@@ -1,0 +1,136 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: Regenerate Linux visual snapshots and upload them as an artifact
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run build
+      - name: Generated files are committed and current
+        run: git diff --exit-code -- packages/tokens/src/generated
+      - run: npm run typecheck
+      - run: npm run deps:check
+      - run: npm run components:check
+      - run: npm test -- --coverage.enabled --coverage.reporter=text-summary
+      - run: npm run registry:validate
+      - run: npm run registry:components:check
+      - run: npm run docs:generate:check
+      - name: Monarch conforms to itself
+        run: node packages/conformance/dist/cli.js check --root packages/react --format sarif --out reports/monarch.sarif
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always() && hashFiles('reports/monarch.sarif') != ''
+        with: { name: monarch-conformance-sarif, path: reports/monarch.sarif }
+      # Pull requests from forks cannot upload to code scanning (read-only token); never fail the build on it.
+      - uses: github/codeql-action/upload-sarif@a3d1b77a1ba1550fbb5c74db1dc3a11f4a481126 # v3.39.2
+        if: always() && hashFiles('reports/monarch.sarif') != ''
+        continue-on-error: true
+        with: { sarif_file: reports/monarch.sarif, category: monarch-conformance }
+      - name: Changeset present for package changes
+        if: github.event_name == 'pull_request'
+        run: npx changeset status --since=origin/${{ github.base_ref }}
+      - run: npm audit --omit=dev --audit-level=high
+      - name: Build is reproducible
+        run: |
+          cp -r packages/tokens/dist /tmp/dist-a
+          npm run build -w @rookcom/monarch-tokens >/dev/null
+          diff -r /tmp/dist-a packages/tokens/dist
+  docs:
+    # Four parallel legs instead of one long job: axe in each engine, and the
+    # visual baselines. Each leg builds the site itself (about 3 minutes), which
+    # is simpler and faster overall than passing a build artifact around.
+    name: Docs site (${{ matrix.suite }})
+    runs-on: ubuntu-24.04
+    # Pinned browser and fonts make screenshots deterministic. Keep the tag in
+    # sync with @playwright/test in package.json.
+    container: mcr.microsoft.com/playwright:v1.56.1-noble
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [a11y-chromium, a11y-firefox, a11y-webkit, visual]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - run: npm run build:docs
+      - name: The docs site conforms to Monarch
+        if: ${{ matrix.suite == 'visual' }}
+        run: node packages/conformance/dist/cli.js check --root apps/docs
+      - name: Axe in ${{ matrix.suite }}
+        if: ${{ startsWith(matrix.suite, 'a11y-') }}
+        run: npx playwright test --project ${{ matrix.suite }}
+      - name: Visual baselines
+        if: ${{ matrix.suite == 'visual' && !inputs.update_snapshots }}
+        run: npm run test:visual
+      - name: Regenerate Linux snapshots (manual run)
+        if: ${{ matrix.suite == 'visual' && inputs.update_snapshots }}
+        run: npm run test:visual:update
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: ${{ matrix.suite == 'visual' && inputs.update_snapshots }}
+        with: { name: visual-snapshots-linux, path: apps/docs/tests/__screenshots__/visual }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.suite }}
+          path: |
+            playwright-report
+            apps/docs/test-results
+          retention-days: 14
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        if: matrix.suite == 'visual' && github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DOCS_PAGES == 'true'
+        with: { path: apps/docs/dist }
+    env:
+      DOCS_BASE: /monarch/
+      # Container jobs run as root with HOME=/github/home (owned by pwuser);
+      # Firefox refuses to start in that case. Playwright's documented fix.
+      HOME: /root
+  pages:
+    name: Deploy docs to GitHub Pages
+    # Enable by setting the repository variable DOCS_PAGES=true after turning on Pages (source: GitHub Actions).
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DOCS_PAGES == 'true'
+    needs: [verify, docs]
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
+  secrets:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { fetch-depth: 0 }
+      # The gitleaks CLI is free; the GitHub Action needs a paid org licence.
+      - name: gitleaks
+        run: >
+          docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.21.2
+          git --redact --verbose --exit-code 1 /repo
