@@ -1,4 +1,5 @@
-const REPO = 'https://github.com/RookHQ/monarch/blob/main';
+import { PageFrame } from '../../layout/page-frame.js';
+import { REPO_URL } from '../../layout/top-bar.js';
 
 const LINKS: [string, string, string][] = [
   [
@@ -26,30 +27,32 @@ const LINKS: [string, string, string][] = [
 
 export function GovernancePage() {
   return (
-    <>
-      <h1>Governance</h1>
-      <p className="docs-lead">
-        Monarch is the source of truth. These policies say how it changes and how products stay
-        aligned.
-      </p>
-      <table className="docs-table">
-        <thead>
-          <tr>
-            <th scope="col">Policy</th>
-            <th scope="col">What it covers</th>
-          </tr>
-        </thead>
-        <tbody>
-          {LINKS.map(([title, path, what]) => (
-            <tr key={path}>
-              <td>
-                <a href={`${REPO}/${path}`}>{title}</a>
-              </td>
-              <td>{what}</td>
+    <PageFrame
+      eyebrow="Guides"
+      title="Governance"
+      lead="Monarch is the source of truth. These policies say how it changes and how products stay aligned."
+      toc={false}
+    >
+      <div className="docs-table-scroll">
+        <table className="docs-table">
+          <thead>
+            <tr>
+              <th scope="col">Policy</th>
+              <th scope="col">What it covers</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </>
+          </thead>
+          <tbody>
+            {LINKS.map(([title, path, what]) => (
+              <tr key={path}>
+                <td>
+                  <a href={`${REPO_URL}/blob/main/${path}`}>{title}</a>
+                </td>
+                <td>{what}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </PageFrame>
   );
 }
