@@ -22,7 +22,7 @@ describe('SearchInput', () => {
     render(
       <SearchInput
         aria-label="Search"
-        debounce={40}
+        debounce={300}
         onSearch={onSearch}
         onValueChange={onValueChange}
       />,
