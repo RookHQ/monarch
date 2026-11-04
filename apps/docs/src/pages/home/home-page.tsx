@@ -216,7 +216,7 @@ function ShowcaseSection() {
         titleId="home-showcase"
         eyebrow="Showcase"
         title="Made of the real thing"
-        description="Every card here is a live Monarch component, exactly as you would use it. Type in the form, flip a switch, hover the chart."
+        description="These are live Monarch components, exactly as you would use them. Type in the form. Flip a switch. Hover the chart."
       />
       <ShowcaseSlot />
     </MarketingSection>
@@ -229,8 +229,8 @@ function Foundations() {
       <MarketingSectionHeader
         titleId="home-foundations"
         eyebrow="Foundations"
-        title="A quiet foundation for everything"
-        description="Colour, type, spacing, radius, elevation and motion live in one set of tokens. Components use nothing else, so one change reaches every screen."
+        title="A quiet foundation"
+        description="Colour, type, spacing, radius, elevation and motion live in one set of tokens. Components use nothing else, so a single change reaches the whole product."
       />
       <FeatureGrid
         columns={4}
@@ -238,7 +238,7 @@ function Foundations() {
           {
             icon: <PaletteIcon size={20} />,
             title: 'Colours',
-            description: 'Semantic roles for every surface, with contrast you can see.',
+            description: 'Semantic roles for surfaces, text and states, with contrast you can see.',
             href: href('/colours'),
           },
           {
@@ -272,7 +272,7 @@ function Components() {
       <MarketingSectionHeader
         titleId="home-components"
         eyebrow="Components"
-        title="Everything a product needs, ready when you are"
+        title="Ready when you are"
         description={`${facts.components} components and ${facts.patterns} patterns, from buttons and forms to charts, data tables, scheduling, collaboration, an editor and marketing blocks. ${facts.examples} live examples, documented from the code itself.`}
         actions={
           <Button asChild trailingIcon={<ArrowRightIcon />}>
@@ -298,12 +298,12 @@ function Theming() {
           <MarketingSectionHeader
             titleId="home-theming"
             eyebrow="Accessibility and theming"
-            title="Your colour. Readable for everyone."
-            description="Bring one brand colour and deriveTheme builds the whole palette, adjusted until text, focus rings and states meet WCAG 2.2 AA contrast in every theme. Try it: these controls change this whole site."
+            title="Your colour. Always readable."
+            description="Bring one brand colour and deriveTheme builds the palette, adjusted until text, focus rings and states meet WCAG 2.2 AA contrast in light, dark and high contrast. Try it: these controls change this whole site."
           />
           <ul className="docs-checks">
-            <li>Keyboard support, focus management and accessible names in every component</li>
-            <li>Every component is tested with axe and rendered on the server</li>
+            <li>Keyboard support, focus management and accessible names, built in</li>
+            <li>Tested with axe and rendered on the server, component by component</li>
             <li>This site is checked with axe in Chromium, Firefox and WebKit</li>
             <li>Motion rests when someone asks for less of it</li>
           </ul>
