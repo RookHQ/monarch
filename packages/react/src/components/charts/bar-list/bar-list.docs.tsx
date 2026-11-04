@@ -166,11 +166,11 @@ export default {
                 max={100}
                 limit={4}
                 items={[
-                  { id: 'a', label: 'Northwind', value: 82 },
+                  { id: 'a', label: 'Northfield', value: 82 },
                   { id: 'you', label: 'Your site (you)', value: 71, highlighted: true },
-                  { id: 'b', label: 'Contoso', value: 64 },
-                  { id: 'c', label: 'Fabrikam', value: null },
-                  { id: 'd', label: 'Tailspin', value: 38 },
+                  { id: 'b', label: 'Cobalt', value: 64 },
+                  { id: 'c', label: 'Fernway', value: null },
+                  { id: 'd', label: 'Tidewater', value: 38 },
                 ]}
               />
             </div>

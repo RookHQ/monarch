@@ -145,7 +145,7 @@ export default {
               <Avatar name="Grace Hopper" status="away" size={28} />
               <Avatar name="Katherine Johnson" status="busy" palette="tokens" />
               <Avatar name="Margaret Hamilton" status="offline" palette="tokens" seed="user_4" />
-              <Avatar name="Northwind Labs" shape="square" fallback="icon" size="lg" />
+              <Avatar name="Northfield Labs" shape="square" fallback="icon" size="lg" />
             </>
           ),
         },

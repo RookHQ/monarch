@@ -10,7 +10,7 @@ import {
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 function DirtyDemo() {
-  const [saved, setSaved] = useState({ name: 'Northwind', digest: true });
+  const [saved, setSaved] = useState({ name: 'Northfield', digest: true });
   const [draft, setDraft] = useState(saved);
   const [saving, setSaving] = useState(false);
   const dirty = draft.name !== saved.name || draft.digest !== saved.digest;

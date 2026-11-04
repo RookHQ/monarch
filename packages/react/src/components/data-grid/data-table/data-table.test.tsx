@@ -86,9 +86,9 @@ describe('Table', () => {
 
 type Deal = { id: string; name: string; stage: string; amount: number; owner: string | null };
 const DEALS: Deal[] = [
-  { id: 'd1', name: 'Northwind renewal', stage: 'Won', amount: 1200, owner: 'Ana' },
-  { id: 'd2', name: 'Contoso pilot', stage: 'Open', amount: 300, owner: null },
-  { id: 'd3', name: 'Fabrikam upgrade', stage: 'Open', amount: 4500, owner: 'Ben' },
+  { id: 'd1', name: 'Northfield renewal', stage: 'Won', amount: 1200, owner: 'Ana' },
+  { id: 'd2', name: 'Cobalt pilot', stage: 'Open', amount: 300, owner: null },
+  { id: 'd3', name: 'Fernway upgrade', stage: 'Open', amount: 4500, owner: 'Ben' },
 ];
 const COLUMNS: DataTableColumn<Deal>[] = [
   { id: 'name', header: 'Name', sortable: true },
@@ -139,7 +139,7 @@ describe('DataTable', () => {
     render(<DataTable {...base} />);
     expect(screen.getByRole('table', { name: 'Deals' })).toBeInTheDocument();
     expect(screen.getAllByRole('columnheader')).toHaveLength(4);
-    expect(names()).toEqual(['Northwind renewal', 'Contoso pilot', 'Fabrikam upgrade']);
+    expect(names()).toEqual(['Northfield renewal', 'Cobalt pilot', 'Fernway upgrade']);
     expect(screen.getByRole('cell', { name: '4500' })).toHaveAttribute('data-numeric', 'true');
     await expectNoA11yViolations();
   });
@@ -149,7 +149,7 @@ describe('DataTable', () => {
     render(<DataTable {...base} onSortChange={onSortChange} />);
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: /^Amount/ }));
-    expect(names()).toEqual(['Contoso pilot', 'Northwind renewal', 'Fabrikam upgrade']);
+    expect(names()).toEqual(['Cobalt pilot', 'Northfield renewal', 'Fernway upgrade']);
     expect(screen.getByRole('columnheader', { name: /Amount/ })).toHaveAttribute(
       'aria-sort',
       'ascending',
@@ -158,7 +158,7 @@ describe('DataTable', () => {
       screen.getByRole('button', { name: /^Amount ?, sorted ascending$/ }),
     ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /^Amount/ }));
-    expect(names()[0]).toBe('Fabrikam upgrade');
+    expect(names()[0]).toBe('Fernway upgrade');
     await user.click(screen.getByRole('button', { name: /^Amount/ }));
     expect(onSortChange).toHaveBeenLastCalledWith([]);
     expect(screen.getByRole('columnheader', { name: /Amount/ })).not.toHaveAttribute('aria-sort');
@@ -172,7 +172,7 @@ describe('DataTable', () => {
     await user.click(screen.getByRole('button', { name: /^Amount/ }));
     await user.click(screen.getByRole('button', { name: /^Amount/ }));
     await user.keyboard('{/Shift}');
-    expect(names()).toEqual(['Fabrikam upgrade', 'Contoso pilot', 'Northwind renewal']);
+    expect(names()).toEqual(['Fernway upgrade', 'Cobalt pilot', 'Northfield renewal']);
     expect(
       screen.getByRole('button', { name: /^Amount ?, sorted descending, sort 2$/ }),
     ).toBeInTheDocument();
@@ -203,7 +203,7 @@ describe('DataTable', () => {
     render(<Server />);
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: /^Amount/ }));
-    expect(names()[0]).toBe('Northwind renewal');
+    expect(names()[0]).toBe('Northfield renewal');
     await user.click(screen.getByRole('button', { name: 'Page 2' }));
     expect(screen.getByTestId('state')).toHaveTextContent(
       '{"sort":[{"id":"amount","direction":"ascending"}],"page":2}',
@@ -213,9 +213,9 @@ describe('DataTable', () => {
 
   it('paginates client-side', async () => {
     render(<DataTable {...base} pageSize={2} />);
-    expect(names()).toEqual(['Northwind renewal', 'Contoso pilot']);
+    expect(names()).toEqual(['Northfield renewal', 'Cobalt pilot']);
     await userEvent.setup().click(screen.getByRole('button', { name: 'Page 2' }));
-    expect(names()).toEqual(['Fabrikam upgrade']);
+    expect(names()).toEqual(['Fernway upgrade']);
     expect(screen.getByRole('navigation', { name: 'Table pages' })).toBeInTheDocument();
   });
 
@@ -224,10 +224,10 @@ describe('DataTable', () => {
     render(<DataTable {...base} selectable onSelectedRowIdsChange={onChange} />);
     const user = userEvent.setup();
     const all = screen.getByRole('checkbox', { name: 'Select all rows on this page' });
-    await user.click(screen.getByRole('checkbox', { name: 'Select Contoso pilot' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Select Cobalt pilot' }));
     expect(onChange).toHaveBeenLastCalledWith(['d2']);
     expect(all).toHaveAttribute('aria-checked', 'mixed');
-    expect(screen.getByRole('row', { name: /Contoso pilot/ })).toHaveAttribute(
+    expect(screen.getByRole('row', { name: /Cobalt pilot/ })).toHaveAttribute(
       'aria-selected',
       'true',
     );
@@ -236,9 +236,9 @@ describe('DataTable', () => {
     expect(all).toHaveAttribute('aria-checked', 'true');
     await user.click(all);
     expect(onChange).toHaveBeenLastCalledWith([]);
-    await user.click(screen.getByRole('checkbox', { name: 'Select Northwind renewal' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Select Northfield renewal' }));
     await user.keyboard('{Shift>}');
-    await user.click(screen.getByRole('checkbox', { name: 'Select Fabrikam upgrade' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Select Fernway upgrade' }));
     await user.keyboard('{/Shift}');
     expect(onChange).toHaveBeenLastCalledWith(['d1', 'd2', 'd3']);
     await expectNoA11yViolations();
@@ -253,10 +253,10 @@ describe('DataTable', () => {
         isRowSelectable={(r) => r.stage !== 'Won'}
       />,
     );
-    expect(screen.getByRole('checkbox', { name: 'Select Northwind renewal' })).toBeDisabled();
-    await userEvent.setup().click(screen.getByRole('checkbox', { name: 'Select Contoso pilot' }));
+    expect(screen.getByRole('checkbox', { name: 'Select Northfield renewal' })).toBeDisabled();
+    await userEvent.setup().click(screen.getByRole('checkbox', { name: 'Select Cobalt pilot' }));
     // Controlled without a handler: nothing changes.
-    expect(screen.getByRole('checkbox', { name: 'Select Contoso pilot' })).toHaveAttribute(
+    expect(screen.getByRole('checkbox', { name: 'Select Cobalt pilot' })).toHaveAttribute(
       'aria-checked',
       'false',
     );
@@ -348,9 +348,9 @@ describe('DataTable', () => {
       />,
     );
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: 'Remove Contoso pilot' }));
+    await user.click(screen.getByRole('button', { name: 'Remove Cobalt pilot' }));
     expect(onRemove).toHaveBeenCalledWith('d2');
-    screen.getByRole('button', { name: 'Actions for Fabrikam upgrade' }).focus();
+    screen.getByRole('button', { name: 'Actions for Fernway upgrade' }).focus();
     await user.keyboard('{Enter}');
     await user.click(await screen.findByRole('menuitem', { name: 'Archive' }));
     expect(onArchive).toHaveBeenCalledWith('d3');
@@ -359,12 +359,12 @@ describe('DataTable', () => {
 
   it('expands rows (uncontrolled) with aria-expanded and aria-controls', async () => {
     render(<DataTable {...base} renderExpanded={(r) => <p>Notes for {r.name}</p>} />);
-    const toggle = screen.getByRole('button', { name: 'Details for Contoso pilot' });
+    const toggle = screen.getByRole('button', { name: 'Details for Cobalt pilot' });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     await userEvent.setup().click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
     const detail = document.getElementById(toggle.getAttribute('aria-controls')!);
-    expect(detail).toHaveTextContent('Notes for Contoso pilot');
+    expect(detail).toHaveTextContent('Notes for Cobalt pilot');
     await expectNoA11yViolations();
   });
 
@@ -374,7 +374,7 @@ describe('DataTable', () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole('gridcell', { name: 'Won' }));
     expect(onOpen).toHaveBeenCalledWith('d1');
-    await user.click(screen.getByRole('checkbox', { name: 'Select Northwind renewal' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Select Northfield renewal' }));
     expect(onOpen).toHaveBeenCalledTimes(1);
   });
 
@@ -400,19 +400,19 @@ describe('DataTable', () => {
     await user.keyboard('{ArrowRight}');
     expect(screen.getByRole('button', { name: /^Name/ })).toHaveFocus();
     await user.keyboard('{ArrowDown}');
-    const firstName = within(grid).getByRole('rowheader', { name: 'Northwind renewal' });
+    const firstName = within(grid).getByRole('rowheader', { name: 'Northfield renewal' });
     expect(firstName).toHaveFocus();
     await user.keyboard('{Enter}');
     expect(onOpen).toHaveBeenCalledWith('d1');
     await user.keyboard(' ');
-    expect(screen.getByRole('checkbox', { name: 'Select Northwind renewal' })).toHaveAttribute(
+    expect(screen.getByRole('checkbox', { name: 'Select Northfield renewal' })).toHaveAttribute(
       'aria-checked',
       'true',
     );
     await user.keyboard('{End}');
     expect(within(grid).getByRole('gridcell', { name: 'Ana' })).toHaveFocus();
     await user.keyboard('{Home}');
-    expect(screen.getByRole('checkbox', { name: 'Select Northwind renewal' })).toHaveFocus();
+    expect(screen.getByRole('checkbox', { name: 'Select Northfield renewal' })).toHaveFocus();
     await user.keyboard('{Control>}{End}{/Control}');
     expect(within(grid).getByRole('gridcell', { name: 'Ben' })).toHaveFocus();
     await user.keyboard('{ArrowUp}{ArrowUp}{ArrowUp}{ArrowUp}{ArrowUp}');
@@ -452,9 +452,9 @@ describe('DataTable', () => {
     expect(within(list).getAllByRole('listitem')).toHaveLength(3);
     expect(within(list).getAllByText('Stage')).toHaveLength(3);
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: 'Open Contoso pilot' }));
+    await user.click(screen.getByRole('button', { name: 'Open Cobalt pilot' }));
     expect(onOpen).toHaveBeenCalledWith('d2');
-    await user.click(screen.getByRole('checkbox', { name: 'Select Contoso pilot' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Select Cobalt pilot' }));
     expect(onOpen).toHaveBeenCalledTimes(1);
     await expectNoA11yViolations();
   });
@@ -491,7 +491,7 @@ describe('DataTable', () => {
       <DataTable {...base} selectable stickyFirstColumn rowActions={() => []} layout="auto" />,
     );
     expect(html).toContain('mn-data-table');
-    expect(html).toContain('Northwind renewal');
+    expect(html).toContain('Northfield renewal');
     expect(html).toContain('data-view="table"');
   });
 });

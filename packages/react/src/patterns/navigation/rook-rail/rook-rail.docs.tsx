@@ -155,7 +155,7 @@ function CollapsedDemo() {
 
 const workspaces = [
   { id: 'w1', name: 'Acme', handle: 'acme' },
-  { id: 'w2', name: 'Northwind', handle: 'northwind' },
+  { id: 'w2', name: 'Northfield', handle: 'northwind' },
 ];
 const spaces = [
   { id: 's1', name: 'Engineering' },
