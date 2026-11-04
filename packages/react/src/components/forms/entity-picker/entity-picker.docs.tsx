@@ -118,7 +118,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'The "click the field, search, pick a record" pattern every Rook product rebuilt: a trigger (a field-style button or the product’s own chip) opens a popover with a search box and a listbox. The product injects the records, search, rendering and creation; EntityPicker owns the trigger, popover, keyboard and selection model.',
+        'The "click the field, search, pick a record" pattern most products end up rebuilding: a trigger (a field-style button or the product’s own chip) opens a popover with a search box and a listbox. The product injects the records, search, rendering and creation; EntityPicker owns the trigger, popover, keyboard and selection model.',
       useWhen: [
         'Picking a project, contact, company, team, status or space from a list that may be long or server-searched.',
         'The value is shown as a compact chip or field and edited in place (issue properties, ticket sidebars).',

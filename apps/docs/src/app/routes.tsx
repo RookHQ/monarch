@@ -63,7 +63,7 @@ const STATIC: Record<string, () => ReactElement> = {
 export function resolveRoute(path: string): ResolvedRoute {
   if (path === '/')
     return {
-      title: 'Monarch · Rook’s open-source design system',
+      title: 'Monarch · Open-source design system',
       fullWidth: true,
       element: <HomePage />,
     };

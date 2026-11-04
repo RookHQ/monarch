@@ -92,7 +92,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'Writes and sends a message: a chat message, a thread reply, a ticket reply or an internal note. It wraps RichTextEditor with the send behaviour and the surrounding slots every Rook conversation surface needs.',
+        'Writes and sends a message: a chat message, a thread reply, a ticket reply or an internal note. It wraps RichTextEditor with the send behaviour and the surrounding slots every conversation surface needs.',
       useWhen: [
         'People send messages in a conversation, thread or ticket.',
         'The same box edits a message that was already sent.',

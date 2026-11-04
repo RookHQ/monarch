@@ -1,5 +1,10 @@
 # Getting started
 
+In a few steps you can have Monarch running in your app: light and dark
+themes, your brand colour, and accessible components that already feel at home
+together. Monarch works the same in a weekend project and a large product team.
+These steps assume React 18 or 19; the tokens alone work with any framework.
+
 ## 1. Install
 
 ```bash

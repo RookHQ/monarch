@@ -100,7 +100,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'Tells the story of a record or a workspace as a readable list of sentences (“Ana Lopez moved Pricing page to In review”), with who did it, when, and optional details. Ten Rook products show this pattern; this is the shared one.',
+        'Tells the story of a record or a workspace as a readable list of sentences (“Ana Lopez moved Pricing page to In review”), with who did it, when, and optional details. One shared pattern, so every product’s history reads the same way.',
       useWhen: [
         'A record’s history: a ticket, task, client, incident or IP record.',
         'Project or workspace activity, with comments and changes interleaved.',
