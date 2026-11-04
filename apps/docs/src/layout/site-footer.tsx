@@ -7,7 +7,7 @@ export function SiteFooter() {
     <footer className="docs-footer">
       <div className="docs-footer__inner">
         <p>
-          Rook Monarch is open source under the{' '}
+          Monarch is made by Rook and open source under the{' '}
           <a href={`${REPO_URL}/blob/main/LICENSE`}>MIT License</a>.
         </p>
         <ul className="docs-footer__links">

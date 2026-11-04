@@ -16,7 +16,7 @@ import { pageById } from '../../lib/docs.js';
 import { facts, INSTALL_COMMAND } from '../../lib/facts.js';
 import { DEFAULT_PRODUCT } from '../../lib/appearance.js';
 import '../../styles/home.css';
-import { products } from '../../lib/registry.js';
+import { Showcase } from './showcase.js';
 import { href } from '../../lib/router.js';
 import {
   ArrowRightIcon,
@@ -33,8 +33,18 @@ const delay = (s: number) => ({ '--docs-delay': `${s}s` }) as CSSProperties;
 /** Components shown live on the home page; each links to its page. */
 const SHOWCASE = ['button', 'segmented-control', 'tabs', 'status-badge', 'progress-bar', 'avatar'];
 
-/** Product accents offered in the theming demo (the first few registered products). */
-const DEMO_ACCENTS = products.slice(0, 5);
+/**
+ * Accents offered in the theming demo, named by colour. Each id is a registered
+ * accent in registry/products, so the swatch shows its real, contrast-checked palette.
+ */
+const DEMO_ACCENTS = [
+  { id: DEFAULT_PRODUCT, name: 'Monarch' },
+  { id: 'calendar', name: 'Sky' },
+  { id: 'chat', name: 'Indigo' },
+  { id: 'dossier', name: 'Teal' },
+  { id: 'links', name: 'Green' },
+  { id: 'atlas', name: 'Orange' },
+] as const;
 
 /** Crown and wordmark in a frosted pill with a soft four-colour glow. */
 function Lockup() {
@@ -46,15 +56,19 @@ function Lockup() {
   );
 }
 
-/** Tokens → Components → Conformance: the three packages, one Rook colour each. */
+/** Tokens → Components → Experiences: what you build with Monarch, one brand colour each. */
 function StepFlow() {
   const steps = [
     ['Tokens', 'info'],
     ['Components', 'success'],
-    ['Conformance', 'warning'],
+    ['Experiences', 'warning'],
   ] as const;
   return (
-    <ol className="docs-steps-flow docs-rise" style={delay(0.5)} aria-label="What Monarch includes">
+    <ol
+      className="docs-steps-flow docs-rise"
+      style={delay(0.5)}
+      aria-label="From tokens to experiences"
+    >
       {steps.map(([label, tone], i) => (
         <Fragment key={label}>
           {i > 0 ? (
@@ -146,14 +160,17 @@ function Hero() {
         eyebrow={<Lockup />}
         title={
           <span id="home-title" className="docs-hero__block docs-rise" style={delay(0.15)}>
-            <span className="docs-hero__title">Meet Monarch.</span>
-            <span className="docs-hero__tagline">Rook’s open-source design system.</span>
+            <span className="docs-hero__title">Build beautifully.</span>
+            <span className="docs-hero__tagline">
+              An open-source design system for everyone who builds.
+            </span>
           </span>
         }
         lead={
           <span className="docs-hero__block docs-rise" style={delay(0.28)}>
-            Design tokens, accessible React components and conformance tooling, built for every Rook
-            product and free to use under the MIT License.
+            {facts.components} accessible components and {facts.patterns} patterns on one set of
+            tokens. Bring your colour, choose light or dark, and ship something that feels
+            considered from the very first screen.
           </span>
         }
         actions={
@@ -178,14 +195,28 @@ function Hero() {
   );
 }
 
+function ShowcaseSection() {
+  return (
+    <MarketingSection spacing="md" aria-labelledby="home-showcase">
+      <MarketingSectionHeader
+        titleId="home-showcase"
+        eyebrow="Showcase"
+        title="Made of the real thing"
+        description="Every card here is a live Monarch component, exactly as you would use it. Type in the form, flip a switch, hover the chart."
+      />
+      <Showcase />
+    </MarketingSection>
+  );
+}
+
 function Foundations() {
   return (
     <MarketingSection spacing="md" aria-labelledby="home-foundations">
       <MarketingSectionHeader
         titleId="home-foundations"
         eyebrow="Foundations"
-        title="One set of tokens under everything"
-        description="Colour, type, spacing, radius, elevation and motion are CSS variables. Components use nothing else, so a theme or accent change reaches every control."
+        title="A quiet foundation for everything"
+        description="Colour, type, spacing, radius, elevation and motion live in one set of tokens. Components use nothing else, so one change reaches every screen."
       />
       <FeatureGrid
         columns={4}
@@ -193,25 +224,25 @@ function Foundations() {
           {
             icon: <PaletteIcon size={20} />,
             title: 'Colours',
-            description: 'Brand colours and semantic roles, with live contrast ratios.',
+            description: 'Semantic roles for every surface, with contrast you can see.',
             href: href('/colours'),
           },
           {
             icon: <TypeIcon size={20} />,
             title: 'Typography',
-            description: 'A fixed text scale for apps and a fluid display scale for pages.',
+            description: 'A steady scale for interfaces, a fluid one for headlines.',
             href: href('/typography'),
           },
           {
             icon: <GridIcon size={20} />,
             title: 'Tokens',
-            description: 'Spacing on a 4px grid, radius, elevation, motion and layout.',
+            description: 'Spacing on a 4px grid, with radius, elevation and motion.',
             href: href('/tokens'),
           },
           {
             icon: <ContrastIcon size={20} />,
             title: 'Theming',
-            description: 'Light, dark and high contrast, and an accent per product.',
+            description: 'Light, dark and high contrast, in your own colour.',
             href: href('/theming'),
           },
         ]}
@@ -227,8 +258,8 @@ function Components() {
       <MarketingSectionHeader
         titleId="home-components"
         eyebrow="Components"
-        title="Accessible components, documented by their code"
-        description={`${facts.components} components and ${facts.patterns} patterns with ${facts.examples} live examples. Every page is generated from the component’s docs file and TypeScript declarations.`}
+        title="Everything a product needs, ready when you are"
+        description={`${facts.components} components and ${facts.patterns} patterns, from buttons and forms to charts, data tables, scheduling, collaboration, an editor and marketing blocks. ${facts.examples} live examples, documented from the code itself.`}
         actions={
           <Button asChild trailingIcon={<ArrowRightIcon />}>
             <a href={href('/components')}>Browse all</a>
@@ -253,14 +284,14 @@ function Theming() {
           <MarketingSectionHeader
             titleId="home-theming"
             eyebrow="Accessibility and theming"
-            title="Light, dark, high contrast, and your accent"
-            description="Every product accent is adjusted at build time until text, focus rings and states meet WCAG 2.2 AA in each theme. Try it: these controls change this whole site."
+            title="Your colour. Readable for everyone."
+            description="Bring one brand colour and deriveTheme builds the whole palette, adjusted until text, focus rings and states meet WCAG 2.2 AA contrast in every theme. Try it: these controls change this whole site."
           />
           <ul className="docs-checks">
             <li>Keyboard support, focus management and accessible names in every component</li>
-            <li>Component tests run axe and server rendering</li>
+            <li>Every component is tested with axe and rendered on the server</li>
             <li>This site is checked with axe in Chromium, Firefox and WebKit</li>
-            <li>Motion collapses under reduced-motion settings</li>
+            <li>Motion rests when someone asks for less of it</li>
           </ul>
         </div>
         <div className="docs-lab" role="group" aria-label="Try the appearance settings">
@@ -280,7 +311,7 @@ function Theming() {
               Accent
             </span>
             <div className="docs-lab__accents" role="group" aria-labelledby="home-accent-label">
-              {[{ id: DEFAULT_PRODUCT, name: 'Rook' }, ...DEMO_ACCENTS].map((p) => (
+              {DEMO_ACCENTS.map((p) => (
                 <button
                   key={p.id}
                   type="button"
@@ -290,7 +321,7 @@ function Theming() {
                   onClick={() => update({ product: p.id })}
                 >
                   <span className="docs-lab__dot" aria-hidden />
-                  {p.name.replace(/^Rook /, '')}
+                  {p.name}
                 </button>
               ))}
             </div>
@@ -315,8 +346,8 @@ function OpenSource() {
       <CTABand
         tone="inverse"
         aria-labelledby="home-open-source"
-        title={<span id="home-open-source">Open source, MIT-licensed</span>}
-        description="Read the code, report issues and contribute on GitHub. Use Monarch in your own projects under the MIT License."
+        title={<span id="home-open-source">Made by Rook. Open to everyone.</span>}
+        description="Monarch is free under the MIT License, for a weekend project or a company-wide platform. Read the code, open an issue, or help shape what comes next."
         actions={
           <>
             <Button asChild variant="primary" leadingIcon={<RepoIcon />}>
@@ -336,6 +367,7 @@ export function HomePage() {
   return (
     <div className="docs-home">
       <Hero />
+      <ShowcaseSection />
       <Foundations />
       <Components />
       <Theming />

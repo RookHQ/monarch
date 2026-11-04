@@ -1,16 +1,30 @@
-# Rook Monarch
+# Monarch
 
-**One design authority. Every Rook experience.**
+**Build beautifully.**
 
-Monarch is the open-source design system behind the Rook applications: tokens,
-themes, accessible React components, and the governance tooling that keeps many
-products consistent without any of them depending on a live Monarch server.
-It is released under the [MIT license](LICENSE).
+Monarch is an open-source design system for everyone who builds: startups and
+enterprise teams, independent designers and developers. It gives you a calm,
+considered foundation, so your product feels finished from the very first
+screen and stays consistent as it grows.
+
+- **Accessible by default.** Keyboard support, focus management and accessible
+  names in every component, tested with axe and checked with axe in Chromium,
+  Firefox and WebKit on the docs site.
+- **Your colour, everywhere.** Light, dark and high-contrast themes. Bring one
+  brand colour and `deriveTheme` builds a palette that meets WCAG 2.2 AA
+  contrast in every theme.
+- **Everything a product needs.** Forms, overlays, navigation, charts, data
+  tables, scheduling, collaboration, a rich-text editor and marketing blocks.
+- **Safe to render anywhere.** Server-render safe components on React 18 and 19.
+- **Stays consistent.** A conformance CLI flags raw colours, off-grid spacing
+  and local copies of components, with SARIF output for code review.
+
+Made by Rook, open to everyone under the [MIT License](LICENSE).
 
 | Package                                                | What it is                                                                                              | Needs         |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ------------- |
 | [`@rookcom/monarch-tokens`](packages/tokens)           | CSS variables, 4 themes, per-product accents with guaranteed contrast, Tailwind 3 preset, `tokens.json` | nothing       |
-| [`@rookcom/monarch-react`](packages/react)             | 22 accessible components (React 18/19, SSR-safe) and `styles.css`                                       | tokens, React |
+| [`@rookcom/monarch-react`](packages/react)             | Accessible components and patterns (React 18/19, SSR-safe) and `styles.css`                             | tokens, React |
 | [`@rookcom/monarch-conformance`](packages/conformance) | `monarch` CLI: design-conformance checks, SARIF, registry verification                                  | Node only     |
 
 ## Install

@@ -28,7 +28,7 @@ export function IntroductionPage() {
     <PageFrame
       eyebrow="Foundations"
       title="Introduction"
-      lead="Monarch is Rook's open-source design system: design tokens, accessible React components and the conformance tooling that keeps many products consistent, without any of them depending on a live Monarch service. It is released under the MIT License."
+      lead="Monarch is an open-source design system for startups, enterprise teams, independent designers and developers: anyone who wants their product to feel calm, clear and finished. It gives you design tokens, accessible React components and a conformance CLI that keeps every screen consistent as you grow, with no live service to depend on. It is free under the MIT License."
       meta={
         <>
           <Button asChild variant="primary" size="sm">
