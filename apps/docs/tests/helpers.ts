@@ -48,7 +48,12 @@ export async function mountPreviews(page: Page): Promise<void> {
  * `allow-same-origin` (documented in their threat model), which browsers warn
  * about. Everything else on the console fails the test.
  */
-const EXPECTED_CONSOLE = [/allow-scripts and allow-same-origin/];
+const EXPECTED_CONSOLE = [
+  /allow-scripts and allow-same-origin/,
+  // Firefox, when the test itself (axe, scrolling) forces layout while the
+  // EmbeddedAppFrame example's blob: frame document is still loading.
+  /Layout was forced before the page was fully loaded.*\{file: "(blob:|debugger eval code)/,
+];
 
 /** Collects console errors and warnings (and uncaught errors) from now on. */
 export function watchConsole(page: Page): () => string[] {
