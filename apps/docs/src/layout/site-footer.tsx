@@ -1,4 +1,4 @@
-import { NEW_TAB } from '../lib/external.js';
+import { MAKER_LINK, NEW_TAB } from '../lib/external.js';
 import { href } from '../lib/router.js';
 import { REPO_URL } from './top-bar.js';
 
@@ -8,7 +8,7 @@ export function SiteFooter() {
     <footer className="docs-footer">
       <div className="docs-footer__inner">
         <p>
-          Monarch is made by Rook and open source under the{' '}
+          Monarch is made by <a {...MAKER_LINK}>Rook</a> and open source under the{' '}
           <a {...NEW_TAB} href={`${REPO_URL}/blob/main/LICENSE`}>
             MIT License
           </a>

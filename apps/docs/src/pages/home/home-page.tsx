@@ -1,4 +1,4 @@
-import { NEW_TAB } from '../../lib/external.js';
+import { MAKER_LINK, NEW_TAB } from '../../lib/external.js';
 import { Fragment, Suspense, lazy, useRef, type CSSProperties } from 'react';
 import { Badge, Button, CopyField, Progress, Switch } from '@rookcom/monarch-react';
 import {
@@ -357,7 +357,11 @@ function OpenSource() {
       <CTABand
         tone="inverse"
         aria-labelledby="home-open-source"
-        title={<span id="home-open-source">Made by Rook. Open to everyone.</span>}
+        title={
+          <span id="home-open-source">
+            Made by <a {...MAKER_LINK}>Rook</a>. Open to everyone.
+          </span>
+        }
         description="Monarch is free under the MIT License, for a weekend project or a company-wide platform. Read the code, open an issue, or help shape what comes next."
         actions={
           <>

@@ -19,7 +19,7 @@ screen and stays consistent as it grows.
 - **Stays consistent.** A conformance CLI flags raw colours, off-grid spacing
   and local copies of components, with SARIF output for code review.
 
-Made by Rook, open to everyone under the [MIT License](LICENSE).
+Made by [Rook](https://rookhq.com), open to everyone under the [MIT License](LICENSE).
 
 | Package                                                | What it is                                                                                              | Needs         |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ------------- |

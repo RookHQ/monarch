@@ -44,6 +44,7 @@ export function jsonLd({ route, title, description, url, siteUrl, crumbs, modifi
     '@id': id('maker'),
     name: SITE.maker.name,
     url: SITE.maker.url,
+    sameAs: ['https://github.com/RookHQ'],
   };
   const website = {
     '@type': 'WebSite',
@@ -125,7 +126,7 @@ export function llmsTxt({ siteUrl, mdUrl, data }) {
 
 > ${SITE.description}
 
-Monarch has ${facts.components} components and ${facts.patterns} patterns, ${facts.themes} themes, and ${facts.examples} live examples. Install it with \`npm i @rookcom/monarch-tokens @rookcom/monarch-react\`. It is MIT licensed and made by ${SITE.maker.name}. Every page has a Markdown copy at the same address ending in \`index.md\`, or ask for \`Accept: text/markdown\`.
+Monarch has ${facts.components} components and ${facts.patterns} patterns, ${facts.themes} themes, and ${facts.examples} live examples. Install it with \`npm i @rookcom/monarch-tokens @rookcom/monarch-react\`. It is MIT licensed and made by [${SITE.maker.name}](${SITE.maker.url}). Every page has a Markdown copy at the same address ending in \`index.md\`, or ask for \`Accept: text/markdown\`.
 
 ## Packages
 
