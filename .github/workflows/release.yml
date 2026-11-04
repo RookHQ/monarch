@@ -1,0 +1,61 @@
+name: Release
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+  id-token: write
+  pull-requests: write
+concurrency: release
+jobs:
+  canary:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with: { node-version-file: .nvmrc, cache: npm, registry-url: 'https://registry.npmjs.org' }
+      # Trusted publishing needs npm >= 11.5; Node 22 ships npm 10.
+      - run: npm install -g npm@11.6.2
+      - run: npm ci
+      - run: npm run verify
+      - name: Publish canary (0.0.0-canary-<sha>) under the `canary` dist-tag
+        # Only when there are unreleased changesets; otherwise main equals the last release.
+        run: |
+          if ls .changeset/*.md 2>/dev/null | grep -qv README; then
+            npx changeset version --snapshot canary
+            npx changeset publish --tag canary --no-git-tag
+          else
+            echo "No unreleased changesets; skipping canary."
+          fi
+        # The repository is public, so npm records a provenance attestation (id-token: write).
+        env: { NPM_CONFIG_PROVENANCE: 'true' }
+  stable:
+    # Flow: run `npm run version-packages` locally, review, commit and push to
+    # main. With no pending changesets, this job publishes every package version
+    # on main that npm does not have yet. Nothing else is needed.
+    runs-on: ubuntu-24.04
+    needs: canary
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with: { node-version-file: .nvmrc, cache: npm, registry-url: 'https://registry.npmjs.org' }
+      - run: npm install -g npm@11.6.2
+      - run: npm ci
+      - name: Publish unreleased stable versions
+        run: |
+          if ls .changeset/*.md 2>/dev/null | grep -qv README; then
+            echo "Pending changesets: stable publishes after 'npm run version-packages' is pushed."
+          else
+            npm run verify
+            npx changeset publish
+            # Tag every published version explicitly (Changesets' own tags did
+            # not reliably reach the remote). Idempotent: existing tags are skipped.
+            for f in packages/*/package.json; do
+              t=$(node -p "const j=require('./' + process.argv[1]); j.private ? '' : j.name + '@' + j.version" "$f")
+              [ -z "$t" ] && continue
+              if ! git ls-remote --exit-code --tags origin "refs/tags/$t" >/dev/null; then
+                git tag -f "$t" && git push origin "refs/tags/$t"
+              fi
+            done
+          fi
+        env: { NPM_CONFIG_PROVENANCE: 'true' }
