@@ -62,7 +62,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'Gives every Rook app the same in-app inbox: a bell in the header or rail that shows how many notifications are unread and opens a panel to read, open and clear them. The product supplies the items and handles reading and navigation.',
+        'Gives every app the same in-app inbox: a bell in the header or rail that shows how many notifications are unread and opens a panel to read, open and clear them. The product supplies the items and handles reading and navigation.',
       useWhen: [
         'An app header or icon rail that needs mentions, assignments and replies.',
         'Any surface that marks notifications read when opened.',

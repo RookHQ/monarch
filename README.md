@@ -1,6 +1,6 @@
 # Monarch
 
-**Build beautifully.**
+**Meet Monarch.**
 
 Monarch is an open-source design system for everyone who builds: startups and
 enterprise teams, independent designers and developers. It gives you a calm,

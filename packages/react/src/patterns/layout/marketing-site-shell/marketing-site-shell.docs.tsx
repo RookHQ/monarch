@@ -10,10 +10,10 @@ export default {
   sections: {
     purpose: {
       summary:
-        'SiteHeader and SiteFooter give every Rook public site the same navigation model and landmarks. Import from `@rookcom/monarch-react/marketing`.',
+        'SiteHeader and SiteFooter give every public site the same navigation model and landmarks. Import from `@rookcom/monarch-react/marketing`.',
       useWhen: ['Product sites, launch pages, docs landing pages and other public pages.'],
       avoidWhen: [
-        'Signed-in app screens: use the Rook app shell (RookRail).',
+        'Signed-in app screens: use the app shell (`RookRail`, from `@rookcom/monarch-react/shell`).',
         'Dialog-like flows such as sign-in, where navigation would distract.',
       ],
     },
@@ -21,7 +21,7 @@ export default {
       items: [
         'Quiet chrome: a translucent canvas bar with a hairline border, muted links that darken on hover; the wordmark and one primary action carry the brand.',
         'Group items open a panel of links with descriptions, not an application menu: they are navigation, so they stay links.',
-        'No artwork ships in the package. `brand` is a slot for the product wordmark from the Rook brand kit.',
+        'No artwork ships in the package. `brand` is a slot for the product wordmark from your brand kit.',
         'Footer column titles are real headings and links meet the 24px target size.',
       ],
     },

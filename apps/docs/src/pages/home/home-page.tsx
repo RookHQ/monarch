@@ -160,7 +160,7 @@ function Hero() {
         eyebrow={<Lockup />}
         title={
           <span id="home-title" className="docs-hero__block docs-rise" style={delay(0.15)}>
-            <span className="docs-hero__title">Build beautifully.</span>
+            <span className="docs-hero__title">Meet Monarch.</span>
             <span className="docs-hero__tagline">
               An open-source design system for everyone who builds.
             </span>
