@@ -1,3 +1,4 @@
+import { NEW_TAB } from '../../lib/external.js';
 import { PageFrame } from '../../layout/page-frame.js';
 import { REPO_URL } from '../../layout/top-bar.js';
 
@@ -45,7 +46,9 @@ export function GovernancePage() {
             {LINKS.map(([title, path, what]) => (
               <tr key={path}>
                 <td>
-                  <a href={`${REPO_URL}/blob/main/${path}`}>{title}</a>
+                  <a {...NEW_TAB} href={`${REPO_URL}/blob/main/${path}`}>
+                    {title}
+                  </a>
                 </td>
                 <td>{what}</td>
               </tr>

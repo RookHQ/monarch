@@ -32,6 +32,13 @@ export interface Prefs {
   product: string;
 }
 
+/** What a page shows before the stored preferences are read (and what the server renders). */
+export const DEFAULT_PREFS: Prefs = {
+  theme: 'system',
+  contrast: 'system',
+  product: DEFAULT_PRODUCT,
+};
+
 export function readPrefs(): Prefs {
   const theme = cookie(THEME_COOKIE);
   const contrast = cookie(CONTRAST_COOKIE);

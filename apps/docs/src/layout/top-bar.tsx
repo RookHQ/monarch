@@ -1,3 +1,4 @@
+import { NEW_TAB } from '../lib/external.js';
 import { Badge, Button, IconButton } from '@rookcom/monarch-react';
 import { reactVersion } from '../lib/docs.js';
 import { href } from '../lib/router.js';
@@ -7,6 +8,9 @@ import { ThemeSwitcher } from '../features/appearance/theme-switcher.js';
 import { AppearanceSettings } from '../features/appearance/appearance-settings.js';
 import { MenuIcon, RepoIcon } from '../ui/icons.js';
 import { NAV, type NavGroup } from '../app/navigation.js';
+
+/** The drawer (a modal Sheet) loads the first time it is opened, or when its button is hovered. */
+export const loadDrawer = () => import('./nav-drawer.js');
 
 export const REPO_URL = 'https://github.com/RookHQ/monarch';
 
@@ -38,6 +42,8 @@ export function TopBar({
           aria-expanded={menuOpen}
           aria-haspopup="dialog"
           onClick={onOpenMenu}
+          onPointerEnter={() => void loadDrawer()}
+          onFocus={() => void loadDrawer()}
         />
         <a className="docs-topbar__brand" href={href('/')} aria-label="Monarch home">
           <Wordmark />
@@ -62,7 +68,7 @@ export function TopBar({
           <ThemeSwitcher compact className="docs-topbar__theme" />
           <AppearanceSettings />
           <Button asChild variant="ghost" size="sm" leadingIcon={<RepoIcon />}>
-            <a href={REPO_URL} className="docs-topbar__repo">
+            <a {...NEW_TAB} href={REPO_URL} className="docs-topbar__repo">
               <span className="docs-topbar__repo-label">GitHub</span>
             </a>
           </Button>

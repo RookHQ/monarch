@@ -13,6 +13,7 @@ import type {
   Example,
 } from '../../../../packages/react/src/internal/component-docs.js';
 import type { ExtractedExample } from '../../plugins/extract-examples.js';
+import type { ExportDoc } from './manifest.js';
 
 export type { ComponentDocs, DocsPageMeta, Example, ExtractedExample };
 export {
@@ -86,11 +87,35 @@ export interface LoadedDocs {
   docs: ComponentDocs;
   /** One entry per example, in order: the extracted `render` source. */
   source: readonly ExtractedExample[];
+  /** Manifest entries for the page's exports, in export order. */
+  api: readonly ExportDoc[];
 }
 
 interface DocsModule {
   default: ComponentDocs;
   exampleSource: ExtractedExample[];
+  apiEntries: ExportDoc[];
+}
+
+/**
+ * Marks a promise as settled the way React's `use()` reads it, so a page whose
+ * docs file is already loaded (prefetched, or loaded before hydration) renders
+ * in one pass instead of suspending once.
+ */
+function track<T>(p: Promise<T>): Promise<T> {
+  const t = p as Promise<T> & { status?: string; value?: T; reason?: unknown };
+  t.status = 'pending';
+  p.then(
+    (value) => {
+      t.status = 'fulfilled';
+      t.value = value;
+    },
+    (reason: unknown) => {
+      t.status = 'rejected';
+      t.reason = reason;
+    },
+  );
+  return p;
 }
 
 const loaders = import.meta.glob<DocsModule>('../../../../packages/react/src/**/*.docs.tsx');
@@ -102,20 +127,25 @@ for (const [file, load] of Object.entries(loaders)) {
 
 const cache = new Map<string, Promise<LoadedDocs>>();
 
+/** True when the page has a docs file. */
+export const hasDocs = (id: string): boolean => id in loaderById;
+
 /** Loads one docs file. The promise is cached, so `use()` can read it without re-suspending. */
 export function loadDocs(id: string): Promise<LoadedDocs> {
   let p = cache.get(id);
   if (!p) {
     const load = loaderById[id];
     if (!load) return Promise.reject(new Error(`No docs file for "${id}"`));
-    p = load().then((m) => {
-      const count = examplesOf(m.default).length;
-      if (m.exampleSource.length !== count)
-        throw new Error(
-          `${id}: ${count} examples but ${m.exampleSource.length} extracted sources (plugins/extract-examples.ts)`,
-        );
-      return { docs: m.default, source: m.exampleSource };
-    });
+    p = track(
+      load().then((m) => {
+        const count = examplesOf(m.default).length;
+        if (m.exampleSource.length !== count)
+          throw new Error(
+            `${id}: ${count} examples but ${m.exampleSource.length} extracted sources (plugins/extract-examples.ts)`,
+          );
+        return { docs: m.default, source: m.exampleSource, api: m.apiEntries };
+      }),
+    );
     cache.set(id, p);
   }
   return p;
@@ -124,8 +154,10 @@ export function loadDocs(id: string): Promise<LoadedDocs> {
 let all: Promise<Record<string, LoadedDocs>> | null = null;
 /** Every docs file, keyed by id. */
 export function loadAllDocs(): Promise<Record<string, LoadedDocs>> {
-  all ??= Promise.all(docsPages.map((p) => loadDocs(p.id).then((d) => [p.id, d] as const))).then(
-    (entries) => Object.fromEntries(entries),
+  all ??= track(
+    Promise.all(docsPages.map((p) => loadDocs(p.id).then((d) => [p.id, d] as const))).then(
+      (entries) => Object.fromEntries(entries),
+    ),
   );
   return all;
 }

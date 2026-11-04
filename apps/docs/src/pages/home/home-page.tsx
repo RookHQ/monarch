@@ -1,4 +1,5 @@
-import { Fragment, type CSSProperties } from 'react';
+import { NEW_TAB } from '../../lib/external.js';
+import { Fragment, Suspense, lazy, useRef, type CSSProperties } from 'react';
 import { Badge, Button, CopyField, Progress, Switch } from '@rookcom/monarch-react';
 import {
   CTABand,
@@ -16,7 +17,7 @@ import { pageById } from '../../lib/docs.js';
 import { facts, INSTALL_COMMAND } from '../../lib/facts.js';
 import { DEFAULT_PRODUCT } from '../../lib/appearance.js';
 import '../../styles/home.css';
-import { Showcase } from './showcase.js';
+import { useNearViewport } from '../../features/examples/use-near-viewport.js';
 import { href } from '../../lib/router.js';
 import {
   ArrowRightIcon,
@@ -172,7 +173,9 @@ function Hero() {
               <a href={href('/getting-started')}>Get started</a>
             </Button>
             <Button asChild leadingIcon={<RepoIcon />}>
-              <a href={REPO_URL}>GitHub</a>
+              <a {...NEW_TAB} href={REPO_URL}>
+                GitHub
+              </a>
             </Button>
           </>
         }
@@ -188,6 +191,27 @@ function Hero() {
   );
 }
 
+/**
+ * The showcase (charts, calendar, messages) is its own chunk, loaded as it
+ * nears the viewport into a slot of reserved height (home.css). It is never
+ * prerendered: its dates follow the visitor's day, which the build cannot know.
+ */
+const Showcase = lazy(() => import('./showcase.js').then((m) => ({ default: m.Showcase })));
+
+function ShowcaseSlot() {
+  const ref = useRef<HTMLDivElement>(null);
+  const near = useNearViewport(ref, '200px');
+  return (
+    <div ref={ref} className="docs-show-slot">
+      {near ? (
+        <Suspense fallback={null}>
+          <Showcase />
+        </Suspense>
+      ) : null}
+    </div>
+  );
+}
+
 function ShowcaseSection() {
   return (
     <MarketingSection spacing="md" aria-labelledby="home-showcase">
@@ -197,7 +221,7 @@ function ShowcaseSection() {
         title="Made of the real thing"
         description="These are live Monarch components, exactly as you would use them. Type in the form. Flip a switch. Hover the chart."
       />
-      <Showcase />
+      <ShowcaseSlot />
     </MarketingSection>
   );
 }
@@ -344,10 +368,14 @@ function OpenSource() {
         actions={
           <>
             <Button asChild variant="primary" leadingIcon={<RepoIcon />}>
-              <a href={REPO_URL}>View on GitHub</a>
+              <a {...NEW_TAB} href={REPO_URL}>
+                View on GitHub
+              </a>
             </Button>
             <Button asChild>
-              <a href={`${REPO_URL}/blob/main/CONTRIBUTING.md`}>How to contribute</a>
+              <a {...NEW_TAB} href={`${REPO_URL}/blob/main/CONTRIBUTING.md`}>
+                How to contribute
+              </a>
             </Button>
           </>
         }

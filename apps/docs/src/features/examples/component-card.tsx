@@ -1,7 +1,8 @@
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useRef } from 'react';
 import { examplesOf, useDocs, type DocsPageMeta } from '../../lib/docs.js';
 import { href } from '../../lib/router.js';
 import { PreviewBoundary } from './preview-boundary.js';
+import { useNearViewport } from './use-near-viewport.js';
 
 /** The first example of a docs file, as a non-interactive thumbnail. */
 function Thumbnail({ id }: { id: string }) {
@@ -30,23 +31,7 @@ export function ComponentCard({
   headingLevel?: 2 | 3;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || visible) return;
-    if (typeof IntersectionObserver === 'undefined') {
-      setVisible(true);
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) setVisible(true);
-      },
-      { rootMargin: '400px 0px' },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [visible]);
+  const visible = useNearViewport(ref, '400px');
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return (
     <li className="docs-card">

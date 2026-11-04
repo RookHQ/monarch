@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test';
-import { componentRoutes, runAxe, setAppearance, settle, waitForFonts } from './helpers';
+import {
+  componentRoutes,
+  mountPreviews,
+  pageUrl,
+  runAxe,
+  setAppearance,
+  settle,
+  waitForFonts,
+  watchConsole,
+} from './helpers';
 
 const PAGES = [
   '/',
@@ -33,16 +42,22 @@ const HEAVY_ROUTES = new Set(['/__gallery']);
 
 for (const theme of ['light', 'dark'] as const) {
   test.describe(`axe · ${theme}`, () => {
+    // Pages are prerendered in the build machine's time zone and locale. A distant one
+    // and German make any example that depends on either fail to hydrate (console error).
+    test.use({ timezoneId: 'Pacific/Kiritimati', locale: 'de-DE' });
     for (const route of ROUTES) {
       test(`${route} has no axe violations`, async ({ page }) => {
         const heavy = HEAVY_ROUTES.has(route);
         if (heavy) test.setTimeout(120_000);
         await setAppearance(page, theme);
-        await page.goto(`/#${route}`);
+        const consoleMessages = watchConsole(page);
+        await page.goto(pageUrl(route));
         await waitForFonts(page);
         await expect(page.locator('main')).toBeVisible({ timeout: heavy ? 45_000 : 5_000 });
         // Pages are lazy chunks: wait for the page itself, not the shell.
         await expect(page.locator('h1').first()).toBeAttached();
+        // Examples mount near the viewport; scan all of them.
+        if (route.startsWith('/components/')) await mountPreviews(page);
         await settle(page);
         const violations = await runAxe(page, route === '/colours' ? ['.docs-swatch__chip'] : []);
         expect(
@@ -51,14 +66,53 @@ for (const theme of ['light', 'dark'] as const) {
               `${v.id} (${v.impact}): ${v.help}\n  ${v.nodes.map((n) => n.target.join(' ')).join('\n  ')}`,
           ),
         ).toEqual([]);
+        // Prerendered pages hydrate without a mismatch, and nothing else logs either.
+        // The screenshot routes are left out: they open from the prerendered home
+        // page and replace it, so browsers rightly report its preloads as unused.
+        if (!route.startsWith('/__')) expect(consoleMessages()).toEqual([]);
       });
     }
   });
 }
 
+test('pages are prerendered and hydrate in place', async ({ page }) => {
+  await setAppearance(page, 'light');
+  const consoleMessages = watchConsole(page);
+  const response = await page.request.get(pageUrl('/components/button'));
+  const html = await response.text();
+  // The HTML already has the page, before any script runs.
+  expect(html).toContain('data-route="/components/button"');
+  expect(html).toMatch(/<h1[^>]*>Button<\/h1>/);
+  expect(html).toContain('<link rel="canonical"');
+  await page.goto(pageUrl('/components/button'));
+  await expect(page.getByRole('heading', { level: 1, name: 'Button' })).toBeVisible();
+  // Hydrated, not re-rendered: the route marker is still on #root.
+  await expect(page.locator('#root')).toHaveAttribute('data-route', '/components/button');
+  // Client-side navigation still works from a hydrated page.
+  await page
+    .getByRole('navigation', { name: 'Documentation' })
+    .getByRole('link', { name: 'Colours' })
+    .click();
+  await expect(page).toHaveTitle('Colours · Monarch');
+  expect(new URL(page.url()).pathname).toMatch(/\/colours\/$/);
+  expect(consoleMessages()).toEqual([]);
+});
+
+test('old hash addresses move to the real page address', async ({ page }) => {
+  await setAppearance(page, 'light');
+  await page.goto(`${pageUrl('/')}#/components/tabs#keyboard`);
+  await expect(page).toHaveTitle('Tabs · Monarch');
+  const url = new URL(page.url());
+  expect(url.pathname).toMatch(/\/components\/tabs\/$/);
+  expect(url.hash).toBe('#keyboard');
+  // A renamed page keeps working at its old hash address.
+  await page.goto(`${pageUrl('/')}#/components/input`);
+  expect(new URL(page.url()).pathname).toMatch(/\/components\/text-field\/$/);
+});
+
 test('search: ⌘K / Ctrl K opens the palette and a result navigates', async ({ page }) => {
   await setAppearance(page, 'light');
-  await page.goto('/#/introduction');
+  await page.goto(pageUrl('/introduction'));
   await expect(page.getByRole('heading', { level: 1, name: 'Introduction' })).toBeVisible();
   // The palette reads the platform the page reports (device emulation may differ from the host).
   const mod = await page.evaluate(() => {
@@ -78,7 +132,7 @@ test('search: ⌘K / Ctrl K opens the palette and a result navigates', async ({ 
 
 test('component page: Show code reveals the extracted source', async ({ page }) => {
   await setAppearance(page, 'light');
-  await page.goto('/#/components/button');
+  await page.goto(pageUrl('/components/button'));
   const show = page.getByRole('button', { name: 'Show code' }).first();
   await show.click();
   await expect(page.getByRole('button', { name: 'Hide code' }).first()).toHaveAttribute(
@@ -92,7 +146,7 @@ test('component page: Show code reveals the extracted source', async ({ page }) 
 
 test('keyboard: skip link, nav and page title', async ({ page, browserName }) => {
   await setAppearance(page, 'light');
-  await page.goto('/#/components/button');
+  await page.goto(pageUrl('/components/button'));
   await expect(page).toHaveTitle('Button · Monarch');
   // Safari's default (and WebKit on macOS) only tabs to form controls; links are
   // reached with Option+Tab. That is a browser preference, not a page bug.
@@ -114,7 +168,7 @@ test('keyboard: skip link, nav and page title', async ({ page, browserName }) =>
 
 test('theme and product controls change <html> attributes', async ({ page }) => {
   await setAppearance(page, 'light');
-  await page.goto('/#/tokens');
+  await page.goto(pageUrl('/tokens'));
   // The top bar's compact switcher.
   await page
     .getByRole('banner')
@@ -145,7 +199,7 @@ test('theme and product controls change <html> attributes', async ({ page }) => 
 for (const theme of ['light', 'dark'] as const) {
   test(`toast open (${theme}): no axe violations, focus stays, F8 reaches it`, async ({ page }) => {
     await setAppearance(page, theme);
-    await page.goto('/#/components/toast');
+    await page.goto(pageUrl('/components/toast'));
     await waitForFonts(page);
     const trigger = page.getByRole('button', { name: 'Archive ticket' }).first();
     // Keyboard activation: WebKit does not focus buttons on click.

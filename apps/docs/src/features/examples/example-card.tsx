@@ -1,13 +1,17 @@
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import type { Example } from '../../lib/docs.js';
 import { CodeIcon } from '../../ui/icons.js';
 import { CodeBlock } from '../code/code-block.js';
 import { PreviewBoundary } from './preview-boundary.js';
+import { useNearViewport } from './use-near-viewport.js';
 
 /**
  * One live example: the preview on a canvas, then a "Show code" disclosure
- * with the example's extracted source (plugins/extract-examples.ts).
+ * with the example's extracted source (plugins/extract-examples.ts). The
+ * headline example (`size="lg"`) is rendered at once, and so is part of the
+ * prerendered page; any other preview mounts when it nears the viewport, and
+ * until then its canvas keeps a reserved height (examples.css).
  */
 export function ExampleCard({
   example,
@@ -28,6 +32,8 @@ export function ExampleCard({
   const codeId = useId();
   const headingId = useId();
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
+  const preview = useRef<HTMLDivElement>(null);
+  const near = useNearViewport(preview) || size === 'lg';
   return (
     // A named group, not a section: example titles may repeat a reference section's title.
     <div role="group" className="docs-example" data-size={size} aria-labelledby={headingId} id={id}>
@@ -35,8 +41,13 @@ export function ExampleCard({
         {example.title}
       </Heading>
       <div className="docs-example__frame">
-        <div className="docs-example__preview" data-stack={example.stack || undefined}>
-          <PreviewBoundary name={example.title}>{example.render()}</PreviewBoundary>
+        <div
+          ref={preview}
+          className="docs-example__preview"
+          data-stack={example.stack || undefined}
+          data-pending={near ? undefined : ''}
+        >
+          {near ? <PreviewBoundary name={example.title}>{example.render()}</PreviewBoundary> : null}
         </div>
         <div className="docs-example__bar">
           <Button

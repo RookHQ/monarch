@@ -33,7 +33,7 @@ export function ComponentPage({ id }: { id: string }) {
 
 function Loaded({ meta }: { meta: DocsPageMeta }) {
   const { id } = meta;
-  const { docs, source } = useDocs(id);
+  const { docs, source, api } = useDocs(id);
   const examples = examplesOf(docs);
   const codeOf = (i: number) => examples[i]?.code ?? source[i]?.code ?? '';
   const [first, ...rest] = examples;
@@ -92,7 +92,7 @@ function Loaded({ meta }: { meta: DocsPageMeta }) {
               </Alert>
             ) : null}
             {!missing || s.partial || sid === 'apiReference' || sid === 'typedProperties' ? (
-              <SectionBody id={sid} s={body} page={meta} />
+              <SectionBody id={sid} s={body} page={meta} api={api} />
             ) : null}
           </PageSection>
         );

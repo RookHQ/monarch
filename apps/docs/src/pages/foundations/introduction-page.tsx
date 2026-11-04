@@ -1,3 +1,4 @@
+import { NEW_TAB } from '../../lib/external.js';
 import { Button } from '@rookcom/monarch-react';
 import { PageFrame, PageSection } from '../../layout/page-frame.js';
 import { REPO_URL } from '../../layout/top-bar.js';
@@ -35,7 +36,9 @@ export function IntroductionPage() {
             <a href={href('/getting-started')}>Get started</a>
           </Button>
           <Button asChild size="sm">
-            <a href={REPO_URL}>View the source</a>
+            <a {...NEW_TAB} href={REPO_URL}>
+              View the source
+            </a>
           </Button>
         </>
       }

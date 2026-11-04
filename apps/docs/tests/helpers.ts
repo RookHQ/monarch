@@ -8,6 +8,69 @@ export const AXE_SOURCE = readFileSync(require.resolve('axe-core/axe.min.js'), '
 
 export type Theme = 'light' | 'dark' | 'hc-light' | 'hc-dark';
 
+/** The site's base path (DOCS_BASE at build time): `/` locally, `/monarch/` in CI. */
+const BASE = (() => {
+  const b = process.env.DOCS_BASE ?? '/';
+  return b.endsWith('/') ? b : `${b}/`;
+})();
+
+/**
+ * The address of a route: `/components/button` → `<base>components/button/`.
+ * The screenshot routes (`/__gallery`, `/__marketing`) live in the fragment.
+ */
+export function pageUrl(route: string, anchor?: string): string {
+  if (route.startsWith('/__')) return `${BASE}#${route}`;
+  const url = route === '/' ? BASE : `${BASE}${route.slice(1)}/`;
+  return anchor ? `${url}#${anchor}` : url;
+}
+
+/**
+ * Live previews mount when they near the viewport. Scrolls each one into view,
+ * so every example is on the page before it is scanned, then back to the top.
+ */
+export async function mountPreviews(page: Page): Promise<void> {
+  // Brings the next unmounted preview into view until none is left.
+  await page.waitForFunction(
+    () => {
+      const next = document.querySelector('[data-pending]');
+      next?.scrollIntoView({ block: 'center' });
+      return next === null;
+    },
+    undefined,
+    { polling: 'raf' },
+  );
+  await page.evaluate(() => window.scrollTo(0, 0));
+}
+
+/**
+ * Console messages that are expected: the EmbeddedAppFrame and ChatDock
+ * examples deliberately sandbox a cross-origin frame with `allow-scripts` and
+ * `allow-same-origin` (documented in their threat model), which browsers warn
+ * about. Everything else on the console fails the test.
+ */
+const EXPECTED_CONSOLE = [
+  /allow-scripts and allow-same-origin/,
+  // Firefox, when the test itself (axe, scrolling) forces layout while the
+  // EmbeddedAppFrame example's blob: frame document is still loading.
+  /Layout was forced before the page was fully loaded.*\{file: "(blob:|debugger eval code)/,
+  // WebKit, on the heaviest example pages: the two preloaded Poppins files are
+  // fetched at once, but the first paint with them can land after WebKit's
+  // few-second preload heuristic. The fonts do load; this is only the warning.
+  /assets\/poppins-(400|600)-latin-[\w-]+\.woff2 was preloaded using link preload but not used/,
+];
+
+/** Collects console errors and warnings (and uncaught errors) from now on. */
+export function watchConsole(page: Page): () => string[] {
+  const messages: string[] = [];
+  page.on('console', (m) => {
+    if (m.type() !== 'error' && m.type() !== 'warning') return;
+    const text = m.text();
+    if (!EXPECTED_CONSOLE.some((re) => re.test(text))) messages.push(`${m.type()}: ${text}`);
+  });
+  page.on('pageerror', (e) => messages.push(`uncaught: ${e.message}`));
+  return () => messages;
+}
+
 /** Sets the same cookies Rook apps use, so the pre-paint script applies the theme. */
 /** `product`: an id applies that accent, `null` clears it, `undefined` leaves storage alone. */
 export async function setAppearance(
