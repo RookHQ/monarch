@@ -53,6 +53,10 @@ const EXPECTED_CONSOLE = [
   // Firefox, when the test itself (axe, scrolling) forces layout while the
   // EmbeddedAppFrame example's blob: frame document is still loading.
   /Layout was forced before the page was fully loaded.*\{file: "(blob:|debugger eval code)/,
+  // WebKit, on the heaviest example pages: the two preloaded Poppins files are
+  // fetched at once, but the first paint with them can land after WebKit's
+  // few-second preload heuristic. The fonts do load; this is only the warning.
+  /assets\/poppins-(400|600)-latin-[\w-]+\.woff2 was preloaded using link preload but not used/,
 ];
 
 /** Collects console errors and warnings (and uncaught errors) from now on. */
