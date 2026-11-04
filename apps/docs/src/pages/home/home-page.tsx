@@ -304,12 +304,6 @@ function Theming() {
             title="Your colour. Always readable."
             description="Bring one brand colour and deriveTheme builds the palette, adjusted until text, focus rings and states meet WCAG 2.2 AA contrast in light, dark and high contrast. Try it: these controls change this whole site."
           />
-          <ul className="docs-checks">
-            <li>Keyboard support, focus management and accessible names, built in</li>
-            <li>Tested with axe and rendered on the server, component by component</li>
-            <li>This site is checked with axe in Chromium, Firefox and WebKit</li>
-            <li>Motion rests when someone asks for less of it</li>
-          </ul>
         </div>
         <div className="docs-lab" role="group" aria-label="Try the appearance settings">
           <div className="docs-lab__row">

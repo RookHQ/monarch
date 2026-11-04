@@ -176,6 +176,30 @@ sitemap only work for search engines at the root of an origin, so a sub-path
 deployment such as GitHub Pages at `/monarch/` needs them at the origin root
 too.
 
+### Search, answers and AI crawlers
+
+Every page ships what a search engine, an answer engine and an AI assistant
+need, built into the HTML (`scripts/prerender.mjs`, `scripts/seo.mjs`):
+
+- Title, description, canonical link, `robots` with large previews, and Open
+  Graph / Twitter tags with the share card (`public/og.png`, 1200×630; redo it
+  with `npm run docs:og`).
+- JSON-LD: `WebSite`, `Organization` and `SoftwareSourceCode` on the home page,
+  `TechArticle` and `BreadcrumbList` on every other page. All values are
+  counted from the site's own data.
+- The page body is in the HTML itself. React's streaming output (a placeholder
+  plus a hidden block moved by a script) is resolved at build time, so
+  crawlers that do not run scripts read the content, and people do not wait for
+  the swap.
+- A Markdown copy of every page (`<route>/index.md`, including all example
+  code), `llms.txt` (an index) and `llms-full.txt` (everything in one file).
+  On the server, `Accept: text/markdown` at a normal address returns the
+  Markdown.
+- `robots.txt` that names the search and AI crawlers, a sitemap with `lastmod`
+  dates, and `/.well-known/security.txt` (renew its `Expires` date yearly).
+
+`npm run docs:seo` fails the build if any page lacks one of these.
+
 ## Tests
 
 | Command                      | Project                                        | What                                                                                                                                                                                                                                    |

@@ -11,7 +11,8 @@ import { prerenderToNodeStream } from 'react-dom/static';
 import { App } from './app/app.js';
 import { NAV } from './app/navigation.js';
 import { ROUTES, resolveRoute } from './app/routes.js';
-import { ROUTE_ALIASES, pageById } from './lib/docs.js';
+import { ROUTE_ALIASES, docsPages, loadDocs, pageById } from './lib/docs.js';
+import { facts } from './lib/facts.js';
 
 export { ROUTES, ROUTE_ALIASES };
 
@@ -55,3 +56,35 @@ export async function render(path: string): Promise<RenderedRoute> {
     ],
   };
 }
+
+/**
+ * The code of every example on a component page, for the Markdown copy of the
+ * page (only the headline example is in the prerendered HTML). Null for pages
+ * without examples.
+ */
+export async function renderExamplesMarkdown(path: string): Promise<string | null> {
+  const id = resolveRoute(path).docsId;
+  if (!id) return null;
+  const { source } = await loadDocs(id);
+  if (source.length === 0) return null;
+  return source.map((e) => `### ${e.title}\n\n\`\`\`tsx\n${e.code.trimEnd()}\n\`\`\``).join('\n\n');
+}
+
+/** Counted site data for llms.txt and the structured data: nothing typed by hand. */
+export const SITE_DATA = {
+  facts,
+  nav: NAV.map((g) => ({
+    heading: g.heading,
+    items: g.items.map((i) => ({
+      path: i.path,
+      label: i.label,
+      description: i.description ?? null,
+    })),
+  })),
+  components: docsPages.map((p) => ({
+    path: `/components/${p.id}`,
+    title: p.title,
+    summary: p.summary ?? null,
+    layer: p.layer,
+  })),
+};

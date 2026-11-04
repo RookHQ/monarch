@@ -11,7 +11,7 @@ monarchui.dev {
 
 	header {
 		Cache-Control "public, max-age=0, must-revalidate"
-		Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-YmBFy6fCAkcT3f61J8F5cdJlexU6nKhCYk1qi4KQqbw=' 'sha256-7mu4H06fwDCjmnxxr/xNHyuQC6pLTHr4M2E4jXw5WZs=' 'sha256-J/qDW99W6jEnr/+137mxPf84FrK3BwhhJ/pEhv6yOnw=' 'sha256-Ou10F5Qe+dMWKeWRNV8baJ+E8nADIUekzF/cipA1Tco=' 'sha256-QAlSewaQLi/NPCznjAZSyvQ72heD0VdxmNDDkZeCxgc='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-src 'self' blob:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-YmBFy6fCAkcT3f61J8F5cdJlexU6nKhCYk1qi4KQqbw=' 'sha256-J/qDW99W6jEnr/+137mxPf84FrK3BwhhJ/pEhv6yOnw=' 'sha256-Ou10F5Qe+dMWKeWRNV8baJ+E8nADIUekzF/cipA1Tco='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-src 'self' blob:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
 		X-Frame-Options "DENY"
 		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()"
 		Cross-Origin-Opener-Policy "same-origin"
@@ -24,6 +24,22 @@ monarchui.dev {
 
 	@icons path /icon.svg /icon-*.png /apple-touch-icon.png /site.webmanifest
 	header @icons Cache-Control "public, max-age=86400"
+
+	# Every page also exists as Markdown (index.md), for assistants and crawlers. Asking for
+	# "Accept: text/markdown" at the normal address returns it; the page itself says so in <link>.
+	header +Vary "Accept"
+	@markdown {
+		header Accept *text/markdown*
+		path_regexp md ^(.*/)$
+	}
+	rewrite @markdown {re.md.1}index.md
+	@mdfile path *.md
+	header @mdfile Content-Type "text/markdown; charset=utf-8"
+	# The Markdown copies are for reading, not for search results (the HTML pages are).
+	header @mdfile X-Robots-Tag "noindex"
+	@text path /llms.txt /llms-full.txt /robots.txt /.well-known/security.txt
+	header @text Content-Type "text/plain; charset=utf-8"
+	header @text Cache-Control "public, max-age=3600"
 
 	handle_errors {
 		rewrite * /404.html
