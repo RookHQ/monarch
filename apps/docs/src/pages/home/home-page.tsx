@@ -1,4 +1,4 @@
-import { Fragment, type CSSProperties } from 'react';
+import { Fragment, Suspense, lazy, useRef, type CSSProperties } from 'react';
 import { Badge, Button, CopyField, Progress, Switch } from '@rookcom/monarch-react';
 import {
   CTABand,
@@ -16,7 +16,7 @@ import { pageById } from '../../lib/docs.js';
 import { facts, INSTALL_COMMAND } from '../../lib/facts.js';
 import { DEFAULT_PRODUCT } from '../../lib/appearance.js';
 import '../../styles/home.css';
-import { Showcase } from './showcase.js';
+import { useNearViewport } from '../../features/examples/use-near-viewport.js';
 import { href } from '../../lib/router.js';
 import {
   ArrowRightIcon,
@@ -188,6 +188,27 @@ function Hero() {
   );
 }
 
+/**
+ * The showcase (charts, calendar, messages) is its own chunk, loaded as it
+ * nears the viewport into a slot of reserved height (home.css). It is never
+ * prerendered: its dates follow the visitor's day, which the build cannot know.
+ */
+const Showcase = lazy(() => import('./showcase.js').then((m) => ({ default: m.Showcase })));
+
+function ShowcaseSlot() {
+  const ref = useRef<HTMLDivElement>(null);
+  const near = useNearViewport(ref, '200px');
+  return (
+    <div ref={ref} className="docs-show-slot">
+      {near ? (
+        <Suspense fallback={null}>
+          <Showcase />
+        </Suspense>
+      ) : null}
+    </div>
+  );
+}
+
 function ShowcaseSection() {
   return (
     <MarketingSection spacing="md" aria-labelledby="home-showcase">
@@ -197,7 +218,7 @@ function ShowcaseSection() {
         title="Made of the real thing"
         description="Every card here is a live Monarch component, exactly as you would use it. Type in the form, flip a switch, hover the chart."
       />
-      <Showcase />
+      <ShowcaseSlot />
     </MarketingSection>
   );
 }
