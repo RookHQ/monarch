@@ -293,7 +293,7 @@ describe('Combobox: async search', () => {
       <Combobox
         aria-label="City"
         onSearch={onSearch}
-        searchDebounce={80}
+        searchDebounce={300}
         onValueChange={onValueChange}
       />,
     );
