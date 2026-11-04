@@ -113,9 +113,6 @@ export default {
           render: () => (
             <InlineErrorRetry onRetry={wait}>Your recent payouts didn’t load.</InlineErrorRetry>
           ),
-          code: `<InlineErrorRetry onRetry={() => refetch()} returnFocusTo={headingRef}>
-  Your recent payouts didn’t load.
-</InlineErrorRetry>`,
         },
         {
           title: 'Banner above stale data',
@@ -135,18 +132,6 @@ export default {
               </InlineErrorRetry>
             </>
           ),
-          code: `<InlineErrorRetry variant="banner" onRetry={refetch}>
-  We couldn’t load this chart. The rest of the dashboard is up to date.
-</InlineErrorRetry>
-<InlineErrorRetry
-  variant="banner"
-  tone="warning"
-  retrying={isFetching}
-  onRetry={refetch}
-  actions={<Link href="/status">View status</Link>}
->
-  Showing data from 10 minutes ago.
-</InlineErrorRetry>`,
         },
       ],
     },

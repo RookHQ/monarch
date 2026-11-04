@@ -176,15 +176,6 @@ export default {
               />
             </div>
           ),
-          code: `<AgendaList
-  events={events}
-  timeZone={zone}
-  locale={locale}
-  today={todayInZone}
-  onEventClick={(e) => openEvent(e.id)}
-  dayNotes={(day) => timeOff.get(day)}
-  style={{ maxHeight: 480 }}
-/>`,
         },
         {
           title: 'Empty',
@@ -194,7 +185,6 @@ export default {
               <AgendaList {...base} events={[]} />
             </div>
           ),
-          code: `<AgendaList events={[]} />`,
         },
         {
           title: 'Custom empty state and range',
@@ -215,7 +205,6 @@ export default {
               />
             </div>
           ),
-          code: `<AgendaList events={events} from="2026-11-09" days={7} empty={<NoBookings />} />`,
         },
       ],
     },

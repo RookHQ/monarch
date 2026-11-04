@@ -21,6 +21,7 @@ import {
   SiteHeader,
   StatStrip,
 } from '@rookcom/monarch-react/marketing';
+import './example.css';
 import { IconHistory, IconPages, IconSearch, IconShare, IconSlash, IconBot } from './icons.js';
 
 /** Example wordmark: a product mark in the accent plus the product name. */

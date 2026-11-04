@@ -216,15 +216,6 @@ export default {
           title: 'Docked, with three unread',
           stack: true,
           render: () => <Basic />,
-          code: `<ChatDock
-  src={\`\${CHAT_ORIGIN}/embed/dock?ws=\${workspace.id}\`}
-  allowedOrigins={[CHAT_ORIGIN]}
-  appName="Example Desk"
-  workspaceId={workspace.id}
-  refreshSession={refreshSession}
-  unread={unreadFromPoll}
-  hidden={pageHasAssistant}
-/>`,
         },
       ],
     },

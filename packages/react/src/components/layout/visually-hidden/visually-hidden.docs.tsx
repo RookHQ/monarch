@@ -49,7 +49,6 @@ export default {
               Save <VisuallyHidden>changes to the ticket</VisuallyHidden>
             </Button>
           ),
-          code: `<Button>Save <VisuallyHidden>changes to the ticket</VisuallyHidden></Button>`,
         },
       ],
     },

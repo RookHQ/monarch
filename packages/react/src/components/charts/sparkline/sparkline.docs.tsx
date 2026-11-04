@@ -139,9 +139,6 @@ export default {
               <Sparkline values={VISITS} variant="bar" color={2} />
             </>
           ),
-          code: `<Sparkline values={visits} />
-<Sparkline values={visits} variant="area" color={1} />
-<Sparkline values={visits} variant="bar" color={2} />`,
         },
         {
           title: 'In table rows: thresholds, gaps and an inverted rank',
@@ -165,13 +162,6 @@ export default {
               </div>
             </>
           ),
-          code: `<Sparkline
-  values={[180, 190, 210, null, 240, 260, 320, 410]}
-  label="p95 latency, last 8 days"
-  thresholds={{ warning: 300, danger: 400 }}
-  formatValue={(v) => \`\${v} ms\`}
-/>
-<Sparkline values={rankHistory} invert label="Rank, last 8 weeks" color={1} />`,
         },
         {
           title: 'Responsive and not enough data',
@@ -182,8 +172,6 @@ export default {
               <Sparkline values={[12]} label="Score" />
             </>
           ),
-          code: `<Sparkline values={visits} variant="area" responsive height={40} color={3} />
-<Sparkline values={[12]} label="Score" />   // "Not enough data"`,
         },
       ],
     },

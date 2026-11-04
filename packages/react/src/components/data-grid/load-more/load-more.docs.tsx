@@ -165,15 +165,6 @@ export default {
         {
           title: 'With useLoadMore',
           render: () => <CursorListDemo />,
-          code: `const list = useLoadMore<AuditEntry, string>({
-  fetchPage: async (cursor, { signal }) => {
-    const res = await api.get('/audit', { params: { cursor, limit: 50 }, signal });
-    return { items: res.data, nextCursor: res.meta.nextCursor, total: res.meta.total };
-  },
-});
-
-<ul>{list.items.map((e) => <AuditRow key={e.id} entry={e} />)}</ul>
-<LoadMore {...list.loadMoreProps} noun={{ one: 'entry', other: 'entries' }} />`,
         },
         {
           title: 'States',
@@ -186,27 +177,12 @@ export default {
               <LoadMore hasMore={false} loadedCount={214} totalCount={214} onLoadMore={() => {}} />
             </>
           ),
-          code: `<LoadMore hasMore loadedCount={50} totalCount={214} onLoadMore={next} />
-<LoadMore hasMore loading loadedCount={50} onLoadMore={next} />
-<LoadMore hasMore error loadedCount={50} onLoadMore={next} />
-<LoadMore hasMore={false} loadedCount={214} totalCount={214} onLoadMore={next} />`,
         },
         {
           title: 'With react-query',
           render: () => (
             <LoadMore hasMore loadedCount={20} onLoadMore={() => {}} autoLoad={false} />
           ),
-          code: `const q = useInfiniteQuery({ queryKey, queryFn, getNextPageParam });
-const rows = q.data?.pages.flatMap((p) => p.rows) ?? [];
-
-<LoadMore
-  hasMore={q.hasNextPage}
-  loading={q.isFetchingNextPage}
-  error={q.isFetchNextPageError}
-  onLoadMore={() => q.fetchNextPage()}
-  loadedCount={rows.length}
-  autoLoad
-/>`,
         },
       ],
     },

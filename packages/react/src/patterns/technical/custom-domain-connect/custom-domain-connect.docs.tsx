@@ -210,15 +210,6 @@ export default {
           title: 'Full flow (simulated checks)',
           stack: true,
           render: () => <FlowDemo />,
-          code: `<CustomDomainConnect
-  requireSubdomain
-  status={status}
-  records={records}
-  failureReason={reason}
-  onConnect={(domain) => api.addDomain(domain)}
-  onVerify={async () => setStatus(await api.checkDomain())}
-  onRemove={() => api.removeDomain()}
-/>`,
         },
         {
           title: 'Pending, with records and provider hints',
@@ -248,14 +239,6 @@ export default {
               ]}
             />
           ),
-          code: `<CustomDomainConnect
-  domain="help.example.com"
-  status="pending"
-  records={records}            // { type, name, value, purpose?, ttl?, found? }
-  lastChecked="Checked 2 minutes ago"
-  providerHints={hints}        // written and maintained by the product
-  onConnect={…} onVerify={…} onRemove={…}
-/>`,
         },
         {
           title: 'Failed with a reason',
@@ -270,7 +253,6 @@ export default {
               records={RECORDS.slice(0, 1).map((r) => ({ ...r, name: 'status', found: false }))}
             />
           ),
-          code: `<CustomDomainConnect domain="status.example.org" status="failed" failureReason="…" … />`,
         },
         {
           title: 'Active',
@@ -284,7 +266,6 @@ export default {
               records={RECORDS}
             />
           ),
-          code: `<CustomDomainConnect domain="book.example.com" status="active" onRemove={…} … />`,
         },
       ],
     },

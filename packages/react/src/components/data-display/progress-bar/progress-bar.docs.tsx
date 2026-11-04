@@ -129,9 +129,6 @@ export default {
               <Progress label="Syncing members" />
             </>
           ),
-          code: `<Progress label="Upload progress" value={40} />
-<Progress label="Import progress" value={100} tone="success" size="sm" />
-<Progress label="Syncing members" />`,
         },
         {
           title: 'Quota meter',
@@ -162,9 +159,6 @@ export default {
               />
             </>
           ),
-          code: `<Progress semantics="meter" label="Storage" value={4.2} max={10} valueText="4.2 of 10 GB used" />
-<Progress semantics="meter" label="Seats" value={46} max={50} thresholds={{ warning: 40, danger: 50 }} />
-<Progress semantics="meter" label="Capacity" value={52} max={40} />   {/* over the limit: danger */}`,
         },
         {
           title: 'Segmented',
@@ -192,15 +186,6 @@ export default {
               />
             </>
           ),
-          code: `<Progress
-  label="Sprint progress"
-  max={24}
-  segments={[
-    { label: 'Done', value: 11, tone: 'success' },
-    { label: 'In review', value: 4, tone: 'info' },
-    { label: 'In progress', value: 5, tone: 'warning' },
-  ]}
-/>`,
         },
       ],
     },

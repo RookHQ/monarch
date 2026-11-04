@@ -168,18 +168,6 @@ export default {
         {
           title: 'View switch',
           render: () => <ViewSwitch />,
-          code: `const [view, setView] = useState<'list' | 'board' | 'grid'>('list');
-
-<SegmentedControl
-  aria-label="View"
-  value={view}
-  onValueChange={setView}
-  options={[
-    { value: 'list', label: 'List', icon: <ListIcon /> },
-    { value: 'board', label: 'Board', icon: <BoardIcon /> },
-    { value: 'grid', label: 'Grid', icon: <GridIcon /> },
-  ]}
-/>`,
         },
         {
           title: 'Sizes, icon-only, suffix',
@@ -217,37 +205,10 @@ export default {
               />
             </>
           ),
-          code: `<SegmentedControl aria-label="Layout" size="sm" defaultValue="grid" options={[
-  { value: 'list', label: 'List', icon: <ListIcon />, hideLabel: true },
-  { value: 'grid', label: 'Grid', icon: <GridIcon />, hideLabel: true },
-]} />
-<SegmentedControl aria-label="Billing period" size="lg" defaultValue="monthly" options={[
-  { value: 'monthly', label: 'Monthly' },
-  { value: 'yearly', label: 'Yearly', suffix: '2 months free' },
-]} />
-<SegmentedControl aria-label="Range" block defaultValue="7d" options={[
-  { value: '1d', label: '1 day' },
-  { value: '7d', label: '7 days' },
-  { value: '30d', label: '30 days' },
-  { value: '90d', label: '90 days', disabled: true },
-]} />`,
         },
         {
           title: 'ToggleGroup with counts',
           render: () => <Filters />,
-          code: `const [value, setValue] = useState<string[]>(['open']);
-
-<ToggleGroup
-  aria-label="Show"
-  size="sm"
-  value={value}
-  onValueChange={setValue}
-  options={[
-    { value: 'open', label: 'Open', count: 12 },
-    { value: 'waiting', label: 'Waiting', count: 3 },
-    { value: 'closed', label: 'Closed', count: 48 },
-  ]}
-/>`,
         },
       ],
     },

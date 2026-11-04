@@ -263,28 +263,10 @@ export default {
         {
           title: 'Chat, help articles, contacts and status',
           render: () => <Basic />,
-          code: `const [open, setOpen] = useState(false);
-
-<RookRail support={{ onOpen: () => setOpen(true), open, panelId: 'support', unread }} … />
-<SupportPanel
-  id="support"
-  open={open}
-  onOpenChange={setOpen}
-  client={supportClient}          // the product's Support Chat API client
-  inset="var(--mn-layout-rail-collapsed)"
-  articles={<HelpArticles />}
-  contacts={[{ label: 'Email support', href: 'mailto:support@example.com' }]}
-  status={{ href: statusUrl, tone: 'operational', text: 'All systems normal' }}
-  helpHref={helpCenterUrl}
-/>`,
         },
         {
           title: 'Help only',
           render: () => <HelpOnly />,
-          code: `<SupportPanel
-  contacts={[{ label: 'Email support', href: 'mailto:support@example.com' }]}
-  status={{ href: statusUrl }}
-/>`,
         },
       ],
     },

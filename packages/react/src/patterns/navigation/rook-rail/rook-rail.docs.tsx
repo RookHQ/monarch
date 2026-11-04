@@ -337,43 +337,11 @@ export default {
           title: 'Collapsed, with Help & support and a theme toggle',
           stack: true,
           render: () => <CollapsedDemo />,
-          code: `// In <head>: <script dangerouslySetInnerHTML={{ __html: rookRailScript() }} />
-<RookRail
-  brand={{ label: 'Acme Planner home', href: '/w/acme', icon: <AppIcon /> }}
-  currentPath={pathname}
-  linkComponent={Link}
-  sections={[{ key: 'main', items: [
-    { key: 'home', label: 'Home', icon: <HomeIcon />, href: '/w/acme/home' },
-    { key: 'inbox', label: 'Inbox', icon: <InboxIcon />, href: '/w/acme/inbox', badge: 4 },
-    { key: 'calendar', label: 'Calendar', icon: <CalendarIcon />, href: '/w/acme/calendar' },
-  ] }]}
-  workspaceSection={{ key: 'workspace', items: [
-    { key: 'members', label: 'Members', icon: <UsersIcon />, href: '/w/acme/members' },
-    { key: 'settings', label: 'Settings', icon: <GearIcon />, href: idUrl, external: true, opensIn: 'Rook ID' },
-  ] }}
-  quickActions={[{ key: 'new', label: 'New event', icon: <PlusIcon />, shortcut: 'C', onSelect: create }]}
-  support={{ onOpen: openSupport, open: supportOpen, unread }}
-  themeToggle={({ collapsed }) => (
-    <ThemeToggle variant="menu" size="sm" side="right" showLabel={!collapsed} />
-  )}
-  notifications={{ label: 'Notifications', href: '/w/acme/notifications', count: 2 }}
-  account={{ name, email, avatarUrl, profileHref: '/me', accountHref: idUrl, onSignOut }}
-/>`,
         },
         {
           title: 'Expanded, with workspace and Space switchers',
           stack: true,
           render: () => <ExpandedDemo />,
-          code: `<RookRail
-  {...rail}
-  defaultExpanded
-  workspaceSwitcher={({ collapsed }) => (
-    <WorkspaceSwitcher workspaces={workspaces} value={workspaceId} onValueChange={go} collapsed={collapsed} />
-  )}
-  spaceSwitcher={({ collapsed }) => (
-    <SpaceSwitcher spaces={spaces} value={spaceId} onValueChange={setSpaceId} collapsed={collapsed} />
-  )}
-/>`,
         },
       ],
     },

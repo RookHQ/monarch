@@ -183,14 +183,6 @@ export default {
               </Field>
             </div>
           ),
-          code: `<Field>
-  <FieldLabel>Skills</FieldLabel>
-  <TagInput
-    defaultValue={['Research', 'TypeScript']}
-    suggestions={skills}
-    max={8}
-  />
-</Field>`,
         },
         {
           title: 'Validated emails',
@@ -200,13 +192,6 @@ export default {
               <RecipientsDemo />
             </div>
           ),
-          code: `<TagInput
-  value={cc}
-  onValueChange={setCc}
-  separators={[',', ' ', ';']}
-  normalize={(v) => v.trim().toLowerCase()}
-  validate={(v) => (isEmail(v) ? null : \`“\${v}” is not an email address.\`)}
-/>`,
         },
         {
           title: 'Read-only and small',
@@ -217,8 +202,6 @@ export default {
               <TagInput aria-label="Keywords" size="sm" defaultValue={['quarterly', 'draft']} />
             </div>
           ),
-          code: `<TagInput aria-label="Labels" readOnly defaultValue={['Billing', 'Priority']} />
-<TagInput aria-label="Keywords" size="sm" defaultValue={['quarterly', 'draft']} />`,
         },
       ],
     },

@@ -172,24 +172,11 @@ export default {
           title: 'Shown once, with copy',
           stack: true,
           render: () => <NewKey />,
-          code: `<Field>
-  <FieldLabel>Signing secret</FieldLabel>
-  <SecretField label="Signing secret" defaultValue={secret} readOnly copyable />
-  <FieldDescription>Shown once. Store it somewhere safe before you leave this page.</FieldDescription>
-</Field>`,
         },
         {
           title: 'Set, not shown',
           stack: true,
           render: () => <SavedToken />,
-          code: `const [value, setValue] = useState('');
-
-<Field>
-  <FieldLabel>API token</FieldLabel>
-  <SecretField label="API token" isSet value={value} onChange={(e) => setValue(e.target.value)} />
-  <FieldDescription>Stored encrypted.</FieldDescription>
-</Field>
-// On save: send the token only when value !== ''.`,
         },
         {
           title: 'Sizes, standalone',
@@ -200,8 +187,6 @@ export default {
               <SecretField label="Access key" size="lg" defaultValue="AKIA4EXAMPLE7Q" copyable />
             </div>
           ),
-          code: `<SecretField label="Bot token" size="sm" defaultValue={token} />
-<SecretField label="Access key" size="lg" defaultValue={key} copyable />`,
         },
       ],
     },

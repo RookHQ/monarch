@@ -215,21 +215,6 @@ export default {
           title: 'Views with filters, save and discard',
           stack: true,
           render: () => <ViewsWithFilters />,
-          code: `const current = views.find((v) => v.id === viewId);
-const modified = !!current && !sameFilters(current.filters, filters);
-
-<SavedViews
-  views={views}
-  value={viewId}
-  modified={modified}
-  onValueChange={(id) => { setViewId(id); applyView(id); }}
-  onDiscardChanges={() => applyView(viewId)}
-  onSaveChanges={(id) => api.updateView(id, { filters })}
-  onSaveNew={async (name) => setViewId((await api.createView({ name, filters })).id)}
-  onRename={(id, name) => api.updateView(id, { name })}
-  onSetDefault={(id) => api.updateView(id, { isDefault: true })}
-  onDelete={(id) => api.deleteView(id)}
-/>`,
         },
       ],
     },

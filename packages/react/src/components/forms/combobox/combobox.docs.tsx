@@ -259,35 +259,16 @@ export default {
           title: 'Searchable picker',
           stack: true,
           render: () => <TimezonePicker />,
-          code: `<Field>
-  <FieldLabel>Time zone</FieldLabel>
-  <Combobox options={timezones} value={value} onValueChange={setValue} placeholder="Search" />
-</Field>`,
         },
         {
           title: 'Multiple with groups and hints',
           stack: true,
           render: () => <ReviewersPicker />,
-          code: `<Combobox
-  multiple
-  options={reviewers} // { value, label, hint, group }
-  values={values}
-  onValuesChange={setValues}
-  sortByMatch
-/>`,
         },
         {
           title: 'Server search with a typed fallback',
           stack: true,
           render: () => <CityPicker />,
-          code: `<Combobox
-  onSearch={(query, { signal }) => fetch(\`/api/cities?q=\${query}\`, { signal }).then((r) => r.json())}
-  value={value}
-  onValueChange={setValue}
-  onCreate={(q) => ({ value: q, label: q })}
-  messages={{ create: (q) => \`Use “\${q}”\` }}
-  clearOption={{ label: 'No city' }}
-/>`,
         },
         {
           title: 'Inline list',
@@ -311,7 +292,6 @@ export default {
               />
             </div>
           ),
-          code: `<Combobox inline aria-label="Search people" listLabel="People" options={people} />`,
         },
       ],
     },

@@ -340,15 +340,6 @@ export default {
           title: 'Gallery with categories, search, blank and preview',
           stack: true,
           render: () => <GalleryDemo />,
-          code: `<TemplatePicker
-  aria-label="Page template"
-  templates={templates}          // { id, name, description, category, preview, badge }
-  categories={[{ id: 'pages', label: 'Pages' }, …]}
-  blank={{ description: 'Start from an empty page.' }}
-  value={value}
-  onValueChange={(id) => setValue(id)}
-  renderPreview={(t) => <LargePreview template={t} />}
-/>`,
         },
         {
           title: 'Compact, without search',
@@ -377,7 +368,6 @@ export default {
               ]}
             />
           ),
-          code: `<TemplatePicker aria-label="Issue template" searchable={false} minCardWidth="8rem" templates={issueTemplates} />`,
         },
       ],
     },

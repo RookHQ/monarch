@@ -188,35 +188,11 @@ export default {
           title: 'With DataTable selection',
           stack: true,
           render: () => <WithTable />,
-          code: `const [selected, setSelected] = useState<string[]>([]);
-
-<BulkActionBar
-  count={selected.length}
-  totalCount={members.length}
-  onClear={() => setSelected([])}
-  actions={[
-    { id: 'team', label: 'Move to team', onSelect: () => openMoveDialog(selected) },
-    { id: 'role', label: 'Change role', onSelect: () => openRoleDialog(selected) },
-    { id: 'export', label: 'Export', onSelect: () => exportMembers(selected) },
-    { id: 'remove', label: 'Remove', tone: 'danger', onSelect: () => confirmRemove(selected) },
-  ]}
-/>
-<DataTable
-  columns={columns}
-  rows={members}
-  getRowId={(r) => r.id}
-  getRowLabel={(r) => r.name}
-  caption="Members"
-  selectable
-  selectedRowIds={selected}
-  onSelectedRowIdsChange={setSelected}
-/>`,
         },
         {
           title: 'Busy',
           stack: true,
           render: () => <Busy />,
-          code: `<BulkActionBar count={12} onClear={clear} busy actions={actions} />`,
         },
       ],
     },

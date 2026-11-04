@@ -226,17 +226,6 @@ export default {
           title: 'With an upload queue',
           stack: true,
           render: () => <UploadWithQueue />,
-          code: `const [items, setItems] = useState<UploadQueueItem[]>([]);
-
-<FileUpload
-  accept="image/*,application/pdf"
-  maxSize={10 * 1024 * 1024}
-  maxFiles={5}
-  currentCount={items.length}
-  paste
-  onFiles={(accepted) => accepted.forEach((file) => startUpload(file, setItems))}
-/>
-<UploadQueue items={items} onCancel={cancel} onRetry={retry} onRemove={remove} />`,
         },
         {
           title: 'In a field, single file',
@@ -250,11 +239,6 @@ export default {
               </FieldDescription>
             </Field>
           ),
-          code: `<Field>
-  <FieldLabel>Résumé</FieldLabel>
-  <FileUpload accept=".pdf,.doc,.docx" maxFiles={1} maxSize={5 * 1024 * 1024} onFiles={attach} />
-  <FieldDescription>PDF or Word document. Shared with the hiring team.</FieldDescription>
-</Field>`,
         },
         {
           title: 'Compact, and limit reached',
@@ -265,8 +249,6 @@ export default {
               <FileUpload variant="compact" maxFiles={3} currentCount={3} />
             </div>
           ),
-          code: `<FileUpload variant="compact" accept="image/*" maxSize={2 * 1024 * 1024} onFiles={attach} />
-<FileUpload variant="compact" maxFiles={3} currentCount={attachments.length} onFiles={attach} />`,
         },
         {
           title: 'The same checks without the zone',
@@ -277,13 +259,6 @@ export default {
               same messages, for a composer’s own attach button.
             </p>
           ),
-          code: `const { accepted, rejected } = validateFiles(files, {
-  accept: 'image/*',
-  maxSize: 10 * 1024 * 1024,
-  maxFiles: 10,
-  currentCount: attachments.length,
-});
-rejected.forEach((r) => toast.error(r.message));`,
         },
       ],
     },

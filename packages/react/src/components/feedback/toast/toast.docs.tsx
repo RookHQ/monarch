@@ -180,17 +180,6 @@ export default {
               <ArchiveButton />
             </ToastProvider>
           ),
-          code: `// Once, near the root:
-<ToastProvider>{app}</ToastProvider>
-
-// Anywhere below:
-const { toast } = useToast();
-toast({
-  title: 'Ticket archived',
-  description: 'You can undo this.',
-  tone: 'success',
-  action: { label: 'Undo', onClick: undo },
-});`,
         },
         {
           title: 'Errors from an API',
@@ -201,12 +190,6 @@ toast({
               <ErrorButton />
             </ToastProvider>
           ),
-          code: `const { toast } = useToast();
-try {
-  await save();
-} catch (error) {
-  toast.error(getErrorMessage(error, { fallback: 'Could not save the workspace' }));
-}`,
         },
         {
           title: 'More time for people who need it',
@@ -219,8 +202,6 @@ try {
               <ArchiveButton />
             </ToastProvider>
           ),
-          code: `// From a user preference; Infinity turns auto-dismiss off.
-<ToastProvider durationScale={prefs.slowNotifications ? 3 : 1}>{app}</ToastProvider>`,
         },
       ],
     },

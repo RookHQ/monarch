@@ -59,7 +59,6 @@ export default {
               <Spinner size="lg" label="Loading large" />
             </>
           ),
-          code: `<Spinner label="Loading tickets" />`,
         },
       ],
     },

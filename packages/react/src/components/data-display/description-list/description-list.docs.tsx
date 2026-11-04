@@ -144,11 +144,6 @@ export default {
               </DescriptionItem>
             </DescriptionList>
           ),
-          code: `<DescriptionList columns={2}>
-  <DescriptionItem term="Owner">Ada Lovelace</DescriptionItem>
-  <DescriptionItem term="Stage">Proposal</DescriptionItem>
-  <DescriptionItem term="Notes" wide>Follow up after the product review.</DescriptionItem>
-</DescriptionList>`,
         },
         {
           title: 'Copyable values and empty placeholders',
@@ -166,12 +161,6 @@ export default {
               </DescriptionItem>
             </DescriptionList>
           ),
-          code: `<DescriptionList columns={2}>
-  <DescriptionItem term="Workspace ID" copyable>ws_8f2a91c4</DescriptionItem>
-  <DescriptionItem term="Webhook URL" copyable>https://hooks.example.com/w/8f2a91c4</DescriptionItem>
-  <DescriptionItem term="Phone">{contact.phone}</DescriptionItem>{/* "—", read as "Not set" */}
-  <DescriptionItem term="Tax ID" placeholder="Not provided">{contact.taxId}</DescriptionItem>
-</DescriptionList>`,
         },
         {
           title: 'Inline layout with a clamped value',
@@ -192,11 +181,6 @@ export default {
               <DescriptionItem term="Canonical">{null}</DescriptionItem>
             </DescriptionList>
           ),
-          code: `<DescriptionList layout="inline" columns={1}>
-  <DescriptionItem term="Page title">Pricing plans for teams of every size</DescriptionItem>
-  <DescriptionItem term="Meta description" truncate={2}>{page.description}</DescriptionItem>
-  <DescriptionItem term="Canonical">{page.canonical}</DescriptionItem>
-</DescriptionList>`,
         },
         {
           title: 'Responsive columns',
@@ -208,12 +192,6 @@ export default {
               <DescriptionItem term="Billing">Annual</DescriptionItem>
             </DescriptionList>
           ),
-          code: `<DescriptionList columns="auto">{/* as many 12rem columns as fit */}
-  <DescriptionItem term="Plan">Team</DescriptionItem>
-  <DescriptionItem term="Seats">12 of 15</DescriptionItem>
-  <DescriptionItem term="Renews">1 June</DescriptionItem>
-  <DescriptionItem term="Billing">Annual</DescriptionItem>
-</DescriptionList>`,
         },
       ],
     },

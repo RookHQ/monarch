@@ -156,24 +156,6 @@ export default {
               />
             </div>
           ),
-          code: `<SiteHeader
-  brand={<Link href="/"><img src="/brand/wordmark.svg" alt="Rook Example" /></Link>}
-  linkAs={Link}
-  nav={[
-    { label: 'Product', items: [{ label: 'Editor', href: '/editor', description: 'Pages and blocks' }] },
-    { label: 'Pricing', href: '/pricing' },
-  ]}
-  actions={<>
-    <Button variant="ghost" size="sm">Log in</Button>
-    <Button variant="primary" size="sm">Start free</Button>
-  </>}
-/>
-…
-<SiteFooter
-  columns={[{ title: 'Product', links: [{ label: 'Editor', href: '/editor' }] }]}
-  legal="© 2026 Rook"
-  legalLinks={[{ label: 'Privacy', href: '/privacy' }]}
-/>`,
         },
       ],
     },

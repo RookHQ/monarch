@@ -153,15 +153,6 @@ export default {
               <BarList label="Top pages" items={pages} unit="views" locale="en-US" />
             </div>
           ),
-          code: `<BarList
-  label="Top pages"
-  unit="views"
-  items={[
-    { id: 'home', label: '/', value: 4820, href: '/analytics/pages/home' },
-    { id: 'pricing', label: '/pricing', value: 2310, href: '/analytics/pages/pricing' },
-    // …
-  ]}
-/>`,
         },
         {
           title: 'Ranked comparison, inline layout',
@@ -184,20 +175,6 @@ export default {
               />
             </div>
           ),
-          code: `<BarList
-  label="Visibility score"
-  ranked
-  layout="inline"
-  max={100}
-  limit={4}
-  items={[
-    { id: 'a', label: 'Northwind', value: 82 },
-    { id: 'you', label: 'Your site (you)', value: 71, highlighted: true },
-    { id: 'b', label: 'Contoso', value: 64 },
-    { id: 'c', label: 'Fabrikam', value: null }, // read as "No value"
-    { id: 'd', label: 'Tailspin', value: 38 },
-  ]}
-/>`,
         },
         {
           title: 'Rates with a description and display value',
@@ -229,16 +206,6 @@ export default {
               />
             </div>
           ),
-          code: `<BarList
-  label="Reply rate by channel"
-  format="percent"
-  max={1}
-  items={[
-    { id: 'e', label: 'Email', description: 'Spring outreach', value: 0.12, displayValue: '12% · 4 of 33' },
-    { id: 'l', label: 'LinkedIn', description: 'Founders list', value: 0.21, displayValue: '21% · 9 of 43' },
-    { id: 'c', label: 'Calls', description: 'Renewals', value: 0.05 },
-  ]}
-/>`,
         },
         {
           title: 'Loading and empty',
@@ -249,8 +216,6 @@ export default {
               <BarList label="Top referrers" items={[]} emptyState="No referrers in this period" />
             </div>
           ),
-          code: `<BarList label="Top referrers" items={[]} loading loadingRows={3} />
-<BarList label="Top referrers" items={[]} emptyState="No referrers in this period" />`,
         },
       ],
     },

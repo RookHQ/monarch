@@ -91,8 +91,6 @@ export default {
               <Switch label="Compact rail" size="sm" />
             </>
           ),
-          code: `<Switch label="Two-step sign-in" description="Ask for a PIN on new devices." defaultChecked />
-<Switch label="Compact rail" size="sm" />`,
         },
       ],
     },

@@ -150,11 +150,6 @@ export default {
               <Button variant="danger-subtle">Remove</Button>
             </>
           ),
-          code: `<Button variant="primary">Save changes</Button>
-<Button>Cancel</Button>
-<Button variant="ghost">Learn more</Button>
-<Button variant="danger">Delete</Button>
-<Button variant="danger-subtle">Remove</Button>`,
         },
         {
           title: 'Sizes, icons, loading',
@@ -172,12 +167,6 @@ export default {
               <IconButton label="More actions" icon={<MoreIcon />} />
             </>
           ),
-          code: `<Button size="xs">Extra small</Button>
-<Button size="sm">Small</Button>
-<Button leadingIcon={<PlusIcon />}>New ticket</Button>
-<Button size="lg" variant="primary" loading>Saving</Button>
-<Button disabled>Disabled</Button>
-<IconButton label="More actions" icon={<MoreIcon />} />`,
         },
         {
           title: 'As a link',
@@ -186,9 +175,6 @@ export default {
               <a href="#/components/button">Open ticket</a>
             </Button>
           ),
-          code: `<Button asChild variant="primary">
-  <Link href="/tickets/42">Open ticket</Link>
-</Button>`,
         },
         {
           title: 'Status and brand',
@@ -207,12 +193,6 @@ export default {
               </Button>
             </>
           ),
-          code: `<Button variant="success">Approve</Button>
-<Button variant="warning">Mark at risk</Button>
-{/* tenant colour from your data; text contrast is derived */}
-<Button variant="brand" brandColor={tenant.color}>Book a call</Button>
-<Button variant="brand" brandColor="#facc15">Join waitlist</Button>
-<Button variant="success" size="xs">Approve</Button>`,
         },
       ],
     },

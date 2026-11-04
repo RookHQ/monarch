@@ -281,30 +281,11 @@ export default {
               />
             </div>
           ),
-          code: `<TimeGrid
-  aria-label="Week of 2 November"
-  days={week}
-  events={events}
-  timeZone={zone}
-  locale={locale}
-  now={now}
-  workingHours={schedule.weeklyHours}
-  unavailable={timeOff}
-  onDayClick={(day) => showDay(day)}
-  onEventClick={(e) => openEvent(e.id)}
-/>`,
         },
         {
           title: 'Day view: create and drag',
           stack: true,
           render: () => <CreateDemo />,
-          code: `<TimeGrid
-  aria-label="Wednesday 4 November"
-  days={['2026-11-04']}
-  events={events}
-  onSlotClick={(slot) => openCreate(slot.start)}
-  onEventMove={({ event, start, end }) => confirmMove(event, start, end)}
-/>`,
         },
       ],
     },

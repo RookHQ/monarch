@@ -270,24 +270,11 @@ export default {
               />
             </div>
           ),
-          code: `<CalendarMonthView
-  month="2026-11-01"
-  events={events}
-  timeZone={zone}
-  locale={locale}
-  today={todayInZone}
-  onDayClick={(day) => openDay(day)}
-  onEventClick={(e) => openEvent(e.id)}
-  dayState={(day) => (holidays.has(day) ? { hatched: true, badge: 'Holiday' } : undefined)}
-/>`,
         },
         {
           title: 'Product-owned navigation',
           stack: true,
           render: () => <NavigableMonth />,
-          code: `const [month, setMonth] = useState('2026-11-01');
-<Toolbar>…Previous / Next / Today…</Toolbar>
-<CalendarMonthView month={month} events={events} onNavigate={setMonth} />`,
         },
         {
           title: 'Narrow (dot summary)',
@@ -297,7 +284,6 @@ export default {
               <CalendarMonthView {...base} month="2026-11-01" events={EVENTS} fixedWeeks={false} />
             </div>
           ),
-          code: `<CalendarMonthView month={month} events={events} /> // in a container under 36rem`,
         },
       ],
     },

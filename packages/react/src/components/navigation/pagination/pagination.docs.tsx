@@ -105,17 +105,6 @@ export default {
               <PaginationDemo compact />
             </>
           ),
-          code: `const [page, setPage] = useState(5);
-<Pagination page={page} pageCount={20} onPageChange={setPage} />
-<Pagination
-  variant="compact"
-  label="Compact pagination"
-  page={page}
-  pageCount={8}
-  pageSize={20}
-  totalItems={143}
-  onPageChange={setPage}
-/>`,
         },
       ],
     },

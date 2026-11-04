@@ -163,15 +163,6 @@ export default {
               />
             </MarketingSection>
           ),
-          code: `<MarketingSection spacing="lg" aria-labelledby="features">
-  <MarketingSectionHeader
-    titleId="features"
-    eyebrow="The editor"
-    title="Every idea gets the right shape."
-    description="Type a slash and pick a block."
-  />
-  <FeatureGrid columns={3} items={[{ icon: <FileText />, title: 'Slash commands', description: '…' }]} />
-</MarketingSection>`,
         },
         {
           title: 'Product frame, stats, FAQ and CTA',
@@ -205,12 +196,6 @@ export default {
               />
             </div>
           ),
-          code: `<ProductFrame label="Share dialog with a copyable link" chrome="browser" title="example.rookhq.com/share">
-  <ShareDialogIllustration />
-</ProductFrame>
-<StatStrip items={[{ value: '3', label: 'Export formats' }, { value: '13', label: 'Interface languages' }]} />
-<FAQ items={[{ question: 'Which formats can I export?', answer: 'HTML, Markdown and PDF.' }]} />
-<CTABand title="Start with a blank page." actions={<Button variant="primary">Start writing</Button>} />`,
         },
       ],
     },

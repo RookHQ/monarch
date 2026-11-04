@@ -62,9 +62,6 @@ export default {
               <Skeleton width="8rem" height="2rem" />
             </>
           ),
-          code: `<Skeleton shape="circle" width="2.5rem" height="2.5rem" />
-<Skeleton shape="text" width="12rem" />
-<Skeleton width="8rem" height="2rem" />`,
         },
       ],
     },

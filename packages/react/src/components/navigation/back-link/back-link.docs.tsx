@@ -98,8 +98,6 @@ export default {
               </BackLink>
             </>
           ),
-          code: `<BackLink href="/domains">Back to domains</BackLink>
-<BackLink href="/invoices" variant="standalone">All invoices</BackLink>`,
         },
         {
           title: 'With a router link',
@@ -108,11 +106,6 @@ export default {
               <a href="#/components/back-link">All campaigns</a>
             </BackLink>
           ),
-          code: `import NextLink from 'next/link';
-
-<BackLink asChild>
-  <NextLink href={\`/w/\${slug}/campaigns\`}>All campaigns</NextLink>
-</BackLink>`,
         },
       ],
     },

@@ -152,13 +152,6 @@ export default {
           title: 'Rail, identity bar and a scrolling main region',
           stack: true,
           render: () => <Demo />,
-          code: `// app/(workspace)/layout.tsx (this preview uses mainRole="region": the docs page has its own <main>)
-<AppShell
-  rail={<RookRail {...rail} currentPath={pathname} linkComponent={Link} />}
-  header={<IdentityBar product={{ name: 'Acme Desk' }} />}
->
-  {children}
-</AppShell>`,
         },
       ],
     },

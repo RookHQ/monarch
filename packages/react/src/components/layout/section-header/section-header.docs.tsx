@@ -141,15 +141,6 @@ export default {
               }
             />
           ),
-          code: `<SectionHeader
-  title="Recent invoices"
-  meta="12 issued this month"
-  link={
-    <SectionHeaderLink asChild>
-      <Link href="/invoices">View all invoices</Link>
-    </SectionHeaderLink>
-  }
-/>`,
         },
         {
           title: 'Description and actions',
@@ -166,20 +157,11 @@ export default {
               }
             />
           ),
-          code: `<SectionHeader
-  size="md"
-  title="Team members"
-  description="People who can sign in to this workspace."
-  actions={<Button size="sm" variant="primary" leadingIcon={<PlusIcon />}>Invite</Button>}
-/>`,
         },
         {
           title: 'Section with busy state',
           stack: true,
           render: () => <BusyDemo />,
-          code: `<SectionHeader title="Traffic sources" meta="Last 7 days" busy={isFetching} actions={…}>
-  <SourcesList />
-</SectionHeader>`,
         },
       ],
     },

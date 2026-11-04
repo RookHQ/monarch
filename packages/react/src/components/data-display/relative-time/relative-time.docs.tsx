@@ -152,10 +152,6 @@ export default {
               </div>
             </>
           ),
-          code: `<RelativeTime date={comment.createdAt} />
-<RelativeTime date={invoice.renewsAt} locale="en-GB" timeZone="Europe/London" />
-<RelativeTime date={doc.createdAt} absoluteAfter={7 * 86_400_000}
-  absoluteFormat={{ dateStyle: 'medium' }} />`,
         },
         {
           title: 'Short, narrow and live',
@@ -191,9 +187,6 @@ export default {
               </div>
             </>
           ),
-          code: `<RelativeTime date={row.updatedAt} format="short" tooltip={false} />
-<RelativeTime date={row.updatedAt} format="narrow" tooltip={false} />
-<RelativeTime date={lastSync} live />   {/* keeps itself current */}`,
         },
         {
           title: 'Server rendering',
@@ -202,9 +195,6 @@ export default {
               Localised: <RelativeTime date={NOW - 3 * HOUR} now={NOW} locale="de" timeZone="UTC" />
             </div>
           ),
-          code: `// Server component: pass the same "now" to the client for identical HTML.
-const now = Date.now();
-<RelativeTime date={post.publishedAt} now={now} locale={locale} timeZone={user.timeZone} />`,
         },
       ],
     },

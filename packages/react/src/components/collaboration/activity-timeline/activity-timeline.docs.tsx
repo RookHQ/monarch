@@ -212,20 +212,6 @@ export default {
         {
           title: 'Task activity with filters and details',
           render: () => <FilteredDemo />,
-          code: `<ActivityTimeline
-  events={events.map((e) => ({
-    id: e.id,
-    actor: e.actor && { name: e.actor.name, avatarSrc: e.actor.avatarUrl, kind: e.actor.type },
-    verb: describe(e).verb,       // product-side humanisation
-    object: describe(e).object,
-    time: e.createdAt,
-    details: e.changes && <FieldChanges changes={e.changes} />,
-  }))}
-  filters={<TabsFilter aria-label="Show" variant="pill" value={filter} onValueChange={setFilter} options={opts} />}
-  hasMore={q.hasNextPage}
-  loadingMore={q.isFetchingNextPage}
-  onLoadMore={() => q.fetchNextPage()}
-/>`,
         },
         {
           title: 'Compact, with avatars',
@@ -242,7 +228,6 @@ export default {
               />
             </div>
           ),
-          code: `<ActivityTimeline events={events} markers="avatar" density="compact" groupByDay={false} aria-label="Recent activity" />`,
         },
       ],
     },

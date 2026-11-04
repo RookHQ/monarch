@@ -155,13 +155,6 @@ export default {
           title: 'Debounced, pending',
           stack: true,
           render: () => <DebouncedDemo />,
-          code: `<SearchInput
-  aria-label="Search fruit"
-  debounce={300}
-  pending={pending}
-  onValueChange={() => setPending(true)}
-  onSearch={(q) => { setQuery(q); setPending(false); }}
-/>`,
         },
         {
           title: 'Shortcut, sizes and Field',
@@ -181,12 +174,6 @@ export default {
               </Field>
             </div>
           ),
-          code: `<SearchInput aria-label="Search the page" shortcut="/" shortcutKeys="/" />
-<SearchInput aria-label="Filter rows" size="sm" defaultValue="overdue" />
-<Field>
-  <FieldLabel>Find a member</FieldLabel>
-  <SearchInput placeholder="Name or email" />
-</Field>`,
         },
       ],
     },

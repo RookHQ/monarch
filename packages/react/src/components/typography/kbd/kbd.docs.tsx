@@ -33,7 +33,6 @@ export default {
               <Kbd>⌘</Kbd> <Kbd>K</Kbd>
             </>
           ),
-          code: `<Kbd>⌘</Kbd> <Kbd>K</Kbd>`,
         },
       ],
     },

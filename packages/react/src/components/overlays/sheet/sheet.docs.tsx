@@ -168,20 +168,6 @@ export default {
               </SheetContent>
             </Sheet>
           ),
-          code: `<Sheet>
-  <SheetTrigger asChild><Button>Open details</Button></SheetTrigger>
-  <SheetContent>
-    <SheetHeader>
-      <SheetTitle>Invoice INV-1042</SheetTitle>
-      <SheetDescription>Sent on 12 March to the billing contact.</SheetDescription>
-    </SheetHeader>
-    <SheetBody>…</SheetBody>
-    <SheetFooter>
-      <SheetClose asChild><Button>Close</Button></SheetClose>
-      <Button variant="primary">Send reminder</Button>
-    </SheetFooter>
-  </SheetContent>
-</Sheet>`,
         },
         {
           title: 'Filters from the left, outside clicks locked',
@@ -215,10 +201,6 @@ export default {
               </SheetContent>
             </Sheet>
           ),
-          code: `<SheetContent side="left" size="sm" closeOnOutsideClick={false} footer={…}>
-  <SheetHeader><SheetTitle>Filters</SheetTitle></SheetHeader>
-  <SheetBody>…</SheetBody>
-</SheetContent>`,
         },
         {
           title: 'Bottom sheet',
@@ -241,13 +223,6 @@ export default {
               </SheetContent>
             </Sheet>
           ),
-          code: `<SheetContent side="bottom" size="sm">
-  <SheetHeader>
-    <SheetTitle>Share board</SheetTitle>
-    <SheetDescription>Anyone with the link can view.</SheetDescription>
-  </SheetHeader>
-  <SheetBody>…</SheetBody>
-</SheetContent>`,
         },
       ],
     },

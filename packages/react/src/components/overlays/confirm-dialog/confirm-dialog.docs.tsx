@@ -255,66 +255,18 @@ export default {
         {
           title: 'Type to confirm, with consequences',
           render: () => <DeleteProject />,
-          code: `<ConfirmDialog
-  trigger={<Button variant="danger">Delete project</Button>}
-  tone="danger"
-  title="Delete this project?"
-  description="This cannot be undone."
-  consequences={[
-    '48 tasks and their comments are deleted',
-    '6 people lose access',
-    'Shared links stop working',
-  ]}
-  confirmPhrase="q3-launch"
-  confirmLabel="Delete project"
-  onConfirm={() => api.deleteProject(id)}
-/>`,
         },
         {
           title: 'Required reason',
           render: () => <DeclineRequest />,
-          code: `<ConfirmDialog
-  trigger={<Button>Decline request</Button>}
-  title="Decline this access request?"
-  description="The requester is told by email."
-  reason={{ label: 'Reason', description: 'Shown to the requester.', required: true }}
-  confirmLabel="Decline request"
-  onConfirm={({ reason }) => api.decline(id, reason)}
-/>`,
         },
         {
           title: 'Error and retry',
           render: () => <RevokeWithError />,
-          code: `<ConfirmDialog
-  trigger={<Button>Revoke key</Button>}
-  tone="danger"
-  title="Revoke this API key?"
-  description="Requests signed with it start failing straight away."
-  confirmLabel="Revoke key"
-  onConfirm={() => api.revokeKey(id)} // a rejection is shown in the dialog
-/>`,
         },
         {
           title: 'From a menu with useConfirm',
           render: () => <RowActions />,
-          code: `const { confirm, element } = useConfirm();
-
-<DropdownMenuItem
-  tone="danger"
-  onSelect={async () => {
-    const result = await confirm({
-      tone: 'danger',
-      title: 'Delete this note?',
-      description: 'It is removed for everyone on the account.',
-      confirmLabel: 'Delete note',
-      onConfirm: () => api.deleteNote(id),
-    });
-    if (result) refresh();
-  }}
->
-  Delete
-</DropdownMenuItem>
-{element}`,
         },
       ],
     },

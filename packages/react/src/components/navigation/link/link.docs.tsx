@@ -90,10 +90,6 @@ export default {
               </Link>
             </>
           ),
-          code: `<Link href="/settings">Inline link</Link>
-<Link href="/settings" variant="standalone">Standalone link</Link>
-<Link href="/settings" variant="subtle">Subtle link</Link>
-<Link href="https://rookhq.com" target="_blank">Rook website</Link>`,
         },
       ],
     },

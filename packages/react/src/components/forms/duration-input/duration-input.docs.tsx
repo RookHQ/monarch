@@ -126,10 +126,6 @@ export default {
           title: 'Estimate',
           stack: true,
           render: () => <EstimateDemo />,
-          code: `<Field>
-  <FieldLabel>Estimate</FieldLabel>
-  <DurationInput value={minutes} onValueChange={setMinutes} />
-</Field>`,
         },
         {
           title: 'Limits, days and small',
@@ -147,8 +143,6 @@ export default {
               <DurationInput aria-label="Response target" largestUnit="d" defaultValue={1680} />
             </div>
           ),
-          code: `<DurationInput aria-label="Buffer" size="sm" min={5} max={120} step={5} defaultValue={10} />
-<DurationInput aria-label="Response target" largestUnit="d" defaultValue={1680} />`,
         },
       ],
     },

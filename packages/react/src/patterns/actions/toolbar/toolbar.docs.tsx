@@ -98,16 +98,6 @@ export default {
               </ToolbarGroup>
             </Toolbar>
           ),
-          code: `<Toolbar
-  label="Task list tools"
-  search={<Input aria-label="Search tasks" placeholder="Search tasks" />}
-  end={<Button>Export</Button>}
->
-  <ToolbarGroup aria-label="View">
-    <Button>Board</Button>
-    <Button>List</Button>
-  </ToolbarGroup>
-</Toolbar>`,
         },
       ],
     },

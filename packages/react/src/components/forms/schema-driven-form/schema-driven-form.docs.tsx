@@ -249,23 +249,6 @@ export default {
           title: 'Booking form with sections and a conditional field',
           stack: true,
           render: () => <BookingDemo />,
-          code: `const schema = [
-  { type: 'section', id: 'you', title: 'Your details', fields: [
-    { type: 'text', name: 'name', label: 'Full name', required: true },
-    { type: 'text', name: 'email', label: 'Email', inputType: 'email', required: true },
-  ] },
-  { type: 'section', id: 'visit', title: 'Your visit', fields: [
-    { type: 'select', name: 'topic', label: 'Topic', required: true, options },
-    { type: 'textarea', name: 'other', label: 'What would you like to discuss?',
-      required: true, visibleWhen: { field: 'topic', equals: 'other' } },
-    { type: 'number', name: 'guests', label: 'Guests', min: 1, max: 10, integer: true },
-    { type: 'date', name: 'date', label: 'Preferred date' },
-    { type: 'switch', name: 'reminder', label: 'Email reminder', defaultValue: true },
-    { type: 'checkbox', name: 'consent', label: 'I agree to be contacted…', required: true },
-  ] },
-];
-
-<SchemaDrivenForm aria-label="Booking form" schema={schema} submitLabel="Book" onSubmit={save} />`,
         },
         {
           title: 'Integration settings with a Cancel action',
@@ -280,13 +263,6 @@ export default {
               />
             </div>
           ),
-          code: `<SchemaDrivenForm
-  schema={providerFields}
-  submitLabel="Connect"
-  secondaryActions={<Button variant="ghost">Cancel</Button>}
-  errors={serverErrors}
-  onSubmit={connect}
-/>`,
         },
         {
           title: 'Read-only',
@@ -308,7 +284,6 @@ export default {
               />
             </div>
           ),
-          code: `<SchemaDrivenForm schema={schema} values={submission} readOnly locale="en-GB" />`,
         },
       ],
     },

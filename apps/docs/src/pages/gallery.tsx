@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { pageById } from '../lib/components.js';
+import { useAllDocs } from '../lib/docs.js';
 import { GALLERY } from './gallery-ids.js';
 
 export { GALLERY };
@@ -11,8 +11,12 @@ export { GALLERY };
  * `#/__gallery/<id>` renders a single component (used by the overlay shots).
  * Theme/contrast/product come from <html> attributes set by the test via the
  * normal cookies, so the gallery renders exactly as an app would.
+ *
+ * Every docs file is loaded before the first render, so moving between
+ * `#/__gallery/<id>` routes never waits on a chunk.
  */
 export function GalleryPage({ only }: { only?: string } = {}) {
+  const all = useAllDocs();
   useEffect(() => {
     document.title = 'Gallery · Monarch';
   }, []);
@@ -21,9 +25,9 @@ export function GalleryPage({ only }: { only?: string } = {}) {
     <main className="gallery" aria-label="Component gallery" data-testid="gallery">
       <h1 className="mn-visually-hidden">Monarch component gallery</h1>
       {ids.map((id) => {
-        const page = pageById[id];
-        if (!page) throw new Error(`gallery: no docs file for ${id}`);
-        const { docs } = page;
+        const loaded = all[id];
+        if (!loaded) throw new Error(`gallery: no docs file for ${id}`);
+        const { docs } = loaded;
         const examples = 'items' in docs.sections.examples ? docs.sections.examples.items : [];
         return (
           <section

@@ -184,16 +184,6 @@ export default {
               locale="en-US"
             />
           ),
-          code: `<BarChart
-  title="Posts"
-  description="Drafted and posted per week"
-  data={weeks}                 // [{ week: 'Week 1', drafted: 12, posted: 8 }, …]
-  categoryKey="week"
-  series={[
-    { key: 'drafted', label: 'Drafted' },
-    { key: 'posted', label: 'Posted' },
-  ]}
-/>`,
         },
         {
           title: 'Stacked with totals',
@@ -213,7 +203,6 @@ export default {
               locale="en-US"
             />
           ),
-          code: `<BarChart title="Posts by state" data={weeks} categoryKey="week" layout="stacked" valueLabels series={series} />`,
         },
         {
           title: 'Highlighted month with a target',
@@ -234,16 +223,6 @@ export default {
               height={200}
             />
           ),
-          code: `<BarChart
-  title="Earnings"
-  data={months}
-  categoryKey="month"
-  series={[{ key: 'earned', label: 'Earned' }]}
-  highlightIndex={months.length - 1}
-  valueLabels
-  referenceLines={[{ value: 500, label: 'Goal' }]}
-  valueFormat={{ style: 'currency', currency: 'USD', maximumFractionDigits: 0 }}
-/>`,
         },
         {
           title: 'Horizontal, with drill-in',
@@ -261,15 +240,6 @@ export default {
               locale="en-US"
             />
           ),
-          code: `<BarChart
-  title="Open requests by topic"
-  data={topics}
-  categoryKey="topic"
-  orientation="horizontal"
-  valueLabels
-  series={[{ key: 'open', label: 'Open' }]}
-  onBarSelect={(row) => router.push(\`/requests?topic=\${row.topic}\`)}
-/>`,
         },
       ],
     },

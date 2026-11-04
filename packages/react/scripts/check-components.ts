@@ -187,8 +187,12 @@ function checkSection(where: string, id: string, s: Record<string, unknown>, f: 
     case 'examples':
       if (!nonEmpty(items)) fail(where, 'examples needs at least one live example');
       for (const ex of (items ?? []) as { title?: unknown; render?: unknown; code?: unknown }[])
-        if (typeof ex.render !== 'function' || !nonEmpty(ex.code) || !nonEmpty(ex.title))
-          fail(where, 'every example needs title, render() and code');
+        if (
+          typeof ex.render !== 'function' ||
+          !nonEmpty(ex.title) ||
+          (ex.code !== undefined && !nonEmpty(ex.code))
+        )
+          fail(where, 'every example needs title and render() (code, if given, must not be empty)');
       return;
     case 'related':
       if (!nonEmpty(items)) fail(where, 'related needs items');

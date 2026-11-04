@@ -83,3 +83,17 @@ export function componentRoutes(): string[] {
     .sort()
     .map((id) => `/components/${id}`);
 }
+
+/**
+ * Waits for entrance animations to finish (the home hero rises in), so contrast
+ * is measured on the final colours. Infinite decorative loops are ignored.
+ */
+export async function settle(page: Page): Promise<void> {
+  await page.waitForFunction(() =>
+    document
+      .getAnimations()
+      .every(
+        (a) => a.playState !== 'running' || a.effect?.getComputedTiming().iterations === Infinity,
+      ),
+  );
+}

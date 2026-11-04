@@ -21,6 +21,16 @@ export default defineConfig({
         },
       },
       {
+        // The docs site's build plugins: example extraction and the site index.
+        esbuild: { jsx: 'automatic' },
+        test: {
+          name: 'docs',
+          root: './apps/docs',
+          environment: 'jsdom',
+          include: ['plugins/**/*.test.ts'],
+        },
+      },
+      {
         esbuild: { jsx: 'automatic' },
         // Tests resolve tokens from source so they never depend on a prior build.
         resolve: {

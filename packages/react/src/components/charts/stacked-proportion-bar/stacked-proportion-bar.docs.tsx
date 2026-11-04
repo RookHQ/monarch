@@ -137,16 +137,6 @@ export default {
               />
             </div>
           ),
-          code: `<StackedProportionBar
-  label="Lead pipeline"
-  segments={[
-    { key: 'new', label: 'New', value: 1240 },
-    { key: 'enrolled', label: 'In a campaign', value: 610 },
-    { key: 'replied', label: 'Replied', value: 182 },
-    { key: 'converted', label: 'Converted', value: 41 },
-    { key: 'unsubscribed', label: 'Unsubscribed', value: 6 }, // reads "<1%"
-  ]}
-/>`,
         },
         {
           title: 'Storage capacity with a remainder',
@@ -168,19 +158,6 @@ export default {
               />
             </div>
           ),
-          code: `<StackedProportionBar
-  label="Storage"
-  size="lg"
-  total={100}
-  remainderLabel="Free"
-  legendContent="value"
-  formatValue={(v) => \`\${v} GB\`}
-  segments={[
-    { key: 'docs', label: 'Documents', value: 38 },
-    { key: 'media', label: 'Media', value: 21 },
-    { key: 'backups', label: 'Backups', value: 12 },
-  ]}
-/>`,
         },
         {
           title: 'Status mode: monitors by state',
@@ -199,16 +176,6 @@ export default {
               />
             </div>
           ),
-          code: `<StackedProportionBar
-  label="Monitors by state"
-  legendContent="value"
-  segments={[
-    { key: 'up', label: 'Operational', value: 42, tone: 'success' },
-    { key: 'degraded', label: 'Degraded', value: 3, tone: 'warning' },
-    { key: 'down', label: 'Down', value: 1, tone: 'danger' },
-    { key: 'paused', label: 'Paused', value: 2, tone: 'neutral' },
-  ]}
-/>`,
         },
         {
           title: 'Compact, legend for screen readers only',
@@ -227,7 +194,6 @@ export default {
               />
             </div>
           ),
-          code: `<StackedProportionBar label="Campaign progress" size="sm" legend={false} segments={…} />`,
         },
       ],
     },

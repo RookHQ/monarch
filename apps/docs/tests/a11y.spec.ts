@@ -1,12 +1,18 @@
 import { expect, test } from '@playwright/test';
-import { componentRoutes, runAxe, setAppearance, waitForFonts } from './helpers';
+import { componentRoutes, runAxe, setAppearance, settle, waitForFonts } from './helpers';
 
 const PAGES = [
   '/',
-  '/getting-started',
-  '/theming',
-  '/migration',
+  '/introduction',
+  '/colours',
+  '/typography',
   '/tokens',
+  '/theming',
+  '/getting-started',
+  '/migration',
+  '/conformance',
+  '/patterns',
+  '/patterns/guide',
   '/components',
   '/components/button',
   '/components/field',
@@ -22,16 +28,23 @@ const PAGES = [
 ];
 /** Every component page is scanned too: one per <id>.docs.tsx, found on disk. */
 const ROUTES = [...new Set([...PAGES, ...componentRoutes()])];
+/** Routes that render every component at once (each docs file is its own lazy chunk), so they need longer to appear in the slowest engine. */
+const HEAVY_ROUTES = new Set(['/__gallery']);
 
 for (const theme of ['light', 'dark'] as const) {
   test.describe(`axe · ${theme}`, () => {
     for (const route of ROUTES) {
       test(`${route} has no axe violations`, async ({ page }) => {
+        const heavy = HEAVY_ROUTES.has(route);
+        if (heavy) test.setTimeout(120_000);
         await setAppearance(page, theme);
         await page.goto(`/#${route}`);
         await waitForFonts(page);
-        await expect(page.locator('main')).toBeVisible();
-        const violations = await runAxe(page, route === '/tokens' ? ['.docs-swatch__chip'] : []);
+        await expect(page.locator('main')).toBeVisible({ timeout: heavy ? 45_000 : 5_000 });
+        // Pages are lazy chunks: wait for the page itself, not the shell.
+        await expect(page.locator('h1').first()).toBeAttached();
+        await settle(page);
+        const violations = await runAxe(page, route === '/colours' ? ['.docs-swatch__chip'] : []);
         expect(
           violations.map(
             (v) =>
@@ -42,6 +55,40 @@ for (const theme of ['light', 'dark'] as const) {
     }
   });
 }
+
+test('search: ⌘K / Ctrl K opens the palette and a result navigates', async ({ page }) => {
+  await setAppearance(page, 'light');
+  await page.goto('/#/introduction');
+  await expect(page.getByRole('heading', { level: 1, name: 'Introduction' })).toBeVisible();
+  // The palette reads the platform the page reports (device emulation may differ from the host).
+  const mod = await page.evaluate(() => {
+    const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
+    return /mac|iphone|ipad|ipod/i.test(nav.userAgentData?.platform ?? nav.platform ?? '')
+      ? 'Meta'
+      : 'Control';
+  });
+  await page.keyboard.press(`${mod}+k`);
+  const palette = page.getByRole('dialog', { name: 'Search the documentation' });
+  await expect(palette).toBeVisible();
+  await page.keyboard.type('data table');
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveTitle('DataTable · Monarch');
+  await expect(palette).toBeHidden();
+});
+
+test('component page: Show code reveals the extracted source', async ({ page }) => {
+  await setAppearance(page, 'light');
+  await page.goto('/#/components/button');
+  const show = page.getByRole('button', { name: 'Show code' }).first();
+  await show.click();
+  await expect(page.getByRole('button', { name: 'Hide code' }).first()).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
+  await expect(page.getByRole('region', { name: 'Code: Variants' })).toContainText(
+    "import { Button } from '@rookcom/monarch-react';",
+  );
+});
 
 test('keyboard: skip link, nav and page title', async ({ page, browserName }) => {
   await setAppearance(page, 'light');
@@ -68,12 +115,21 @@ test('keyboard: skip link, nav and page title', async ({ page, browserName }) =>
 test('theme and product controls change <html> attributes', async ({ page }) => {
   await setAppearance(page, 'light');
   await page.goto('/#/tokens');
-  await page.getByTestId('theme').selectOption('dark');
+  // The top bar's compact switcher.
+  await page
+    .getByRole('banner')
+    .getByRole('radiogroup', { name: 'Theme' })
+    .getByRole('radio', { name: 'Dark' })
+    .click();
   await expect(page.locator('html')).toHaveAttribute('data-mn-theme', 'dark');
   await expect(page.locator('html')).toHaveClass(/dark/);
-  await page.getByTestId('contrast').selectOption('more');
+  // Contrast and product accent live in the appearance popover.
+  await page.getByTestId('appearance').click();
+  const settings = page.getByRole('dialog', { name: 'Appearance' });
+  await settings.getByRole('radio', { name: 'More' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-mn-contrast', 'more');
-  await page.getByTestId('product').selectOption('base');
+  await settings.getByTestId('product').click();
+  await page.getByRole('option', { name: 'Rook Base' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-mn-product', 'base');
   // The accent variable now comes from the product file.
   const solid = await page.evaluate(() =>

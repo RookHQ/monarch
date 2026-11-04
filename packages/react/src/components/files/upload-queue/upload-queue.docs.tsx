@@ -184,13 +184,6 @@ export default {
           title: 'Mixed statuses',
           stack: true,
           render: () => <QueueDemo />,
-          code: `<UploadQueue
-  items={uploads}
-  onCancel={(id) => uploader.cancel(id)}
-  onRetry={(id) => uploader.retry(id)}
-  onRemove={(id) => uploader.remove(id)}
-  onClearFinished={() => uploader.clearFinished()}
-/>`,
         },
         {
           title: 'Without the header, with a custom step',
@@ -212,14 +205,6 @@ export default {
               ]}
             />
           ),
-          code: `<UploadQueue
-  showSummary={false}
-  aria-label="Banner uploads"
-  items={[
-    { id: 'a', name: 'banner-wide.png', status: 'done', thumbnail: previewUrl, detail: 'Checking for viruses' },
-    { id: 'b', name: 'banner-square.png', status: 'uploading' }, // no progress yet: indeterminate
-  ]}
-/>`,
         },
       ],
     },

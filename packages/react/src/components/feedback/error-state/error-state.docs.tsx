@@ -137,13 +137,6 @@ export default {
               requestId="req_7f3a91c2"
             />
           ),
-          code: `<ErrorState
-  title="Couldn't load invoices"
-  description="Check your connection and try again."
-  onRetry={refetch}
-  retrying={isFetching}
-  requestId={error.requestId}
-/>`,
         },
         {
           title: 'Forbidden and offline',
@@ -166,20 +159,6 @@ export default {
               />
             </>
           ),
-          code: `<ErrorState
-  kind="forbidden"         // no retry: it cannot help
-  size="compact"
-  title="You can't view this project"
-  description="Ask a workspace admin for access."
-  actions={<Button>Request access</Button>}
-/>
-<ErrorState
-  kind={errorKindFromStatus(error.status, { offline: !navigator.onLine })}
-  size="compact"
-  title="You're offline"
-  description="We'll show the latest data once you reconnect."
-  onRetry={refetch}
-/>`,
         },
         {
           title: 'Panel error boundary',
@@ -192,14 +171,6 @@ export default {
               <p>Panel content renders here until it throws.</p>
             </ErrorStateBoundary>
           ),
-          code: `<ErrorStateBoundary
-  title="This panel didn't load"
-  description="The rest of the page still works."
-  onError={(error) => report(error)}
-  resetKeys={[ticketId]}
->
-  <TicketTimeline id={ticketId} />
-</ErrorStateBoundary>`,
         },
       ],
     },

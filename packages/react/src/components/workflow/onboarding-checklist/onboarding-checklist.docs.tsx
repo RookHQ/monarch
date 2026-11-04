@@ -188,23 +188,6 @@ export default {
           title: 'Get started',
           stack: true,
           render: () => <ChecklistDemo />,
-          code: `<OnboardingChecklist
-  title="Get started"
-  description="A few steps to set up your workspace."
-  steps={[
-    { id: 'profile', title: 'Complete your profile', done: profileDone },
-    {
-      id: 'invite',
-      title: 'Invite your team',
-      description: 'Work is easier to share with the people you work with.',
-      done: memberCount > 1,
-      action: <Button size="sm" onClick={openInvite}>Invite people</Button>,
-    },
-  ]}
-  collapsed={prefs.checklistCollapsed}
-  onCollapsedChange={(c) => savePrefs({ checklistCollapsed: c })}
-  onDismiss={() => savePrefs({ checklistDismissed: true })}
-/>`,
         },
         {
           title: 'Complete',
@@ -223,13 +206,6 @@ export default {
               completeContent="Billing is ready. You can change it any time in Settings."
             />
           ),
-          code: `<OnboardingChecklist
-  title="Set up billing"
-  headingLevel={3}
-  collapsible={false}
-  steps={steps}
-  completeContent="Billing is ready. You can change it any time in Settings."
-/>`,
         },
       ],
     },

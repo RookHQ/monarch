@@ -159,8 +159,13 @@ Each `<id>.docs.tsx` ends with `export default { … } satisfies ComponentDocs;`
   `dist/manifest.json` (`scripts/manifest.ts`, TypeScript compiler API) for the
   folder's exports (from the registry), so a prop's doc comment is its
   documentation.
-- **Examples are live.** Each `{ title, render, code, stack? }` renders on the
+- **Examples are live.** Each `{ title, render, stack? }` renders on the
   page and in the gallery. Import components from `'@rookcom/monarch-react'`.
+  The code under each example ("Show code") is extracted from `render` when the
+  docs site builds (`apps/docs/plugins/extract-examples.ts`), with the imports
+  and file-level declarations it uses, so it is never written by hand. Give
+  `code` only for an example whose preview is prose and whose code is an
+  integration sketch.
   Demo icons come from `src/internal/docs-demo.tsx`; never sparkle icons.
 - **List sections** (`variants`, `states`, `interaction`, `keyboard`,
   `responsive`, `theme`, …) may have an empty `items` list only with `notes`

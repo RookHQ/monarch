@@ -60,9 +60,6 @@ export default {
               <p>Security</p>
             </>
           ),
-          code: `<p>Profile</p>
-<Separator />
-<p>Security</p>`,
         },
       ],
     },

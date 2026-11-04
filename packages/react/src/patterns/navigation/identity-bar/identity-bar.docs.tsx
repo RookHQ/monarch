@@ -114,12 +114,6 @@ export default {
               account={account}
             />
           ),
-          code: `<IdentityBar
-  product={{ name: 'Acme Desk', href: '/', logo: <AppIcon /> }}
-  search={<SearchInput aria-label="Search tickets" placeholder="Search tickets" />}
-  notifications={<IconButton label="Notifications" icon={<BellIcon />} />}
-  account={{ name, email, profileHref: '/me', accountHref: idUrl, onSignOut }}
-/>`,
         },
         {
           title: 'Context and actions, without a link',
@@ -142,12 +136,6 @@ export default {
               account={{ name: 'Grace Hopper' }}
             />
           ),
-          code: `<IdentityBar
-  product={{ name: 'Acme Desk' }}
-  start={<span>Support queue</span>}
-  actions={<ThemeToggle variant="menu" size="sm" showLabel={false} />}
-  account={{ name: 'Grace Hopper' }}
-/>`,
         },
       ],
     },

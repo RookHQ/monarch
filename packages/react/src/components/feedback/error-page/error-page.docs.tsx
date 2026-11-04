@@ -144,18 +144,6 @@ export default {
               }
             />
           ),
-          code: `<ErrorPage
-  kind="not-found"
-  fullScreen={false}
-  title="Page not found"
-  description="The link may be broken, or the page may have moved."
-  actions={
-    <>
-      <Button variant="primary" asChild><Link href="/">Go to dashboard</Link></Button>
-      <Button onClick={() => router.back()}>Go back</Button>
-    </>
-  }
-/>`,
         },
         {
           title: 'Server error with support',
@@ -176,14 +164,6 @@ export default {
               }
             />
           ),
-          code: `<ErrorPage
-  kind="server"
-  title="Something went wrong"
-  description="We couldn't open this page. Try again in a moment."
-  onRetry={reset}
-  requestId={error.requestId}
-  support={<>Still stuck? <Link href="mailto:support@example.com">Contact support</Link></>}
-/>`,
         },
         {
           title: 'Offline and maintenance, without the shell',
@@ -211,20 +191,6 @@ export default {
               />
             </>
           ),
-          code: `// app/global-error.tsx, app/offline/page.tsx: no app shell around it
-<ErrorPage
-  kind="offline"
-  brand={<Logo />}
-  title="You're offline"
-  description="Check your connection. We'll try again when you're back online."
-  onRetry={reload}
-/>
-<ErrorPage
-  kind="maintenance"
-  brand={<Logo />}
-  title="Down for maintenance"
-  description="We're making some improvements and will be back shortly."
-/>`,
         },
       ],
     },

@@ -141,13 +141,6 @@ export default {
               }
             />
           ),
-          code: `<EmptyState
-  icon={<Inbox />}
-  title="No tickets yet"
-  description="New tickets from your inbox and portal appear here."
-  actions={<Button variant="primary">New ticket</Button>}
-  tip={<>Press <Kbd>N</Kbd> to create a ticket from anywhere.</>}
-/>`,
         },
         {
           title: 'Filtered and all clear',
@@ -169,14 +162,6 @@ export default {
               />
             </>
           ),
-          code: `<EmptyState
-  kind="filtered"
-  size="compact"
-  title="No results match these filters"
-  description="Try a different search or clear the filters."
-  onClearFilters={clearFilters}
-/>
-<EmptyState kind="success" size="compact" title="You're all caught up" />`,
         },
         {
           title: 'One line',
@@ -191,14 +176,6 @@ export default {
               actions={<Button size="sm">View all activity</Button>}
             />
           ),
-          code: `<EmptyState
-  layout="line"
-  icon={<List />}
-  headingLevel="p"
-  title="No activity this week"
-  description="Changes to records show up here."
-  actions={<Button size="sm">View all activity</Button>}
-/>`,
         },
       ],
     },

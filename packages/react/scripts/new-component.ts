@@ -173,7 +173,6 @@ export default {
         {
           title: 'TODO',
           render: () => <${Name}>TODO</${Name}>,
-          code: \`<${Name}>TODO</${Name}>\`,
         },
       ],
     },
@@ -239,5 +238,5 @@ Next:
   1. Build the component; replace every TODO in ${id}.docs.tsx with what the code does.
   2. npm run build && npx vitest run -u packages/react/test/api.test.ts   (new export in the API snapshot)
   3. npm run registry:components && npm run docs:generate   (status planned → stable)
-  4. Add it to GALLERY in apps/docs/src/pages/gallery.tsx if it should have visual baselines.
+  4. Add it to GALLERY in apps/docs/src/pages/gallery-ids.ts if it should have visual baselines.
   5. npm run changeset (minor) and npm run verify.`);

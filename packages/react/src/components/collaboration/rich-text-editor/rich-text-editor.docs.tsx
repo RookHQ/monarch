@@ -231,11 +231,6 @@ export default {
               />
             </div>
           ),
-          code: `<RichTextEditor
-  aria-label="Release notes"
-  defaultValue={notesHtml}
-  placeholder="Write notes…"
-/>`,
         },
         {
           title: 'Controlled with a limit',
@@ -245,15 +240,6 @@ export default {
               <ControlledDemo />
             </div>
           ),
-          code: `const [html, setHtml] = useState('<p>Edit me, then look below.</p>');
-
-<RichTextEditor
-  aria-label="Summary"
-  value={html}
-  onValueChange={(v) => setHtml(String(v))}
-  toolbar={['bold', 'italic', 'code', '|', 'bulletList', 'orderedList', '|', 'link']}
-  maxLength={280}
-/>`,
         },
         {
           title: 'Mentions and uploads',
@@ -276,20 +262,6 @@ export default {
               />
             </div>
           ),
-          code: `<RichTextEditor
-  aria-label="Comment"
-  placeholder="Type @ to mention someone, or paste an image"
-  mentions={{ search: (text, { signal }) => api.searchPeople(text, { signal }) }}
-  onFiles={async (files) => {
-    const uploaded = await api.upload(files);
-    return uploaded.map((u) =>
-      u.isImage
-        ? { type: 'image', src: u.url, alt: u.name }
-        : { type: 'link', href: u.url, text: u.name },
-    );
-  }}
-  headingLevels={[]}
-/>`,
         },
         {
           title: 'Read-only and disabled',
@@ -310,8 +282,6 @@ export default {
               />
             </div>
           ),
-          code: `<RichTextEditor aria-label="Published notes" readOnly defaultValue={html} />
-<RichTextEditor aria-label="Locked description" disabled defaultValue={html} />`,
         },
       ],
     },

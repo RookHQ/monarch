@@ -174,25 +174,11 @@ export default {
           title: 'Notification preferences',
           stack: true,
           render: () => <NotificationsDemo />,
-          code: `<SwitchSettingsList title="Security notifications" description="Emails about activity on your account.">
-  <SwitchSettingsItem
-    label="Security alerts"
-    description="Password changes and new recovery methods."
-    checked={prefs.security_alerts}
-    onCheckedChange={(next) => savePreference('security_alerts', next)}   // returns a promise
-  />
-  …
-</SwitchSettingsList>`,
         },
         {
           title: 'Failed save, rollback and retry',
           stack: true,
           render: () => <FailingDemo />,
-          code: `<SwitchSettingsItem
-  label="In-app notifications"
-  checked={prefs.in_app}
-  onCheckedChange={(next) => api.patch({ in_app: next })}   // rejects → rolls back, shows Retry
-/>`,
         },
       ],
     },

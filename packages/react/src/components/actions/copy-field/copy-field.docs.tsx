@@ -135,8 +135,6 @@ export default {
               <CopyField label="TXT record" value="verify=c41e9b20d7" size="sm" iconOnly />
             </>
           ),
-          code: `<CopyField label="Webhook URL" value={webhookUrl} />
-<CopyField label="TXT record" value={txtValue} size="sm" iconOnly />`,
         },
         {
           title: 'In a Field, multi-line',
@@ -148,11 +146,6 @@ export default {
               <FieldDescription>Paste before the closing body tag.</FieldDescription>
             </Field>
           ),
-          code: `<Field>
-  <FieldLabel>Embed code</FieldLabel>
-  <CopyField label="Embed code" value={snippet} multiline />
-  <FieldDescription>Paste before the closing body tag.</FieldDescription>
-</Field>`,
         },
       ],
     },

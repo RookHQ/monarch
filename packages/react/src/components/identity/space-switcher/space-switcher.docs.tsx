@@ -151,21 +151,10 @@ export default {
         {
           title: 'All spaces, with New and Manage',
           render: () => <Basic />,
-          code: `const [space, setSpace] = useState<string | null>(null);
-
-<SpaceSwitcher
-  spaces={spaces}
-  value={space}
-  onValueChange={setSpace}
-  manageHref={\`\${ROOK_ID}/workspaces/\${workspaceId}/spaces\`}
-  onCreate={openNewSpace}
-/>`,
         },
         {
           title: 'Collapsed, and without All spaces',
           render: () => <Compact />,
-          code: `<SpaceSwitcher spaces={spaces} defaultValue="s-mkt" collapsed />
-<SpaceSwitcher spaces={spaces} defaultValue="s-ops" allowAll={false} />`,
         },
       ],
     },

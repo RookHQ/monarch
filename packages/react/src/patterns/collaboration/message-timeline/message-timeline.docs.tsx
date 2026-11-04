@@ -240,22 +240,6 @@ export default {
         {
           title: 'Conversation with older history',
           render: () => <LiveDemo />,
-          code: `const q = useInfiniteQuery({ queryKey: ['history', id], queryFn, getNextPageParam });
-const messages = q.data?.pages.slice().reverse().flatMap((p) => p.messages) ?? [];
-
-<MessageTimeline
-  items={messages}            // { id, time, authorId, ... } oldest first
-  renderItem={(m, { grouped }) => (
-    <MessageRow author={m.author} time={m.createdAt} grouped={grouped}>{m.body}</MessageRow>
-  )}
-  firstUnreadId={unreadAtOpen}
-  hasOlder={q.hasNextPage}
-  loadingOlder={q.isFetchingNextPage}
-  olderError={q.isFetchNextPageError}
-  onLoadOlder={() => q.fetchNextPage()}
-  onAtBottomChange={(atBottom) => atBottom && markRead()}
-  status={typing ? \`\${typing} is typing…\` : null}
-/>`,
         },
         {
           title: 'In your own virtualiser',

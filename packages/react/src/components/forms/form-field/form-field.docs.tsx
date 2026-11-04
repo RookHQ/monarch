@@ -205,12 +205,6 @@ export default {
           title: 'Validation wiring',
           stack: true,
           render: () => <EmailField initial="not-an-email" />,
-          code: `<Field invalid={!!error} required>
-  <FieldLabel>Email</FieldLabel>
-  <Input type="email" value={v} onChange={…} />
-  <FieldDescription>Used for sign-in codes only.</FieldDescription>
-  <FieldError>{error}</FieldError>
-</Field>`,
         },
         {
           title: 'Native select',
@@ -222,28 +216,17 @@ export default {
               <FieldDescription>Used for reminders and reports.</FieldDescription>
             </Field>
           ),
-          code: `<Field required>
-  <FieldLabel>Time zone</FieldLabel>
-  <NativeSelect options={zones} placeholder="Choose a time zone" defaultValue="" />
-  <FieldDescription>Used for reminders and reports.</FieldDescription>
-</Field>`,
         },
         {
           title: 'Compact toolbar select',
           render: () => (
             <NativeSelect size="sm" label="Sort" options={SORTS} defaultValue="updated" />
           ),
-          code: `<NativeSelect size="sm" label="Sort" options={sorts} value={sort} onChange={…} />`,
         },
         {
           title: 'Switch with description',
           stack: true,
           render: () => <DigestRow />,
-          code: `<Field layout="row">
-  <FieldLabel>Weekly digest</FieldLabel>
-  <FieldDescription>A summary of activity, sent on Monday mornings.</FieldDescription>
-  <Switch checked={on} onCheckedChange={setOn} />
-</Field>`,
         },
       ],
     },

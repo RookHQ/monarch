@@ -127,16 +127,6 @@ export default {
               </AccordionItem>
             </Accordion>
           ),
-          code: `<Accordion type="single" collapsible defaultValue="billing">
-  <AccordionItem value="billing">
-    <AccordionTrigger>When am I billed?</AccordionTrigger>
-    <AccordionContent>On the first of each month, for the seats in use.</AccordionContent>
-  </AccordionItem>
-  <AccordionItem value="cancel">
-    <AccordionTrigger>Can I cancel at any time?</AccordionTrigger>
-    <AccordionContent>Yes. Access continues to the end of the paid period.</AccordionContent>
-  </AccordionItem>
-</Accordion>`,
         },
       ],
     },

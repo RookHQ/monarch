@@ -210,21 +210,6 @@ export default {
         {
           title: 'Comment field with people and channels',
           render: () => <CommentDemo />,
-          code: `const [value, setValue] = useState('');
-const mention = useMentionTextarea({
-  value,
-  onChange: setValue,
-  triggers: ['@', '#'],
-  search: (text, { trigger, signal }) =>
-    api.get('/mentions', { params: { q: text, kind: trigger === '#' ? 'channel' : 'all' }, signal })
-      .then((r) => r.data),   // [{ id, label, kind, description, avatarSrc }]
-});
-
-<textarea aria-label="Comment" {...mention.textareaProps} />
-<MentionPicker {...mention.pickerProps} />
-
-// On send: who to notify
-const ids = parseMentionTokens(value).flatMap((s) => (s.type === 'mention' ? [s.id] : []));`,
         },
         {
           title: 'With a rich-text editor',

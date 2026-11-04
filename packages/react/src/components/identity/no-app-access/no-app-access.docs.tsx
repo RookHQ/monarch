@@ -134,20 +134,11 @@ export default {
           title: 'Every action',
           stack: true,
           render: () => <Basic />,
-          code: `<NoAppAccess
-  appName="Example Desk"
-  workspaceName={workspace.name}
-  onRequestAccess={() => requestAccess(app.slug)}
-  homeHref={\`/w/\${workspace.slug}/home\`}
-  onSwitchWorkspace={openWorkspaceSwitcher}
-  contactHref="mailto:admin@example.com"
-/>`,
         },
         {
           title: 'Explanation and a way back',
           stack: true,
           render: () => <Minimal />,
-          code: `<NoAppAccess appName="Example Wiki" homeHref={\`/w/\${workspace.slug}/home\`} />`,
         },
       ],
     },

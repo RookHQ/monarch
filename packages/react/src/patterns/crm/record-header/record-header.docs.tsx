@@ -213,44 +213,11 @@ export default {
               }
             />
           ),
-          code: `<RecordHeader
-  back={<BackLink href="/contacts">All contacts</BackLink>}
-  avatar={<Avatar name={contact.name} src={contact.photo} size="lg" />}
-  title={contact.name}
-  status={<StatusBadge status={contact.status} />}
-  badges={<Badge tone="accent">{contact.tier}</Badge>}
-  subtitle={<span>{contact.email} · {contact.title}</span>}
-  facts={[
-    { term: 'Owner', value: contact.owner },
-    { term: 'Lifecycle', value: contact.lifecycle },
-    { term: 'Contact ID', value: contact.id, copyable: true },
-    { term: 'Phone', value: contact.phone },
-  ]}
-  actions={<><Button>Email</Button><ContactMenu contact={contact} /></>}
-  tabs={<TabsNav aria-label="Contact sections">…</TabsNav>}
-/>`,
         },
         {
           title: 'Ticket with editable subject and prev/next',
           stack: true,
           render: () => <TicketDemo />,
-          code: `<RecordHeader
-  headingLevel="h2"
-  back={<BackLink href="/inbox">Inbox</BackLink>}
-  navigator={{
-    position: { index, total },
-    previousLabel: 'Previous ticket',
-    nextLabel: 'Next ticket',
-    onPrevious: prev ? () => open(prev) : undefined,
-    onNext: next ? () => open(next) : undefined,
-  }}
-  title={ticket.subject}
-  titleLabel="Subject"
-  onTitleSave={(subject) => patch.mutateAsync({ subject })}
-  status={<StatusBadge status={ticket.status} />}
-  badges={<Badge tone="warning">High</Badge>}
-  subtitle={<span>#{ticket.number} · Opened 2 hours ago by {ticket.author}</span>}
-/>`,
         },
         {
           title: 'Record state banner',
@@ -269,13 +236,6 @@ export default {
               actions={<Button>Unarchive</Button>}
             />
           ),
-          code: `<RecordHeader
-  title="Q3 renewal"
-  status={<StatusBadge status="neutral" label="Archived" />}
-  subtitle="Northwind · Opportunity"
-  banner={<InlineNotice tone="neutral">Archived on 2 May. It no longer appears in pipelines or reports.</InlineNotice>}
-  actions={<Button onClick={unarchive}>Unarchive</Button>}
-/>`,
         },
       ],
     },

@@ -146,19 +146,6 @@ export default {
         {
           title: 'Interview time with a time zone',
           render: () => <Interview />,
-          code: `const [value, setValue] = useState<string | null>('2026-11-10T14:30');
-
-<Field>
-  <FieldLabel>Interview</FieldLabel>
-  <DateTimePicker
-    locale="en-GB"
-    min="2026-11-04T09:00"
-    step={15}
-    timeZone="IST"
-    value={value}
-    onValueChange={setValue}
-  />
-</Field>`,
         },
         {
           title: '12-hour clock (en-US) and sizes',
@@ -183,11 +170,6 @@ export default {
               />
             </>
           ),
-          code: `<Field>
-  <FieldLabel>Send at</FieldLabel>
-  <DateTimePicker locale="en-US" defaultValue="2026-11-05T08:00" timeZone="New York" />
-</Field>
-<DateTimePicker aria-label="Reminder" size="sm" locale="en-GB" defaultValue="2026-11-05T17:45" />`,
         },
         {
           title: 'Disabled',
@@ -202,10 +184,6 @@ export default {
               />
             </Field>
           ),
-          code: `<Field disabled>
-  <FieldLabel>Starts</FieldLabel>
-  <DateTimePicker locale="en-GB" defaultValue="2026-11-04T13:00" timeZone="UTC" />
-</Field>`,
         },
       ],
     },

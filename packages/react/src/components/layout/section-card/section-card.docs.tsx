@@ -194,32 +194,11 @@ export default {
               </ul>
             </SectionCard>
           ),
-          code: `<SectionCard
-  title="Open tasks"
-  description="Assigned to you this week."
-  meta={<Badge>3</Badge>}
-  icon={<ClockIcon />}
-  actions={<Button size="xs" leadingIcon={<PlusIcon />}>Add</Button>}
-  link={<SectionHeaderLink href="/tasks">View all tasks</SectionHeaderLink>}
-  footer={<span>Updated just now</span>}
->
-  <ul>{tasks.map((t) => <li key={t.id}>{t.title}</li>)}</ul>
-</SectionCard>`,
         },
         {
           title: 'Loading, empty and error states',
           stack: true,
           render: () => <StatesDemo />,
-          code: `<SectionCard
-  title="Upcoming invoices"
-  state={query.isLoading ? 'loading' : query.isError ? 'error' : invoices.length ? 'ready' : 'empty'}
-  emptyDescription="Invoices you schedule appear here."
-  errorDescription="Check your connection and try again."
-  onRetry={() => query.refetch()}
-  retrying={query.isFetching}
->
-  <InvoiceList invoices={invoices} />
-</SectionCard>`,
         },
         {
           title: 'Collapsible and danger tone',
@@ -241,15 +220,6 @@ export default {
               />
             </div>
           ),
-          code: `<SectionCard title="Activity" collapsible defaultOpen={false}>
-  <ActivityList />
-</SectionCard>
-<SectionCard
-  title="Delete this project"
-  tone="danger"
-  description="Deleting the project removes its tasks and files."
-  actions={<Button variant="danger" size="sm" onClick={confirmDelete}>Delete project</Button>}
-/>`,
         },
       ],
     },

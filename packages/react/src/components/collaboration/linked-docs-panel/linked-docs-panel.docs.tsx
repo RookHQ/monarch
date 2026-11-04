@@ -210,22 +210,11 @@ export default {
           title: 'Docs and links on a record',
           stack: true,
           render: () => <Basic />,
-          code: `<LinkedDocsPanel
-  items={links}            // null while loading
-  onSearchDocs={(q, { signal }) => dossier.search(q, { signal })}
-  onLinkDoc={(docId) => link(docId)}
-  onCreateDoc={() => createDocInSpace(record.spaceId)}
-  onAddLink={({ url, title }) => addExternalLink(url, title)}
-  onUnlink={(item) => unlink(item.id)}
-/>`,
         },
         {
           title: 'Empty, loading and read-only',
           stack: true,
           render: () => <States />,
-          code: `<LinkedDocsPanel items={[]} onAddLink={addLink} />
-<LinkedDocsPanel items={null} />
-<LinkedDocsPanel items={links} readOnly />`,
         },
       ],
     },
