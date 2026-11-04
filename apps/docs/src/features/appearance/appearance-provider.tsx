@@ -3,11 +3,18 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
-import { applyPrefs, readPrefs, writePrefs, type Prefs } from '../../lib/appearance.js';
+import {
+  DEFAULT_PREFS,
+  applyPrefs,
+  readPrefs,
+  writePrefs,
+  type Prefs,
+} from '../../lib/appearance.js';
 
 interface AppearanceValue {
   prefs: Prefs;
@@ -18,13 +25,22 @@ interface AppearanceValue {
 const AppearanceContext = createContext<AppearanceValue | null>(null);
 
 export function AppearanceProvider({ children }: { children: ReactNode }) {
-  const [prefs, setPrefs] = useState<Prefs>(() => readPrefs());
+  // `null` until the stored preferences are read. Pages are prerendered, and the
+  // first client render must match that HTML, so it uses the defaults; the
+  // stored values replace them before the browser paints (layout effect). The
+  // pre-paint script has already applied them to <html>.
+  const [stored, setStored] = useState<Prefs | null>(null);
+  useLayoutEffect(() => setStored(readPrefs()), []);
+  const prefs = stored ?? DEFAULT_PREFS;
 
   // Same values the pre-paint script applied; this also covers storage it could not read.
-  useEffect(() => applyPrefs(prefs), [prefs]);
+  useEffect(() => {
+    if (stored) applyPrefs(stored);
+  }, [stored]);
 
   // `system` keeps following the OS while the page is open.
   useEffect(() => {
+    if (!stored) return;
     if (prefs.theme !== 'system' && prefs.contrast !== 'system') return;
     const queries = ['(prefers-color-scheme: dark)', '(prefers-contrast: more)'].map((q) =>
       window.matchMedia(q),
@@ -34,11 +50,11 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     return () => {
       for (const mq of queries) mq.removeEventListener('change', onChange);
     };
-  }, [prefs]);
+  }, [stored, prefs]);
 
   const update = useCallback((next: Partial<Prefs>) => {
-    setPrefs((current) => {
-      const merged = { ...current, ...next };
+    setStored((current) => {
+      const merged = { ...(current ?? readPrefs()), ...next };
       writePrefs(merged);
       return merged;
     });

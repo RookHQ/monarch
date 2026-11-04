@@ -8,6 +8,60 @@ export const AXE_SOURCE = readFileSync(require.resolve('axe-core/axe.min.js'), '
 
 export type Theme = 'light' | 'dark' | 'hc-light' | 'hc-dark';
 
+/** The site's base path (DOCS_BASE at build time): `/` locally, `/monarch/` in CI. */
+const BASE = (() => {
+  const b = process.env.DOCS_BASE ?? '/';
+  return b.endsWith('/') ? b : `${b}/`;
+})();
+
+/**
+ * The address of a route: `/components/button` → `<base>components/button/`.
+ * The screenshot routes (`/__gallery`, `/__marketing`) live in the fragment.
+ */
+export function pageUrl(route: string, anchor?: string): string {
+  if (route.startsWith('/__')) return `${BASE}#${route}`;
+  const url = route === '/' ? BASE : `${BASE}${route.slice(1)}/`;
+  return anchor ? `${url}#${anchor}` : url;
+}
+
+/**
+ * Live previews mount when they near the viewport. Scrolls each one into view,
+ * so every example is on the page before it is scanned, then back to the top.
+ */
+export async function mountPreviews(page: Page): Promise<void> {
+  // Brings the next unmounted preview into view until none is left.
+  await page.waitForFunction(
+    () => {
+      const next = document.querySelector('[data-pending]');
+      next?.scrollIntoView({ block: 'center' });
+      return next === null;
+    },
+    undefined,
+    { polling: 'raf' },
+  );
+  await page.evaluate(() => window.scrollTo(0, 0));
+}
+
+/**
+ * Console messages that are expected: the EmbeddedAppFrame and ChatDock
+ * examples deliberately sandbox a cross-origin frame with `allow-scripts` and
+ * `allow-same-origin` (documented in their threat model), which browsers warn
+ * about. Everything else on the console fails the test.
+ */
+const EXPECTED_CONSOLE = [/allow-scripts and allow-same-origin/];
+
+/** Collects console errors and warnings (and uncaught errors) from now on. */
+export function watchConsole(page: Page): () => string[] {
+  const messages: string[] = [];
+  page.on('console', (m) => {
+    if (m.type() !== 'error' && m.type() !== 'warning') return;
+    const text = m.text();
+    if (!EXPECTED_CONSOLE.some((re) => re.test(text))) messages.push(`${m.type()}: ${text}`);
+  });
+  page.on('pageerror', (e) => messages.push(`uncaught: ${e.message}`));
+  return () => messages;
+}
+
 /** Sets the same cookies Rook apps use, so the pre-paint script applies the theme. */
 /** `product`: an id applies that accent, `null` clears it, `undefined` leaves storage alone. */
 export async function setAppearance(

@@ -8,6 +8,9 @@ import { AppearanceSettings } from '../features/appearance/appearance-settings.j
 import { MenuIcon, RepoIcon } from '../ui/icons.js';
 import { NAV, type NavGroup } from '../app/navigation.js';
 
+/** The drawer (a modal Sheet) loads the first time it is opened, or when its button is hovered. */
+export const loadDrawer = () => import('./nav-drawer.js');
+
 export const REPO_URL = 'https://github.com/RookHQ/monarch';
 
 /** Section links in the bar, each to the first page of its group. */
@@ -38,6 +41,8 @@ export function TopBar({
           aria-expanded={menuOpen}
           aria-haspopup="dialog"
           onClick={onOpenMenu}
+          onPointerEnter={() => void loadDrawer()}
+          onFocus={() => void loadDrawer()}
         />
         <a className="docs-topbar__brand" href={href('/')} aria-label="Monarch home">
           <Wordmark />

@@ -7,17 +7,21 @@ export function CrownMark({
   className,
 }: {
   strokeWidth?: number;
-  /** Draws the outline in on first paint (static under reduced motion). */
+  /** Reveals the crown on first paint, with opacity and scale only (static under reduced motion). */
   animated?: boolean;
   className?: string;
 }) {
   return (
-    <svg viewBox="0 0 120 80" className={className} aria-hidden focusable="false">
+    <svg
+      viewBox="0 0 120 80"
+      className={
+        [className, animated ? 'docs-crown-draw' : null].filter(Boolean).join(' ') || undefined
+      }
+      aria-hidden
+      focusable="false"
+    >
       <path
         d={CROWN_PATH}
-        // Normalised length, so the draw animation always covers the whole outline.
-        pathLength={1}
-        className={animated ? 'docs-crown-draw' : undefined}
         fill="none"
         stroke="currentColor"
         strokeWidth={strokeWidth}

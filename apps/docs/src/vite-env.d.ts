@@ -1,7 +1,8 @@
 /// <reference types="vite/client" />
-declare module '*.md?raw' {
-  const content: string;
-  export default content;
+/** A guide rendered at build time (plugins/guides.ts). */
+declare module '*.md?guide' {
+  const guide: { title: string; lead: string | null; html: string };
+  export default guide;
 }
 
 /** Built by plugins/monarch-docs.ts from the docs files, the registry and the react package. */

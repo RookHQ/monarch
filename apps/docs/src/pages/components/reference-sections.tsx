@@ -4,7 +4,7 @@
  * properties come from the manifest generated from the TypeScript declarations.
  */
 import { Badge, Kbd } from '@rookcom/monarch-react';
-import { exportsByName, type ExportDoc } from '../../lib/manifest.js';
+import type { ExportDoc } from '../../lib/manifest.js';
 import {
   importLine,
   pageById,
@@ -27,8 +27,13 @@ function ComponentLink({ id }: { id: string }) {
   );
 }
 
-function ApiReference({ page, notes }: { page: DocsPageMeta; notes?: string[] | undefined }) {
-  const parts = page.exports.map((n) => exportsByName[n]).filter((p): p is ExportDoc => Boolean(p));
+interface ApiProps {
+  page: DocsPageMeta;
+  api: readonly ExportDoc[];
+  notes?: string[] | undefined;
+}
+
+function ApiReference({ page, api: parts, notes }: ApiProps) {
   return (
     <>
       <CodeBlock code={importLine(page)} label="Code: import" />
@@ -58,10 +63,8 @@ function ApiReference({ page, notes }: { page: DocsPageMeta; notes?: string[] | 
   );
 }
 
-function Properties({ page, notes }: { page: DocsPageMeta; notes?: string[] | undefined }) {
-  const parts = page.exports
-    .map((n) => exportsByName[n])
-    .filter((p): p is ExportDoc => Boolean(p) && p?.kind === 'component');
+function Properties({ api, notes }: ApiProps) {
+  const parts = api.filter((p) => p.kind === 'component');
   return (
     <>
       <Notes notes={notes} />
@@ -99,10 +102,12 @@ export function SectionBody({
   id,
   s,
   page,
+  api,
 }: {
   id: Exclude<DocSectionId, 'examples'>;
   s: Record<string, unknown>;
   page: DocsPageMeta;
+  api: readonly ExportDoc[];
 }) {
   switch (id) {
     case 'purpose': {
@@ -132,9 +137,9 @@ export function SectionBody({
       );
     }
     case 'apiReference':
-      return <ApiReference page={page} notes={(s.notes as string[]) ?? []} />;
+      return <ApiReference page={page} api={api} notes={(s.notes as string[]) ?? []} />;
     case 'typedProperties':
-      return <Properties page={page} notes={(s.notes as string[]) ?? []} />;
+      return <Properties page={page} api={api} notes={(s.notes as string[]) ?? []} />;
     case 'variants': {
       const items = (s.items as { prop: string; values: string[]; description: string }[]) ?? [];
       return (

@@ -11,6 +11,10 @@
  *   (`extract-examples.ts`). "Show code" displays it, so example code is
  *   never written twice by hand.
  *
+ * - Every `<id>.docs.tsx` also gets `apiEntries`: the entries of
+ *   `@rookcom/monarch-react/manifest.json` for the folder's exports, so a
+ *   component page loads the API of its own component, not the whole manifest.
+ *
  * An example that cannot be extracted fails the build with its file and line.
  */
 import { readFileSync, readdirSync } from 'node:fs';
@@ -92,7 +96,26 @@ export function buildIndex(repoRoot: string) {
   };
 }
 
+interface ManifestEntry {
+  name: string;
+}
+
 export function monarchDocs({ repoRoot }: MonarchDocsOptions): Plugin {
+  const manifestFile = path.join(repoRoot, 'packages/react/dist/manifest.json');
+  let exportsById: Map<string, string[]> | null = null;
+  let manifest: Map<string, ManifestEntry> | null = null;
+  /** The manifest entries for one docs file's exports, in export order. */
+  const apiEntries = (id: string): ManifestEntry[] => {
+    exportsById ??= new Map(buildIndex(repoRoot).pages.map((p) => [p.id, p.exports]));
+    manifest ??= new Map(
+      (
+        JSON.parse(readFileSync(manifestFile, 'utf8')) as { components: ManifestEntry[] }
+      ).components.map((c) => [c.name, c]),
+    );
+    return (exportsById.get(id) ?? [])
+      .map((name) => manifest?.get(name))
+      .filter((e): e is ManifestEntry => e !== undefined);
+  };
   return {
     name: 'monarch-docs',
     enforce: 'pre',
@@ -124,13 +147,21 @@ export function monarchDocs({ repoRoot }: MonarchDocsOptions): Plugin {
       } catch (e) {
         this.error(e instanceof Error ? e.message : String(e));
       }
+      const docsId = /([^\\/]+)\.docs\.tsx$/.exec(file)?.[1] ?? '';
+      this.addWatchFile(manifestFile);
       return {
-        code: `${code}\nexport const exampleSource = ${JSON.stringify(examples)};\n`,
+        code:
+          `${code}\nexport const exampleSource = ${JSON.stringify(examples)};\n` +
+          `export const apiEntries = ${JSON.stringify(apiEntries(docsId))};\n`,
         map: null,
       };
     },
     handleHotUpdate({ file, server }) {
       // A docs file's title or summary feeds the index; rebuild it.
+      if (DOCS_FILE.test(file) || file === manifestFile) {
+        exportsById = null;
+        manifest = null;
+      }
       if (DOCS_FILE.test(file)) {
         const mod = server.moduleGraph.getModuleById(RESOLVED_INDEX_ID);
         if (mod) server.moduleGraph.invalidateModule(mod);
