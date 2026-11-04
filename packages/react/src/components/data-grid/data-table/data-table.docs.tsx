@@ -31,7 +31,7 @@ interface Invoice {
 const INVOICES: Invoice[] = [
   {
     id: 'INV-1042',
-    customer: 'Northwind Traders',
+    customer: 'Northfield Traders',
     status: 'Paid',
     amount: 1240,
     issued: '2026-09-02',
@@ -39,7 +39,7 @@ const INVOICES: Invoice[] = [
   },
   {
     id: 'INV-1043',
-    customer: 'Contoso Ltd',
+    customer: 'Cobalt Ltd',
     status: 'Due',
     amount: 860,
     issued: '2026-09-11',
@@ -47,7 +47,7 @@ const INVOICES: Invoice[] = [
   },
   {
     id: 'INV-1044',
-    customer: 'Fabrikam Inc',
+    customer: 'Fernway Inc',
     status: 'Overdue',
     amount: 4300,
     issued: '2026-08-21',
@@ -55,7 +55,7 @@ const INVOICES: Invoice[] = [
   },
   {
     id: 'INV-1045',
-    customer: 'Tailspin Toys',
+    customer: 'Tidewater Toys',
     status: 'Due',
     amount: 395,
     issued: '2026-09-18',
@@ -63,7 +63,7 @@ const INVOICES: Invoice[] = [
   },
   {
     id: 'INV-1046',
-    customer: 'Wide World Importers',
+    customer: 'Westbridge Imports',
     status: 'Paid',
     amount: 2150,
     issued: '2026-09-20',
@@ -71,7 +71,7 @@ const INVOICES: Invoice[] = [
   },
   {
     id: 'INV-1047',
-    customer: 'Litware',
+    customer: 'Lumen',
     status: 'Due',
     amount: 1720,
     issued: '2026-09-24',
@@ -298,7 +298,7 @@ export default {
         'No business logic: the app owns data, filters and persistence. DataTable sorts and pages client-side only when the app has not taken that over, and always reports intent through callbacks.',
         'Every state is controlled or uncontrolled: `sort`/`defaultSort`, `selectedRowIds`/`defaultSelectedRowIds`, `page`/`defaultPage`, `expandedRowIds`/`defaultExpandedRowIds`, `columnWidths`/`defaultColumnWidths`.',
         'Built from Monarch parts: Checkbox, DropdownMenu, Pagination, EmptyState, LoadingState and ErrorState, so states look the same as everywhere else.',
-        'Every control has a row-specific name ("Select INV-1042 for Northwind Traders", "Actions for …").',
+        'Every control has a row-specific name ("Select INV-1042 for Northfield Traders", "Actions for …").',
       ],
     },
     apiReference: {

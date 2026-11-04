@@ -176,7 +176,7 @@ export default {
               title="Ada Lovelace"
               status={<StatusBadge status="success" label="Active" />}
               badges={<Badge>Enterprise</Badge>}
-              subtitle={<span>ada@example.com · Head of Engineering, Northwind</span>}
+              subtitle={<span>ada@example.com · Head of Engineering, Northfield</span>}
               facts={[
                 { term: 'Owner', value: 'Grace Hopper' },
                 { term: 'Lifecycle', value: 'Customer' },
@@ -227,7 +227,7 @@ export default {
               headingLevel="h2"
               title="Q3 renewal"
               status={<StatusBadge status="neutral" label="Archived" />}
-              subtitle="Northwind · Opportunity"
+              subtitle="Northfield · Opportunity"
               banner={
                 <InlineNotice tone="neutral">
                   Archived on 2 May. It no longer appears in pipelines or reports.

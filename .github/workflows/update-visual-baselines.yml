@@ -23,6 +23,13 @@ jobs:
     runs-on: ubuntu-24.04
     container: mcr.microsoft.com/playwright:v1.56.1-noble
     timeout-minutes: 25
+    # Same as the CI docs job: the site is built AND served under this base,
+    # so the setting must apply to every step, not only the test step.
+    env:
+      DOCS_BASE: /monarch/
+      # Container jobs run as root with HOME=/github/home (owned by pwuser);
+      # Firefox refuses to start in that case.
+      HOME: /root
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -32,9 +39,6 @@ jobs:
       - run: npm run build:docs
       - name: Regenerate Linux baselines
         run: npm run test:visual:update
-        env:
-          DOCS_BASE: /monarch/
-          HOME: /root
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: visual-baselines

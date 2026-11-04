@@ -4,7 +4,7 @@ import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 const workspaces = [
   { id: 'w1', name: 'Acme', handle: 'acme' },
-  { id: 'w2', name: 'Northwind Traders', handle: 'northwind' },
+  { id: 'w2', name: 'Northfield Traders', handle: 'northwind' },
   { id: 'w3', name: 'Globex', handle: 'globex', keywords: 'globex corporation' },
 ];
 

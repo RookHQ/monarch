@@ -7,7 +7,7 @@ import { WorkspaceSwitcher, type WorkspaceOption } from './index.js';
 
 const workspaces: WorkspaceOption[] = [
   { id: 'w1', name: 'Acme', handle: 'acme' },
-  { id: 'w2', name: 'Northwind', handle: 'northwind', keywords: 'nw' },
+  { id: 'w2', name: 'Northfield', handle: 'northwind', keywords: 'nw' },
   { id: 'w3', name: 'Globex' },
 ];
 
@@ -70,12 +70,12 @@ describe('WorkspaceSwitcher', () => {
       <WorkspaceSwitcher workspaces={workspaces} value="w1" onValueChange={onValueChange} />,
     );
     await user.click(screen.getByRole('button', { name: 'Workspace: Acme @acme' }));
-    await user.click(await screen.findByRole('option', { name: /Northwind/ }));
+    await user.click(await screen.findByRole('option', { name: /Northfield/ }));
     expect(onValueChange).toHaveBeenCalledWith('w2');
     expect(screen.getByRole('button', { name: 'Workspace: Acme @acme' })).toBeInTheDocument();
     rerender(<WorkspaceSwitcher workspaces={workspaces} value="w2" />);
     expect(
-      screen.getByRole('button', { name: 'Workspace: Northwind @northwind' }),
+      screen.getByRole('button', { name: 'Workspace: Northfield @northwind' }),
     ).toBeInTheDocument();
   });
 
@@ -114,10 +114,10 @@ describe('WorkspaceSwitcher', () => {
 
   it('collapsed: avatar only, with the name in a tooltip', async () => {
     render(<WorkspaceSwitcher workspaces={workspaces} defaultValue="w2" collapsed />);
-    const trigger = screen.getByRole('button', { name: 'Workspace: Northwind @northwind' });
+    const trigger = screen.getByRole('button', { name: 'Workspace: Northfield @northwind' });
     expect(trigger).toHaveAttribute('data-collapsed');
     await userEvent.setup().hover(trigger);
-    expect(await screen.findByRole('tooltip')).toHaveTextContent('Workspace: Northwind');
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Workspace: Northfield');
   });
 
   it('renders on the server', () => {
