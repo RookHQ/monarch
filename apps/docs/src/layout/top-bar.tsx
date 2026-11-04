@@ -1,3 +1,4 @@
+import { NEW_TAB } from '../lib/external.js';
 import { Badge, Button, IconButton } from '@rookcom/monarch-react';
 import { reactVersion } from '../lib/docs.js';
 import { href } from '../lib/router.js';
@@ -67,7 +68,7 @@ export function TopBar({
           <ThemeSwitcher compact className="docs-topbar__theme" />
           <AppearanceSettings />
           <Button asChild variant="ghost" size="sm" leadingIcon={<RepoIcon />}>
-            <a href={REPO_URL} className="docs-topbar__repo">
+            <a {...NEW_TAB} href={REPO_URL} className="docs-topbar__repo">
               <span className="docs-topbar__repo-label">GitHub</span>
             </a>
           </Button>

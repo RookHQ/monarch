@@ -1,3 +1,4 @@
+import { NEW_TAB } from '../../lib/external.js';
 import { Fragment, Suspense, lazy, useRef, type CSSProperties } from 'react';
 import { Badge, Button, CopyField, Progress, Switch } from '@rookcom/monarch-react';
 import {
@@ -172,7 +173,9 @@ function Hero() {
               <a href={href('/getting-started')}>Get started</a>
             </Button>
             <Button asChild leadingIcon={<RepoIcon />}>
-              <a href={REPO_URL}>GitHub</a>
+              <a {...NEW_TAB} href={REPO_URL}>
+                GitHub
+              </a>
             </Button>
           </>
         }
@@ -365,10 +368,14 @@ function OpenSource() {
         actions={
           <>
             <Button asChild variant="primary" leadingIcon={<RepoIcon />}>
-              <a href={REPO_URL}>View on GitHub</a>
+              <a {...NEW_TAB} href={REPO_URL}>
+                View on GitHub
+              </a>
             </Button>
             <Button asChild>
-              <a href={`${REPO_URL}/blob/main/CONTRIBUTING.md`}>How to contribute</a>
+              <a {...NEW_TAB} href={`${REPO_URL}/blob/main/CONTRIBUTING.md`}>
+                How to contribute
+              </a>
             </Button>
           </>
         }

@@ -10,7 +10,7 @@
  * removes `dist-ssr/`.
  *
  * DOCS_SITE_URL is the public address of the site, used for canonical links
- * and the sitemap (default: https://monarch.rookhq.com + the base path).
+ * and the sitemap (default: https://monarchui.dev + the base path).
  */
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -29,7 +29,7 @@ if (!entryKey) throw new Error('prerender: no entry chunk in the build manifest'
 const entrySrc = new RegExp(`src="([^"]*)${manifest[entryKey].file}"`).exec(template);
 if (!entrySrc) throw new Error('prerender: entry script not found in dist/index.html');
 const base = entrySrc[1];
-const siteUrl = new URL(process.env.DOCS_SITE_URL ?? `https://monarch.rookhq.com${base}`);
+const siteUrl = new URL(process.env.DOCS_SITE_URL ?? `https://monarchui.dev${base}`);
 if (!siteUrl.pathname.endsWith('/')) siteUrl.pathname += '/';
 
 const { render, ROUTES, ROUTE_ALIASES, NOT_FOUND_PATH } = await import(

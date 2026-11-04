@@ -84,7 +84,7 @@ runs three steps:
    `ROUTE_ALIASES`, `sitemap.xml` and `robots.txt`.
 
 `DOCS_SITE_URL` is the public address used for canonical links and the
-sitemap (default `https://monarch.rookhq.com` + the base path; CI sets the
+sitemap (default `https://monarchui.dev` + the base path; CI sets the
 GitHub Pages address).
 
 In the browser, `main.tsx` hydrates the prerendered page when it is the one

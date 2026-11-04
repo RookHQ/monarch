@@ -1,3 +1,4 @@
+import { NEW_TAB } from '../../lib/external.js';
 import { PageFrame } from '../../layout/page-frame.js';
 import { products } from '../../lib/registry.js';
 
@@ -23,7 +24,9 @@ export function ProductsPage() {
             {products.map((p) => (
               <tr key={p.id}>
                 <td>
-                  <a href={`https://${p.domain}`}>{p.name}</a>
+                  <a {...NEW_TAB} href={`https://${p.domain}`}>
+                    {p.name}
+                  </a>
                 </td>
                 <td>{p.kind}</td>
                 <td>
