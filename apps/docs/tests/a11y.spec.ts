@@ -28,15 +28,19 @@ const PAGES = [
 ];
 /** Every component page is scanned too: one per <id>.docs.tsx, found on disk. */
 const ROUTES = [...new Set([...PAGES, ...componentRoutes()])];
+/** Routes that render every component at once (each docs file is its own lazy chunk), so they need longer to appear in the slowest engine. */
+const HEAVY_ROUTES = new Set(['/__gallery']);
 
 for (const theme of ['light', 'dark'] as const) {
   test.describe(`axe · ${theme}`, () => {
     for (const route of ROUTES) {
       test(`${route} has no axe violations`, async ({ page }) => {
+        const heavy = HEAVY_ROUTES.has(route);
+        if (heavy) test.setTimeout(120_000);
         await setAppearance(page, theme);
         await page.goto(`/#${route}`);
         await waitForFonts(page);
-        await expect(page.locator('main')).toBeVisible();
+        await expect(page.locator('main')).toBeVisible({ timeout: heavy ? 45_000 : 5_000 });
         // Pages are lazy chunks: wait for the page itself, not the shell.
         await expect(page.locator('h1').first()).toBeAttached();
         await settle(page);
