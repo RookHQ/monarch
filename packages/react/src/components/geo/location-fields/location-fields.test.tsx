@@ -116,7 +116,7 @@ describe('LocationFields', () => {
       <LocationFields
         adapter={adapter}
         defaultValue={{ country: 'CA' }}
-        cityDebounce={20}
+        cityDebounce={300}
         onValueChange={onValueChange}
       />,
     );
