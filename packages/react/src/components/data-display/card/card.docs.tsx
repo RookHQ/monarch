@@ -97,14 +97,6 @@ export default {
               ))}
             </>
           ),
-          code: `<Card variant="raised">
-  <CardHeader>
-    <CardTitle>Open tickets</CardTitle>
-    <CardDescription>Last 7 days</CardDescription>
-  </CardHeader>
-  <CardContent>128</CardContent>
-  <CardFooter><Button size="sm">View</Button></CardFooter>
-</Card>`,
         },
       ],
     },

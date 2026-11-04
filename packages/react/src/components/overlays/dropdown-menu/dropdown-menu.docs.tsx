@@ -122,15 +122,6 @@ export default {
               </DropdownMenuContent>
             </DropdownMenu>
           ),
-          code: `<DropdownMenu>
-  <DropdownMenuTrigger asChild><Button>Actions</Button></DropdownMenuTrigger>
-  <DropdownMenuContent>
-    <DropdownMenuItem shortcut="R">Rename</DropdownMenuItem>
-    <DropdownMenuCheckboxItem checked>Watching</DropdownMenuCheckboxItem>
-    <DropdownMenuSeparator />
-    <DropdownMenuItem tone="danger">Delete</DropdownMenuItem>
-  </DropdownMenuContent>
-</DropdownMenu>`,
         },
         {
           title: 'Destructive item with icons',
@@ -150,11 +141,6 @@ export default {
               </DropdownMenuContent>
             </DropdownMenu>
           ),
-          code: `<DropdownMenuContent>
-  <DropdownMenuItem icon={<PencilIcon />} shortcut="E">Edit</DropdownMenuItem>
-  <DropdownMenuSeparator />
-  <DropdownMenuItem tone="danger" icon={<TrashIcon />}>Move to trash</DropdownMenuItem>
-</DropdownMenuContent>`,
         },
       ],
     },

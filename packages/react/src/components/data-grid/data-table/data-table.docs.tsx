@@ -472,111 +472,31 @@ export default {
           title: 'Sorting, selection, row actions and grid keyboard',
           stack: true,
           render: () => <SortAndSelect />,
-          code: `const columns: DataTableColumn<Invoice>[] = [
-  { id: 'customer', header: 'Customer', sortable: true },
-  { id: 'status', header: 'Status', sortable: true, cell: (r) => <Badge tone={tone[r.status]}>{r.status}</Badge> },
-  { id: 'issued', header: 'Issued', sortable: true, hideBelow: 520 },
-  { id: 'owner', header: 'Owner', sortable: true },
-  { id: 'amount', header: 'Amount', numeric: true, sortable: true, cell: (r) => formatMoney(r.amount) },
-];
-
-<DataTable
-  columns={columns}
-  rows={invoices}
-  getRowId={(r) => r.id}
-  getRowLabel={(r) => \`\${r.id} for \${r.customer}\`}
-  caption="Invoices"
-  defaultSort={[{ id: 'issued', direction: 'descending' }]}
-  multiSort
-  selectable
-  selectedRowIds={selected}
-  onSelectedRowIdsChange={setSelected}
-  stickyFirstColumn
-  onRowOpen={(r) => router.push(\`/invoices/\${r.id}\`)}
-  rowActions={(r) => [
-    { id: 'send', label: 'Send reminder', onSelect: () => remind(r) },
-    { id: 'void', label: 'Void invoice', tone: 'danger', onSelect: () => confirmVoid(r) },
-  ]}
-/>`,
         },
         {
           title: 'Server-driven sorting and pagination',
           stack: true,
           render: () => <ServerDriven />,
-          code: `const [sort, setSort] = useState<DataTableSort[]>([{ id: 'amount', direction: 'descending' }]);
-const [page, setPage] = useState(1);
-const { rows, total } = useInvoices({ sort, page, pageSize: 5 }); // your data hook
-
-<DataTable
-  columns={columns}
-  rows={rows}
-  getRowId={(r) => r.id}
-  caption="Invoices"
-  sort={sort}
-  onSortChange={(next) => { setSort(next); setPage(1); }}
-  manualSorting
-  manualPagination
-  pageSize={5}
-  page={page}
-  onPageChange={setPage}
-  totalRowCount={total}
-  density="compact"
-/>`,
         },
         {
           title: 'Column chooser, resizing and expandable rows',
           stack: true,
           render: () => <ColumnsAndDetails />,
-          code: `const cols = useDataTableColumns(columns); // persist cols.visibility / cols.order yourself
-
-<DataTableColumnChooser {...cols.chooserProps} />
-<DataTable
-  columns={columns} // customer: { resizable: true, width: 220, hideable: false }
-  rows={invoices}
-  getRowId={(r) => r.id}
-  {...cols.tableProps}
-  caption="Invoices with details"
-  renderExpanded={(r) => <p>{r.customer} was invoiced on {r.issued}.</p>}
-/>`,
         },
         {
           title: 'Loading, filtered empty and error states',
           stack: true,
           render: () => <States />,
-          code: `<DataTable {...props} rows={[]} loading />
-<DataTable {...props} rows={[]} filtered onClearFilters={clearFilters} />
-<DataTable {...props} rows={[]} error="The server did not respond." onRetry={refetch} />`,
         },
         {
           title: 'Card layout for narrow screens',
           stack: true,
           render: () => <Cards />,
-          code: `<DataTable {...props} layout="cards" selectable onRowOpen={open} />
-// or layout="auto" to switch below cardBreakpoint (640px)`,
         },
         {
           title: 'Table parts (custom tables)',
           stack: true,
           render: () => <Primitives />,
-          code: `const [sort, setSort] = useState<'ascending' | 'descending'>('ascending');
-
-<Table>
-  <TableCaption>Open tickets</TableCaption>
-  <TableHeader>
-    <TableRow>
-      <TableSelectCell header label="Select all" />
-      <TableHead sort={sort} onSortChange={setSort}>Title</TableHead>
-      <TableHead numeric>Age</TableHead>
-    </TableRow>
-  </TableHeader>
-  <TableBody>
-    <TableRow selected>
-      <TableSelectCell label="Select ticket 1" checked />
-      <TableCell>Login link expired</TableCell>
-      <TableCell numeric>3d</TableCell>
-    </TableRow>
-  </TableBody>
-</Table>`,
         },
       ],
     },

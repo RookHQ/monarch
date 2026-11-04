@@ -169,13 +169,6 @@ export default {
               }
             />
           ),
-          code: `<PageHeader
-  eyebrow={<Breadcrumb items={[{ label: 'Projects', href: '/projects' }, { label: 'Website refresh' }]} />}
-  title="Website refresh"
-  meta={<Badge tone="success">Active</Badge>}
-  description="Tasks, owners and dates for this project."
-  actions={<><Button>Share</Button><Button variant="primary">New task</Button></>}
-/>`,
         },
         {
           title: 'Publishable entity: back link, status, address and overflow actions',
@@ -214,24 +207,6 @@ export default {
               primaryAction={<Button variant="primary">Publish changes</Button>}
             />
           ),
-          code: `<PageHeader
-  back={<BackLink href="/pages">All pages</BackLink>}
-  title="Spring launch"
-  status={<Badge tone="success">Published</Badge>}
-  details={<>
-    <span>launch.example.com/spring</span>
-    <CopyButton value="https://launch.example.com/spring" iconOnly size="xs" label="Copy address" />
-    <span>Updated 5 minutes ago</span>
-  </>}
-  secondaryActions={[
-    { id: 'preview', label: 'Preview', href: '/pages/spring/preview' },
-    { id: 'duplicate', label: 'Duplicate', onSelect: duplicate },
-    { id: 'unpublish', label: 'Unpublish', onSelect: unpublish },
-    { id: 'delete', label: 'Delete page', icon: <TrashIcon />, tone: 'danger', onSelect: confirmDelete },
-  ]}
-  moreActionsLabel="More actions for Spring launch"
-  primaryAction={<Button variant="primary">Publish changes</Button>}
-/>`,
         },
         {
           title: 'With section tabs',
@@ -257,18 +232,6 @@ export default {
               }
             />
           ),
-          code: `<PageHeader
-  title="Billing"
-  description="Plan, invoices and payment methods."
-  primaryAction={<Button variant="primary" leadingIcon={<PlusIcon />}>Add payment method</Button>}
-  tabs={
-    <TabsNav aria-label="Billing sections">
-      <TabsLink href="/billing" active>Overview</TabsLink>
-      <TabsLink href="/billing/invoices">Invoices</TabsLink>
-      <TabsLink href="/billing/methods">Payment methods</TabsLink>
-    </TabsNav>
-  }
-/>`,
         },
       ],
     },

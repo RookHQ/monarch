@@ -176,20 +176,6 @@ export default {
           title: 'Members with editable roles',
           stack: true,
           render: () => <TeamDemo />,
-          code: `<MemberList aria-label="Workspace members">
-  {members.map((m) => (
-    <MemberRow
-      key={m.id}
-      name={m.name}
-      email={m.email}
-      isSelf={m.id === me}
-      roleOptions={roles}
-      memberRole={m.role}
-      onMemberRoleChange={(role) => api.setRole(m.id, role)}
-      onRemove={() => api.remove(m.id)}
-    />
-  ))}
-</MemberList>`,
         },
         {
           title: 'Invited, suspended and read-only',
@@ -223,9 +209,6 @@ export default {
               />
             </MemberList>
           ),
-          code: `<MemberRow name="lee@example.com" status="invited" meta="Invite expires in 6 days" onResend={…} onRemove={…} />
-<MemberRow name="Sam Carter" status="suspended" roleOptions={roles} memberRole="member" />
-<MemberRow name="Mei Tanaka" presence="online" badges={<Badge size="sm">Guest</Badge>} … />`,
         },
       ],
     },

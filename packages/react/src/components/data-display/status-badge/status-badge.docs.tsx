@@ -144,12 +144,6 @@ export default {
               ))}
             </>
           ),
-          code: `<StatusBadge status="operational" />
-<StatusBadge status="degraded" />
-<StatusBadge status="partial" />
-<StatusBadge status="down" />
-<StatusBadge status="maintenance" />
-<StatusBadge status="unknown" />`,
         },
         {
           title: 'Variants',
@@ -172,10 +166,6 @@ export default {
               </div>
             </>
           ),
-          code: `<StatusBadge status="success" variant="outline" />
-<StatusBadge status="degraded" variant="dot" />
-<StatusBadge status="down" variant="solid" />
-<StatusBadge status="operational" variant="solid" size="sm" />`,
         },
         {
           title: 'Your own statuses',
@@ -187,18 +177,6 @@ export default {
               <StatusBadge status="pending_delete" />
             </StatusRegistryProvider>
           ),
-          code: `const requestStatuses = defineStatuses({
-  open: { label: 'Open', tone: 'info' },
-  waiting: { label: 'Waiting on requester', tone: 'warning', icon: <Clock /> },
-  resolved: { label: 'Resolved', tone: 'success' },
-});
-
-<StatusRegistryProvider statuses={requestStatuses}>
-  <StatusBadge status="open" />
-  <StatusBadge status="waiting" />
-  <StatusBadge status="resolved" />
-  <StatusBadge status="pending_delete" /> {/* not defined: "Pending delete", neutral */}
-</StatusRegistryProvider>`,
         },
         {
           title: 'Custom colours, contrast-guarded',
@@ -211,13 +189,6 @@ export default {
               <StatusBadge status="triage" variant="solid" />
             </StatusRegistryProvider>
           ),
-          code: `// Colours chosen by a workspace admin. #facc15 is too light on white:
-// the guard darkens it for light themes and keeps it for dark ones.
-const workspaceStatuses = defineStatuses({
-  triage: { label: 'Triage', tone: 'neutral', color: '#7c3aed' },
-  review: { label: 'In review', tone: 'neutral', color: '#facc15' },
-  shipped: { label: 'Shipped', tone: 'neutral', color: '#0d9488' },
-});`,
         },
       ],
     },

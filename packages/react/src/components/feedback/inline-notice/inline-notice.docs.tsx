@@ -137,12 +137,6 @@ export default {
               </InlineNotice>
             </>
           ),
-          code: `<InlineNotice tone="info">Members sync from Rook ID every 15 minutes.</InlineNotice>
-<InlineNotice tone="warning" title="Unverified.">Emails from this domain may land in spam.</InlineNotice>
-<InlineNotice tone="danger" live action={<Button size="xs" onClick={retry}>Retry</Button>}>
-  Could not load comments.
-</InlineNotice>
-<InlineNotice tone="neutral" onDismiss={forgetDraftNotice}>Draft restored from this device.</InlineNotice>`,
         },
         {
           title: 'Plain, under a control',
@@ -157,8 +151,6 @@ export default {
               </InlineNotice>
             </>
           ),
-          code: `<InlineNotice variant="plain" tone="success">Domain verified</InlineNotice>
-<InlineNotice variant="plain" tone="warning">Renews in 6 days</InlineNotice>`,
         },
       ],
     },

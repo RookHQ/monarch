@@ -186,11 +186,6 @@ export default {
           title: 'Verify a code',
           stack: true,
           render: () => <VerifyDemo />,
-          code: `<Field invalid={wrong} disabled={checking}>
-  <FieldLabel>Verification code</FieldLabel>
-  <OTPPinInput value={code} onValueChange={setCode} onComplete={verify} />
-  <FieldError>{wrong ? 'That code is not right. Check it and try again.' : null}</FieldError>
-</Field>`,
         },
         {
           title: 'PIN and groups',
@@ -208,9 +203,6 @@ export default {
               />
             </div>
           ),
-          code: `<OTPPinInput aria-label="4-digit PIN" length={4} mask />
-<OTPPinInput aria-label="Grouped code" groupSize={3} />
-<OTPPinInput aria-label="Recovery code" length={8} mode="alphanumeric" groupSize={4} />`,
         },
       ],
     },

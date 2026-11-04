@@ -199,41 +199,16 @@ export default {
           title: 'Title with validation',
           stack: true,
           render: () => <TitleDemo />,
-          code: `<h1>
-  <InlineEditText
-    label="Title"
-    value={issue.title}
-    maxLength={120}
-    validate={(v) => (v.length === 0 ? 'Enter a title.' : null)}
-    onSave={(title) => updateIssue({ title })}
-  />
-</h1>`,
         },
         {
           title: 'Failed save keeps the draft',
           stack: true,
           render: () => <FailingDemo />,
-          code: `<InlineEditText
-  label="Project name"
-  value={project.name}
-  onSave={(name) => api.rename(project.id, name)}   // rejects → error shown, editor stays open
-  onSaveError={(error, draft) => {
-    if (isConflict(error)) setConflict(draft);       // product-owned conflict handling
-  }}
-  error={conflict ? 'Someone else renamed this project.' : null}
-/>`,
         },
         {
           title: 'Multiline with actions',
           stack: true,
           render: () => <DescriptionDemo />,
-          code: `<InlineEditText
-  label="Description"
-  multiline
-  placeholder="Add a description"
-  value={description}
-  onSave={saveDescription}
-/>`,
         },
       ],
     },

@@ -91,10 +91,6 @@ export default {
               <Badge size="sm">v0.1.0</Badge>
             </>
           ),
-          code: `<Badge tone="success" dot>Resolved</Badge>
-<Badge tone="success" variant="solid">3</Badge>
-<Badge tone="info" variant="outline">Beta</Badge>
-<Badge size="sm">v0.1.0</Badge>`,
         },
       ],
     },

@@ -313,59 +313,16 @@ export default {
           title: 'Board with a WIP limit',
           stack: true,
           render: () => <BoardDemo />,
-          code: `const [columns, setColumns] = useState(initialColumns);
-
-<KanbanBoard
-  aria-label="Sprint board"
-  columns={columns}
-  onMove={(move, next) => setColumns(next)}
-  getItemId={(t) => t.id}
-  getItemLabel={(t) => t.title}
-  renderCard={(t) => <TaskCard task={t} />}
-/>`,
         },
         {
           title: 'Allowed moves, Move to menu and optimistic saving',
           stack: true,
           render: () => <RulesDemo />,
-          code: `<KanbanBoard
-  aria-label="Review pipeline"
-  columns={columns}
-  moveMenu
-  canMove={(task, to, from) => transitions[from].includes(to)}
-  onMove={async (move, next) => {
-    setColumns(next);                 // optimistic
-    try {
-      await api.moveTask(move.itemId, move.toColumnId, move.toIndex);
-    } catch (error) {
-      setColumns(previous);           // the board also announces the failure
-      throw error;
-    }
-  }}
-  getItemId={(t) => t.id}
-  getItemLabel={(t) => t.title}
-  renderCard={(t, state) => <TaskCard task={t} saving={state.pending} />}
-/>`,
         },
         {
           title: 'Collapsible columns, enforced limits, drag from the card',
           stack: true,
           render: () => <CollapsibleDemo />,
-          code: `<KanbanBoard
-  aria-label="Content board"
-  defaultColumns={columns.map((c) => ({
-    ...c,
-    actions: <IconButton size="xs" icon={<Plus />} label={\`Add a card to \${c.title}\`} />,
-  }))}
-  collapsible
-  collapsedColumnIds={collapsed}
-  onCollapsedColumnIdsChange={setCollapsed}
-  enforceWipLimits
-  dragFrom="card"
-  getItemId={(t) => t.id}
-  getItemLabel={(t) => t.title}
-  renderCard={(t) => <TaskCard task={t} />}
-/>`,
         },
       ],
     },

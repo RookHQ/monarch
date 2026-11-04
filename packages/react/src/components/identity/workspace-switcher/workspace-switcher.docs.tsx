@@ -135,19 +135,10 @@ export default {
         {
           title: 'Switch, create and manage',
           render: () => <Basic />,
-          code: `<WorkspaceSwitcher
-  workspaces={workspaces}
-  value={workspaceId}
-  onValueChange={(id) => router.push(\`/w/\${slugOf(id)}\`)}
-  onCreate={openCreateWorkspace}
-  manageHref={\`\${ROOK_ID}/workspaces\`}
-/>`,
         },
         {
           title: 'Collapsed, and nothing chosen yet',
           render: () => <Compact />,
-          code: `<WorkspaceSwitcher workspaces={workspaces} defaultValue="w2" collapsed />
-<WorkspaceSwitcher workspaces={workspaces} createHref="/onboarding" />`,
         },
       ],
     },

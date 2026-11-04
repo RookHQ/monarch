@@ -104,17 +104,6 @@ export default {
               note="Free for teams of up to 10."
             />
           ),
-          code: `<MarketingHero
-  eyebrow="Rook Example"
-  title="Write it once. Find it whenever."
-  lead="Structured documents for teams whose decisions need to stay connected."
-  actions={<>
-    <Button variant="primary">Start writing</Button>
-    <Button variant="secondary">See how it works</Button>
-  </>}
-  note="Free for teams of up to 10."
-  media={<ProductFrame label="…">…</ProductFrame>}
-/>`,
         },
       ],
     },

@@ -88,8 +88,6 @@ export default {
               </Alert>
             </>
           ),
-          code: `<Alert tone="warning" title="Domain not verified" actions={<Button size="sm">Verify</Button>} />
-<Alert tone="danger" title="Payment failed" live="assertive">…</Alert>`,
         },
       ],
     },

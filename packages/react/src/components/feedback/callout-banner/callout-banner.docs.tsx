@@ -149,15 +149,6 @@ export default {
               Add a payment method to keep your workspace and its data.
             </CalloutBanner>
           ),
-          code: `<CalloutBanner
-  placement="page"
-  tone="accent"
-  title="Your trial ends in 3 days"
-  actions={<Button size="sm" variant="primary">Choose a plan</Button>}
-  onDismiss={() => saveDismissal('trial-banner')}
->
-  Add a payment method to keep your workspace and its data.
-</CalloutBanner>`,
         },
         {
           title: 'Tones',
@@ -179,14 +170,6 @@ export default {
               <CalloutBanner tone="success" title="Domain verified" dismissible />
             </>
           ),
-          code: `<CalloutBanner tone="info" landmark="region" title="Scheduled maintenance">
-  Sign-in is unavailable on Sunday from 02:00 to 03:00 UTC.
-</CalloutBanner>
-<CalloutBanner tone="warning" title="Payment method expires this month" />
-<CalloutBanner tone="danger" title="Sync failed" live="assertive" actions={<Button size="sm">Retry</Button>}>
-  The registry did not respond. Your changes are saved locally.
-</CalloutBanner>
-<CalloutBanner tone="success" title="Domain verified" dismissible />`,
         },
         {
           title: 'Scope notice',
@@ -206,15 +189,6 @@ export default {
               Showing tickets in <strong>Support</strong>.
             </CalloutBanner>
           ),
-          code: `<CalloutBanner
-  variant="scope"
-  tone="neutral"
-  live="polite"
-  actionPlacement="inline"
-  actions={<Button size="xs" variant="ghost" onClick={clearSpace}>Show all Spaces</Button>}
->
-  Showing tickets in <strong>Support</strong>.
-</CalloutBanner>`,
         },
       ],
     },

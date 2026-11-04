@@ -208,17 +208,6 @@ export default {
           title: 'Header controls, legend and table toggle',
           stack: true,
           render: () => <FrameDemo />,
-          code: `<ChartFrame
-  title="Requests"
-  description="New requests per day"
-  headingLevel={3}
-  actions={<TabsFilter aria-label="Range" variant="pill" options={ranges} value={range} onValueChange={setRange} />}
-  legend={[{ key: 'requests', label: 'Requests', color: 1 }]}
-  table={{ columns: [{ key: 'day', label: 'Day' }, { key: 'requests', label: 'Requests' }], rows }}
-  footer="Counts update every hour."
->
-  <MyCustomChart />
-</ChartFrame>`,
         },
         {
           title: 'Loading, empty and error',
@@ -235,9 +224,6 @@ export default {
               <ChartFrame title="Error" status="error" height={80} onRetry={() => undefined} />
             </>
           ),
-          code: `<ChartFrame title="Requests" status="loading" />
-<ChartFrame title="Requests" status="empty" emptyDescription="Requests appear here after the first one arrives." />
-<ChartFrame title="Requests" status="error" onRetry={refetch} />`,
         },
       ],
     },

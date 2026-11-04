@@ -233,13 +233,6 @@ export default {
               </Tabs>
             </>
           ),
-          code: `<Tabs defaultValue="board">
-  <TabsList aria-label="Views">
-    <TabsTrigger value="board">Board</TabsTrigger>
-    <TabsTrigger value="list">List</TabsTrigger>
-  </TabsList>
-  <TabsContent value="board">…</TabsContent>
-</Tabs>`,
         },
         {
           title: 'Counts',
@@ -262,7 +255,6 @@ export default {
               <TabsContent value="closed">Closed requests</TabsContent>
             </Tabs>
           ),
-          code: `<TabsTrigger value="open" count={6} countTone="accent">Open</TabsTrigger>`,
         },
         {
           title: 'Link tabs',
@@ -278,22 +270,11 @@ export default {
               <TabsLink href="#/components/tabs">Settings</TabsLink>
             </TabsNav>
           ),
-          code: `<TabsNav aria-label="Project sections">
-  <TabsLink asChild active={pathname === '/p/42'}>
-    <Link href="/p/42">Overview</Link>
-  </TabsLink>
-  <TabsLink asChild active={pathname === '/p/42/issues'} count={4}>
-    <Link href="/p/42/issues">Issues</Link>
-  </TabsLink>
-</TabsNav>`,
         },
         {
           title: 'Filter tabs',
           stack: true,
           render: () => <FilterDemo />,
-          code: `<TabsFilter aria-label="Status" options={statuses} value={status} onValueChange={setStatus} scrollable>
-  <RequestList status={status} />
-</TabsFilter>`,
         },
         {
           title: 'Scrollable',
@@ -316,7 +297,6 @@ export default {
               </Tabs>
             </div>
           ),
-          code: `<TabsList aria-label="Workspace sections" scrollable>…</TabsList>`,
         },
         {
           title: 'URL binding',
@@ -327,14 +307,6 @@ export default {
               returns <code>value</code> / <code>onValueChange</code> for Tabs or TabsFilter.
             </p>
           ),
-          code: `const [params, setParams] = useSearchParams();
-const tabs = useTabsUrlBinding({
-  value: params.get('tab'),
-  onChange: (v) => setParams(v ? { tab: v } : {}),
-  values: ['overview', 'activity', 'files'],
-  defaultValue: 'overview',
-});
-<Tabs {...tabs}>…</Tabs>`,
         },
       ],
     },

@@ -132,14 +132,6 @@ export default {
           title: 'Detected and pinned zones',
           stack: true,
           render: () => <WorkspaceZone />,
-          code: `<Field>
-  <FieldLabel>Workspace time zone</FieldLabel>
-  <TimezoneSelect
-    value={zone}
-    onValueChange={setZone}
-    pinned={['Europe/London', 'America/New_York']}
-  />
-</Field>`,
         },
         {
           title: 'Curated list, small',
@@ -156,7 +148,6 @@ export default {
               />
             </div>
           ),
-          code: `<TimezoneSelect aria-label="Sending time zone" size="sm" zones={COMMON_ZONES} defaultValue="Europe/Berlin" />`,
         },
       ],
     },

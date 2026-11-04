@@ -257,43 +257,15 @@ export default {
           title: 'Project with groups, clear option and footer',
           stack: true,
           render: () => <ProjectDemo />,
-          code: `<Field>
-  <FieldLabel>Project</FieldLabel>
-  <EntityPicker
-    options={projects} // { value, label, hint, group, media }
-    value={value}
-    onValueChange={setValue}
-    placeholder="Choose a project"
-    clearOption={{ label: 'No project' }}
-    footer={({ close }) => <button onClick={close}>Manage projects</button>}
-  />
-</Field>`,
         },
         {
           title: 'Multiple with create',
           stack: true,
           render: () => <LabelsDemo />,
-          code: `<EntityPicker
-  multiple
-  options={options}
-  values={values}
-  onValuesChange={setValues}
-  onCreate={(q) => {
-    const option = { value: q.toLowerCase(), label: q };
-    setOptions((list) => [...list, option]);
-    return option;
-  }}
-/>`,
         },
         {
           title: 'Chip trigger',
           render: () => <ChipDemo />,
-          code: `<EntityPicker
-  options={projects}
-  value={value}
-  onValueChange={setValue}
-  trigger={<Button size="xs" aria-label={\`\${code}: project \${label}\`}>{code}</Button>}
-/>`,
         },
       ],
     },

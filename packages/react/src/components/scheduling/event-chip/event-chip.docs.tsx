@@ -143,9 +143,6 @@ export default {
               <EventChip title="Vendor call" time="17:30" status="declined" />
             </div>
           ),
-          code: `<EventChip title="Stand-up" time="09:00" color="#0f766e" />
-<EventChip title="Design review" time="11:00" status="tentative" color="#7c3aed" />
-<EventChip title="Retrospective" time="16:00" status="cancelled" />`,
         },
         {
           title: 'Bar chips (agenda, all-day row)',
@@ -169,8 +166,6 @@ export default {
               />
             </div>
           ),
-          code: `<EventChip variant="bar" title="Quarterly planning" time="10:00 – 11:30" detail="Room 4 · 8 guests" color="#2563eb" />
-<EventChip variant="bar" title="Team offsite" timeLabel="All day" />`,
         },
         {
           title: 'Block chips (time grid)',
@@ -200,8 +195,6 @@ export default {
               </div>
             </div>
           ),
-          code: `<EventChip variant="block" title="Interview" time="13:00 – 14:00" detail="Video call" color="#0891b2" />
-<EventChip variant="block" density="compact" title="Check-in" time="15:00" timeLabel="15:00 – 15:15" />`,
         },
         {
           title: 'As a link or popover trigger',
@@ -211,15 +204,6 @@ export default {
               <EventChip href="#/components/event-chip" title="Launch review" time="10:00" />
             </div>
           ),
-          code: `<EventChip href={\`/events/\${event.id}\`} title={event.title} time="10:00" />
-
-<EventChip asChild title={event.title} time="10:00">
-  <Link href={\`/events/\${event.id}\`} />
-</EventChip>
-
-<PopoverTrigger asChild>
-  <EventChip title={event.title} time="10:00" />
-</PopoverTrigger>`,
         },
       ],
     },

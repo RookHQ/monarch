@@ -307,43 +307,14 @@ export default {
         {
           title: 'Commands, groups and shortcut hints',
           render: () => <GroupsDemo />,
-          code: `<CommandPalette
-  items={[
-    { id: 'new', label: 'Create task', group: 'Actions', icon: <Plus />, shortcut: 'c', onSelect: createTask },
-    { id: 'archive', label: 'Archive', group: 'Actions', keywords: ['delete'], tone: 'danger' },
-    { id: 'board', label: 'Board', group: 'Go to', shortcut: ['G', 'B'], onSelect: () => router.push('/board') },
-  ]}
-  trigger={<Button>Search {formatHotkey('mod+k').map((k) => <Kbd key={k}>{k}</Kbd>)}</Button>}
-/>`,
         },
         {
           title: 'Recent items and async search',
           render: () => <RecentDemo />,
-          code: `<CommandPalette
-  items={commands}
-  recent={recent}                       // the app stores these
-  onItemSelect={(item) => remember(item)}
-  sources={[{
-    id: 'documents',
-    group: 'Documents',
-    minQueryLength: 2,
-    search: (q, signal) => api.search(q, { signal }).then(toItems),
-  }]}
-/>`,
         },
         {
           title: 'Nested page: Move to…',
           render: () => <PagesDemo />,
-          code: `<CommandPalette
-  items={[{ id: 'move', label: 'Move to…', page: 'move' }]}
-  pages={{
-    move: {
-      title: 'Move to',
-      placeholder: 'Choose a project…',
-      items: projects.map((p) => ({ id: p.id, label: p.name, onSelect: () => move(p.id) })),
-    },
-  }}
-/>`,
         },
         {
           title: 'App shortcuts with useHotkey',

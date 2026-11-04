@@ -223,18 +223,6 @@ export default {
         {
           title: 'Workspace audit log',
           render: () => <Demo />,
-          code: `const q = useInfiniteQuery({ queryKey: ['audit', area], queryFn, getNextPageParam });
-const events = q.data?.pages.flatMap((p) => p.items) ?? [];
-
-<AuditLogViewer
-  events={events.map(toAuditEvent)}  // { id, time, actor, action, target, ip, device, changes }
-  filters={<AreaSelect value={area} onValueChange={setArea} />}
-  onExport={() => download('audit-log.csv', auditLogToCsv([header, ...events.map(toRow)]))}
-  hasMore={q.hasNextPage}
-  loadingMore={q.isFetchingNextPage}
-  onLoadMore={() => q.fetchNextPage()}
-  error={q.error && <InlineErrorRetry onRetry={() => q.refetch()}>Couldn’t load the audit log.</InlineErrorRetry>}
-/>`,
         },
       ],
     },

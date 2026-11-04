@@ -196,30 +196,11 @@ export default {
           title: 'Drag or keyboard',
           stack: true,
           render: () => <StagesDemo />,
-          code: `const [stages, setStages] = useState(initial);
-<ReorderableList
-  aria-label="Pipeline stages"
-  items={stages}
-  onReorder={(next, { item, to }) => { setStages(next); api.moveStage(item.id, to); }}
-  getKey={(s) => s.id}
-  getLabel={(s) => s.name}
-  renderItem={(s) => <>{s.name} <Badge>{s.count}</Badge></>}
-/>`,
         },
         {
           title: 'Move buttons and a locked item',
           stack: true,
           render: () => <ButtonsDemo />,
-          code: `<ReorderableList
-  aria-label="Form fields"
-  items={fields}
-  onReorder={setFields}
-  moveButtons
-  isItemDisabled={(f) => f.locked}
-  getKey={(f) => f.id}
-  getLabel={(f) => f.name}
-  renderItem={(f) => f.name}
-/>`,
         },
       ],
     },

@@ -104,8 +104,6 @@ export default {
               <LoadingState label="Loading invoices" variant="rows" rows={3} />
             </>
           ),
-          code: `<LoadingState label="Loading contacts" rows={3} />
-<LoadingState label="Loading invoices" variant="rows" rows={3} />`,
         },
         {
           title: 'Cards and detail',
@@ -116,14 +114,11 @@ export default {
               <LoadingState label="Loading project" variant="detail" />
             </>
           ),
-          code: `<LoadingState label="Loading projects" variant="cards" rows={3} />
-<LoadingState label="Loading project" variant="detail" />`,
         },
         {
           title: 'Spinner',
           stack: true,
           render: () => <LoadingState label="Loading report…" variant="spinner" />,
-          code: `<LoadingState label="Loading report…" variant="spinner" />`,
         },
       ],
     },

@@ -175,17 +175,6 @@ export default {
         {
           title: 'Bell and panel',
           render: () => <Demo />,
-          code: `<NotificationCenter
-  items={notifications}             // newest first
-  unreadCount={meta.unread}
-  onSelect={(n) => router.push(n.href)}
-  onMarkRead={(id) => markRead.mutate(id)}
-  onMarkAllRead={() => markAllRead.mutate()}
-  hasMore={q.hasNextPage}
-  loadingMore={q.isFetchingNextPage}
-  onLoadMore={() => q.fetchNextPage()}
-  footer={<Link href="/settings/notifications">Notification settings</Link>}
-/>`,
         },
         {
           title: 'Custom trigger',
@@ -198,10 +187,6 @@ export default {
               align="start"
             />
           ),
-          code: `<NotificationCenter
-  items={notifications}
-  trigger={<RailItem label={\`Notifications, \${unread} unread\`} icon={<Bell />} />}
-/>`,
         },
       ],
     },

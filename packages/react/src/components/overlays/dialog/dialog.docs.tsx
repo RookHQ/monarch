@@ -199,47 +199,10 @@ export default {
               </DialogContent>
             </Dialog>
           ),
-          code: `<Dialog>
-  <DialogTrigger asChild><Button variant="danger">Delete project</Button></DialogTrigger>
-  <DialogContent size="sm">
-    <DialogHeader>
-      <DialogTitle>Delete project?</DialogTitle>
-      <DialogDescription>This removes all tasks and sprints.</DialogDescription>
-    </DialogHeader>
-    <DialogFooter>
-      <DialogClose asChild><Button>Cancel</Button></DialogClose>
-      <Button variant="danger">Delete</Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>`,
         },
         {
           title: 'Form with a busy save',
           render: () => <RenameDialog />,
-          code: `const [saving, setSaving] = useState(false);
-
-<Dialog open={open} onOpenChange={setOpen}>
-  <DialogTrigger asChild><Button>Rename board</Button></DialogTrigger>
-  <DialogContent
-    busy={saving}
-    closeOnOutsideClick={false}
-    fullScreenOnPhone
-    footer={
-      <>
-        <DialogClose asChild><Button disabled={saving}>Cancel</Button></DialogClose>
-        <Button variant="primary" loading={saving} onClick={save}>Save</Button>
-      </>
-    }
-  >
-    <DialogHeader>
-      <DialogTitle>Rename board</DialogTitle>
-      <DialogDescription>Everyone with access sees the new name.</DialogDescription>
-    </DialogHeader>
-    <DialogBody>
-      <Field><FieldLabel>Board name</FieldLabel><Input defaultValue="Q3 launch" /></Field>
-    </DialogBody>
-  </DialogContent>
-</Dialog>`,
         },
       ],
     },

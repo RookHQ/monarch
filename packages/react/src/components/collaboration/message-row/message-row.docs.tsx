@@ -176,22 +176,6 @@ export default {
         {
           title: 'Reactions, replies and actions',
           render: () => <ReactionsDemo />,
-          code: `<MessageRow
-  author={{ name: 'Ana Lopez', avatarSrc: user.avatarUrl }}
-  time={message.createdAt}
-  reactions={message.reactions}
-  onReactionToggle={(emoji) => react(message.id, emoji)}
-  replyCount={message.replyCount}
-  onOpenThread={() => openThread(message.id)}
-  actions={
-    <>
-      <IconButton size="xs" label="Edit message" icon={<Pencil />} />
-      <IconButton size="xs" label="More actions" icon={<MoreHorizontal />} />
-    </>
-  }
->
-  <MessageBody body={message.body} />
-</MessageRow>`,
         },
         {
           title: 'Grouping, edited and states',
@@ -239,14 +223,6 @@ export default {
               />
             </div>
           ),
-          code: `<MessageRow author={ben} time={t1}>Draft is in the shared folder.</MessageRow>
-<MessageRow author={ben} time={t2} grouped edited>Updated the second section too.</MessageRow>
-<MessageRow author={ben} time={t3} grouped status="pending">Sending this one now…</MessageRow>
-<MessageRow author={ben} time={t4} grouped status="failed" error="No connection. Not sent."
-  onRetry={() => resend(id)} onDiscard={() => discard(id)}>
-  And the summary slide.
-</MessageRow>
-<MessageRow author={chloe} time={t5} deleted />`,
         },
         {
           title: 'Internal note and system line',
@@ -276,13 +252,6 @@ export default {
               </MessageRow>
             </div>
           ),
-          code: `<MessageRow author={dev} time={t} variant="internal"
-  tags={<Badge tone="warning" size="sm">Internal</Badge>}>
-  Customer is on the legacy plan. Check billing before replying.
-</MessageRow>
-<MessageRow author={system} time={t} variant="system">
-  Dev Patel assigned this request to the Billing team
-</MessageRow>`,
         },
       ],
     },

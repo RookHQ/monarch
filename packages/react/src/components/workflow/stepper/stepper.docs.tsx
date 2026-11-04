@@ -178,18 +178,6 @@ export default {
           title: 'Wizard with clickable completed steps',
           stack: true,
           render: () => <WizardDemo />,
-          code: `<Stepper
-  aria-label="Setup progress"
-  steps={[
-    { id: 'basics', label: 'Basics' },
-    { id: 'access', label: 'Access' },
-    { id: 'branding', label: 'Branding', optional: true },
-    { id: 'review', label: 'Review' },
-  ]}
-  current={step}
-  furthest={furthest}
-  onStepSelect={(_, i) => setStep(i)}
-/>`,
         },
         {
           title: 'Error and descriptions',
@@ -211,7 +199,6 @@ export default {
               ]}
             />
           ),
-          code: `<Stepper current="map" steps={[…, { id: 'map', label: 'Map columns', status: 'error' }, …]} />`,
         },
         {
           title: 'Vertical',
@@ -229,7 +216,6 @@ export default {
               ]}
             />
           ),
-          code: `<Stepper orientation="vertical" current={2} steps={steps} aria-label="Domain setup" />`,
         },
         {
           title: 'Compact',
@@ -237,7 +223,6 @@ export default {
           render: () => (
             <Stepper aria-label="Checkout progress" compact="always" current={1} steps={SETUP} />
           ),
-          code: `<Stepper compact="always" current={1} steps={steps} /> // what 320px shows with compact="auto"`,
         },
       ],
     },

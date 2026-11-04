@@ -271,34 +271,6 @@ export default {
           title: 'Inbox with list, conversation and details',
           stack: true,
           render: () => <InboxDemo />,
-          code: `// State lives in the URL: ?t=<id>&details=1
-<SplitInboxLayout
-  listLabel="Conversations"
-  detailLabel="Conversation"
-  contextLabel="Ticket details"
-  detailOpen={Boolean(state.t)}
-  onBack={() => navigate({ t: null })}
-  listSize={prefs.listSize}
-  onListSizeChange={(listSize) => savePrefs({ listSize })}
-  contextOpen={prefs.details}
-  onContextOpenChange={(details) => savePrefs({ details })}
-  list={<ConversationList onOpen={(t) => navigate({ t })} />}
-  detail={
-    state.t ? (
-      <>
-        <RecordHeader
-          headingLevel="h2"
-          title={ticket.subject}
-          actions={<SplitInboxContextToggle showLabel="Show ticket details" hideLabel="Hide ticket details" />}
-        />
-        <Conversation ticket={ticket} />
-      </>
-    ) : (
-      <EmptyState size="compact" headingLevel="h2" title="Pick a conversation" />
-    )
-  }
-  context={<TicketDetails ticket={ticket} />}
-/>`,
         },
       ],
     },

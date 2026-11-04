@@ -252,15 +252,6 @@ export default {
               <ChatDemo />
             </div>
           ),
-          code: `<MessageComposer
-  label="Message #design"
-  placeholder="Message #design"
-  mentions={{ search: searchPeople }}
-  replyTo={replyTo}
-  onDismissReply={() => setReplyTo(undefined)}
-  emoji={(insert) => <EmojiPicker onPick={insert} />}
-  onSend={(message) => api.send(channelId, message)}
-/>`,
         },
         {
           title: 'Ticket reply and internal note',
@@ -270,21 +261,6 @@ export default {
               <TicketDemo />
             </div>
           ),
-          code: `<MessageComposer
-  label={mode === 'note' ? 'Internal note' : 'Reply to customer'}
-  modes={[
-    { value: 'public', label: 'Reply', placeholder: 'Write a reply to the customer' },
-    { value: 'note', label: 'Internal note', tone: 'note', sendLabel: 'Add note' },
-  ]}
-  mode={mode}
-  onModeChange={setMode}
-  modeAside={mode === 'public' ? 'To: customer@example.com' : 'Visible to your team'}
-  sendOn="mod-enter"
-  onDraftChange={saveDraft}
-  draftStatus={draftStatus}
-  maxLength={2000}
-  onSend={(message) => api.reply(ticketId, message)}
-/>`,
         },
         {
           title: 'Editing, attachments and disabled',
@@ -328,16 +304,6 @@ export default {
               />
             </div>
           ),
-          code: `<MessageComposer label="Edit message" editing defaultValue={message.html}
-  onCancelEdit={stopEditing} onSend={(m) => api.edit(message.id, m)} />
-
-<MessageComposer label="Message" onFiles={uploads.add}
-  hasAttachments={uploads.items.length > 0}
-  attachments={<UploadQueue items={uploads.items} />}
-  onSend={send} />
-
-<MessageComposer label="Message #announcements" disabled
-  disabledReason="Only admins can post in #announcements." onSend={send} />`,
         },
       ],
     },

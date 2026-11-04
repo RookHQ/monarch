@@ -125,10 +125,6 @@ export default {
               <Money amount={4500} currency="JPY" minorUnits locale="ja-JP" />
             </>
           ),
-          code: `<Money amount={129900} currency="USD" minorUnits locale="en-US" />   // $1,299.00
-<Money amount={129900} currency="EUR" minorUnits locale="de-DE" />   // 1.299,00 €
-<Money amount={12990000} currency="INR" minorUnits locale="en-IN" /> // ₹1,29,900.00
-<Money amount={4500} currency="JPY" minorUnits locale="ja-JP" />     // ￥4,500`,
         },
         {
           title: 'Compact, signs and negatives',
@@ -142,11 +138,6 @@ export default {
               <Money amount={null} currency="USD" />
             </>
           ),
-          code: `<Money amount={2_480_000} currency="USD" notation="compact" /> // $2.5M, read in full
-<Money amount={1250} currency="USD" signDisplay="exceptZero" />
-<Money amount={-1250} currency="USD" toneNegative />
-<Money amount={-1250} currency="USD" currencySign="accounting" />
-<Money amount={null} currency="USD" />`,
         },
       ],
     },

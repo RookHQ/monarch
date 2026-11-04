@@ -148,18 +148,6 @@ export default {
               style={{ width: '100%', maxWidth: '30rem' }}
             />
           ),
-          code: `<DonutChart
-  title="Assets by type"
-  description="All active assets"
-  centerLabel="assets"
-  segments={[
-    { key: 'laptop', label: 'Laptops', value: 412 },
-    { key: 'phone', label: 'Phones', value: 268 },
-    { key: 'monitor', label: 'Monitors', value: 131 },
-    { key: 'tablet', label: 'Tablets', value: 54 },
-    { key: 'other', label: 'Accessories', value: 9 },
-  ]}
-/>`,
         },
         {
           title: 'Folding into Other, percentages only',
@@ -183,8 +171,6 @@ export default {
               style={{ width: '100%', maxWidth: '30rem' }}
             />
           ),
-          code: `<DonutChart title="Tickets by channel" segments={channels} maxSegments={5}
-  legendContent="percent" size={140} />`,
         },
         {
           title: 'Loading and empty',
@@ -200,8 +186,6 @@ export default {
               />
             </div>
           ),
-          code: `<DonutChart title="Assets by type" segments={[]} status="loading" />
-<DonutChart title="Assets by type" segments={[]} emptyDescription="Assets appear here once you import them." />`,
         },
       ],
     },

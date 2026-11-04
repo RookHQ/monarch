@@ -159,15 +159,6 @@ export default {
           title: 'Controlled with validation',
           stack: true,
           render: () => <ControlledDemo />,
-          code: `const [hours, setHours] = useState(schedule.weeklyHours);
-const errors = validateWeeklyHours(hours);
-<WeeklyHoursEditor
-  value={hours}
-  onValueChange={setHours}
-  weekStartsOn={settings.weekStartsOn}
-  timeZoneLabel={<TimezoneSelect value={zone} onValueChange={setZone} />}
-/>
-<Button disabled={Object.keys(errors).length > 0}>Save</Button>`,
         },
         {
           title: 'Uncontrolled, 12-hour clock, week from Sunday',
@@ -185,7 +176,6 @@ const errors = validateWeeklyHours(hours);
               />
             </div>
           ),
-          code: `<WeeklyHoursEditor name="supportHours" defaultValue={hours} weekStartsOn={0} hourCycle="12" step={30} />`,
         },
         {
           title: 'Read-only',
@@ -201,7 +191,6 @@ const errors = validateWeeklyHours(hours);
               />
             </div>
           ),
-          code: `<WeeklyHoursEditor readOnly value={hours} timeZoneLabel="Times in Asia/Kolkata" />`,
         },
       ],
     },

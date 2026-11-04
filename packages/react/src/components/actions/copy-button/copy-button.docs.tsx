@@ -166,32 +166,14 @@ export default {
               <CopyButton value="ws_01HZX4" label="Copy workspace ID" iconOnly size="sm" />
             </>
           ),
-          code: `<CopyButton value={webhookUrl} target="webhook URL" />
-<CopyButton value={shareUrl} label="Copy link" copiedLabel="Link copied" variant="primary" />
-<CopyButton value={workspaceId} label="Copy workspace ID" iconOnly size="sm" />`,
         },
         {
           title: 'Reporting a failure',
           render: () => <WithErrorReport />,
-          code: `const [problem, setProblem] = useState<string | null>(null);
-
-<CopyButton
-  value={inviteUrl}
-  label="Copy invite link"
-  copiedLabel="Link copied"
-  onCopy={() => setProblem(null)}
-  onCopyError={(error) => setProblem(error.message)} // or toast({ tone: 'danger', … })
-/>
-{problem ? <p>Copy failed. Select the link and copy it manually.</p> : null}`,
         },
         {
           title: 'useCopyToClipboard',
           render: () => <HookDemo />,
-          code: `const { copy, status } = useCopyToClipboard();
-
-<Button size="sm" onClick={() => void copy(reference)}>
-  {status === 'copied' ? 'Reference copied' : 'Copy reference'}
-</Button>`,
         },
       ],
     },

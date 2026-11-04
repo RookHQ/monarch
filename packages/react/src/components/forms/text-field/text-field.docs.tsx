@@ -104,12 +104,6 @@ export default {
               <Textarea aria-label="Notes" placeholder="Notes" />
             </>
           ),
-          code: `<Input size="sm" placeholder="Small" />
-<Input placeholder="Default" />
-<Input size="lg" placeholder="Large" />
-<Input invalid defaultValue="Invalid value" />
-<Input disabled placeholder="Disabled" />
-<Textarea placeholder="Notes" />`,
         },
       ],
     },

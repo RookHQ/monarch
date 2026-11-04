@@ -136,8 +136,6 @@ export default {
               <Avatar name="Rook" size="xl" />
             </>
           ),
-          code: `<Avatar name="Ada Lovelace" src={user.avatarUrl} />
-<Avatar name="Margaret Hamilton" size="lg" shape="square" />`,
         },
         {
           title: 'Status, numeric size and token palette',
@@ -150,10 +148,6 @@ export default {
               <Avatar name="Northwind Labs" shape="square" fallback="icon" size="lg" />
             </>
           ),
-          code: `<Avatar name={user.name} src={user.avatarUrl} status="online" />
-<Avatar name={user.name} size={28} status="away" />
-<Avatar name={user.name} seed={user.id} palette="tokens" status="busy" />
-<Avatar name={org.name} src={org.logoUrl} shape="square" fallback="icon" />`,
         },
         {
           title: 'Group with overflow',
@@ -166,9 +160,6 @@ export default {
               <Avatar name="Hedy Lamarr" />
             </AvatarGroup>
           ),
-          code: `<AvatarGroup label="Assignees" max={3}>
-  {assignees.map((a) => <Avatar key={a.id} name={a.name} src={a.avatarUrl} seed={a.id} />)}
-</AvatarGroup>`,
         },
       ],
     },

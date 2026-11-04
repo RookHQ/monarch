@@ -192,15 +192,6 @@ export default {
         {
           title: 'Sidebar calendar with events',
           render: () => <SidebarCalendar />,
-          code: `const [value, setValue] = useState<string | null>('2026-11-10');
-
-<MiniMonth
-  locale="en-GB"
-  value={value}
-  onValueChange={setValue}
-  getDayInfo={(d) => events[d]} // { dots: ['accent', 'info'], description: '2 events' }
-  aria-label="Jump to date"
-/>`,
         },
         {
           title: 'Bookable days only, week numbers',
@@ -215,19 +206,10 @@ export default {
               defaultValue="2026-11-12"
             />
           ),
-          code: `<MiniMonth
-  locale="en-GB"
-  min={today}
-  max="2026-12-20"
-  isDateDisabled={(d) => isWeekend(d)}
-  showWeekNumbers
-  defaultValue="2026-11-12"
-/>`,
         },
         {
           title: 'US locale (week starts on Sunday)',
           render: () => <MiniMonth locale="en-US" today={TODAY} defaultValue="2026-11-26" />,
-          code: `<MiniMonth locale="en-US" defaultValue="2026-11-26" />`,
         },
       ],
     },

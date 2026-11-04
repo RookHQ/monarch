@@ -98,16 +98,6 @@ export default {
               ]}
             />
           ),
-          code: `<Breadcrumb
-  linkAs={Link}
-  items={[
-    { label: 'Workspace', href: '/' },
-    { label: 'Projects', href: '/projects' },
-    { label: 'Website', href: '/projects/website' },
-    { label: 'Sprint 4', href: '/projects/website/sprints/4' },
-    { label: 'Fix sign-in redirect' },
-  ]}
-/>`,
         },
       ],
     },

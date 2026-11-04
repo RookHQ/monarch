@@ -203,22 +203,6 @@ export default {
         {
           title: 'Due date with quick picks',
           render: () => <DueDate />,
-          code: `const [value, setValue] = useState<string | null>(null);
-
-<Field>
-  <FieldLabel>Due date</FieldLabel>
-  <DatePicker
-    locale="en-GB"
-    presets={[
-      { label: 'Today', days: 0 },
-      { label: 'Tomorrow', days: 1 },
-      { label: 'In a week', days: 7 },
-      { label: 'In two weeks', days: 14 },
-    ]}
-    value={value}
-    onValueChange={setValue}
-  />
-</Field>`,
         },
         {
           title: 'Min, max and an error',
@@ -235,10 +219,6 @@ export default {
               />
             </Field>
           ),
-          code: `<Field>
-  <FieldLabel>Renewal date</FieldLabel>
-  <DatePicker locale="en-GB" min="2026-11-01" max="2027-10-31" defaultValue="2027-12-01" />
-</Field>`,
         },
         {
           title: 'Sizes and formats',
@@ -269,26 +249,10 @@ export default {
               />
             </>
           ),
-          code: `<DatePicker aria-label="Start" size="sm" locale="en-US" defaultValue="2026-11-04" />
-<DatePicker aria-label="Published" size="lg" locale="de-DE" defaultValue="2026-11-04"
-  formatOptions={{ dateStyle: 'medium' }} />
-<DatePicker aria-label="Locked" disabled locale="en-GB" defaultValue="2026-11-04" />`,
         },
         {
           title: 'Inside a dialog',
           render: () => <InDialog />,
-          code: `<Dialog>
-  <DialogTrigger asChild><Button>Schedule review</Button></DialogTrigger>
-  <DialogContent size="sm">
-    <DialogTitle>Schedule review</DialogTitle>
-    <DialogBody>
-      <Field>
-        <FieldLabel>Review date</FieldLabel>
-        <DatePicker locale="en-GB" min={today} />
-      </Field>
-    </DialogBody>
-  </DialogContent>
-</Dialog>`,
         },
       ],
     },

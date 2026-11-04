@@ -180,23 +180,11 @@ export default {
           title: 'Assignee with you and Unassigned',
           stack: true,
           render: () => <SingleDemo />,
-          code: `<Field>
-  <FieldLabel>Assignee</FieldLabel>
-  <AssigneePicker people={members} currentUserId={me.id} value={value} onValueChange={setValue} />
-</Field>`,
         },
         {
           title: 'Several reviewers',
           stack: true,
           render: () => <MultipleDemo />,
-          code: `<AssigneePicker
-  multiple
-  people={members}
-  currentUserId={me.id}
-  values={values}
-  onValuesChange={setValues}
-  allowUnassigned={false}
-/>`,
         },
       ],
     },

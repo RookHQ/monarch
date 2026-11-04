@@ -200,14 +200,6 @@ export default {
               />
             </StatCardGroup>
           ),
-          code: `<StatCardGroup label="Last 30 days" columns={3}>
-  <StatCard label="Revenue" value={1284500} format="currency" currency="USD" notation="compact"
-    change={{ value: 0.124 }} caption="vs previous 30 days" />
-  <StatCard label="Cost per lead" value={41.2} format="currency" currency="USD"
-    change={{ current: 41.2, previous: 50.4, goodDirection: 'down' }} caption="vs previous 30 days" />
-  <StatCard label="Reply rate" value={0.081} format="percent"
-    change={{ value: 0 }} caption="vs previous 30 days" hint="212 of 2,617 contacts" />
-</StatCardGroup>`,
         },
         {
           title: 'Help, unit, sparkline and drill-down',
@@ -236,18 +228,6 @@ export default {
               />
             </StatCardGroup>
           ),
-          code: `<StatCard
-  label="First response"
-  value={2.4}
-  unit="h"
-  format="number"
-  help="Median time from a ticket being opened to the first reply by an agent, in business hours."
-  change={{ current: 2.4, previous: 3.1, goodDirection: 'down' }}
-  caption="vs last week"
-  sparkline={<Sparkline values={lastSevenDays} responsive height={28} />}
-/>
-<StatCard label="Overdue invoices" value={7} href="/invoices?status=overdue" tone="danger"
-  hint="3 more than last month" />`,
         },
         {
           title: 'Sizes and plain variant',
@@ -287,16 +267,6 @@ export default {
               </div>
             </div>
           ),
-          code: `<StatCard size="lg" label="Uptime, 30 days" value={0.9996} format="percent"
-  formatOptions={{ maximumFractionDigits: 2 }}
-  change={{ value: 0.02, format: 'number', unit: 'pt', formatOptions: { maximumFractionDigits: 2 } }}
-  caption="vs previous 30 days" />
-<StatCardGroup columns={3}>
-  <StatCard size="sm" label="Open" value="42" />
-  <StatCard size="sm" label="Pending" value="9" />
-  <StatCard size="sm" label="Resolved" value="118" tone="success" />
-</StatCardGroup>
-<StatCard variant="plain" semantics="description-list" label="Members" value="24" hint="3 invited" />`,
         },
         {
           title: 'Loading, empty and error',
@@ -313,9 +283,6 @@ export default {
               />
             </StatCardGroup>
           ),
-          code: `<StatCard label="Signups" value={data?.signups} loading={isLoading} />
-<StatCard label="NPS" value={null} hint="Needs at least 20 responses" />
-<StatCard label="Churn" value={null} error="Couldn't load churn." onRetry={refetch} />`,
         },
         {
           title: '0.3 delta props',
@@ -340,8 +307,6 @@ export default {
               />
             </>
           ),
-          code: `<StatCard label="Open tickets" value="42" delta="+5" deltaDirection="up" deltaTone="danger" caption="vs last week" />
-<StatCard label="Resolved" value="118" delta="+9" deltaDirection="up" caption="vs last week" />`,
         },
       ],
     },

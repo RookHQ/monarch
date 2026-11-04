@@ -179,15 +179,6 @@ export default {
           title: 'Workspace address',
           stack: true,
           render: () => <AddressDemo />,
-          code: `<Field required>
-  <FieldLabel>Workspace address</FieldLabel>
-  <UsernameAvailabilityInput
-    prefix="example.com/"
-    validate={(value, signal) => api.checkAddress(value, { signal })}
-    transform={slugify}
-    onStatusChange={setStatus}
-  />
-</Field>`,
         },
         {
           title: 'Settled states',
@@ -208,11 +199,6 @@ export default {
               />
             </div>
           ),
-          code: `<UsernameAvailabilityInput defaultValue="maya-lee" validate={() => ({ valid: true })} />
-<UsernameAvailabilityInput
-  defaultValue="admin"
-  validate={() => ({ valid: false, message: 'That handle is taken.' })}
-/>`,
         },
       ],
     },

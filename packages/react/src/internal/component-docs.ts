@@ -12,7 +12,8 @@
  * - API reference and typed properties are generated from the TypeScript
  *   declarations (dist/manifest.json); the docs file only adds notes.
  * - Live examples import components from '@rookcom/monarch-react', exactly as
- *   an app would, never from the folder's own files.
+ *   an app would, never from the folder's own files. The code shown under each
+ *   example is extracted from its `render` function when the docs site builds.
  *
  * This file is type-only apart from the `incomplete` helper and the section
  * list. It is excluded from the published build (tsconfig.build.json).
@@ -87,8 +88,13 @@ export interface Example {
   stack?: boolean;
   /** The live demonstration. Import components from '@rookcom/monarch-react'. */
   render: () => ReactNode;
-  /** The source shown under the demo. Keep it identical in behaviour to `render`. */
-  code: string;
+  /**
+   * Only for an example whose preview is prose and whose code is an
+   * integration sketch that cannot run on the page. Every other example's code
+   * is generated from `render` at build time (apps/docs/plugins/extract-examples.ts),
+   * so it is never written twice.
+   */
+  code?: string;
 }
 
 export interface PurposeSection {

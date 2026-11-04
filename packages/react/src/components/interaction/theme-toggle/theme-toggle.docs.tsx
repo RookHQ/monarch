@@ -171,26 +171,14 @@ export default {
         {
           title: 'Appearance setting',
           render: () => <SettingsDemo />,
-          code: `// In <head>: <script dangerouslySetInnerHTML={{ __html: appearanceScript() }} />
-<ThemeToggle />`,
         },
         {
           title: 'Menu button, with and without text',
           render: () => <MenuDemo />,
-          code: `<ThemeToggle variant="menu" />
-<ThemeToggle variant="menu" showLabel={false} side="right" />`,
         },
         {
           title: 'Controlled, translated',
           render: () => <ControlledDemo />,
-          code: `const [theme, setTheme] = useState<ThemePreference>('light');
-
-<ThemeToggle
-  size="sm"
-  value={theme}
-  onValueChange={setTheme}
-  messages={{ label: 'Appearance' }}
-/>`,
         },
       ],
     },

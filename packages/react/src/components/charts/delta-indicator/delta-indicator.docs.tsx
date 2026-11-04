@@ -147,12 +147,6 @@ export default {
               />
             </>
           ),
-          code: `<DeltaIndicator value={0.124} comparison="vs last month" />          // +12.4%, better
-<DeltaIndicator value={-0.052} comparison="vs last month" />         // −5.2%, worse
-<DeltaIndicator current={182} previous={240} format="number" unit="ms"
-  goodDirection="down" comparison="vs last week" />                  // −58 ms, better
-<DeltaIndicator value={1250} format="currency" currency="USD"
-  goodDirection="down" comparison="in spend" />                      // +$1,250.00, worse`,
         },
         {
           title: 'Flat, no data and pill',
@@ -170,10 +164,6 @@ export default {
               />
             </>
           ),
-          code: `<DeltaIndicator value={0.0004} comparison="vs last week" /> // rounds to 0%: No change
-<DeltaIndicator current={14} previous={0} />                // No earlier data
-<DeltaIndicator value={0.08} appearance="pill" size="md" />
-<DeltaIndicator value={-3} format="number" goodDirection="neither" appearance="pill" />`,
         },
       ],
     },

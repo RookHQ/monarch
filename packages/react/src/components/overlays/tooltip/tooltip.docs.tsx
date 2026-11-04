@@ -85,11 +85,6 @@ export default {
               <IconButton label="Copy link" icon={<PlusIcon />} />
             </Tooltip>
           ),
-          code: `<TooltipProvider>   {/* once, near the root */}
-  <Tooltip content="Copy link">
-    <IconButton label="Copy link" icon={<LinkIcon />} />
-  </Tooltip>
-</TooltipProvider>`,
         },
       ],
     },

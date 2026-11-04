@@ -215,19 +215,6 @@ export default {
               xFormat={UTC_DAY}
             />
           ),
-          code: `<LineChart
-  title="Sessions"
-  description="Last 14 days against the previous 14"
-  data={traffic}               // [{ date: Date, sessions: 820, previous: 672 }, …]
-  xKey="date"
-  xLabel="Day"
-  series={[
-    { key: 'sessions', label: 'This period' },
-    { key: 'previous', label: 'Previous period', color: 'neutral', dashed: true },
-  ]}
-  referenceLines={[{ value: 1200, label: 'Target' }]}
-  locale="en-US"
-/>`,
         },
         {
           title: 'Area with gaps',
@@ -249,25 +236,11 @@ export default {
               height={180}
             />
           ),
-          code: `<LineChart
-  title="p95 latency"
-  variant="area"
-  curve="monotone"
-  data={latency}               // p95: null on days with no traffic
-  xKey="date"
-  series={[{ key: 'p95', label: 'p95', color: 3 }]}
-  includeZero={false}
-  formatValue={(v) => \`\${v} ms\`}
-/>`,
         },
         {
           title: 'Two charts sharing one crosshair',
           stack: true,
           render: () => <SyncedDemo />,
-          code: `const [active, setActive] = useState<number | null>(null);
-
-<LineChart title="Sessions" … activeIndex={active} onActiveIndexChange={setActive} />
-<LineChart title="Sign-ups" … activeIndex={active} onActiveIndexChange={setActive} />`,
         },
       ],
     },

@@ -189,40 +189,11 @@ export default {
               </SettingsRow>
             </SettingsSection>
           ),
-          code: `<SettingsSection
-  title="Profile"
-  description="How you appear to your teammates."
-  actions={<Button variant="primary">Save</Button>}
->
-  <SettingsRow label="Display name" description="Shown on comments and assignments." required>
-    <Input defaultValue="Ada Lovelace" />
-  </SettingsRow>
-  <SettingsRow label="Show my status">
-    <Switch defaultChecked />
-  </SettingsRow>
-</SettingsSection>`,
         },
         {
           title: 'Save footer with dirty state',
           stack: true,
           render: () => <DirtyDemo />,
-          code: `const dirty = draft.name !== saved.name || draft.digest !== saved.digest;
-
-<SettingsSection
-  title="Workspace"
-  description="Name and notifications for everyone in this workspace."
-  dirty={dirty}
-  saving={mutation.isPending}
-  onSave={() => mutation.mutate(draft)}
-  onCancel={() => setDraft(saved)}
->
-  <SettingsRow label="Workspace name">
-    <Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
-  </SettingsRow>
-  <SettingsRow label="Weekly digest" description="A summary email every Monday.">
-    <Switch checked={draft.digest} onCheckedChange={(digest) => setDraft({ ...draft, digest })} />
-  </SettingsRow>
-</SettingsSection>`,
         },
         {
           title: 'Danger zone',
@@ -245,18 +216,6 @@ export default {
               />
             </SettingsSection>
           ),
-          code: `<SettingsSection title="Danger zone" description="These actions affect everyone in the workspace." tone="danger">
-  <SettingsActionRow
-    title="Transfer ownership"
-    description="Make another admin the owner. You stay an admin."
-    action={<Button onClick={openTransfer}>Transfer</Button>}
-  />
-  <SettingsActionRow
-    title="Delete workspace"
-    description="Removes every project, file and member. This can’t be undone."
-    action={<Button variant="danger" onClick={confirmDelete}>Delete workspace</Button>}
-  />
-</SettingsSection>`,
         },
         {
           title: 'Loading and no access',
@@ -275,12 +234,6 @@ export default {
               </SettingsSection>
             </div>
           ),
-          code: `<SettingsSection title="Payroll" state={query.isLoading ? 'loading' : 'ready'}>…</SettingsSection>
-<SettingsSection
-  title="Security"
-  state={canEdit ? 'ready' : 'no-access'}
-  noAccessDescription="Ask a workspace admin to change security settings."
->…</SettingsSection>`,
         },
       ],
     },

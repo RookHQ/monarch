@@ -272,43 +272,15 @@ export default {
         {
           title: 'Removable filters',
           render: () => <ActiveFilters />,
-          code: `<FilterBar onClearAll={() => setFilters([])}>
-  {filters.map((f) => (
-    <FilterChip key={f.name} name={f.name} value={f.value} onRemove={() => remove(f.name)} />
-  ))}
-</FilterBar>`,
         },
         {
           title: 'Search, add filter, editable chip, result count',
           stack: true,
           render: () => <FullBar />,
-          code: `<FilterBar
-  landmark
-  label="Filter tickets"
-  search={<SearchInput aria-label="Search tickets" size="sm" value={q} onValueChange={setQ} debounce={250} />}
-  activeCount={active}
-  resultCount={\`\${total} results\`}
-  end={<SortMenu />}
-  add={<FilterMenu options={[{ value: 'status', label: 'Status' }, { value: 'owner', label: 'Owner' }]} onSelect={add} />}
-  onClearAll={clearAll}
->
-  <FilterChip
-    name="Status"
-    value={status}
-    open={statusOpen}
-    onOpenChange={setStatusOpen}
-    onRemove={() => setStatus(null)}
-    editor={<StatusPicker value={status} onChange={setStatus} />}
-  />
-</FilterBar>`,
         },
         {
           title: 'Quick filters (toggle chips with counts)',
           render: () => <QuickFilters />,
-          code: `<FilterBar label="Quick filters" scrollable>
-  <FilterChip name="Assigned to me" count={12} pressed={mine} onPressedChange={setMine} />
-  <FilterChip name="Unread" count={5} pressed={unread} onPressedChange={setUnread} />
-</FilterBar>`,
         },
       ],
     },

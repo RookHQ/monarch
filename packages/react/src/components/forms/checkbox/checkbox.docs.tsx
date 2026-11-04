@@ -91,9 +91,6 @@ export default {
               <Checkbox label="Unavailable" disabled />
             </>
           ),
-          code: `<Checkbox label="Email me updates" description="About once a month." defaultChecked />
-<Checkbox label="Select all" checked="indeterminate" />
-<Checkbox label="Unavailable" disabled />`,
         },
       ],
     },

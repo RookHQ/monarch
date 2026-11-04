@@ -75,10 +75,6 @@ export default {
               </PopoverContent>
             </Popover>
           ),
-          code: `<Popover>
-  <PopoverTrigger asChild><Button>Filters</Button></PopoverTrigger>
-  <PopoverContent aria-label="Filters">…</PopoverContent>
-</Popover>`,
         },
       ],
     },

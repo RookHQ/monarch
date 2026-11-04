@@ -234,19 +234,6 @@ export default {
           title: 'Controlled address',
           stack: true,
           render: () => <ControlledDemo />,
-          code: `const adapter: LocationAdapter = {
-  countries: (signal) => api.countries({ signal }),
-  regions: (country, signal) => api.regions(country, { signal }),
-  cities: (query, signal) => api.searchCities(query, { signal }),
-};
-
-<LocationFields
-  adapter={adapter}
-  legend="Billing address"
-  value={value}
-  onValueChange={setValue}
-  required={['country', 'city']}
-/>`,
         },
         {
           title: 'Subset and failure',
@@ -266,8 +253,6 @@ export default {
               />
             </div>
           ),
-          code: `<LocationFields adapter={adapter} fields={['country', 'city']} />
-<LocationFields adapter={failingAdapter} fields={['country']} />`,
         },
       ],
     },

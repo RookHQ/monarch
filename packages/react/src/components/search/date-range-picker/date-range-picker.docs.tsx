@@ -166,25 +166,6 @@ export default {
         {
           title: 'Report period with presets',
           render: () => <ReportRange />,
-          code: `const [value, setValue] = useState<DateRange | null>({ start: '2026-10-06', end: '2026-11-04' });
-
-<Field>
-  <FieldLabel>Report period</FieldLabel>
-  <DateRangePicker
-    locale="en-GB"
-    max={today}
-    maxDays={366}
-    presets={[
-      { label: 'Last 7 days', lastDays: 7 },
-      { label: 'Last 30 days', lastDays: 30 },
-      { label: 'Last 90 days', lastDays: 90 },
-      { label: 'This month', months: 0 },
-      { label: 'Last month', months: -1 },
-    ]}
-    value={value}
-    onValueChange={setValue}
-  />
-</Field>`,
         },
         {
           title: 'Leave with a minimum length',
@@ -201,11 +182,6 @@ export default {
               />
             </Field>
           ),
-          code: `<Field>
-  <FieldLabel>Leave</FieldLabel>
-  <DateRangePicker locale="en-GB" min={today} minDays={2}
-    defaultValue={{ start: '2026-11-12', end: '2026-11-12' }} />
-</Field>`,
         },
         {
           title: 'Compact filter',
@@ -218,8 +194,6 @@ export default {
               defaultValue={{ start: '2026-11-01', end: '2026-11-30' }}
             />
           ),
-          code: `<DateRangePicker aria-label="Created" size="sm" locale="en-US"
-  defaultValue={{ start: '2026-11-01', end: '2026-11-30' }} />`,
         },
       ],
     },

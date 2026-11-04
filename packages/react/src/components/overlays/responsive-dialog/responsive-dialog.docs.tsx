@@ -155,22 +155,6 @@ export default {
               </ResponsiveDialogContent>
             </ResponsiveDialog>
           ),
-          code: `<ResponsiveDialog>
-  <ResponsiveDialogTrigger asChild><Button>Invite people</Button></ResponsiveDialogTrigger>
-  <ResponsiveDialogContent closeOnOutsideClick={false}>
-    <DialogHeader>
-      <DialogTitle>Invite people</DialogTitle>
-      <DialogDescription>They get an email with a link to join.</DialogDescription>
-    </DialogHeader>
-    <DialogBody>
-      <Field><FieldLabel>Email address</FieldLabel><Input type="email" /></Field>
-    </DialogBody>
-    <DialogFooter>
-      <ResponsiveDialogClose asChild><Button>Cancel</Button></ResponsiveDialogClose>
-      <Button variant="primary">Send invite</Button>
-    </DialogFooter>
-  </ResponsiveDialogContent>
-</ResponsiveDialog>`,
         },
       ],
     },

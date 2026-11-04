@@ -112,14 +112,6 @@ export default {
           title: 'Inbox',
           stack: true,
           render: () => <Inbox />,
-          code: `<SplitLayout
-  listLabel="Conversations"
-  detailLabel="Conversation"
-  detailOpen={open !== null}
-  onBack={() => setOpen(null)}
-  list={<ConversationList onOpen={setOpen} />}
-  detail={open ? <Conversation id={open} /> : <EmptyState title="No conversation selected" />}
-/>`,
         },
       ],
     },

@@ -202,32 +202,11 @@ export default {
           title: 'An embedded settings page (ready, auto-height)',
           stack: true,
           render: () => <Ready />,
-          code: `// Host (Rook ID App Settings)
-<EmbeddedAppFrame
-  src="https://desk.example.com/settings/email?embed=settings"
-  title="Example Desk: Email notifications"
-  allowedOrigins={['https://desk.example.com']}
-  openHref="https://desk.example.com/settings/email"
-  messages={{ open: 'Open in Example Desk' }}
-/>
-
-// Embedded app (its settings layout)
-const { embedded, exitFocus } = useEmbedReady({
-  allowedParentOrigins: ['https://hub.example.com'],
-  ready: !!session && !!workspace,
-});`,
         },
         {
           title: 'A page that never answers',
           stack: true,
           render: () => <Unresponsive />,
-          code: `<EmbeddedAppFrame
-  src={url}
-  title="Example Desk: Billing"
-  readyTimeout={1} // the demo gives up at once; the default is 12 seconds
-  openHref={url}
-  messages={{ open: 'Open in Example Desk' }}
-/>`,
         },
       ],
     },
