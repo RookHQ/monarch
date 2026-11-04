@@ -166,13 +166,6 @@ function Hero() {
             </span>
           </span>
         }
-        lead={
-          <span className="docs-hero__block docs-rise" style={delay(0.28)}>
-            {facts.components} accessible components and {facts.patterns} patterns on one set of
-            tokens. Bring your colour, choose light or dark, and ship something that feels
-            considered from the very first screen.
-          </span>
-        }
         actions={
           <>
             <Button asChild variant="primary" trailingIcon={<ArrowRightIcon />}>
