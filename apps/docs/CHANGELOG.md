@@ -1,5 +1,13 @@
 # @rookcom/monarch-docs
 
+## 0.0.10
+
+### Patch Changes
+
+- Updated dependencies [b5b4170]
+- Updated dependencies [b5b4170]
+  - @rookcom/monarch-react@0.7.0
+
 ## 0.0.9
 
 ### Patch Changes
