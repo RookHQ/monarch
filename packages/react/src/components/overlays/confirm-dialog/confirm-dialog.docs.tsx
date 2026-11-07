@@ -12,6 +12,33 @@ import { MoreIcon, TrashIcon } from '../../../internal/docs-demo.js';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
+function EraseContact() {
+  return (
+    <ConfirmDialog
+      trigger={<Button variant="danger">Erase personal data</Button>}
+      tone="danger"
+      title="Erase this contact’s personal data?"
+      description="Name, email and phone are removed for good. Invoices keep the legal minimum."
+      acknowledgement="I understand this cannot be undone"
+      confirmLabel="Erase data"
+      onConfirm={() => wait(1200)}
+    />
+  );
+}
+
+function SignOutEverywhere() {
+  return (
+    <ConfirmDialog
+      trigger={<Button>Sign out everywhere</Button>}
+      tone="warning"
+      title="Sign out of every device?"
+      description="You stay signed in here. Other devices need to sign in again."
+      confirmLabel="Sign out everywhere"
+      onConfirm={() => wait(800)}
+    />
+  );
+}
+
 function DeleteProject() {
   return (
     <ConfirmDialog
@@ -149,9 +176,15 @@ export default {
       items: [
         {
           prop: 'tone',
-          values: ['default', 'danger'],
+          values: ['default', 'warning', 'danger'],
           description:
-            '`danger` uses the danger Button and a warning icon in the header. Exposed as `data-tone`.',
+            '`danger` uses the danger Button and a warning icon in the header; `warning` shows the warning icon with the primary Button, for consequential but recoverable actions. Exposed as `data-tone`.',
+        },
+        {
+          prop: 'acknowledgement',
+          values: ['undefined', 'ReactNode'],
+          description:
+            'A required "I understand…" checkbox. The confirm button stays disabled until it is ticked. Use it for legal-grade or irreversible actions.',
         },
         {
           prop: 'confirmPhrase',
@@ -261,6 +294,14 @@ export default {
           render: () => <DeclineRequest />,
         },
         {
+          title: 'Acknowledgement checkbox',
+          render: () => <EraseContact />,
+        },
+        {
+          title: 'Warning tone',
+          render: () => <SignOutEverywhere />,
+        },
+        {
           title: 'Error and retry',
           render: () => <RevokeWithError />,
         },
@@ -294,7 +335,7 @@ export default {
     },
     dependencies: {
       packages: ['react'],
-      components: ['button', 'alert', 'form-field', 'text-field', 'dialog'],
+      components: ['button', 'alert', 'checkbox', 'form-field', 'text-field', 'dialog'],
     },
     testing: {
       unit: [

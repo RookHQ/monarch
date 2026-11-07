@@ -390,6 +390,147 @@ export {
   type AssigneePerson,
   type AssigneePickerMessages,
 } from './components/identity/assignee-picker/index.js';
+export {
+  PromptDialog,
+  usePrompt,
+  type PromptInputType,
+  type PromptDialogProps,
+  type PromptOptions,
+  type UsePromptResult,
+} from './components/overlays/prompt-dialog/index.js';
+export {
+  ChoiceDialog,
+  useChoice,
+  type ChoiceDialogChoice,
+  type ChoiceDialogProps,
+  type ChoiceOptions,
+  type UseChoiceResult,
+} from './components/overlays/choice-dialog/index.js';
+export {
+  UnsavedChangesDialog,
+  useUnsavedChangesGuard,
+  UnsavedChangesGuard,
+  type UnsavedChangesMessages,
+  type UnsavedChangesLeaveReason,
+  type UnsavedChangesDialogProps,
+  type UseUnsavedChangesGuardOptions,
+  type UseUnsavedChangesGuardResult,
+  type UnsavedChangesGuardHandle,
+  type UnsavedChangesGuardProps,
+} from './components/overlays/unsaved-changes-guard/index.js';
+export {
+  useUndoToast,
+  type UndoOutcome,
+  type UndoToastMessages,
+  type UndoableOptions,
+  type UseUndoToastOptions,
+  type UseUndoToastResult,
+} from './components/feedback/undo-toast/index.js';
+export {
+  StepUpAuthDialog,
+  useStepUpAuth,
+  type StepUpMethod,
+  type StepUpCredential,
+  type StepUpAuthMessages,
+  type StepUpAuthDialogProps,
+  type StepUpAuthOptions,
+  type StepUpRequirement,
+  type UseStepUpAuthResult,
+} from './components/identity/step-up-auth-dialog/index.js';
+export {
+  phraseMatches,
+  TypeToConfirmInput,
+  type TypeToConfirmInputProps,
+} from './components/forms/type-to-confirm-input/index.js';
+export {
+  CONSEQUENCE_LIST_MESSAGES,
+  ConsequenceList,
+  type ConsequenceKind,
+  type ConsequenceItem,
+  type ConsequenceListMessages,
+  type ConsequenceListProps,
+} from './components/feedback/consequence-list/index.js';
+export {
+  WizardDialog,
+  type WizardStep,
+  type WizardDialogMessages,
+  type WizardDialogProps,
+} from './components/overlays/wizard-dialog/index.js';
+export {
+  DEFAULT_CONSENT_CATEGORIES,
+  DEFAULT_CONSENT_REGIMES,
+  resolveConsentRegime,
+  localStorageConsentStorage,
+  cookieConsentStorage,
+  readGlobalPrivacyControl,
+  ConsentProvider,
+  useConsent,
+  useOptionalConsent,
+  ConsentGate,
+  type ConsentRegime,
+  type ConsentCategory,
+  type ConsentJurisdiction,
+  type ConsentRegimeMap,
+  type ConsentMethod,
+  type ConsentRecord,
+  type ConsentStorage,
+  type ConsentStatus,
+  type ConsentContextValue,
+  type ConsentProviderProps,
+  type ConsentGateProps,
+} from './components/identity/consent-manager/index.js';
+export {
+  CookieConsentBanner,
+  type CookieConsentBannerText,
+  type CookieConsentBannerMessages,
+  type CookieConsentBannerMessageOverrides,
+  type CookieConsentBannerProps,
+} from './components/identity/cookie-consent-banner/index.js';
+export {
+  ConsentPreferences,
+  ConsentSettingsLink,
+  type ConsentPreferencesMessages,
+  type ConsentPreferencesProps,
+  type ConsentSettingsLinkProps,
+} from './components/identity/consent-preferences/index.js';
+export {
+  PrivacyChoicesLink,
+  type PrivacyChoicesLinkMessages,
+  type PrivacyChoicesLinkProps,
+} from './components/identity/privacy-choices-link/index.js';
+export {
+  MarketingConsentCheckbox,
+  type MarketingChannel,
+  type MarketingConsent,
+  type MarketingConsentCheckboxProps,
+} from './components/forms/marketing-consent-checkbox/index.js';
+export {
+  termsVersions,
+  TermsAcceptance,
+  type TermsDocument,
+  type TermsAcceptanceDetails,
+  type TermsAcceptanceProps,
+} from './components/forms/terms-acceptance/index.js';
+export {
+  formatEffectiveDate,
+  TermsUpdateDialog,
+  type TermsUpdateDocument,
+  type TermsUpdateDialogProps,
+} from './components/overlays/terms-update-dialog/index.js';
+export {
+  DataExportRequest,
+  type DataExportStatus,
+  type DataExportScopeOption,
+  type DataExportFormatOption,
+  type DataExportRequestDetails,
+  type DataExportRequestMessages,
+  type DataExportRequestProps,
+} from './components/identity/data-export-request/index.js';
+export {
+  ConsentHistory,
+  type ConsentHistoryMessages,
+  type ConsentHistoryProps,
+} from './components/identity/consent-history/index.js';
 // Patterns: compositions of the components above for recurring Rook screens.
 export {
   PageHeader,
@@ -419,3 +560,9 @@ export {
   AccordionContent,
   type AccordionTriggerProps,
 } from './components/data-display/accordion/index.js';
+export {
+  DangerZone,
+  DangerZoneItem,
+  type DangerZoneProps,
+  type DangerZoneItemProps,
+} from './patterns/layout/danger-zone/index.js';

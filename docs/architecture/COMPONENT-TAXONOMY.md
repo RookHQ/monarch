@@ -18,20 +18,20 @@ package entry can hold components from several categories.
 
 | #   | Category                                       | Id                 | In scope | Registry entries |
 | --- | ---------------------------------------------- | ------------------ | -------- | ---------------- |
-| 01  | Foundational Layout Components                 | `01-layout`        | 5        | 13               |
+| 01  | Foundational Layout Components                 | `01-layout`        | 5        | 14               |
 | 02  | Typography and Content                         | `02-typography`    | 0        | 1                |
 | 03  | Actions and Controls                           | `03-actions`       | 3        | 4                |
-| 04  | Form and Input Infrastructure                  | `04-forms`         | 11       | 15               |
+| 04  | Form and Input Infrastructure                  | `04-forms`         | 11       | 18               |
 | 05  | Navigation Components                          | `05-navigation`    | 5        | 7                |
 | 06  | Data Display Components                        | `06-data-display`  | 5        | 8                |
-| 07  | Advanced Table and Data Grid Infrastructure    | `07-data-grid`     | 3        | 3                |
-| 08  | Status and Feedback Components                 | `08-feedback`      | 8        | 11               |
-| 09  | Overlay and Floating Components                | `09-overlays`      | 5        | 8                |
+| 07  | Advanced Table and Data Grid Infrastructure    | `07-data-grid`     | 3        | 4                |
+| 08  | Status and Feedback Components                 | `08-feedback`      | 8        | 13               |
+| 09  | Overlay and Floating Components                | `09-overlays`      | 5        | 13               |
 | 10  | Date, Time and Scheduling Components           | `10-scheduling`    | 5        | 9                |
 | 11  | Charts and Data Visualization                  | `11-charts`        | 3        | 8                |
 | 12  | File and Document Components                   | `12-files`         | 1        | 2                |
 | 13  | Search and Discovery Components                | `13-search`        | 6        | 6                |
-| 14  | Identity, Security and Permissions             | `14-identity`      | 7        | 7                |
+| 14  | Identity, Security and Permissions             | `14-identity`      | 7        | 23               |
 | 15  | Collaboration Components                       | `15-collaboration` | 9        | 9                |
 | 16  | Workflow and Process Components                | `16-workflow`      | 3        | 3                |
 | 17  | Enterprise Intelligence Components             |                    | 0        | 0                |
@@ -67,8 +67,8 @@ layer may compose lower ones, never the reverse.
 | Layer             | In scope | Registry entries |
 | ----------------- | -------- | ---------------- |
 | primitive         | 12       | 25               |
-| component         | 63       | 80               |
-| pattern           | 9        | 12               |
+| component         | 63       | 97               |
+| pattern           | 9        | 23               |
 | template          | 4        | 7                |
 | product-extension | 0        | 0                |
 

@@ -13,8 +13,10 @@ import {
   type ReactNode,
 } from 'react';
 import { cx } from '../../../internal/cx.js';
+import { focusReturnTarget, isThenable } from '../../../internal/dialog-helpers.js';
 import { WarningGlyph } from '../../../internal/icons.js';
 import { Button } from '../../actions/button/index.js';
+import { Checkbox } from '../../forms/checkbox/index.js';
 import { Alert } from '../../feedback/alert/index.js';
 import { Field, FieldDescription, FieldError, FieldLabel } from '../../forms/form-field/index.js';
 import { Input, Textarea } from '../../forms/text-field/index.js';
@@ -71,8 +73,12 @@ export interface ConfirmDialogProps extends Omit<
   consequences?: ReactNode[];
   /** Extra content between the description and the fields, e.g. a step-up slot. */
   children?: ReactNode;
-  /** `danger` for destructive or irreversible actions: red confirm button and a warning icon. */
-  tone?: 'default' | 'danger';
+  /**
+   * `danger` for destructive or irreversible actions: red confirm button and a
+   * warning icon. `warning` for consequential but recoverable actions (sign out
+   * everywhere, pause a campaign): warning icon, primary confirm button.
+   */
+  tone?: 'default' | 'warning' | 'danger';
   /** Label of the confirming button. Name the action ("Delete project"), not "OK". Default "Confirm". */
   confirmLabel?: ReactNode;
   /** Default "Cancel". */
@@ -86,6 +92,15 @@ export interface ConfirmDialogProps extends Omit<
   confirmPhraseLabel?: ReactNode;
   /** Shown when the person submits a phrase that does not match. */
   confirmPhraseMismatch?: ReactNode;
+  /**
+   * A required "I understand…" checkbox. The confirm button stays disabled
+   * until it is ticked. Use it for legal or irreversible actions where the
+   * person must acknowledge a specific consequence, e.g. "I understand this
+   * cannot be undone".
+   */
+  acknowledgement?: ReactNode;
+  /** Shown when the person tries to confirm without ticking the acknowledgement. */
+  acknowledgementMissing?: ReactNode;
   /** Ask for a reason (optional or required); it is passed to `onConfirm`. */
   reason?: ConfirmReasonField;
   /**
@@ -119,14 +134,6 @@ function defaultErrorMessage(error: unknown): ReactNode {
   return error instanceof Error && error.message ? error.message : DEFAULT_ERROR;
 }
 
-function isThenable(value: unknown): value is PromiseLike<unknown> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    typeof (value as { then?: unknown }).then === 'function'
-  );
-}
-
 /**
  * Confirmation for consequential actions, built on Dialog with
  * `role="alertdialog"`. Supports a danger tone, a consequence list,
@@ -151,6 +158,8 @@ export const ConfirmDialog = forwardRef<ElementRef<typeof DialogContent>, Confir
       confirmPhrase,
       confirmPhraseLabel,
       confirmPhraseMismatch = 'The text does not match.',
+      acknowledgement,
+      acknowledgementMissing = 'Tick the box to continue.',
       reason,
       onConfirm,
       onCancel,
@@ -172,6 +181,7 @@ export const ConfirmDialog = forwardRef<ElementRef<typeof DialogContent>, Confir
     const open = openProp ?? openState;
     const [phrase, setPhrase] = useState('');
     const [reasonText, setReasonText] = useState('');
+    const [acknowledged, setAcknowledged] = useState(false);
     const [running, setRunning] = useState(false);
     const [failure, setFailure] = useState<ReactNode>(null);
     const [attempted, setAttempted] = useState(false);
@@ -192,6 +202,7 @@ export const ConfirmDialog = forwardRef<ElementRef<typeof DialogContent>, Confir
       if (open) {
         setPhrase('');
         setReasonText('');
+        setAcknowledged(false);
         setFailure(null);
         setAttempted(false);
       }
@@ -201,7 +212,8 @@ export const ConfirmDialog = forwardRef<ElementRef<typeof DialogContent>, Confir
     const shownError = errorProp ?? failure;
     const phraseOk = confirmPhrase === undefined || phrase.trim() === confirmPhrase.trim();
     const reasonOk = !reason?.required || reasonText.trim() !== '';
-    const blocked = !phraseOk || !reasonOk;
+    const acknowledgedOk = acknowledgement === undefined || acknowledged;
+    const blocked = !phraseOk || !reasonOk || !acknowledgedOk;
 
     const setOpen = useCallback(
       (next: boolean) => {
@@ -245,7 +257,8 @@ export const ConfirmDialog = forwardRef<ElementRef<typeof DialogContent>, Confir
       if (closeOnConfirm) setOpen(false);
     };
 
-    const hasField = confirmPhrase !== undefined || reason !== undefined;
+    const hasField =
+      confirmPhrase !== undefined || reason !== undefined || acknowledgement !== undefined;
     const hasBody = children !== undefined || (consequences && consequences.length > 0) || hasField;
 
     return (
@@ -271,7 +284,7 @@ export const ConfirmDialog = forwardRef<ElementRef<typeof DialogContent>, Confir
         >
           <form className="mn-confirm-dialog__form" onSubmit={submit} noValidate>
             <DialogHeader className="mn-confirm-dialog__header">
-              {tone === 'danger' ? (
+              {tone !== 'default' ? (
                 <span className="mn-confirm-dialog__icon" aria-hidden>
                   <WarningGlyph />
                 </span>
@@ -348,6 +361,23 @@ export const ConfirmDialog = forwardRef<ElementRef<typeof DialogContent>, Confir
                     <FieldError>{attempted && !phraseOk ? confirmPhraseMismatch : null}</FieldError>
                   </Field>
                 ) : null}
+                {acknowledgement !== undefined ? (
+                  <Field invalid={attempted && !acknowledgedOk}>
+                    <Checkbox
+                      label={acknowledgement}
+                      checked={acknowledged}
+                      disabled={pending}
+                      invalid={attempted && !acknowledgedOk}
+                      onCheckedChange={(next) => {
+                        setAcknowledged(next === true);
+                        if (attempted) setAttempted(false);
+                      }}
+                    />
+                    <FieldError>
+                      {attempted && !acknowledgedOk ? acknowledgementMissing : null}
+                    </FieldError>
+                  </Field>
+                ) : null}
               </DialogBody>
             ) : null}
             {shownError ? (
@@ -400,20 +430,8 @@ export interface UseConfirmResult {
 }
 
 /**
- * Where focus should return when the dialog closes: the focused element, or,
- * when that is an item of a menu that is about to close, the menu's trigger.
- */
-function focusReturnTarget(): HTMLElement | null {
-  if (typeof document === 'undefined') return null;
-  const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  const menuOwner = active?.closest('[role="menu"]')?.getAttribute('aria-labelledby');
-  const trigger = menuOwner ? document.getElementById(menuOwner) : null;
-  return trigger ?? active;
-}
-
-/**
  * Imperative confirmation: `if (await confirm({ title: 'Delete note?' }))`.
- * A replacement for `window.confirm` and `window.prompt` that is themed,
+ * A replacement for `window.confirm` (use `usePrompt` for `window.prompt`) that is themed,
  * accessible and can show consequences, a reason field and async progress.
  */
 export function useConfirm(): UseConfirmResult {

@@ -132,6 +132,9 @@ export function ToastProvider({
 }: ToastProviderProps) {
   const [toasts, setToasts] = useState<ToastRecord[]>([]);
   const timers = useRef(new Set<ReturnType<typeof setTimeout>>());
+  // Ids whose onDismiss has run. A closed record is only removed after that,
+  // so a sweep that runs before React renders the close cannot skip onDismiss.
+  const notified = useRef(new Set<string>());
 
   useEffect(() => {
     const pending = timers.current;
@@ -145,7 +148,11 @@ export function ToastProvider({
   const sweep = useCallback(() => {
     const t = setTimeout(() => {
       timers.current.delete(t);
-      setToasts((list) => list.filter((r) => r.open));
+      setToasts((list) => {
+        const next = list.filter((r) => r.open || !notified.current.has(r.id));
+        for (const r of list) if (!next.includes(r)) notified.current.delete(r.id);
+        return next.length === list.length ? list : next;
+      });
     }, EXIT_MS);
     timers.current.add(t);
   }, []);
@@ -208,6 +215,10 @@ export function ToastProvider({
             durationScale={durationScale}
             dismissLabel={dismissLabel}
             onOpenChange={(open) => (open ? undefined : dismiss(t.id))}
+            onNotified={() => {
+              notified.current.add(t.id);
+              sweep();
+            }}
           />
         ))}
         <ToastPrimitive.Viewport
@@ -243,11 +254,13 @@ function ToastItem({
   durationScale,
   dismissLabel,
   onOpenChange,
+  onNotified,
 }: {
   record: ToastRecord;
   durationScale: number;
   dismissLabel: string;
   onOpenChange: (open: boolean) => void;
+  onNotified: () => void;
 }) {
   const titleId = useId();
   const tone = record.tone ?? 'neutral';
@@ -257,10 +270,13 @@ function ToastItem({
   // onDismiss fires once, the first time the record closes.
   const notified = useRef(false);
   const onDismiss = record.onDismiss;
+  const notifiedRef = useRef(onNotified);
+  notifiedRef.current = onNotified;
   useEffect(() => {
     if (!record.open && !notified.current) {
       notified.current = true;
       onDismiss?.();
+      notifiedRef.current();
     }
   }, [record.open, onDismiss]);
 

@@ -7,11 +7,14 @@
 //   registry/component-demand.json        how many products need each component, and capability gaps
 //   packages/react/dist/manifest.json      what Monarch exports today (npm run build)
 //   registry/roadmap-waves.json            wave, package and entry point per component
+//   registry/strategic.json                strategic families, in scope ahead of demand (ADR 0011)
 //   registry/deprecations.json             deprecated exports
 //   packages/react/src/**/<id>/             component folders and their <id>.docs.tsx
 //
 // Scope rule (docs/roadmap/COMPONENT-IMPLEMENTATION-ROADMAP.md): a component is
-// in scope when 3+ products need it, or 2+ need it at P0.
+// in scope when 3+ products need it, or 2+ need it at P0. Components in a
+// strategic family (registry/strategic.json, ADR 0011) are in scope with
+// scope "strategic" whatever their product count.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join, relative } from 'node:path';
@@ -449,6 +452,60 @@ const EXPORT_GROUPS = [
   { id: 'linked-docs-panel', exports: ['LinkedDocsPanel', 'parseLinkUrl'] },
   { id: 'identity-bar', exports: ['IdentityBar'] },
   { id: 'app-shell', exports: ['AppShell'] },
+  { id: 'prompt-dialog', exports: ['PromptDialog', 'usePrompt'] },
+  { id: 'choice-dialog', exports: ['ChoiceDialog', 'useChoice'] },
+  {
+    id: 'unsaved-changes-guard',
+    exports: ['UnsavedChangesDialog', 'UnsavedChangesGuard', 'useUnsavedChangesGuard'],
+  },
+  { id: 'undo-toast', exports: ['useUndoToast'] },
+  { id: 'step-up-auth-dialog', exports: ['StepUpAuthDialog', 'useStepUpAuth'] },
+  { id: 'type-to-confirm-input', exports: ['TypeToConfirmInput', 'phraseMatches'] },
+  { id: 'consequence-list', exports: ['CONSEQUENCE_LIST_MESSAGES', 'ConsequenceList'] },
+  { id: 'wizard-dialog', exports: ['WizardDialog'] },
+  { id: 'danger-zone', exports: ['DangerZone', 'DangerZoneItem'] },
+  {
+    id: 'delete-workspace-flow',
+    exports: ['DELETE_WORKSPACE_FLOW_MESSAGES', 'DeleteWorkspaceFlow'],
+  },
+  { id: 'delete-account-flow', exports: ['DELETE_ACCOUNT_FLOW_MESSAGES', 'DeleteAccountFlow'] },
+  {
+    id: 'transfer-ownership-flow',
+    exports: ['TRANSFER_OWNERSHIP_FLOW_MESSAGES', 'TransferOwnershipFlow'],
+  },
+  { id: 'leave-workspace-flow', exports: ['LEAVE_WORKSPACE_FLOW_MESSAGES', 'LeaveWorkspaceFlow'] },
+  { id: 'remove-member-flow', exports: ['REMOVE_MEMBER_FLOW_MESSAGES', 'RemoveMemberFlow'] },
+  { id: 'bulk-destructive-flow', exports: ['BulkDestructiveFlow'] },
+  { id: 'gdpr-erase-flow', exports: ['GDPR_ERASE_FLOW_MESSAGES', 'GdprEraseFlow'] },
+  { id: 'deactivate-flow', exports: ['DeactivateFlow'] },
+  { id: 'revoke-access-flow', exports: ['RevokeAccessFlow'] },
+  {
+    id: 'consent-manager',
+    exports: [
+      'ConsentGate',
+      'ConsentProvider',
+      'DEFAULT_CONSENT_CATEGORIES',
+      'DEFAULT_CONSENT_REGIMES',
+      'cookieConsentStorage',
+      'localStorageConsentStorage',
+      'readGlobalPrivacyControl',
+      'resolveConsentRegime',
+      'useConsent',
+      'useOptionalConsent',
+    ],
+  },
+  { id: 'cookie-consent-banner', exports: ['CookieConsentBanner'] },
+  { id: 'consent-preferences', exports: ['ConsentPreferences', 'ConsentSettingsLink'] },
+  { id: 'privacy-choices-link', exports: ['PrivacyChoicesLink'] },
+  { id: 'marketing-consent-checkbox', exports: ['MarketingConsentCheckbox'] },
+  { id: 'terms-acceptance', exports: ['TermsAcceptance', 'termsVersions'] },
+  { id: 'terms-update-dialog', exports: ['TermsUpdateDialog', 'formatEffectiveDate'] },
+  { id: 'data-export-request', exports: ['DataExportRequest'] },
+  { id: 'consent-history', exports: ['ConsentHistory'] },
+  {
+    id: 'data-subject-request-form',
+    exports: ['DEFAULT_DATA_SUBJECT_REQUEST_TYPES', 'DataSubjectRequestForm'],
+  },
 ];
 
 /**
@@ -514,6 +571,7 @@ export async function loadInputs() {
     consolidated: read('registry/component-demand.json'),
     manifest: read(manifestPath),
     waves: read('registry/roadmap-waves.json'),
+    strategic: read('registry/strategic.json'),
     deprecations: read('registry/deprecations.json').deprecations,
     folders: await componentFolders(),
     packageIndexes: Object.fromEntries(
@@ -527,6 +585,7 @@ export async function loadInputs() {
 
 export function buildRegistry(inputs) {
   const { consolidated, manifest, waves, deprecations, folders } = inputs;
+  const strategic = inputs.strategic ?? { families: [] };
   const packageIndexes = inputs.packageIndexes ?? {};
   const guides = inputs.guides ?? {};
   const discovery = new Map(consolidated.components.map((c) => [c.id, c]));
@@ -546,10 +605,24 @@ export function buildRegistry(inputs) {
     }
     exportsById.set(g.id, g.exports.filter((e) => exportNames.includes(e)).sort());
     if (g.meta) metaById.set(g.id, g.meta);
-    else if (!discovery.has(g.id)) errors.push(`EXPORT_GROUPS ${g.id} needs meta (no demand data)`);
+    else if (
+      !discovery.has(g.id) &&
+      !strategic.families.some((f) => f.components.some((c) => c.id === g.id))
+    )
+      errors.push(`EXPORT_GROUPS ${g.id} needs meta (no demand data)`);
   }
   for (const e of exportNames)
     if (!seen.has(e)) errors.push(`export ${e} is not in EXPORT_GROUPS (build-components.mjs)`);
+
+  // Strategic families → entry (ADR 0011)
+  const strategicById = new Map();
+  for (const f of strategic.families)
+    for (const c of f.components) {
+      if (strategicById.has(c.id)) errors.push(`strategic.json: ${c.id} appears twice`);
+      if (discovery.has(c.id))
+        errors.push(`strategic.json: ${c.id} has demand data; keep it in one input only`);
+      strategicById.set(c.id, { ...c, wave: f.wave, family: f.family });
+    }
 
   // Waves → entry
   const waveById = new Map();
@@ -558,6 +631,8 @@ export function buildRegistry(inputs) {
       for (const id of g.ids) {
         if (waveById.has(id)) errors.push(`roadmap-waves.json: ${id} appears twice`);
         if (!discovery.has(id)) errors.push(`roadmap-waves.json: ${id} has no demand data`);
+        if (strategicById.has(id))
+          errors.push(`roadmap-waves.json: ${id} is strategic; its wave comes from strategic.json`);
         waveById.set(id, { wave: w.wave, package: g.package, entry: g.entry });
       }
 
@@ -595,6 +670,7 @@ export function buildRegistry(inputs) {
   const ids = new Set([
     ...consolidated.components.filter(inScope).map((c) => c.id),
     ...waveById.keys(),
+    ...strategicById.keys(),
     ...exportsById.keys(),
   ]);
 
@@ -602,9 +678,12 @@ export function buildRegistry(inputs) {
   const entries = [];
   for (const id of [...ids].sort()) {
     const d = discovery.get(id);
-    const meta = metaById.get(id);
+    const st = strategicById.get(id);
+    const meta = metaById.get(id) ?? st;
     const exps = exportsById.get(id) ?? [];
-    const w = waveById.get(id);
+    const w =
+      waveById.get(id) ??
+      (st ? { wave: st.wave, package: '@rookcom/monarch-react', entry: st.entry } : undefined);
     const scoped = d ? inScope(d) : false;
     const missing = d ? d.missingInMonarch : [];
 
@@ -615,7 +694,10 @@ export function buildRegistry(inputs) {
           ? 'implemented-incomplete'
           : 'implemented-complete'
         : 'not-assessed';
-    else if (d.layer === 'product-extension' || (!scoped && d.gapDraft === 'product-extension'))
+    else if (
+      d &&
+      (d.layer === 'product-extension' || (!scoped && d.gapDraft === 'product-extension'))
+    )
       gap = 'product-extension';
     else gap = 'missing';
 
@@ -644,7 +726,7 @@ export function buildRegistry(inputs) {
         : exps.length
           ? 'stable'
           : 'planned',
-      scope: scoped ? 'in-scope' : w ? 'roadmap' : 'shipped',
+      scope: st ? 'strategic' : scoped ? 'in-scope' : w ? 'roadmap' : 'shipped',
       sourceProducts: d?.sourceProducts ?? [],
       productCount: d?.productCount ?? 0,
       priority: d?.priority ?? 'none',
@@ -684,6 +766,7 @@ export function buildRegistry(inputs) {
       demand: 'registry/component-demand.json',
       manifest: 'packages/react/dist/manifest.json',
       waves: 'registry/roadmap-waves.json',
+      strategic: 'registry/strategic.json',
       deprecations: 'registry/deprecations.json',
       docs: 'packages/react/src/**/<id>.docs.tsx',
     },

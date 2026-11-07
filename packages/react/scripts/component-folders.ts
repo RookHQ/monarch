@@ -118,6 +118,8 @@ export const LEGACY_FOLDERS = new Set([
 export const NO_OWN_CSS: Record<string, string> = {
   'dropdown-menu':
     'its .mn-menu styles are shared with Select and Combobox, so they live in styles/menu.css',
+  'consent-manager':
+    'it renders no markup of its own: a provider, hooks and a gate; the banner and preferences have their own styles',
   'visually-hidden':
     '.mn-visually-hidden is a foundation utility (styles/foundation.css) that other components and apps use directly',
 };

@@ -93,6 +93,12 @@ export const RULES = {
     summary: 'Sparkle icon used',
     help: 'Rook does not use sparkle icons (Sparkles, Sparkle, WandSparkles and its old name Wand2). For AI features use the lucide `Bot` icon; elsewhere use a plain icon that names the thing, such as Inbox or Bell.',
   },
+  'dialogs/no-native-dialog': {
+    id: 'dialogs/no-native-dialog',
+    severity: 'error',
+    summary: 'Native browser dialog (window.confirm, alert or prompt)',
+    help: 'Native dialogs are unthemed, cannot show a destructive tone, are blocked in iframes and cannot be translated. Use `useConfirm()` for confirm, `usePrompt()` for prompt, `useChoice()` when OK/Cancel stands for two options, and a toast or inline Alert for alert. For reversible deletes, act and offer `useUndoToast()` instead of asking.',
+  },
   'legacy/bridge-variable': {
     id: 'legacy/bridge-variable',
     severity: 'info',
@@ -667,6 +673,84 @@ function scanSparkles(ctx: FileContext, out: RawFinding[]): void {
   });
 }
 
+// ---------------------------------------------------------------- native dialogs
+
+const NATIVE_DIALOGS = ['confirm', 'alert', 'prompt'] as const;
+const GLOBAL_DIALOG_RE =
+  /(?<![\w$.])(?:window|globalThis|self)\s*\.\s*(confirm|alert|prompt)\s*\(/g;
+const BARE_DIALOG_RE = /(?<![\w$.])(confirm|alert|prompt)\s*\(/g;
+/** `confirm(…) {` or `prompt(input: string): T {`: a method definition, not a call. */
+const METHOD_DEF_RE = /^(?:confirm|alert|prompt)\s*\([^)]*\)\s*(?::[^{=;]*)?\{/;
+
+/**
+ * Names the file binds itself (`const { confirm } = useConfirm()`, an import,
+ * a parameter or a local function). A bare call to one of those is the app's
+ * own function, such as Monarch's `confirm()`, so it is not reported.
+ */
+function locallyBound(text: string): Set<string> {
+  const bound = new Set<string>();
+  for (const name of NATIVE_DIALOGS) {
+    const declared = new RegExp(
+      [
+        `\\b(?:const|let|var|function)\\s+${name}\\b`,
+        `[{,]\\s*(?:\\w+\\s*:\\s*)?${name}\\s*(?:=[^,}]*)?[,}]`,
+        `\\b\\w+\\s+as\\s+${name}\\b`,
+        `\\(\\s*${name}\\s*[,):]`,
+        `,\\s*${name}\\s*[,):]`,
+      ].join('|'),
+    );
+    if (declared.test(text)) bound.add(name);
+  }
+  return bound;
+}
+
+/** True when `index` sits inside a '…', "…" or `…` literal on this line. */
+function inStringLiteral(line: string, index: number): boolean {
+  let quote: string | null = null;
+  for (let i = 0; i < index; i++) {
+    const c = line[i];
+    if (c === '\\') {
+      i++;
+      continue;
+    }
+    if (quote) {
+      if (c === quote) quote = null;
+    } else if (c === "'" || c === '"' || c === '`') quote = c;
+  }
+  return quote !== null;
+}
+
+function scanNativeDialogs(ctx: FileContext, out: RawFinding[]): void {
+  if (!isCode(ctx.ext)) return;
+  if (!/\b(?:confirm|alert|prompt)\s*\(/.test(ctx.text)) return;
+  const bound = locallyBound(ctx.text);
+  const report = (line: number, column: number, name: string, global: boolean) =>
+    out.push({
+      rule: 'dialogs/no-native-dialog',
+      line,
+      column,
+      message: `\`${global ? 'window.' : ''}${name}()\` opens a native browser dialog; use ${
+        name === 'confirm'
+          ? '`useConfirm()`'
+          : name === 'prompt'
+            ? '`usePrompt()`'
+            : 'a toast or an inline `Alert`'
+      } from @rookcom/monarch-react`,
+    });
+  ctx.lines.forEach((line, i) => {
+    if (isCommentLine(line)) return;
+    eachMatch(GLOBAL_DIALOG_RE, line, (m) => {
+      if (!inStringLiteral(line, m.index)) report(i + 1, m.index + 1, m[1] ?? '', true);
+    });
+    eachMatch(BARE_DIALOG_RE, line, (m) => {
+      const name = m[1] ?? '';
+      if (bound.has(name) || inStringLiteral(line, m.index)) return;
+      if (METHOD_DEF_RE.test(line.slice(m.index))) return;
+      report(i + 1, m.index + 1, name, false);
+    });
+  });
+}
+
 // ---------------------------------------------------------------- deprecated API
 
 function scanDeprecated(ctx: FileContext, out: RawFinding[]): void {
@@ -703,6 +787,7 @@ export function scanFile(ctx: FileContext): RawFinding[] {
   scanOutline(ctx, out);
   scanDeprecated(ctx, out);
   scanSparkles(ctx, out);
+  scanNativeDialogs(ctx, out);
   return out;
 }
 

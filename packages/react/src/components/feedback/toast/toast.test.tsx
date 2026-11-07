@@ -215,6 +215,30 @@ describe('Toast', () => {
     expect(tones).toEqual(['success', 'danger', 'warning', 'info']);
   });
 
+  it('onDismiss still fires when the cleanup timer runs before the close renders', async () => {
+    vi.useFakeTimers();
+    try {
+      const ctx = capture();
+      const onDismiss = vi.fn();
+      let handle!: { dismiss: () => void };
+      act(() => {
+        handle = ctx.current.toast({ title: 'Tile deleted', duration: Infinity, onDismiss });
+      });
+      act(() => {
+        handle.dismiss();
+        vi.advanceTimersByTime(1500);
+      });
+      expect(onDismiss).toHaveBeenCalledTimes(1);
+      act(() => {
+        vi.advanceTimersByTime(1500);
+      });
+      expect(screen.queryByText('Tile deleted')).toBeNull();
+      expect(onDismiss).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('returns a handle whose dismiss closes that toast only', async () => {
     const t = capture();
     let handle: ReturnType<ToastContextValue['toast']> | undefined;

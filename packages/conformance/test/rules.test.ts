@@ -403,3 +403,71 @@ describe('icons/no-sparkles', () => {
     );
   });
 });
+
+describe('dialogs/no-native-dialog', () => {
+  const lines = (f: readonly RawFinding[]) =>
+    only('dialogs/no-native-dialog', f).map((x) => [x.line, x.column]);
+
+  it('flags window, globalThis and bare calls to confirm, alert and prompt', () => {
+    const f = scan(
+      'a.tsx',
+      [
+        "if (!window.confirm('Delete tile?')) return;",
+        "const name = prompt('Name this view');",
+        "alert('Download failed');",
+        "globalThis.confirm('Sure?');",
+        '// window.confirm("commented out")',
+      ].join('\n'),
+    );
+    expect(lines(f)).toEqual([
+      [1, 6],
+      [2, 14],
+      [3, 1],
+      [4, 1],
+    ]);
+    expect(only('dialogs/no-native-dialog', f)[1]?.message).toContain('usePrompt()');
+  });
+
+  it('allows the app’s own confirm, such as Monarch’s useConfirm', () => {
+    const f = scan(
+      'b.tsx',
+      [
+        'const { confirm, element } = useConfirm();',
+        "if (await confirm({ title: 'Delete note?' })) remove();",
+        'const { prompt: ask } = usePrompt();',
+        'function alert(x: string) { log(x); }',
+        "alert('kept local');",
+      ].join('\n'),
+    );
+    expect(lines(f)).toEqual([]);
+  });
+
+  it('still flags window.confirm when a local confirm exists, and ignores members and methods', () => {
+    const f = scan(
+      'c.ts',
+      [
+        'const { confirm } = useConfirm();',
+        "window.confirm('old');",
+        "dialog.confirm('x'); api.alert(1);",
+        'class A { async prompt(input: string) { return input; } }',
+      ].join('\n'),
+    );
+    expect(lines(f)).toEqual([[2, 1]]);
+  });
+
+  it('ignores the words inside strings', () => {
+    const f = scan(
+      'e.ts',
+      [
+        "const label = 'New booking alert (staff)';",
+        'const t = `Confirm (optional)`; const u = "prompt (text)";',
+        "notify(`x`); window.alert('real');",
+      ].join('\n'),
+    );
+    expect(lines(f)).toEqual([[3, 14]]);
+  });
+
+  it('does not scan CSS', () => {
+    expect(lines(scan('d.css', '.x { content: "confirm("; }'))).toEqual([]);
+  });
+});

@@ -210,6 +210,45 @@ describe('ConfirmDialog', () => {
     expect(onConfirm).toHaveBeenCalledWith({ reason: 'Duplicate of an open request' });
   });
 
+  it('acknowledgement: blocked until the box is ticked, reset on reopen', async () => {
+    const onConfirm = vi.fn();
+    render(
+      <Delete
+        defaultOpen
+        acknowledgement="I understand this cannot be undone"
+        onConfirm={onConfirm}
+      />,
+    );
+    const user = userEvent.setup();
+    const box = screen.getByRole('checkbox', { name: 'I understand this cannot be undone' });
+    expect(box).not.toBeChecked();
+    expect(inDialog('Delete project')).toBeDisabled();
+    await user.click(box);
+    expect(inDialog('Delete project')).toBeEnabled();
+    await expectNoA11yViolations();
+    await user.click(inDialog('Delete project'));
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it('warning tone: warning icon and the primary button', () => {
+    render(
+      <ConfirmDialog
+        defaultOpen
+        tone="warning"
+        title="Sign out of every device?"
+        confirmLabel="Sign out everywhere"
+        onConfirm={() => {}}
+      />,
+    );
+    const dialog = screen.getByRole('alertdialog');
+    expect(dialog).toHaveAttribute('data-tone', 'warning');
+    expect(dialog.querySelector('.mn-confirm-dialog__icon')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Sign out everywhere' })).not.toHaveAttribute(
+      'data-variant',
+      'danger',
+    );
+  });
+
   it('optional reason: empty is sent as no reason', async () => {
     const onConfirm = vi.fn();
     render(

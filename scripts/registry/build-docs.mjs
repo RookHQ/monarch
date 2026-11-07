@@ -136,10 +136,16 @@ function blocks(ctx) {
 
   // COMPONENT-GAP-ANALYSIS
   out['gap-summary'] = table(
-    ['Class', 'In scope', 'Roadmap (below the rule)', 'Shipped (below the rule)'],
+    [
+      'Class',
+      'In scope',
+      'Strategic (ADR 0011)',
+      'Roadmap (below the rule)',
+      'Shipped (below the rule)',
+    ],
     [...GAPS, 'not-assessed'].map((g) => [
       g,
-      ...['in-scope', 'roadmap', 'shipped'].map(
+      ...['in-scope', 'strategic', 'roadmap', 'shipped'].map(
         (s) => entries.filter((e) => e.scope === s && e.gap === g).length,
       ),
     ]),

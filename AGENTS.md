@@ -22,10 +22,13 @@ applications).
    (`IconButton label=`), every input sits in a `Field` with a `FieldLabel`,
    every `Dialog` has a `DialogTitle`, and destructive actions use
    `variant="danger"` plus a confirmation.
-6. Before finishing, run `npx monarch check --product <id>` (or
+6. Never call `window.confirm`, `alert` or `prompt`. Use `useConfirm()`,
+   `usePrompt()`, `useChoice()` or `useUndoToast()`, and pick the level from
+   `docs/guides/destructive-actions.md`. `dialogs/no-native-dialog` enforces it.
+7. Before finishing, run `npx monarch check --product <id>` (or
    `--root src`) and fix new findings. Do not add `monarch-ignore` without a
    reason, and never hand-edit generated registry files.
-7. Do not copy Monarch source into the app. Do not redefine `--mn-*` or
+8. Do not copy Monarch source into the app. Do not redefine `--mn-*` or
    `--primary`-style variables locally.
 
 ## If you are changing Monarch itself

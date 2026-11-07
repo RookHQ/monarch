@@ -24,6 +24,15 @@ A component is **in scope** for the registry when either:
 1. **three or more** products need it, or
 2. **two or more** need it and at least one needs it urgently (priority P0).
 
+A third route is **strategic scope**
+([ADR 0011](../adr/0011-strategic-scope.md)): a family that Rook leadership
+designates ahead of demand, because waiting for three products to build their
+own copies is the problem it solves. Strategic families are listed in
+[`registry/strategic.json`](../../registry/strategic.json) and appear in the
+registry with `scope: "strategic"`. The first one is Destructive &
+confirmation (wave 10). Strategic components meet the same contract as every
+other component.
+
 Components below that rule are either parts of an in-scope family (a chart
 frame under every chart) or are left to the product that needs them until a
 second or third product asks for the same thing. The rule keeps product-specific
@@ -42,7 +51,7 @@ the packages export today.
 
 | Measure                             | Value |
 | ----------------------------------- | ----- |
-| Registry entries                    | 124   |
+| Registry entries                    | 152   |
 | Needed by 3+ products               | 78    |
 | Needed by exactly 2 products at P0  | 10    |
 | In scope (3+ products, or 2+ at P0) | 88    |

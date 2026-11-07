@@ -22,14 +22,14 @@ enters Monarch.
 
 <!-- generated:gap-summary -->
 
-| Class                  | In scope | Roadmap (below the rule) | Shipped (below the rule) |
-| ---------------------- | -------- | ------------------------ | ------------------------ |
-| implemented-complete   | 2        | 1                        | 3                        |
-| implemented-incomplete | 86       | 16                       | 4                        |
-| missing                | 0        | 0                        | 0                        |
-| product-extension      | 0        | 0                        | 0                        |
-| not-evidenced          | 0        | 0                        | 0                        |
-| not-assessed           | 0        | 0                        | 12                       |
+| Class                  | In scope | Strategic (ADR 0011) | Roadmap (below the rule) | Shipped (below the rule) |
+| ---------------------- | -------- | -------------------- | ------------------------ | ------------------------ |
+| implemented-complete   | 2        | 0                    | 1                        | 3                        |
+| implemented-incomplete | 86       | 0                    | 16                       | 4                        |
+| missing                | 0        | 0                    | 0                        | 0                        |
+| product-extension      | 0        | 0                    | 0                        | 0                        |
+| not-evidenced          | 0        | 0                    | 0                        | 0                        |
+| not-assessed           | 0        | 28                   | 0                        | 12                       |
 
 <!-- /generated:gap-summary -->
 
