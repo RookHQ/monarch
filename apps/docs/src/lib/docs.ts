@@ -113,7 +113,7 @@ export interface LoadedDocs {
   api: readonly ExportDoc[];
 }
 
-interface DocsModule {
+export interface DocsModule {
   default: ComponentDocs;
   exampleSource: ExtractedExample[];
   apiEntries: ExportDoc[];
@@ -165,33 +165,37 @@ export function useDetails(): LoadedDetails {
   return use(loadDetails());
 }
 
-const loaders = import.meta.glob<DocsModule>('../../../../packages/react/src/**/*.docs.tsx');
-const loaderById: Record<string, () => Promise<DocsModule>> = {};
-for (const [file, load] of Object.entries(loaders)) {
-  const id = /([^/]+)\.docs\.tsx$/.exec(file)?.[1];
-  if (id) loaderById[id] = load;
-}
+// The map of every docs file's loader lives in its own module, loaded on
+// demand: Vite attaches each page's preload list to its loader, so keeping the
+// map in the entry chunk would grow it with every page in the catalog.
+let loadersPromise: Promise<Record<string, () => Promise<DocsModule>>> | null = null;
+const docsLoaders = () =>
+  (loadersPromise ??= import('./docs-loaders.js').then((m) => m.loaderById));
 
 const cache = new Map<string, Promise<LoadedDocs>>();
 
-/** True when the page has a docs file. */
-export const hasDocs = (id: string): boolean => id in loaderById;
+/** True when the page has a docs file (every page in the index comes from one). */
+export const hasDocs = (id: string): boolean => id in pageById;
 
 /** Loads one docs file. The promise is cached, so `use()` can read it without re-suspending. */
 export function loadDocs(id: string): Promise<LoadedDocs> {
   let p = cache.get(id);
   if (!p) {
-    const load = loaderById[id];
-    if (!load) return Promise.reject(new Error(`No docs file for "${id}"`));
     p = track(
-      load().then((m) => {
-        const count = examplesOf(m.default).length;
-        if (m.exampleSource.length !== count)
-          throw new Error(
-            `${id}: ${count} examples but ${m.exampleSource.length} extracted sources (plugins/extract-examples.ts)`,
-          );
-        return { docs: m.default, source: m.exampleSource, api: m.apiEntries };
-      }),
+      docsLoaders()
+        .then((loaders) => {
+          const load = loaders[id];
+          if (!load) throw new Error(`No docs file for "${id}"`);
+          return load();
+        })
+        .then((m) => {
+          const count = examplesOf(m.default).length;
+          if (m.exampleSource.length !== count)
+            throw new Error(
+              `${id}: ${count} examples but ${m.exampleSource.length} extracted sources (plugins/extract-examples.ts)`,
+            );
+          return { docs: m.default, source: m.exampleSource, api: m.apiEntries };
+        }),
     );
     cache.set(id, p);
   }

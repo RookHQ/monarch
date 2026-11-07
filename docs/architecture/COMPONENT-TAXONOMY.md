@@ -18,27 +18,27 @@ package entry can hold components from several categories.
 
 | #   | Category                                       | Id                 | In scope | Registry entries |
 | --- | ---------------------------------------------- | ------------------ | -------- | ---------------- |
-| 01  | Foundational Layout Components                 | `01-layout`        | 5        | 14               |
-| 02  | Typography and Content                         | `02-typography`    | 0        | 1                |
+| 01  | Foundational Layout Components                 | `01-layout`        | 5        | 22               |
+| 02  | Typography and Content                         | `02-typography`    | 0        | 2                |
 | 03  | Actions and Controls                           | `03-actions`       | 3        | 4                |
-| 04  | Form and Input Infrastructure                  | `04-forms`         | 11       | 18               |
-| 05  | Navigation Components                          | `05-navigation`    | 5        | 7                |
-| 06  | Data Display Components                        | `06-data-display`  | 5        | 8                |
-| 07  | Advanced Table and Data Grid Infrastructure    | `07-data-grid`     | 3        | 4                |
-| 08  | Status and Feedback Components                 | `08-feedback`      | 8        | 13               |
-| 09  | Overlay and Floating Components                | `09-overlays`      | 5        | 13               |
-| 10  | Date, Time and Scheduling Components           | `10-scheduling`    | 5        | 9                |
-| 11  | Charts and Data Visualization                  | `11-charts`        | 3        | 8                |
-| 12  | File and Document Components                   | `12-files`         | 1        | 2                |
-| 13  | Search and Discovery Components                | `13-search`        | 6        | 6                |
-| 14  | Identity, Security and Permissions             | `14-identity`      | 7        | 23               |
-| 15  | Collaboration Components                       | `15-collaboration` | 9        | 9                |
-| 16  | Workflow and Process Components                | `16-workflow`      | 3        | 3                |
+| 04  | Form and Input Infrastructure                  | `04-forms`         | 11       | 19               |
+| 05  | Navigation Components                          | `05-navigation`    | 5        | 10               |
+| 06  | Data Display Components                        | `06-data-display`  | 5        | 23               |
+| 07  | Advanced Table and Data Grid Infrastructure    | `07-data-grid`     | 3        | 11               |
+| 08  | Status and Feedback Components                 | `08-feedback`      | 8        | 15               |
+| 09  | Overlay and Floating Components                | `09-overlays`      | 5        | 14               |
+| 10  | Date, Time and Scheduling Components           | `10-scheduling`    | 5        | 18               |
+| 11  | Charts and Data Visualization                  | `11-charts`        | 3        | 12               |
+| 12  | File and Document Components                   | `12-files`         | 1        | 7                |
+| 13  | Search and Discovery Components                | `13-search`        | 6        | 7                |
+| 14  | Identity, Security and Permissions             | `14-identity`      | 7        | 34               |
+| 15  | Collaboration Components                       | `15-collaboration` | 9        | 29               |
+| 16  | Workflow and Process Components                | `16-workflow`      | 3        | 23               |
 | 17  | Enterprise Intelligence Components             | `17-intelligence`  | 0        | 86               |
 | 18  | CRM and Business Components                    | `18-crm`           | 1        | 1                |
-| 19  | Domain and Technical Infrastructure Components | `19-technical`     | 5        | 5                |
-| 20  | Commerce, Billing and Subscription Components  | `20-billing`       | 0        | 1                |
-| 21  | Geographic and Location Components             | `21-geo`           | 1        | 1                |
+| 19  | Domain and Technical Infrastructure Components | `19-technical`     | 5        | 16               |
+| 20  | Commerce, Billing and Subscription Components  | `20-billing`       | 0        | 8                |
+| 21  | Geographic and Location Components             | `21-geo`           | 1        | 2                |
 | 22  | Advanced Interaction Components                | `22-interaction`   | 2        | 2                |
 
 <!-- /generated:taxonomy-categories -->
@@ -67,8 +67,8 @@ layer may compose lower ones, never the reverse.
 | Layer             | In scope | Registry entries |
 | ----------------- | -------- | ---------------- |
 | primitive         | 12       | 25               |
-| component         | 63       | 179              |
-| pattern           | 9        | 23               |
+| component         | 63       | 293              |
+| pattern           | 9        | 36               |
 | template          | 4        | 11               |
 | product-extension | 0        | 0                |
 

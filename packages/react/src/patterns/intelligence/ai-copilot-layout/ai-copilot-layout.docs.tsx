@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Checkbox } from '@rookcom/monarch-react';
 import {
   AiCopilotLayout,
   messageText,
@@ -7,7 +8,6 @@ import {
   useAiConversation,
   useAiSelectionContext,
 } from '@rookcom/monarch-react/ai';
-import { Checkbox } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 const transport = mockTransport({

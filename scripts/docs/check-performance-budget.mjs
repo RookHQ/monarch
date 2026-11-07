@@ -18,11 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib';
 
 const KB = 1024;
-// 156: set when the eager page index grew ~70 B gzip per component (wave 10, 2026-11-07).
-// Since then the entry carries only ids, titles and families (~14 B gzip per
-// component); summaries and exports are a lazy chunk (~50 B per component) that
-// the overview and component pages load, not the home page.
-const HOME_JS = 156 * KB;
+const HOME_JS = 150 * KB;
 const HOME_CSS = 60 * KB;
 // Component pages load their own docs file and the component it documents; the
 // editor's pages are the heaviest (the editor itself is about 115 KB).

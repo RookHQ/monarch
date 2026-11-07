@@ -531,6 +531,102 @@ export {
   type ConsentHistoryMessages,
   type ConsentHistoryProps,
 } from './components/identity/consent-history/index.js';
+export {
+  RATING_PICKER_MESSAGES,
+  RatingPicker,
+  type RatingOption,
+  type RatingPickerMessages,
+  type RatingPickerProps,
+} from './components/forms/rating-picker/index.js';
+export { InfoTooltip, type InfoTooltipProps } from './components/overlays/info-tooltip/index.js';
+export {
+  COMING_SOON_STATE_MESSAGES,
+  ComingSoonState,
+  type ComingSoonStateMessages,
+  type ComingSoonStateProps,
+} from './components/feedback/coming-soon-state/index.js';
+export {
+  CelebrationPanel,
+  Celebration,
+  type CelebrationDecoration,
+  type CelebrationTone,
+  type CelebrationPanelProps,
+  type CelebrationProps,
+} from './components/feedback/celebration/index.js';
+export {
+  defaultTreeViewMessages,
+  TreeView,
+  type TreeViewItem,
+  type TreeViewItemState,
+  type TreeViewMessages,
+  type TreeViewProps,
+} from './components/data-display/tree-view/index.js';
+export {
+  defaultScoreRingThresholds,
+  defaultScoreRingMessages,
+  ScoreRing,
+  type ScoreRingTone,
+  type ScoreRingThreshold,
+  type ScoreRingMessages,
+  type ScoreRingProps,
+} from './components/data-display/score-ring/index.js';
+export {
+  defaultProvenanceMessages,
+  Provenance,
+  type ProvenanceMessages,
+  type ProvenanceProps,
+} from './components/data-display/provenance/index.js';
+export {
+  defaultFreshnessIndicatorMessages,
+  freshnessStatus,
+  FreshnessIndicator,
+  type FreshnessStatus,
+  type FreshnessIndicatorMessages,
+  type FreshnessIndicatorProps,
+} from './components/data-display/freshness-indicator/index.js';
+export {
+  isSafeFaviconSrc,
+  faviconHostname,
+  faviconLetter,
+  Favicon,
+  type FaviconProps,
+} from './components/data-display/favicon/index.js';
+export {
+  FAVORITES_LIST_MESSAGES,
+  FavoritesList,
+  FavoriteToggle,
+  type FavoriteItem,
+  type FavoritesListMessages,
+  type FavoritesListProps,
+  type FavoriteToggleProps,
+} from './components/navigation/favorites-list/index.js';
+export {
+  KEYBOARD_SHORTCUTS_SHEET_MESSAGES,
+  describeShortcutKeys,
+  KeyboardShortcutsSheet,
+  type KeyboardShortcut,
+  type KeyboardShortcutsSheetMessages,
+  type KeyboardShortcutsSheetProps,
+} from './components/navigation/keyboard-shortcuts-sheet/index.js';
+export {
+  MEGA_MENU_MESSAGES,
+  MegaMenu,
+  type MegaMenuLink,
+  type MegaMenuSection,
+  type MegaMenuFeatured,
+  type MegaMenuItem,
+  type MegaMenuMessages,
+  type MegaMenuProps,
+} from './components/navigation/mega-menu/index.js';
+export { DeviceFrame, type DeviceFrameProps } from './components/layout/device-frame/index.js';
+export {
+  CodeBlock,
+  CodeTabs,
+  type CodeBlockMessages,
+  type CodeBlockProps,
+  type CodeSample,
+  type CodeTabsProps,
+} from './components/typography/code-block/index.js';
 // Patterns: compositions of the components above for recurring Rook screens.
 export {
   PageHeader,

@@ -144,7 +144,6 @@ function SlashCommandsDemo() {
         ]}
         renderTriggerMenu={(state) => <SlashMenu state={state} active={active} />}
         textareaProps={{
-          role: 'combobox',
           'aria-autocomplete': 'list',
           'aria-expanded': Boolean(open && matches.length),
           'aria-controls': open && matches.length ? 'docs-slash-menu' : undefined,
@@ -312,14 +311,14 @@ export default {
       ],
     },
     accessibility: {
-      role: 'textbox (or combobox when you pass `role` for a trigger menu)',
+      role: 'textbox',
       name: '`label`, a real `<label>` that is visually hidden unless `showLabel`.',
       items: [
         'A visually hidden hint (“Enter to send, Shift+Enter for a new line.”, plus “Escape stops the response.” while busy) is the textarea’s description, with the counter and the disabled reason.',
         'The counter is read as “120 of 4000 characters”; reaching the warning threshold or going over is announced once, politely, never per keystroke.',
         'Attaching and removing files is announced politely; removing a chip moves focus to the next chip or back to the textarea.',
         'Send and Stop are labelled icon buttons; Stop has `aria-keyshortcuts="Escape"`.',
-        'For a trigger menu, pass `role="combobox"`, `aria-expanded`, `aria-controls` and `aria-activedescendant` through `textareaProps`; focus stays in the textarea.',
+        'For a trigger menu, pass `aria-autocomplete`, `aria-expanded`, `aria-controls` and `aria-activedescendant` through `textareaProps` (not `role="combobox"`, which is not allowed on a textarea); focus stays in the textarea.',
         'The drop hint is decorative; the attach button is the accessible route to the same action.',
       ],
     },

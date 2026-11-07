@@ -1,5 +1,5 @@
-import { AppShell, IdentityBar, RookRail } from '@rookcom/monarch-react/shell';
 import { PageHeader } from '@rookcom/monarch-react';
+import { AppShell, IdentityBar, RookRail } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { AppMark, CalendarIcon, HomeIcon, InboxIcon } from '../../../internal/docs-demo.js';
 

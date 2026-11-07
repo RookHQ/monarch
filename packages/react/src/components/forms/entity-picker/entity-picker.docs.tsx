@@ -1,6 +1,11 @@
 import { useState } from 'react';
-import { Button, EntityPicker, Field, FieldLabel } from '@rookcom/monarch-react';
-import type { ComboboxOption } from '@rookcom/monarch-react';
+import {
+  Button,
+  EntityPicker,
+  Field,
+  FieldLabel,
+  type ComboboxOption,
+} from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { BoardIcon, GridIcon, ListIcon } from '../../../internal/docs-demo.js';
 

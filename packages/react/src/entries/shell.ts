@@ -131,3 +131,59 @@ export {
   type LinkedDocItem,
   type LinkedDocKind,
 } from '../components/collaboration/linked-docs-panel/index.js';
+export {
+  presenceLabel,
+  PresenceDot,
+  type PresenceStatus,
+  type PresenceCustomStatus,
+  type PresenceDotMessages,
+  type PresenceDotProps,
+} from '../components/identity/presence-dot/index.js';
+export {
+  MyStatus,
+  type MyStatusCustomStatus,
+  type MyStatusMessages,
+  type MyStatusProps,
+} from '../components/identity/my-status/index.js';
+export {
+  RookBar,
+  RookBarPanelProvider,
+  useRookBarPanel,
+  RookBarAppCatalog,
+  RookBarLinkList,
+  RookBarFeaturePanel,
+  RookBarStoriesPanel,
+  type RookBarLinkItem,
+  type RookBarMenuItem,
+  type RookBarItem,
+  type RookBarAccount,
+  type RookBarMessages,
+  type RookBarProps,
+  type RookBarPanelContext,
+  type RookBarLink,
+  type RookBarApp,
+  type RookBarAppCategory,
+  type RookBarAppCatalogMessages,
+  type RookBarAppCatalogProps,
+  type RookBarLinkListProps,
+  type RookBarFeature,
+  type RookBarFeaturePanelProps,
+  type RookBarStory,
+  type RookBarStoriesPanelMessages,
+  type RookBarStoriesPanelProps,
+} from '../patterns/layout/rook-bar/index.js';
+export {
+  DocsPanel,
+  type DocsPanelMessages,
+  type DocsPanelProps,
+} from '../patterns/layout/docs-panel/index.js';
+export {
+  NotificationsBell,
+  type NotificationsBellMessages,
+  type NotificationsBellProps,
+} from '../components/layout/notifications-bell/index.js';
+export {
+  AvailabilityToggle,
+  type AvailabilityToggleMessages,
+  type AvailabilityToggleProps,
+} from '../components/layout/availability-toggle/index.js';

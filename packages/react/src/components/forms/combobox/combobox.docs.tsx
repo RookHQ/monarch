@@ -1,6 +1,11 @@
 import { useState } from 'react';
-import { Combobox, Field, FieldDescription, FieldLabel } from '@rookcom/monarch-react';
-import type { ComboboxOption } from '@rookcom/monarch-react';
+import {
+  Combobox,
+  Field,
+  FieldDescription,
+  FieldLabel,
+  type ComboboxOption,
+} from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 const timezones = [

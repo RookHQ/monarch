@@ -1,0 +1,409 @@
+/* Org chart. Only --mn-* variables; state goes in data-* attributes.
+   The list layout is the base; the chart layout is applied on top of it for
+   data-layout="chart", and for data-layout="auto" when there is room. */
+.mn-org-chart {
+  --mn-org-chart-height: 70vh;
+  --mn-org-chart-card-width: 14rem;
+  --_line: var(--mn-color-border-default);
+  container: mn-org-chart / inline-size;
+  display: grid;
+  gap: var(--mn-space-2);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  color: var(--mn-color-text-default);
+  font-family: var(--mn-font-sans);
+  font-size: var(--mn-text-sm);
+}
+.mn-org-chart__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--mn-space-2);
+}
+.mn-org-chart__hint {
+  flex: 1 1 14rem;
+  margin: 0;
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+}
+.mn-org-chart__zoom {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mn-space-0-5);
+  padding: var(--mn-space-0-5);
+  border: 1px solid var(--mn-color-border-subtle);
+  border-radius: var(--mn-radius-lg);
+  background: var(--mn-color-bg-surface);
+}
+.mn-org-chart__zoom-level {
+  min-width: 2.75rem;
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.mn-org-chart__viewport {
+  position: relative;
+  min-width: 0;
+  border: 1px solid var(--mn-color-border-subtle);
+  border-radius: var(--mn-radius-lg);
+  background: var(--mn-color-bg-subtle);
+}
+.mn-org-chart__canvas {
+  position: relative;
+  box-sizing: border-box;
+  padding: var(--mn-space-3);
+}
+.mn-org-chart__dotted {
+  display: none;
+}
+
+/* List layout (base). */
+.mn-org-chart__tree,
+.mn-org-chart__group {
+  display: grid;
+  gap: var(--mn-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mn-org-chart__group {
+  margin-top: var(--mn-space-2);
+  margin-inline-start: var(--mn-space-4);
+  padding-inline-start: var(--mn-space-3);
+  border-inline-start: 1px solid var(--_line);
+}
+.mn-org-chart__branch {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  min-width: 0;
+}
+.mn-org-chart__node {
+  position: relative;
+  display: grid;
+  gap: var(--mn-space-2);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: var(--mn-space-2-5) var(--mn-space-3);
+  border: 1px solid var(--mn-color-border-subtle);
+  border-radius: var(--mn-radius-lg);
+  background: var(--mn-color-bg-surface);
+  box-shadow: var(--mn-shadow-xs);
+  cursor: pointer;
+  text-align: start;
+  transition:
+    box-shadow var(--mn-duration-fast) var(--mn-ease-standard),
+    border-color var(--mn-duration-fast) var(--mn-ease-standard);
+}
+.mn-org-chart__node:hover {
+  box-shadow: var(--mn-shadow-md);
+}
+.mn-org-chart__node:focus-visible {
+  outline: var(--mn-focus-ring-width) solid var(--mn-color-focus-ring);
+  outline-offset: 2px;
+}
+.mn-org-chart__node[data-focus] {
+  border-color: var(--mn-color-accent-solid);
+  box-shadow: 0 0 0 3px var(--mn-color-accent-subtle);
+}
+.mn-org-chart__node[data-dashed],
+.mn-org-chart__node[data-kind='vacancy'] {
+  border-style: dashed;
+  border-color: var(--mn-color-border-strong);
+}
+.mn-org-chart__node[data-kind='vacancy'] {
+  background: var(--mn-color-bg-muted);
+}
+.mn-org-chart__node[data-dragging] {
+  opacity: 0.5;
+}
+.mn-org-chart__node[data-drop] {
+  border-color: var(--mn-color-accent-strong);
+  background: var(--mn-color-accent-subtle);
+}
+.mn-org-chart__person {
+  display: flex;
+  align-items: center;
+  gap: var(--mn-space-2-5);
+  min-width: 0;
+}
+.mn-org-chart__vacancy-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px dashed var(--mn-color-border-strong);
+  border-radius: var(--mn-radius-full);
+  background: var(--mn-color-bg-surface);
+  color: var(--mn-color-text-muted);
+}
+.mn-org-chart__text {
+  display: grid;
+  min-width: 0;
+}
+.mn-org-chart__name,
+.mn-org-chart__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mn-org-chart__name {
+  font-weight: var(--mn-weight-medium);
+}
+.mn-org-chart__title {
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+}
+.mn-org-chart__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mn-space-1);
+  min-width: 0;
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+}
+.mn-org-chart__toggle {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mn-space-0-5);
+  height: 1.25rem;
+  margin-top: calc(-1 * var(--mn-space-2-5));
+  margin-inline-start: var(--mn-space-3);
+  padding: 0 var(--mn-space-1-5);
+  border: 1px solid var(--mn-color-border-default);
+  border-radius: var(--mn-radius-full);
+  background: var(--mn-color-bg-surface);
+  color: var(--mn-color-text-muted);
+  font: inherit;
+  font-size: var(--mn-text-2xs);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.mn-org-chart__toggle:hover {
+  color: var(--mn-color-text-default);
+}
+.mn-org-chart__toggle svg {
+  width: 0.75rem;
+  height: 0.75rem;
+  transition: transform var(--mn-duration-fast) var(--mn-ease-standard);
+}
+.mn-org-chart__toggle[data-open] svg {
+  transform: rotate(90deg);
+}
+.mn-org-chart__toggle:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* Chart layout: top-down boxes joined by lines. */
+.mn-org-chart[data-layout='chart'] .mn-org-chart__viewport,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__viewport {
+  height: var(--mn-org-chart-height);
+  min-height: 20rem;
+  overflow: auto;
+  cursor: grab;
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__canvas,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__canvas {
+  display: inline-block;
+  min-width: 100%;
+  padding: var(--mn-space-6) var(--mn-space-6) var(--mn-space-16);
+  transform: scale(var(--mn-org-chart-zoom, 1));
+  transform-origin: top left;
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__dotted,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__dotted {
+  position: absolute;
+  inset: 0 auto auto 0;
+  display: block;
+  color: var(--mn-color-text-subtle);
+  pointer-events: none;
+}
+.mn-org-chart__dotted path {
+  fill: none;
+  stroke: currentColor;
+  stroke-dasharray: 6 4;
+  stroke-width: 1.5;
+}
+.mn-org-chart__dotted circle {
+  fill: currentColor;
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__tree,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__tree,
+.mn-org-chart[data-layout='chart'] .mn-org-chart__group,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__group {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__group,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__group {
+  position: relative;
+  margin: 0;
+  padding: var(--mn-space-4) 0 0;
+  border: 0;
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__group::before,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__group::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: var(--mn-space-4);
+  border-left: 1px solid var(--_line);
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__branch,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__branch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 var(--mn-space-2);
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__group > .mn-org-chart__branch,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__group > .mn-org-chart__branch {
+  padding-top: var(--mn-space-6);
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__group > .mn-org-chart__branch::before,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__group > .mn-org-chart__branch::before,
+.mn-org-chart[data-layout='chart'] .mn-org-chart__group > .mn-org-chart__branch::after,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__group > .mn-org-chart__branch::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: var(--mn-space-6);
+  border-top: 1px solid var(--_line);
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__group > .mn-org-chart__branch::before,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__group > .mn-org-chart__branch::before {
+  right: 50%;
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__group > .mn-org-chart__branch::after,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__group > .mn-org-chart__branch::after {
+  left: 50%;
+  border-left: 1px solid var(--_line);
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__group > .mn-org-chart__branch:first-child::before,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__group > .mn-org-chart__branch:first-child::before,
+.mn-org-chart[data-layout='chart'] .mn-org-chart__group > .mn-org-chart__branch:last-child::after,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__group > .mn-org-chart__branch:last-child::after {
+  border-top: 0;
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__group > .mn-org-chart__branch:last-child::before,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__group > .mn-org-chart__branch:last-child::before {
+  border-right: 1px solid var(--_line);
+  border-top-right-radius: var(--mn-radius-md);
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__group > .mn-org-chart__branch:first-child::after,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__group > .mn-org-chart__branch:first-child::after {
+  border-top-left-radius: var(--mn-radius-md);
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__group > .mn-org-chart__branch:only-child::before,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__group > .mn-org-chart__branch:only-child::before {
+  display: none;
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__group > .mn-org-chart__branch:only-child::after,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__group > .mn-org-chart__branch:only-child::after {
+  border-top: 0;
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__node,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__node {
+  width: var(--mn-org-chart-card-width);
+}
+.mn-org-chart[data-layout='chart'] .mn-org-chart__toggle,
+.mn-org-chart[data-layout='auto'] .mn-org-chart__toggle {
+  margin-inline-start: 0;
+}
+
+/* data-layout="auto" falls back to the list when narrow. */
+@container mn-org-chart (max-width: 40rem) {
+  .mn-org-chart[data-layout='auto'] .mn-org-chart__zoom {
+    display: none;
+  }
+  .mn-org-chart[data-layout='auto'] .mn-org-chart__viewport {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    cursor: auto;
+  }
+  .mn-org-chart[data-layout='auto'] .mn-org-chart__canvas {
+    display: block;
+    min-width: 0;
+    padding: var(--mn-space-3);
+    transform: none;
+  }
+  .mn-org-chart[data-layout='auto'] .mn-org-chart__dotted {
+    display: none;
+  }
+  .mn-org-chart[data-layout='auto'] .mn-org-chart__tree,
+  .mn-org-chart[data-layout='auto'] .mn-org-chart__group {
+    display: grid;
+    gap: var(--mn-space-2);
+  }
+  .mn-org-chart[data-layout='auto'] .mn-org-chart__group {
+    margin-top: var(--mn-space-2);
+    margin-inline-start: var(--mn-space-4);
+    padding: 0;
+    padding-inline-start: var(--mn-space-3);
+    border-inline-start: 1px solid var(--_line);
+  }
+  .mn-org-chart[data-layout='auto'] .mn-org-chart__group::before,
+  .mn-org-chart[data-layout='auto'] .mn-org-chart__group > .mn-org-chart__branch::before,
+  .mn-org-chart[data-layout='auto'] .mn-org-chart__group > .mn-org-chart__branch::after {
+    display: none;
+  }
+  .mn-org-chart[data-layout='auto'] .mn-org-chart__branch,
+  .mn-org-chart[data-layout='auto'] .mn-org-chart__group > .mn-org-chart__branch {
+    display: grid;
+    justify-items: start;
+    padding: 0;
+  }
+  .mn-org-chart[data-layout='auto'] .mn-org-chart__node {
+    width: 100%;
+  }
+  .mn-org-chart[data-layout='auto'] .mn-org-chart__toggle {
+    margin-inline-start: var(--mn-space-3);
+  }
+}
+.mn-org-chart[data-layout='list'] .mn-org-chart__zoom {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .mn-org-chart__toggle {
+    height: 1.75rem;
+    padding: 0 var(--mn-space-2);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mn-org-chart__node,
+  .mn-org-chart__toggle svg {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .mn-org-chart {
+    --_line: CanvasText;
+  }
+  .mn-org-chart__node,
+  .mn-org-chart__toggle,
+  .mn-org-chart__viewport {
+    border-color: CanvasText;
+  }
+  .mn-org-chart__node[data-focus],
+  .mn-org-chart__node[data-drop] {
+    border-width: 2px;
+    border-color: Highlight;
+  }
+  .mn-org-chart__dotted {
+    color: GrayText;
+  }
+}

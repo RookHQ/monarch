@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { AiUserMessageEdit } from '@rookcom/monarch-react/ai';
 import { Button } from '@rookcom/monarch-react';
+import { AiUserMessageEdit } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 function Demo() {

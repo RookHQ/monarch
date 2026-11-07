@@ -13,9 +13,9 @@ import {
 } from 'react';
 import { cx } from '../../../internal/cx.js';
 import { ownsOpenPopup } from '../../../internal/dismiss.js';
-import { ChevronDownGlyph, CloseGlyph, BotGlyph } from '../../../internal/icons.js';
+import { ChevronDownGlyph, CloseGlyph } from '../../../internal/icons.js';
 import { Button, IconButton } from '../../actions/button/index.js';
-import { Avatar } from '../../identity/avatar/index.js';
+import { AiAgentAvatar } from '../ai-agent-avatar/index.js';
 import type { AiAgentRef, AiMessage, UseAiConversationResult } from '../ai-conversation/index.js';
 import { AiThread, type AiThreadProps } from '../ai-thread/index.js';
 import type { AiMessageViewProps } from '../ai-message/index.js';
@@ -356,13 +356,11 @@ export const AiAssistantPanel = forwardRef<HTMLElement, AiAssistantPanelProps>(
       >
         <header className="mn-ai-assistant-panel__header">
           <span className="mn-ai-assistant-panel__avatar">
-            <Avatar
-              name={name ?? 'Assistant'}
-              src={agent?.avatar ?? null}
+            <AiAgentAvatar
+              agent={agent ?? { name: name ?? 'Assistant' }}
+              state={conversation.busy ? 'working' : 'idle'}
               size="sm"
               decorative
-              fallback="icon"
-              icon={<BotGlyph />}
             />
           </span>
           <div className="mn-ai-assistant-panel__heading">

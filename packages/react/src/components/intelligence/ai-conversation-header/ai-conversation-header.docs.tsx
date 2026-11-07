@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { AiConversationHeader } from '@rookcom/monarch-react/ai';
 import {
   Button,
   DropdownMenu,
@@ -7,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@rookcom/monarch-react';
+import { AiConversationHeader } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 const AGENT = { name: 'Assistant', role: 'Workspace assistant' };

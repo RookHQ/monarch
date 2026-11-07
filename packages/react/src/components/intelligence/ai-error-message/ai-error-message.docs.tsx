@@ -1,11 +1,11 @@
 import { useState } from 'react';
+import { Button } from '@rookcom/monarch-react';
 import {
   AiErrorMessage,
   mockTransport,
   useAiConversation,
   type AiErrorKind,
 } from '@rookcom/monarch-react/ai';
-import { Button } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 const failing = mockTransport({

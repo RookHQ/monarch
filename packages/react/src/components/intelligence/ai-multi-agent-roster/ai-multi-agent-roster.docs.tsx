@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { AiMultiAgentRoster, type AiRosterMember } from '@rookcom/monarch-react/ai';
 import { Button } from '@rookcom/monarch-react';
+import { AiMultiAgentRoster, type AiRosterMember } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 const team: AiRosterMember[] = [

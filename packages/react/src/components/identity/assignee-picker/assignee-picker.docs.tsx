@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { AssigneePicker, Field, FieldLabel } from '@rookcom/monarch-react';
-import type { AssigneePerson } from '@rookcom/monarch-react';
+import { AssigneePicker, Field, FieldLabel, type AssigneePerson } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 const members: AssigneePerson[] = [

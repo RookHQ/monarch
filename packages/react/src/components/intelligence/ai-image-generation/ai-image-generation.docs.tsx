@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { Button } from '@rookcom/monarch-react';
 import {
   AiImageGeneration,
   type AiGeneratedImage,
   type AiImageGenerationStatus,
 } from '@rookcom/monarch-react/ai';
-import { Button } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 /** Neutral placeholder art: monochrome shapes as local `blob:` URLs, so nothing is hotlinked. */

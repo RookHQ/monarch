@@ -1,5 +1,5 @@
-import { AiAgentAvatar } from '@rookcom/monarch-react/ai';
 import { Avatar } from '@rookcom/monarch-react';
+import { AiAgentAvatar } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 const research = { id: 'research', name: 'Research agent', role: 'Finds and checks sources' };

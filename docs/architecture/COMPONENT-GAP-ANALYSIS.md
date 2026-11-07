@@ -29,7 +29,7 @@ enters Monarch.
 | missing                | 0        | 0                    | 0                        | 0                        |
 | product-extension      | 0        | 0                    | 0                        | 0                        |
 | not-evidenced          | 0        | 0                    | 0                        | 0                        |
-| not-assessed           | 0        | 114                  | 0                        | 12                       |
+| not-assessed           | 0        | 241                  | 0                        | 12                       |
 
 <!-- /generated:gap-summary -->
 

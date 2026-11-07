@@ -1,5 +1,5 @@
-import { IdentityBar, ThemeToggle } from '@rookcom/monarch-react/shell';
 import { IconButton, SearchInput } from '@rookcom/monarch-react';
+import { IdentityBar, ThemeToggle } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { AppMark, BellIcon } from '../../../internal/docs-demo.js';
 

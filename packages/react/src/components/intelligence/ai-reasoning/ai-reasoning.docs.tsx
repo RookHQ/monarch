@@ -1,3 +1,4 @@
+import { Button } from '@rookcom/monarch-react';
 import {
   AiMessageView,
   AiReasoning,
@@ -6,7 +7,6 @@ import {
   useAiConversation,
   type AiStreamEvent,
 } from '@rookcom/monarch-react/ai';
-import { Button } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 const reasoningDeltas = (text: string): AiStreamEvent[] =>

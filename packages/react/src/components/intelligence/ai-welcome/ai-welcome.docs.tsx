@@ -1,3 +1,4 @@
+import { Button } from '@rookcom/monarch-react';
 import {
   AiStarterPrompts,
   AiThread,
@@ -7,7 +8,6 @@ import {
   textDeltas,
   useAiConversation,
 } from '@rookcom/monarch-react/ai';
-import { Button } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 const transport = mockTransport({

@@ -242,7 +242,7 @@ export default {
     },
     dependencies: {
       packages: ['react'],
-      components: ['ai-prompt-input', 'ai-thread', 'avatar', 'button'],
+      components: ['ai-agent-avatar', 'ai-prompt-input', 'ai-thread', 'button'],
     },
     testing: {
       unit: [

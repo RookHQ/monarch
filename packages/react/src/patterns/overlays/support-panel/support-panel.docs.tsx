@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
+import { Button } from '@rookcom/monarch-react';
 import {
   SupportPanel,
   type SupportChatClient,
   type SupportChatEvent,
 } from '@rookcom/monarch-react/shell';
-import { Button } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 /** Docs only: an in-memory client that answers every message after a moment. */

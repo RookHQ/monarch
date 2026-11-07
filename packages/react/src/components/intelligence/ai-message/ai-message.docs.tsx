@@ -242,6 +242,7 @@ export default {
         'ai-conversation',
         'ai-error-message',
         'ai-message-actions',
+        'ai-message-branch',
         'ai-streaming-text',
       ],
     },

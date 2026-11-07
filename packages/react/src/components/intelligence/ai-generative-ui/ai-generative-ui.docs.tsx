@@ -1,5 +1,5 @@
-import { AiGenerativeUi, createAiUiRegistry, type AiUiPart } from '@rookcom/monarch-react/ai';
 import { Badge, Card, CardContent, CardHeader, CardTitle } from '@rookcom/monarch-react';
+import { AiGenerativeUi, createAiUiRegistry, type AiUiPart } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 function MetricCard({ label, value, change }: { label?: string; value?: string; change?: string }) {

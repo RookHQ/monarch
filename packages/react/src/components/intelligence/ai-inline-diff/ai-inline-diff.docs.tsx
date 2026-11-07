@@ -1,11 +1,11 @@
 import { useState } from 'react';
+import { Button } from '@rookcom/monarch-react';
 import {
   AiInlineDiff,
   diffWords,
   resolveAiInlineDiff,
   type AiDiffSegment,
 } from '@rookcom/monarch-react/ai';
-import { Button } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 const BEFORE =

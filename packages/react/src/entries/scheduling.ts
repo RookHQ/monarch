@@ -94,3 +94,72 @@ export {
   type WeeklyHoursInterval,
   type WeeklyHoursValue,
 } from '../components/scheduling/weekly-hours-editor/index.js';
+export {
+  SlotPicker,
+  type SlotPickerSlot,
+  type SlotPickerMessages,
+  type SlotPickerProps,
+} from '../components/scheduling/slot-picker/index.js';
+export {
+  useBookingFlow,
+  BookingFlow,
+  type BookingFlowStep,
+  type BookingFlowMessages,
+  type BookingFlowProps,
+} from '../patterns/scheduling/booking-flow/index.js';
+export {
+  RescheduleDialog,
+  type RescheduleDetails,
+  type RescheduleDialogMessages,
+  type RescheduleSlotPickerProps,
+  type RescheduleDialogProps,
+} from '../components/scheduling/reschedule-dialog/index.js';
+export {
+  TimeOffPanel,
+  type TimeOffEntry,
+  type TimeOffPerson,
+  type TimeOffDraft,
+  type TimeOffPanelMessages,
+  type TimeOffPanelProps,
+} from '../components/scheduling/time-off-panel/index.js';
+export {
+  CalendarToolbar,
+  type CalendarToolbarView,
+  type CalendarToolbarMessages,
+  type CalendarToolbarProps,
+} from '../components/scheduling/calendar-toolbar/index.js';
+export {
+  EventPopover,
+  type EventPopoverDetail,
+  type EventPopoverMessages,
+  type EventPopoverProps,
+} from '../components/scheduling/event-popover/index.js';
+export {
+  ShiftRoster,
+  type ShiftRosterShift,
+  type ShiftRosterMember,
+  type ShiftRosterValue,
+  type ShiftRosterChange,
+  type ShiftRosterMessages,
+  type ShiftRosterProps,
+} from '../components/scheduling/shift-roster/index.js';
+export {
+  validateBusinessHours,
+  BusinessHoursEditor,
+  type BusinessHoursException,
+  type BusinessHoursValue,
+  type BusinessHoursExceptionError,
+  type BusinessHoursErrors,
+  type ValidateBusinessHoursOptions,
+  type BusinessHoursEditorMessages,
+  type BusinessHoursEditorProps,
+} from '../components/scheduling/business-hours-editor/index.js';
+export {
+  TeamCalendar,
+  type TeamCalendarMember,
+  type TeamCalendarPortion,
+  type TeamCalendarEntry,
+  type TeamCalendarHoliday,
+  type TeamCalendarMessages,
+  type TeamCalendarProps,
+} from '../components/scheduling/team-calendar/index.js';

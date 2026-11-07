@@ -23,7 +23,7 @@ import {
   BotGlyph,
 } from '../../../internal/icons.js';
 import { isSafeUrl } from '../../../internal/sanitize.js';
-import { Button, IconButton } from '../../actions/button/index.js';
+import { Button } from '../../actions/button/index.js';
 import { writeToClipboard } from '../../actions/copy-button/index.js';
 import { Spinner } from '../../feedback/spinner/index.js';
 import { Avatar } from '../../identity/avatar/index.js';
@@ -45,6 +45,7 @@ import {
   type AiFeedback,
   type AiMessageActionsMessages,
 } from '../ai-message-actions/index.js';
+import { AiMessageBranch } from '../ai-message-branch/index.js';
 import { AiStreamingText } from '../ai-streaming-text/index.js';
 
 function FileGlyph(props: SVGProps<SVGSVGElement>) {
@@ -488,25 +489,17 @@ export const AiMessageView = forwardRef<HTMLElement, AiMessageViewProps>(functio
     ) : null;
 
   const switcher = branch ? (
-    <div className="mn-ai-message__branch" role="group" aria-label={m.versions}>
-      <IconButton
-        size="sm"
-        label={m.previousVersion}
-        icon={<ChevronRightGlyph className="mn-ai-message__branch-prev" />}
-        disabled={branch.index <= 0}
-        onClick={() => onBranch?.(branch.index - 1, message)}
-      />
-      <span className="mn-ai-message__branch-status">
-        {m.versionOf(branch.index + 1, branch.count)}
-      </span>
-      <IconButton
-        size="sm"
-        label={m.nextVersion}
-        icon={<ChevronRightGlyph className="mn-ai-message__branch-next" />}
-        disabled={branch.index >= branch.count - 1}
-        onClick={() => onBranch?.(branch.index + 1, message)}
-      />
-    </div>
+    <AiMessageBranch
+      index={branch.index}
+      count={branch.count}
+      onChange={(index) => onBranch?.(index, message)}
+      messages={{
+        label: m.versions,
+        previous: m.previousVersion,
+        next: m.nextVersion,
+        position: m.versionOf,
+      }}
+    />
   ) : null;
 
   const timestamp = time ? (

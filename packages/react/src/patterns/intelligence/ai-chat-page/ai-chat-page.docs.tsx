@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Button } from '@rookcom/monarch-react';
 import {
   AiChatPage,
   AiDisclaimer,
@@ -10,7 +11,6 @@ import {
   useAiConversation,
   type AiCanvasArtifact,
 } from '@rookcom/monarch-react/ai';
-import { Button } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 const transport = mockTransport({

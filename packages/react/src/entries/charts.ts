@@ -79,3 +79,63 @@ export {
   type ProportionTone,
   type StackedProportionBarProps,
 } from '../components/charts/stacked-proportion-bar/index.js';
+export {
+  heatmapScale,
+  HeatmapLegend,
+  Heatmap,
+  type HeatmapLevel,
+  type HeatmapScale,
+  type HeatmapLegendLabels,
+  type HeatmapLegendProps,
+  type HeatmapAxisItem,
+  type HeatmapCell,
+  type HeatmapPosition,
+  type HeatmapLabels,
+  type HeatmapProps,
+} from '../components/charts/heatmap/index.js';
+export {
+  CalendarHeatmap,
+  type CalendarHeatmapDay,
+  type CalendarHeatmapLayout,
+  type CalendarHeatmapLabels,
+  type CalendarHeatmapProps,
+} from '../components/charts/calendar-heatmap/index.js';
+export {
+  DEFAULT_UPTIME_STATUS_LABELS,
+  uptimeStatus,
+  UptimeLegend,
+  UptimeBar,
+  type UptimeStatus,
+  type UptimeSegmentDetail,
+  type UptimeSegment,
+  type UptimeThresholds,
+  type UptimeBarLabels,
+  type UptimeLegendProps,
+  type UptimeBarProps,
+} from '../components/charts/uptime-bar/index.js';
+export {
+  ForceGraph,
+  forceLayout,
+  type ForceGraphNode,
+  type ForceGraphEdge,
+  type ForceGraphGroup,
+  type ForceGraphEdgeKind,
+  type ForceGraphLabels,
+  type ForceGraphProps,
+  type ForceLayoutEdge,
+  type ForceLayoutNode,
+  type ForceLayoutOptions,
+  type ForceLayoutPoint,
+} from '../components/charts/force-graph/index.js';
+export {
+  WorldMap,
+  WORLD_MAP_CENTROIDS,
+  WORLD_MAP_SHAPES,
+  WORLD_MAP_VIEWBOX,
+  type WorldMapDetail,
+  type WorldMapDatum,
+  type WorldMapExtra,
+  type WorldMapVariant,
+  type WorldMapLabels,
+  type WorldMapProps,
+} from '../components/geo/world-map/index.js';

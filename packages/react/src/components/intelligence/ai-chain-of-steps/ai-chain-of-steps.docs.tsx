@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { AiChainOfSteps, type AiStep } from '@rookcom/monarch-react/ai';
 import { Button } from '@rookcom/monarch-react';
+import { AiChainOfSteps, type AiStep } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 const LABELS = [

@@ -1,5 +1,5 @@
-import { AiAgentCard } from '@rookcom/monarch-react/ai';
 import { Avatar, Button } from '@rookcom/monarch-react';
+import { AiAgentCard } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
 const research = {
