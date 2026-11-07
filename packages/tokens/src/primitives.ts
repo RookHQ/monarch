@@ -60,6 +60,17 @@ export const neutral = {
 
 export type NeutralStep = keyof typeof neutral;
 
+/**
+ * Disabled text, between two neutral steps: the lightest (light theme) or
+ * darkest (dark theme) grey that still reaches 2.5:1 on every surface up to
+ * `bg-muted`, so a disabled label stays distinguishable without competing with
+ * real text (docs/architecture/CONTRAST-MATRIX.md).
+ */
+export const textDisabled = {
+  light: hsl(220, 9, 62),
+  dark: hsl(220, 9, 42),
+} as const;
+
 /** The Monarch identity spectrum: used sparingly for brand moments and data. */
 export const spectrum = {
   blue: ramp(214, 90),

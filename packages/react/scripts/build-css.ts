@@ -103,6 +103,17 @@ for (const p of order) {
       if (prev && prev !== p) errors.push(`.${block} is defined by both ${prev} and ${p}`);
       else blockOwner.set(block, p);
     }
+  // Theme coverage (docs/guides/theming.md): every stylesheet handles forced
+  // colours, and every animated one handles reduced motion.
+  if (!css.includes('forced-colors'))
+    errors.push(
+      `${p}: no @media (forced-colors: active) block (a comment saying why none is needed also counts)`,
+    );
+  if (
+    /\b(animation|transition)\s*:/.test(stripComments(css)) &&
+    !css.includes('prefers-reduced-motion')
+  )
+    errors.push(`${p}: animates but has no @media (prefers-reduced-motion: reduce) block`);
   for (const name of keyframesOf(css)) {
     const prev = keyframeOwner.get(name);
     if (prev) errors.push(`@keyframes ${name} is defined by both ${prev} and ${p}`);

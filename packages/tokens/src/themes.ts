@@ -15,7 +15,7 @@ import {
   toChannels,
   type Hsl,
 } from './color.js';
-import { neutral, statusBase } from './primitives.js';
+import { neutral, statusBase, textDisabled } from './primitives.js';
 
 export type ThemeId = 'light' | 'dark' | 'hc-light' | 'hc-dark';
 export const THEME_IDS: readonly ThemeId[] = ['light', 'dark', 'hc-light', 'hc-dark'];
@@ -74,7 +74,7 @@ export const themes: Readonly<Record<ThemeId, ThemeDefinition>> = {
       'text-default': neutral[850],
       'text-muted': neutral[600],
       'text-subtle': neutral[500],
-      'text-disabled': neutral[400],
+      'text-disabled': textDisabled.light,
       'text-inverse': neutral[0],
       'text-inverse-muted': neutral[300],
       'border-subtle': neutral[150],
@@ -108,7 +108,7 @@ export const themes: Readonly<Record<ThemeId, ThemeDefinition>> = {
       'text-default': neutral[50],
       'text-muted': neutral[300],
       'text-subtle': neutral[400],
-      'text-disabled': neutral[600],
+      'text-disabled': textDisabled.dark,
       'text-inverse': neutral[900],
       'text-inverse-muted': neutral[600],
       'border-subtle': neutral[850],
