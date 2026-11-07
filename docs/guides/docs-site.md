@@ -152,10 +152,10 @@ parser on any page; the editor, charts or the command palette on any page
 that is not their own component page. It checks the sources listed in each
 chunk's source map, so a module cannot slip in under another chunk's name.
 The home-page JavaScript limit was raised from 150 KB in wave 10: the eager
-page index grows with every component. Pages load only the stylesheets of the
-entries they import (`styles/core.css` plus, for example, `styles/ai.css`),
-through the `monarch-entry-styles` Vite plugin, so CSS no longer grows with
-the whole catalog.
+page index grows with every component. Pages load `styles/core.css` plus the
+per-component sheet (`styles/components/<id>.css`) of every subpath component
+they import, through the `monarch-entry-styles` Vite plugin, so CSS no longer
+grows with the catalog.
 `--report` prints every page and the 25 largest chunks with gzip and brotli
 sizes. Raise a limit only in a reviewed PR that says why.
 

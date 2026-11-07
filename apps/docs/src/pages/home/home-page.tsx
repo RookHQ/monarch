@@ -14,6 +14,8 @@ import { ThemeSwitcher } from '../../features/appearance/theme-switcher.js';
 import { useAppearance } from '../../features/appearance/appearance-provider.js';
 import { REPO_URL } from '../../layout/top-bar.js';
 import { pageById } from '../../lib/docs.js';
+// Only the showcased pages' details, so the home page does not load every summary.
+import { details as showcaseDetails } from 'virtual:monarch-docs-details?pages=button,segmented-control,tabs,status-badge,progress-bar,avatar';
 import { facts, INSTALL_COMMAND } from '../../lib/facts.js';
 import { DEFAULT_PRODUCT } from '../../lib/appearance.js';
 import '../../styles/home.css';
@@ -32,7 +34,7 @@ import {
 const delay = (s: number) => ({ '--docs-delay': `${s}s` }) as CSSProperties;
 
 /** Components shown live on the home page; each links to its page. */
-const SHOWCASE = ['button', 'segmented-control', 'tabs', 'status-badge', 'progress-bar', 'avatar'];
+const SHOWCASE = Object.keys(showcaseDetails);
 
 /**
  * Accents offered in the theming demo, named by colour. Each id is a registered
@@ -285,7 +287,7 @@ function Components() {
       />
       <ul className="docs-cards docs-cards--home">
         {showcase.map((p) => (
-          <ComponentCard key={p.id} page={p} />
+          <ComponentCard key={p.id} page={p} summary={showcaseDetails[p.id]?.summary} />
         ))}
       </ul>
     </MarketingSection>

@@ -8,9 +8,11 @@
 import { PassThrough } from 'node:stream';
 import { StrictMode } from 'react';
 import { prerenderToNodeStream } from 'react-dom/static';
+// The server bundle reads the page details directly; the browser loads them lazily.
+import { details } from 'virtual:monarch-docs-details';
 import { App } from './app/app.js';
 import { NAV } from './app/navigation.js';
-import { ROUTES, resolveRoute } from './app/routes.js';
+import { ROUTES, resolveRoute, usesDetails } from './app/routes.js';
 import { ROUTE_ALIASES, docsPages, loadDocs, pageById } from './lib/docs.js';
 import { facts } from './lib/facts.js';
 
@@ -29,7 +31,7 @@ export interface RenderedRoute {
 }
 
 function describe(path: string): string | null {
-  if (path.startsWith('/components/')) return pageById[path.slice(12)]?.summary ?? null;
+  if (path.startsWith('/components/')) return details[path.slice(12)]?.summary ?? null;
   for (const group of NAV)
     for (const item of group.items) if (item.path === path) return item.description ?? null;
   return null;
@@ -52,6 +54,8 @@ export async function render(path: string): Promise<RenderedRoute> {
     description: describe(path),
     modules: [
       ...route.files.map((f) => `src/${f.replace(/^\.\.\//, '')}`),
+      // Build-manifest key of the page details chunk (src/lib/docs.ts `loadDetails`).
+      ...(usesDetails(route) ? ['virtual:monarch-docs-details'] : []),
       ...(meta ? [`../../packages/react/src/${meta.folder}/${meta.id}.docs.tsx`] : []),
     ],
   };
@@ -84,7 +88,7 @@ export const SITE_DATA = {
   components: docsPages.map((p) => ({
     path: `/components/${p.id}`,
     title: p.title,
-    summary: p.summary ?? null,
+    summary: details[p.id]?.summary ?? null,
     layer: p.layer,
   })),
 };

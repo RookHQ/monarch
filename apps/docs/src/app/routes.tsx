@@ -9,7 +9,7 @@
  * JavaScript and CSS.
  */
 import { lazy, type ComponentType, type ReactElement } from 'react';
-import { ROUTE_ALIASES, docsPages, hasDocs, loadDocs, pageById } from '../lib/docs.js';
+import { ROUTE_ALIASES, docsPages, hasDocs, loadDetails, loadDocs, pageById } from '../lib/docs.js';
 import { navItem } from './navigation.js';
 
 type PageModule = Record<string, ComponentType<never>>;
@@ -51,6 +51,13 @@ const GOVERNANCE = '../pages/guides/governance-page.tsx';
 const OVERVIEW = '../pages/components/overview-page.tsx';
 const COMPONENT = '../pages/components/component-page.tsx';
 const NOT_FOUND = '../pages/not-found-page.tsx';
+
+/** Pages that read the lazily loaded page details (summaries, exports, registry). */
+const USES_DETAILS = new Set([OVERVIEW, COMPONENT]);
+
+/** True when a route renders the lazily loaded page details (`loadDetails()`). */
+export const usesDetails = (route: ResolvedRoute): boolean =>
+  route.files.some((f) => USES_DETAILS.has(f));
 
 const HomePage = named(HOME, 'HomePage');
 const IntroductionPage = named(INTRODUCTION, 'IntroductionPage');
@@ -146,14 +153,16 @@ export function resolveRoute(raw: string): ResolvedRoute {
 }
 
 /**
- * Starts loading everything a route renders: its page chunk and, for a
- * component page, its docs file. Called on hover or focus of a link and before
- * hydration, so the page renders in one pass.
+ * Starts loading everything a route renders: its page chunk, the page details
+ * if it shows summaries or exports and, for a component page, its docs file.
+ * Called on hover or focus of a link and before hydration, so the page renders
+ * in one pass.
  */
 export function preloadRoute(path: string): Promise<unknown> {
   const route = resolveRoute(path);
   return Promise.all([
     ...route.files.map(load),
+    ...(usesDetails(route) ? [loadDetails()] : []),
     ...(route.docsId ? [loadDocs(route.docsId)] : []),
   ]).catch(() => undefined);
 }

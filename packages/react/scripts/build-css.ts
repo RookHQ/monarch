@@ -193,3 +193,34 @@ if (missing.length) {
   process.exit(1);
 }
 console.log(`styles/: ${Object.keys(entryFiles).length} per-entry sheets`);
+
+// ---------------------------------------------------------------- per-component sheets
+//
+// dist/styles/components/<id>.css holds one component folder's CSS plus that of
+// every non-core folder it composes, so a page that uses three AI components
+// loads three small sheets instead of styles/ai.css. core.css is still required.
+
+const componentsDir = join(stylesDir, 'components');
+mkdirSync(componentsDir, { recursive: true });
+let componentSheets = 0;
+for (const [folder, owner] of entryOfFolder) {
+  if (owner === 'core') continue;
+  const wanted = new Set<string>();
+  const visit = (f: string) => {
+    if (wanted.has(f) || (entryOfFolder.get(f) ?? 'core') === 'core') return;
+    wanted.add(f);
+    importsOf(f).forEach(visit);
+  };
+  visit(folder);
+  const parts = order
+    .filter((p) => {
+      const f = folderOfCss(p);
+      return f !== null && wanted.has(f);
+    })
+    .map((p) => chunkByPath.get(p))
+    .filter((c): c is string => c !== undefined);
+  const id = folder.split('/').pop() ?? folder;
+  writeFileSync(join(componentsDir, `${id}.css`), sheet(parts, `Monarch ${id} styles`));
+  componentSheets += 1;
+}
+console.log(`styles/components/: ${componentSheets} per-component sheets (non-core entries)`);

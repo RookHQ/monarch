@@ -1,11 +1,19 @@
 /**
  * Vite plugin that turns the component docs files into docs-site data.
  *
- * - `virtual:monarch-docs-index`: a small index the site shell loads up front
- *   (navigation, search, the components overview): id, title, summary and
- *   folder of every `<id>.docs.tsx`, the registry entries the pages link to,
- *   and the published version of `@rookcom/monarch-react`. The docs files
- *   themselves are loaded lazily, one chunk per page.
+ * - `virtual:monarch-docs-index`: the small index the site shell loads up front
+ *   (sidebar, routes, page titles): id, title, layer, family and package entry
+ *   of every `<id>.docs.tsx`, the total example count and the published
+ *   version of `@rookcom/monarch-react`. It is part of the entry chunk, so it
+ *   carries nothing per page that the shell does not render.
+ * - `virtual:monarch-docs-details`: everything else per page (summary, exports,
+ *   example count) and the registry entries the pages link to. Search, the
+ *   overview cards and component pages load it lazily (`loadDetails()` in
+ *   src/lib/docs.ts); the server entry imports it directly.
+ *   `virtual:monarch-docs-details?pages=a,b` is the same module for just those
+ *   pages, in that order (the home page's showcase), so a page that shows a
+ *   few cards does not load every summary. An unknown id fails the build.
+ * - The docs files themselves are loaded lazily, one chunk per page.
  * - Every `<id>.docs.tsx` gets an extra export, `exampleSource`: the source of
  *   each example's `render`, extracted with the TypeScript compiler API
  *   (`extract-examples.ts`). "Show code" displays it, so example code is
@@ -24,6 +32,8 @@ import { extractDocs, extractExamples } from './extract-examples.js';
 
 const INDEX_ID = 'virtual:monarch-docs-index';
 const RESOLVED_INDEX_ID = `\0${INDEX_ID}`;
+const DETAILS_ID = 'virtual:monarch-docs-details';
+const RESOLVED_DETAILS_ID = `\0${DETAILS_ID}`;
 const DOCS_FILE = /[\\/]packages[\\/]react[\\/]src[\\/](.+)\.docs\.tsx$/;
 
 interface RegistryEntry {
@@ -96,6 +106,50 @@ export function buildIndex(repoRoot: string) {
   };
 }
 
+type DocsIndex = ReturnType<typeof buildIndex>;
+
+/** Source of `virtual:monarch-docs-index`: only what the always-visible shell needs. */
+export function indexModule(index: DocsIndex): string {
+  const pages = index.pages.map(({ id, title, layer, family, entry }) =>
+    entry === '.' ? { id, title, layer, family } : { id, title, layer, family, entry },
+  );
+  const exampleCount = index.pages.reduce((n, p) => n + p.exampleCount, 0);
+  return [
+    `export const reactVersion = ${JSON.stringify(index.reactVersion)};`,
+    `export const exampleCount = ${exampleCount};`,
+    `export const pages = ${JSON.stringify(pages)};`,
+  ].join('\n');
+}
+
+/**
+ * Source of `virtual:monarch-docs-details`: per-page details, loaded lazily.
+ * With `only`, just those pages, in that order, and no registry.
+ */
+export function detailsModule(index: DocsIndex, only?: readonly string[]): string {
+  const byId = new Map(index.pages.map((p) => [p.id, p]));
+  const ids = only ?? index.pages.map((p) => p.id);
+  const details = Object.fromEntries(
+    ids.map((id) => {
+      const page = byId.get(id);
+      if (!page) throw new Error(`virtual:monarch-docs-details: no docs page "${id}"`);
+      const { summary, exports, exampleCount } = page;
+      return [id, { summary, exports, exampleCount }];
+    }),
+  );
+  return [
+    `export const details = ${JSON.stringify(details)};`,
+    `export const registry = ${JSON.stringify(only ? [] : index.registry)};`,
+  ].join('\n');
+}
+
+/** The page ids of a `virtual:monarch-docs-details?pages=a,b` request, or undefined for all. */
+function detailsSubset(id: string): string[] | undefined {
+  const query = id.slice(RESOLVED_DETAILS_ID.length);
+  if (!query) return undefined;
+  const pages = new URLSearchParams(query.slice(1)).get('pages');
+  return (pages ?? '').split(',').filter(Boolean);
+}
+
 interface ManifestEntry {
   name: string;
 }
@@ -120,23 +174,21 @@ export function monarchDocs({ repoRoot }: MonarchDocsOptions): Plugin {
     name: 'monarch-docs',
     enforce: 'pre',
     resolveId(id) {
-      return id === INDEX_ID ? RESOLVED_INDEX_ID : undefined;
+      if (id === INDEX_ID) return RESOLVED_INDEX_ID;
+      if (id === DETAILS_ID || id.startsWith(`${DETAILS_ID}?`)) return `\0${id}`;
+      return undefined;
     },
     load(id) {
-      if (id !== RESOLVED_INDEX_ID) return undefined;
-      let index: ReturnType<typeof buildIndex>;
+      const isDetails = id === RESOLVED_DETAILS_ID || id.startsWith(`${RESOLVED_DETAILS_ID}?`);
+      if (id !== RESOLVED_INDEX_ID && !isDetails) return undefined;
       try {
-        index = buildIndex(repoRoot);
+        const index = buildIndex(repoRoot);
+        for (const f of index.files) this.addWatchFile(f);
+        this.addWatchFile(path.join(repoRoot, 'registry/components.json'));
+        return isDetails ? detailsModule(index, detailsSubset(id)) : indexModule(index);
       } catch (e) {
         this.error(e instanceof Error ? e.message : String(e));
       }
-      for (const f of index.files) this.addWatchFile(f);
-      this.addWatchFile(path.join(repoRoot, 'registry/components.json'));
-      return [
-        `export const reactVersion = ${JSON.stringify(index.reactVersion)};`,
-        `export const pages = ${JSON.stringify(index.pages)};`,
-        `export const registry = ${JSON.stringify(index.registry)};`,
-      ].join('\n');
     },
     transform(code, id) {
       const file = id.split('?')[0] as string;
@@ -157,14 +209,15 @@ export function monarchDocs({ repoRoot }: MonarchDocsOptions): Plugin {
       };
     },
     handleHotUpdate({ file, server }) {
-      // A docs file's title or summary feeds the index; rebuild it.
+      // A docs file's title or summary feeds the index and the details; rebuild them.
       if (DOCS_FILE.test(file) || file === manifestFile) {
         exportsById = null;
         manifest = null;
       }
       if (DOCS_FILE.test(file)) {
-        const mod = server.moduleGraph.getModuleById(RESOLVED_INDEX_ID);
-        if (mod) server.moduleGraph.invalidateModule(mod);
+        for (const mod of server.moduleGraph.idToModuleMap.values())
+          if (mod.id === RESOLVED_INDEX_ID || mod.id?.startsWith(RESOLVED_DETAILS_ID))
+            server.moduleGraph.invalidateModule(mod);
       }
     },
   };

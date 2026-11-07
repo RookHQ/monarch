@@ -51,7 +51,7 @@ the packages export today.
 
 | Measure                             | Value |
 | ----------------------------------- | ----- |
-| Registry entries                    | 165   |
+| Registry entries                    | 238   |
 | Needed by 3+ products               | 78    |
 | Needed by exactly 2 products at P0  | 10    |
 | In scope (3+ products, or 2+ at P0) | 88    |

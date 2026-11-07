@@ -33,6 +33,11 @@ plus one sheet per subpath entry you import: `styles/ai.css`,
 `styles/marketing.css` or `styles/shell.css`. Core is about half the size of
 the full sheet.
 
+For the smallest CSS, load core.css plus one sheet per subpath component you
+use: `@rookcom/monarch-react/styles/components/<id>.css` (for example
+`styles/components/ai-thread.css`). Each sheet includes the styles of the
+subpath components it composes.
+
 ## 3. Apply the appearance before paint
 
 ```tsx

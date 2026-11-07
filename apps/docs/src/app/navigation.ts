@@ -2,15 +2,18 @@
  * The site's information architecture, built from data: the fixed pages
  * below plus one entry per docs file (virtual:monarch-docs-index). The
  * sidebar, the search palette, page titles and previous/next links all read it.
+ * Component entries carry no description or keywords: those come from the
+ * lazily loaded page details (search-index.ts, entry-server.tsx), so the
+ * entry chunk does not grow with every summary.
  */
 import { FAMILY_TITLES, docsPages, isMarketing, type DocsPageMeta } from '../lib/docs.js';
 
 export interface NavItem {
   path: string;
   label: string;
-  /** One line for search results and overview cards. */
+  /** One line for search results and the page's meta description (fixed pages only). */
   description?: string;
-  /** Extra words search should match (export names, family). */
+  /** Extra words search should match. */
   keywords?: readonly string[];
   /** Short context shown beside the label in search results (the component family). */
   hint?: string;
@@ -25,8 +28,7 @@ export interface NavGroup {
 const componentItem = (p: DocsPageMeta): NavItem => ({
   path: `/components/${p.id}`,
   label: p.title,
-  description: p.summary,
-  keywords: [...p.exports, p.family, p.id],
+  keywords: [p.family, p.id],
   hint: FAMILY_TITLES[p.family] ?? p.family,
 });
 

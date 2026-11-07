@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ExampleExtractionError, extractDocs, extractExamples } from './extract-examples.js';
-import { buildIndex, docsFiles } from './monarch-docs.js';
+import { buildIndex, detailsModule, docsFiles, indexModule } from './monarch-docs.js';
 import { highlight } from '../src/features/code/highlight.js';
 
 const repoRoot = path.resolve(__dirname, '../../..');
@@ -127,6 +127,41 @@ describe('every docs file in packages/react', () => {
     const index = buildIndex(repoRoot);
     expect(index.pages.length).toBe(files.length);
     expect(index.pages.every((p) => p.exports.length > 0)).toBe(true);
+  });
+
+  it('keeps per-page details out of the eager index module', () => {
+    const index = buildIndex(repoRoot);
+    const eager = indexModule(index);
+    const lazy = detailsModule(index);
+    const page = index.pages.find((p) => p.summary.length > 0 && p.exports.length > 0);
+    expect(page).toBeDefined();
+    if (!page) return;
+    // The shell's index: ids and titles, no summaries, exports or registry.
+    expect(eager).toContain(JSON.stringify(page.id));
+    expect(eager).toContain(JSON.stringify(page.title));
+    expect(eager).not.toContain(JSON.stringify(page.summary));
+    expect(eager).not.toContain('export const registry');
+    expect(eager).toContain(
+      `export const exampleCount = ${index.pages.reduce((n, p) => n + p.exampleCount, 0)};`,
+    );
+    // The lazily loaded details carry them.
+    expect(lazy).toContain(JSON.stringify(page.summary));
+    expect(lazy).toContain(JSON.stringify(page.exports));
+    expect(lazy).toContain('export const registry');
+  });
+
+  it('builds a details module for just the listed pages', () => {
+    const index = buildIndex(repoRoot);
+    const [a, b] = index.pages;
+    if (!a || !b) throw new Error('expected at least two docs pages');
+    const subset = detailsModule(index, [b.id, a.id]);
+    const details = JSON.parse(/export const details = (.*);/.exec(subset)?.[1] ?? '{}') as Record<
+      string,
+      unknown
+    >;
+    expect(Object.keys(details)).toEqual([b.id, a.id]);
+    expect(subset).toContain('export const registry = [];');
+    expect(() => detailsModule(index, ['no-such-page'])).toThrow(/no-such-page/);
   });
 });
 

@@ -3,11 +3,16 @@
  * (docs/architecture/SOURCE-LAYOUT.md).
  *
  * The shell needs only the small index from `virtual:monarch-docs-index`
- * (titles, summaries, folders). The docs files themselves, with their live
- * examples and extracted example source, load on demand: one chunk per page.
+ * (ids, titles, families). Per-page details (summaries, exports, registry
+ * entries) are a second module, `virtual:monarch-docs-details`, loaded on
+ * demand by search, the component cards and component pages, so the entry
+ * chunk does not grow with every summary. The docs files themselves, with
+ * their live examples and extracted example source, load on demand too: one
+ * chunk per page.
  */
 import { use } from 'react';
-import { pages, registry, reactVersion, type DocsPageMeta } from 'virtual:monarch-docs-index';
+import { exampleCount, pages, reactVersion } from 'virtual:monarch-docs-index';
+import type { DocsPageDetails, RegistryRef } from 'virtual:monarch-docs-details';
 import type {
   ComponentDocs,
   Example,
@@ -15,7 +20,7 @@ import type {
 import type { ExtractedExample } from '../../plugins/extract-examples.js';
 import type { ExportDoc } from './manifest.js';
 
-export type { ComponentDocs, DocsPageMeta, Example, ExtractedExample };
+export type { ComponentDocs, DocsPageDetails, Example, ExtractedExample, RegistryRef };
 export {
   DOC_SECTIONS,
   DOC_SECTION_TITLES,
@@ -24,15 +29,32 @@ export {
 } from '../../../../packages/react/src/internal/component-docs.js';
 
 export { reactVersion };
+/** Examples across every docs file. */
+export const totalExamples: number = exampleCount;
+
+/** What the shell knows about a docs page without loading anything. */
+export interface DocsPageMeta {
+  id: string;
+  title: string;
+  /** `components/actions/button` */
+  folder: string;
+  layer: 'components' | 'patterns';
+  family: string;
+  /** Package entry the exports come from: `.`, `./data`, `./marketing` … */
+  entry: string;
+}
 
 /** Every docs page, by title. */
-export const docsPages: readonly DocsPageMeta[] = [...pages].sort((a, b) =>
-  a.title.localeCompare(b.title),
-);
+export const docsPages: readonly DocsPageMeta[] = pages
+  .map((p) => ({
+    ...p,
+    folder: `${p.layer}/${p.family}/${p.id}`,
+    entry: p.entry ?? '.',
+  }))
+  .sort((a, b) => a.title.localeCompare(b.title));
 export const pageById: Readonly<Record<string, DocsPageMeta>> = Object.fromEntries(
   docsPages.map((p) => [p.id, p]),
 );
-export const registryById = Object.fromEntries(registry.map((e) => [e.id, e]));
 
 /** Pages for public marketing sites, kept in their own navigation group. */
 export const isMarketing = (p: DocsPageMeta) => p.id.startsWith('marketing-');
@@ -73,12 +95,12 @@ export const ROUTE_ALIASES: Readonly<Record<string, string>> = {
 };
 
 /** The import line for a page's exports. */
-export function importLine(page: DocsPageMeta): string {
+export function importLine(page: DocsPageMeta, exports: readonly string[]): string {
   const from =
     page.entry === '.'
       ? '@rookcom/monarch-react'
       : `@rookcom/monarch-react/${page.entry.replace(/^\.\//, '')}`;
-  return `import { ${page.exports.join(', ')} } from '${from}';`;
+  return `import { ${exports.join(', ')} } from '${from}';`;
 }
 
 // ---------------------------------------------------------------- lazy docs modules
@@ -116,6 +138,31 @@ function track<T>(p: Promise<T>): Promise<T> {
     },
   );
   return p;
+}
+
+// ---------------------------------------------------------------- lazy page details
+
+export interface LoadedDetails {
+  /** Summary, exports and example count, by page id. */
+  details: Readonly<Record<string, DocsPageDetails>>;
+  registryById: Readonly<Record<string, RegistryRef>>;
+}
+
+let detailsPromise: Promise<LoadedDetails> | null = null;
+/** Loads the per-page details once (a chunk of its own). */
+export function loadDetails(): Promise<LoadedDetails> {
+  detailsPromise ??= track(
+    import('virtual:monarch-docs-details').then((m) => ({
+      details: m.details,
+      registryById: Object.fromEntries(m.registry.map((e) => [e.id, e])),
+    })),
+  );
+  return detailsPromise;
+}
+
+/** Suspends until the per-page details are loaded. */
+export function useDetails(): LoadedDetails {
+  return use(loadDetails());
 }
 
 const loaders = import.meta.glob<DocsModule>('../../../../packages/react/src/**/*.docs.tsx');

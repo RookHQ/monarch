@@ -283,3 +283,17 @@ export function ArrowDownGlyph(props: SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+/**
+ * The AI identity mark (a robot head, lucide-style Bot), used by every
+ * `./ai` component. Never use a sparkle for AI (icons/no-sparkles).
+ */
+export function BotGlyph(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} strokeWidth={1.5} aria-hidden focusable={false} {...props}>
+      <path d="M8 2.5V5" />
+      <rect x="3" y="5" width="10" height="8" rx="2" />
+      <path d="M1.5 9h1.5M13 9h1.5M6 8.25v1.25M10 8.25v1.25" />
+    </svg>
+  );
+}

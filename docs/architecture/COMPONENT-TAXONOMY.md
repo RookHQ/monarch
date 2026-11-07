@@ -34,7 +34,7 @@ package entry can hold components from several categories.
 | 14  | Identity, Security and Permissions             | `14-identity`      | 7        | 23               |
 | 15  | Collaboration Components                       | `15-collaboration` | 9        | 9                |
 | 16  | Workflow and Process Components                | `16-workflow`      | 3        | 3                |
-| 17  | Enterprise Intelligence Components             | `17-intelligence`  | 0        | 13               |
+| 17  | Enterprise Intelligence Components             | `17-intelligence`  | 0        | 86               |
 | 18  | CRM and Business Components                    | `18-crm`           | 1        | 1                |
 | 19  | Domain and Technical Infrastructure Components | `19-technical`     | 5        | 5                |
 | 20  | Commerce, Billing and Subscription Components  | `20-billing`       | 0        | 1                |
@@ -67,9 +67,9 @@ layer may compose lower ones, never the reverse.
 | Layer             | In scope | Registry entries |
 | ----------------- | -------- | ---------------- |
 | primitive         | 12       | 25               |
-| component         | 63       | 110              |
+| component         | 63       | 179              |
 | pattern           | 9        | 23               |
-| template          | 4        | 7                |
+| template          | 4        | 11               |
 | product-extension | 0        | 0                |
 
 <!-- /generated:taxonomy-layers -->

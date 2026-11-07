@@ -18,16 +18,19 @@ function Thumbnail({ id }: { id: string }) {
 
 /**
  * Overview card: a live, scaled-down preview of the component's first example,
- * its name (the card's one link) and summary. The preview renders once the card
+ * its name (the card's one link) and summary (from the page details, which the
+ * page using the card loads). The preview renders once the card
  * nears the viewport, in a frame of fixed height, so nothing shifts. It is
  * `inert` and hidden from assistive technology: it is a picture of the
  * component, and the page it links to has the real, interactive examples.
  */
 export function ComponentCard({
   page,
+  summary,
   headingLevel = 3,
 }: {
   page: DocsPageMeta;
+  summary: string | undefined;
   headingLevel?: 2 | 3;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -48,7 +51,7 @@ export function ComponentCard({
             {page.title}
           </a>
         </Heading>
-        <p className="docs-card__summary">{page.summary}</p>
+        <p className="docs-card__summary">{summary}</p>
       </div>
     </li>
   );

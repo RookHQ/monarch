@@ -8,7 +8,7 @@ import type { ExportDoc } from '../../lib/manifest.js';
 import {
   importLine,
   pageById,
-  registryById,
+  useDetails,
   type DocSectionId,
   type DocsPageMeta,
 } from '../../lib/docs.js';
@@ -17,6 +17,7 @@ import { CodeBlock } from '../../features/code/code-block.js';
 import { Inline, List, Notes, Table, inline } from '../../features/content/inline.js';
 
 function ComponentLink({ id }: { id: string }) {
+  const { registryById } = useDetails();
   const page = pageById[id];
   if (page) return <a href={href(`/components/${id}`)}>{page.title}</a>;
   const entry = registryById[id];
@@ -34,9 +35,10 @@ interface ApiProps {
 }
 
 function ApiReference({ page, api: parts, notes }: ApiProps) {
+  const exports = useDetails().details[page.id]?.exports ?? [];
   return (
     <>
-      <CodeBlock code={importLine(page)} label="Code: import" />
+      <CodeBlock code={importLine(page, exports)} label="Code: import" />
       <Table
         head={['Export', 'Kind', 'Rendering', 'Root class']}
         rows={parts.map((p) => [

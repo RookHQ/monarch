@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin, type PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
@@ -24,24 +24,57 @@ function appearance(): Plugin {
 }
 
 /**
- * Per-entry styles, exactly as an app should load them: the root stylesheet
- * (`styles/core.css`) is global, and any module that imports a subpath entry
- * (`@rookcom/monarch-react/ai`) also imports that entry's stylesheet. Each page
- * then ships only the component CSS it uses (docs/guides/getting-started.md).
+ * Per-component styles, exactly as an app can load them: the root stylesheet
+ * (`styles/core.css`) is global, and a module that imports components from a
+ * subpath entry (`import { AiThread } from '@rookcom/monarch-react/ai'`) also
+ * imports `styles/components/<id>.css` for each of them, so each page ships
+ * only the component CSS it uses. Names are mapped to component folders with
+ * registry/components.json.
  */
 function entryStyles(): Plugin {
-  const ENTRY_IMPORT = /from\s+['"]@rookcom\/monarch-react\/([a-z-]+)['"]/g;
+  const IMPORT = /import\s*\{([^}]*)\}\s*from\s*['"]@rookcom\/monarch-react\/([a-z-]+)['"]/g;
+  let folderOf: Map<string, string> | null = null;
+  const lookup = () => {
+    if (folderOf) return folderOf;
+    const registry = JSON.parse(
+      readFileSync(new URL('../../registry/components.json', import.meta.url), 'utf8'),
+    ) as { components: { exports: string[]; source?: string; entry: string }[] };
+    folderOf = new Map();
+    for (const c of registry.components)
+      if (c.source && c.entry !== '.')
+        for (const e of c.exports) folderOf.set(e, c.source.split('/').pop() ?? '');
+    return folderOf;
+  };
   return {
     name: 'monarch-entry-styles',
     enforce: 'pre',
+    buildStart() {
+      folderOf = null;
+    },
     transform(code, id) {
       if (!/\.(tsx?|jsx?)$/.test(id) || id.includes('node_modules')) return null;
-      const entries = new Set<string>();
-      for (const m of code.matchAll(ENTRY_IMPORT)) if (m[1] && m[1] !== 'styles') entries.add(m[1]);
-      if (entries.size === 0) return null;
-      const imports = [...entries]
-        .map((e) => `import '@rookcom/monarch-react/styles/${e}.css';`)
-        .join('\n');
+      const sheets = new Set<string>();
+      for (const m of code.matchAll(IMPORT)) {
+        if (m[2] === 'styles') continue;
+        for (const raw of (m[1] ?? '').split(',')) {
+          const name = raw
+            .trim()
+            .replace(/^type\s+/, '')
+            .split(/\s+as\s+/)[0];
+          if (!name || raw.trim().startsWith('type ')) continue;
+          const folder = lookup().get(name);
+          // Folders whose CSS ships in core.css have no sheet of their own.
+          if (
+            folder &&
+            existsSync(
+              new URL(`../../packages/react/dist/styles/components/${folder}.css`, import.meta.url),
+            )
+          )
+            sheets.add(`@rookcom/monarch-react/styles/components/${folder}.css`);
+        }
+      }
+      if (sheets.size === 0) return null;
+      const imports = [...sheets].map((s) => `import '${s}';`).join('\n');
       // Appended, not prepended: imports are hoisted anyway, and source map
       // lines stay where they were.
       return { code: `${code}\n${imports}\n`, map: null };

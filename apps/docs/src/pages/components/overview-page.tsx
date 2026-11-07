@@ -5,6 +5,7 @@ import {
   docsPages,
   isMarketing,
   reactVersion,
+  useDetails,
   type DocsPageMeta,
 } from '../../lib/docs.js';
 import { PageFrame } from '../../layout/page-frame.js';
@@ -28,6 +29,7 @@ export function OverviewPage({ layer }: { layer: 'all' | 'patterns' }) {
     () => Object.keys(FAMILY_TITLES).filter((f) => pages.some((p) => p.family === f)),
     [pages],
   );
+  const { details } = useDetails();
   const [family, setFamily] = useState<string>(ALL);
   const shown = families.filter((f) => family === ALL || f === family);
   const byFamily = (f: string): DocsPageMeta[] => pages.filter((p) => p.family === f);
@@ -79,7 +81,7 @@ export function OverviewPage({ layer }: { layer: 'all' | 'patterns' }) {
           </h2>
           <ul className="docs-cards">
             {byFamily(f).map((p) => (
-              <ComponentCard key={p.id} page={p} />
+              <ComponentCard key={p.id} page={p} summary={details[p.id]?.summary} />
             ))}
           </ul>
         </section>

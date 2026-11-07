@@ -1,0 +1,287 @@
+'use client';
+
+import { forwardRef, useEffect, useId, useRef, useState, type HTMLAttributes } from 'react';
+import { cx } from '../../../internal/cx.js';
+import { ErrorGlyph, RetryGlyph } from '../../../internal/icons.js';
+import { isSafeImageSrc } from '../../../internal/sanitize.js';
+import { Button } from '../../actions/button/index.js';
+import { Field, FieldError, FieldLabel } from '../../forms/form-field/index.js';
+import { Input } from '../../forms/text-field/index.js';
+
+/** Where a generation is: waiting for pixels, refining a preview, finished, or failed. */
+export type AiImageGenerationStatus = 'pending' | 'progressive' | 'done' | 'error';
+
+/** One generated image (or the slot for one that is still generating). */
+export interface AiGeneratedImage {
+  /** Stable id, passed back to `onSelect`, `onVariations` and `onAltChange`. */
+  id: string;
+  /**
+   * Image URL: `http(s):`, a same-origin path or a `blob:` preview. Anything
+   * else (`data:`, `javascript:`…) is not loaded and the slot shows a
+   * placeholder. Leave out while the image is still generating.
+   */
+  src?: string | undefined;
+  /** Alt text for the image. Required: the field is invalid while it is empty. */
+  alt: string;
+}
+
+/** Every string AiImageGeneration shows or announces. English defaults. */
+export interface AiImageGenerationMessages {
+  /** Accessible name of the whole region. */
+  label: string;
+  /** Status line while waiting; `progress` is 0–1 or undefined. */
+  pending: (progress: number | undefined) => string;
+  /** Status line while previews refine. */
+  progressive: (progress: number | undefined) => string;
+  /** Status line when finished. */
+  done: (count: number) => string;
+  /** Status line when generation failed. */
+  error: string;
+  /** Announced politely when generation finishes. */
+  announceDone: (count: number) => string;
+  /** Retry button, shown with `onRetry` in the error state. */
+  retry: string;
+  /** Accessible name of each image while its alt text is empty. */
+  imageName: (index: number) => string;
+  /** Shown in a slot whose `src` is missing after generation or was not safe to load. */
+  unavailable: string;
+  /** Label of the alt text field. */
+  altLabel: (index: number) => string;
+  /** Error under an empty alt text field. */
+  altRequired: string;
+  /** "Use image" button; its accessible name includes the position. */
+  select: string;
+  selectName: (index: number) => string;
+  /** Shown on the chosen image. */
+  selected: string;
+  /** "More like this" button; its accessible name includes the position. */
+  variations: string;
+  variationsName: (index: number) => string;
+}
+
+const percent = (p: number) =>
+  new Intl.NumberFormat(undefined, { style: 'percent', maximumFractionDigits: 0 }).format(p);
+
+const DEFAULT_MESSAGES: AiImageGenerationMessages = {
+  label: 'AI generated images',
+  pending: (p) => (p === undefined ? 'Generating images…' : `Generating images… ${percent(p)}`),
+  progressive: (p) => (p === undefined ? 'Refining images…' : `Refining images… ${percent(p)}`),
+  done: (n) => (n === 1 ? '1 image generated' : `${n} images generated`),
+  error: 'The images could not be generated.',
+  announceDone: (n) => (n === 1 ? '1 image generated.' : `${n} images generated.`),
+  retry: 'Try again',
+  imageName: (i) => `Generated image ${i}`,
+  unavailable: 'Preview unavailable',
+  altLabel: (i) => `Alt text for image ${i}`,
+  altRequired: 'Describe the image for people who cannot see it.',
+  select: 'Use image',
+  selectName: (i) => `Use image ${i}`,
+  selected: 'Selected',
+  variations: 'More like this',
+  variationsName: (i) => `More like this, image ${i}`,
+};
+
+export interface AiImageGenerationProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onSelect'> {
+  /**
+   * `pending`: placeholders while nothing is ready. `progressive`: low-quality
+   * previews are refining. `done`: final images. `error`: generation failed.
+   */
+  status: AiImageGenerationStatus;
+  /** The images, or their slots while generating. Shown as a variations grid. */
+  images: readonly AiGeneratedImage[];
+  /** Overall progress from 0 to 1, shown in the status line while generating. */
+  progress?: number | undefined;
+  /** Id of the chosen image, marked "Selected". */
+  selectedId?: string | undefined;
+  /** Shows "Use image" on each finished image. */
+  onSelect?: ((id: string) => void) | undefined;
+  /** Shows "More like this" on each finished image. */
+  onVariations?: ((id: string) => void) | undefined;
+  /** Called as alt text is typed. The images are controlled: update `alt` in `images`. */
+  onAltChange: (id: string, alt: string) => void;
+  /** Shows a retry button in the error state. */
+  onRetry?: (() => void) | undefined;
+  /** Replaces the default error text. */
+  error?: string | undefined;
+  /** Strings, for localisation. */
+  messages?: Partial<AiImageGenerationMessages> | undefined;
+}
+
+/**
+ * Images generated by AI, as a variations grid. Shows placeholders while
+ * generating and refining previews with progress, then each image with a
+ * required alt text field and "Use image" / "More like this" actions. Only
+ * http(s), same-origin and `blob:` sources are loaded.
+ */
+export const AiImageGeneration = forwardRef<HTMLDivElement, AiImageGenerationProps>(
+  function AiImageGeneration(
+    {
+      status,
+      images,
+      progress,
+      selectedId,
+      onSelect,
+      onVariations,
+      onAltChange,
+      onRetry,
+      error,
+      messages: messagesProp,
+      className,
+      ...rest
+    },
+    ref,
+  ) {
+    const m = { ...DEFAULT_MESSAGES, ...messagesProp };
+    const labelId = useId();
+    const generating = status === 'pending' || status === 'progressive';
+    const p =
+      progress === undefined || !Number.isFinite(progress)
+        ? undefined
+        : Math.min(1, Math.max(0, progress));
+
+    // Announce completion once per transition into `done`, never on first render.
+    const [announcement, setAnnouncement] = useState('');
+    const prevStatus = useRef(status);
+    useEffect(() => {
+      const was = prevStatus.current;
+      prevStatus.current = status;
+      if (status === 'done' && was !== 'done') setAnnouncement(m.announceDone(images.length));
+      else if (status !== 'done') setAnnouncement('');
+      // Only status transitions announce.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [status]);
+
+    const statusText =
+      status === 'pending'
+        ? m.pending(p)
+        : status === 'progressive'
+          ? m.progressive(p)
+          : status === 'done'
+            ? m.done(images.length)
+            : null;
+
+    return (
+      <div
+        ref={ref}
+        role="group"
+        aria-labelledby={labelId}
+        aria-busy={generating || undefined}
+        {...rest}
+        className={cx('mn-ai-image-generation', className)}
+        data-status={status}
+      >
+        <span id={labelId} className="mn-visually-hidden">
+          {m.label}
+        </span>
+        {statusText ? (
+          <p className="mn-ai-image-generation__status">{statusText}</p>
+        ) : (
+          <div className="mn-ai-image-generation__error" role="alert">
+            <span className="mn-ai-image-generation__error-icon" aria-hidden>
+              <ErrorGlyph />
+            </span>
+            <span className="mn-ai-image-generation__error-text">{error ?? m.error}</span>
+            {onRetry ? (
+              <Button size="sm" leadingIcon={<RetryGlyph />} onClick={onRetry}>
+                {m.retry}
+              </Button>
+            ) : null}
+          </div>
+        )}
+        {generating && p !== undefined ? (
+          <div className="mn-ai-image-generation__progress" aria-hidden>
+            <span
+              className="mn-ai-image-generation__progress-fill"
+              style={{ inlineSize: `${p * 100}%` }}
+            />
+          </div>
+        ) : null}
+        <span className="mn-visually-hidden" aria-live="polite">
+          {announcement}
+        </span>
+        {images.length > 0 ? (
+          <ul className="mn-ai-image-generation__grid">
+            {images.map((image, i) => {
+              const n = i + 1;
+              const safe = image.src !== undefined && isSafeImageSrc(image.src);
+              const showImage = safe && status !== 'pending';
+              const ready = status === 'done' && showImage;
+              const altEmpty = image.alt.trim() === '';
+              const altInvalid = status !== 'pending' && altEmpty;
+              const selected = selectedId === image.id;
+              return (
+                <li
+                  key={image.id}
+                  className="mn-ai-image-generation__item"
+                  data-selected={selected || undefined}
+                >
+                  <div
+                    className="mn-ai-image-generation__frame"
+                    data-state={
+                      showImage ? (status === 'progressive' ? 'refining' : 'ready') : 'placeholder'
+                    }
+                  >
+                    {showImage ? (
+                      <img
+                        className="mn-ai-image-generation__image"
+                        src={image.src}
+                        alt={altEmpty ? m.imageName(n) : image.alt}
+                        decoding="async"
+                      />
+                    ) : generating ? (
+                      <span className="mn-ai-image-generation__placeholder" aria-hidden />
+                    ) : (
+                      <span className="mn-ai-image-generation__unavailable">{m.unavailable}</span>
+                    )}
+                    {selected ? (
+                      <span className="mn-ai-image-generation__selected">{m.selected}</span>
+                    ) : null}
+                  </div>
+                  <Field
+                    className="mn-ai-image-generation__alt"
+                    invalid={altInvalid}
+                    required
+                    disabled={status === 'pending'}
+                  >
+                    <FieldLabel>{m.altLabel(n)}</FieldLabel>
+                    <Input
+                      size="sm"
+                      value={image.alt}
+                      onChange={(e) => onAltChange(image.id, e.target.value)}
+                    />
+                    <FieldError>{altInvalid ? m.altRequired : null}</FieldError>
+                  </Field>
+                  {ready && (onSelect || onVariations) ? (
+                    <div className="mn-ai-image-generation__actions">
+                      {onSelect ? (
+                        <Button
+                          size="sm"
+                          variant={selected ? 'primary' : 'secondary'}
+                          aria-label={m.selectName(n)}
+                          aria-pressed={selected}
+                          onClick={() => onSelect(image.id)}
+                        >
+                          {m.select}
+                        </Button>
+                      ) : null}
+                      {onVariations ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          aria-label={m.variationsName(n)}
+                          onClick={() => onVariations(image.id)}
+                        >
+                          {m.variations}
+                        </Button>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+      </div>
+    );
+  },
+);

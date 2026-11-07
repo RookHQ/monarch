@@ -1,7 +1,8 @@
 'use client';
 
-import { forwardRef, useEffect, useState, type HTMLAttributes, type SVGProps } from 'react';
+import { forwardRef, useEffect, useState, type HTMLAttributes } from 'react';
 import { cx } from '../../../internal/cx.js';
+import { BotGlyph } from '../../../internal/icons.js';
 
 export interface AiThinkingIndicatorMessages {
   /** The label shown and announced while the assistant has not answered yet. */
@@ -47,29 +48,6 @@ export interface AiThinkingIndicatorProps extends HTMLAttributes<HTMLDivElement>
   showElapsedAfter?: number;
   /** Strings, for localisation. */
   messages?: Partial<AiThinkingIndicatorMessages>;
-}
-
-/** The lucide-style Bot glyph, the AI identity mark in Monarch. */
-function BotGlyph(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      width={16}
-      height={16}
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      focusable={false}
-      {...props}
-    >
-      <path d="M8 2.5V5" />
-      <rect x="3" y="5" width="10" height="8" rx="2" />
-      <path d="M1.5 9h1.5M13 9h1.5M6 8.25v1.25M10 8.25v1.25" />
-    </svg>
-  );
 }
 
 function toTime(value: Date | number | string | undefined): number | null {
