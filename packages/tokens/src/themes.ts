@@ -196,8 +196,15 @@ export const themes: Readonly<Record<ThemeId, ThemeDefinition>> = {
   },
 };
 
-export type IntentId = 'accent' | 'danger' | 'success' | 'warning' | 'info';
-export const INTENT_IDS: readonly IntentId[] = ['accent', 'danger', 'success', 'warning', 'info'];
+export type IntentId = 'accent' | 'danger' | 'success' | 'warning' | 'info' | 'ai';
+export const INTENT_IDS: readonly IntentId[] = [
+  'accent',
+  'danger',
+  'success',
+  'warning',
+  'info',
+  'ai',
+];
 
 export type IntentRole =
   | 'solid'

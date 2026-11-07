@@ -138,7 +138,7 @@ production build and fails when:
 | Check                                                    | Budget (gzip) |
 | -------------------------------------------------------- | ------------- |
 | Home page: JavaScript loaded before any interaction      | 156 KB        |
-| Home page: CSS                                           | 64 KB         |
+| Home page: CSS                                           | 60 KB         |
 | Any other page: JavaScript loaded before any interaction | 290 KB        |
 | Any other page: CSS                                      | 60 KB         |
 | The entry chunk                                          | 135 KB        |
@@ -151,12 +151,11 @@ page's docs file, the search palette, a lazily opened panel or the Markdown
 parser on any page; the editor, charts or the command palette on any page
 that is not their own component page. It checks the sources listed in each
 chunk's source map, so a module cannot slip in under another chunk's name.
-The home-page limits were raised from 150 and 60 KB in wave 10 (28 new
-components). Two things grow with the catalog on every page: the eager page
-index (`virtual:monarch-docs-index`, about 70 bytes gzip per component) and
-the single component stylesheet. On the way to 500 components the index must
-load lazily and the stylesheet split per entry, rather than raising the limits
-again.
+The home-page JavaScript limit was raised from 150 KB in wave 10: the eager
+page index grows with every component. Pages load only the stylesheets of the
+entries they import (`styles/core.css` plus, for example, `styles/ai.css`),
+through the `monarch-entry-styles` Vite plugin, so CSS no longer grows with
+the whole catalog.
 `--report` prints every page and the 25 largest chunks with gzip and brotli
 sizes. Raise a limit only in a reviewed PR that says why.
 

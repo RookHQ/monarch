@@ -66,6 +66,7 @@ export const ENTRY_FILES: Record<string, string> = {
   './marketing': 'entries/marketing.ts',
   './editor': 'entries/editor.ts',
   './shell': 'entries/shell.ts',
+  './ai': 'entries/ai.ts',
 };
 
 /**
@@ -120,6 +121,9 @@ export const NO_OWN_CSS: Record<string, string> = {
     'its .mn-menu styles are shared with Select and Combobox, so they live in styles/menu.css',
   'consent-manager':
     'it renders no markup of its own: a provider, hooks and a gate; the banner and preferences have their own styles',
+  'ai-conversation':
+    'it renders no markup: the message model, the useAiConversation hook and its transport adapters',
+  'ai-scroll-anchor': 'it is a headless hook; the thread that uses it owns the styles',
   'visually-hidden':
     '.mn-visually-hidden is a foundation utility (styles/foundation.css) that other components and apps use directly',
 };

@@ -23,6 +23,32 @@ function appearance(): Plugin {
   };
 }
 
+/**
+ * Per-entry styles, exactly as an app should load them: the root stylesheet
+ * (`styles/core.css`) is global, and any module that imports a subpath entry
+ * (`@rookcom/monarch-react/ai`) also imports that entry's stylesheet. Each page
+ * then ships only the component CSS it uses (docs/guides/getting-started.md).
+ */
+function entryStyles(): Plugin {
+  const ENTRY_IMPORT = /from\s+['"]@rookcom\/monarch-react\/([a-z-]+)['"]/g;
+  return {
+    name: 'monarch-entry-styles',
+    enforce: 'pre',
+    transform(code, id) {
+      if (!/\.(tsx?|jsx?)$/.test(id) || id.includes('node_modules')) return null;
+      const entries = new Set<string>();
+      for (const m of code.matchAll(ENTRY_IMPORT)) if (m[1] && m[1] !== 'styles') entries.add(m[1]);
+      if (entries.size === 0) return null;
+      const imports = [...entries]
+        .map((e) => `import '@rookcom/monarch-react/styles/${e}.css';`)
+        .join('\n');
+      // Appended, not prepended: imports are hoisted anyway, and source map
+      // lines stay where they were.
+      return { code: `${code}\n${imports}\n`, map: null };
+    },
+  };
+}
+
 /** Weights preloaded for the first paint: body text (400) and headings (600), latin subset. */
 const PRELOADED_FONTS = [
   /^assets\/poppins-400-latin-[\w-]{8}\.woff2$/,
@@ -85,6 +111,7 @@ export default defineConfig({
   base: process.env.DOCS_BASE ?? '/',
   // plugin-react ships types against a newer Vite major; the runtime hook API is the same.
   plugins: [
+    entryStyles(),
     monarchDocs({ repoRoot }),
     guides(),
     react() as unknown as PluginOption,

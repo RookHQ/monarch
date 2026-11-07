@@ -19,7 +19,7 @@ declare module 'virtual:monarch-docs-index' {
     entry: string;
     /** Every value export of the folder, primary first. */
     exports: string[];
-    exampleTitles: string[];
+    exampleCount: number;
   }
   export interface RegistryRef {
     id: string;

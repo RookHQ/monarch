@@ -95,12 +95,22 @@ export const status = {
   sky: ramp(brand.blue.h, brand.blue.s),
 } as const;
 
+/**
+ * The intelligence hue: marks AI-generated content and AI controls in every
+ * product. A purple at 294°, between the nearest product accents (indigo at
+ * 239°, magenta at 326°); the sweep in ADR 0013 found it gives the largest
+ * separation from every accent and status colour in all four themes. Colour
+ * is never the only AI cue: AI content also carries a label and the Bot icon.
+ */
+export const intelligenceBase: Hsl = hsl(294, 90, 54);
+
 /** Base colours each status intent is derived from (see `themes.ts`). */
 export const statusBase = {
   danger: brand.red,
   success: brand.green,
   warning: brand.yellow,
   info: brand.blue,
+  ai: intelligenceBase,
 } as const;
 
 /** Accent used when no product is set: the brand's primary colour. */
@@ -194,6 +204,10 @@ export const duration = {
   base: '180ms',
   slow: '260ms',
   slower: '400ms',
+  /** One blink of the streaming caret. */
+  'stream-caret': '1000ms',
+  /** One pass of the "thinking" shimmer. */
+  shimmer: '1600ms',
 } as const;
 
 export const easing = {
@@ -201,6 +215,8 @@ export const easing = {
   enter: 'cubic-bezier(0, 0, 0.2, 1)',
   exit: 'cubic-bezier(0.4, 0, 1, 1)',
   emphasized: 'cubic-bezier(0.3, 0, 0, 1.15)',
+  /** Streamed text settling in: quick and even, so it never feels bouncy. */
+  stream: 'cubic-bezier(0.2, 0, 0.2, 1)',
 } as const;
 
 export const breakpoint = {

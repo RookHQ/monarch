@@ -20,8 +20,7 @@ import { brotliCompressSync, constants, gzipSync } from 'node:zlib';
 const KB = 1024;
 // 156: the eager page index grows ~70 B gzip per component; wave 10 added 28 (2026-11-07).
 const HOME_JS = 156 * KB;
-// 64: one stylesheet ships every component; wave 10 added 28.
-const HOME_CSS = 64 * KB;
+const HOME_CSS = 60 * KB;
 // Component pages load their own docs file and the component it documents; the
 // editor's pages are the heaviest (the editor itself is about 115 KB).
 const PAGE_JS = 290 * KB;

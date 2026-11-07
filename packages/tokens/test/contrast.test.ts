@@ -300,3 +300,30 @@ describe.each(THEME_IDS)('data palette in %s', (themeId) => {
     }
   });
 });
+
+/** OKLab ΔE (×100, as for the data palette) between two theme colours. */
+const colourDelta = (a: Parameters<typeof toRgb>[0], b: Parameters<typeof toRgb>[0]) => {
+  const lab = (c: Parameters<typeof toRgb>[0]) => oklab(toRgb(c).map(linear) as unknown as Rgb);
+  return deltaE(lab(a), lab(b));
+};
+
+describe('the AI intent (ADR 0013)', () => {
+  it.each(THEME_IDS)(
+    'stays distinguishable from every product accent and status colour in %s',
+    (themeId) => {
+      const theme = themes[themeId];
+      for (const [id, accent] of accents) {
+        const r = resolveTheme(theme, accent);
+        for (const other of ['accent', 'danger', 'success', 'warning', 'info'] as const) {
+          if (id === 'friends' && other === 'accent') continue; // achromatic accent
+          const d = colourDelta(r.intents.ai.solid, r.intents[other].solid);
+          // 10 is the floor the hue sweep in ADR 0013 can reach against all 17
+          // accents in all four themes; AI content never relies on colour alone.
+          expect(d, `${themeId} ai vs ${id} ${other}: ΔE ${d.toFixed(1)}`).toBeGreaterThanOrEqual(
+            10,
+          );
+        }
+      }
+    },
+  );
+});

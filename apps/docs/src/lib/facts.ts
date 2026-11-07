@@ -13,7 +13,7 @@ export const facts = {
   documented: docsPages.length,
   themes: Object.keys((tokens as { themes: Record<string, unknown> }).themes).length,
   products: products.length,
-  examples: docsPages.reduce((n, p) => n + p.exampleTitles.length, 0),
+  examples: docsPages.reduce((n, p) => n + p.exampleCount, 0),
 };
 
 export const INSTALL_COMMAND = 'npm i @rookcom/monarch-tokens @rookcom/monarch-react';

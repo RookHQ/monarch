@@ -234,6 +234,7 @@ export function themeDecls(resolved: ResolvedTheme): Decls {
     ...NEUTRAL_ROLES.map((r) => [`--mn-color-${r}`, toCss(n[r])] as const),
     ...INTENT_IDS.flatMap((id) => intentDecls(id, resolved.intents[id])),
     ['--mn-color-text-link', 'var(--mn-color-accent-strong)'],
+    ...aiDecls(theme),
     [
       '--mn-color-focus-ring',
       theme.contrast === 'more' ? 'var(--mn-color-text-default)' : 'var(--mn-color-accent-strong)',
@@ -244,6 +245,33 @@ export function themeDecls(resolved: ResolvedTheme): Decls {
       (k) => [`--mn-shadow-${k}`, theme.shadow[k]] as const,
     ),
     ...dataDecls(theme),
+  ];
+}
+
+/**
+ * AI roles built on the `ai` intent and the status intents, so they inherit
+ * their contrast guarantees (ADR 0013). The gradient is decorative only and is
+ * a solid colour in the high-contrast themes.
+ */
+function aiDecls(theme: ThemeDefinition): Decls {
+  const hc = theme.contrast === 'more';
+  return [
+    ['--mn-color-ai-thinking', 'var(--mn-color-ai-subtle)'],
+    ['--mn-color-ai-tool', 'var(--mn-color-info-strong)'],
+    ['--mn-color-ai-citation', 'var(--mn-color-ai-strong)'],
+    ['--mn-color-ai-diff-add', 'var(--mn-color-success-subtle)'],
+    ['--mn-color-ai-diff-add-strong', 'var(--mn-color-success-strong)'],
+    ['--mn-color-ai-diff-remove', 'var(--mn-color-danger-subtle)'],
+    ['--mn-color-ai-diff-remove-strong', 'var(--mn-color-danger-strong)'],
+    ['--mn-color-confidence-low', 'var(--mn-color-danger-strong)'],
+    ['--mn-color-confidence-medium', 'var(--mn-color-warning-strong)'],
+    ['--mn-color-confidence-high', 'var(--mn-color-success-strong)'],
+    [
+      '--mn-gradient-ai',
+      hc
+        ? 'var(--mn-color-ai-solid)'
+        : 'linear-gradient(135deg, var(--mn-color-ai-solid) 0%, color-mix(in srgb, var(--mn-color-ai-solid) 70%, var(--mn-color-info-solid)) 100%)',
+    ],
   ];
 }
 

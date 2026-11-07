@@ -3,7 +3,7 @@ import { createRoot, hydrateRoot } from 'react-dom/client';
 import './styles/fonts.css';
 import '@rookcom/monarch-tokens/css';
 import '@rookcom/monarch-tokens/css/base';
-import '@rookcom/monarch-react/styles.css';
+import '@rookcom/monarch-react/styles/core.css';
 import './styles/base.css';
 import './styles/gallery.css';
 import './styles/shell.css';

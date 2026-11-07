@@ -82,6 +82,7 @@ export const monarchPreset = {
           success: intent('success'),
           warning: intent('warning'),
           info: intent('info'),
+          ai: intent('ai'),
           data: Object.fromEntries([1, 2, 3, 4, 5].map((i) => [i, mn(`data-${i}`)])),
         },
         border: legacy('border'),

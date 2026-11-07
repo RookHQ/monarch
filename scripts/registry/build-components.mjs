@@ -506,6 +506,58 @@ const EXPORT_GROUPS = [
     id: 'data-subject-request-form',
     exports: ['DEFAULT_DATA_SUBJECT_REQUEST_TYPES', 'DataSubjectRequestForm'],
   },
+  {
+    id: 'ai-conversation',
+    exports: [
+      'applyStreamEvent',
+      'isStreaming',
+      'mapRookIntelligenceEvent',
+      'messageText',
+      'mockTransport',
+      'readServerSentEvents',
+      'rookIntelligenceTransport',
+      'textDeltas',
+      'useAiConversation',
+    ],
+  },
+  {
+    id: 'ai-scroll-anchor',
+    exports: ['AI_SCROLL_ANCHOR_THRESHOLD', 'AiScrollAnchor', 'useAiScrollAnchor'],
+  },
+  { id: 'ai-thread', exports: ['AiThread'] },
+  { id: 'ai-message', exports: ['AiMessageView'] },
+  { id: 'ai-message-actions', exports: ['AiMessageActions'] },
+  { id: 'ai-prompt-input', exports: ['AiPromptInput', 'findTrigger', 'usePromptDraft'] },
+  {
+    id: 'ai-streaming-text',
+    exports: ['AI_STREAMING_TEXT_MESSAGES', 'AiStreamingText', 'completeStreamingMarkdown'],
+  },
+  {
+    id: 'ai-markdown',
+    exports: [
+      'AI_MARKDOWN_MESSAGES',
+      'AiMarkdown',
+      'blockText',
+      'inlineText',
+      'parseInline',
+      'parseMarkdownBlocks',
+      'parseMarkdownIncremental',
+    ],
+  },
+  {
+    id: 'ai-code-block',
+    exports: [
+      'AI_CODE_BLOCK_MESSAGES',
+      'AiCodeBlock',
+      'codeLanguageName',
+      'resolveCodeLanguage',
+      'tokenizeCode',
+    ],
+  },
+  { id: 'ai-thinking-indicator', exports: ['AiThinkingIndicator'] },
+  { id: 'ai-typing-dots', exports: ['AiTypingDots'] },
+  { id: 'ai-stop-button', exports: ['AiStopButton', 'AiStopGlyph'] },
+  { id: 'ai-error-message', exports: ['AiErrorMessage', 'aiErrorKind'] },
 ];
 
 /**

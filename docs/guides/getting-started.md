@@ -25,6 +25,14 @@ import '@rookcom/monarch-react/styles.css'; // component styles
 
 Order does not matter: every file declares the cascade-layer order.
 
+`styles.css` holds every component. To ship less CSS, load
+`@rookcom/monarch-react/styles/core.css` (the root entry and shared styles)
+plus one sheet per subpath entry you import: `styles/ai.css`,
+`styles/patterns.css`, `styles/charts.css`, `styles/data.css`,
+`styles/scheduling.css`, `styles/collaboration.css`, `styles/editor.css`,
+`styles/marketing.css` or `styles/shell.css`. Core is about half the size of
+the full sheet.
+
 ## 3. Apply the appearance before paint
 
 ```tsx

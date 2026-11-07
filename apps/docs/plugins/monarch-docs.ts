@@ -85,7 +85,7 @@ export function buildIndex(repoRoot: string) {
       family: m[3] as string,
       entry: own[0]?.entry ?? '.',
       exports: own.flatMap((e) => e.exports),
-      exampleTitles: docs.examples.map((e) => e.title),
+      exampleCount: docs.examples.length,
     };
   });
   return {
