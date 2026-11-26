@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { renderToString } from 'react-dom/server';
 import { expectNoA11yViolations } from '../../../../test/a11y.js';
 import { OverlayStage } from '../../../internal/overlay-stage.js';
@@ -45,6 +46,24 @@ describe('Select', () => {
       </Select>,
     );
     expect(html).toContain('mn-select');
+  });
+
+  it('outside a stage, defaultOpen opens the real list and onOpenChange is called on close', async () => {
+    const changes: boolean[] = [];
+    render(
+      <Select defaultValue="open" defaultOpen onOpenChange={(o) => changes.push(o)}>
+        <SelectTrigger aria-label="Status" />
+        <SelectContent>
+          <SelectItem value="open">Open</SelectItem>
+          <SelectItem value="done">Done</SelectItem>
+        </SelectContent>
+      </Select>,
+    );
+    expect(await screen.findByRole('listbox')).toBeInTheDocument();
+    expect(document.querySelector('[data-mn-select-picture]')).toBeNull();
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('listbox')).toBeNull();
+    expect(changes).toEqual([false]);
   });
 
   it('open in an overlay stage, shows the list without making the page modal', async () => {

@@ -4,13 +4,10 @@ import {
   createContext,
   forwardRef,
   Fragment,
-  useCallback,
   useContext,
   useState,
   type ComponentPropsWithoutRef,
-  type CSSProperties,
   type ElementRef,
-  type Ref,
 } from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { cx } from '../../../internal/cx.js';
@@ -27,12 +24,7 @@ export type SelectProps = ComponentPropsWithoutRef<typeof SelectPrimitive.Root>;
  * the same markup and styles, in the flow, with the page left alone. The first
  * time the trigger is used the picture gives way to the real list.
  */
-interface SelectPicture {
-  value: string | undefined;
-  triggerWidth: number | undefined;
-  setTriggerWidth: (width: number) => void;
-}
-const SelectPictureContext = createContext<SelectPicture | null>(null);
+const SelectPictureContext = createContext<{ value: string | undefined } | null>(null);
 
 /**
  * Single-value select built on Radix Select: typeahead, arrow-key navigation,
@@ -46,35 +38,18 @@ const SelectPictureContext = createContext<SelectPicture | null>(null);
  *   </Select>
  */
 export function Select({ open, defaultOpen, onOpenChange, ...props }: SelectProps) {
-  // `staged` never changes for a mounted Select, so each branch keeps its own tree.
   const staged = useOverlayStage();
+  // Radix's open state is always held here, so a staged Select can start as a picture.
   const [pictured, setPictured] = useState(staged && Boolean(open ?? defaultOpen));
-  const [ownOpen, setOwnOpen] = useState(false);
-  const [ownValue, setOwnValue] = useState(props.defaultValue);
-  const [triggerWidth, setTriggerWidth] = useState<number>();
-  if (!staged) {
-    return (
-      <SelectPrimitive.Root
-        {...props}
-        {...(open !== undefined ? { open } : {})}
-        {...(defaultOpen !== undefined ? { defaultOpen } : {})}
-        {...(onOpenChange ? { onOpenChange } : {})}
-      />
-    );
-  }
-  const value = props.value ?? ownValue;
+  const [ownOpen, setOwnOpen] = useState(!staged && Boolean(defaultOpen));
   return (
     <SelectPictureContext.Provider
-      value={pictured ? { value, triggerWidth, setTriggerWidth } : null}
+      // Nothing can change the value before the picture gives way, so the initial one holds.
+      value={pictured ? { value: props.value ?? props.defaultValue } : null}
     >
       <SelectPrimitive.Root
         {...props}
-        value={value ?? ''}
-        onValueChange={(next) => {
-          setOwnValue(next);
-          props.onValueChange?.(next);
-        }}
-        open={pictured ? false : (open ?? ownOpen)}
+        open={!pictured && (open ?? ownOpen)}
         onOpenChange={(next) => {
           setPictured(false);
           setOwnOpen(next);
@@ -105,18 +80,9 @@ export const SelectTrigger = forwardRef<
     'aria-required'?: true;
     'aria-invalid'?: true;
   };
-  const picture = useContext(SelectPictureContext);
-  const setTriggerWidth = picture?.setTriggerWidth;
-  const measure = useCallback(
-    (node: HTMLButtonElement | null) => {
-      setRef(ref, node);
-      if (node && setTriggerWidth) setTriggerWidth(node.offsetWidth);
-    },
-    [ref, setTriggerWidth],
-  );
   return (
     <SelectPrimitive.Trigger
-      ref={measure}
+      ref={ref}
       {...props}
       data-size={size}
       className={cx('mn-input', 'mn-select', className)}
@@ -142,22 +108,14 @@ export const SelectContent = forwardRef<
   const picture = useContext(SelectPictureContext);
   const Portal = staged ? Fragment : SelectPrimitive.Portal;
   if (picture) {
-    const style = {
-      ...rest.style,
-      ...(picture.triggerWidth
-        ? { '--radix-select-trigger-width': `${picture.triggerWidth}px` }
-        : {}),
-    } as CSSProperties;
     return (
       <>
         {/* Closed, Radix keeps the items off the page so the trigger shows the value. */}
         <SelectPrimitive.Content>{children}</SelectPrimitive.Content>
         <div
           className={cx('mn-menu', 'mn-select__content', className)}
-          data-state="open"
-          data-side="bottom"
           data-mn-select-picture=""
-          style={style}
+          style={rest.style}
         >
           <div className="mn-select__viewport">
             <SelectItemPictureContext.Provider value={picture.value ?? null}>
@@ -241,8 +199,3 @@ export const SelectSeparator = forwardRef<
     />
   );
 });
-
-function setRef<T>(ref: Ref<T> | undefined, value: T | null) {
-  if (typeof ref === 'function') ref(value);
-  else if (ref) (ref as { current: T | null }).current = value;
-}
