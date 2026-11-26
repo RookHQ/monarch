@@ -1,0 +1,65 @@
+name: Branch policy
+# Keeps the branching model honest: what may be merged into main and uat, and how branches are named.
+# See docs/governance/branching.md. Runs on pull requests only and needs no secrets or write access.
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+permissions:
+  contents: read
+jobs:
+  branch-policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Check source and target branches
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+          FORK: ${{ github.event.pull_request.head.repo.fork }}
+        run: |
+          set -eu
+          case "$BASE" in
+            main)
+              # main only receives releases from uat, or urgent fixes from hotfix/*.
+              case "$HEAD" in
+                uat|hotfix/*) echo "OK: $HEAD -> main" ;;
+                *) echo "::error::Pull requests into main must come from uat (a release) or hotfix/* (an urgent fix). Open this one against uat."; exit 1 ;;
+              esac
+              ;;
+            uat)
+              if [ "$HEAD" = "main" ]; then
+                echo "OK: main -> uat (back-merge after a hotfix)"
+              elif [ "$FORK" = "true" ]; then
+                echo "OK: pull request from a fork"
+              else
+                case "$HEAD" in
+                  feat/*|fix/*|docs/*|chore/*|refactor/*|test/*|ci/*|perf/*|revert/*|release/*|hotfix/*|dependabot/*) echo "OK: $HEAD -> uat" ;;
+                  *) echo "::error::Branch names start with feat/, fix/, docs/, chore/, refactor/, test/, ci/, perf/, revert/, release/ or hotfix/ (for example feat/date-picker-range)."; exit 1 ;;
+                esac
+              fi
+              ;;
+            *) echo "Base $BASE is not governed by this policy." ;;
+          esac
+      - name: Check the component category in the branch name
+        # feat/forms/date-picker-range: the middle part names the component category (a folder under
+        # packages/react/src/components or patterns). Names without a category (feat/date-picker-range) are fine.
+        if: github.event.pull_request.head.repo.fork == false && github.base_ref == 'uat'
+        env:
+          HEAD: ${{ github.head_ref }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -eu
+          case "$HEAD" in
+            feat/*/*|fix/*/*|refactor/*/*|test/*/*|perf/*/*) ;;
+            *) echo "No category segment to check."; exit 0 ;;
+          esac
+          category=$(printf '%s' "$HEAD" | cut -d/ -f2)
+          known=$( { gh api "repos/$REPO/contents/packages/react/src/components?ref=uat" -q '.[]|select(.type=="dir")|.name'
+                     gh api "repos/$REPO/contents/packages/react/src/patterns?ref=uat" -q '.[]|select(.type=="dir")|.name'; } | sort -u)
+          if printf '%s\n' "$known" | grep -qx "$category"; then
+            echo "OK: category $category"
+          else
+            echo "::error::'$category' is not a component category. Use one of: $(printf '%s' "$known" | tr '\n' ' ')or leave the category out (feat/your-change)."
+            exit 1
+          fi

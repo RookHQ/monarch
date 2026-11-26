@@ -1,0 +1,440 @@
+/* AiVoiceMode: a live spoken conversation. Central visual, state text, captions and controls.
+   Only --mn-* variables; state goes in data-* attributes; logical properties so RTL works. */
+.mn-ai-voice-mode {
+  /* Set inline from the `level` prop (0 to 1) while listening or speaking. */
+  --mn-ai-voice-mode-level: 0;
+  --_orb: 5.5rem;
+  display: grid;
+  gap: var(--mn-space-4);
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  padding: var(--mn-space-6);
+  border: 1px solid var(--mn-color-border-subtle);
+  border-radius: var(--mn-radius-lg);
+  background: var(--mn-color-bg-surface);
+  color: var(--mn-color-text-default);
+  font-size: var(--mn-text-sm);
+  line-height: var(--mn-leading-normal);
+}
+.mn-ai-voice-mode:focus-visible {
+  outline: var(--mn-focus-ring-width) solid var(--mn-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.mn-ai-voice-mode__stage {
+  display: grid;
+  justify-items: center;
+  gap: var(--mn-space-4);
+  min-inline-size: 0;
+  text-align: center;
+}
+
+/* The visual. Each state has its own shape, so colour is never the only cue:
+   listening = outlined orb with level bars, speaking = filled orb with bars and a
+   halo that grows with the level, connecting / thinking / reconnecting = a turning
+   arc with dots, muted = dashed orb with a struck-through microphone, ended = a
+   flat line, error = an error mark. */
+.mn-ai-voice-mode__visual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: calc(var(--_orb) * 1.4);
+  block-size: calc(var(--_orb) * 1.4);
+}
+.mn-ai-voice-mode__orb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: var(--_orb);
+  block-size: var(--_orb);
+  border: 2px solid var(--mn-color-ai-border);
+  border-radius: var(--mn-radius-full);
+  background: var(--mn-color-ai-subtle);
+  color: var(--mn-color-ai-strong);
+}
+.mn-ai-voice-mode__halo {
+  position: absolute;
+  inset: calc(var(--_orb) * 0.2);
+  display: none;
+  border: 2px solid var(--mn-color-ai-border);
+  border-radius: var(--mn-radius-full);
+}
+
+.mn-ai-voice-mode[data-state='speaking'] .mn-ai-voice-mode__orb {
+  border-color: var(--mn-color-ai-solid);
+  background: var(--mn-color-ai-solid);
+  color: var(--mn-color-ai-on-solid);
+}
+.mn-ai-voice-mode[data-state='speaking'] .mn-ai-voice-mode__halo {
+  display: block;
+  transform: scale(calc(1.08 + var(--mn-ai-voice-mode-level) * 0.3));
+  transition: transform var(--mn-duration-fast) linear;
+}
+
+.mn-ai-voice-mode[data-state='connecting'] .mn-ai-voice-mode__halo,
+.mn-ai-voice-mode[data-state='thinking'] .mn-ai-voice-mode__halo,
+.mn-ai-voice-mode[data-state='reconnecting'] .mn-ai-voice-mode__halo {
+  display: block;
+  inset: calc(var(--_orb) * 0.12);
+  border-color: var(--mn-color-ai-solid);
+  border-block-end-color: transparent;
+  border-inline-end-color: transparent;
+  animation: mn-ai-voice-mode-turn 1.4s linear infinite;
+}
+.mn-ai-voice-mode[data-state='connecting'] .mn-ai-voice-mode__orb,
+.mn-ai-voice-mode[data-state='reconnecting'] .mn-ai-voice-mode__orb {
+  background: var(--mn-color-bg-subtle);
+}
+.mn-ai-voice-mode[data-state='reconnecting'] .mn-ai-voice-mode__orb {
+  border-style: dotted;
+}
+
+.mn-ai-voice-mode[data-state='muted'] .mn-ai-voice-mode__orb {
+  border-style: dashed;
+  border-color: var(--mn-color-border-strong);
+  background: var(--mn-color-bg-muted);
+  color: var(--mn-color-text-muted);
+}
+.mn-ai-voice-mode[data-state='ended'] .mn-ai-voice-mode__orb {
+  border-color: var(--mn-color-border-default);
+  background: var(--mn-color-bg-subtle);
+  color: var(--mn-color-text-muted);
+}
+.mn-ai-voice-mode[data-state='error'] .mn-ai-voice-mode__orb {
+  border-color: var(--mn-color-danger-border);
+  background: var(--mn-color-danger-subtle);
+  color: var(--mn-color-danger-strong);
+}
+
+.mn-ai-voice-mode__glyph {
+  inline-size: 36%;
+  block-size: 36%;
+}
+.mn-ai-voice-mode__rest {
+  display: block;
+  inline-size: 36%;
+  block-size: 2px;
+  border-radius: var(--mn-radius-full);
+  background: currentColor;
+}
+
+.mn-ai-voice-mode__bars {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--_orb) * 0.05);
+  inline-size: 56%;
+  block-size: 50%;
+}
+.mn-ai-voice-mode__bar {
+  display: block;
+  flex: 1 1 0;
+  max-inline-size: 0.375rem;
+  block-size: calc(18% + var(--mn-ai-voice-mode-level) * 45%);
+  border-radius: var(--mn-radius-full);
+  background: currentColor;
+  transition: block-size var(--mn-duration-fast) linear;
+}
+.mn-ai-voice-mode__bar:nth-child(2),
+.mn-ai-voice-mode__bar:nth-child(4) {
+  block-size: calc(24% + var(--mn-ai-voice-mode-level) * 60%);
+}
+.mn-ai-voice-mode__bar:nth-child(3) {
+  block-size: calc(30% + var(--mn-ai-voice-mode-level) * 70%);
+}
+
+.mn-ai-voice-mode__dots {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--_orb) * 0.07);
+}
+.mn-ai-voice-mode__dot {
+  display: block;
+  inline-size: calc(var(--_orb) * 0.1);
+  block-size: calc(var(--_orb) * 0.1);
+  border-radius: var(--mn-radius-full);
+  background: currentColor;
+  animation: mn-ai-voice-mode-dot 1.4s var(--mn-ease-standard) infinite;
+}
+.mn-ai-voice-mode__dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.mn-ai-voice-mode__dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes mn-ai-voice-mode-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes mn-ai-voice-mode-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+/* Name, clock, state text. */
+.mn-ai-voice-mode__summary {
+  display: grid;
+  justify-items: center;
+  gap: var(--mn-space-1);
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.mn-ai-voice-mode__agent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mn-space-1) var(--mn-space-2);
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+}
+.mn-ai-voice-mode__name {
+  min-inline-size: 0;
+  font-weight: var(--mn-weight-medium);
+  overflow-wrap: anywhere;
+}
+.mn-ai-voice-mode__elapsed {
+  font-variant-numeric: tabular-nums;
+}
+.mn-ai-voice-mode__state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--mn-space-1) var(--mn-space-2);
+  margin: 0;
+  min-inline-size: 0;
+}
+.mn-ai-voice-mode__state-text {
+  font-size: var(--mn-text-lg);
+  font-weight: var(--mn-weight-semibold);
+  line-height: var(--mn-leading-snug);
+  overflow-wrap: anywhere;
+}
+.mn-ai-voice-mode__muted-note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mn-space-1);
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+}
+.mn-ai-voice-mode__muted-note > svg {
+  flex: none;
+  align-self: center;
+}
+.mn-ai-voice-mode__error,
+.mn-ai-voice-mode__duration {
+  margin: 0;
+  max-inline-size: 36rem;
+  color: var(--mn-color-text-muted);
+  overflow-wrap: anywhere;
+}
+.mn-ai-voice-mode__duration {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Captions log. Scrolls on the block axis only; positioned so visually hidden
+   text inside it can never escape the clip. */
+.mn-ai-voice-mode__captions {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--mn-space-2);
+  min-inline-size: 0;
+  max-block-size: 12rem;
+  padding: var(--mn-space-3);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--mn-color-border-subtle);
+  border-radius: var(--mn-radius-md);
+  background: var(--mn-color-bg-subtle);
+  text-align: start;
+}
+.mn-ai-voice-mode__captions:focus-visible {
+  outline: var(--mn-focus-ring-width) solid var(--mn-color-focus-ring);
+  outline-offset: 2px;
+}
+.mn-ai-voice-mode__caption,
+.mn-ai-voice-mode__captions-empty {
+  margin: 0;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.mn-ai-voice-mode__captions-empty {
+  color: var(--mn-color-text-muted);
+}
+.mn-ai-voice-mode__speaker {
+  margin-inline-end: var(--mn-space-1);
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+  font-weight: var(--mn-weight-semibold);
+}
+.mn-ai-voice-mode__caption[data-speaker='assistant'] .mn-ai-voice-mode__speaker {
+  color: var(--mn-color-ai-strong);
+}
+/* Words that may still change: italic and quieter, not colour alone. */
+.mn-ai-voice-mode__caption[data-final='false'] .mn-ai-voice-mode__caption-text {
+  color: var(--mn-color-text-muted);
+  font-style: italic;
+}
+
+.mn-ai-voice-mode__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mn-space-2);
+  min-inline-size: 0;
+}
+.mn-ai-voice-mode__mute[data-pressed],
+.mn-ai-voice-mode__captions-toggle[data-pressed] {
+  border-color: var(--mn-color-ai-border);
+  background: var(--mn-color-ai-subtle);
+  color: var(--mn-color-ai-strong);
+}
+
+/* Compact: the visual sits beside the text, for an assistant panel. */
+.mn-ai-voice-mode[data-size='compact'] {
+  --_orb: 2.5rem;
+  gap: var(--mn-space-3);
+  padding: var(--mn-space-3);
+}
+.mn-ai-voice-mode[data-size='compact'] .mn-ai-voice-mode__stage {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  justify-items: start;
+  gap: var(--mn-space-3);
+  text-align: start;
+}
+.mn-ai-voice-mode[data-size='compact'] .mn-ai-voice-mode__summary {
+  justify-items: start;
+  gap: 0;
+}
+.mn-ai-voice-mode[data-size='compact'] .mn-ai-voice-mode__agent,
+.mn-ai-voice-mode[data-size='compact'] .mn-ai-voice-mode__state {
+  justify-content: flex-start;
+}
+.mn-ai-voice-mode[data-size='compact'] .mn-ai-voice-mode__state-text {
+  font-size: var(--mn-text-sm);
+}
+.mn-ai-voice-mode[data-size='compact'] .mn-ai-voice-mode__captions {
+  max-block-size: 8rem;
+  padding: var(--mn-space-2);
+}
+.mn-ai-voice-mode[data-size='compact'] .mn-ai-voice-mode__controls {
+  justify-content: flex-start;
+}
+
+@media (max-width: 30rem) {
+  .mn-ai-voice-mode {
+    padding: var(--mn-space-3);
+  }
+  .mn-ai-voice-mode[data-size='md'] {
+    --_orb: 4.5rem;
+  }
+  .mn-ai-voice-mode__controls > * {
+    flex: 1 1 auto;
+  }
+}
+/* The same rules when the AI surface around it (a container named mn-ai, such as
+   AiAssistantPanel's body) is narrow, whatever the screen width. Keep both blocks identical:
+   test/ai-container-queries.test.ts compares them. */
+@container mn-ai (max-width: 30rem) {
+  .mn-ai-voice-mode {
+    padding: var(--mn-space-3);
+  }
+  .mn-ai-voice-mode[data-size='md'] {
+    --_orb: 4.5rem;
+  }
+  .mn-ai-voice-mode__controls > * {
+    flex: 1 1 auto;
+  }
+}
+
+@media (pointer: coarse) {
+  .mn-ai-voice-mode__controls > * {
+    min-block-size: 2.75rem;
+  }
+}
+
+/* Reduced motion: the visual keeps its shape for each state but stands still,
+   whatever the level. */
+@media (prefers-reduced-motion: reduce) {
+  .mn-ai-voice-mode[data-state='speaking'] .mn-ai-voice-mode__halo {
+    transform: scale(1.2);
+    transition: none;
+  }
+  .mn-ai-voice-mode[data-state='connecting'] .mn-ai-voice-mode__halo,
+  .mn-ai-voice-mode[data-state='thinking'] .mn-ai-voice-mode__halo,
+  .mn-ai-voice-mode[data-state='reconnecting'] .mn-ai-voice-mode__halo {
+    animation: none;
+  }
+  .mn-ai-voice-mode__dot {
+    animation: none;
+  }
+  .mn-ai-voice-mode__bar {
+    block-size: 35%;
+    transition: none;
+  }
+  .mn-ai-voice-mode__bar:nth-child(2),
+  .mn-ai-voice-mode__bar:nth-child(4) {
+    block-size: 55%;
+  }
+  .mn-ai-voice-mode__bar:nth-child(3) {
+    block-size: 75%;
+  }
+}
+
+@media (forced-colors: active) {
+  .mn-ai-voice-mode,
+  .mn-ai-voice-mode__captions {
+    border-color: CanvasText;
+  }
+  .mn-ai-voice-mode[data-state] .mn-ai-voice-mode__orb {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+  .mn-ai-voice-mode[data-state] .mn-ai-voice-mode__halo {
+    border-color: CanvasText;
+  }
+  .mn-ai-voice-mode[data-state='connecting'] .mn-ai-voice-mode__halo,
+  .mn-ai-voice-mode[data-state='thinking'] .mn-ai-voice-mode__halo,
+  .mn-ai-voice-mode[data-state='reconnecting'] .mn-ai-voice-mode__halo {
+    border-block-end-color: Canvas;
+    border-inline-end-color: Canvas;
+  }
+  .mn-ai-voice-mode__agent,
+  .mn-ai-voice-mode__muted-note,
+  .mn-ai-voice-mode__error,
+  .mn-ai-voice-mode__duration,
+  .mn-ai-voice-mode__speaker,
+  .mn-ai-voice-mode__caption[data-speaker] .mn-ai-voice-mode__speaker,
+  .mn-ai-voice-mode__captions-empty,
+  .mn-ai-voice-mode__caption[data-final='false'] .mn-ai-voice-mode__caption-text {
+    color: CanvasText;
+  }
+  .mn-ai-voice-mode:focus-visible,
+  .mn-ai-voice-mode__captions:focus-visible {
+    outline-color: Highlight;
+  }
+  .mn-ai-voice-mode__mute[data-pressed],
+  .mn-ai-voice-mode__captions-toggle[data-pressed] {
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+}

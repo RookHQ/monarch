@@ -1,0 +1,42 @@
+version: 2
+# Updates go to uat (see docs/governance/branching.md), never straight to main.
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    target-branch: uat
+    open-pull-requests-limit: 3
+    labels: [dependencies]
+    commit-message: { prefix: 'chore(deps)', prefix-development: 'chore(deps-dev)' }
+    # Groups carry the low-risk updates. Major versions are upgraded by a maintainer on a
+    # chore/ branch when it is planned (Dependabot still opens security updates).
+    groups:
+      radix:
+        patterns: ['@radix-ui/*']
+        update-types: [minor, patch]
+      dev-tooling:
+        dependency-type: development
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+      # Types track the Node line we run (.nvmrc = 22), not the newest Node.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+      # Playwright must match the CI container tag (mcr.microsoft.com/playwright:vX-noble);
+      # bump both together by hand.
+      - dependency-name: '@playwright/test'
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    target-branch: uat
+    open-pull-requests-limit: 2
+    labels: [dependencies]
+    commit-message: { prefix: 'ci(deps)' }
+    groups:
+      github-actions:
+        patterns: ['*']
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']

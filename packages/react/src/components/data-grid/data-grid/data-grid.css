@@ -1,0 +1,306 @@
+/* DataGrid: a div-based WAI-ARIA grid. The scroller scrolls both ways; the
+   header row is sticky; body rows are absolutely placed (virtualized). Every
+   row is a CSS grid sharing --_cols (px widths). Pinned cells are sticky with
+   an inline inset from data-pinned. Only --mn-* variables. */
+.mn-data-grid {
+  --_py: var(--mn-space-2-5);
+  --_px: var(--mn-space-3);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  inline-size: 100%;
+  border: 1px solid var(--mn-color-border-default);
+  border-radius: var(--mn-radius-md);
+  background: var(--mn-color-bg-surface);
+  color: var(--mn-color-text-default);
+  font-size: var(--mn-text-sm);
+  line-height: var(--mn-leading-snug);
+  overflow: hidden;
+}
+.mn-data-grid[data-density='compact'] {
+  --_py: var(--mn-space-1-5);
+  font-size: var(--mn-text-xs);
+}
+.mn-data-grid__scroller {
+  position: relative;
+  overflow: auto;
+  overscroll-behavior: contain;
+  overflow-anchor: none;
+}
+.mn-data-grid__grid {
+  position: relative;
+  min-inline-size: 100%;
+}
+.mn-data-grid__row {
+  display: grid;
+  grid-template-columns: var(--_cols);
+}
+.mn-data-grid__header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 3;
+}
+.mn-data-grid__body {
+  position: relative;
+}
+.mn-data-grid__body > .mn-data-grid__row {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: 100%;
+}
+
+/* Cells */
+.mn-data-grid__cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--mn-space-1);
+  box-sizing: border-box;
+  min-inline-size: 0;
+  padding: var(--_py) var(--_px);
+  border-block-end: 1px solid var(--mn-color-border-subtle);
+  background: var(--mn-color-bg-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mn-data-grid__cell:focus {
+  outline: none;
+}
+.mn-data-grid__cell:focus-visible,
+.mn-data-grid__cell:has(:focus-visible) {
+  outline: var(--mn-focus-ring-width) solid var(--mn-color-focus-ring);
+  outline-offset: calc(var(--mn-focus-ring-width) * -1);
+  z-index: 2;
+}
+.mn-data-grid__cell[data-numeric] {
+  justify-content: flex-end;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+.mn-data-grid__row-head {
+  font-weight: var(--mn-weight-medium);
+}
+.mn-data-grid__utility {
+  justify-content: center;
+  padding-inline: var(--mn-space-1);
+}
+.mn-data-grid__cell[data-editable] {
+  padding-block: var(--mn-space-0-5);
+  padding-inline: calc(var(--_px) - var(--mn-space-1-5) - 1px);
+}
+.mn-data-grid__cell[data-editable] > .mn-editable-cell {
+  inline-size: 100%;
+}
+.mn-data-grid__cell[data-editing] {
+  overflow: visible;
+  z-index: 4;
+}
+.mn-data-grid__row:hover > .mn-data-grid__cell {
+  background: var(--mn-color-bg-subtle);
+}
+.mn-data-grid__row[data-selected] > .mn-data-grid__cell {
+  background: var(--mn-color-accent-subtle);
+}
+
+/* Header */
+.mn-data-grid__head {
+  border-block-end-color: var(--mn-color-border-default);
+  background: var(--mn-color-bg-subtle);
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+  font-weight: var(--mn-weight-medium);
+  letter-spacing: var(--mn-tracking-wide);
+}
+.mn-data-grid__head[data-sortable] {
+  cursor: pointer;
+}
+.mn-data-grid__head[data-sortable]:hover {
+  color: var(--mn-color-text-default);
+}
+.mn-data-grid__head-label {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mn-data-grid__sort-icon {
+  flex-shrink: 0;
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  opacity: 0;
+  transition:
+    transform var(--mn-duration-fast) var(--mn-ease-standard),
+    opacity var(--mn-duration-fast) var(--mn-ease-standard);
+}
+.mn-data-grid__head:hover .mn-data-grid__sort-icon {
+  opacity: 0.35;
+}
+.mn-data-grid__sort-icon[data-direction='ascending'],
+.mn-data-grid__sort-icon[data-direction='descending'] {
+  opacity: 1;
+}
+.mn-data-grid__head:hover .mn-data-grid__sort-icon[data-direction='ascending'],
+.mn-data-grid__head:hover .mn-data-grid__sort-icon[data-direction='descending'] {
+  opacity: 1;
+}
+.mn-data-grid__sort-icon[data-direction='ascending'] {
+  transform: rotate(180deg);
+}
+.mn-data-grid__sort-priority {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 1rem;
+  block-size: 1rem;
+  padding-inline: var(--mn-space-0-5);
+  border-radius: var(--mn-radius-full);
+  background: var(--mn-color-bg-muted);
+  color: var(--mn-color-text-default);
+  font-size: var(--mn-text-2xs);
+  font-variant-numeric: tabular-nums;
+}
+.mn-data-grid__menu-button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--mn-control-xs);
+  block-size: var(--mn-control-xs);
+  margin-inline-start: auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--mn-radius-sm);
+  background: transparent;
+  color: var(--mn-color-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--mn-duration-fast) var(--mn-ease-standard);
+}
+.mn-data-grid__head:hover .mn-data-grid__menu-button,
+.mn-data-grid__head:focus-within .mn-data-grid__menu-button,
+.mn-data-grid__menu-button[data-state='open'] {
+  opacity: 1;
+}
+.mn-data-grid__menu-button:hover {
+  background: var(--mn-color-bg-muted);
+  color: var(--mn-color-text-default);
+}
+.mn-data-grid__menu-button:focus-visible {
+  outline: var(--mn-focus-ring-width) solid var(--mn-color-focus-ring);
+  opacity: 1;
+}
+.mn-data-grid__resize {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 1;
+  inline-size: var(--mn-space-2);
+  cursor: col-resize;
+  touch-action: none;
+}
+.mn-data-grid__resize::after {
+  content: '';
+  position: absolute;
+  inset-block: var(--mn-space-2);
+  inset-inline-end: 0;
+  inline-size: 2px;
+  border-radius: var(--mn-radius-full);
+  background: var(--mn-color-border-default);
+  transition: background-color var(--mn-duration-fast) var(--mn-ease-standard);
+}
+.mn-data-grid__resize:hover::after,
+.mn-data-grid__resize[data-dragging]::after {
+  background: var(--mn-color-accent-solid);
+}
+
+/* Pinned columns */
+.mn-data-grid__cell[data-pinned] {
+  position: sticky;
+  z-index: 1;
+}
+.mn-data-grid__head[data-pinned] {
+  z-index: 2;
+}
+.mn-data-grid__cell[data-pinned='start'][data-pinned-edge] {
+  box-shadow: inset -1px 0 0 var(--mn-color-border-default);
+}
+.mn-data-grid__cell[data-pinned='end'][data-pinned-edge] {
+  box-shadow: inset 1px 0 0 var(--mn-color-border-default);
+}
+.mn-data-grid:dir(rtl) .mn-data-grid__cell[data-pinned='start'][data-pinned-edge] {
+  box-shadow: inset 1px 0 0 var(--mn-color-border-default);
+}
+.mn-data-grid:dir(rtl) .mn-data-grid__cell[data-pinned='end'][data-pinned-edge] {
+  box-shadow: inset -1px 0 0 var(--mn-color-border-default);
+}
+
+/* States */
+.mn-data-grid__state {
+  padding: var(--mn-space-6) var(--mn-space-4);
+}
+.mn-data-grid__progress {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 5;
+  block-size: 2px;
+  background: var(--mn-color-accent-solid);
+  animation: mn-data-grid-busy var(--mn-duration-slow) var(--mn-ease-standard) infinite alternate;
+}
+@keyframes mn-data-grid-busy {
+  from {
+    opacity: 0.3;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.mn-data-grid__menu {
+  min-inline-size: 11rem;
+}
+
+@media (pointer: coarse) {
+  .mn-data-grid__menu-button {
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    opacity: 1;
+  }
+  .mn-data-grid__resize {
+    inline-size: var(--mn-space-4);
+  }
+}
+@media (hover: none) {
+  .mn-data-grid__menu-button {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mn-data-grid__sort-icon,
+  .mn-data-grid__menu-button,
+  .mn-data-grid__resize::after {
+    transition: none;
+  }
+  .mn-data-grid__progress {
+    animation: none;
+  }
+}
+@media (forced-colors: active) {
+  .mn-data-grid {
+    border-color: CanvasText;
+  }
+  .mn-data-grid__cell:focus-visible,
+  .mn-data-grid__cell:has(:focus-visible) {
+    outline-color: Highlight;
+  }
+  .mn-data-grid__row[data-selected] > .mn-data-grid__cell {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+  .mn-data-grid__resize::after,
+  .mn-data-grid__progress {
+    background: CanvasText;
+  }
+}

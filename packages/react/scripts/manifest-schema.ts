@@ -1,0 +1,113 @@
+/**
+ * JSON Schema of dist/manifest.json. scripts/manifest.ts writes it to
+ * apps/docs/public/schema/manifest.json, served at MANIFEST_SCHEMA_URL.
+ */
+import { MANIFEST_SCHEMA_URL } from './manifest-lib.js';
+
+export const MANIFEST_SCHEMA = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  $id: MANIFEST_SCHEMA_URL,
+  title: 'Monarch component manifest',
+  description:
+    'Every public export of @rookcom/monarch-react with its props, defaults, allowed values, import line, stylesheets and docs page. Generated from the TypeScript declarations by packages/react/scripts/manifest.ts.',
+  type: 'object',
+  additionalProperties: false,
+  required: ['$schema', 'package', 'version', 'generatedBy', 'styles', 'tokens', 'components'],
+  properties: {
+    $schema: { type: 'string' },
+    package: { const: '@rookcom/monarch-react' },
+    version: { type: 'string', pattern: '^\\d+\\.\\d+\\.\\d+' },
+    generatedBy: { type: 'string' },
+    styles: { type: 'string', description: 'The stylesheet with every component.' },
+    tokens: { type: 'string', description: 'The tokens stylesheet every app loads.' },
+    docs: { type: 'string', description: 'The docs site.' },
+    components: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: [
+          'name',
+          'entry',
+          'kind',
+          'scope',
+          'description',
+          'usesClient',
+          'clientOnly',
+          'import',
+          'css',
+          'props',
+        ],
+        properties: {
+          name: { type: 'string' },
+          entry: { type: 'string', pattern: '^\\.(/[a-z-]+)?$' },
+          alsoEntries: { type: 'array', items: { type: 'string' } },
+          kind: { enum: ['component', 'hook', 'utility'] },
+          scope: {
+            enum: ['general', 'rook'],
+            description:
+              'rook: built for a Rook platform contract (docs/guides/rook-specific-exports.md). Prefer general exports outside Rook.',
+          },
+          description: { type: 'string' },
+          className: {
+            type: 'string',
+            pattern: '^mn-',
+            description:
+              'Root class of the element the component renders (and forwards its ref to). Public and stable within a minor.',
+          },
+          usesClient: {
+            type: 'boolean',
+            description:
+              "The module starts with 'use client'. It still renders on the server; React Server Components import it as a client boundary.",
+          },
+          clientOnly: {
+            type: 'boolean',
+            deprecated: true,
+            description:
+              'Deprecated alias of usesClient. It never meant "cannot server-render": every export is server-render safe.',
+          },
+          import: { type: 'string', description: 'The exact import line.' },
+          css: {
+            type: 'array',
+            items: { type: 'string' },
+            description:
+              'Stylesheets to import when the app does not load the full styles.css (getting-started §2).',
+          },
+          componentCss: {
+            type: 'string',
+            description: 'The smallest alternative: the per-component sheet.',
+          },
+          docs: { type: 'string', format: 'uri' },
+          size: {
+            type: 'object',
+            additionalProperties: false,
+            required: ['gzip'],
+            description:
+              "Size of the component folder's module: minified and gzipped, with package imports external, as last recorded in registry/size-budgets.json. Exports of one folder share it.",
+            properties: { gzip: { type: 'integer', minimum: 0, description: 'Bytes.' } },
+          },
+          props: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              required: ['name', 'type', 'required', 'description'],
+              properties: {
+                name: { type: 'string' },
+                type: { type: 'string' },
+                required: { type: 'boolean' },
+                description: { type: 'string' },
+                default: { type: 'string', description: 'As written in code.' },
+                values: {
+                  type: 'array',
+                  items: { type: ['string', 'number'] },
+                  description: 'The allowed literal values when the type is a union of literals.',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+} as const;

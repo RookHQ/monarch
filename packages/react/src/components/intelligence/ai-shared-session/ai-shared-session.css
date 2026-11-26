@@ -1,0 +1,373 @@
+/* AiSharedSession: who is here, who is being answered and what is waiting, in a shared AI conversation. */
+.mn-ai-shared-session {
+  --_ring: var(--mn-color-bg-surface);
+  display: grid;
+  gap: var(--mn-space-2);
+  min-width: 0;
+  max-width: 100%;
+  padding: var(--mn-space-2) var(--mn-space-3);
+  border: 1px solid var(--mn-color-border-subtle);
+  border-radius: var(--mn-radius-lg);
+  background: var(--mn-color-bg-surface);
+  color: var(--mn-color-text-default);
+  font-family: var(--mn-font-sans);
+  font-size: var(--mn-text-sm);
+  line-height: var(--mn-leading-normal);
+}
+.mn-ai-shared-session:focus-visible,
+.mn-ai-shared-session__more:focus-visible {
+  outline: var(--mn-focus-ring-width) solid var(--mn-color-focus-ring);
+  outline-offset: 2px;
+}
+.mn-ai-shared-session__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mn-space-2) var(--mn-space-3);
+  min-width: 0;
+}
+.mn-ai-shared-session__here {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--mn-space-1);
+}
+
+/* The avatar stack. */
+.mn-ai-shared-session__stack {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  padding-inline-start: 2px;
+  list-style: none;
+}
+.mn-ai-shared-session__item {
+  display: inline-flex;
+}
+.mn-ai-shared-session__item + .mn-ai-shared-session__item {
+  margin-inline-start: calc(var(--mn-space-1-5) * -1);
+}
+.mn-ai-shared-session__person,
+.mn-ai-shared-session__face {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+.mn-ai-shared-session__person > .mn-avatar {
+  box-shadow: 0 0 0 2px var(--_ring);
+}
+/* People who stepped away are greyed, not faded, so initials keep their contrast. */
+.mn-ai-shared-session__item[data-presence='away'] .mn-avatar,
+.mn-ai-shared-session__row[data-presence='away'] .mn-avatar {
+  filter: grayscale(1);
+}
+
+/* Presence as a shape: a filled dot (active), a half dot (idle), a ring (away). */
+.mn-ai-shared-session__mark {
+  display: inline-block;
+  flex: none;
+  box-sizing: border-box;
+  width: var(--mn-space-2);
+  height: var(--mn-space-2);
+  border: 2px solid var(--mn-color-text-muted);
+  border-radius: var(--mn-radius-full);
+  background: var(--mn-color-bg-surface);
+}
+.mn-ai-shared-session__mark[data-presence='active'] {
+  border-color: var(--mn-color-success-solid);
+  background: var(--mn-color-success-solid);
+}
+.mn-ai-shared-session__mark[data-presence='idle'] {
+  background: linear-gradient(
+    to bottom,
+    var(--mn-color-bg-surface) 50%,
+    var(--mn-color-text-muted) 50%
+  );
+}
+.mn-ai-shared-session__mark[data-overlay] {
+  position: absolute;
+  inset-inline-end: -1px;
+  inset-block-end: -1px;
+  box-shadow: 0 0 0 1px var(--_ring);
+}
+
+.mn-ai-shared-session__more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  padding: 0 var(--mn-space-1);
+  border: 0;
+  border-radius: var(--mn-radius-full);
+  background: var(--mn-color-bg-muted);
+  color: var(--mn-color-text-muted);
+  font: inherit;
+  font-size: var(--mn-text-xs);
+  font-weight: var(--mn-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.mn-ai-shared-session__more:hover,
+.mn-ai-shared-session__more[data-state='open'] {
+  color: var(--mn-color-text-default);
+}
+
+/* The status line. */
+.mn-ai-shared-session__status {
+  flex: 1 1 10rem;
+  min-width: 0;
+  margin: 0;
+  color: var(--mn-color-text-default);
+  overflow-wrap: anywhere;
+}
+.mn-ai-shared-session__status[data-quiet],
+.mn-ai-shared-session__clause:not([data-kind='answering']) {
+  color: var(--mn-color-text-muted);
+}
+.mn-ai-shared-session__clause[data-kind='answering'] {
+  font-weight: var(--mn-weight-medium);
+}
+.mn-ai-shared-session__dot {
+  color: var(--mn-color-text-subtle);
+  font-weight: var(--mn-weight-regular);
+}
+.mn-ai-shared-session__actions {
+  display: inline-flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mn-space-2);
+  margin-inline-start: auto;
+}
+.mn-ai-shared-session__queue-toggle .mn-glyph {
+  transition: transform var(--mn-duration-fast) var(--mn-ease-standard);
+}
+.mn-ai-shared-session__queue-toggle[data-open] .mn-glyph {
+  transform: rotate(180deg);
+}
+
+/* The read-only notice for viewers. */
+.mn-ai-shared-session__notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mn-space-2);
+  padding: var(--mn-space-2);
+  border: 1px solid var(--mn-color-border-subtle);
+  border-radius: var(--mn-radius-md);
+  background: var(--mn-color-bg-muted);
+}
+.mn-ai-shared-session__notice-icon {
+  flex: none;
+  color: var(--mn-color-text-muted);
+}
+.mn-ai-shared-session__notice-text {
+  flex: 1 1 10rem;
+  min-width: 0;
+  margin: 0;
+  font-weight: var(--mn-weight-medium);
+}
+.mn-ai-shared-session__requested {
+  color: var(--mn-color-text-muted);
+}
+
+/* The queue. */
+.mn-ai-shared-session__queue {
+  display: grid;
+  gap: var(--mn-space-1);
+  margin: 0;
+  padding: 0;
+  padding-block-start: var(--mn-space-2);
+  border-block-start: 1px solid var(--mn-color-border-subtle);
+  list-style: none;
+  counter-reset: mn-ai-shared-session-request;
+}
+.mn-ai-shared-session__request {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mn-space-1) var(--mn-space-2);
+  min-width: 0;
+  padding: var(--mn-space-1) var(--mn-space-2);
+  border-radius: var(--mn-radius-sm);
+  counter-increment: mn-ai-shared-session-request;
+}
+.mn-ai-shared-session__request::before {
+  content: counter(mn-ai-shared-session-request) '.';
+  flex: none;
+  min-width: 1.25rem;
+  color: var(--mn-color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.mn-ai-shared-session__request[data-own] {
+  background: var(--mn-color-ai-subtle);
+}
+.mn-ai-shared-session__request-text {
+  display: flex;
+  flex: 1 1 10rem;
+  flex-direction: column;
+  min-width: 0;
+}
+.mn-ai-shared-session__request-name {
+  font-weight: var(--mn-weight-medium);
+  overflow-wrap: anywhere;
+}
+.mn-ai-shared-session__preview {
+  overflow: hidden;
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mn-ai-shared-session__request-actions {
+  display: inline-flex;
+  flex: none;
+  flex-wrap: wrap;
+  gap: var(--mn-space-1);
+  margin-inline-start: auto;
+}
+
+/* The full list, in a popover. */
+.mn-ai-shared-session__popover.mn-popover {
+  --_ring: var(--mn-color-bg-raised);
+  display: grid;
+  gap: var(--mn-space-2);
+  min-width: 15rem;
+  max-width: min(22rem, calc(100vw - var(--mn-space-4)));
+  max-height: min(24rem, 70vh);
+  overflow-y: auto;
+  padding: var(--mn-space-2);
+  font-family: var(--mn-font-sans);
+  font-size: var(--mn-text-sm);
+}
+.mn-ai-shared-session__group-title {
+  padding: var(--mn-space-1) var(--mn-space-2);
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+  font-weight: var(--mn-weight-semibold);
+}
+.mn-ai-shared-session__rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mn-ai-shared-session__row {
+  display: flex;
+  align-items: center;
+  gap: var(--mn-space-2);
+  min-width: 0;
+  padding: var(--mn-space-1-5) var(--mn-space-2);
+}
+.mn-ai-shared-session__who {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+.mn-ai-shared-session__name {
+  font-weight: var(--mn-weight-medium);
+  overflow-wrap: anywhere;
+}
+.mn-ai-shared-session__details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--mn-space-2);
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+}
+.mn-ai-shared-session__presence {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mn-space-1);
+}
+.mn-ai-shared-session__row[data-kind='agent'] .mn-ai-shared-session__doing {
+  color: var(--mn-color-ai-strong);
+}
+.mn-ai-shared-session__follow {
+  flex: none;
+}
+.mn-ai-shared-session__follow[data-pressed] {
+  background: var(--mn-color-ai-subtle);
+  color: var(--mn-color-ai-strong);
+}
+
+@media (max-width: 30rem) {
+  .mn-ai-shared-session__status {
+    flex-basis: 100%;
+    order: 3;
+  }
+  .mn-ai-shared-session__request-actions {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+}
+/* The same rules when the AI surface around it (a container named mn-ai, such as
+   AiAssistantPanel's body) is narrow, whatever the screen width. Keep both blocks identical:
+   test/ai-container-queries.test.ts compares them. */
+@container mn-ai (max-width: 30rem) {
+  .mn-ai-shared-session__status {
+    flex-basis: 100%;
+    order: 3;
+  }
+  .mn-ai-shared-session__request-actions {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (pointer: coarse) {
+  .mn-ai-shared-session__more {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+  .mn-ai-shared-session__actions > *,
+  .mn-ai-shared-session__notice > button,
+  .mn-ai-shared-session__request-actions > *,
+  .mn-ai-shared-session__follow {
+    min-height: 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-ai-shared-session__queue-toggle .mn-glyph {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .mn-ai-shared-session,
+  .mn-ai-shared-session__notice {
+    border-color: CanvasText;
+  }
+  .mn-ai-shared-session__more {
+    border: 1px solid CanvasText;
+  }
+  .mn-ai-shared-session:focus-visible,
+  .mn-ai-shared-session__more:focus-visible {
+    outline-color: Highlight;
+  }
+  .mn-ai-shared-session__mark {
+    forced-color-adjust: none;
+    border-color: CanvasText;
+    background: Canvas;
+    box-shadow: none;
+  }
+  .mn-ai-shared-session__mark[data-presence='active'] {
+    background: CanvasText;
+  }
+  .mn-ai-shared-session__mark[data-presence='idle'] {
+    background: linear-gradient(to bottom, Canvas 50%, CanvasText 50%);
+  }
+  .mn-ai-shared-session__request[data-own] {
+    outline: 1px solid CanvasText;
+  }
+  .mn-ai-shared-session__follow[data-pressed] {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+}

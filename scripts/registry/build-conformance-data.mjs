@@ -1,0 +1,177 @@
+// Writes packages/conformance/src/bundled-data.ts: the registry facts the
+// conformance CLI needs in an app that has no Monarch registry checkout.
+//
+//   compatibility   registry/compatibility.json (deps/monarch-version, verify)
+//   deprecations    registry/deprecations.json (api/deprecated): deprecated exports and
+//                   exports that moved to another entry (`importPaths`)
+//   products        registry/products/*.json: id, name, accent (--product)
+//   components      component exports of @rookcom/monarch-react, from
+//                   registry/components.json, whose `exports` are the names in
+//                   packages/react/dist/manifest.json (components/duplicated-primitive)
+//   colours         semantic colour tokens by light-theme hex, from
+//                   packages/tokens/dist/css/monarch.css (the colour fix)
+//
+//   npm run registry:conformance          rewrite the file
+//   npm run registry:conformance -- --check   fail if it is stale (CI and a conformance test)
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { format, resolveConfig } from 'prettier';
+
+const ROOT = fileURLToPath(new URL('../..', import.meta.url));
+const OUT = join(ROOT, 'packages/conformance/src/bundled-data.ts');
+
+const kebab = (name) =>
+  name
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+    .toLowerCase();
+
+/** Component exports (PascalCase with a lower-case letter) of general (non-Rook) entries. */
+export function componentNames(registry) {
+  const names = new Set();
+  for (const c of registry.components) {
+    if (c.package !== '@rookcom/monarch-react') continue;
+    for (const n of c.exports ?? [])
+      if (/^[A-Z][A-Za-z0-9]*$/.test(n) && /[a-z]/.test(n) && !/Rook/.test(n)) names.add(n);
+  }
+  return [...names].sort();
+}
+
+const hslToHex = (h, s, l) => {
+  const sat = s / 100;
+  const lig = l / 100;
+  const k = (n) => (n + h / 30) % 12;
+  const a = sat * Math.min(lig, 1 - lig);
+  const f = (n) => lig - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return `#${[f(0), f(8), f(4)]
+    .map((x) =>
+      Math.round(x * 255)
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('')}`;
+};
+
+/** `--mn-color-*: hsl(h s% l%)` declarations of one top-level block of monarch.css. */
+function blockColours(css, selector) {
+  const start = css.indexOf(`${selector} {`);
+  if (start === -1) throw new Error(`monarch.css: no block ${selector}`);
+  const end = css.indexOf('\n  }', start);
+  const out = new Map();
+  for (const m of css
+    .slice(start, end)
+    .matchAll(/--(mn-color-[a-z0-9-]+):\s*hsl\(([\d.]+) ([\d.]+)% ([\d.]+)%\)\s*;/g))
+    out.set(m[1], hslToHex(Number(m[2]), Number(m[3]), Number(m[4])));
+  return out;
+}
+
+/**
+ * Light-theme hex → the one semantic colour variable with that value. Product
+ * accents are left out (they depend on the product). `invariant` when the value
+ * is the same in all four themes, so the replacement looks the same everywhere.
+ */
+export function colourTokens(css) {
+  const light = blockColours(css, ':where(:root, [data-mn-theme="light"])');
+  const others = [
+    blockColours(css, '[data-mn-theme="dark"]'),
+    blockColours(css, '[data-mn-contrast="more"]'),
+    blockColours(css, '[data-mn-theme="dark"][data-mn-contrast="more"]'),
+  ];
+  const byHex = new Map();
+  for (const [name, hex] of light) {
+    if (name.startsWith('mn-color-accent')) continue;
+    byHex.set(hex, [...(byHex.get(hex) ?? []), name]);
+  }
+  const out = {};
+  for (const [hex, names] of [...byHex].sort(([a], [b]) => a.localeCompare(b))) {
+    if (names.length !== 1) continue;
+    const name = names[0];
+    const invariant = others.every((o) => (o.get(name) ?? hex) === hex);
+    out[hex] = { variable: `--${name}`, invariant };
+  }
+  return out;
+}
+
+export function conformanceData(root = ROOT) {
+  const r = (p) => JSON.parse(readFileSync(join(root, p), 'utf8'));
+  const compatibility = r('registry/compatibility.json');
+  delete compatibility.$description;
+  const products = readdirSync(join(root, 'registry/products'))
+    .filter((f) => f.endsWith('.json'))
+    .sort()
+    .map((f) => r(`registry/products/${f}`))
+    .map((p) => ({ id: p.id, name: p.name, accent: p.theme.accent }));
+  const cssPath = join(root, 'packages/tokens/dist/css/monarch.css');
+  if (!existsSync(cssPath)) throw new Error('packages/tokens/dist missing: build the tokens first');
+  return {
+    compatibility,
+    deprecations: r('registry/deprecations.json').deprecations,
+    importPaths: r('registry/deprecations.json').importPaths ?? [],
+    products,
+    components: componentNames(r('registry/components.json')).map((name) => ({
+      name,
+      stem: kebab(name),
+    })),
+    colours: colourTokens(readFileSync(cssPath, 'utf8')),
+  };
+}
+
+export async function render() {
+  const d = conformanceData();
+  const body = `/**
+ * Generated by \`npm run registry:conformance\` (scripts/registry/build-conformance-data.mjs)
+ * from registry/ and the built tokens. Do not edit.
+ *
+ * Bundled so \`monarch check\` works in any app, with or without a Monarch registry checkout.
+ */
+import type { Compatibility, Deprecation, ImportPathDeprecation } from './types.js';
+
+export interface BundledProduct {
+  readonly id: string;
+  readonly name: string;
+  /** HSL channels, \`354 70% 52%\`. */
+  readonly accent: string;
+}
+
+export interface ColourToken {
+  /** \`--mn-color-…\`. */
+  readonly variable: string;
+  /** Same value in light, dark and both more-contrast themes. */
+  readonly invariant: boolean;
+}
+
+export const BUNDLED_COMPATIBILITY: Compatibility = ${JSON.stringify(d.compatibility)};
+
+export const BUNDLED_DEPRECATIONS: readonly Deprecation[] = ${JSON.stringify(d.deprecations)};
+
+/** Exports that moved to another entry and stay available from the old one for now. */
+export const BUNDLED_IMPORT_PATH_DEPRECATIONS: readonly ImportPathDeprecation[] = ${JSON.stringify(d.importPaths)};
+
+export const BUNDLED_PRODUCTS: readonly BundledProduct[] = ${JSON.stringify(d.products)};
+
+/** Component exports of @rookcom/monarch-react and their file stems (components/duplicated-primitive). */
+export const BUNDLED_COMPONENTS: readonly { readonly name: string; readonly stem: string }[] = ${JSON.stringify(d.components)};
+
+/** Light-theme hex → the one semantic colour variable with exactly that value. */
+export const COLOUR_TOKENS: Readonly<Record<string, ColourToken>> = ${JSON.stringify(d.colours)};
+`;
+  return format(body, { ...(await resolveConfig(OUT)), filepath: OUT });
+}
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  const text = await render();
+  if (process.argv.includes('--check')) {
+    const current = existsSync(OUT) ? readFileSync(OUT, 'utf8') : '';
+    if (current !== text) {
+      console.error(
+        'packages/conformance/src/bundled-data.ts is stale: run `npm run registry:conformance`',
+      );
+      process.exit(1);
+    }
+    console.log('packages/conformance/src/bundled-data.ts is current');
+  } else {
+    writeFileSync(OUT, text);
+    console.log(`wrote ${OUT.slice(ROOT.length)}`);
+  }
+}

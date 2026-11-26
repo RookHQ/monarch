@@ -1,0 +1,558 @@
+/* AiComputerView: a live view of an agent operating a browser or a computer.
+   Only --mn-* variables; state goes in data-* attributes. */
+.mn-ai-computer-view {
+  container: mn-ai-computer-view / inline-size;
+  min-width: 0;
+  max-width: 100%;
+  padding: var(--mn-space-4);
+  border: 1px solid var(--mn-color-border-subtle);
+  border-radius: var(--mn-radius-lg);
+  background: var(--mn-color-bg-surface);
+  color: var(--mn-color-text-default);
+  font-size: var(--mn-text-sm);
+  line-height: var(--mn-leading-normal);
+}
+.mn-ai-computer-view [hidden] {
+  display: none;
+}
+.mn-ai-computer-view__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mn-space-4);
+  min-width: 0;
+}
+.mn-ai-computer-view__main {
+  display: grid;
+  align-content: start;
+  gap: var(--mn-space-3);
+  min-width: 0;
+}
+
+/* Status line and the "who is in control" banner. */
+.mn-ai-computer-view__header {
+  display: grid;
+  gap: var(--mn-space-2);
+  min-width: 0;
+}
+.mn-ai-computer-view__status {
+  display: flex;
+  align-items: center;
+  gap: var(--mn-space-2);
+  margin: 0;
+  font-weight: var(--mn-weight-semibold);
+  overflow-wrap: anywhere;
+}
+.mn-ai-computer-view__status-icon,
+.mn-ai-computer-view__banner-icon,
+.mn-ai-computer-view__waiting-icon,
+.mn-ai-computer-view__kind {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+}
+.mn-ai-computer-view__status-icon {
+  color: var(--mn-color-ai-strong);
+}
+.mn-ai-computer-view[data-status='paused'] .mn-ai-computer-view__status-icon,
+.mn-ai-computer-view[data-status='waiting-for-you'] .mn-ai-computer-view__status-icon {
+  color: var(--mn-color-warning-strong);
+}
+.mn-ai-computer-view[data-status='done'] .mn-ai-computer-view__status-icon {
+  color: var(--mn-color-success-strong);
+}
+.mn-ai-computer-view[data-status='failed'] .mn-ai-computer-view__status-icon {
+  color: var(--mn-color-danger-strong);
+}
+.mn-ai-computer-view[data-status='taken-over'] .mn-ai-computer-view__status-icon,
+.mn-ai-computer-view[data-status='stopped'] .mn-ai-computer-view__status-icon {
+  color: var(--mn-color-text-muted);
+}
+.mn-ai-computer-view__banner {
+  display: flex;
+  align-items: center;
+  gap: var(--mn-space-2);
+  margin: 0;
+  padding: var(--mn-space-2) var(--mn-space-3);
+  border-radius: var(--mn-radius-md);
+  background: var(--mn-color-ai-solid);
+  color: var(--mn-color-ai-on-solid);
+  font-weight: var(--mn-weight-semibold);
+  overflow-wrap: anywhere;
+}
+.mn-ai-computer-view[data-controller='you'] .mn-ai-computer-view__banner {
+  border: 1px solid var(--mn-color-border-strong);
+  background: var(--mn-color-bg-muted);
+  color: var(--mn-color-text-default);
+}
+
+/* The window: bar, screenshot, capture time. */
+.mn-ai-computer-view__window {
+  min-width: 0;
+  margin: 0;
+  border: 1px solid var(--mn-color-border-default);
+  border-radius: var(--mn-radius-md);
+  background: var(--mn-color-bg-subtle);
+  overflow: hidden;
+}
+.mn-ai-computer-view[data-controller='agent'] .mn-ai-computer-view__window {
+  border-color: var(--mn-color-ai-border);
+  outline: 2px solid var(--mn-color-ai-border);
+  outline-offset: -1px;
+}
+.mn-ai-computer-view__chrome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--mn-space-1) var(--mn-space-3);
+  min-width: 0;
+  padding: var(--mn-space-2) var(--mn-space-3);
+  border-block-end: 1px solid var(--mn-color-border-subtle);
+  background: var(--mn-color-bg-muted);
+  font-size: var(--mn-text-xs);
+}
+.mn-ai-computer-view__window-title {
+  min-width: 0;
+  font-weight: var(--mn-weight-medium);
+  overflow-wrap: anywhere;
+}
+.mn-ai-computer-view__url {
+  flex: 1 1 8rem;
+  min-width: 0;
+  color: var(--mn-color-text-muted);
+  font-family: var(--mn-font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The box is reserved from the frame's width and height (inline aspect-ratio),
+   so a new screenshot never moves the page. */
+.mn-ai-computer-view__frame {
+  position: relative;
+  inline-size: 100%;
+  background: var(--mn-color-bg-muted);
+  overflow: hidden;
+}
+.mn-ai-computer-view__image {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+.mn-ai-computer-view__video {
+  /* The live picture never takes input itself: the frame around it does. */
+  pointer-events: none;
+}
+/* The person is in control and can act on the screen. */
+.mn-ai-computer-view__frame[data-interactive] {
+  cursor: crosshair;
+  touch-action: none;
+}
+.mn-ai-computer-view__frame[data-interactive]:focus-visible {
+  outline: 2px solid var(--mn-color-focus-ring);
+  outline-offset: -2px;
+}
+.mn-ai-computer-view[data-controller='you'] .mn-ai-computer-view__window {
+  border-color: var(--mn-color-border-strong);
+}
+.mn-ai-computer-view__input-hint {
+  margin: 0;
+  padding: var(--mn-space-1) var(--mn-space-3);
+  border-block-start: 1px solid var(--mn-color-border-subtle);
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+}
+.mn-ai-computer-view__live-dot {
+  display: inline-block;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  margin-inline-end: var(--mn-space-1);
+  border-radius: var(--mn-radius-full);
+  background: var(--mn-color-danger-solid);
+}
+.mn-ai-computer-view__placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: var(--mn-space-3);
+  color: var(--mn-color-text-muted);
+  text-align: center;
+}
+.mn-ai-computer-view__overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.mn-ai-computer-view__marker,
+.mn-ai-computer-view__pointer {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+.mn-ai-computer-view__marker {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border: 2px solid var(--mn-color-ai-solid);
+  border-radius: var(--mn-radius-full);
+  box-shadow:
+    0 0 0 2px var(--mn-color-bg-surface),
+    inset 0 0 0 2px var(--mn-color-bg-surface);
+}
+.mn-ai-computer-view__marker[data-marker='selected'] {
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-width: 3px;
+  border-color: var(--mn-color-focus-ring);
+}
+.mn-ai-computer-view__marker[data-live] {
+  animation: mn-ai-computer-view-pulse 1.6s var(--mn-ease-standard) infinite;
+}
+.mn-ai-computer-view__pointer {
+  display: inline-flex;
+  padding: var(--mn-space-0-5);
+  border-radius: var(--mn-radius-full);
+  background: var(--mn-color-ai-solid);
+  color: var(--mn-color-ai-on-solid);
+  box-shadow: 0 0 0 2px var(--mn-color-bg-surface);
+  /* The tip of the arrow, not the middle of the badge, sits on the point. */
+  transform: translate(-25%, -20%);
+  transition:
+    left var(--mn-duration-base) var(--mn-ease-standard),
+    top var(--mn-duration-base) var(--mn-ease-standard);
+}
+@keyframes mn-ai-computer-view-pulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.25);
+    opacity: 0.6;
+  }
+}
+.mn-ai-computer-view__captured {
+  margin: 0;
+  padding: var(--mn-space-1) var(--mn-space-3);
+  border-block-start: 1px solid var(--mn-color-border-subtle);
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Why the agent is waiting. */
+.mn-ai-computer-view__waiting {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mn-space-2);
+  padding: var(--mn-space-3);
+  border: 1px solid var(--mn-color-warning-border);
+  border-radius: var(--mn-radius-md);
+  background: var(--mn-color-warning-subtle);
+}
+.mn-ai-computer-view__waiting-icon {
+  margin-block-start: var(--mn-space-0-5);
+  color: var(--mn-color-warning-strong);
+}
+.mn-ai-computer-view__waiting-title,
+.mn-ai-computer-view__waiting-reason,
+.mn-ai-computer-view__question {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.mn-ai-computer-view__waiting-title {
+  font-weight: var(--mn-weight-semibold);
+}
+
+/* Controls and the inline stop confirmation. */
+.mn-ai-computer-view__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mn-space-2);
+  min-width: 0;
+  /* Stop stays in view however far the view is scrolled. */
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 1;
+  padding-block: var(--mn-space-1);
+  background: var(--mn-color-bg-surface);
+}
+.mn-ai-computer-view__stop {
+  margin-inline-start: auto;
+}
+.mn-ai-computer-view__confirm {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mn-space-2) var(--mn-space-3);
+  min-width: 0;
+  padding: var(--mn-space-2) var(--mn-space-3);
+  border: 1px solid var(--mn-color-danger-border);
+  border-radius: var(--mn-radius-md);
+  background: var(--mn-color-danger-subtle);
+}
+.mn-ai-computer-view__question {
+  flex: 1 1 12rem;
+  font-weight: var(--mn-weight-medium);
+}
+.mn-ai-computer-view__confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mn-space-2);
+}
+
+/* The action log. */
+.mn-ai-computer-view__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mn-space-2);
+  min-width: 0;
+}
+.mn-ai-computer-view__log-title {
+  margin: 0;
+  font-size: var(--mn-text-sm);
+  font-weight: var(--mn-weight-semibold);
+}
+.mn-ai-computer-view__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--mn-space-2);
+  inline-size: 100%;
+  min-block-size: var(--mn-control-sm);
+  padding: var(--mn-space-1) var(--mn-space-2);
+  border: 0;
+  border-radius: var(--mn-radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: var(--mn-weight-semibold);
+  text-align: start;
+  cursor: pointer;
+}
+.mn-ai-computer-view__toggle:hover {
+  background: var(--mn-color-bg-muted);
+}
+.mn-ai-computer-view__chevron {
+  flex: none;
+  color: var(--mn-color-text-subtle);
+  transform: rotate(-90deg);
+  transition: transform var(--mn-duration-fast) var(--mn-ease-standard);
+}
+.mn-ai-computer-view__chevron:dir(rtl) {
+  transform: rotate(90deg);
+}
+.mn-ai-computer-view__toggle[aria-expanded='true'] .mn-ai-computer-view__chevron {
+  transform: none;
+}
+.mn-ai-computer-view__log-box {
+  position: relative;
+  min-width: 0;
+}
+.mn-ai-computer-view__log {
+  position: relative;
+  max-block-size: 16rem;
+  border: 1px solid var(--mn-color-border-subtle);
+  border-radius: var(--mn-radius-md);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.mn-ai-computer-view__empty {
+  margin: 0;
+  padding: var(--mn-space-3);
+  color: var(--mn-color-text-muted);
+}
+.mn-ai-computer-view__actions {
+  margin: 0;
+  padding: var(--mn-space-1);
+  list-style: none;
+}
+.mn-ai-computer-view__earlier {
+  display: block;
+  inline-size: 100%;
+  min-block-size: 1.75rem;
+  padding: var(--mn-space-1-5) var(--mn-space-2);
+  border: 0;
+  border-radius: var(--mn-radius-sm);
+  background: none;
+  color: var(--mn-color-text-link);
+  font: inherit;
+  font-size: var(--mn-text-sm);
+  text-align: start;
+  cursor: pointer;
+}
+.mn-ai-computer-view__earlier:hover {
+  text-decoration: underline;
+}
+.mn-ai-computer-view__earlier:focus-visible {
+  outline: var(--mn-focus-ring-width) solid var(--mn-color-focus-ring);
+  outline-offset: 1px;
+}
+.mn-ai-computer-view__action {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mn-space-2);
+  inline-size: 100%;
+  min-block-size: 1.75rem;
+  padding: var(--mn-space-1-5) var(--mn-space-2);
+  border: 0;
+  border-inline-start: 3px solid transparent;
+  border-radius: var(--mn-radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.mn-ai-computer-view__action:hover {
+  background: var(--mn-color-bg-muted);
+}
+.mn-ai-computer-view__action[data-selected] {
+  border-inline-start-color: var(--mn-color-ai-solid);
+  background: var(--mn-color-ai-subtle);
+}
+.mn-ai-computer-view__toggle:focus-visible,
+.mn-ai-computer-view__action:focus-visible {
+  outline: var(--mn-focus-ring-width) solid var(--mn-color-focus-ring);
+  outline-offset: -2px;
+}
+.mn-ai-computer-view__kind {
+  margin-block-start: var(--mn-space-0-5);
+  color: var(--mn-color-text-muted);
+}
+.mn-ai-computer-view__text {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.mn-ai-computer-view__label {
+  overflow-wrap: anywhere;
+}
+.mn-ai-computer-view__detail {
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+  overflow-wrap: anywhere;
+}
+.mn-ai-computer-view__detail[data-hidden] {
+  font-style: italic;
+}
+.mn-ai-computer-view__time {
+  flex: none;
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Wide enough: the log sits beside the screenshot and takes its height. */
+@container mn-ai-computer-view (min-width: 48rem) {
+  .mn-ai-computer-view:not([data-compact]) .mn-ai-computer-view__layout {
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
+  }
+  .mn-ai-computer-view:not([data-compact]) .mn-ai-computer-view__log-box {
+    flex: 1 1 auto;
+    min-block-size: 12rem;
+  }
+  .mn-ai-computer-view:not([data-compact]) .mn-ai-computer-view__log {
+    position: absolute;
+    inset: 0;
+    max-block-size: none;
+  }
+}
+
+@media (max-width: 30rem) {
+  .mn-ai-computer-view {
+    padding: var(--mn-space-3);
+  }
+  .mn-ai-computer-view__controls > .mn-button,
+  .mn-ai-computer-view__confirm-actions > .mn-button {
+    flex: 1 1 auto;
+  }
+  .mn-ai-computer-view__stop {
+    margin-inline-start: 0;
+  }
+}
+/* The same rules when the AI surface around it (a container named mn-ai, such as
+   AiAssistantPanel's body) is narrow, whatever the screen width. Keep both blocks identical:
+   test/ai-container-queries.test.ts compares them. */
+@container mn-ai (max-width: 30rem) {
+  .mn-ai-computer-view {
+    padding: var(--mn-space-3);
+  }
+  .mn-ai-computer-view__controls > .mn-button,
+  .mn-ai-computer-view__confirm-actions > .mn-button {
+    flex: 1 1 auto;
+  }
+  .mn-ai-computer-view__stop {
+    margin-inline-start: 0;
+  }
+}
+
+@media (pointer: coarse) {
+  .mn-ai-computer-view__controls .mn-button,
+  .mn-ai-computer-view__toggle,
+  .mn-ai-computer-view__action,
+  .mn-ai-computer-view__earlier {
+    min-block-size: 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-ai-computer-view__marker[data-live] {
+    animation: none;
+  }
+  .mn-ai-computer-view__pointer,
+  .mn-ai-computer-view__chevron {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .mn-ai-computer-view,
+  .mn-ai-computer-view__window,
+  .mn-ai-computer-view__waiting,
+  .mn-ai-computer-view__confirm,
+  .mn-ai-computer-view__log {
+    border-color: CanvasText;
+  }
+  .mn-ai-computer-view__banner,
+  .mn-ai-computer-view[data-controller='you'] .mn-ai-computer-view__banner {
+    border: 2px solid Highlight;
+    background: Canvas;
+    color: CanvasText;
+  }
+  .mn-ai-computer-view__status-icon,
+  .mn-ai-computer-view__waiting-icon {
+    color: CanvasText;
+  }
+  .mn-ai-computer-view__frame[data-interactive]:focus-visible {
+    outline-color: Highlight;
+  }
+  .mn-ai-computer-view__live-dot {
+    background: CanvasText;
+  }
+  .mn-ai-computer-view__controls {
+    background: Canvas;
+  }
+  .mn-ai-computer-view__marker,
+  .mn-ai-computer-view__marker[data-marker='selected'] {
+    border-color: Highlight;
+    box-shadow: none;
+    forced-color-adjust: none;
+  }
+  .mn-ai-computer-view__pointer {
+    background: Highlight;
+    color: HighlightText;
+    box-shadow: none;
+    forced-color-adjust: none;
+  }
+  .mn-ai-computer-view__action[data-selected] {
+    border-inline-start-color: Highlight;
+    outline: 1px solid Highlight;
+    outline-offset: -1px;
+  }
+}

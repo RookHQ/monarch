@@ -1,0 +1,196 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main, uat]
+  workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: Regenerate Linux visual snapshots and upload them as an artifact
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+concurrency:
+  group: ci-${{ github.ref }}
+  # Only pull requests cancel superseded runs. Every push to main and uat gets
+  # a complete run, because Release publishes only after CI passes for that commit.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run build
+      - name: Bundle-size budgets
+        run: npm run size:check
+      - name: Generated files are committed and current
+        run: git diff --exit-code -- packages/tokens/src/generated
+      - run: npm run typecheck
+      - run: npm run deps:check
+      - run: npm run components:check
+      - run: npm test -- --coverage.enabled --coverage.reporter=text-summary
+      - run: npm run registry:validate
+      - run: npm run registry:components:check
+      - run: npm run docs:generate:check
+      - run: npm run build:docs
+      - name: Docs site performance budget
+        run: npm run docs:budget -- --report
+      - name: Docs site internal links
+        run: npm run docs:links
+      - name: Monarch conforms to itself
+        run: node packages/conformance/dist/cli.js check --root packages/react --format sarif --out reports/monarch.sarif
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always() && hashFiles('reports/monarch.sarif') != ''
+        with: { name: monarch-conformance-sarif, path: reports/monarch.sarif }
+      # Pull requests from forks cannot upload to code scanning (read-only token); never fail the build on it.
+      - uses: github/codeql-action/upload-sarif@a3d1b77a1ba1550fbb5c74db1dc3a11f4a481126 # v3.39.2
+        if: always() && hashFiles('reports/monarch.sarif') != ''
+        continue-on-error: true
+        with: { sarif_file: reports/monarch.sarif, category: monarch-conformance }
+      - name: Changeset present for package changes
+        # Release pull requests consume the changesets (release/* into uat, then uat into main), so they change
+        # package versions with no changeset left; every other pull request must carry one for package changes.
+        if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release/') && !(github.head_ref == 'uat' && github.base_ref == 'main')
+        run: npx changeset status --since=origin/${{ github.base_ref }}
+      - run: npm audit --omit=dev --audit-level=high
+      - name: Build is reproducible
+        run: |
+          cp -r packages/tokens/dist /tmp/dist-a
+          npm run build -w @rookcom/monarch-tokens >/dev/null
+          diff -r /tmp/dist-a packages/tokens/dist
+  react-18:
+    # The peer range is React 18.3 or 19; the lockfile installs 19. This leg swaps
+    # in React 18 (without touching the lockfile) and runs the component tests.
+    name: Unit tests (React 18)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npm install --no-save --no-audit --no-fund react@18.3.1 react-dom@18.3.1
+      - name: React 18 is the version under test
+        run: node -e "const v=require('react').version; if(!v.startsWith('18.')) { console.error('expected React 18, got '+v); process.exit(1) } console.log('React '+v)"
+      - run: npm run build
+      - run: npx vitest run --project react
+  docs:
+    # Parallel legs instead of one long job: axe in each engine (three shards
+    # each), the visual baselines, and the device shapes. Each leg builds the site itself (about 3 minutes), which
+    # is simpler and faster overall than passing a build artifact around.
+    name: Docs site (${{ matrix.suite }}${{ (startsWith(matrix.suite, 'a11y-') || startsWith(matrix.suite, 'devices-')) && format(' {0}/3', matrix.shard) || '' }})
+    runs-on: ubuntu-24.04
+    # Pinned browser and fonts make screenshots deterministic. Keep the tag in
+    # sync with @playwright/test in package.json.
+    container: mcr.microsoft.com/playwright:v1.56.1-noble
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        # `devices` is Chromium; `devices-firefox` and `devices-webkit` run the same shapes in the other engines.
+        suite:
+          [
+            a11y-chromium,
+            a11y-firefox,
+            a11y-webkit,
+            visual,
+            devices,
+            devices-firefox,
+            devices-webkit,
+          ]
+        # Axe runs every docs page (500+) in two themes, and the Firefox and WebKit device
+        # legs run every page in five shapes: three shards each keep every leg well inside
+        # the timeout. Visual and the Chromium device leg are one leg each.
+        shard: [1, 2, 3]
+        exclude:
+          - { suite: visual, shard: 2 }
+          - { suite: visual, shard: 3 }
+          - { suite: devices, shard: 2 }
+          - { suite: devices, shard: 3 }
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with: { node-version-file: .nvmrc, cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - run: npm run build:docs
+      - name: The docs site conforms to Monarch
+        if: ${{ matrix.suite == 'visual' }}
+        run: node packages/conformance/dist/cli.js check --root apps/docs
+      - name: Axe in ${{ matrix.suite }}
+        if: ${{ startsWith(matrix.suite, 'a11y-') }}
+        run: npx playwright test --project ${{ matrix.suite }} --shard=${{ matrix.shard }}/3
+      - name: Phone and tablet shapes, upright and on their side
+        if: ${{ startsWith(matrix.suite, 'devices') }}
+        run: npx playwright test --project ${{ matrix.suite }}${{ startsWith(matrix.suite, 'devices-') && format(' --shard={0}/3', matrix.shard) || '' }}
+      - name: Visual baselines
+        if: ${{ matrix.suite == 'visual' && !inputs.update_snapshots }}
+        run: npm run test:visual
+      - name: Regenerate Linux snapshots (manual run)
+        if: ${{ matrix.suite == 'visual' && inputs.update_snapshots }}
+        run: npm run test:visual:update
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: ${{ matrix.suite == 'visual' && inputs.update_snapshots }}
+        with: { name: visual-snapshots-linux, path: apps/docs/tests/__screenshots__/visual }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: failure()
+        with:
+          name: playwright-report-${{ matrix.suite }}-${{ matrix.shard }}
+          path: |
+            playwright-report
+            apps/docs/test-results
+          retention-days: 14
+      # The two steps actions/upload-pages-artifact performs, written out: that Action calls
+      # actions/upload-artifact by tag, which a repository that requires pinned SHAs cannot allow.
+      - name: Package the Pages artifact
+        if: matrix.suite == 'visual' && github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DOCS_PAGES == 'true'
+        run: tar --dereference --hard-dereference --directory apps/docs/dist -cvf "$RUNNER_TEMP/artifact.tar" --exclude=.git --exclude=.github .
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: matrix.suite == 'visual' && github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DOCS_PAGES == 'true'
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/artifact.tar
+          retention-days: 1
+          if-no-files-found: error
+    env:
+      DOCS_BASE: /monarch/
+      # Public address for canonical links and the sitemap (scripts/prerender.mjs).
+      DOCS_SITE_URL: https://rookhq.github.io/monarch/
+      # Container jobs run as root with HOME=/github/home (owned by pwuser);
+      # Firefox refuses to start in that case. Playwright's documented fix.
+      HOME: /root
+  pages:
+    name: Deploy docs to GitHub Pages
+    # Enable by setting the repository variable DOCS_PAGES=true after turning on Pages (source: GitHub Actions).
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DOCS_PAGES == 'true'
+    needs: [verify, docs]
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
+  secrets:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { fetch-depth: 0 }
+      # The gitleaks CLI is free; the GitHub Action needs a paid org licence.
+      - name: gitleaks
+        run: >
+          docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.21.2
+          git --redact --verbose --exit-code 1 /repo

@@ -1,0 +1,114 @@
+name: Release
+# Runs only after CI has passed for the exact commit pushed to main or uat, so
+# nothing reaches npm without the full check suite (unit, axe in three engines,
+# visual, devices, secrets). Pull request runs never trigger it.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main, uat]
+permissions:
+  contents: read
+# One queue per branch: a uat run can never cancel a pending main release.
+# Within a branch a newer run supersedes a pending one; that is safe because
+# publishing is idempotent (it publishes every version npm does not have yet).
+concurrency:
+  group: release-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+jobs:
+  canary:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { ref: '${{ github.event.workflow_run.head_sha }}' }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with: { node-version-file: .nvmrc, cache: npm, registry-url: 'https://registry.npmjs.org' }
+      # Trusted publishing needs npm >= 11.5; Node 22 ships npm 10.
+      - run: npm install -g npm@11.6.2
+      # Dependency install scripts never run with publish rights.
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      # CI already passed for this commit; build what gets published.
+      - run: npm run build
+      - name: Publish canary (0.0.0-canary-<sha>) under the `canary` dist-tag
+        # Only when there are unreleased changesets; otherwise main equals the last release.
+        run: |
+          if ls .changeset/*.md 2>/dev/null | grep -qv README; then
+            npx changeset version --snapshot canary
+            npx changeset publish --tag canary --no-git-tag
+          else
+            echo "No unreleased changesets; skipping canary."
+          fi
+        # The repository is public, so npm records a provenance attestation (id-token: write).
+        env: { NPM_CONFIG_PROVENANCE: 'true' }
+  stable:
+    # Stable versions are published only from main. uat publishes canaries.
+    if: github.event.workflow_run.head_branch == 'main'
+    # Flow: run `npm run version-packages` locally, review, commit and push to
+    # main. With no pending changesets, this job publishes every package version
+    # on main that npm does not have yet. Nothing else is needed.
+    runs-on: ubuntu-24.04
+    needs: canary
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { ref: '${{ github.event.workflow_run.head_sha }}' }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with: { node-version-file: .nvmrc, cache: npm, registry-url: 'https://registry.npmjs.org' }
+      - run: npm install -g npm@11.6.2
+      # Dependency install scripts never run with publish rights.
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Publish unreleased stable versions
+        run: |
+          if ls .changeset/*.md 2>/dev/null | grep -qv README; then
+            echo "Pending changesets: stable publishes after 'npm run version-packages' is pushed."
+          else
+            npm run build
+            npx changeset publish
+            # Tag every published version explicitly (Changesets' own tags did
+            # not reliably reach the remote). Idempotent: existing tags are skipped.
+            for f in packages/*/package.json; do
+              t=$(node -p "const j=require('./' + process.argv[1]); j.private ? '' : j.name + '@' + j.version" "$f")
+              [ -z "$t" ] && continue
+              if ! git ls-remote --exit-code --tags origin "refs/tags/$t" >/dev/null; then
+                git tag -f "$t" && git push origin "refs/tags/$t"
+              fi
+            done
+          fi
+        env: { NPM_CONFIG_PROVENANCE: 'true' }
+      - name: Attach a software bill of materials to each release
+        # One GitHub release per published version, with a CycloneDX SBOM of what
+        # a consumer installs (resolved from the packed tarball, production
+        # dependencies only, read from the generated lockfile because nothing is
+        # installed). Idempotent: versions that already have a release are skipped.
+        run: |
+          if ls .changeset/*.md 2>/dev/null | grep -qv README; then exit 0; fi
+          for f in packages/*/package.json; do
+            name=$(node -p "const j=require('./' + process.argv[1]); j.private ? '' : j.name" "$f")
+            [ -z "$name" ] && continue
+            version=$(node -p "require('./' + process.argv[1]).version" "$f")
+            tag="$name@$version"
+            if gh release view "$tag" >/dev/null 2>&1; then continue; fi
+            git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null || continue
+            work=$(mktemp -d)
+            (cd "$(dirname "$f")" && npm pack --ignore-scripts --pack-destination "$work" >/dev/null)
+            tar -xzf "$work"/*.tgz -C "$work"
+            sbom="$work/$(basename "$name")-$version.cdx.json"
+            (
+              cd "$work/package"
+              npm install --package-lock-only --omit=dev --ignore-scripts --no-audit --no-fund >/dev/null
+              npm sbom --sbom-format cyclonedx --omit dev --package-lock-only
+            ) | jq --arg name "$name" '.metadata.component.name = $name' > "$sbom"
+            gh release create "$tag" "$sbom" --verify-tag --title "$tag" \
+              --notes "Published to npm with provenance. Changes: see CHANGELOG.md in $(dirname "$f"). The attached CycloneDX file lists the production dependencies this version installs."
+          done
+        env:
+          GH_TOKEN: ${{ github.token }}

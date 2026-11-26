@@ -1,0 +1,46 @@
+# Reusable workflow for apps that use Monarch. In an app repo:
+#
+#   jobs:
+#     monarch:
+#       uses: RookHQ/monarch/.github/workflows/conformance.yml@main
+#       with: { product: my-app }
+#
+name: Monarch conformance
+on:
+  workflow_call:
+    inputs:
+      product:
+        description: Product ID from registry/products
+        required: true
+        type: string
+      baseline:
+        description: Path to the app's baseline file (ratchet)
+        default: monarch.baseline.json
+        type: string
+permissions:
+  contents: read
+  actions: read
+  security-events: write
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { repository: RookHQ/monarch, path: .monarch, token: '${{ secrets.GITHUB_TOKEN }}' }
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with: { node-version-file: .monarch/.nvmrc }
+      - run: npm ci --prefix .monarch && npm run build --prefix .monarch -w @rookcom/monarch-conformance
+      - name: Check
+        run: >
+          node .monarch/packages/conformance/dist/cli.js check
+          --product ${{ inputs.product }} --registry .monarch/registry
+          --baseline ${{ inputs.baseline }}
+          --format sarif --out monarch.sarif
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always() && hashFiles('monarch.sarif') != ''
+        with: { name: monarch-sarif, path: monarch.sarif }
+      - uses: github/codeql-action/upload-sarif@a3d1b77a1ba1550fbb5c74db1dc3a11f4a481126 # v3.39.2
+        if: always() && hashFiles('monarch.sarif') != ''
+        continue-on-error: true
+        with: { sarif_file: monarch.sarif, category: monarch }

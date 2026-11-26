@@ -1,0 +1,145 @@
+/* Public API (documented on the Toast page, allowed by the conformance rule
+   overrides/monarch-internals): a host sets --mn-toast-offset-block-start,
+   --mn-toast-offset-block-end and --mn-toast-offset-inline-end on an ancestor
+   (:root, html[data-…]) to move the region clear of a docked panel. Each
+   defaults to 0 and is added to the matching safe-area inset. Right positions
+   sit at the inline end, so they follow the reading direction. */
+.mn-toast-viewport {
+  --_safe-inline-end: env(safe-area-inset-right, 0px);
+  position: fixed;
+  z-index: var(--mn-z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--mn-space-2);
+  width: min(24rem, calc(100vw - 2rem));
+  max-height: 100vh;
+  margin: 0;
+  padding: var(--mn-space-4);
+  list-style: none;
+  outline: none;
+}
+.mn-toast-viewport:dir(rtl) {
+  --_safe-inline-end: env(safe-area-inset-left, 0px);
+}
+.mn-toast-viewport[data-position^='bottom'] {
+  inset-block-end: calc(var(--mn-toast-offset-block-end, 0px) + env(safe-area-inset-bottom, 0px));
+}
+.mn-toast-viewport[data-position^='top'] {
+  inset-block-start: calc(var(--mn-toast-offset-block-start, 0px) + env(safe-area-inset-top, 0px));
+}
+.mn-toast-viewport[data-position$='right'] {
+  inset-inline-end: calc(var(--mn-toast-offset-inline-end, 0px) + var(--_safe-inline-end));
+}
+.mn-toast-viewport[data-position='bottom-center'] {
+  /* physical: centred with translateX(-50%), direction-neutral */
+  left: 50%;
+  transform: translateX(-50%);
+}
+.mn-toast {
+  --_accent: var(--mn-color-border-strong);
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mn-space-3);
+  padding: var(--mn-space-3);
+  padding-inline-start: var(--mn-space-4);
+  border: 1px solid var(--mn-color-border-subtle);
+  border-inline-start: 3px solid var(--_accent);
+  border-radius: var(--mn-radius-lg);
+  background: var(--mn-color-bg-raised);
+  color: var(--mn-color-text-default);
+  box-shadow: var(--mn-shadow-lg);
+  font-size: var(--mn-text-sm);
+  animation: mn-toast-in var(--mn-duration-slow) var(--mn-ease-enter);
+}
+.mn-toast[data-state='closed'] {
+  animation: mn-toast-out var(--mn-duration-base) var(--mn-ease-exit) forwards;
+}
+.mn-toast[data-swipe='move'] {
+  transform: translateX(var(--radix-toast-swipe-move-x));
+}
+.mn-toast[data-swipe='end'] {
+  animation: mn-toast-out var(--mn-duration-base) var(--mn-ease-exit) forwards;
+}
+.mn-toast[data-tone='info'] {
+  --_accent: var(--mn-color-info-strong);
+}
+.mn-toast[data-tone='success'] {
+  --_accent: var(--mn-color-success-strong);
+}
+.mn-toast[data-tone='warning'] {
+  --_accent: var(--mn-color-warning-strong);
+}
+.mn-toast[data-tone='danger'] {
+  --_accent: var(--mn-color-danger-strong);
+}
+.mn-toast__icon {
+  display: inline-flex;
+  margin-top: 0.125rem;
+  color: var(--_accent);
+}
+.mn-toast__body {
+  flex: 1;
+  min-width: 0;
+}
+.mn-toast__title {
+  margin: 0;
+  font-weight: var(--mn-weight-semibold);
+}
+.mn-toast__description {
+  margin: var(--mn-space-0-5) 0 0;
+  color: var(--mn-color-text-muted);
+  line-height: var(--mn-leading-normal);
+}
+.mn-toast__action {
+  align-self: center;
+}
+.mn-toast__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--mn-control-xs);
+  height: var(--mn-control-xs);
+  margin: calc(var(--mn-space-1) * -1) calc(var(--mn-space-1) * -1) 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--mn-radius-sm);
+  background: transparent;
+  color: var(--mn-color-text-muted);
+  cursor: pointer;
+}
+.mn-toast__close:hover {
+  background: var(--mn-color-bg-muted);
+  color: var(--mn-color-text-default);
+}
+.mn-toast__close:focus-visible {
+  outline: var(--mn-focus-ring-width) solid var(--mn-color-focus-ring);
+  outline-offset: 2px;
+}
+@keyframes mn-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes mn-toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mn-toast,
+  .mn-toast[data-state='closed'] {
+    animation-duration: 0.01ms;
+  }
+}
+
+@media (forced-colors: active) {
+  .mn-toast {
+    border-color: CanvasText;
+  }
+  .mn-toast__close:hover {
+    color: Highlight;
+  }
+}

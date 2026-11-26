@@ -1,0 +1,426 @@
+/* AiTraceView: the technical trace of one agent run as a tree grid with a waterfall and details. */
+.mn-ai-trace-view {
+  container-type: inline-size;
+  /* Inline-size containment hides the content's width from layout, so flex
+     and grid parents would size this ~0px wide: fill the available width,
+     and fall back to 20rem where there is none. */
+  inline-size: 100%;
+  contain-intrinsic-inline-size: 20rem;
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--mn-space-3);
+  min-width: 0;
+  max-width: 100%;
+  color: var(--mn-color-text-default);
+  font-size: var(--mn-text-sm);
+  line-height: var(--mn-leading-normal);
+}
+.mn-ai-trace-view__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mn-space-2);
+}
+.mn-ai-trace-view__label {
+  font-weight: var(--mn-weight-semibold);
+}
+
+/* Totals. */
+.mn-ai-trace-view__totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mn-space-2) var(--mn-space-6);
+  margin: 0;
+}
+.mn-ai-trace-view__totals > div,
+.mn-ai-trace-view__facts > div {
+  display: grid;
+  min-width: 0;
+}
+.mn-ai-trace-view__totals dt,
+.mn-ai-trace-view__facts dt,
+.mn-ai-trace-view__attribute-list dt {
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+}
+.mn-ai-trace-view__totals dd,
+.mn-ai-trace-view__facts dd,
+.mn-ai-trace-view__attribute-list dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.mn-ai-trace-view__totals dd {
+  display: flex;
+  align-items: center;
+  gap: var(--mn-space-1);
+  font-size: var(--mn-text-base);
+  font-weight: var(--mn-weight-semibold);
+}
+.mn-ai-trace-view__totals [data-errors] dd {
+  color: var(--mn-color-danger-strong);
+}
+.mn-ai-trace-view__empty {
+  margin: 0;
+  color: var(--mn-color-text-muted);
+}
+
+/* Table and details: stacked, side by side when there is room. */
+.mn-ai-trace-view__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--mn-space-3);
+  align-items: start;
+  min-width: 0;
+}
+@container (min-width: 60rem) {
+  .mn-ai-trace-view[data-details] .mn-ai-trace-view__body {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+  }
+}
+
+/* The scroll box is positioned so visually hidden text inside it is clipped
+   with it (test/scroll-containers.test.ts). */
+.mn-ai-trace-view__scroll {
+  position: relative;
+  overflow: auto;
+  max-width: 100%;
+  max-block-size: 36rem;
+  border: 1px solid var(--mn-color-border-subtle);
+  border-radius: var(--mn-radius-md);
+  background: var(--mn-color-bg-surface);
+}
+.mn-ai-trace-view__table {
+  inline-size: 100%;
+  min-inline-size: 46rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+.mn-ai-trace-view__table th {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  padding: var(--mn-space-1-5) var(--mn-space-2);
+  border-block-end: 1px solid var(--mn-color-border-default);
+  background: var(--mn-color-bg-subtle);
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+  font-weight: var(--mn-weight-medium);
+  text-align: start;
+  white-space: nowrap;
+}
+.mn-ai-trace-view__table [data-numeric] {
+  text-align: end;
+}
+/* Windowed rows: a spacer row stands in for the rows outside the viewport. */
+.mn-ai-trace-view__gap {
+  padding: 0;
+  border: 0;
+}
+.mn-ai-trace-view__scale {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mn-space-2);
+}
+
+.mn-ai-trace-view__row {
+  cursor: pointer;
+}
+.mn-ai-trace-view__row:hover {
+  background: var(--mn-color-bg-muted);
+}
+.mn-ai-trace-view__row[data-selected] {
+  background: var(--mn-color-ai-subtle);
+}
+.mn-ai-trace-view__row:focus-visible {
+  outline: var(--mn-focus-ring-width) solid var(--mn-color-focus-ring);
+  outline-offset: calc(-1 * var(--mn-focus-ring-width));
+}
+.mn-ai-trace-view__cell {
+  padding: var(--mn-space-1) var(--mn-space-2);
+  border-block-end: 1px solid var(--mn-color-border-subtle);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.mn-ai-trace-view__row[data-selected] .mn-ai-trace-view__cell--name {
+  box-shadow: inset var(--mn-space-0-5) 0 0 var(--mn-color-ai-solid);
+}
+.mn-ai-trace-view__row[data-selected] .mn-ai-trace-view__cell--name:dir(rtl) {
+  box-shadow: inset calc(-1 * var(--mn-space-0-5)) 0 0 var(--mn-color-ai-solid);
+}
+.mn-ai-trace-view__cell--name {
+  max-inline-size: 22rem;
+  padding-inline-start: calc(var(--mn-space-1) + var(--_level, 0) * var(--mn-space-4));
+}
+.mn-ai-trace-view__name-line {
+  display: flex;
+  align-items: center;
+  gap: var(--mn-space-1);
+  min-width: 0;
+}
+.mn-ai-trace-view__toggle {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  border-radius: var(--mn-radius-sm);
+  color: var(--mn-color-text-subtle);
+}
+.mn-ai-trace-view__toggle[data-toggle]:hover {
+  background: var(--mn-color-bg-subtle);
+  color: var(--mn-color-text-default);
+}
+.mn-ai-trace-view__chevron {
+  transition: transform var(--mn-duration-fast) var(--mn-ease-standard);
+}
+.mn-ai-trace-view__chevron:dir(rtl) {
+  transform: scaleX(-1);
+}
+.mn-ai-trace-view__row[aria-expanded='true'] .mn-ai-trace-view__chevron {
+  transform: rotate(90deg);
+}
+.mn-ai-trace-view__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: var(--mn-weight-medium);
+}
+.mn-ai-trace-view__status-icon {
+  flex: none;
+  color: var(--mn-color-danger-strong);
+}
+.mn-ai-trace-view__status {
+  flex: none;
+  padding-inline: var(--mn-space-1);
+  border-radius: var(--mn-radius-xs);
+  background: var(--mn-color-bg-muted);
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-2xs);
+  font-weight: var(--mn-weight-medium);
+}
+.mn-ai-trace-view__row[data-status='error'] .mn-ai-trace-view__status {
+  background: var(--mn-color-danger-subtle);
+  color: var(--mn-color-danger-strong);
+}
+.mn-ai-trace-view__row[data-status='running'] .mn-ai-trace-view__status {
+  background: var(--mn-color-ai-subtle);
+  color: var(--mn-color-ai-strong);
+}
+
+/* Waterfall. */
+.mn-ai-trace-view__cell--timeline {
+  inline-size: 40%;
+  min-inline-size: 12rem;
+}
+.mn-ai-trace-view__track {
+  position: relative;
+  display: block;
+  block-size: 0.75rem;
+  border-radius: var(--mn-radius-xs);
+  background: var(--mn-color-bg-subtle);
+}
+.mn-ai-trace-view__bar {
+  position: absolute;
+  inset-block: 0;
+  min-inline-size: 2px;
+  border-radius: var(--mn-radius-xs);
+  background: var(--mn-color-border-strong);
+}
+.mn-ai-trace-view__row[data-kind='model'] .mn-ai-trace-view__bar {
+  background: var(--mn-color-ai-solid);
+}
+.mn-ai-trace-view__row[data-kind='tool'] .mn-ai-trace-view__bar {
+  background: var(--mn-color-ai-tool);
+}
+.mn-ai-trace-view__row[data-kind='retrieval'] .mn-ai-trace-view__bar {
+  background: var(--mn-color-info-solid);
+}
+/* Neutral, not the accent: in a red-accent theme an agent bar would read as an error. */
+.mn-ai-trace-view__row[data-kind='agent'] .mn-ai-trace-view__bar {
+  background: var(--mn-color-text-default);
+}
+.mn-ai-trace-view__row[data-kind='guardrail'] .mn-ai-trace-view__bar {
+  background: var(--mn-color-warning-strong);
+}
+.mn-ai-trace-view__row[data-status='cancelled'] .mn-ai-trace-view__bar {
+  background: var(--mn-color-text-disabled);
+}
+.mn-ai-trace-view__row[data-status='error'] .mn-ai-trace-view__bar {
+  background: var(--mn-color-danger-solid);
+}
+.mn-ai-trace-view__row[data-status='running'] .mn-ai-trace-view__bar {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--mn-color-ai-thinking) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: mn-ai-trace-view-shimmer var(--mn-duration-shimmer) linear infinite;
+}
+
+/* Details. */
+.mn-ai-trace-view__details {
+  display: grid;
+  gap: var(--mn-space-3);
+  min-width: 0;
+  padding: var(--mn-space-3);
+  border: 1px solid var(--mn-color-border-subtle);
+  border-radius: var(--mn-radius-md);
+  background: var(--mn-color-bg-surface);
+}
+.mn-ai-trace-view__details-header,
+.mn-ai-trace-view__preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mn-space-2);
+  min-width: 0;
+}
+.mn-ai-trace-view__details-actions {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--mn-space-1);
+}
+.mn-ai-trace-view__details-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: var(--mn-weight-semibold);
+}
+.mn-ai-trace-view__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mn-space-2) var(--mn-space-5);
+  margin: 0;
+}
+.mn-ai-trace-view__error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--mn-space-1-5);
+  margin: 0;
+  padding: var(--mn-space-2);
+  border: 1px solid var(--mn-color-danger-border);
+  border-radius: var(--mn-radius-sm);
+  background: var(--mn-color-danger-subtle);
+  color: var(--mn-color-danger-strong);
+  overflow-wrap: anywhere;
+}
+.mn-ai-trace-view__error .mn-ai-trace-view__status-icon {
+  margin-block-start: var(--mn-space-0-5);
+}
+.mn-ai-trace-view__attributes,
+.mn-ai-trace-view__preview {
+  display: grid;
+  gap: var(--mn-space-1);
+  min-width: 0;
+}
+.mn-ai-trace-view__preview-label {
+  color: var(--mn-color-text-muted);
+  font-size: var(--mn-text-xs);
+  font-weight: var(--mn-weight-medium);
+}
+.mn-ai-trace-view__attribute-list {
+  display: grid;
+  gap: var(--mn-space-1);
+  margin: 0;
+}
+.mn-ai-trace-view__attribute-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: var(--mn-space-2);
+}
+.mn-ai-trace-view__attribute-list dt {
+  overflow-wrap: anywhere;
+  font-family: var(--mn-font-mono);
+}
+.mn-ai-trace-view__preview-scroll {
+  position: relative;
+  overflow: auto;
+  max-block-size: 16rem;
+  border: 1px solid var(--mn-color-border-subtle);
+  border-radius: var(--mn-radius-sm);
+  background: var(--mn-color-bg-subtle);
+}
+.mn-ai-trace-view__preview-scroll:focus-visible {
+  outline: var(--mn-focus-ring-width) solid var(--mn-color-focus-ring);
+  outline-offset: 2px;
+}
+.mn-ai-trace-view__pre {
+  margin: 0;
+  padding: var(--mn-space-2);
+  font-family: var(--mn-font-mono);
+  font-size: var(--mn-text-xs);
+  line-height: var(--mn-leading-relaxed);
+  white-space: pre;
+  tab-size: 2;
+}
+
+@keyframes mn-ai-trace-view-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (pointer: coarse) {
+  .mn-ai-trace-view__cell {
+    padding-block: var(--mn-space-2-5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mn-ai-trace-view__row[data-status='running'] .mn-ai-trace-view__bar {
+    animation: none;
+    background-image: none;
+  }
+  .mn-ai-trace-view__chevron {
+    transition: none;
+  }
+  .mn-ai-trace-view__scroll,
+  .mn-ai-trace-view__preview-scroll {
+    scroll-behavior: auto;
+  }
+}
+
+@media (forced-colors: active) {
+  .mn-ai-trace-view__bar,
+  .mn-ai-trace-view__row[data-kind] .mn-ai-trace-view__bar,
+  .mn-ai-trace-view__row[data-status] .mn-ai-trace-view__bar {
+    background: CanvasText;
+    animation: none;
+    forced-color-adjust: none;
+  }
+  .mn-ai-trace-view__track {
+    border: 1px solid CanvasText;
+    background: Canvas;
+  }
+  .mn-ai-trace-view__status,
+  .mn-ai-trace-view__row[data-status] .mn-ai-trace-view__status {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+  .mn-ai-trace-view__row[data-selected] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+  .mn-ai-trace-view__row:focus-visible,
+  .mn-ai-trace-view__preview-scroll:focus-visible {
+    outline-color: Highlight;
+  }
+  .mn-ai-trace-view__scroll,
+  .mn-ai-trace-view__cell,
+  .mn-ai-trace-view__table th,
+  .mn-ai-trace-view__details,
+  .mn-ai-trace-view__error,
+  .mn-ai-trace-view__preview-scroll {
+    border-color: CanvasText;
+  }
+}
