@@ -65,6 +65,13 @@ const EXPECTED_CONSOLE = [
   // EmbedBlock's video frames: Chromium supports both and the players use them
   // (picture in picture, casting), Firefox and WebKit report the token they skip.
   /Feature Policy: Skipping unsupported feature name “picture-in-picture”/,
+  // ChatDock's frame asks for calls, autoplay and the clipboard (DEFAULT_CHAT_ALLOW): Chromium
+  // supports each, Firefox reports the tokens it does not know and applies the rest.
+  /Feature Policy: Skipping unsupported feature name “(autoplay|clipboard-read|clipboard-write)”/,
+  // Firefox, on pages whose first example is a staged popover or menu (overlay stage): Radix
+  // positions popper content from scroll events, and the stage pins it in the flow with
+  // !important styles, so nothing moves; Firefox still reports the scroll-driven style write.
+  /This site appears to use a scroll-linked positioning effect/,
   /'sandbox' attribute: 'allow-presentation' is an invalid sandbox flag/,
   // AiArtifactCanvas's HTML preview is a `srcdoc` frame with an empty `sandbox`,
   // so no script runs in it: Chromium reports the example's own <script> (which
