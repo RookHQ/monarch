@@ -110,8 +110,9 @@ function Device({
       data-device={screen.device}
       data-theme={theme}
     >
-      <div className="docs-device__body">
-        <div className="docs-device__screen">
+      {/* Hardware is dark in both site themes; the screen shows its screenshot's theme. */}
+      <div className="docs-device__body" data-mn-theme="dark">
+        <div className="docs-device__screen" data-mn-theme={theme}>
           <img
             className="docs-device__img"
             src={`${BASE}native/${file}`}
