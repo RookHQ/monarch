@@ -38,7 +38,8 @@ const PAGE_JS_OVERRIDES = {
   // 338 KB: 337.0 KB once Dialog, Popover, DropdownMenu and Tooltip learned the docs overlay stage
   // (internal/overlay-stage.tsx, a few hundred bytes across the overlays this page loads).
   // 339 KB: 338.1 KB measured with the merged parity fixtures of the block-editor example.
-  '/components/block-editor': 339 * KB,
+  // 340 KB: the Linux CI build measures 338.9 KB, about 0.8 KB above a macOS build of the same tree.
+  '/components/block-editor': 340 * KB,
   '/components/callout-block': EDITOR_PAGE_JS,
   '/components/columns-block': EDITOR_PAGE_JS,
   '/components/embed-block': EDITOR_PAGE_JS,
@@ -47,7 +48,8 @@ const PAGE_JS_OVERRIDES = {
   '/components/rich-text-editor': EDITOR_PAGE_JS,
   // 302 KB: 301.0 KB at 0dd9edf8 (over the editor cap already), 301.2 KB with the iOS and Android
   // sections of the top bar and sidebar.
-  '/components/table-block': 302 * KB,
+  // 303 KB: the Linux CI build measures 302.1 KB, about 0.7 KB above a macOS build of the same tree.
+  '/components/table-block': 303 * KB,
   '/components/toggle-block': EDITOR_PAGE_JS,
 };
 const ENTRY_CHUNK = 135 * KB;
