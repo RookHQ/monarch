@@ -185,10 +185,12 @@ export default {
           title: 'Partway through an answer',
           stack: true,
           render: () => (
+            // The primary example sits under a level-2 title: its "## Summary" is a level 3.
             <AiStreamingText
               text={MID_STREAM}
               streaming={fixture.data.streaming}
               announce={false}
+              headingLevelOffset={1}
             />
           ),
         },
