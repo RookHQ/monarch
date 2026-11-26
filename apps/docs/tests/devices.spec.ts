@@ -71,6 +71,10 @@ const ALLOWED: Record<string, { match: RegExp; devices?: Device[]; why: string }
       match: /^small target: a in \.mn-app-shell__main/,
       why: 'Example page content inside the shell.',
     },
+    {
+      match: /^small target: a\.mn-link /,
+      why: 'Example page content inside the shell: the links of the sample inbox list.',
+    },
   ],
 };
 
