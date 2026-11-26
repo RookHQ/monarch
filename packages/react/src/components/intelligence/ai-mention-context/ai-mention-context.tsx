@@ -254,8 +254,9 @@ export const AiMentionContext = forwardRef<HTMLDivElement, AiMentionContextProps
       else if (option.bottom > box.bottom) root.scrollTop += option.bottom - box.bottom;
     }, [activeId, listId]);
 
-    // When the results overflow, the menu scrolls: it is then also a named, focusable region,
-    // so it can be scrolled from the keyboard without the prompt (WCAG 2.1.1).
+    // When the results overflow, the menu scrolls: it is then also a named, focusable group,
+    // so it can be scrolled from the keyboard without the prompt (WCAG 2.1.1). A group, not a
+    // region: a popup menu is not a page landmark, and two open menus would share its name.
     const [scrolls, setScrolls] = useState(false);
     useEffect(() => {
       const el = rootRef.current;
@@ -272,7 +273,7 @@ export const AiMentionContext = forwardRef<HTMLDivElement, AiMentionContextProps
     return (
       <div
         ref={(node) => setRefs(node, rootRef, ref)}
-        {...(scrolls ? { role: 'region', 'aria-label': m.label, tabIndex: 0 } : {})}
+        {...(scrolls ? { role: 'group', 'aria-label': m.label, tabIndex: 0 } : {})}
         {...rest}
         className={cx('mn-ai-mention-context', className)}
         data-status={status}

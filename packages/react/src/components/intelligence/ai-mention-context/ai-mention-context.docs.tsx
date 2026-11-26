@@ -226,7 +226,7 @@ export default {
       items: [
         'The prompt keeps its textbox role with `aria-autocomplete="list"`, `aria-controls` and `aria-activedescendant` while results are shown.',
         'Options are named by their label and described by their description; token counts are visual only.',
-        'The highlighted option is kept in view as the arrows move it. While the results overflow, the menu is also a focusable region named like the list, so it can be scrolled from the keyboard.',
+        'The highlighted option is kept in view as the arrows move it. While the results overflow, the menu is also a focusable group named like the list (not a landmark), so it can be scrolled from the keyboard.',
         'A polite status announces "Searching…", the number of results, no matches or the error.',
         'Avatars and glyphs are decorative.',
       ],
