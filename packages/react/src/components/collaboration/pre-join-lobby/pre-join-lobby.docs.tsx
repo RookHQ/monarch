@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Button,
   Dialog,
@@ -22,20 +22,12 @@ const devices: MediaDeviceOption[] = [
   { deviceId: fixture.data.camera.id, kind: 'videoinput', label: fixture.data.camera.label },
 ];
 
-/** A gently moving level, standing in for a real microphone in the docs. */
-function useDemoLevel(on: boolean) {
-  const [level, setLevel] = useState(0);
-  useEffect(() => {
-    if (!on) return;
-    let t = 0;
-    const timer = window.setInterval(() => {
-      t += 1;
-      setLevel(0.25 + 0.2 * Math.abs(Math.sin(t / 3)));
-    }, 150);
-    return () => window.clearInterval(timer);
-  }, [on]);
-  return on ? level : 0;
-}
+/**
+ * A steady level, standing in for a real microphone in the docs. A level that
+ * moved on a timer would restart the meter's transition forever, so the
+ * preview would never settle (screenshots, axe) and would distract readers.
+ */
+const DEMO_LEVEL = 0.4;
 
 function Lobby({ onDone, inDialog = false }: { onDone?: () => void; inDialog?: boolean }) {
   const [micOn, setMicOn] = useState(fixture.data.micOn);
@@ -43,11 +35,12 @@ function Lobby({ onDone, inDialog = false }: { onDone?: () => void; inDialog?: b
   const [mic, setMic] = useState<string | null>(fixture.data.microphone.id);
   const [cam, setCam] = useState<string | null>(fixture.data.camera.id);
   const [joining, setJoining] = useState(false);
-  const level = useDemoLevel(micOn);
+  const level = micOn ? DEMO_LEVEL : 0;
   return (
     <PreJoinLobby
+      // In a dialog the dialog title names it; a second region with the same name would only
+      // repeat it (and clash with the inline example's region on this page).
       title={inDialog ? null : fixture.data.title}
-      aria-label={inDialog ? fixture.data.title : undefined}
       micOn={micOn}
       onMicOnChange={setMicOn}
       cameraOn={cameraOn}
