@@ -93,7 +93,7 @@ jobs:
     # Parallel legs instead of one long job: axe in each engine (three shards
     # each), the visual baselines, and the device shapes. Each leg builds the site itself (about 3 minutes), which
     # is simpler and faster overall than passing a build artifact around.
-    name: Docs site (${{ matrix.suite }}${{ (startsWith(matrix.suite, 'a11y-') || startsWith(matrix.suite, 'devices-')) && format(' {0}/3', matrix.shard) || '' }})
+    name: Docs site (${{ matrix.suite }}${{ (startsWith(matrix.suite, 'a11y-') || startsWith(matrix.suite, 'devices')) && format(' {0}/3', matrix.shard) || '' }})
     runs-on: ubuntu-24.04
     # Pinned browser and fonts make screenshots deterministic. Keep the tag in
     # sync with @playwright/test in package.json.
@@ -113,15 +113,13 @@ jobs:
             devices-firefox,
             devices-webkit,
           ]
-        # Axe runs every docs page (500+) in two themes, and the Firefox and WebKit device
-        # legs run every page in five shapes: three shards each keep every leg well inside
-        # the timeout. Visual and the Chromium device leg are one leg each.
+        # Axe runs every docs page (500+) in two themes, and the device legs run every page in
+        # five shapes: three shards each keep every leg well inside the timeout (one Chromium
+        # device leg passed Playwright's 21-minute limit with every component native). Visual is one leg.
         shard: [1, 2, 3]
         exclude:
           - { suite: visual, shard: 2 }
           - { suite: visual, shard: 3 }
-          - { suite: devices, shard: 2 }
-          - { suite: devices, shard: 3 }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -137,7 +135,7 @@ jobs:
         run: npx playwright test --project ${{ matrix.suite }} --shard=${{ matrix.shard }}/3
       - name: Phone and tablet shapes, upright and on their side
         if: ${{ startsWith(matrix.suite, 'devices') }}
-        run: npx playwright test --project ${{ matrix.suite }}${{ startsWith(matrix.suite, 'devices-') && format(' --shard={0}/3', matrix.shard) || '' }}
+        run: npx playwright test --project ${{ matrix.suite }} --shard=${{ matrix.shard }}/3
       - name: Visual baselines
         if: ${{ matrix.suite == 'visual' && !inputs.update_snapshots }}
         run: npm run test:visual
