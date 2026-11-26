@@ -175,7 +175,12 @@ jobs:
       # clean build), the same values as a local build; nothing here overrides them.
       - name: Every Android gate
         if: needs.changes.outputs.android == 'true'
-        run: ./gradlew verifyMonarch --stacktrace
+        # Maven Central and the Gradle plugin portal answer 429 (Too Many Requests) to busy hosted
+        # runners; Gradle retries such answers, here with more attempts and a longer first wait.
+        run: >
+          ./gradlew verifyMonarch --stacktrace
+          -Dorg.gradle.internal.repository.max.retries=6
+          -Dorg.gradle.internal.repository.initial.backoff=5000
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure() && needs.changes.outputs.android == 'true'
         with:
