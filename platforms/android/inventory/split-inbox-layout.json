@@ -1,0 +1,109 @@
+{
+  "id": "split-inbox-layout",
+  "name": null,
+  "title": "SplitInboxLayout",
+  "family": "layout",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold with its extraPane, rememberListDetailPaneScaffoldNavigator, ListDetailPaneScaffoldRole.Extra and androidx.compose.material3.adaptive.layout.AnimatedPane",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "An inbox with a list, the open item and a context pane is the Material ListDetailPaneScaffold with its extra pane: up to three panes side by side on a wide window and one pane at a time with back navigation on a phone. Monarch ships nothing.",
+  "whenToUse": "For a list of items opened one at a time with extra context next to the open item: a support inbox, mail, a queue of approvals. Navigate to the detail when an item is chosen and to the extra pane when the person asks for the context.",
+  "whenNotToUse": "For a list and its detail without a context pane, use the same scaffold without extraPane (split-layout). For two panels that are not a list and its detail use MonarchResizablePanels.",
+  "api": [
+    "@Composable fun <T> NavigableListDetailPaneScaffold(navigator: ThreePaneScaffoldNavigator<T>, listPane: @Composable ThreePaneScaffoldPaneScope.() -> Unit, detailPane: @Composable ThreePaneScaffoldPaneScope.() -> Unit, modifier: Modifier = Modifier, extraPane: (@Composable ThreePaneScaffoldPaneScope.() -> Unit)? = null, defaultBackBehavior: BackNavigationBehavior = ..., paneExpansionDragHandle: (@Composable ThreePaneScaffoldScope.(PaneExpansionState) -> Unit)? = null, paneExpansionState: PaneExpansionState? = null)",
+    "@Composable fun <T> rememberListDetailPaneScaffoldNavigator(scaffoldDirective: PaneScaffoldDirective = ..., adaptStrategies: ThreePaneScaffoldAdaptStrategies = ..., isDestinationHistoryAware: Boolean = true, initialDestinationHistory: List<ThreePaneScaffoldDestinationItem<T>> = ...): ThreePaneScaffoldNavigator<T>",
+    "suspend fun ThreePaneScaffoldNavigator<T>.navigateTo(pane: ThreePaneScaffoldRole, contentKey: T? = null)",
+    "ListDetailPaneScaffoldRole.List, ListDetailPaneScaffoldRole.Detail, ListDetailPaneScaffoldRole.Extra",
+    "@Composable fun ExtendedPaneScaffoldPaneScope.AnimatedPane(modifier: Modifier = Modifier, enterTransition: EnterTransition = ..., exitTransition: ExitTransition = ..., boundsAnimationSpec: FiniteAnimationSpec<IntRect> = ..., content: @Composable AnimatedPaneScope.() -> Unit)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "compact window",
+      "description": "One pane at a time: the list, then the detail, then the context; system back returns one pane."
+    },
+    {
+      "name": "medium and expanded windows",
+      "description": "Two panes side by side (list and detail, or detail and context, by the adapt strategy); on a window wide enough for three panes the scaffold directive can show all three."
+    },
+    {
+      "name": "nothing selected",
+      "description": "The detail pane shows a placeholder, such as MonarchEmptyState."
+    },
+    {
+      "name": "context shown",
+      "description": "After navigateTo(ListDetailPaneScaffoldRole.Extra) the context pane is shown; back hides it again."
+    }
+  ],
+  "appearance": "The scaffold draws no surface of its own; the panes take the theme's surfaces from their content. Material 3 colors, including the drag handle, are mapped from the Monarch theme by MonarchTheme.",
+  "platformNotes": "The web SplitInboxLayout has list, detail and context panes with its own breakpoints (one pane below 768px, the context as a drawer below 1280px), resizable panes, a collapsible list, a context toggle and focus management. On Android the Material list-detail scaffold decides from the window size class and posture how many panes fit, the navigator keeps which panes are shown, and system back with predictive back moves between them, so the app does not track detailOpen or contextOpen. The web's context drawer is the extra pane shown on its own on a compact window; the web's resizing is paneExpansionDragHandle with rememberPaneExpansionState; a collapsed list is the scaffold showing the detail and extra panes. The web's pane labels are the panes' own headings. iOS uses a NavigationSplitView with an inspector for the context. In adaptive 1.3, the version the Compose BOM brings, the navigator, AnimatedPane and the pane expansion API are marked ExperimentalMaterial3AdaptiveApi, so the examples opt in. The sample catalogue does not depend on the adaptive artifacts, so its page shows the same behavior with a Row and BackHandler; the compiled examples here are the reference.",
+  "accessibility": [
+    "System behavior: TalkBack reads the panes that are shown in order, list, detail, context.",
+    "On a compact window each navigation shows a new pane; system back returns to the previous pane.",
+    "Give each pane a heading so TalkBack's heading navigation can jump between them.",
+    "Selection in the list should be shown by more than color, for example the selected state of the list item."
+  ],
+  "edgeCases": [
+    "Rotating or unfolding the device can change from one pane to two or three; the navigator keeps the destination history.",
+    "Without a selection, keep the detail pane as a placeholder; navigate to the extra pane only with a content key.",
+    "paneExpansionState applies only when two panes are shown side by side."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Inbox with list, conversation and details",
+      "fixture": "split-inbox-layout",
+      "webExample": "Inbox with list, conversation and details",
+      "template": "@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nBox(\n    modifier = Modifier\n        .height(440.dp)\n        .clip(MonarchTheme.shapes.lg)\n        .border(1.dp, MonarchTheme.colors.borderSubtle, MonarchTheme.shapes.lg),\n) {\nNavigableListDetailPaneScaffold(\n    navigator = navigator,\n    listPane = {\n        AnimatedPane {\n            LazyColumn {\n                itemsIndexed(items = conversations, key = { _, item -> item.subject }) { index, conversation ->\n                    MonarchListRow(\n                        headlineContent = { Text(conversation.subject) },\n                        supportingContent = { Text(conversation.from + \" · \" + conversation.preview) },\n                        selected = navigator.currentDestination?.contentKey == index,\n                        divider = true,\n                        onClick = {\n                            scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, index) }\n                        },\n                    )\n                }\n            }\n        }\n    },\n    detailPane = {\n        AnimatedPane {\n            val index = navigator.currentDestination?.contentKey\n            if (index == null) {\n                MonarchEmptyState(title = \"Pick a conversation\", message = \"Choose one from the list.\")\n            } else {\n                val conversation = conversations[index]\n                Column(\n                    modifier = Modifier.padding(MonarchTheme.spacing.space4),\n                    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n                ) {\n                    Row(verticalAlignment = Alignment.Top) {\n                        MonarchText(text = conversation.subject, modifier = Modifier.weight(1f), style = MonarchTextStyle.Title)\n                        MonarchIconButton(\n                            label = \"Ticket details\",\n                            onClick = {\n                                scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, index) }\n                            },\n                        ) {\n                            MonarchIcon(SampleIcons.Columns, contentDescription = null)\n                        }\n                    }\n                    MonarchBadge(text = {{status.label}}, tone = {{status.tone|tone}})\n                    MonarchText(text = \"From \" + conversation.from, color = MonarchTheme.colors.textMuted)\n                    MonarchText(text = conversation.preview)\n                }\n            }\n        }\n    },\n    extraPane = {\n        AnimatedPane {\n            val index = navigator.currentDestination?.contentKey\n            if (index != null) {\n                MonarchSectionCard(title = \"Ticket details\") {\n                    MonarchDescriptionList(\n                        items = listOf(\n                            MonarchDescriptionItem(\"Requester\", conversations[index].from),\n                            MonarchDescriptionItem(\"Priority\", {{priority}}),\n                            MonarchDescriptionItem(\"Assignee\", null),\n                        ),\n                        emptyLabel = \"—\",\n                    )\n                }\n            }\n        }\n    },\n)\n}",
+      "setupTemplate": "@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nval navigator = rememberListDetailPaneScaffoldNavigator<Int>()\nval scope = rememberCoroutineScope()\nclass Conversation(val subject: String, val from: String, val preview: String)\nval conversations = remember {\n    listOf(\n        Conversation({{conversations.0.subject}}, {{conversations.0.from}}, {{conversations.0.preview}}),\n        Conversation({{conversations.1.subject}}, {{conversations.1.from}}, {{conversations.1.preview}}),\n        Conversation({{conversations.2.subject}}, {{conversations.2.from}}, {{conversations.2.preview}}),\n    )\n}\n@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nLaunchedEffect(Unit) { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, {{selected}}) }",
+      "imports": [
+        "androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi",
+        "androidx.compose.material3.adaptive.layout.*",
+        "androidx.compose.material3.adaptive.navigation.*",
+        "androidx.compose.foundation.lazy.itemsIndexed",
+        "kotlinx.coroutines.launch",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.border",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.unit.dp",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nval navigator = rememberListDetailPaneScaffoldNavigator<Int>()\nval scope = rememberCoroutineScope()\nclass Conversation(val subject: String, val from: String, val preview: String)\nval conversations = remember {\n    listOf(\n        Conversation(\"Printer offline on floor 3\", \"Grace Hopper\", \"It stopped after the update this morning.\"),\n        Conversation(\"Invoice shows the wrong address\", \"Alan Turing\", \"Our billing address changed in March.\"),\n        Conversation(\"Reset two-factor\", \"Katherine Johnson\", \"I replaced my phone and lost the codes.\"),\n    )\n}\n@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nLaunchedEffect(Unit) { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, 0) }",
+      "code": "@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nBox(\n    modifier = Modifier\n        .height(440.dp)\n        .clip(MonarchTheme.shapes.lg)\n        .border(1.dp, MonarchTheme.colors.borderSubtle, MonarchTheme.shapes.lg),\n) {\nNavigableListDetailPaneScaffold(\n    navigator = navigator,\n    listPane = {\n        AnimatedPane {\n            LazyColumn {\n                itemsIndexed(items = conversations, key = { _, item -> item.subject }) { index, conversation ->\n                    MonarchListRow(\n                        headlineContent = { Text(conversation.subject) },\n                        supportingContent = { Text(conversation.from + \" · \" + conversation.preview) },\n                        selected = navigator.currentDestination?.contentKey == index,\n                        divider = true,\n                        onClick = {\n                            scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, index) }\n                        },\n                    )\n                }\n            }\n        }\n    },\n    detailPane = {\n        AnimatedPane {\n            val index = navigator.currentDestination?.contentKey\n            if (index == null) {\n                MonarchEmptyState(title = \"Pick a conversation\", message = \"Choose one from the list.\")\n            } else {\n                val conversation = conversations[index]\n                Column(\n                    modifier = Modifier.padding(MonarchTheme.spacing.space4),\n                    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n                ) {\n                    Row(verticalAlignment = Alignment.Top) {\n                        MonarchText(text = conversation.subject, modifier = Modifier.weight(1f), style = MonarchTextStyle.Title)\n                        MonarchIconButton(\n                            label = \"Ticket details\",\n                            onClick = {\n                                scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, index) }\n                            },\n                        ) {\n                            MonarchIcon(SampleIcons.Columns, contentDescription = null)\n                        }\n                    }\n                    MonarchBadge(text = \"Open\", tone = MonarchTone.Info)\n                    MonarchText(text = \"From \" + conversation.from, color = MonarchTheme.colors.textMuted)\n                    MonarchText(text = conversation.preview)\n                }\n            }\n        }\n    },\n    extraPane = {\n        AnimatedPane {\n            val index = navigator.currentDestination?.contentKey\n            if (index != null) {\n                MonarchSectionCard(title = \"Ticket details\") {\n                    MonarchDescriptionList(\n                        items = listOf(\n                            MonarchDescriptionItem(\"Requester\", conversations[index].from),\n                            MonarchDescriptionItem(\"Priority\", \"High\"),\n                            MonarchDescriptionItem(\"Assignee\", null),\n                        ),\n                        emptyLabel = \"—\",\n                    )\n                }\n            }\n        }\n    },\n)\n}"
+    }
+  ],
+  "webEquivalent": "SplitInboxLayout",
+  "dependsOn": [
+    "split-layout"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-text",
+      "platform": "android",
+      "reason": "The web shows the conversation list, the open conversation and the details side by side. On a compact phone window the three panes are screens of a list-detail pattern: the example opens the conversation, and the list and the details are reached by the back button and the Ticket details button. The docs preview is recorded in an 840dp window, where the list and the conversation show together; the exception applies to a compact phone window only.",
+      "convention": "list-detail navigates between panes on a compact window (Material adaptive)",
+      "paths": [
+        "Grace Hopper · It stopped after the update this morning.",
+        "Invoice shows the wrong address",
+        "Alan Turing · Our billing address changed in March.",
+        "Reset two-factor",
+        "Katherine Johnson · I replaced my phone and lost the codes.",
+        "Back to conversations",
+        "Requester",
+        "Priority",
+        "High",
+        "Assignee",
+        "Invoice shows the wrong addressAlan Turing · Our billing address changed in March.",
+        "Reset two-factorKatherine Johnson · I replaced my phone and lost the codes."
+      ]
+    }
+  ]
+}

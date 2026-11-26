@@ -1,5 +1,12 @@
-import { StatusDot } from '@rookcom/monarch-react';
+import { StatusDot, type StatusDotProps } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './status-dot.fixture.json';
+
+const items = fixture.data.items as readonly {
+  tone: NonNullable<StatusDotProps['tone']>;
+  label: string;
+}[];
 
 export default {
   id: 'status-dot',
@@ -113,12 +120,9 @@ export default {
           title: 'Tones',
           render: () => (
             <>
-              <StatusDot label="Draft" />
-              <StatusDot tone="info" label="Scheduled" />
-              <StatusDot tone="success" label="Running" />
-              <StatusDot tone="warning" label="Paused" />
-              <StatusDot tone="danger" label="Failed" />
-              <StatusDot tone="accent" label="Featured" />
+              {items.map((item) => (
+                <StatusDot key={item.label} tone={item.tone} label={item.label} />
+              ))}
             </>
           ),
         },

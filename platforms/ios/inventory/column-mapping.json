@@ -1,0 +1,134 @@
+{
+  "id": "column-mapping",
+  "name": "MonarchColumnMapping",
+  "title": "ColumnMapping",
+  "family": "data-grid",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "List with a summary Section and one Picker with .pickerStyle(.menu) per column; MonarchBadge for suggestions, MonarchButton for the bulk actions",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The mapping step of an import: one menu picker per imported column with example values, suggested fields from names and aliases, and the required fields still unmapped and the fields chosen twice.",
+  "whenToUse": "After someone picks a CSV or spreadsheet to import, on its own screen, to choose which product field each column fills.",
+  "whenNotToUse": "To choose which columns a table shows, use MonarchColumnChooser. To preview the rows that will be imported, use MonarchPreviewRows.",
+  "api": [
+    "init(_ sources: [MonarchColumnMappingSource], mapping: Binding<[String: String]>, fields: [MonarchColumnMappingField], suggestions: [String: MonarchColumnMappingSuggestion]? = nil, showsIssues: Bool = true, showsBulkActions: Bool = true, labels: MonarchColumnMappingLabels = MonarchColumnMappingLabels())",
+    "static func suggest(_ sources: [MonarchColumnMappingSource], fields: [MonarchColumnMappingField], threshold: Double = 0.75) -> [String: MonarchColumnMappingSuggestion]",
+    "static func mapping(from suggestions: [String: MonarchColumnMappingSuggestion]) -> [String: String]",
+    "static func issues(_ mapping: [String: String], fields: [MonarchColumnMappingField]) -> (missing: [MonarchColumnMappingField], duplicates: [String: [String]])",
+    "MonarchColumnMappingSource.init(_ name: String, samples: [String] = [])",
+    "MonarchColumnMappingField.init(id: String, label: String, isRequired: Bool = false, description: String? = nil, aliases: [String] = [])",
+    "MonarchColumnMappingSuggestion.init(fieldID: String, confidence: MonarchColumnMappingConfidence, score: Double)",
+    "enum MonarchColumnMappingConfidence { case exact, similar }",
+    "MonarchColumnMappingLabels.init(label: String? = nil, fieldFor: (@Sendable (String) -> String)? = nil, skip: String? = nil, required: String? = nil, exactMatch: String? = nil, suggested: String? = nil, noSamples: String? = nil, summary: (@Sendable (Int, Int) -> String)? = nil, missing: (@Sendable (String) -> String)? = nil, duplicate: (@Sendable (String, String) -> String)? = nil, useSuggestions: String? = nil, skipAll: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "sources",
+      "type": "[MonarchColumnMappingSource]",
+      "default": "required",
+      "description": "The columns of the imported data in file order: the header and a few example values."
+    },
+    {
+      "name": "mapping",
+      "type": "Binding<[String: String]>",
+      "default": "required",
+      "description": "Column name to field id. A column missing from it is not imported. Start from MonarchColumnMapping.mapping(from: suggest(...))."
+    },
+    {
+      "name": "fields",
+      "type": "[MonarchColumnMappingField]",
+      "default": "required",
+      "description": "The fields the columns can be mapped to, with required flags, help and aliases."
+    },
+    {
+      "name": "suggestions",
+      "type": "[String: MonarchColumnMappingSuggestion]?",
+      "default": "nil",
+      "description": "The suggestions behind the badges and Use suggestions. By default, MonarchColumnMapping.suggest(sources, fields:)."
+    },
+    {
+      "name": "showsIssues",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the missing required fields and the duplicate errors. Pass false until the person first tries to go on."
+    },
+    {
+      "name": "showsBulkActions",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows Use suggestions (when the mapping differs from them) and Don’t import any (when something is mapped)."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchColumnMappingLabels",
+      "default": "MonarchColumnMappingLabels()",
+      "description": "Replacements for every built-in string: picker names, the skip option, badges, the summary, the errors and the buttons."
+    }
+  ],
+  "states": [
+    {
+      "name": "suggested",
+      "description": "A column set to its suggested field shows a success \"Matched\" badge for an exact match or an info \"Suggested\" badge for a close one."
+    },
+    {
+      "name": "not imported",
+      "description": "The picker shows \"Don’t import\"; the column is missing from the mapping."
+    },
+    {
+      "name": "missing required",
+      "description": "The summary section shows \"Map a column to: …\" with an error icon in the danger colour."
+    },
+    {
+      "name": "duplicate",
+      "description": "Each column that chose the same field shows \"<Field> is also chosen for <other columns>.\" under its picker."
+    },
+    {
+      "name": "disabled",
+      "description": "With disabled(true), the pickers and the bulk buttons cannot be used and take the system's disabled look."
+    }
+  ],
+  "appearance": "A grouped list. Column headers in the default text colour, example values and help in the muted text colour, the chosen field as the picker's value in the accent colour. Errors use the danger strong colour with an icon. The roles follow light, dark and high-contrast themes.",
+  "platformNotes": "The web ColumnMapping is a three-column grid (column, example values, field) with a native select per row and column headings on wide screens. On iPhone a three-column grid does not fit, so each column is a list row whose label holds the header and example values, with the standard menu picker as its value, and the headings are left out. The web size prop (sm, md) has no counterpart: list rows size themselves with Dynamic Type. The web disabled prop is the standard disabled(_:) modifier. The web value and onValueChange become one binding; the web's uncontrolled defaultValue is the app's initial state. The suggestion algorithm (normalising names, word overlap, containment and edit distance, threshold 0.75, each field once) is the same as the web's suggestColumnMapping. The view is a List, so give it its own screen or a height. Android shares the design.",
+  "accessibility": [
+    "Each picker is named \"Field for <column>\" and its value is the chosen field or \"Don’t import\".",
+    "The example values, the suggestion badge, a duplicate error and the field's help are read as the picker's hint.",
+    "Errors are an icon and text in the danger colour, never colour alone; suggestions are a word in a badge, not only a tone.",
+    "Changes to the summary (\"3 of 5 columns mapped\") are announced.",
+    "The bulk buttons are standard buttons with 44-point touch targets."
+  ],
+  "edgeCases": [
+    "A blank header is shown as its position, \"#3\".",
+    "Two columns with the same header share one entry in the mapping, because the mapping is keyed by name, as on the web.",
+    "A field id in the mapping that is not in fields does not count as mapped.",
+    "Long headers and values wrap; nothing is truncated."
+  ],
+  "tests": [
+    "MonarchColumnMappingTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Contacts import",
+      "fixture": "column-mapping",
+      "webExample": "Contacts import",
+      "template": "MonarchColumnMapping(Self.sources, mapping: $mapping, fields: Self.fields)\n    .frame(minHeight: 900)",
+      "setupTemplate": "private static let sources = [\n    MonarchColumnMappingSource({{sources.0.name}}, samples: [{{sources.0.samples.0}}, {{sources.0.samples.1}}]),\n    MonarchColumnMappingSource({{sources.1.name}}, samples: [{{sources.1.samples.0}}, {{sources.1.samples.1}}]),\n    MonarchColumnMappingSource({{sources.2.name}}, samples: [{{sources.2.samples.0}}]),\n    MonarchColumnMappingSource({{sources.3.name}}, samples: [{{sources.3.samples.0}}]),\n    MonarchColumnMappingSource({{sources.4.name}}),\n]\nprivate static let fields = [\n    MonarchColumnMappingField(id: {{fields.0.id}}, label: {{fields.0.label}}, isRequired: {{fields.0.required}}),\n    MonarchColumnMappingField(id: {{fields.1.id}}, label: {{fields.1.label}}, isRequired: {{fields.1.required}}, aliases: [{{fields.1.aliases.0}}, {{fields.1.aliases.1}}]),\n    MonarchColumnMappingField(id: {{fields.2.id}}, label: {{fields.2.label}}, description: {{fields.2.description}}),\n    MonarchColumnMappingField(id: {{fields.3.id}}, label: {{fields.3.label}}),\n]\n@State private var mapping = MonarchColumnMapping.mapping(\n    from: MonarchColumnMapping.suggest(Self.sources, fields: Self.fields)\n)",
+      "setup": "private static let sources = [\n    MonarchColumnMappingSource(\"Full Name\", samples: [\"Sam Lee\", \"Ana Ruiz\"]),\n    MonarchColumnMappingSource(\"E-mail\", samples: [\"sam@example.com\", \"ana@example.org\"]),\n    MonarchColumnMappingSource(\"Phone\", samples: [\"+44 20 7946 0000\"]),\n    MonarchColumnMappingSource(\"Organisation name\", samples: [\"Example Ltd\"]),\n    MonarchColumnMappingSource(\"Notes\"),\n]\nprivate static let fields = [\n    MonarchColumnMappingField(id: \"name\", label: \"Name\", isRequired: true),\n    MonarchColumnMappingField(id: \"email\", label: \"Email\", isRequired: true, aliases: [\"E-mail\", \"Mail\"]),\n    MonarchColumnMappingField(id: \"phone\", label: \"Phone number\", description: \"International format, e.g. +44 20 7946 0000\"),\n    MonarchColumnMappingField(id: \"company\", label: \"Company\"),\n]\n@State private var mapping = MonarchColumnMapping.mapping(\n    from: MonarchColumnMapping.suggest(Self.sources, fields: Self.fields)\n)",
+      "code": "MonarchColumnMapping(Self.sources, mapping: $mapping, fields: Self.fields)\n    .frame(minHeight: 900)"
+    },
+    {
+      "title": "Checking the mapping before going on",
+      "setup": "@State private var mapping: [String: String] = [\"Mail\": \"email\", \"E-mail\": \"email\"]\n@State private var showsIssues = false\nprivate let fields = [\n    MonarchColumnMappingField(id: \"email\", label: \"Email\", isRequired: true),\n    MonarchColumnMappingField(id: \"name\", label: \"Name\", isRequired: true),\n]",
+      "code": "VStack {\n    MonarchColumnMapping(\n        [MonarchColumnMappingSource(\"Mail\"), MonarchColumnMappingSource(\"E-mail\")],\n        mapping: $mapping,\n        fields: fields,\n        showsIssues: showsIssues\n    )\n    .frame(minHeight: 360)\n    Button(\"Next\") {\n        let issues = MonarchColumnMapping.issues(mapping, fields: fields)\n        showsIssues = !issues.missing.isEmpty || !issues.duplicates.isEmpty\n    }\n}"
+    }
+  ],
+  "webEquivalent": "ColumnMapping",
+  "dependsOn": [
+    "select",
+    "badge"
+  ]
+}

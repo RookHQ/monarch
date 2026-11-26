@@ -1,0 +1,124 @@
+{
+  "id": "ai-thinking-indicator",
+  "name": "MonarchAiThinkingIndicator",
+  "title": "AiThinkingIndicator",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.FlowRow of androidx.compose.material3.Text, androidx.compose.ui.draw.drawWithContent with a Brush.linearGradient for the shimmer, androidx.compose.animation.core.rememberInfiniteTransition; MonarchAiTypingDots as the default mark",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Shows that the assistant is working before its first token arrives: a \"Thinking…\" label with a soft shimmer or a pulsing mark and, after a few seconds, how long it has been thinking.",
+  "whenToUse": "In the place of the assistant reply between sending a prompt and the first streamed token, especially when the wait can be long (reasoning, tool use, searching files).",
+  "whenNotToUse": "Where there is no room for a sentence use MonarchAiTypingDots. To reserve the shape of the coming answer use MonarchAiResponseSkeleton. Once text streams, show the text.",
+  "api": [
+    "@Composable fun MonarchAiThinkingIndicator(modifier: Modifier = Modifier, variant: MonarchAiThinkingIndicatorVariant = MonarchAiThinkingIndicatorVariant.Shimmer, label: String? = null, startedAt: Long? = null, showElapsedAfterMillis: Long = 3_000L, announce: Boolean = true, icon: (@Composable () -> Unit)? = null, elapsedLabel: ((seconds: Int) -> String)? = null)",
+    "enum class MonarchAiThinkingIndicatorVariant { Shimmer, Mark }"
+  ],
+  "options": [
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the indicator."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchAiThinkingIndicatorVariant",
+      "default": "MonarchAiThinkingIndicatorVariant.Shimmer",
+      "description": "Shimmer: a band of the strong assistant color sweeps through the label. Mark: a pulsing mark before a still label."
+    },
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "null",
+      "description": "Replaces the built-in \"Thinking…\" (monarch_aithinkingindicator_label), for example \"Searching your files…\"."
+    },
+    {
+      "name": "startedAt",
+      "type": "Long?",
+      "default": "null",
+      "description": "When the assistant started working, in epoch milliseconds (UTC). null counts from when the indicator first appeared; pass it when the indicator can leave the composition during one turn, for example in a lazy list."
+    },
+    {
+      "name": "showElapsedAfterMillis",
+      "type": "Long",
+      "default": "3000",
+      "description": "How long before the elapsed time appears after the label. Long.MAX_VALUE never shows it."
+    },
+    {
+      "name": "announce",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Announces the label when the indicator appears and when the label changes."
+    },
+    {
+      "name": "icon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The mark of the Mark variant, given the strong assistant color as its content color; it pulses. null uses MonarchAiTypingDots. Monarch bundles no icons. Ignored by the Shimmer variant."
+    },
+    {
+      "name": "elapsedLabel",
+      "type": "((seconds: Int) -> String)?",
+      "default": "null",
+      "description": "Formats whole elapsed seconds. By default the narrow unit format of the current locale: \"5s\", \"1m 5s\"."
+    }
+  ],
+  "states": [
+    {
+      "name": "thinking",
+      "description": "The label in muted text, with the shimmer or the mark."
+    },
+    {
+      "name": "long wait",
+      "description": "After showElapsedAfterMillis the elapsed time follows the label in subtle text and updates every second."
+    },
+    {
+      "name": "animations off",
+      "description": "The shimmer and the pulse stop; the label stays muted text and the mark is still. The clock still ticks once a second."
+    }
+  ],
+  "appearance": "The label is muted text; the shimmer is a band of the strong assistant role drawn only over the label's own pixels, so contrast holds in light, dark and both high-contrast themes. The elapsed time is subtle caption text. The mark takes the strong assistant role; the default mark is MonarchAiTypingDots in its assistant roles.",
+  "platformNotes": "The web shimmers a band behind the label; Android, like iOS, sweeps the assistant color through the label's own text. The web uses an assistant bot glyph as the mark; Monarch for Android bundles no icons, so the mark is an icon slot and falls back to MonarchAiTypingDots, which the plan named. iOS posts an announcement; Android uses an always-present polite live region holding only the label, as the web does. startedAt is epoch milliseconds (iOS takes a Date) and the delay is showElapsedAfterMillis (iOS showsElapsedAfter in seconds); announce matches MonarchAiTypingDots (iOS isAnnounced).",
+  "accessibility": [
+    "The label is one TalkBack element, with the elapsed time as its state description once it shows.",
+    "The label is announced through a polite live region filled one frame after the indicator appears, and again when the label changes; the live region never holds the elapsed time, so the ticking clock is not announced.",
+    "With announce set to false there is no live region.",
+    "The mark is decorative and hidden from TalkBack.",
+    "When animations are off the shimmer and the pulse stop.",
+    "The label and the elapsed time wrap at large font sizes; nothing has a fixed height."
+  ],
+  "edgeCases": [
+    "A startedAt in the future counts as 0 seconds.",
+    "Without startedAt the clock restarts if the indicator leaves the composition and comes back.",
+    "The elapsed time moves to a new line when it does not fit after a long label.",
+    "Exactly a whole minute is written without seconds: \"1m\"."
+  ],
+  "tests": [
+    "MonarchAiThinkingIndicatorTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Shimmer (default)",
+      "fixture": "ai-thinking-indicator",
+      "webExample": "Shimmer (default)",
+      "template": "MonarchAiThinkingIndicator(variant = MonarchAiThinkingIndicatorVariant.{{variant|pascal}})",
+      "code": "MonarchAiThinkingIndicator(variant = MonarchAiThinkingIndicatorVariant.Shimmer)"
+    },
+    {
+      "title": "A long search, with a pulsing mark",
+      "setup": "val startedAt = remember { System.currentTimeMillis() }",
+      "code": "MonarchAiThinkingIndicator(\n    variant = MonarchAiThinkingIndicatorVariant.Mark,\n    label = \"Searching your files…\",\n    startedAt = startedAt,\n)"
+    }
+  ],
+  "webEquivalent": "AiThinkingIndicator",
+  "dependsOn": [
+    "ai-typing-dots"
+  ]
+}

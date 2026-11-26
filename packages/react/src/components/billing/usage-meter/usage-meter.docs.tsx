@@ -1,5 +1,23 @@
 import { UsageMeter } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './usage-meter.fixture.json';
+
+const data = fixture.data as unknown as {
+  title: string;
+  period: string;
+  resetsAt: string;
+  timeZone: string;
+  locale: string;
+  items: {
+    id: string;
+    label: string;
+    used: number;
+    limit?: number;
+    unit?: string;
+    description?: string;
+  }[];
+};
 
 export default {
   id: 'usage-meter',
@@ -108,22 +126,19 @@ export default {
           title: 'Quotas and counts',
           render: () => (
             <UsageMeter
-              title="Usage"
-              period="This month"
-              resetsAt="2026-12-01T00:00:00Z"
-              timeZone="UTC"
-              locale="en-US"
-              items={[
-                { id: 'req', label: 'Requests', used: 4200, limit: 10000 },
-                { id: 'msg', label: 'Messages', used: 8500, limit: 10000 },
-                { id: 'gb', label: 'Storage', used: 12, limit: 10, unit: 'GB' },
-                {
-                  id: 'conv',
-                  label: 'Conversations',
-                  used: 31,
-                  description: 'Conversations started',
-                },
-              ]}
+              title={data.title}
+              period={data.period}
+              resetsAt={data.resetsAt}
+              timeZone={data.timeZone}
+              locale={data.locale}
+              items={data.items.map((i) => ({
+                id: i.id,
+                label: i.label,
+                used: i.used,
+                ...(i.limit !== undefined && { limit: i.limit }),
+                ...(i.unit !== undefined && { unit: i.unit }),
+                ...(i.description !== undefined && { description: i.description }),
+              }))}
             />
           ),
         },

@@ -2,32 +2,29 @@ import { useState } from 'react';
 import { Field, FieldLabel, FieldDescription } from '@rookcom/monarch-react';
 import { DateRangePicker, type DateRange } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './date-range-picker.fixture.json';
 
 // Examples pin `today` so the page and its visual baselines never change with the date.
-const TODAY = '2026-11-04';
+const TODAY = fixture.data.today;
 
 function ReportRange() {
-  const [value, setValue] = useState<DateRange | null>({ start: '2026-10-06', end: '2026-11-04' });
+  const [value, setValue] = useState<DateRange | null>(fixture.data.value);
   return (
     <Field>
-      <FieldLabel>Report period</FieldLabel>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
       <DateRangePicker
-        locale="en-GB"
+        locale={fixture.data.locale}
         today={TODAY}
         max={TODAY}
-        maxDays={366}
-        presets={[
-          { label: 'Last 7 days', lastDays: 7 },
-          { label: 'Last 30 days', lastDays: 30 },
-          { label: 'Last 90 days', lastDays: 90 },
-          { label: 'This month', months: 0 },
-          { label: 'Last month', months: -1 },
-        ]}
+        maxDays={fixture.data.maxDays}
+        presets={fixture.data.presets}
         value={value}
         onValueChange={setValue}
       />
       <FieldDescription>
-        {value ? `${value.start} to ${value.end}` : 'No period'}; at most 366 days.
+        {value ? `${value.start} to ${value.end}` : 'No period'}; at most {fixture.data.maxDays}{' '}
+        days.
       </FieldDescription>
     </Field>
   );

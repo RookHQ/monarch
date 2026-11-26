@@ -1,30 +1,35 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- the fixture is a fixed JSON literal; the indices below exist. */
 import { useState } from 'react';
 import { AiAgentPicker, type AiAgentPickerOption } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-agent-picker.fixture.json';
+
+const A = fixture.data.agents;
 
 const AGENTS: AiAgentPickerOption[] = [
   {
-    agent: { id: 'research', name: 'Research agent', role: 'Finds and summarises sources' },
-    description: 'Reads documents in this space and answers with citations.',
-    capabilities: ['Summarises', 'Cites sources'],
-    tools: [{ name: 'Search documents' }, { name: 'Read file' }],
+    agent: { id: A[0]!.id, name: A[0]!.name, role: A[0]!.role },
+    description: A[0]!.description,
+    capabilities: A[0]!.capabilities,
+    tools: (A[0]!.tools ?? []).map((name) => ({ name })),
   },
   {
-    agent: { id: 'writer', name: 'Writing agent', role: 'Drafts and edits text' },
-    description: 'Drafts replies and tightens wording in the tone you choose.',
-    capabilities: ['Drafts', 'Rewrites'],
-    tools: [{ name: 'Insert text' }],
+    agent: { id: A[1]!.id, name: A[1]!.name, role: A[1]!.role },
+    description: A[1]!.description,
+    capabilities: A[1]!.capabilities,
+    tools: (A[1]!.tools ?? []).map((name) => ({ name })),
     state: 'working',
   },
   {
-    agent: { id: 'scheduler', name: 'Scheduling agent', role: 'Plans meetings' },
-    description: 'Finds times that work and drafts invitations. Not enabled in this space.',
+    agent: { id: A[2]!.id, name: A[2]!.name, role: A[2]!.role },
+    description: A[2]!.description,
     disabled: true,
   },
 ];
 
 function Demo({ layout }: { layout?: 'list' | 'grid' }) {
-  const [value, setValue] = useState<string | null>('research');
+  const [value, setValue] = useState<string | null>(fixture.data.value);
   return <AiAgentPicker agents={AGENTS} value={value} onChange={setValue} layout={layout} />;
 }
 

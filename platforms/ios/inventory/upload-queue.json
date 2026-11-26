@@ -1,0 +1,154 @@
+{
+  "id": "upload-queue",
+  "name": "MonarchUploadQueue",
+  "title": "UploadQueue",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of rows with ProgressView (.monarchLinear), MonarchFileTypeIcon, MonarchButton and Button",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The files being uploaded: progress and status per file, cancel, retry and remove, and a summary with the total progress.",
+  "whenToUse": "When several files upload at once, for example after picking photos or dropping files, so people can follow, cancel and retry them.",
+  "whenNotToUse": "For one or two files in a composer, use MonarchAttachmentChip.",
+  "api": [
+    "init(_ items: [MonarchUploadQueueItem], showsSummary: Bool = true, usesBinaryUnits: Bool = false, labels: MonarchUploadQueueLabels = MonarchUploadQueueLabels(), onCancel: (@MainActor (String) -> Void)? = nil, onRetry: (@MainActor (String) -> Void)? = nil, onRemove: (@MainActor (String) -> Void)? = nil, onClearFinished: (@MainActor () -> Void)? = nil)",
+    "MonarchUploadQueueItem.init(id: String, name: String, size: Int64? = nil, contentType: String? = nil, status: MonarchUploadStatus, progress: Double? = nil, errorMessage: String? = nil, isRetryable: Bool = true, detail: String? = nil)",
+    "MonarchUploadQueueCounts.init(_ items: [MonarchUploadQueueItem]); let total, queued, uploading, done, failed, cancelled: Int; var active: Int; var finished: Int",
+    "enum MonarchUploadStatus { case queued, uploading, done, failed, cancelled; var isActive: Bool }",
+    "struct MonarchUploadQueueLabels { var title, queued, done, failed, cancelled, retry, clearFinished, totalLabel: String?; var uploading: (@Sendable (String?) -> String)?; var retryLabel, cancel, remove, progressLabel, announceDone: (@Sendable (String) -> String)?; var summary, announceFinished: (@Sendable (MonarchUploadQueueCounts) -> String)?; var announceFailed: (@Sendable (String, String?) -> String)? }"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "[MonarchUploadQueueItem]",
+      "default": "required",
+      "description": "The uploads, in display order. The app updates status and progress."
+    },
+    {
+      "name": "showsSummary",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the title, the summary (\"2 of 5 uploaded · 1 failed\"), the clear button and the total progress."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchUploadQueueLabels",
+      "default": "MonarchUploadQueueLabels()",
+      "description": "Replacements for every built-in string and announcement."
+    },
+    {
+      "name": "onCancel",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Cancels a queued or uploading file by id. Adds cancel buttons."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Retries a failed or cancelled, retryable file by id. Adds retry buttons."
+    },
+    {
+      "name": "onRemove",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Removes a file that ended from the list by id. Adds remove buttons."
+    },
+    {
+      "name": "onClearFinished",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Removes every file that ended. Adds a header button while there is one."
+    },
+    {
+      "name": "MonarchUploadQueueItem.progress",
+      "type": "Double?",
+      "default": "nil",
+      "description": "0 through 1 while uploading; nil shows a moving bar."
+    },
+    {
+      "name": "MonarchUploadQueueItem.detail",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the status line, for example \"Checking for viruses\"."
+    },
+    {
+      "name": "usesBinaryUnits",
+      "type": "Bool",
+      "default": "false",
+      "description": "Writes sizes in 1024-based units, as the web, instead of 1000-based ones."
+    }
+  ],
+  "states": [
+    {
+      "name": "queued",
+      "description": "\"Waiting\" and a cancel button."
+    },
+    {
+      "name": "uploading",
+      "description": "\"Uploading… 40%\", a progress bar and a cancel button."
+    },
+    {
+      "name": "done",
+      "description": "A check mark and \"Uploaded\" in the success colour, and a remove button."
+    },
+    {
+      "name": "failed",
+      "description": "An error mark and the error in the danger colour, retry and remove buttons."
+    },
+    {
+      "name": "cancelled",
+      "description": "\"Cancelled\", retry and remove buttons."
+    },
+    {
+      "name": "empty",
+      "description": "Only the title."
+    }
+  ],
+  "appearance": "A subheading title with a muted caption summary and a linear Monarch progress bar while files are active. Rows are separated by MonarchDivider; each has the file type icon, the name and size, and a caption status line whose colour and icon follow the status.",
+  "platformNotes": "The web shows an image thumbnail when one is given; here each row shows MonarchFileTypeIcon. The web moves keyboard focus to the next row when a row is removed; iOS does not move VoiceOver focus. Transfers that must survive the app going to the background belong to a background URLSession in the app; the queue only shows them. Progress is a fraction from 0 to 1. Android shares the name and the statuses.",
+  "accessibility": [
+    "The title has the header trait.",
+    "Each row is the file name read with its size and status as the value.",
+    "Progress bars are standard ProgressViews named \"Upload progress of\" and the file name; the total bar reads its percentage.",
+    "Cancel, retry and remove are separate buttons named with the file name, with 44-point touch targets.",
+    "Finished and failed files are announced (\"a.pdf uploaded.\"), and when the last active upload of several ends, the result is announced.",
+    "Status is written in words with an icon, so colour is never the only signal."
+  ],
+  "edgeCases": [
+    "Total progress leaves out failed and cancelled files, and is weighted by size only when every remaining file has a size.",
+    "Retry is not offered for items with isRetryable false.",
+    "Long names wrap to two lines and are then shortened in the middle.",
+    "The summary's English plural is fixed (\"1 of 4 uploaded\"); pass labels.summary for other languages."
+  ],
+  "tests": [
+    "MonarchUploadQueueTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Mixed statuses",
+      "fixture": "upload-queue",
+      "webExample": "Mixed statuses",
+      "template": "MonarchUploadQueue(\n    items,\n    usesBinaryUnits: true,\n    onCancel: { id in\n        items = items.map { $0.id == id ? MonarchUploadQueueItem(id: $0.id, name: $0.name, size: $0.size, status: .cancelled) : $0 }\n    },\n    onRetry: { id in\n        items = items.map { $0.id == id ? MonarchUploadQueueItem(id: $0.id, name: $0.name, size: $0.size, status: .queued) : $0 }\n    },\n    onRemove: { id in items.removeAll { $0.id == id } },\n    onClearFinished: { items.removeAll { !$0.status.isActive } }\n)",
+      "setupTemplate": "@State private var items = [\n    MonarchUploadQueueItem(id: {{items.0.id}}, name: {{items.0.name}}, size: {{items.0.size}}, status: {{items.0.status|case}}),\n    MonarchUploadQueueItem(id: {{items.1.id}}, name: {{items.1.name}}, size: {{items.1.size}}, status: {{items.1.status|case}}, progress: {{items.1.progress|double}} / 100),\n    MonarchUploadQueueItem(id: {{items.2.id}}, name: {{items.2.name}}, size: {{items.2.size}}, status: {{items.2.status|case}}),\n    MonarchUploadQueueItem(id: {{items.3.id}}, name: {{items.3.name}}, size: {{items.3.size}}, status: {{items.3.status|case}}, errorMessage: {{items.3.error}}),\n    MonarchUploadQueueItem(id: {{items.4.id}}, name: {{items.4.name}}, size: {{items.4.size}}, status: {{items.4.status|case}}, errorMessage: {{items.4.error}}, isRetryable: {{items.4.retryable}}),\n]",
+      "setup": "@State private var items = [\n    MonarchUploadQueueItem(id: \"1\", name: \"quarterly-report.pdf\", size: 2_516_582, status: .done),\n    MonarchUploadQueueItem(id: \"2\", name: \"site-photo-01.jpg\", size: 4_299_162, status: .uploading, progress: 62.0 / 100),\n    MonarchUploadQueueItem(id: \"3\", name: \"site-photo-02.jpg\", size: 3_984_589, status: .queued),\n    MonarchUploadQueueItem(id: \"4\", name: \"floor-plan.dwg\", size: 18_874_368, status: .failed, errorMessage: \"Upload interrupted. Check your connection and try again.\"),\n    MonarchUploadQueueItem(id: \"5\", name: \"archive.zip\", size: 125_829_120, status: .failed, errorMessage: \"Larger than the 100 MB limit.\", isRetryable: false),\n]",
+      "code": "MonarchUploadQueue(\n    items,\n    usesBinaryUnits: true,\n    onCancel: { id in\n        items = items.map { $0.id == id ? MonarchUploadQueueItem(id: $0.id, name: $0.name, size: $0.size, status: .cancelled) : $0 }\n    },\n    onRetry: { id in\n        items = items.map { $0.id == id ? MonarchUploadQueueItem(id: $0.id, name: $0.name, size: $0.size, status: .queued) : $0 }\n    },\n    onRemove: { id in items.removeAll { $0.id == id } },\n    onClearFinished: { items.removeAll { !$0.status.isActive } }\n)"
+    }
+  ],
+  "webEquivalent": "UploadQueue",
+  "dependsOn": [
+    "progress-bar",
+    "button",
+    "file-type-icon"
+  ],
+  "icons": {
+    "status.done": "SuccessGlyph",
+    "retry": "RetryGlyph",
+    "remove": "CloseGlyph"
+  }
+}

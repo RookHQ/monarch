@@ -1,5 +1,9 @@
 import { Breadcrumb } from '@rookcom/monarch-react';
 import { incomplete, type ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './breadcrumb.fixture.json';
+
+const items = fixture.data.items as unknown as readonly [string, string, string, string, string];
 
 export default {
   id: 'breadcrumb',
@@ -97,11 +101,11 @@ export default {
           render: () => (
             <Breadcrumb
               items={[
-                { label: 'Workspace', href: '#/components/breadcrumb' },
-                { label: 'Projects', href: '#/components/breadcrumb' },
-                { label: 'Website', href: '#/components/breadcrumb' },
-                { label: 'Sprint 4', href: '#/components/breadcrumb' },
-                { label: 'Fix sign-in redirect' },
+                { label: items[0], href: '#/components/breadcrumb' },
+                { label: items[1], href: '#/components/breadcrumb' },
+                { label: items[2], href: '#/components/breadcrumb' },
+                { label: items[3], href: '#/components/breadcrumb' },
+                { label: items[4] },
               ]}
             />
           ),

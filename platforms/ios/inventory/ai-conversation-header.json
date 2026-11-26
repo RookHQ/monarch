@@ -1,0 +1,140 @@
+{
+  "id": "ai-conversation-header",
+  "name": "MonarchAiConversationHeader",
+  "title": "AiConversationHeader",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Menu with .menuStyle(.button) as the navigation title menu (placed in ToolbarItem(placement: .principal)), .alert with a TextField for Rename, ProgressView, MonarchAiAgentAvatar, AccessibilityNotification.Announcement",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The navigation-bar title of an AI conversation: the title with the assistant and model under it, as a title menu with Rename and the app's own actions.",
+  "whenToUse": "At the top of an assistant conversation screen, in ToolbarItem(placement: .principal), when people should see which assistant and model answer and be able to rename the conversation or reach actions such as Share and Delete.",
+  "whenNotToUse": "For a list of conversations use MonarchAiConversationList. For renaming a field inside a form use MonarchInlineEditText. For a plain screen title with no assistant use navigationTitle.",
+  "api": [
+    "init(_ title: String, agent: MonarchAiAgentRef? = nil, model: String? = nil, isNaming: Bool = false, labels: MonarchAiConversationHeaderLabels = MonarchAiConversationHeaderLabels(), onRename: (@MainActor (String) async throws -> Void)? = nil, @ViewBuilder actions: () -> Actions)",
+    "init(_ title: String, agent: MonarchAiAgentRef? = nil, model: String? = nil, isNaming: Bool = false, labels: MonarchAiConversationHeaderLabels = MonarchAiConversationHeaderLabels(), onRename: (@MainActor (String) async throws -> Void)? = nil) where Actions == EmptyView",
+    "struct MonarchAiConversationHeaderLabels { init(untitled:, rename:, titleLabel:, save:, cancel:, naming:, agentPrefix:, modelPrefix:, renameFailed:, menuHint:) }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The conversation's title, trimmed. Empty shows \"New conversation\"."
+    },
+    {
+      "name": "agent",
+      "type": "MonarchAiAgentRef?",
+      "default": "nil",
+      "description": "The assistant answering; its decorative avatar and name show under the title."
+    },
+    {
+      "name": "model",
+      "type": "String?",
+      "default": "nil",
+      "description": "The model in use, already localised, shown after the assistant."
+    },
+    {
+      "name": "isNaming",
+      "type": "Bool",
+      "default": "false",
+      "description": "The title is being generated: shows \"Naming conversation…\" in the muted colour with a spinner and hides Rename."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiConversationHeaderLabels",
+      "default": "MonarchAiConversationHeaderLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onRename",
+      "type": "(@MainActor (String) async throws -> Void)?",
+      "default": "nil",
+      "description": "Saves a new title, trimmed and changed. Adds Rename to the title menu. Throwing opens the prompt again with the draft and an error."
+    },
+    {
+      "name": "actions",
+      "type": "@ViewBuilder () -> Actions",
+      "default": "none (EmptyView initialiser)",
+      "description": "The app's menu items after Rename, such as ShareLink, a model Picker and a destructive Delete button. Label it (actions:) when onRename is also given."
+    }
+  ],
+  "states": [
+    {
+      "name": "menu",
+      "description": "With onRename or actions, the title is a menu button with a chevron."
+    },
+    {
+      "name": "plain",
+      "description": "Without onRename and actions, the title is static header text."
+    },
+    {
+      "name": "untitled",
+      "description": "An empty title reads \"New conversation\"."
+    },
+    {
+      "name": "naming",
+      "description": "\"Naming conversation…\" in the muted text colour with a small spinner; Rename is hidden."
+    },
+    {
+      "name": "renaming",
+      "description": "The system rename prompt with a text field holding the current title, Cancel and Save."
+    },
+    {
+      "name": "saving",
+      "description": "The new title shows at once with a small spinner until onRename returns."
+    },
+    {
+      "name": "rename failed",
+      "description": "The prompt opens again with the draft and \"Couldn’t rename. Try again.\"; announced."
+    }
+  ],
+  "appearance": "The title in the strong body style and the default text colour, centred, up to two lines; the assistant avatar, name and model in the caption style and the muted text colour; a muted chevron when it is a menu. Colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web header is a bar with an inline text field for rename and a separate actions slot. On iPhone the title sits in the navigation bar, so the actions go in the system title menu and Rename uses the system prompt (an alert with a text field) instead of an inline editor; MonarchInlineEditText stays the form-field pattern. The web's model slot takes any view, such as an AiModelPicker; here model is text, and the model is changed with a Picker in the menu or a MonarchAiModelPicker in a toolbar item, because a menu cannot hold a sheet-presenting picker. The web's headingLevel has no iOS equivalent; the title has the header trait. Enter and Escape are keyboard behaviours of the web field; the prompt has Save and Cancel. Marked experimental as an AI product pattern until a Rook app adopts it. Android has no conversation header yet.",
+  "accessibility": [
+    "The title has the header trait and is read with the assistant and model as its value, \"AI assistant: Research agent. Model: Fast model\", built by a tested pure function.",
+    "As a menu, the title is a button with the hint \"Shows conversation actions\".",
+    "The agent avatar is decorative because the name is written beside it.",
+    "Rename uses the system alert with a text field named \"Conversation title\", so VoiceOver and the keyboard behave as everywhere in iOS.",
+    "A failed rename is announced and shown in the reopened prompt.",
+    "The title area has at least a 44-point touch target and wraps to two lines at large text sizes."
+  ],
+  "edgeCases": [
+    "An empty or unchanged title is not saved and onRename is not called.",
+    "A long title is truncated after two lines; the full title is still read by VoiceOver.",
+    "A blank model or agent name is left out of the line and the spoken value.",
+    "While isNaming is true, Rename is not offered even if onRename is given; the app actions stay."
+  ],
+  "tests": [
+    "MonarchAiConversationHeaderTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Rename, agent, model and actions",
+      "fixture": "ai-conversation-header",
+      "webExample": "Rename, agent, model and actions",
+      "template": "HStack(spacing: MonarchTokens.Space.space2) {\n    MonarchAiConversationHeader(\n        title,\n        agent: MonarchAiAgentRef(name: {{agent}}),\n        model: {{model}},\n        onRename: { newTitle in title = newTitle }\n    )\n    .frame(maxWidth: .infinity)\n    MonarchButton({{share.label}}, variant: .{{share.variant|raw}}, size: .{{share.size|raw}}) {}\n    Menu({{more.label}}) {\n        Button({{more.items.0.label}}) {}\n        Button({{more.items.1.label}}, role: .destructive) {}\n    }\n    .buttonStyle(.monarch(.{{more.variant|raw}}, size: .{{more.size|raw}}))\n}",
+      "setupTemplate": "@State private var title = {{title}}",
+      "setup": "@State private var title = \"Quarterly plan review\"",
+      "code": "HStack(spacing: MonarchTokens.Space.space2) {\n    MonarchAiConversationHeader(\n        title,\n        agent: MonarchAiAgentRef(name: \"Assistant\"),\n        model: \"Balanced model\",\n        onRename: { newTitle in title = newTitle }\n    )\n    .frame(maxWidth: .infinity)\n    MonarchButton(\"Share\", variant: .secondary, size: .sm) {}\n    Menu(\"More\") {\n        Button(\"Export\") {}\n        Button(\"Delete conversation\", role: .destructive) {}\n    }\n    .buttonStyle(.monarch(.ghost, size: .sm))\n}"
+    },
+    {
+      "title": "While the title is generated",
+      "code": "MonarchAiConversationHeader(\"\", agent: MonarchAiAgentRef(name: \"Research agent\"), isNaming: true)"
+    }
+  ],
+  "webEquivalent": "AiConversationHeader",
+  "dependsOn": [
+    "ai-agent-avatar",
+    "dropdown-menu"
+  ],
+  "icons": {
+    "rename": "PencilGlyph",
+    "agent": "BotGlyph"
+  }
+}

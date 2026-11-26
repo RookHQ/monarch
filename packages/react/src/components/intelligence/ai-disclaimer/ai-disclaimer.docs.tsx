@@ -1,5 +1,7 @@
-import { AiDisclaimer } from '@rookcom/monarch-react/ai';
+import { AiDisclaimer, type AiDisclaimerRisk } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-disclaimer.fixture.json';
 
 export default {
   id: 'ai-disclaimer',
@@ -79,7 +81,15 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Low risk (default)', stack: true, render: () => <AiDisclaimer /> },
+        {
+          title: 'Low risk (default)',
+          stack: true,
+          render: () => (
+            <AiDisclaimer risk={fixture.data.risk as AiDisclaimerRisk}>
+              {fixture.data.text}
+            </AiDisclaimer>
+          ),
+        },
         { title: 'Medium risk', stack: true, render: () => <AiDisclaimer risk="medium" /> },
         { title: 'High risk', stack: true, render: () => <AiDisclaimer risk="high" /> },
         {

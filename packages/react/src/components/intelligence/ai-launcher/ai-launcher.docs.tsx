@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiLauncher } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-launcher.fixture.json';
 
 function InlineDemo() {
   const [open, setOpen] = useState(false);
@@ -12,6 +14,7 @@ function InlineDemo() {
         onOpenChange={setOpen}
         position="inline"
         shortcut={false}
+        messages={{ label: fixture.data.label }}
         aria-controls="docs-ai-launcher-inline-panel"
       />
       <div

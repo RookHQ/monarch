@@ -1,0 +1,176 @@
+{
+  "id": "calendar-month-view",
+  "name": "MonarchCalendarMonthView",
+  "title": "CalendarMonthView",
+  "family": "scheduling",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "ScrollView(.horizontal) with LazyHStack, .scrollTargetBehavior(.paging) and .scrollPosition(id:) for months; HStack weeks of Button days; MonarchEventChip with .draggable and .dropDestination(for: String.self); .popover with .presentationCompactAdaptation(.popover) for \"+N more\"",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A month of days with their events: weekday header, today and outside days marked, dots on a phone or event chips with a \"+N more\" list on wider screens, drag to move, and a swipe between months.",
+  "whenToUse": "For the month view of a calendar or booking app, with MonarchCalendarToolbar above it and, on a phone, MonarchAgendaList of the selected day under it.",
+  "whenNotToUse": "For choosing a single date, use MonarchMiniMonth or the system DatePicker. For a list of upcoming events, use MonarchAgendaList. For a day or week with hours, use a time grid.",
+  "api": [
+    "init(month: Binding<Date>, events: [MonarchAgendaEvent] = [], selection: Binding<Date?>? = nil, today: Date? = nil, isFixedWeeks: Bool = true, maxEvents: Int = 3, layout: MonarchCalendarMonthViewLayout = .automatic, labels: MonarchCalendarMonthViewLabels = MonarchCalendarMonthViewLabels(), dayState: (@MainActor (Date) -> MonarchCalendarMonthViewDayState?)? = nil, onSelectDay: (@MainActor (Date) -> Void)? = nil, onMoveEvent: (@MainActor (MonarchAgendaEvent, Date) -> Void)? = nil, onSelectEvent: (@MainActor (MonarchAgendaEvent) -> Void)? = nil)",
+    "enum MonarchCalendarMonthViewLayout: String { case automatic, dots, events }",
+    "struct MonarchCalendarMonthViewDayState: Hashable { init(isUnavailable: Bool = false, badge: String? = nil) }",
+    "struct MonarchCalendarMonthViewLabels { init(more: (@Sendable (Int) -> String)? = nil, day: (@Sendable (String, Int) -> String)? = nil, today: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "month",
+      "type": "Binding<Date>",
+      "default": "required",
+      "description": "Any date in the month on screen. A swipe writes the first day of the new month; the toolbar's buttons change it too."
+    },
+    {
+      "name": "events",
+      "type": "[MonarchAgendaEvent]",
+      "default": "[]",
+      "description": "The events, the same type as MonarchAgendaList; each appears on every day it touches."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<Date?>?",
+      "default": "nil",
+      "description": "The selected day, set to its first moment when a day is touched."
+    },
+    {
+      "name": "today",
+      "type": "Date?",
+      "default": "nil",
+      "description": "Today, for previews and tests. Without it the clock is read."
+    },
+    {
+      "name": "isFixedWeeks",
+      "type": "Bool",
+      "default": "true",
+      "description": "Always six weeks, so the height does not change between months."
+    },
+    {
+      "name": "maxEvents",
+      "type": "Int",
+      "default": "3",
+      "description": "Rows a day uses for events in the events layout, the \"+N more\" button included."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchCalendarMonthViewLayout",
+      "default": ".automatic",
+      "description": "Chips, dots, or chips only when a day is at least 80 points wide and the text is not an accessibility size."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchCalendarMonthViewLabels",
+      "default": "MonarchCalendarMonthViewLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "dayState",
+      "type": "(@MainActor (Date) -> MonarchCalendarMonthViewDayState?)?",
+      "default": "nil",
+      "description": "Shading and a short badge for a day: time off, closures, holidays."
+    },
+    {
+      "name": "onSelectDay",
+      "type": "(@MainActor (Date) -> Void)?",
+      "default": "nil",
+      "description": "Runs when a day is touched, after selection is set."
+    },
+    {
+      "name": "onMoveEvent",
+      "type": "(@MainActor (MonarchAgendaEvent, Date) -> Void)?",
+      "default": "nil",
+      "description": "Makes chips draggable; receives the event and the first moment of the day it was dropped on."
+    },
+    {
+      "name": "onSelectEvent",
+      "type": "(@MainActor (MonarchAgendaEvent) -> Void)?",
+      "default": "nil",
+      "description": "Makes chips buttons that open the event."
+    }
+  ],
+  "states": [
+    {
+      "name": "today",
+      "description": "The date sits in a filled accent circle with the on-accent text colour."
+    },
+    {
+      "name": "selected",
+      "description": "The day has the accent subtle fill and an accent border, and the selected trait."
+    },
+    {
+      "name": "outside",
+      "description": "Days of the previous and next month have the subtle text colour."
+    },
+    {
+      "name": "unavailable",
+      "description": "dayState isUnavailable gives the muted background and the subtle date colour; the badge is drawn beside the date."
+    },
+    {
+      "name": "dots",
+      "description": "Up to three dots in the event colour (hollow when tentative, disabled colour when cancelled or declined); the whole day is one button."
+    },
+    {
+      "name": "events",
+      "description": "Dot chips with the start time; when more events exist than fit, the last row is \"+N more\", which opens a popover with every event as a bar chip."
+    },
+    {
+      "name": "drop target",
+      "description": "While a chip is dragged over a day, the day takes the accent subtle fill."
+    },
+    {
+      "name": "empty",
+      "description": "Days without events show only the date."
+    }
+  ],
+  "appearance": "Weekday initials in the muted text colour, days separated by subtle border lines, dates in the label style with tabular figures. Today uses the accent solid fill, selection the accent subtle fill and accent border, unavailable days the muted background. Chips are MonarchEventChip in the event colour. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web view switches to dots below about 36rem of width and opens a day's list in a popover; the product owns month navigation and the grid has arrow-key focus movement. On iOS the automatic layout uses dots on a phone and the selected day is meant to be listed under the grid with MonarchAgendaList, as the system Calendar does, instead of a popover per day. Months are pages of a horizontal paging ScrollView that writes month, so a swipe and MonarchCalendarToolbar both navigate. Keyboard grid navigation (arrows, Home, End, Page Up and Down) is not offered: VoiceOver moves day by day and scrolls pages with three fingers. Events use MonarchAgendaEvent and the environment's Calendar (time zone, first weekday, locale) instead of ISO strings, an IANA zone and an hourCycle. Drag to move, from the plan, is added with draggable and dropDestination; the web has none. Hatching is a muted fill. renderEvent is not offered; use onSelectEvent. Android has no month view yet. Several closures are optional (dayState, onSelectDay, onMoveEvent, onSelectEvent). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is dayState.",
+  "accessibility": [
+    "Each day is read as its long date and event count, then \"today\" and the badge when they apply, for example \"Wednesday, November 4, 2026, 2 events, today, Holiday\".",
+    "The selected day has the selected trait; today and selection are also shown by shape (circle, border), not colour alone.",
+    "In the dots layout the whole day is one button with a touch target of at least 44 points; dots are not read.",
+    "In the events layout the date, each chip and \"+N more\" are separate buttons; chips read title, time and status.",
+    "The weekday header is hidden from VoiceOver because each day's name carries its weekday.",
+    "Months are pages that VoiceOver scrolls with a three-finger swipe; programmatic month changes animate only without Reduce Motion.",
+    "Moving an event by drag has no VoiceOver equivalent in the view; apps should offer moving in their event editor."
+  ],
+  "edgeCases": [
+    "An event ending exactly at midnight does not appear on the day it ends; an all-day event appears on its last day.",
+    "Events entirely outside the shown weeks are skipped; events starting earlier appear from the first shown day.",
+    "maxEvents below 1 is treated as 1, so a busy day shows only \"+N more\".",
+    "A month binding passed as a constant still pages on swipe but does not change month.",
+    "The pager holds 24 months on each side of the first month shown and moves its centre when month jumps outside it.",
+    "At accessibility text sizes the automatic layout uses dots, because chips no longer fit."
+  ],
+  "tests": [
+    "MonarchCalendarMonthViewTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Month with events",
+      "fixture": "calendar-month-view",
+      "webExample": "Month with events",
+      "template": "MonarchCalendarMonthView(\n    month: $month,\n    events: [\n        MonarchAgendaEvent({{events.0.title}}, id: {{events.0.id}}, start: {{events.0.start|date}}, isAllDay: {{events.0.allDay}}, color: Color(red: {{events.0.color.r}} / 255.0, green: {{events.0.color.g}} / 255.0, blue: {{events.0.color.b}} / 255.0)),\n        MonarchAgendaEvent({{events.1.title}}, id: {{events.1.id}}, start: {{events.1.start|date}}, end: {{events.1.end|date}}, color: Color(red: {{events.1.color.r}} / 255.0, green: {{events.1.color.g}} / 255.0, blue: {{events.1.color.b}} / 255.0)),\n        MonarchAgendaEvent({{events.2.title}}, id: {{events.2.id}}, start: {{events.2.start|date}}, end: {{events.2.end|date}}, color: Color(red: {{events.2.color.r}} / 255.0, green: {{events.2.color.g}} / 255.0, blue: {{events.2.color.b}} / 255.0)),\n        MonarchAgendaEvent({{events.3.title}}, id: {{events.3.id}}, start: {{events.3.start|date}}, end: {{events.3.end|date}}, color: Color(red: {{events.3.color.r}} / 255.0, green: {{events.3.color.g}} / 255.0, blue: {{events.3.color.b}} / 255.0)),\n        MonarchAgendaEvent({{events.4.title}}, id: {{events.4.id}}, start: {{events.4.start|date}}, end: {{events.4.end|date}}, color: Color(red: {{events.4.color.r}} / 255.0, green: {{events.4.color.g}} / 255.0, blue: {{events.4.color.b}} / 255.0), status: {{events.4.status|case}}),\n        MonarchAgendaEvent({{events.5.title}}, id: {{events.5.id}}, start: {{events.5.start|date}}, end: {{events.5.end|date}}, color: Color(red: {{events.5.color.r}} / 255.0, green: {{events.5.color.g}} / 255.0, blue: {{events.5.color.b}} / 255.0)),\n        MonarchAgendaEvent({{events.6.title}}, id: {{events.6.id}}, start: {{events.6.start|date}}, end: {{events.6.end|date}}, color: Color(red: {{events.6.color.r}} / 255.0, green: {{events.6.color.g}} / 255.0, blue: {{events.6.color.b}} / 255.0), status: {{events.6.status|case}}),\n        MonarchAgendaEvent({{events.7.title}}, id: {{events.7.id}}, start: {{events.7.start|date}}, end: {{events.7.end|date}}, color: Color(red: {{events.7.color.r}} / 255.0, green: {{events.7.color.g}} / 255.0, blue: {{events.7.color.b}} / 255.0)),\n        MonarchAgendaEvent({{events.8.title}}, id: {{events.8.id}}, start: {{events.8.start|date}}, end: {{events.8.end|date}}, isAllDay: {{events.8.allDay}}, color: Color(red: {{events.8.color.r}} / 255.0, green: {{events.8.color.g}} / 255.0, blue: {{events.8.color.b}} / 255.0)),\n        MonarchAgendaEvent({{events.9.title}}, id: {{events.9.id}}, start: {{events.9.start|date}}, end: {{events.9.end|date}}, color: Color(red: {{events.9.color.r}} / 255.0, green: {{events.9.color.g}} / 255.0, blue: {{events.9.color.b}} / 255.0)),\n    ],\n    today: {{today|date}},\n    layout: .events,\n    dayState: { day in\n        calendar.isDate(day, inSameDayAs: {{holiday.date|date}})\n            ? MonarchCalendarMonthViewDayState(isUnavailable: {{holiday.hatched}}, badge: {{holiday.badge}})\n            : nil\n    }\n)\n.environment(\\.calendar, calendar)\n.environment(\\.locale, Locale(identifier: {{locale}}))",
+      "setupTemplate": "@State private var month = {{month|date}}\nprivate var calendar: Calendar {\n    var calendar = Calendar(identifier: .gregorian)\n    calendar.timeZone = TimeZone(identifier: {{timeZone}}) ?? .gmt\n    calendar.locale = Locale(identifier: {{locale}})\n    return calendar\n}",
+      "setup": "@State private var month = Date(timeIntervalSince1970: 1_793_491_200)\nprivate var calendar: Calendar {\n    var calendar = Calendar(identifier: .gregorian)\n    calendar.timeZone = TimeZone(identifier: \"UTC\") ?? .gmt\n    calendar.locale = Locale(identifier: \"en-GB\")\n    return calendar\n}",
+      "code": "MonarchCalendarMonthView(\n    month: $month,\n    events: [\n        MonarchAgendaEvent(\"Release day\", id: \"m1\", start: Date(timeIntervalSince1970: 1_793_750_400), isAllDay: true, color: Color(red: 22 / 255.0, green: 163 / 255.0, blue: 74 / 255.0)),\n        MonarchAgendaEvent(\"Stand-up\", id: \"m2\", start: Date(timeIntervalSince1970: 1_793_782_800), end: Date(timeIntervalSince1970: 1_793_783_700), color: Color(red: 15 / 255.0, green: 118 / 255.0, blue: 110 / 255.0)),\n        MonarchAgendaEvent(\"Design review\", id: \"m3\", start: Date(timeIntervalSince1970: 1_793_790_000), end: Date(timeIntervalSince1970: 1_793_793_600), color: Color(red: 124 / 255.0, green: 58 / 255.0, blue: 237 / 255.0)),\n        MonarchAgendaEvent(\"Lunch & learn\", id: \"m4\", start: Date(timeIntervalSince1970: 1_793_795_400), end: Date(timeIntervalSince1970: 1_793_799_000), color: Color(red: 37 / 255.0, green: 99 / 255.0, blue: 235 / 255.0)),\n        MonarchAgendaEvent(\"Retrospective\", id: \"m5\", start: Date(timeIntervalSince1970: 1_793_808_000), end: Date(timeIntervalSince1970: 1_793_811_600), color: Color(red: 194 / 255.0, green: 65 / 255.0, blue: 12 / 255.0), status: .cancelled),\n        MonarchAgendaEvent(\"Interview\", id: \"m6\", start: Date(timeIntervalSince1970: 1_794_218_400), end: Date(timeIntervalSince1970: 1_794_222_000), color: Color(red: 8 / 255.0, green: 145 / 255.0, blue: 178 / 255.0)),\n        MonarchAgendaEvent(\"Vendor call\", id: \"m7\", start: Date(timeIntervalSince1970: 1_794_492_000), end: Date(timeIntervalSince1970: 1_794_493_800), color: Color(red: 37 / 255.0, green: 99 / 255.0, blue: 235 / 255.0), status: .tentative),\n        MonarchAgendaEvent(\"Board meeting\", id: \"m8\", start: Date(timeIntervalSince1970: 1_795_014_000), end: Date(timeIntervalSince1970: 1_795_021_200), color: Color(red: 219 / 255.0, green: 39 / 255.0, blue: 119 / 255.0)),\n        MonarchAgendaEvent(\"Conference\", id: \"m9\", start: Date(timeIntervalSince1970: 1_795_478_400), end: Date(timeIntervalSince1970: 1_795_651_200), isAllDay: true, color: Color(red: 202 / 255.0, green: 138 / 255.0, blue: 4 / 255.0)),\n        MonarchAgendaEvent(\"Quarter close\", id: \"m10\", start: Date(timeIntervalSince1970: 1_796_058_000), end: Date(timeIntervalSince1970: 1_796_061_600), color: Color(red: 124 / 255.0, green: 58 / 255.0, blue: 237 / 255.0)),\n    ],\n    today: Date(timeIntervalSince1970: 1_793_750_400),\n    layout: .events,\n    dayState: { day in\n        calendar.isDate(day, inSameDayAs: Date(timeIntervalSince1970: 1_795_132_800))\n            ? MonarchCalendarMonthViewDayState(isUnavailable: true, badge: \"Holiday\")\n            : nil\n    }\n)\n.environment(\\.calendar, calendar)\n.environment(\\.locale, Locale(identifier: \"en-GB\"))"
+    },
+    {
+      "title": "Chips with overflow, a holiday and drag to move",
+      "setup": "private let today = Date(timeIntervalSince1970: 1_794_614_400)\n@State private var month = Date(timeIntervalSince1970: 1_794_614_400)",
+      "code": "MonarchCalendarMonthView(\n    month: $month,\n    events: [\n        MonarchAgendaEvent(\"Stand-up\", id: \"1\", start: today.addingTimeInterval(9 * 3_600)),\n        MonarchAgendaEvent(\"Lunch\", id: \"2\", start: today.addingTimeInterval(12 * 3_600)),\n        MonarchAgendaEvent(\"Review\", id: \"3\", start: today.addingTimeInterval(14 * 3_600)),\n        MonarchAgendaEvent(\"Planning\", id: \"4\", start: today.addingTimeInterval(16 * 3_600))\n    ],\n    today: today,\n    layout: .events,\n    dayState: { day in\n        Calendar.current.component(.day, from: day) == 25 ? MonarchCalendarMonthViewDayState(isUnavailable: true, badge: \"Holiday\") : nil\n    },\n    onMoveEvent: { _, _ in },\n    onSelectEvent: { _ in }\n)"
+    }
+  ],
+  "webEquivalent": "CalendarMonthView",
+  "dependsOn": [
+    "event-chip",
+    "calendar-toolbar",
+    "agenda-list"
+  ]
+}

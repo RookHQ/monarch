@@ -1,5 +1,24 @@
-import { Button, CalloutBanner } from '@rookcom/monarch-react';
+import {
+  Button,
+  CalloutBanner,
+  type ButtonProps,
+  type CalloutBannerProps,
+} from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './callout-banner.fixture.json';
+
+const banner = fixture.data as unknown as {
+  placement: NonNullable<CalloutBannerProps['placement']>;
+  tone: NonNullable<CalloutBannerProps['tone']>;
+  title: string;
+  body: string;
+  action: {
+    label: string;
+    variant: NonNullable<ButtonProps['variant']>;
+    size: NonNullable<ButtonProps['size']>;
+  };
+};
 
 export default {
   id: 'callout-banner',
@@ -136,17 +155,17 @@ export default {
           stack: true,
           render: () => (
             <CalloutBanner
-              placement="page"
-              tone="accent"
-              title="Your trial ends in 3 days"
+              placement={banner.placement}
+              tone={banner.tone}
+              title={banner.title}
               actions={
-                <Button size="sm" variant="primary">
-                  Choose a plan
+                <Button size={banner.action.size} variant={banner.action.variant}>
+                  {banner.action.label}
                 </Button>
               }
               onDismiss={() => {}}
             >
-              Add a payment method to keep your workspace and its data.
+              {banner.body}
             </CalloutBanner>
           ),
         },

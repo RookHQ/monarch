@@ -1,39 +1,18 @@
 import { ForceGraph } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
-const docs = [
-  { id: 'handbook', label: 'Team handbook', group: 'ops', description: 'Operations' },
-  { id: 'onboarding', label: 'Onboarding', group: 'ops' },
-  { id: 'travel', label: 'Travel policy', group: 'ops' },
-  { id: 'security', label: 'Security policy', group: 'eng' },
-  { id: 'incident', label: 'Incident runbook', group: 'eng' },
-  { id: 'release', label: 'Release process', group: 'eng' },
-  { id: 'style', label: 'Writing style', group: 'brand' },
-  { id: 'glossary', label: 'Glossary', group: 'brand' },
-  { id: 'old-runbook', label: 'Old runbook', group: 'eng' },
-  { id: 'notes', label: 'Meeting notes' },
-];
-const links = [
-  { source: 'handbook', target: 'onboarding', kind: 'parent' },
-  { source: 'handbook', target: 'travel', kind: 'parent' },
-  { source: 'handbook', target: 'security', kind: 'related' },
-  { source: 'security', target: 'incident', kind: 'related' },
-  { source: 'incident', target: 'release' },
-  { source: 'incident', target: 'old-runbook', kind: 'supersedes' },
-  { source: 'onboarding', target: 'glossary' },
-  { source: 'style', target: 'glossary', kind: 'related' },
-  { source: 'release', target: 'style' },
-];
-const groups = [
-  { key: 'ops', label: 'Operations' },
-  { key: 'eng', label: 'Engineering' },
-  { key: 'brand', label: 'Brand' },
-];
-const kinds = [
-  { key: 'parent', label: 'Parent / child', color: 1 as const },
-  { key: 'related', label: 'Related', color: 3 as const, dashed: true },
-  { key: 'supersedes', label: 'Supersedes', color: 4 as const },
-];
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './force-graph.fixture.json';
+
+const docs = fixture.data.nodes;
+const links = fixture.data.edges;
+const groups = fixture.data.groups;
+const kinds = fixture.data.edgeKinds as readonly {
+  key: string;
+  label: string;
+  color: 1 | 3 | 4;
+  dashed?: boolean;
+}[];
 
 export default {
   id: 'force-graph',
@@ -178,13 +157,13 @@ export default {
           stack: true,
           render: () => (
             <ForceGraph
-              title="Document links"
-              description="Documents and how they reference each other"
+              title={fixture.data.title}
+              description={fixture.data.description}
               nodes={docs}
               edges={links}
               groups={groups}
               edgeKinds={kinds}
-              height={360}
+              height={fixture.data.height}
               style={{ width: '100%', maxWidth: '44rem' }}
             />
           ),

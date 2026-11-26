@@ -1,5 +1,7 @@
 import { EmailVerificationBanner } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './email-verification-banner.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
@@ -120,8 +122,8 @@ export default {
           stack: true,
           render: () => (
             <EmailVerificationBanner
-              email="sam@example.com"
-              cooldownSeconds={20}
+              email={fixture.data.email}
+              cooldownSeconds={fixture.data.cooldownSeconds}
               onResend={() => wait(700)}
               onChangeEmail={() => undefined}
             />

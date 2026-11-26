@@ -8,6 +8,8 @@ import {
   OTPPinInput,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './otp-pin-input.fixture.json';
 
 function VerifyDemo() {
   const [code, setCode] = useState('');
@@ -20,8 +22,9 @@ function VerifyDemo() {
   return (
     <div style={{ display: 'grid', gap: 12, width: '100%' }}>
       <Field invalid={state === 'wrong'} disabled={state === 'checking'}>
-        <FieldLabel>Verification code</FieldLabel>
+        <FieldLabel>{fixture.data.label}</FieldLabel>
         <OTPPinInput
+          length={fixture.data.length}
           value={code}
           onValueChange={(v) => {
             setCode(v);
@@ -29,7 +32,7 @@ function VerifyDemo() {
           }}
           onComplete={verify}
         />
-        <FieldDescription>Try 123456.</FieldDescription>
+        <FieldDescription>{fixture.data.description}</FieldDescription>
         <FieldError>
           {state === 'wrong' ? 'That code is not right. Check it and try again.' : null}
         </FieldError>
@@ -38,10 +41,10 @@ function VerifyDemo() {
         <Button
           variant="primary"
           loading={state === 'checking'}
-          disabled={code.length !== 6}
+          disabled={code.length !== fixture.data.length}
           onClick={() => verify(code)}
         >
-          {state === 'ok' ? 'Verified' : 'Confirm'}
+          {state === 'ok' ? 'Verified' : fixture.data.confirm}
         </Button>
       </div>
     </div>

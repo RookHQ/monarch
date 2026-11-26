@@ -1,5 +1,14 @@
 import { InlineCode, Text } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './inline-code.fixture.json';
+
+/** Text with `code` spans written in backticks, as the native components read it. */
+function withCode(markdown: string) {
+  return markdown
+    .split('`')
+    .map((part, i) => (i % 2 === 1 ? <InlineCode key={i}>{part}</InlineCode> : part));
+}
 
 export default {
   id: 'inline-code',
@@ -78,12 +87,9 @@ export default {
           stack: true,
           render: () => (
             <>
-              <Text>
-                Set <InlineCode>timeout</InlineCode> to a number of seconds, then run{' '}
-                <InlineCode>npm run sync</InlineCode>.
-              </Text>
+              <Text>{withCode(fixture.data.lines[0] ?? '')}</Text>
               <Text size="sm" tone="muted">
-                The file is saved to <InlineCode>exports/2026/report.csv</InlineCode>.
+                {withCode(fixture.data.lines[1] ?? '')}
               </Text>
             </>
           ),

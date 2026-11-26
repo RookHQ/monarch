@@ -1,0 +1,139 @@
+{
+  "id": "mention-picker",
+  "name": "MonarchMentionPicker",
+  "title": "MentionPicker",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyColumn of MonarchListRow rows, with MonarchAvatar, MonarchSkeleton and MonarchInlineErrorRetry; androidx.compose.ui.text.input.TextFieldValue for the caret",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Suggestions for an @mention or #channel: a strip of people and channels above the message field and the keyboard, with loading, empty and error states, and helpers that find the mention being typed and replace it.",
+  "whenToUse": "In a message or comment composer where people mention others with @ or channels with #.",
+  "whenNotToUse": "Not for general search suggestions; use a Material 3 SearchBar with its suggestion list. Not for choosing people in a form; use a list with checkboxes or a dropdown menu.",
+  "api": [
+    "@Composable public fun MonarchMentionPicker(query: MonarchMentionQuery?, items: List<MonarchMentionItem>, onSelect: (MonarchMentionItem) -> Unit, modifier: Modifier = Modifier, status: MonarchMentionPickerStatus = MonarchMentionPickerStatus.Ready, onRetry: (() -> Unit)? = null, labels: MonarchMentionPickerLabels = MonarchMentionPickerLabels())",
+    "public class MonarchMentionQuery(trigger: Char, text: String, start: Int, end: Int) { fun replacing(text: String, replacement: String): String; fun replacing(value: TextFieldValue, replacement: String): TextFieldValue; companion object { fun find(text: String, caret: Int = text.length, triggers: Set<Char> = setOf('@')): MonarchMentionQuery?; fun find(value: TextFieldValue, triggers: Set<Char> = setOf('@')): MonarchMentionQuery? } }",
+    "public class MonarchMentionItem(id: String, label: String, kind: MonarchMentionKind = MonarchMentionKind.Person, detail: String? = null, image: Painter? = null, enabled: Boolean = true) { fun token(trigger: Char = '@'): String }",
+    "public enum class MonarchMentionKind { Person, Channel }",
+    "public enum class MonarchMentionPickerStatus { Loading, Ready, Failed }",
+    "public class MonarchMentionPickerLabels(label: String? = null, people: String? = null, channels: String? = null, loading: String? = null, empty: String? = null, error: String? = null, retry: String? = null, count: ((Int) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "query",
+      "type": "MonarchMentionQuery?",
+      "default": "required",
+      "description": "The mention being typed, from MonarchMentionQuery.find; null closes the picker."
+    },
+    {
+      "name": "items",
+      "type": "List<MonarchMentionItem>",
+      "default": "required",
+      "description": "The suggestions from the app's search. People and channels are grouped under headings when both are present; more than about four scroll."
+    },
+    {
+      "name": "onSelect",
+      "type": "(MonarchMentionItem) -> Unit",
+      "default": "required",
+      "description": "Called with the chosen suggestion. Complete the mention with query.replacing(value, item.token(query.trigger) + \" \")."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the strip. Place it directly above the message field."
+    },
+    {
+      "name": "status",
+      "type": "MonarchMentionPickerStatus",
+      "default": "MonarchMentionPickerStatus.Ready",
+      "description": "Loading shows placeholder rows, Failed the error."
+    },
+    {
+      "name": "onRetry",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Repeats a failed search: adds a Retry button."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchMentionPickerLabels",
+      "default": "MonarchMentionPickerLabels()",
+      "description": "Replacements for the built-in strings."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "No query: nothing is drawn."
+    },
+    {
+      "name": "loading",
+      "description": "Three placeholder rows, one element read as \"Searching…\"."
+    },
+    {
+      "name": "results",
+      "description": "A row per suggestion with an avatar, or a square number-sign tile for a channel; people and channels under headings when both are present."
+    },
+    {
+      "name": "disabled suggestion",
+      "description": "Text in the disabled color; the row cannot be chosen."
+    },
+    {
+      "name": "no matches",
+      "description": "\"No matches\". When a query with a space finds nothing, the picker closes."
+    },
+    {
+      "name": "failed",
+      "description": "\"Couldn’t load suggestions.\" with a Retry button when onRetry is given."
+    }
+  ],
+  "appearance": "A strip on the surface color with a subtle top border; labels in the default text color, details, headings and notes in the muted text color, disabled rows in the disabled text color; avatars with their fallback colors and a square number-sign tile for channels. The same roles in every theme.",
+  "platformNotes": "The web anchors a listbox to the caret with aria-activedescendant and arrow keys, and ships hooks that debounce and abort the search. Compose gives no caret rectangle, so on Android, as on iOS, the picker is a full-width strip that the app places directly above the message field, so it sits above the keyboard with the field's imePadding; suggestions are buttons. The app runs its search in a LaunchedEffect keyed by the query, which cancels the previous one; Monarch adds no debounce timer. MonarchMentionQuery.find reads the caret from TextFieldValue.selection, so a mention in the middle of the text is found. The token format matches the web's formatMentionToken; the web's parseMentionTokens and getCaretRect have no Android counterpart in this release.",
+  "accessibility": [
+    "The strip is a group named \"Suggestions\" and a polite live region whose state is the result count, \"Searching…\", \"No matches\" or the error, so the change is announced while focus stays in the text field.",
+    "Each suggestion is a button whose name is its label and detail; a disabled suggestion is marked disabled and cannot be activated.",
+    "Group headings are headings.",
+    "Avatars and the channel tile are decorative.",
+    "Rows are at least 56dp high and grow with the font size setting; long details wrap."
+  ],
+  "edgeCases": [
+    "A trigger inside a word, such as in an email address, finds no query.",
+    "A query ends after two words, a line break or a word longer than 40 characters.",
+    "Replacing a query removes one space after it when the replacement ends with a space, so a mention typed mid-sentence does not leave two spaces.",
+    "A query's range belongs to the text it was found in; replacing in a shorter text leaves it unchanged.",
+    "While a range of text is selected, find on a TextFieldValue returns null."
+  ],
+  "tests": [
+    "MonarchMentionPickerTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Suggestions while typing a mention",
+      "fixture": "mention-picker",
+      "webExample": "Suggestions while typing a mention",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchTextField(\n        value = value,\n        onValueChange = { value = it },\n        modifier = Modifier.fillMaxWidth(),\n        label = {{label}},\n        helperText = {{hint}},\n        singleLine = false,\n    )\n    MonarchMentionPicker(\n        query = query,\n        items = people,\n        onSelect = { item ->\n            if (query != null) value = query.replacing(value, item.token() + \" \")\n        },\n    )\n}",
+      "setupTemplate": "var value by remember { mutableStateOf(TextFieldValue({{text}}, TextRange({{text}}.length))) }\nval people = listOf(\n    MonarchMentionItem(id = {{suggestions.0.id}}, label = {{suggestions.0.label}}, detail = {{suggestions.0.description}}),\n)\nval query = MonarchMentionQuery.find(value)",
+      "imports": [
+        "androidx.compose.ui.text.TextRange"
+      ],
+      "setup": "var value by remember { mutableStateOf(TextFieldValue(\"Thanks @Ana Lopez, looping in @be\", TextRange(\"Thanks @Ana Lopez, looping in @be\".length))) }\nval people = listOf(\n    MonarchMentionItem(id = \"u_ben\", label = \"Ben Okafor\", detail = \"Engineering\"),\n)\nval query = MonarchMentionQuery.find(value)",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchTextField(\n        value = value,\n        onValueChange = { value = it },\n        modifier = Modifier.fillMaxWidth(),\n        label = \"Comment\",\n        helperText = \"Type @ for people or # for channels.\",\n        singleLine = false,\n    )\n    MonarchMentionPicker(\n        query = query,\n        items = people,\n        onSelect = { item ->\n            if (query != null) value = query.replacing(value, item.token() + \" \")\n        },\n    )\n}"
+    },
+    {
+      "title": "A search that failed",
+      "code": "MonarchMentionPicker(\n    query = MonarchMentionQuery(trigger = '#', text = \"des\", start = 0, end = 4),\n    items = emptyList(),\n    onSelect = {},\n    status = MonarchMentionPickerStatus.Failed,\n    onRetry = { /* Search again. */ },\n)"
+    }
+  ],
+  "webEquivalent": "MentionPicker",
+  "dependsOn": [
+    "avatar",
+    "skeleton"
+  ]
+}

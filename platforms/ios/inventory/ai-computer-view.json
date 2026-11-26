@@ -1,0 +1,233 @@
+{
+  "id": "ai-computer-view",
+  "name": "MonarchAiComputerView",
+  "title": "AiComputerView",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of MonarchCalloutBanner, a screenshot box (MonarchRemoteImage/AsyncImage at the screenshot's aspectRatio with GeometryReader markers), MonarchLightbox for pinch zoom, MonarchButton controls in MonarchFlowLayout, confirmationDialog for Stop, DisclosureGroup for the compact log, AccessibilityNotification.Announcement",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A live view of an AI agent operating a browser or a computer: the latest screenshot with the agent's pointer and actions marked, the status in words, who is in control, a log of every action, and Pause, Take over, Hand back and Stop.",
+  "whenToUse": "When an agent operates a website or a computer on the person's behalf and they need to watch it, see what it did, and pause, take control or stop it.",
+  "whenNotToUse": "For an agent's actions on records without a screen use MonarchAiActionLog. For the steps of a plan use MonarchAiChainOfSteps or MonarchAiTaskProgress. For a plain screenshot use MonarchLightbox.",
+  "api": [
+    "init(status: MonarchAiComputerViewStatus, frame: MonarchAiComputerFrame? = nil, actions: [MonarchAiComputerAction] = [], currentURL: String? = nil, windowTitle: String? = nil, pointer: MonarchAiComputerPoint? = nil, surface: MonarchAiComputerViewSurface = .browser, waitingReason: String? = nil, selection: Binding<String?>? = nil, showsTypedText: Bool = false, isCompact: Bool = false, visibleActions: Int = 200, announceInterval: Duration = .seconds(4), labels: MonarchAiComputerViewLabels = MonarchAiComputerViewLabels(), onPauseChange: (@MainActor (Bool) -> Void)? = nil, onTakeOver: (@MainActor () -> Void)? = nil, onHandBack: (@MainActor () -> Void)? = nil, onStop: (@MainActor () -> Void)? = nil)",
+    "enum MonarchAiComputerViewStatus: String { case starting, working, paused, waitingForYou, takenOver, done, failed, stopped }",
+    "enum MonarchAiComputerActionKind: String { case click, type, scroll, navigate, key, wait, read, other }",
+    "enum MonarchAiComputerViewSurface: String { case browser, computer }",
+    "struct MonarchAiComputerPoint { init(x: Double, y: Double) }",
+    "struct MonarchAiComputerFrame { init(image: Image?, width: Double, height: Double, capturedAt: Date, alt: String? = nil, isSensitive: Bool = false); init(url: URL?, width: Double, height: Double, capturedAt: Date, alt: String? = nil, isSensitive: Bool = false) }",
+    "struct MonarchAiComputerAction: Identifiable { init(id: String, kind: MonarchAiComputerActionKind, label: String, date: Date, point: MonarchAiComputerPoint? = nil, detail: String? = nil, isSensitive: Bool = false) }",
+    "struct MonarchAiComputerViewLabels { init(label:, status:, kind:, agentInControl:, youInControl:, waitingTitle:, waitingFallback:, pause:, resume:, takeOver:, handBack:, stop:, stopQuestion:, stopConfirm:, stopCancel:, logLabel:, logToggle:, empty:, hidden:, sensitiveLabel:, noFrame:, frameUnavailable:, frameHidden:, frameAlt:, latestAction:, capturedAt:, address:, zoom:, showEarlier:, announceActions:, announceStatus:, announceTakenOver:, announceReleased:) }"
+  ],
+  "options": [
+    {
+      "name": "status",
+      "type": "MonarchAiComputerViewStatus",
+      "default": "required",
+      "description": "Where the session is. Each change is announced once."
+    },
+    {
+      "name": "frame",
+      "type": "MonarchAiComputerFrame?",
+      "default": "nil",
+      "description": "The latest screenshot, as an Image or an http or https URL, with its pixel size and capture time."
+    },
+    {
+      "name": "actions",
+      "type": "[MonarchAiComputerAction]",
+      "default": "[]",
+      "description": "What the agent did, oldest first. New entries are announced, throttled."
+    },
+    {
+      "name": "currentURL",
+      "type": "String?",
+      "default": "nil",
+      "description": "The address of the page, shown as text without any user:password part."
+    },
+    {
+      "name": "windowTitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "The title of the window or page."
+    },
+    {
+      "name": "pointer",
+      "type": "MonarchAiComputerPoint?",
+      "default": "nil",
+      "description": "Where the agent's pointer is, in screenshot pixels."
+    },
+    {
+      "name": "surface",
+      "type": "MonarchAiComputerViewSurface",
+      "default": ".browser",
+      "description": "What is operated; only changes the wording."
+    },
+    {
+      "name": "waitingReason",
+      "type": "String?",
+      "default": "nil",
+      "description": "Why the agent waits, shown while the status is waitingForYou."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<String?>?",
+      "default": "nil",
+      "description": "The id of the highlighted action, whose point is marked on the screenshot. Without it the view keeps the selection."
+    },
+    {
+      "name": "showsTypedText",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the detail of typing actions. Sensitive actions stay hidden."
+    },
+    {
+      "name": "isCompact",
+      "type": "Bool",
+      "default": "false",
+      "description": "Puts the log behind a disclosure, \"Actions (12)\"."
+    },
+    {
+      "name": "visibleActions",
+      "type": "Int",
+      "default": "200",
+      "description": "How many of the newest actions the log shows before \"Show earlier\"; at least one."
+    },
+    {
+      "name": "announceInterval",
+      "type": "Duration",
+      "default": ".seconds(4)",
+      "description": "The shortest time between two action announcements."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiComputerViewLabels",
+      "default": "MonarchAiComputerViewLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onPauseChange",
+      "type": "(@MainActor (Bool) -> Void)?",
+      "default": "nil",
+      "description": "Shows Pause while starting or working and Resume while paused; receives the wanted paused state."
+    },
+    {
+      "name": "onTakeOver",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows Take over while the agent holds control (primary while it waits for the person)."
+    },
+    {
+      "name": "onHandBack",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows Hand back while the person holds control."
+    },
+    {
+      "name": "onStop",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows Stop until the session is finished; runs after the confirmation dialog."
+    }
+  ],
+  "states": [
+    {
+      "name": "starting",
+      "description": "A small spinner beside \"Starting\"; the agent-in-control banner."
+    },
+    {
+      "name": "working",
+      "description": "The CPU icon and \"Working\"; the agent-in-control banner in the info tone; Pause, Take over and Stop."
+    },
+    {
+      "name": "paused",
+      "description": "\"Paused\" with Resume in place of Pause."
+    },
+    {
+      "name": "waiting for you",
+      "description": "A warning notice with the reason; Take over is the primary button."
+    },
+    {
+      "name": "taken over",
+      "description": "\"You are in control\" and a warning-tone banner; Hand back is the primary button."
+    },
+    {
+      "name": "done, failed, stopped",
+      "description": "A success, danger or neutral icon and the word; no banner and no buttons."
+    },
+    {
+      "name": "no screenshot",
+      "description": "The box keeps a 16:10 shape and reads \"No screenshot yet\"."
+    },
+    {
+      "name": "screenshot hidden",
+      "description": "A crossed-out eye and \"Screenshot hidden: it may show private information\", for a sensitive screenshot or one right after a sensitive action."
+    },
+    {
+      "name": "screenshot unavailable",
+      "description": "\"Screenshot unavailable\" for an address that is not http or https."
+    },
+    {
+      "name": "selected action",
+      "description": "The row has the accent background and border and a check mark; its point gets an accent ring on the screenshot."
+    },
+    {
+      "name": "windowed log",
+      "description": "A ghost \"Show 3 earlier actions\" button above the newest actions."
+    }
+  ],
+  "appearance": "The screenshot sits in a rounded box on the muted background with the default border. The latest action's point has a ring in the strong AI colour, the selected action's a thicker ring in the strong accent colour, and the pointer is an arrow glyph in the default text colour; each has a light halo in the surface colour so it reads on any screenshot. Log rows are rounded surface tiles with the subtle border, the selected one on the subtle accent background. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web shows the log beside the screenshot on wide screens; on iPhone the log is under the screenshot, and isCompact puts it in a system DisclosureGroup. Zoom opens the screenshot in MonarchLightbox, where it can be pinched and panned, instead of a wheel-zoomed frame. Stop confirms in the system confirmation dialog rather than inline buttons. The web can show a live MediaStream and forward the person's pointer and keys to the remote screen while in control (onPointer, onKey, onRelease); a native app owns its own streaming and input, so this view shows screenshots only and has no input forwarding. onSelectAction and selectedActionId are one selection binding. The parity map names MonarchAiActionLog as a dependency; its rows describe agent actions on records with Undo, which does not fit screen actions with points and private details, so the log here is its own list of row buttons. Marked experimental as an AI product pattern until a Rook app adopts it. Android has no computer view yet.",
+  "accessibility": [
+    "The view is a container named \"Assistant browser view\" or \"Assistant computer view\".",
+    "The screenshot is one image element read as its description and the latest action (\"The sign-in page. Latest action: Clicked Continue\"), built by a tested pure function, with a named Zoom action; the markers are hidden.",
+    "A hidden or missing screenshot reads why it is not shown.",
+    "The status is an icon and a word, never colour alone.",
+    "Each status change is announced once; taking over and handing back have their own sentences.",
+    "New actions are announced no more often than announceInterval; several are summed up as \"3 new actions. Latest: …\". A sensitive action is announced as \"Private action\".",
+    "Log rows are buttons read as \"Click: Clicked Continue\" with the detail (or \"Hidden\") and the time as the value; the selected row has the selected trait and a check mark.",
+    "Every button has a 44-point touch target; the address is read after \"Address\"."
+  ],
+  "edgeCases": [
+    "A sensitive action's label and detail are never shown or announced, and the screenshot after it is hidden even if showsTypedText is true.",
+    "Typed text shows only with showsTypedText.",
+    "Credentials in currentURL (user:password@) are removed before it is shown.",
+    "Points outside the screenshot are clamped to its edges; a screenshot with no usable size draws no markers.",
+    "When the selected action is also the latest action with a point, only the selection ring is drawn.",
+    "A visibleActions below one shows one action before Show earlier.",
+    "The stop confirmation closes by itself when the session finishes."
+  ],
+  "tests": [
+    "MonarchAiComputerViewTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Live session",
+      "fixture": "ai-computer-view",
+      "webExample": "Live session",
+      "template": "MonarchAiComputerView(\n    status: status,\n    frame: MonarchAiComputerFrame(\n        image: Self.placeholder(),\n        width: {{frame.width}},\n        height: {{frame.height}},\n        capturedAt: {{frame.capturedAt|date}},\n        alt: {{frame.alt}}\n    ),\n    actions: [\n        MonarchAiComputerAction(\n            id: {{actions.0.id}},\n            kind: .{{actions.0.kind|raw}},\n            label: {{actions.0.label}},\n            date: {{actions.0.at|date}},\n            detail: {{actions.0.detail}}\n        ),\n        MonarchAiComputerAction(\n            id: {{actions.1.id}},\n            kind: .{{actions.1.kind|raw}},\n            label: {{actions.1.label}},\n            date: {{actions.1.at|date}}\n        ),\n    ],\n    currentURL: {{currentUrl}},\n    windowTitle: {{windowTitle}},\n    onPauseChange: { paused in status = paused ? .paused : .working },\n    onTakeOver: { status = .takenOver },\n    onHandBack: { status = .working },\n    onStop: { status = .stopped }\n)\n.environment(\\.locale, Locale(identifier: {{locale}}))\n.environment(\\.timeZone, TimeZone(identifier: {{timeZone}}) ?? .gmt)",
+      "setupTemplate": "@State private var status = MonarchAiComputerViewStatus.{{status|raw}}\n\nprivate static func placeholder() -> Image {\n    // A neutral stand-in for a sign-in page, as the web example draws it: a header bar, a card, two fields and a button.\n    let context = CGContext(\n        data: nil, width: 240, height: 150, bitsPerComponent: 8, bytesPerRow: 0,\n        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!\n    func fill(_ gray: CGFloat, _ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat, radius: CGFloat = 0) {\n        context.setFillColor(gray: gray, alpha: 1)\n        let rect = CGRect(x: x / 4, y: 150 - (y + height) / 4, width: width / 4, height: height / 4)\n        context.addPath(CGPath(roundedRect: rect, cornerWidth: radius / 4, cornerHeight: radius / 4, transform: nil))\n        context.fillPath()\n    }\n    fill(1, 0, 0, 960, 600)\n    fill(0.88, 0, 0, 960, 64)\n    fill(0.94, 330, 150, 300, 300, radius: 12)\n    fill(0.86, 370, 210, 220, 36, radius: 6)\n    fill(0.86, 370, 270, 220, 36, radius: 6)\n    fill(0.5, 370, 350, 220, 44, radius: 8)\n    return Image(decorative: context.makeImage()!, scale: 1)\n}\n",
+      "setup": "@State private var status = MonarchAiComputerViewStatus.working\n\nprivate static func placeholder() -> Image {\n    // A neutral stand-in for a sign-in page, as the web example draws it: a header bar, a card, two fields and a button.\n    let context = CGContext(\n        data: nil, width: 240, height: 150, bitsPerComponent: 8, bytesPerRow: 0,\n        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!\n    func fill(_ gray: CGFloat, _ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat, radius: CGFloat = 0) {\n        context.setFillColor(gray: gray, alpha: 1)\n        let rect = CGRect(x: x / 4, y: 150 - (y + height) / 4, width: width / 4, height: height / 4)\n        context.addPath(CGPath(roundedRect: rect, cornerWidth: radius / 4, cornerHeight: radius / 4, transform: nil))\n        context.fillPath()\n    }\n    fill(1, 0, 0, 960, 600)\n    fill(0.88, 0, 0, 960, 64)\n    fill(0.94, 330, 150, 300, 300, radius: 12)\n    fill(0.86, 370, 210, 220, 36, radius: 6)\n    fill(0.86, 370, 270, 220, 36, radius: 6)\n    fill(0.5, 370, 350, 220, 44, radius: 8)\n    return Image(decorative: context.makeImage()!, scale: 1)\n}\n",
+      "code": "MonarchAiComputerView(\n    status: status,\n    frame: MonarchAiComputerFrame(\n        image: Self.placeholder(),\n        width: 960,\n        height: 600,\n        capturedAt: Date(timeIntervalSince1970: 1_767_268_809),\n        alt: \"The sign-in page of the supplier portal\"\n    ),\n    actions: [\n        MonarchAiComputerAction(\n            id: \"a1\",\n            kind: .navigate,\n            label: \"Opened the supplier portal\",\n            date: Date(timeIntervalSince1970: 1_767_268_801),\n            detail: \"https://portal.example.com/sign-in\"\n        ),\n        MonarchAiComputerAction(\n            id: \"a2\",\n            kind: .read,\n            label: \"Read the sign-in form\",\n            date: Date(timeIntervalSince1970: 1_767_268_803)\n        ),\n    ],\n    currentURL: \"https://portal.example.com/sign-in\",\n    windowTitle: \"Supplier portal\",\n    onPauseChange: { paused in status = paused ? .paused : .working },\n    onTakeOver: { status = .takenOver },\n    onHandBack: { status = .working },\n    onStop: { status = .stopped }\n)\n.environment(\\.locale, Locale(identifier: \"en-GB\"))\n.environment(\\.timeZone, TimeZone(identifier: \"UTC\") ?? .gmt)"
+    },
+    {
+      "title": "Waiting for the person, compact log",
+      "code": "MonarchAiComputerView(\n    status: .waitingForYou,\n    waitingReason: \"Sign in to continue\",\n    isCompact: true,\n    onTakeOver: {}\n)"
+    }
+  ],
+  "webEquivalent": "AiComputerView",
+  "dependsOn": [
+    "callout-banner",
+    "button",
+    "lightbox",
+    "inline"
+  ],
+  "icons": {
+    "banner": "BotGlyph"
+  }
+}

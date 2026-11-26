@@ -40,3 +40,38 @@ updates:
     ignore:
       - dependency-name: '*'
         update-types: ['version-update:semver-major']
+  # Monarch for Android: reads platforms/android/gradle/libs.versions.toml, the only place a
+  # version is written. Majors are ignored: a major Kotlin, AGP, Gradle or Compose BOM upgrade
+  # follows MONARCH_UPGRADE_PLAYBOOK.md on a chore/ branch. Nothing here merges on its own.
+  - package-ecosystem: gradle
+    directory: /platforms/android
+    schedule: { interval: weekly, day: monday }
+    target-branch: uat
+    open-pull-requests-limit: 3
+    labels: [dependencies]
+    commit-message: { prefix: 'chore(android)' }
+    groups:
+      # Versions that must move together arrive in one pull request: the Android Gradle plugin
+      # with Kotlin (which also versions the Compose compiler plugin).
+      android-toolchain:
+        patterns: ['com.android.tools.build:*', 'org.jetbrains.kotlin*']
+        update-types: [minor, patch]
+      android-libraries:
+        patterns: ['*']
+        exclude-patterns: ['com.android.tools.build:*', 'org.jetbrains.kotlin*']
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+  # Monarch for iOS: platforms/ios/Package.swift. The package has no dependencies today, so this
+  # opens nothing until one is added; majors would follow the playbook as above.
+  - package-ecosystem: swift
+    directory: /platforms/ios
+    schedule: { interval: weekly, day: monday }
+    target-branch: uat
+    open-pull-requests-limit: 2
+    labels: [dependencies]
+    commit-message: { prefix: 'chore(ios)' }
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']

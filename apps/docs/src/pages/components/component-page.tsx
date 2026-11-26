@@ -1,4 +1,7 @@
 import '../../styles/component-page.css';
+// The native sections' styles load with the page: the prerendered sections
+// are shown as they are until their code is needed (native-slot.tsx).
+import '../../styles/native.css';
 import { Alert, Badge } from '@rookcom/monarch-react';
 import {
   DOC_SECTIONS,
@@ -15,6 +18,7 @@ import { href } from '../../lib/router.js';
 import { PageFrame, PageSection } from '../../layout/page-frame.js';
 import { ExampleCard } from '../../features/examples/example-card.js';
 import { Inline } from '../../features/content/inline.js';
+import { NativeSlot } from './native-slot.js';
 import { SectionBody } from './reference-sections.js';
 
 const REFERENCE = DOC_SECTIONS.filter(
@@ -23,7 +27,9 @@ const REFERENCE = DOC_SECTIONS.filter(
 
 /**
  * One page per docs file: the headline example big, the other examples with
- * "Show code", then every reference section of the docs contract.
+ * "Show code", then every reference section of the docs contract: the Web
+ * tab. The iOS and Android tabs show the component on those platforms, from
+ * the native inventories (or the plan).
  */
 export function ComponentPage({ id }: { id: string }) {
   const meta = pageById[id];
@@ -62,41 +68,44 @@ function Loaded({ meta }: { meta: DocsPageMeta }) {
         </>
       }
     >
-      {first ? <ExampleCard example={first} code={codeOf(0)} size="lg" headingLevel={2} /> : null}
+      <NativeSlot id={id} title={docs.title} />
+      <div id="panel-web" role="tabpanel" aria-labelledby="tab-web">
+        {first ? <ExampleCard example={first} code={codeOf(0)} size="lg" headingLevel={2} /> : null}
 
-      <PageSection id="examples" title={DOC_SECTION_TITLES.examples}>
-        {rest.length ? (
-          <div className="docs-examples">
-            {rest.map((ex, i) => (
-              <ExampleCard key={ex.title} example={ex} code={codeOf(i + 1)} />
-            ))}
-          </div>
-        ) : (
-          <p className="docs-text">
-            {first
-              ? 'The example at the top of the page is the only one for this component.'
-              : 'No examples yet.'}
-          </p>
-        )}
-      </PageSection>
+        <PageSection id="examples" title={DOC_SECTION_TITLES.examples}>
+          {rest.length ? (
+            <div className="docs-examples">
+              {rest.map((ex, i) => (
+                <ExampleCard key={ex.title} example={ex} code={codeOf(i + 1)} />
+              ))}
+            </div>
+          ) : (
+            <p className="docs-text">
+              {first
+                ? 'The example at the top of the page is the only one for this component.'
+                : 'No examples yet.'}
+            </p>
+          )}
+        </PageSection>
 
-      {REFERENCE.map((sid) => {
-        const s = sections[sid];
-        const missing = isIncomplete(s as never);
-        const body = missing ? ((s.partial as Record<string, unknown>) ?? {}) : s;
-        return (
-          <PageSection key={sid} id={sid} title={DOC_SECTION_TITLES[sid]}>
-            {missing ? (
-              <Alert tone="warning" title="This section is incomplete">
-                <Inline text={s.reason as string} />
-              </Alert>
-            ) : null}
-            {!missing || s.partial || sid === 'apiReference' || sid === 'typedProperties' ? (
-              <SectionBody id={sid} s={body} page={meta} api={api} />
-            ) : null}
-          </PageSection>
-        );
-      })}
+        {REFERENCE.map((sid) => {
+          const s = sections[sid];
+          const missing = isIncomplete(s as never);
+          const body = missing ? ((s.partial as Record<string, unknown>) ?? {}) : s;
+          return (
+            <PageSection key={sid} id={sid} title={DOC_SECTION_TITLES[sid]}>
+              {missing ? (
+                <Alert tone="warning" title="This section is incomplete">
+                  <Inline text={s.reason as string} />
+                </Alert>
+              ) : null}
+              {!missing || s.partial || sid === 'apiReference' || sid === 'typedProperties' ? (
+                <SectionBody id={sid} s={body} page={meta} api={api} />
+              ) : null}
+            </PageSection>
+          );
+        })}
+      </div>
     </PageFrame>
   );
 }

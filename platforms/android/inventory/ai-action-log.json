@@ -1,0 +1,155 @@
+{
+  "id": "ai-action-log",
+  "name": "MonarchAiActionLog",
+  "title": "AiActionLog",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of entry rows with Material 3 HorizontalDivider, composing MonarchAiAgentAvatar, MonarchBadge, MonarchButton and MonarchEmptyState; android.icu.text.RelativeDateTimeFormatter for the times and androidx.compose.ui.text.LinkAnnotation for target links",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "An audit list of what AI agents did: the agent, marked as an AI agent, what it did and to what, when, and Undo for actions that can be reversed.",
+  "whenToUse": "On an agent's screen, in an assistant panel or in a record's history, where people check what agents changed on their behalf and reverse what they do not want.",
+  "whenNotToUse": "For people's actions on a record, use MonarchActivityTimeline. For a single change the agent just made, offer undo with MonarchAiUndoBanner.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchAiActionLog(entries: List<MonarchAiActionLogEntry>, modifier: Modifier = Modifier, now: Long? = null, pageSize: Int = 200, locale: Locale? = null, onUndo: (suspend (id: String) -> Unit)? = null, onOpenTarget: ((MonarchAiActionLogEntry) -> Unit)? = null, labels: MonarchAiActionLogLabels = MonarchAiActionLogLabels())",
+    "data class MonarchAiActionLogEntry(id: String, date: Long, agent: MonarchAiAgentRef, action: String, target: String? = null, url: String? = null, undoable: Boolean = false, undone: Boolean = false, agentImage: Painter? = null)",
+    "class MonarchAiActionLogLabels(label: String? = null, actorKind: String? = null, undo: String? = null, undoLabel: ((description: String) -> String)? = null, undone: String? = null, undoneAnnouncement: ((description: String) -> String)? = null, undoFailed: ((description: String) -> String)? = null, openTarget: ((target: String) -> String)? = null, empty: String? = null, showMore: ((count: Int) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "entries",
+      "type": "List<MonarchAiActionLogEntry>",
+      "default": "required",
+      "description": "The actions, in the order to show them, usually newest first: id, date (epoch milliseconds), agent, action, target, URL, whether it can be undone and whether it was."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the log."
+    },
+    {
+      "name": "now",
+      "type": "Long?",
+      "default": "null",
+      "description": "The reference time for relative times, in epoch milliseconds. null follows the clock, refreshed every minute."
+    },
+    {
+      "name": "pageSize",
+      "type": "Int",
+      "default": "200",
+      "description": "How many entries show at first and how many Show more adds; at least one."
+    },
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "null",
+      "description": "The locale of the relative times. null uses the first locale of the configuration."
+    },
+    {
+      "name": "onUndo",
+      "type": "(suspend (id: String) -> Unit)?",
+      "default": "null",
+      "description": "Reverses an action, given its entry id. Shows Undo on undoable entries; the button shows progress while it runs. Throw to show and announce the failure."
+    },
+    {
+      "name": "onOpenTarget",
+      "type": "((MonarchAiActionLogEntry) -> Unit)?",
+      "default": "null",
+      "description": "Opens an entry's target. null opens its http or https URL through the system (LocalUriHandler)."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiActionLogLabels",
+      "default": "MonarchAiActionLogLabels()",
+      "description": "Replacements for every built-in string."
+    }
+  ],
+  "states": [
+    {
+      "name": "entry",
+      "description": "The decorative agent avatar, the agent's name in the strong body style with an outlined \"AI agent\" badge, the action and target, and the relative time."
+    },
+    {
+      "name": "link",
+      "description": "A target with an http or https URL is an underlined link in the link color; other URLs show as plain text."
+    },
+    {
+      "name": "undoing",
+      "description": "The entry's Undo button shows its spinner; pressing again does nothing."
+    },
+    {
+      "name": "undone",
+      "description": "The action text turns muted, the time line adds \"Undone\" and Undo goes away; announced."
+    },
+    {
+      "name": "undo failed",
+      "description": "\"Could not undo: …\" under the entry in the strong danger color; Undo stays; announced."
+    },
+    {
+      "name": "paged",
+      "description": "A secondary Show more button says how many entries it adds."
+    },
+    {
+      "name": "empty",
+      "description": "A small MonarchEmptyState, \"No AI activity yet.\"."
+    }
+  ],
+  "appearance": "Rows separated by subtle dividers on the surface behind the log. The name in default text, the badge outlined in neutral, the action in default text (muted once undone), the time in muted caption text, links in the link color and failures in the strong danger color. The same roles in dark and both high-contrast themes.",
+  "platformNotes": "A product pattern, experimental until a Rook app adopts it, built only from Monarch parts. Names and parameters follow iOS: entries, now, pageSize, labels and one onUndo handler that receives the entry id (the web has an onUndo per entry); isUndoable and isUndone are undoable and undone, and onUndo is a suspending function, Compose's equivalent of async throws. The rows are a Column, not a LazyColumn, so the log can sit in a screen or a panel that scrolls, as on iOS; long logs page with Show more. The web's href is url; components do not navigate, so onOpenTarget lets the app route it and the default opens a safe URL through LocalUriHandler. The web marks the actor kind with visually hidden brackets; Android shows the \"AI agent\" badge and TalkBack reads it in brackets. The web moves focus to the first revealed row after Show more; Android leaves focus on the button's place. Relative times use android.icu.text.RelativeDateTimeFormatter in the given or configured locale; the web's locale prop is locale. Monarch bundles no icons, so the failure text has no icon. The agent's picture is agentImage: Painter? because Monarch loads no images.",
+  "accessibility": [
+    "Each entry is one TalkBack element read as \"Research agent (AI agent) added a summary to Quarterly report\", built by a tested pure function, so the actor is never mistaken for a person.",
+    "The time, \"Undone\" and a failure are the entry's state description.",
+    "A target link is a named custom action, \"Open Quarterly report\".",
+    "The agent avatar is decorative.",
+    "Undo buttons are named per entry (\"Undo: Research agent added a summary to Quarterly report\") and keep a 48dp touch target.",
+    "A successful and a failed undo are announced through a polite live region that is always present, so nothing is announced when the log first appears.",
+    "The list is a traversal group named \"AI activity\"."
+  ],
+  "edgeCases": [
+    "A time in the future reads \"now\"; past times step from minutes to hours, days, weeks, months and years.",
+    "An entry that is undoable but already undone has no Undo.",
+    "A blank target is left out of the sentence; an unsafe URL such as javascript: keeps the target as plain text with no action.",
+    "pageSize below 1 counts as 1. A change of pageSize starts the paging over.",
+    "The undo state of an entry is kept by id while the log is on screen; the app should also set undone on its entry after a successful undo."
+  ],
+  "tests": [
+    "MonarchAiActionLogTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Log",
+      "fixture": "ai-action-log",
+      "webExample": "Log",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiActionLog(\n    entries = listOf(\n        MonarchAiActionLogEntry(\n            id = {{entries.0.id}},\n            date = {{entries.0.at|millis}},\n            agent = MonarchAiAgentRef(name = {{entries.0.agent.name}}, id = {{entries.0.agent.id}}),\n            action = {{entries.0.action}},\n            target = {{entries.0.target}},\n            url = {{entries.0.href}},\n        ),\n        MonarchAiActionLogEntry(\n            id = {{entries.1.id}},\n            date = {{entries.1.at|millis}},\n            agent = MonarchAiAgentRef(name = {{entries.1.agent.name}}, id = {{entries.1.agent.id}}),\n            action = {{entries.1.action}},\n        ),\n        MonarchAiActionLogEntry(\n            id = {{entries.2.id}},\n            date = {{entries.2.at|millis}},\n            agent = MonarchAiAgentRef(name = {{entries.2.agent.name}}, id = {{entries.2.agent.id}}),\n            action = {{entries.2.action}},\n            target = {{entries.2.target}},\n            undone = {{entries.2.undone}},\n        ),\n    ),\n    now = {{now|millis}},\n    onOpenTarget = { },\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ],
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiActionLog(\n    entries = listOf(\n        MonarchAiActionLogEntry(\n            id = \"1\",\n            date = 1_768_478_160_000L,\n            agent = MonarchAiAgentRef(name = \"Research agent\", id = \"research\"),\n            action = \"added a summary to\",\n            target = \"Quarterly report\",\n            url = \"#quarterly-report\",\n        ),\n        MonarchAiActionLogEntry(\n            id = \"2\",\n            date = 1_768_475_400_000L,\n            agent = MonarchAiAgentRef(name = \"Scheduling agent\", id = \"scheduler\"),\n            action = \"moved the team check-in to Friday\",\n        ),\n        MonarchAiActionLogEntry(\n            id = \"3\",\n            date = 1_768_467_600_000L,\n            agent = MonarchAiAgentRef(name = \"Research agent\", id = \"research\"),\n            action = \"tagged\",\n            target = \"12 records\",\n            undone = true,\n        ),\n    ),\n    now = 1_768_478_400_000L,\n    onOpenTarget = { },\n)"
+    },
+    {
+      "title": "No activity yet",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiActionLog(entries = emptyList())",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ]
+    }
+  ],
+  "webEquivalent": "AiActionLog",
+  "dependsOn": [
+    "ai-agent-avatar",
+    "relative-time",
+    "button",
+    "badge",
+    "empty-state"
+  ],
+  "icons": {
+    "agent.badge": "BotGlyph"
+  }
+}

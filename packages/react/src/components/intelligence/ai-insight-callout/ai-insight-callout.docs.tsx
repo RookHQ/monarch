@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import { useState, type ComponentProps } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiInsightCallout } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-insight-callout.fixture.json';
+
+type CalloutProps = ComponentProps<typeof AiInsightCallout>;
 
 function DismissDemo() {
   const [shown, setShown] = useState(true);
@@ -10,17 +14,18 @@ function DismissDemo() {
   };
   return shown ? (
     <AiInsightCallout
-      severity="warning"
-      origin="ai"
-      title="Renewal at risk"
-      why="Weekly active users fell from 48 to 29 over the last 30 days."
+      severity={fixture.data.severity as CalloutProps['severity']}
+      origin={fixture.data.origin as CalloutProps['origin']}
+      title={fixture.data.title}
+      why={fixture.data.why}
       evidence={
         <ul style={{ margin: 0, paddingInlineStart: 'var(--mn-space-4)' }}>
-          <li>Logins: 312 → 190 (30 days)</li>
-          <li>Support tickets: 2 → 7 (30 days)</li>
+          {fixture.data.evidence.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
         </ul>
       }
-      action={{ label: 'Plan a check-in', onClick: () => {} }}
+      action={{ label: fixture.data.action.label, onClick: () => {} }}
       onDismiss={() => setShown(false)}
     />
   ) : (

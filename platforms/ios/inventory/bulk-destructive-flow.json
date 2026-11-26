@@ -1,0 +1,84 @@
+{
+  "id": "bulk-destructive-flow",
+  "name": null,
+  "title": "BulkDestructiveFlow",
+  "family": "data-grid",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:) with interactiveDismissDisabled while running, holding a VStack that moves through three phases: MonarchConsequenceList and MonarchTypeToConfirmInput to confirm, ProgressView with .monarchLinear while deleting, MonarchBanner for the result",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: \"Delete 37 leads\" confirms a bulk deletion with a sample and its consequences, asks for the count to be typed, runs it with a progress bar while the sheet is locked, then reports the items that failed.",
+  "whenToUse": "When people delete many selected items at once (from a MonarchBulkActionBar), the deletion cannot be undone, and some items may fail on the server.",
+  "whenNotToUse": "For one item, or a few with no partial failure, use confirmationDialog. For a change that can be undone, delete at once and offer Undo (see undo-toast). For deleting a whole workspace, use MonarchTypeToConfirmInput with its name in a sheet.",
+  "api": [
+    "func sheet(isPresented: Binding<Bool>, onDismiss: (() -> Void)? = nil, content: @escaping () -> some View) -> some View",
+    "func interactiveDismissDisabled(_ isDisabled: Bool = true) -> some View",
+    "MonarchConsequenceList.init(_ items: [MonarchConsequence], heading: String? = nil, …)",
+    "MonarchTypeToConfirmInput.init(phrase: String, text: Binding<String>, label: String? = nil, …)",
+    "static func MonarchTypeToConfirmInput.matches(_ text: String, phrase: String) -> Bool",
+    "ProgressView(_ title: String, value: Double?, total: Double).progressViewStyle(.monarchLinear)",
+    "MonarchBanner.init(_ title: String? = nil, message: String, tone: MonarchTone = .info, …)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "confirm",
+      "description": "The title with the count, a sample of three names and \"+34 more\", the consequences, a field asking for the count, and a danger button disabled until the count matches."
+    },
+    {
+      "name": "running",
+      "description": "A linear progress bar with \"12 of 37 deleted\"; the sheet cannot be swiped away."
+    },
+    {
+      "name": "done",
+      "description": "A success banner when every item was deleted."
+    },
+    {
+      "name": "partial",
+      "description": "A warning banner with \"36 of 37 leads deleted\" and the items that failed with their reason; the app can offer a retry for those items."
+    }
+  ],
+  "appearance": "A sheet on the system's sheet background with Monarch components: the danger MonarchButton, the consequence list's icons and tones, the linear progress style in the accent role, and success or warning banners.",
+  "platformNotes": "The web BulkDestructiveFlow is a component built on WizardDialog with plural rules (Intl.PluralRules), a typeCountAbove threshold, an optional step-up authentication and a retry step. On iOS it composes existing parts in a sheet, so the app decides the threshold for typing the count, writes plural forms with its String Catalog, and runs re-authentication (for example LocalAuthentication) before the deletion. The web's progress callback is the app's own loop updating a counter. Android plans the same recipe.",
+  "accessibility": [
+    "The title has the header trait; the consequence list reads each consequence with its kind.",
+    "MonarchTypeToConfirmInput announces when the typed count matches, and the delete button stays disabled until it does.",
+    "The standard ProgressView reads its title and value, so VoiceOver can follow \"12 of 37 deleted\".",
+    "Announce the result with AccessibilityNotification.Announcement when the run ends, since focus does not move."
+  ],
+  "edgeCases": [
+    "Lock the sheet with interactiveDismissDisabled while the deletion runs, so it cannot be dismissed half way.",
+    "Keep the failed items selected after Done so the person can retry or inspect them.",
+    "If nothing could be deleted (the request failed), show the error on the confirmation phase and keep the typed count."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Many items: type the count, then watch it run",
+      "fixture": "bulk-destructive-flow",
+      "webExample": "Many items: type the count, then watch it run",
+      "template": "MonarchButton({{trigger}}, variant: .danger) { isOpen = true }\n    .sheet(isPresented: $isOpen) {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            if isFinished {\n                MonarchBanner(\n                    \"\\(count - failed.count) of \\(count) \\(noun) deleted\",\n                    message: failed.isEmpty ? \"Every contact was deleted.\" : \"Not deleted: \\(failed.joined(separator: \", \"))\",\n                    tone: failed.isEmpty ? .success : .warning\n                )\n                MonarchButton(\"Done\", variant: .primary, fullWidth: true) { isOpen = false }\n            } else if isRunning {\n                ProgressView(\"\\(done) of \\(count) deleted\", value: Double(done), total: Double(count))\n                    .progressViewStyle(.monarchLinear)\n            } else {\n                Text({{trigger}}).monarchTextStyle(.heading).accessibilityAddTraits(.isHeader)\n                Text(\"Check before you delete\").monarchTextStyle(.subheading).accessibilityAddTraits(.isHeader)\n                Text(\"This cannot be undone.\")\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textMuted)\n                VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                    Text(\"Selected\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                    VStack(spacing: 0) {\n                        ForEach(sample, id: \\.self) { name in\n                            Text(name)\n                                .monarchTextStyle(.label)\n                                .frame(maxWidth: .infinity, alignment: .leading)\n                                .padding(theme.spacing.space3)\n                            Divider()\n                        }\n                        Text(\"+\\(count - sample.count) more\")\n                            .monarchTextStyle(.label)\n                            .foregroundStyle(theme.colors.textMuted)\n                            .frame(maxWidth: .infinity, alignment: .leading)\n                            .padding(theme.spacing.space3)\n                    }\n                    .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(theme.colors.borderDefault))\n                }\n                MonarchConsequenceList(\n                    [\n                        MonarchConsequence(.{{consequences.0.kind|raw}}, {{consequences.0.label}}, count: {{consequences.0.count}}),\n                        MonarchConsequence(.{{consequences.1.kind|raw}}, {{consequences.1.label}}),\n                    ]\n                )\n                MonarchTypeToConfirmInput(phrase: \"\\(count)\", text: $typed, label: \"Type \\(count) to confirm\")\n                HStack(spacing: theme.spacing.space2) {\n                    MonarchButton(\"Cancel\", variant: .secondary, fullWidth: true) { isOpen = false }\n                    MonarchButton({{trigger}}, variant: .danger, fullWidth: true) { deleteContacts() }\n                        .disabled(!MonarchTypeToConfirmInput.matches(typed, phrase: \"\\(count)\"))\n                }\n            }\n        }\n        .frame(maxHeight: .infinity, alignment: .top)\n        .padding(theme.spacing.space4)\n        .interactiveDismissDisabled(isRunning)\n    }",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = false\n@State private var typed = \"\"\n@State private var done = 0\n@State private var isRunning = false\n@State private var isFinished = false\n@State private var failed: [String] = []\nprivate let count = {{count}}\nprivate var noun: String { count == 1 ? {{noun.one}} : {{noun.other}} }\nprivate let sample = [{{sample.0}}, {{sample.1}}, {{sample.2}}]\n\nprivate func deleteContacts() {\n    isRunning = true\n    Task {\n        for _ in 1...count {\n            // Delete on the server here; collect the ones that fail.\n            try? await Task.sleep(for: .milliseconds(20))\n            done += 1\n        }\n        isRunning = false\n        isFinished = true\n    }\n}",
+      "previewPresented": [
+        "isOpen"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = false\n@State private var typed = \"\"\n@State private var done = 0\n@State private var isRunning = false\n@State private var isFinished = false\n@State private var failed: [String] = []\nprivate let count = 37\nprivate var noun: String { count == 1 ? \"contact\" : \"contacts\" }\nprivate let sample = [\"Ada Park\", \"Ben Ortiz\", \"Cleo Ngata\"]\n\nprivate func deleteContacts() {\n    isRunning = true\n    Task {\n        for _ in 1...count {\n            // Delete on the server here; collect the ones that fail.\n            try? await Task.sleep(for: .milliseconds(20))\n            done += 1\n        }\n        isRunning = false\n        isFinished = true\n    }\n}",
+      "code": "MonarchButton(\"Delete 37 contacts\", variant: .danger) { isOpen = true }\n    .sheet(isPresented: $isOpen) {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            if isFinished {\n                MonarchBanner(\n                    \"\\(count - failed.count) of \\(count) \\(noun) deleted\",\n                    message: failed.isEmpty ? \"Every contact was deleted.\" : \"Not deleted: \\(failed.joined(separator: \", \"))\",\n                    tone: failed.isEmpty ? .success : .warning\n                )\n                MonarchButton(\"Done\", variant: .primary, fullWidth: true) { isOpen = false }\n            } else if isRunning {\n                ProgressView(\"\\(done) of \\(count) deleted\", value: Double(done), total: Double(count))\n                    .progressViewStyle(.monarchLinear)\n            } else {\n                Text(\"Delete 37 contacts\").monarchTextStyle(.heading).accessibilityAddTraits(.isHeader)\n                Text(\"Check before you delete\").monarchTextStyle(.subheading).accessibilityAddTraits(.isHeader)\n                Text(\"This cannot be undone.\")\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textMuted)\n                VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                    Text(\"Selected\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                    VStack(spacing: 0) {\n                        ForEach(sample, id: \\.self) { name in\n                            Text(name)\n                                .monarchTextStyle(.label)\n                                .frame(maxWidth: .infinity, alignment: .leading)\n                                .padding(theme.spacing.space3)\n                            Divider()\n                        }\n                        Text(\"+\\(count - sample.count) more\")\n                            .monarchTextStyle(.label)\n                            .foregroundStyle(theme.colors.textMuted)\n                            .frame(maxWidth: .infinity, alignment: .leading)\n                            .padding(theme.spacing.space3)\n                    }\n                    .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(theme.colors.borderDefault))\n                }\n                MonarchConsequenceList(\n                    [\n                        MonarchConsequence(.removed, \"notes and activity on these contacts\", count: 214),\n                        MonarchConsequence(.kept, \"Companies they belong to stay\"),\n                    ]\n                )\n                MonarchTypeToConfirmInput(phrase: \"\\(count)\", text: $typed, label: \"Type \\(count) to confirm\")\n                HStack(spacing: theme.spacing.space2) {\n                    MonarchButton(\"Cancel\", variant: .secondary, fullWidth: true) { isOpen = false }\n                    MonarchButton(\"Delete 37 contacts\", variant: .danger, fullWidth: true) { deleteContacts() }\n                        .disabled(!MonarchTypeToConfirmInput.matches(typed, phrase: \"\\(count)\"))\n                }\n            }\n        }\n        .frame(maxHeight: .infinity, alignment: .top)\n        .padding(theme.spacing.space4)\n        .interactiveDismissDisabled(isRunning)\n    }"
+    }
+  ],
+  "webEquivalent": "BulkDestructiveFlow",
+  "dependsOn": [
+    "confirm-dialog",
+    "consequence-list",
+    "progress-bar",
+    "type-to-confirm-input",
+    "alert",
+    "sheet",
+    "button"
+  ]
+}

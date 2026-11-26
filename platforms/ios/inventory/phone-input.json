@@ -1,0 +1,186 @@
+{
+  "id": "phone-input",
+  "name": "MonarchPhoneInput",
+  "title": "PhoneInput",
+  "family": "forms",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "TextField with .keyboardType(.phonePad) and .textContentType(.telephoneNumber), beside a Button that opens MonarchPhoneCountrySelect's searchable country list (a .sheet with a List and .searchable)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A phone number field with a country calling code button, which writes one E.164 value such as +442079460958.",
+  "whenToUse": "Whenever a form asks for a phone number that has to be dialled or texted from anywhere: sign-up, delivery contact, two-step verification.",
+  "whenNotToUse": "Not for a calling code on its own; use MonarchPhoneCountrySelect. Not for an extension or an internal short number; use MonarchTextField with .keyboardType(.phonePad).",
+  "api": [
+    "init(_ label: String, value: Binding<String?>, prompt: String? = nil, helper: String? = nil, error: String? = nil, defaultCountry: String = \"US\", countries: [String]? = nil, preferred: [String] = [], locale: Locale? = nil, showsFlags: Bool = true, isRequired: Bool = false, labels: MonarchPhoneInputLabels = MonarchPhoneInputLabels(), onCountryChange: (@MainActor (String) -> Void)? = nil)",
+    "static func toE164(dialCode: String, national: String, country: String? = nil) -> String?",
+    "static func isValidE164(_ value: String) -> Bool",
+    "static func parse(_ phone: String, preferred: String? = nil) -> MonarchPhoneInputDetails?",
+    "struct MonarchPhoneInputDetails: Sendable, Hashable { let country: String; let dialCode: String; let national: String; init(country: String, dialCode: String, national: String) }",
+    "struct MonarchPhoneInputLabels: Sendable { init(country: String? = nil, invalid: String? = nil, countrySelect: MonarchPhoneCountrySelectLabels = MonarchPhoneCountrySelectLabels(), field: MonarchFormFieldLabels = MonarchFormFieldLabels()) }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The visible label, already localised. It names the number field."
+    },
+    {
+      "name": "value",
+      "type": "Binding<String?>",
+      "default": "required",
+      "description": "The number in E.164, or nil when empty. Any international form (+44 20 7946 0958, 0044…) is read when it is set."
+    },
+    {
+      "name": "prompt",
+      "type": "String?",
+      "default": "nil",
+      "description": "Placeholder text in the number field while it is empty."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Help text under the row."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "An error from the app, shown with an icon and announced. The component's own incomplete-number message takes its place while it shows."
+    },
+    {
+      "name": "defaultCountry",
+      "type": "String",
+      "default": "\"US\"",
+      "description": "The ISO code of the country when the value does not give one. Read once, when the view is created."
+    },
+    {
+      "name": "countries",
+      "type": "[String]?",
+      "default": "nil",
+      "description": "Limits the country list to these ISO codes. nil lists every country in MonarchPhoneCountry.all."
+    },
+    {
+      "name": "preferred",
+      "type": "[String]",
+      "default": "[]",
+      "description": "ISO codes listed first in the country list under Suggested."
+    },
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "nil",
+      "description": "The language of the country names in the list and the spoken value. The environment's locale when nil."
+    },
+    {
+      "name": "showsFlags",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the flag on the country button and in the list."
+    },
+    {
+      "name": "isRequired",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows a mark after the label and adds Required to the hint."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchPhoneInputLabels",
+      "default": "MonarchPhoneInputLabels()",
+      "description": "Replacements for Country code, Enter a complete phone number., the country list strings and the spoken Required and error prefix."
+    },
+    {
+      "name": "onCountryChange",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Receives the ISO code when the country changes, from the list, a pasted number or a shared calling code."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "The number field shows the prompt in the subtle text colour; the button shows the default country's flag and calling code."
+    },
+    {
+      "name": "typing",
+      "description": "The value is not changed on each keystroke; a pasted full international number moves to its country at once and keeps the national digits."
+    },
+    {
+      "name": "committed",
+      "description": "When the field loses focus, Return is pressed or the country changes, a valid number is written as E.164 and the field shows its national digits."
+    },
+    {
+      "name": "invalid",
+      "description": "A number outside 8 to 15 digits, or an international number with no known calling code, keeps its text, is not written, and shows Enter a complete phone number. with an icon and a danger border."
+    },
+    {
+      "name": "error",
+      "description": "An app error shows under the row with an icon, and both borders take the danger colour."
+    },
+    {
+      "name": "disabled",
+      "description": "Both parts take the disabled fill, border and text colours and do not respond."
+    },
+    {
+      "name": "accessibility sizes",
+      "description": "At the accessibility text sizes the country button sits above the number field instead of beside it."
+    }
+  ],
+  "appearance": "The button and the field are separate bordered controls on the surface fill with the input border, as MonarchTextField; an error turns both borders to the strong danger colour. The calling code and number use the default text colour, the chevron the muted secondary colour. Every colour is a theme role, so dark and both high-contrast themes follow.",
+  "platformNotes": "The web shows the country select and the input in one row with a hidden form input; iOS has no form submission, so the binding is the value. The country list is the one MonarchPhoneCountrySelect shows, opened from a compact flag and calling code button, because the full combobox field does not fit beside a number on a phone. The web's Escape to restore the last value has no counterpart on the phone pad. The web's sm, md and lg control sizes are not offered: iOS fields have one size that grows with Dynamic Type. Android has no PhoneInput yet; the names follow the web and the plan (MonarchPhoneInput). The web reports details in onValueChange; iOS gives MonarchPhoneInput.parse(_:preferred:) and onCountryChange.",
+  "accessibility": [
+    "The visible label is hidden from VoiceOver and given to the number field, whose value is the typed number.",
+    "The field's hint is the error (read as Error: …), the help text and Required, each when present; a new error is announced.",
+    "The country button is named Country code and its value is the country and calling code, such as Portugal (+351), in the chosen language.",
+    "Errors are an icon and text and a border, not colour alone.",
+    "The number field and the button are laid out left to right in right-to-left languages, as phone numbers are written.",
+    "The button and the field are at least 44 points high; at the accessibility text sizes they stack.",
+    "The country list's rows are buttons with the selected trait and a check mark on the current country."
+  ],
+  "edgeCases": [
+    "One trunk 0 is dropped (020 7946 0958 under +44 is +442079460958), except for Italy, San Marino and Vatican City.",
+    "Countries sharing a calling code are resolved from the number: 242 555 0100 typed under US is written as +12425550100 and the country moves to the Bahamas.",
+    "Digits typed in Arabic-Indic, Persian or full-width forms, and bidirectional marks from pasted text, are read.",
+    "A value set by the app that has no known calling code is shown as digits under the current country.",
+    "Clearing the field and leaving it writes nil; it is not an error. Use error to require a number.",
+    "The phone pad has no Return key, so the value is written when focus leaves the field; read the binding after focus moves, for example on submit of the form."
+  ],
+  "tests": [
+    "MonarchPhoneInputTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "In a Field with suggested countries",
+      "fixture": "phone-input",
+      "webExample": "In a Field with suggested countries",
+      "template": "MonarchPhoneInput(\n    {{label}},\n    value: $phone,\n    helper: {{storedAs}} + \" \" + (phone ?? {{nothingYet}}) + \".\",\n    preferred: [{{preferred.0}}, {{preferred.1}}, {{preferred.2}}]\n)",
+      "setupTemplate": "@State private var phone: String? = {{value}}",
+      "setup": "@State private var phone: String? = \"+442079460958\"",
+      "code": "MonarchPhoneInput(\n    \"Phone\",\n    value: $phone,\n    helper: \"Stored as\" + \" \" + (phone ?? \"nothing yet\") + \".\",\n    preferred: [\"GB\", \"US\", \"IN\"]\n)"
+    },
+    {
+      "title": "A required number in another default country",
+      "setup": "@State private var phone: String?\n@State private var country = \"PT\"",
+      "code": "MonarchPhoneInput(\n    \"Work phone\",\n    value: $phone,\n    prompt: \"912 345 678\",\n    defaultCountry: \"PT\",\n    isRequired: true,\n    onCountryChange: { country = $0 }\n)"
+    },
+    {
+      "title": "Reading the parts of a value",
+      "setup": "private let value = \"+351912345678\"",
+      "code": "let parts = MonarchPhoneInput.parse(value)\nText(\"\\(parts?.country ?? \"\") \\(parts?.dialCode ?? \"\") \\(parts?.national ?? \"\")\")\n    .monarchTextStyle(.caption)"
+    }
+  ],
+  "webEquivalent": "PhoneInput",
+  "dependsOn": [
+    "phone-country-select",
+    "text-field",
+    "combobox",
+    "form-field"
+  ]
+}

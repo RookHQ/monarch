@@ -1,0 +1,146 @@
+{
+  "id": "consent-preferences",
+  "name": "MonarchConsentPreferences",
+  "title": "ConsentPreferences",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack for a sheet(isPresented:content:): a Toggle per category, Link to the policy, MonarchButtons",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Privacy choices for a sheet: one switch per category of optional storage or processing, with Reject all, Accept all and Save choices, the saved policy version and time, and Withdraw consent.",
+  "whenToUse": "When an app asks for or lets people change consent to optional data uses such as analytics or advertising, opened from a first-run prompt or a Privacy setting.",
+  "whenNotToUse": "Not for the system's App Tracking Transparency prompt, which iOS shows itself (ask with ATTrackingManager), not for marketing messages (use MonarchMarketingConsentCheckbox) and not for the list of past decisions (use MonarchConsentHistory).",
+  "api": [
+    "init(categories: [MonarchConsentPreferencesCategory], choices: [String: Bool] = [:], mode: MonarchConsentPreferencesMode = .categories, isGlobalPrivacyControl: Bool = false, record: MonarchConsentRecord? = nil, policyURL: URL? = nil, allowsWithdraw: Bool = true, now: Date? = nil, labels: MonarchConsentPreferencesLabels = MonarchConsentPreferencesLabels(), onDecide: @escaping @MainActor (MonarchConsentMethod, [String: Bool]) -> Void)",
+    "struct MonarchConsentPreferencesCategory: Identifiable { init(id: String, label: String, description: String, isRequired: Bool = false, isSaleOrSharing: Bool = false) }",
+    "enum MonarchConsentPreferencesMode { case categories, choice }",
+    "struct MonarchConsentPreferencesLabels { init(title:description:policy:alwaysOn:globalPrivacyControl:on:off:rejectAll:acceptAll:save:withdraw:policyVersion:saved:), every parameter optional }"
+  ],
+  "options": [
+    {
+      "name": "categories",
+      "type": "[MonarchConsentPreferencesCategory]",
+      "default": "required",
+      "description": "The categories in order, each with a name, a description, and whether it is strictly necessary or sells or shares data."
+    },
+    {
+      "name": "choices",
+      "type": "[String: Bool]",
+      "default": "[:]",
+      "description": "The saved choice by category id. Leave it empty until the person has chosen, so nothing optional is on."
+    },
+    {
+      "name": "mode",
+      "type": "MonarchConsentPreferencesMode",
+      "default": ".categories",
+      "description": "categories: a switch per category and Save choices. choice: the status of each category and only Reject all and Accept all."
+    },
+    {
+      "name": "isGlobalPrivacyControl",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether a Global Privacy Control signal is on. Sale-or-sharing categories stay off with a note."
+    },
+    {
+      "name": "record",
+      "type": "MonarchConsentRecord?",
+      "default": "nil",
+      "description": "The saved decision: shows \"Policy version 3 · Saved 2 days ago\" and allows Withdraw consent."
+    },
+    {
+      "name": "policyURL",
+      "type": "URL?",
+      "default": "nil",
+      "description": "Adds a \"Privacy policy\" link under the description."
+    },
+    {
+      "name": "allowsWithdraw",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether Withdraw consent is offered in categories mode when a decision is saved and not already withdrawn."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for the saved time. The current time by default."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchConsentPreferencesLabels",
+      "default": "MonarchConsentPreferencesLabels()",
+      "description": "Replacements for every built-in string, to translate or to use the legal team's wording."
+    },
+    {
+      "name": "onDecide",
+      "type": "@MainActor (MonarchConsentMethod, [String: Bool]) -> Void",
+      "default": "required",
+      "description": "Runs when a button is pressed with acceptAll, rejectAll, custom or withdrawn and every category's state, locks applied. Store the record and close the sheet here."
+    }
+  ],
+  "states": [
+    {
+      "name": "first time",
+      "description": "Every optional switch is off; required ones are on, disabled and say \"Always on\"."
+    },
+    {
+      "name": "saved",
+      "description": "Switches show the saved choice; the record line and Withdraw consent appear."
+    },
+    {
+      "name": "Global Privacy Control",
+      "description": "Sale-or-sharing switches are off and disabled, with a note saying why."
+    },
+    {
+      "name": "choice mode",
+      "description": "Each category shows On (success strong), Off or Always on as a word; only Reject all and Accept all are offered."
+    }
+  ],
+  "appearance": "A title, a muted description and an underlined policy link, then the categories separated by subtle dividers with switches tinted in the accent solid role. Reject all and Accept all are equal secondary buttons, side by side when they fit; Save choices is a full-width primary button and Withdraw consent a ghost button. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web dialog reads and writes a ConsentProvider; on iOS the app passes the categories, saved choices and record and stores the decision from onDecide, because consent storage is the app's. The component is the content of a sheet the app presents and closes, rather than a dialog with its own open state. The web's policyLink slot is policyURL. The record type is the shared MonarchConsentRecord and the method is MonarchConsentMethod, as in MonarchConsentHistory. A Global Privacy Control signal is a browser feature; on iOS the app passes it if it honours an equivalent setting. Apple's App Tracking Transparency prompt is separate and still required for tracking across apps.",
+  "accessibility": [
+    "The title has the header trait.",
+    "Each category is a standard Toggle whose label includes its name, description and any note, so VoiceOver says why a locked switch cannot change.",
+    "Locked switches are disabled standard switches.",
+    "In choice mode each category is one element with its name as the label, its status word as the value and its description as the hint.",
+    "Buttons are MonarchButtons with 44-point touch targets; Reject all and Accept all stack vertically when they do not fit side by side."
+  ],
+  "edgeCases": [
+    "Required categories are reported on and GPC-locked ones off whatever the person chose.",
+    "A saved decision older than seven days shows its date instead of a relative time.",
+    "Every decision reports every category, including ones missing from choices."
+  ],
+  "tests": [
+    "MonarchConsentPreferencesTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "First visit (opt-in)",
+      "fixture": "consent-preferences",
+      "webExample": "First visit (opt-in)",
+      "template": "MonarchButton({{link}}) { showsChoices = true }\n    .sheet(isPresented: $showsChoices) {\n        ScrollView {\n            MonarchConsentPreferences(\n                categories: categories,\n                choices: choices,\n                policyURL: URL(string: \"https://example.com/cookie-policy\"),\n                labels: MonarchConsentPreferencesLabels(\n                    title: \"Cookie settings\",\n                    description: \"Choose which optional cookies we may use. Strictly necessary cookies keep the site working and are always on.\",\n                    policy: \"Cookie policy\"\n                )\n            ) { _, newChoices in\n                choices = newChoices\n                showsChoices = false\n            }\n            .padding()\n        }\n    }",
+      "setupTemplate": "@State private var showsChoices = true\n@State private var choices: [String: Bool] = [:]\nprivate let categories = [\n    MonarchConsentPreferencesCategory(id: {{categories.0.id}}, label: {{categories.0.label}}, description: {{categories.0.description}}, isRequired: true),\n    MonarchConsentPreferencesCategory(id: {{categories.1.id}}, label: {{categories.1.label}}, description: {{categories.1.description}}),\n    MonarchConsentPreferencesCategory(id: {{categories.2.id}}, label: {{categories.2.label}}, description: {{categories.2.description}}),\n    MonarchConsentPreferencesCategory(id: {{categories.3.id}}, label: {{categories.3.label}}, description: {{categories.3.description}}, isSaleOrSharing: true),\n]",
+      "previewPresented": [
+        "showsChoices"
+      ],
+      "setup": "@State private var showsChoices = true\n@State private var choices: [String: Bool] = [:]\nprivate let categories = [\n    MonarchConsentPreferencesCategory(id: \"necessary\", label: \"Strictly necessary\", description: \"Keeps you signed in, remembers your security settings and makes the site work.\", isRequired: true),\n    MonarchConsentPreferencesCategory(id: \"preferences\", label: \"Preferences\", description: \"Remembers choices such as language and theme.\"),\n    MonarchConsentPreferencesCategory(id: \"analytics\", label: \"Analytics\", description: \"Counts visits and measures how features are used, so we can improve them.\"),\n    MonarchConsentPreferencesCategory(id: \"marketing\", label: \"Marketing\", description: \"Measures campaigns and shows relevant ads on other sites.\", isSaleOrSharing: true),\n]",
+      "code": "MonarchButton(\"Cookie settings\") { showsChoices = true }\n    .sheet(isPresented: $showsChoices) {\n        ScrollView {\n            MonarchConsentPreferences(\n                categories: categories,\n                choices: choices,\n                policyURL: URL(string: \"https://example.com/cookie-policy\"),\n                labels: MonarchConsentPreferencesLabels(\n                    title: \"Cookie settings\",\n                    description: \"Choose which optional cookies we may use. Strictly necessary cookies keep the site working and are always on.\",\n                    policy: \"Cookie policy\"\n                )\n            ) { _, newChoices in\n                choices = newChoices\n                showsChoices = false\n            }\n            .padding()\n        }\n    }"
+    },
+    {
+      "title": "Choice mode with a saved decision",
+      "code": "MonarchConsentPreferences(\n    categories: [\n        MonarchConsentPreferencesCategory(id: \"necessary\", label: \"Strictly necessary\", description: \"Sign-in and security.\", isRequired: true),\n        MonarchConsentPreferencesCategory(id: \"analytics\", label: \"Analytics\", description: \"How the app is used.\"),\n    ],\n    choices: [\"analytics\": true],\n    mode: .choice,\n    record: MonarchConsentRecord(\n        id: \"1\",\n        date: Date(timeIntervalSince1970: 1_800_000_000),\n        method: .acceptAll,\n        policyVersion: \"3\",\n        regime: .optIn,\n        categories: [\"necessary\": true, \"analytics\": true]\n    )\n) { _, _ in }"
+    }
+  ],
+  "webEquivalent": "ConsentPreferences",
+  "dependsOn": [
+    "sheet",
+    "switch",
+    "button",
+    "consent-history"
+  ]
+}

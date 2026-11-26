@@ -83,7 +83,7 @@ export const AI_MEMORY_PANEL_MESSAGES: AiMemoryPanelMessages = {
   kinds: { person: 'Person', org: 'Organization', project: 'Project', other: 'Other' },
   count: (n) => `${n} ${plural(n, 'memory', 'memories')}`,
   updated: (formatted) => `Updated ${formatted}`,
-  formatDate: (date) => new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(date),
+  formatDate: (date) => formatMemoryDate(date),
   empty: 'Nothing is remembered yet.',
   noMatches: (query) => `No memories match “${query}”.`,
   matches: (n) => `${n} ${plural(n, 'memory matches', 'memories match')}`,
@@ -94,6 +94,13 @@ export const AI_MEMORY_PANEL_MESSAGES: AiMemoryPanelMessages = {
   forgotten: (n) => (n === 1 ? 'Memory forgotten' : `${n} memories forgotten`),
   edited: 'Memory updated',
 };
+
+function formatMemoryDate(date: Date, locale?: string, timeZone?: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: 'medium',
+    ...(timeZone ? { timeZone } : {}),
+  }).format(date);
+}
 
 const KIND_ORDER: AiMemoryEntity['kind'][] = ['person', 'org', 'project', 'other'];
 
@@ -167,6 +174,10 @@ export interface AiMemoryPanelProps extends Omit<HTMLAttributes<HTMLElement>, 'c
   onForgetMany: (ids: string[]) => unknown;
   /** Heading level of each entity group. Default 3. */
   headingLevel?: 2 | 3 | 4 | 5 | 6 | undefined;
+  /** BCP 47 locale for the dates. Default: the runtime locale. */
+  locale?: string | undefined;
+  /** IANA time zone for the dates; pass it for identical server rendering. */
+  timeZone?: string | undefined;
   /** Strings, for localisation. `kinds` and `chip` merge per key. */
   messages?:
     | (Partial<Omit<AiMemoryPanelMessages, 'kinds'>> & {
@@ -188,6 +199,8 @@ export const AiMemoryPanel = forwardRef<HTMLElement, AiMemoryPanelProps>(functio
     onForget,
     onForgetMany,
     headingLevel = 3,
+    locale,
+    timeZone,
     messages: messagesProp,
     className,
     ...rest
@@ -196,6 +209,7 @@ export const AiMemoryPanel = forwardRef<HTMLElement, AiMemoryPanelProps>(functio
 ) {
   const m: AiMemoryPanelMessages = {
     ...AI_MEMORY_PANEL_MESSAGES,
+    formatDate: (date) => formatMemoryDate(date, locale, timeZone),
     ...messagesProp,
     kinds: { ...AI_MEMORY_PANEL_MESSAGES.kinds, ...messagesProp?.kinds },
   };

@@ -1,0 +1,115 @@
+{
+  "id": "impersonation-banner",
+  "name": "MonarchImpersonationBanner",
+  "title": "ImpersonationBanner",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "ViewThatFits with HStack and VStack, Text with an AttributedString, TimelineView(.everyMinute) with Date.RelativeFormatStyle, MonarchButton; placed with .safeAreaInset(edge: .top)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A persistent, inverse-coloured bar shown while acting as another person, with who, since when, why, and one way out: Stop.",
+  "whenToUse": "While a support or admin person is signed in as, or viewing as, another person, and anything they do happens in that person's account.",
+  "whenNotToUse": "For a read-only preview with no real actions, a MonarchCalloutBanner is enough. For ordinary notices such as a trial ending, use MonarchCalloutBanner with the page placement.",
+  "api": [
+    "init(name: String, detail: String? = nil, reason: String? = nil, startedAt: Date? = nil, isStopping: Bool? = nil, labels: MonarchImpersonationBannerLabels = MonarchImpersonationBannerLabels(), onStop: @escaping @MainActor () async throws -> Void)",
+    "struct MonarchImpersonationBannerLabels { init(viewingAs: (@Sendable (String) -> String)? = nil, started: String? = nil, reason: String? = nil, stop: String? = nil, stopLabel: (@Sendable (String) -> String)? = nil, stopError: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "name",
+      "type": "String",
+      "default": "required",
+      "description": "The person being viewed as, in bold in the main line."
+    },
+    {
+      "name": "detail",
+      "type": "String?",
+      "default": "nil",
+      "description": "A second identifier, such as their email, in brackets after the name in the muted inverse colour."
+    },
+    {
+      "name": "reason",
+      "type": "String?",
+      "default": "nil",
+      "description": "Why the session started, such as a ticket number, after \"Reason:\"."
+    },
+    {
+      "name": "startedAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the session started, shown as \"Started 5 minutes ago\" and refreshed every minute."
+    },
+    {
+      "name": "isStopping",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Controls the busy state of Stop when the app tracks the stop itself; tracked from onStop when nil."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchImpersonationBannerLabels",
+      "default": "MonarchImpersonationBannerLabels()",
+      "description": "Replacements for the main line, \"Started\", \"Reason:\", \"Stop\", its spoken name and the fallback error."
+    },
+    {
+      "name": "onStop",
+      "type": "@MainActor () async throws -> Void",
+      "default": "required",
+      "description": "Ends the session. The button is busy while it runs and ignores taps; throwing shows the error's description (or the fallback) in the banner."
+    }
+  ],
+  "states": [
+    {
+      "name": "active",
+      "description": "The eye icon, the main line, the start and reason line, and Stop."
+    },
+    {
+      "name": "stopping",
+      "description": "Stop shows its spinner and ignores taps."
+    },
+    {
+      "name": "error",
+      "description": "The failure under the text with an icon, announced; the banner stays."
+    }
+  ],
+  "appearance": "Inverse colours (the inverse background with inverse text, muted inverse text for the detail and meta line) and a three-point edge and icon in the solid warning colour, so it looks unlike every other banner in light, dark and high-contrast themes. Stop is a small secondary button; when the text and button do not fit on one line, the button moves below and fills the width.",
+  "platformNotes": "The web's sticky prop is replaced by placement: on iOS the app puts the banner in safeAreaInset(edge: .top) of its root view, which keeps it above scrolling content. The web's now and locale props are not needed; the relative time uses the system clock and locale. A replacement main line from labels is shown without bold, because the bold name needs the built-in format. Android builds the same component. The parity map names MonarchBanner and lists callout-banner as a dependency; the banner is drawn on its own instead, because its inverse colours, warning edge and missing dismiss button are what set it apart from callout banners, as on the web.",
+  "accessibility": [
+    "The icon is decorative; the text is one element read as the main line with the name and detail, then the start and reason line.",
+    "The main line is posted as an announcement when the banner appears, like the web's status region.",
+    "Stop is named \"Stop viewing as\" and the name, which starts with its visible title, and has a 44-point touch target; it shows a busy state while stopping.",
+    "A failed stop is announced and shown with an icon and text.",
+    "There is no dismiss button: the only way out is to stop."
+  ],
+  "edgeCases": [
+    "Long names, details and reasons wrap.",
+    "The app removes the banner when the session ends; a successful onStop does not hide it by itself.",
+    "With isStopping set, taps while it is true are ignored even if onStop has returned."
+  ],
+  "tests": [
+    "MonarchImpersonationBannerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Viewing as a person",
+      "fixture": "impersonation-banner",
+      "webExample": "Viewing as a person",
+      "template": "MonarchImpersonationBanner(\n    name: {{name}},\n    detail: {{detail}},\n    reason: {{reason}},\n    startedAt: Date.now.addingTimeInterval(-{{startedMinutesAgo}} * 60)\n) {\n    try await Task.sleep(for: .milliseconds(800))\n}",
+      "code": "MonarchImpersonationBanner(\n    name: \"Sam Rivera\",\n    detail: \"sam@example.com\",\n    reason: \"Case 4821\",\n    startedAt: Date.now.addingTimeInterval(-12 * 60)\n) {\n    try await Task.sleep(for: .milliseconds(800))\n}"
+    }
+  ],
+  "webEquivalent": "ImpersonationBanner",
+  "dependsOn": [
+    "button",
+    "relative-time",
+    "icon"
+  ],
+  "icons": {
+    "eye": "EyeGlyph"
+  }
+}

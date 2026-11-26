@@ -1,0 +1,197 @@
+{
+  "id": "world-map",
+  "name": "MonarchWorldMap",
+  "title": "WorldMap",
+  "family": "geo",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Canvas with bundled simplified country outlines, SpatialTapGesture, inside MonarchChartFrame",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Values by country on a simplified world map: a choropleth in one data colour with a \"Less … More\" legend, or bubbles sized by value, with tiles for values that belong to no country and a data table.",
+  "whenToUse": "For one metric by country where the geography matters: workspaces, revenue or traffic by country.",
+  "whenNotToUse": "For exact comparison of a few countries, use MonarchBarList or MonarchBarChart. For places, routes or anything below country level, use MapKit's Map. For a matrix of two categories, use MonarchHeatmap.",
+  "api": [
+    "init(_ title: String, data: [MonarchWorldMapDatum], description: String? = nil, status: MonarchChartFrameStatus = .ready, variant: MonarchWorldMapVariant = .choropleth, color: MonarchChartColor = .data1, thresholds: [Double]? = nil, extras: [MonarchWorldMapExtra] = [], showsLegend: Bool = true, summary: String? = nil, emptyMessage: String? = nil, footer: String? = nil, labels: MonarchWorldMapLabels = MonarchWorldMapLabels(), countryName: ((String) -> String)? = nil, formatValue: ((Double) -> String)? = nil, onRetry: (@MainActor () -> Void)? = nil, onSelect: (@MainActor (MonarchWorldMapDatum) -> Void)? = nil)",
+    "struct MonarchWorldMapDatum { init(_ country: String, value: Double, details: [MonarchWorldMapDetail] = []) }",
+    "struct MonarchWorldMapDetail { init(_ label: String, value: String) }",
+    "struct MonarchWorldMapExtra: Identifiable { init(_ label: String, value: Double, key: String? = nil) }",
+    "enum MonarchWorldMapVariant { case choropleth, bubble }",
+    "struct MonarchWorldMapLabels { init(frame: MonarchChartFrameLabels = MonarchChartFrameLabels(), country: String? = nil, value: String? = nil, extras: String? = nil, less: String? = nil, more: String? = nil, rangeBelow: String? = nil, range: String? = nil, rangeAbove: String? = nil, unplaced: (@Sendable (String, String) -> String)? = nil, summary: (@Sendable (Int, String) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The name of the chart, already localised."
+    },
+    {
+      "name": "data",
+      "type": "[MonarchWorldMapDatum]",
+      "default": "required",
+      "description": "One value per ISO 3166-1 alpha-2 code. Codes are trimmed and upper-cased; a later entry for the same code wins; values that are not finite are left out."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "One line under the title, such as the period."
+    },
+    {
+      "name": "status",
+      "type": "MonarchChartFrameStatus",
+      "default": ".ready",
+      "description": "Map, loading placeholder, empty state or error. A ready map without values or extras shows the empty state."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchWorldMapVariant",
+      "default": ".choropleth",
+      "description": "Filled countries, or bubbles whose area grows with the value on a neutral map."
+    },
+    {
+      "name": "color",
+      "type": "MonarchChartColor",
+      "default": ".data1",
+      "description": "The data colour of the steps or bubbles."
+    },
+    {
+      "name": "thresholds",
+      "type": "[Double]?",
+      "default": "nil",
+      "description": "Three ascending values where levels 2, 3 and 4 start. Quarters of the largest value when nil."
+    },
+    {
+      "name": "extras",
+      "type": "[MonarchWorldMapExtra]",
+      "default": "[]",
+      "description": "Values that belong to no country (\"Global\", \"EU\"), shown as tiles under the map and as table rows."
+    },
+    {
+      "name": "showsLegend",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the \"Less … More\" legend under a choropleth."
+    },
+    {
+      "name": "summary",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the generated summary that names the map for VoiceOver."
+    },
+    {
+      "name": "emptyMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "The empty-state message."
+    },
+    {
+      "name": "footer",
+      "type": "String?",
+      "default": "nil",
+      "description": "Notes under the chart, such as the source."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchWorldMapLabels",
+      "default": "MonarchWorldMapLabels()",
+      "description": "Replacements for the built-in strings, including the chart frame's."
+    },
+    {
+      "name": "countryName",
+      "type": "((String) -> String)?",
+      "default": "nil",
+      "description": "Names a country from its code. The default is Locale.localizedString(forRegionCode:) in the environment's locale, then the code."
+    },
+    {
+      "name": "formatValue",
+      "type": "((Double) -> String)?",
+      "default": "nil",
+      "description": "Writes a value. The default is a number in the environment's locale."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows Try again in the error status."
+    },
+    {
+      "name": "onSelect",
+      "type": "(@MainActor (MonarchWorldMapDatum) -> Void)?",
+      "default": "nil",
+      "description": "Runs with a country's datum when it is tapped or selected with VoiceOver, for drill-in."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "Countries with a value are filled in one of five steps of the data colour mixed into the muted background; the rest are muted. Countries too small for an outline get a dot."
+    },
+    {
+      "name": "bubble",
+      "description": "Every country is muted; each country with a value has a circle in the data colour, largest drawn first so small ones stay on top."
+    },
+    {
+      "name": "inspected",
+      "description": "After a tap or a VoiceOver swipe, the country is outlined in the default text colour and its name, value and details are written under the map."
+    },
+    {
+      "name": "unplaced codes",
+      "description": "A muted note under the map: \"Not on the map: XX (5)\". The codes are still in the table and the summary."
+    },
+    {
+      "name": "loading, empty, error",
+      "description": "The chart frame's placeholder, empty state and error with optional retry, keeping the height."
+    },
+    {
+      "name": "table",
+      "description": "\"View as table\" replaces the map with one row per country and extra, a value column and a column per detail label."
+    }
+  ],
+  "appearance": "Countries are filled with the theme's muted background and up to four mixes of the chosen data colour, separated by hairlines in the surface colour; the inspected country is outlined in the default text colour. Bubbles mix the data colour into the surface with a solid edge. Every colour comes from the theme, so light, dark and both high-contrast themes follow it.",
+  "platformNotes": "Uses the same Natural Earth 1:110m outline, centroids, levels, bubble sizes, summary and table as the web's WorldMap, converted into the package. The web shows a floating tooltip on hover and steps through countries with the arrow keys; on iOS a tap inspects a country and writes its details under the map, and VoiceOver swipes up and down through the countries by value. The controlled activeCountry and onActiveCountryChange props are not offered. A tap that misses a small country finds the nearest country with a value within 22 points, because many countries are smaller than a 44-point target at phone width. The table toggle and the chart descriptor for Audio Graphs come from the chart frame's pieces. The map is never mirrored in right-to-left languages. Android uses the same name. Several closures are optional (countryName, formatValue, onRetry, onSelect). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is countryName.",
+  "accessibility": [
+    "The map is one adjustable element named by the generated summary, for example \"5 countries. Highest: United States 1,200, Germany 300, India 150.\".",
+    "Swiping up and down moves through the countries with a value, largest first, and reads each as \"Germany: 300, Users 90\".",
+    "With onSelect the map has the button trait and a double tap selects the current country.",
+    "The map carries an accessibility chart descriptor with each country's value, for Audio Graphs.",
+    "The legend is one element read as its steps; the tiles under the map are a group named \"Other values\", each read as its label and value.",
+    "\"View as table\" gives every value in rows and columns; nothing is shown by colour alone."
+  ],
+  "edgeCases": [
+    "Codes the map cannot draw (unknown or very small territories without a centroid) are listed under the map with their total.",
+    "Values of zero or less are drawn as the muted background, like countries without a value; the table still shows them.",
+    "With only extras and no countries, the tiles show without the map.",
+    "Ties are ordered by code, so the order is stable.",
+    "The outline is simplified for showing values; it is not for navigation and takes no position on disputed borders. Kosovo is XK; N. Cyprus is drawn as CY and Somaliland as SO.",
+    "Russia and Fiji cross the 180th meridian; the part past it is cut off at the map's right edge, as on the web."
+  ],
+  "tests": [
+    "MonarchWorldMapTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Choropleth with details and extras",
+      "fixture": "world-map",
+      "webExample": "Choropleth with details and extras",
+      "template": "MonarchWorldMap(\n    {{title}},\n    data: [\n        MonarchWorldMapDatum({{countries.0.country}}, value: {{countries.0.value}}, details: [MonarchWorldMapDetail({{detailLabel}}, value: \"{{countries.0.users|raw}}\")]),\n        MonarchWorldMapDatum({{countries.1.country}}, value: {{countries.1.value}}, details: [MonarchWorldMapDetail({{detailLabel}}, value: \"{{countries.1.users|raw}}\")]),\n        MonarchWorldMapDatum({{countries.2.country}}, value: {{countries.2.value}}, details: [MonarchWorldMapDetail({{detailLabel}}, value: \"{{countries.2.users|raw}}\")]),\n        MonarchWorldMapDatum({{countries.3.country}}, value: {{countries.3.value}}, details: [MonarchWorldMapDetail({{detailLabel}}, value: \"{{countries.3.users|raw}}\")]),\n        MonarchWorldMapDatum({{countries.4.country}}, value: {{countries.4.value}}, details: [MonarchWorldMapDetail({{detailLabel}}, value: \"{{countries.4.users|raw}}\")]),\n        MonarchWorldMapDatum({{countries.5.country}}, value: {{countries.5.value}}, details: [MonarchWorldMapDetail({{detailLabel}}, value: \"{{countries.5.users|raw}}\")]),\n        MonarchWorldMapDatum({{countries.6.country}}, value: {{countries.6.value}}, details: [MonarchWorldMapDetail({{detailLabel}}, value: \"{{countries.6.users|raw}}\")]),\n        MonarchWorldMapDatum({{countries.7.country}}, value: {{countries.7.value}}, details: [MonarchWorldMapDetail({{detailLabel}}, value: \"{{countries.7.users|raw}}\")]),\n        MonarchWorldMapDatum({{countries.8.country}}, value: {{countries.8.value}}, details: [MonarchWorldMapDetail({{detailLabel}}, value: \"{{countries.8.users|raw}}\")]),\n        MonarchWorldMapDatum({{countries.9.country}}, value: {{countries.9.value}}, details: [MonarchWorldMapDetail({{detailLabel}}, value: \"{{countries.9.users|raw}}\")]),\n    ],\n    description: {{description}},\n    extras: [MonarchWorldMapExtra({{extra.label}}, value: {{extra.value}}, key: {{extra.key}})]\n)\n.environment(\\.locale, Locale(identifier: {{locale}}))",
+      "code": "MonarchWorldMap(\n    \"Workspaces by country\",\n    data: [\n        MonarchWorldMapDatum(\"US\", value: 1240, details: [MonarchWorldMapDetail(\"Users\", value: \"3820\")]),\n        MonarchWorldMapDatum(\"GB\", value: 410, details: [MonarchWorldMapDetail(\"Users\", value: \"1190\")]),\n        MonarchWorldMapDatum(\"DE\", value: 380, details: [MonarchWorldMapDetail(\"Users\", value: \"1020\")]),\n        MonarchWorldMapDatum(\"IN\", value: 350, details: [MonarchWorldMapDetail(\"Users\", value: \"1460\")]),\n        MonarchWorldMapDatum(\"BR\", value: 210, details: [MonarchWorldMapDetail(\"Users\", value: \"540\")]),\n        MonarchWorldMapDatum(\"FR\", value: 190, details: [MonarchWorldMapDetail(\"Users\", value: \"470\")]),\n        MonarchWorldMapDatum(\"JP\", value: 120, details: [MonarchWorldMapDetail(\"Users\", value: \"300\")]),\n        MonarchWorldMapDatum(\"AU\", value: 95, details: [MonarchWorldMapDetail(\"Users\", value: \"210\")]),\n        MonarchWorldMapDatum(\"ZA\", value: 40, details: [MonarchWorldMapDetail(\"Users\", value: \"88\")]),\n        MonarchWorldMapDatum(\"SG\", value: 60, details: [MonarchWorldMapDetail(\"Users\", value: \"150\")]),\n    ],\n    description: \"Last 30 days\",\n    extras: [MonarchWorldMapExtra(\"Global\", value: 75, key: \"global\")]\n)\n.environment(\\.locale, Locale(identifier: \"en-US\"))"
+    },
+    {
+      "title": "Bubbles with drill-in",
+      "setup": "@State private var selected: String?",
+      "code": "MonarchWorldMap(\n    \"Sessions\",\n    data: [MonarchWorldMapDatum(\"BR\", value: 820), MonarchWorldMapDatum(\"AU\", value: 310)],\n    variant: .bubble,\n    color: .data3,\n    onSelect: { datum in selected = datum.country }\n)"
+    }
+  ],
+  "webEquivalent": "WorldMap",
+  "dependsOn": [
+    "chart-frame",
+    "chart-legend",
+    "heatmap"
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "id": "roving-focus-group",
+  "name": null,
+  "title": "RovingFocusGroup",
+  "family": "interaction",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "androidx.compose.foundation.focusGroup, androidx.compose.ui.focus.focusRestorer, androidx.compose.ui.focus.FocusRequester",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Moving focus inside a toolbar, a set of options or a grid with a hardware keyboard is done by the Compose focus system. Monarch ships nothing.",
+  "whenToUse": "Nothing is needed for standard controls: Tab moves between focusable elements and the arrow keys move focus in their direction. Wrap a set of controls in focusGroup() so Tab treats it as one stop in the traversal order, add focusRestorer() so focus returns to the last focused item, and use a FocusRequester to move focus in code.",
+  "whenNotToUse": "Do not make every item of a long list or grid focusable by hand; lazy lists and grids take part in focus search themselves. Do not intercept the arrow keys unless the group has a custom order the layout does not express.",
+  "api": [
+    "fun Modifier.focusGroup(): Modifier",
+    "fun Modifier.focusRestorer(fallback: FocusRequester = FocusRequester.Default): Modifier",
+    "class FocusRequester { fun requestFocus(): Boolean }",
+    "fun Modifier.focusRequester(focusRequester: FocusRequester): Modifier",
+    "fun Modifier.focusProperties(scope: FocusProperties.() -> Unit): Modifier"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "focused item",
+      "description": "The focused control draws its own focus indication (Monarch controls draw the focus ring)."
+    }
+  ],
+  "appearance": "No appearance of its own: focus is drawn by each control, and Monarch controls draw the focus ring in the focus-ring color of the theme.",
+  "platformNotes": "The web needs RovingFocusGroup because a browser puts every control in the Tab order and gives the arrow keys no meaning; it keeps one tabindex=0 item and moves it with the arrows, Home and End. On Android with a hardware keyboard, Compose moves focus with the arrow keys by two-dimensional search, and focusGroup() makes a set of controls one stop for Tab. focusRestorer() returns to the last focused item, which is what the roving tabindex achieves. The web's loop and Home/End have no built-in equivalent; add onPreviewKeyEvent on the group if a toolbar needs them. Only matters with a hardware keyboard or a D-pad. iOS uses its focus engine in the same way.",
+  "accessibility": [
+    "System behavior: Tab and Shift+Tab move between focus groups and focusable elements in layout order; the arrow keys move focus to the nearest element in their direction.",
+    "TalkBack does not use keyboard focus: it moves through elements by swiping, so focus groups change nothing for it.",
+    "With focusRestorer, Tab back into the group focuses the item that was focused last."
+  ],
+  "edgeCases": [
+    "focusRestorer needs the items to have stable identity; in a lazy list give each item a key.",
+    "requestFocus() throws when the FocusRequester is not attached to a composed element; call it from an event or after composition."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Toolbar",
+      "fixture": "roving-focus-group",
+      "webExample": "Toolbar",
+      "template": "Row(\n    modifier = Modifier\n        .focusRestorer()\n        .focusGroup()\n        .semantics { contentDescription = {{label}} },\n    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n) {\n    MonarchButton(text = {{buttons.0.label}}, onClick = {}, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm)\n    MonarchButton(text = {{buttons.1.label}}, onClick = {}, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm)\n    MonarchButton(\n        text = {{buttons.2.label}},\n        onClick = {},\n        variant = MonarchButtonVariant.Ghost,\n        size = MonarchButtonSize.Sm,\n        enabled = !{{buttons.2.disabled}},\n    )\n    MonarchButton(text = {{buttons.3.label}}, onClick = {}, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm)\n}",
+      "imports": [
+        "androidx.compose.ui.focus.focusRestorer",
+        "androidx.compose.ui.semantics.contentDescription",
+        "androidx.compose.ui.semantics.semantics"
+      ],
+      "code": "Row(\n    modifier = Modifier\n        .focusRestorer()\n        .focusGroup()\n        .semantics { contentDescription = \"Text formatting\" },\n    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n) {\n    MonarchButton(text = \"Bold\", onClick = {}, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm)\n    MonarchButton(text = \"Italic\", onClick = {}, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm)\n    MonarchButton(\n        text = \"Strikethrough\",\n        onClick = {},\n        variant = MonarchButtonVariant.Ghost,\n        size = MonarchButtonSize.Sm,\n        enabled = !true,\n    )\n    MonarchButton(text = \"Link\", onClick = {}, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm)\n}"
+    },
+    {
+      "title": "Moving focus to the first option from code",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchButton(text = \"Choose a plan\", onClick = { first.requestFocus() })\n    Row(\n        modifier = Modifier.focusGroup(),\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n    ) {\n        MonarchButton(text = \"Monthly\", onClick = {}, modifier = Modifier.focusRequester(first))\n        MonarchButton(text = \"Yearly\", onClick = {})\n    }\n}",
+      "setup": "val first = remember { FocusRequester() }",
+      "imports": [
+        "androidx.compose.ui.focus.FocusRequester",
+        "androidx.compose.ui.focus.focusRequester"
+      ]
+    }
+  ],
+  "webEquivalent": "RovingFocusGroup",
+  "dependsOn": []
+}

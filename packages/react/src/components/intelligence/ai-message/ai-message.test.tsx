@@ -589,3 +589,31 @@ describe('AiMessageView: memory, queued messages and resumable errors', () => {
     expect(props.onCancelQueued).toBeTypeOf('function');
   });
 });
+
+describe('AiMessageView timestamp', () => {
+  it('shows the time in the given locale and time zone', () => {
+    const { container } = render(
+      <AiMessageView message={user('Hello')} locale="en-GB" timeZone="Asia/Kolkata" />,
+    );
+    // 10:15 UTC is 15:45 in India.
+    expect(container.textContent).toContain('15:45');
+    expect(container.textContent).not.toMatch(/PM|AM/);
+  });
+
+  it('pads the hour on a 24-hour clock', () => {
+    const { container } = render(
+      <AiMessageView message={user('Hello')} locale="en-GB" timeZone="Europe/London" />,
+    );
+    // 10:15 UTC on 2 March is 10:15 GMT; a single-digit hour is padded below.
+    expect(container.textContent).toContain('10:15');
+    cleanup();
+    const early = render(
+      <AiMessageView
+        message={user('Hello', { createdAt: '2026-03-02T09:05:00.000Z' })}
+        locale="en-GB"
+        timeZone="UTC"
+      />,
+    );
+    expect(early.container.textContent).toContain('09:05');
+  });
+});

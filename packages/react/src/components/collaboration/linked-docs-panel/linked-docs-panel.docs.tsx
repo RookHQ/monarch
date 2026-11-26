@@ -1,41 +1,26 @@
 import { useRef, useState } from 'react';
 import { LinkedDocsPanel, type LinkedDocItem } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './linked-docs-panel.fixture.json';
 
-const START: LinkedDocItem[] = [
-  {
-    id: 'l1',
-    kind: 'doc',
-    docId: 'd1',
-    title: 'Release runbook',
-    href: '#doc-release-runbook',
-    meta: 'Updated 2 hours ago',
-    status: 'Published',
-    space: { id: 's-eng', name: 'Engineering' },
-  },
-  {
-    id: 'l2',
-    kind: 'doc',
-    docId: 'd2',
-    title: 'Launch brief',
-    href: '#doc-launch-brief',
-    meta: 'Updated yesterday',
-    status: 'Draft',
-    space: { id: 's-mkt', name: 'Marketing' },
-  },
-  {
-    id: 'l3',
-    kind: 'link',
-    title: 'Design file',
-    href: 'https://design.example.com/file/123',
-  },
-];
+const START: LinkedDocItem[] = (
+  fixture.data.items as unknown as {
+    id: string;
+    kind: 'doc' | 'link';
+    docId?: string;
+    title: string;
+    meta?: string;
+    status?: string;
+    space?: { id: string; name: string };
+    url?: string;
+  }[]
+).map(({ url, ...item }) => ({
+  ...item,
+  href: url ?? `#doc-${item.title.toLowerCase().replace(/ /g, '-')}`,
+}));
 
-const DOCS = [
-  { value: 'd1', label: 'Release runbook', description: 'Engineering' },
-  { value: 'd3', label: 'Incident review template', description: 'Engineering' },
-  { value: 'd4', label: 'Pricing notes', description: 'Sales' },
-];
+const DOCS = fixture.data.docOptions;
 
 function Basic() {
   const [items, setItems] = useState(START);

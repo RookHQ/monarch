@@ -1,0 +1,71 @@
+{
+  "id": "live-region",
+  "name": null,
+  "title": "LiveRegion",
+  "family": "interaction",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "androidx.compose.ui.semantics.liveRegion with androidx.compose.ui.semantics.LiveRegionMode (Polite, Assertive)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Telling TalkBack about a change without moving focus is a live-region property on the element that changes. Monarch ships nothing and uses the same property inside its components.",
+  "whenToUse": "Set liveRegion = LiveRegionMode.Polite on an element that is always on screen and whose text or content description changes when something happens the person did not cause directly or cannot see: a save finished, a result count changed, an item moved. Use Assertive only for an error that blocks the person.",
+  "whenNotToUse": "Do not put a live region on a value that changes continuously (a timer, a progress percentage), or TalkBack talks without pause; give it a state description that is read when focused. Do not use View.announceForAccessibility, which Android 16 (API 36) deprecates.",
+  "api": [
+    "var SemanticsPropertyReceiver.liveRegion: LiveRegionMode",
+    "LiveRegionMode.Polite, LiveRegionMode.Assertive",
+    "fun Modifier.semantics(mergeDescendants: Boolean = false, properties: SemanticsPropertyReceiver.() -> Unit): Modifier",
+    "var SemanticsPropertyReceiver.paneTitle: String"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "polite",
+      "description": "TalkBack reads the new content when it finishes what it is saying."
+    },
+    {
+      "name": "assertive",
+      "description": "TalkBack interrupts what it is saying. For blocking errors only."
+    }
+  ],
+  "appearance": "No appearance of its own: the live region is a property of an element that is drawn with Monarch components.",
+  "platformNotes": "The web renders an aria-live region and changes its text, and offers a useAnnouncer() hook to read a message from any event handler. Android has no hidden announcer: TalkBack reads an element marked as a live region when its content changes, so the element must already be on screen (composed) before the change, and an empty node that only carries the message works as the announcer. View.announceForAccessibility, named in the plan, is deprecated in Android 16 and is not used. iOS posts an AccessibilityNotification.Announcement instead. Monarch components that announce (MonarchRecordingIndicator, MonarchBanner, MonarchSnackbarHost) use the same property.",
+  "accessibility": [
+    "System behavior: TalkBack reads a polite live region after it finishes speaking and an assertive one at once.",
+    "Only changes are read: the first composition of a live region is not announced, so keep the node on screen and change its content.",
+    "A live region whose content changes many times a second is read repeatedly; keep it for discrete events."
+  ],
+  "edgeCases": [
+    "A live region added together with its message is not announced on some TalkBack versions; compose the node empty first.",
+    "Two live regions changing at once are both queued; prefer one per screen."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Visible status text that is also announced",
+      "fixture": "live-region",
+      "webExample": "Visible status text that is also announced",
+      "template": "Row(\n    horizontalArrangement = Arrangement.spacedBy(12.dp),\n    verticalAlignment = Alignment.CenterVertically,\n) {\n    MonarchButton(\n        text = {{add}},\n        onClick = { count += 1 },\n        variant = MonarchButtonVariant.Secondary,\n    )\n    MonarchText(\n        text = if (count == 0) {{empty}} else if (count == 1) \"1 item in the list.\" else \"$count items in the list.\",\n        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },\n    )\n}",
+      "setupTemplate": "var count by remember { mutableStateOf(0) }",
+      "setup": "var count by remember { mutableStateOf(0) }",
+      "code": "Row(\n    horizontalArrangement = Arrangement.spacedBy(12.dp),\n    verticalAlignment = Alignment.CenterVertically,\n) {\n    MonarchButton(\n        text = \"Add item\",\n        onClick = { count += 1 },\n        variant = MonarchButtonVariant.Secondary,\n    )\n    MonarchText(\n        text = if (count == 0) \"No items yet.\" else if (count == 1) \"1 item in the list.\" else \"$count items in the list.\",\n        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },\n    )\n}"
+    },
+    {
+      "title": "An announcer node with no visible text",
+      "code": "Box {\n    MonarchButton(text = \"Archive 3 tickets\", onClick = { message = \"3 tickets archived\" })\n    Box(\n        modifier = Modifier.semantics {\n            liveRegion = LiveRegionMode.Polite\n            if (message.isNotEmpty()) contentDescription = message\n        },\n    )\n}",
+      "setup": "var message by remember { mutableStateOf(\"\") }"
+    },
+    {
+      "title": "An error that blocks the person",
+      "code": "MonarchText(\n    text = error,\n    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },\n    color = MonarchTheme.colors.dangerStrong,\n)",
+      "setup": "val error = \"The card was declined. Use another card to continue.\""
+    }
+  ],
+  "webEquivalent": "LiveRegion",
+  "dependsOn": []
+}

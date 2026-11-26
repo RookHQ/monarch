@@ -6,24 +6,13 @@ import {
   type MergeRecord,
 } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './duplicate-panel.fixture.json';
 
-const MATCHES: DuplicateMatch[] = [
-  {
-    id: 'c1',
-    title: 'Example Ltd',
-    kind: 'Client',
-    reasons: ['Same email'],
-    href: '#client-c1',
-  },
-  {
-    id: 'l7',
-    title: 'Example Group',
-    kind: 'Open lead',
-    reasons: ['Same company domain'],
-    meta: 'Created last week',
-    href: '#lead-l7',
-  },
-];
+const HREFS: Record<string, string> = { c1: '#client-c1', l7: '#lead-l7' };
+const MATCHES: DuplicateMatch[] = (fixture.data.matches as Omit<DuplicateMatch, 'href'>[]).map(
+  (match) => ({ ...match, href: HREFS[match.id] ?? '#' }),
+);
 
 const CURRENT: MergeRecord = {
   id: 'c9',
@@ -166,12 +155,7 @@ export default {
         {
           title: 'Hint under a create form',
           stack: true,
-          render: () => (
-            <DuplicatePanel
-              matches={MATCHES}
-              footer="You can still create it. Merge duplicates later from the record page."
-            />
-          ),
+          render: () => <DuplicatePanel matches={MATCHES} footer={fixture.data.footer} />,
         },
         { title: 'On a record page, with merge', stack: true, render: () => <OnRecordPage /> },
       ],

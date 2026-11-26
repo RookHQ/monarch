@@ -6,15 +6,18 @@ import {
   type PriorityLevel,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './priority-picker.fixture.json';
 
-function PriorityDemo({ compact }: { compact?: boolean }) {
-  const [value, setValue] = useState<PriorityLevel>('medium');
+function PriorityDemo({ compact, open }: { compact?: boolean; open?: boolean }) {
+  const [value, setValue] = useState<PriorityLevel>(fixture.data.value as PriorityLevel);
   return (
     <PriorityPicker
       value={value}
       onValueChange={setValue}
       showLabel={!compact}
       size={compact ? 'sm' : 'md'}
+      defaultOpen={open}
     />
   );
 }
@@ -112,7 +115,7 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Priority picker', render: () => <PriorityDemo /> },
+        { title: 'Priority picker', stage: true, render: () => <PriorityDemo open /> },
         { title: 'Glyph only', render: () => <PriorityDemo compact /> },
         {
           title: 'Read-only glyphs with names',

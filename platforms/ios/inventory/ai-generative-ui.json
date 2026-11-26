@@ -1,0 +1,117 @@
+{
+  "id": "ai-generative-ui",
+  "name": "MonarchAiGenerativeUi",
+  "title": "AiGenerativeUi",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "A name-to-view-builder registry (MonarchAiUiRegistry) with JSONDecoder into each component's Decodable props type; MonarchInlineNotice for refused parts; ProgressView while props stream",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Renders a component the model asked for in a ui part, only when its name is in the app's allow-listed registry, with props treated as untrusted data and decoded into typed models.",
+  "whenToUse": "When an assistant answers with interactive UI (a slot picker, a chart, a form) that the app has built and registered in advance.",
+  "whenNotToUse": "Not to render arbitrary markup or code from a model (never do that) and not for documents the assistant produced (use MonarchAiArtifactCard).",
+  "api": [
+    "init(_ part: MonarchAiUiPart, registry: MonarchAiUiRegistry, labels: MonarchAiGenerativeUiLabels = MonarchAiGenerativeUiLabels(), onReject: (@MainActor (MonarchAiUiRejection, MonarchAiUiPart) -> Void)? = nil, onAction: (@MainActor (MonarchAiUiAction) -> Void)? = nil)",
+    "struct MonarchAiUiRegistry { init(); mutating func register<Props: Decodable & Sendable, Content: View>(_ name: String, props: Props.Type, description: String? = nil, streaming: MonarchAiUiStreaming = .progressive, validate: (@Sendable (Props) -> Bool)? = nil, @ViewBuilder content: @escaping @MainActor @Sendable (Props, MonarchAiUiEmit) throws -> Content); var names: [String]; func contains(_ name: String) -> Bool; func manifest() -> String }",
+    "struct MonarchAiUiEmit { init(_ handler: (@MainActor @Sendable (String, MonarchAiJSON?) -> Void)? = nil); var isConnected: Bool; func callAsFunction(_ type: String, payload: MonarchAiJSON? = nil) }",
+    "struct MonarchAiUiAction { init(type: String, payload: MonarchAiJSON? = nil, component: String, partId: String? = nil, toolCallId: String? = nil) }",
+    "enum MonarchAiUiRejection: String, Error { case unknownComponent, invalidProps, renderError }",
+    "enum MonarchAiUiStreaming { case progressive, onComplete }",
+    "struct MonarchAiGenerativeUiLabels { init(unknown: String? = nil, invalid: String? = nil, failed: String? = nil, loading: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "part",
+      "type": "MonarchAiUiPart",
+      "default": "required",
+      "description": "The ui part of the message: a component name and its props. While state is streaming, props may be JSON text that is still arriving."
+    },
+    {
+      "name": "registry",
+      "type": "MonarchAiUiRegistry",
+      "default": "required",
+      "description": "The allow-list. Only names registered here render, matched exactly."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiGenerativeUiLabels",
+      "default": "MonarchAiGenerativeUiLabels()",
+      "description": "Replacements for the three notices and the spoken name of the progress indicator."
+    },
+    {
+      "name": "onReject",
+      "type": "(@MainActor (MonarchAiUiRejection, MonarchAiUiPart) -> Void)?",
+      "default": "nil",
+      "description": "Runs once per refused outcome of a part, for logging. Not called while a streaming part waits for more props."
+    },
+    {
+      "name": "onAction",
+      "type": "(@MainActor (MonarchAiUiAction) -> Void)?",
+      "default": "nil",
+      "description": "Receives actions the component sends through its emit channel, with the payload sanitised and the part id and tool call id attached. Without it the channel is not connected."
+    }
+  ],
+  "states": [
+    {
+      "name": "rendered",
+      "description": "The registered component, built from its decoded props."
+    },
+    {
+      "name": "streaming",
+      "description": "Progressive components render as soon as the partial props decode; others, and props that do not decode yet, show a ProgressView named \"Loading\"."
+    },
+    {
+      "name": "unknown component",
+      "description": "A neutral notice: \"This part of the answer can’t be shown here.\""
+    },
+    {
+      "name": "invalid props",
+      "description": "A neutral notice: \"This part of the answer had data that couldn’t be shown.\""
+    },
+    {
+      "name": "render error",
+      "description": "A neutral notice: \"This part of the answer couldn’t be displayed.\""
+    }
+  ],
+  "appearance": "Rendered components draw themselves. The notice is a subtle neutral MonarchInlineNotice with an information icon, using the theme's neutral roles, so dark and high-contrast themes follow.",
+  "platformNotes": "Same allow-list model, notices, streaming policies and action channel as the web. Differences: props decode into a Decodable Swift type instead of a JSON Schema, so the schema check is the type itself plus an optional validate; Swift has no runtime props spreading, so blocked prop names (style, className, on… handlers) have no meaning and are not filtered, while unsafe URLs and the size, depth and number limits are applied as on the web. SwiftUI cannot catch a view that fails while rendering; a builder that throws is the render error instead. The manifest lists names and descriptions without a schema summary, and there is no JSON format. A custom fallback view is not offered; replace the notice text with labels.",
+  "accessibility": [
+    "The rendered component brings its own accessibility.",
+    "The notice is static text with a decorative icon; the neutral tone adds no spoken tone name.",
+    "The progress indicator while props stream is named \"Loading\".",
+    "Model output is never rendered as markup, so nothing unexpected becomes focusable."
+  ],
+  "edgeCases": [
+    "A streaming part is never refused for its props, because they may still become valid; once complete, props given as text instead of data are refused.",
+    "Registering a name twice replaces the earlier component; an empty name is ignored.",
+    "Strings longer than 20,000 characters are cut, arrays and objects keep 500 members, nesting stops at 8 levels, and numbers that are not finite are dropped."
+  ],
+  "tests": [
+    "MonarchAiGenerativeUiTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Allow-listed component",
+      "fixture": "ai-generative-ui",
+      "webExample": "Allow-listed component",
+      "template": "MonarchAiGenerativeUi(\n    MonarchAiUiPart(component: {{component}}, props: [\"label\": {{props.label}}, \"value\": {{props.value}}, \"change\": {{props.change}}]),\n    registry: registry\n)",
+      "setupTemplate": "struct MetricProps: Decodable, Sendable {\n    let label: String\n    let value: String\n    let change: String?\n}\n\nvar registry: MonarchAiUiRegistry {\n    var registry = MonarchAiUiRegistry()\n    registry.register({{component}}, props: MetricProps.self) { props, _ in\n        MonarchCard {\n            Text(props.label).monarchTextStyle(.subheading)\n            Text(props.value).monarchTextStyle(.title)\n            if let change = props.change {\n                MonarchBadge(change, tone: .success)\n            }\n        }\n    }\n    return registry\n}",
+      "setup": "struct MetricProps: Decodable, Sendable {\n    let label: String\n    let value: String\n    let change: String?\n}\n\nvar registry: MonarchAiUiRegistry {\n    var registry = MonarchAiUiRegistry()\n    registry.register(\"MetricCard\", props: MetricProps.self) { props, _ in\n        MonarchCard {\n            Text(props.label).monarchTextStyle(.subheading)\n            Text(props.value).monarchTextStyle(.title)\n            if let change = props.change {\n                MonarchBadge(change, tone: .success)\n            }\n        }\n    }\n    return registry\n}",
+      "code": "MonarchAiGenerativeUi(\n    MonarchAiUiPart(component: \"MetricCard\", props: [\"label\": \"Active projects\", \"value\": \"42\", \"change\": \"+6 this month\"]),\n    registry: registry\n)"
+    },
+    {
+      "title": "A name that is not allowed",
+      "code": "MonarchAiGenerativeUi(MonarchAiUiPart(component: \"WebView\", props: [:]), registry: MonarchAiUiRegistry())"
+    }
+  ],
+  "webEquivalent": "AiGenerativeUi",
+  "dependsOn": [
+    "inline-notice",
+    "ai-conversation"
+  ]
+}

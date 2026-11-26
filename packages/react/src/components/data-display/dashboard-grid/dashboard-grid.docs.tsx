@@ -2,42 +2,23 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { DashboardGrid, Widget, type DashboardGridItem } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './dashboard-grid.fixture.json';
 
-const demoItems: DashboardGridItem[] = [
-  {
-    id: 'figures',
-    label: 'Key figures',
-    span: 'full',
-    content: (
-      <Widget title="Key figures">
-        <p style={{ margin: 0 }}>128 open · 94% within target</p>
-      </Widget>
-    ),
-  },
-  {
-    id: 'load',
-    label: 'Team load',
-    span: 2,
-    content: (
-      <Widget title="Team load">
-        <p style={{ margin: 0 }}>12 open across 4 people.</p>
-      </Widget>
-    ),
-  },
-  {
-    id: 'activity',
-    label: 'Recent activity',
-    content: (
-      <Widget title="Recent activity">
-        <p style={{ margin: 0 }}>3 updates today.</p>
-      </Widget>
-    ),
-  },
-];
+const demoItems: DashboardGridItem[] = fixture.data.widgets.map((w) => ({
+  id: w.id,
+  label: w.title,
+  ...('span' in w ? { span: w.span as DashboardGridItem['span'] } : {}),
+  content: (
+    <Widget title={w.title}>
+      <p style={{ margin: 0 }}>{w.body}</p>
+    </Widget>
+  ),
+}));
 
 function ArrangeDemo() {
   const [editing, setEditing] = useState(false);
-  const [layout, setLayout] = useState<string[]>(['figures', 'load', 'activity']);
+  const [layout, setLayout] = useState<string[]>(fixture.data.layout);
   return (
     <div style={{ display: 'grid', gap: 'var(--mn-space-3)' }}>
       <div>
@@ -46,7 +27,7 @@ function ArrangeDemo() {
           variant={editing ? 'primary' : 'secondary'}
           onClick={() => setEditing(!editing)}
         >
-          {editing ? 'Done arranging' : 'Arrange'}
+          {editing ? 'Done arranging' : fixture.data.arrangeLabel}
         </Button>
       </div>
       <DashboardGrid

@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { ViewSwitcher, type ViewSwitcherBuiltIn } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './view-switcher.fixture.json';
 
 function Controlled() {
-  const [view, setView] = useState<ViewSwitcherBuiltIn>('table');
+  const [view, setView] = useState<ViewSwitcherBuiltIn>(
+    fixture.data.selected as ViewSwitcherBuiltIn,
+  );
   return (
     <div style={{ display: 'grid', gap: 8 }}>
       <ViewSwitcher value={view} onValueChange={setView} />

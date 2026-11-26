@@ -1,5 +1,7 @@
 import { Separator } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './separator.fixture.json';
 
 export default {
   id: 'separator',
@@ -55,9 +57,9 @@ export default {
           stack: true,
           render: () => (
             <>
-              <p>Profile</p>
+              <p>{fixture.data.above}</p>
               <Separator />
-              <p>Security</p>
+              <p>{fixture.data.below}</p>
             </>
           ),
         },

@@ -1,29 +1,47 @@
 import { Button } from '@rookcom/monarch-react';
 import { ChangelogFeed } from '@rookcom/monarch-react/marketing';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './changelog-feed.fixture.json';
+
+type Tag = { label: string; tone?: 'accent' };
+const tag = (t: Tag) => (t.tone ? { label: t.label, tone: t.tone } : t.label);
+const [exported, search, fix] = fixture.data.entries as [
+  {
+    id: string;
+    date: string;
+    version: string;
+    title: string;
+    tags: [{ label: string; tone: 'accent' }, Tag];
+    body: string;
+    href: string;
+  },
+  { id: string; date: string; title: string; tags: [Tag]; body: string },
+  { id: string; date: string; title: string; tags: [Tag] },
+];
 
 const sampleEntries = [
   {
-    id: 'sample-export',
-    date: '2026-06-01',
-    version: '2.4.0',
-    title: 'Reports can be exported',
-    tags: [{ label: 'New', tone: 'accent' as const }, 'Reports'],
-    body: <p>Every report now has an Export button. Files keep the filters you applied.</p>,
-    href: '#sample-export',
+    id: exported.id,
+    date: exported.date.slice(0, 10),
+    version: exported.version,
+    title: exported.title,
+    tags: exported.tags.map(tag),
+    body: <p>{exported.body}</p>,
+    href: exported.href,
   },
   {
-    id: 'sample-search',
-    date: '2026-05-20',
-    title: 'Search remembers your last query',
-    tags: ['Improved'],
-    body: <p>Opening search again shows the last query and its results.</p>,
+    id: search.id,
+    date: search.date.slice(0, 10),
+    title: search.title,
+    tags: search.tags.map(tag),
+    body: <p>{search.body}</p>,
   },
   {
-    id: 'sample-fix',
-    date: '2026-05-12',
-    title: 'Fixed a sorting issue in tables',
-    tags: ['Fix'],
+    id: fix.id,
+    date: fix.date.slice(0, 10),
+    title: fix.title,
+    tags: fix.tags.map(tag),
   },
 ];
 
@@ -125,11 +143,11 @@ export default {
           title: 'Changelog with RSS',
           render: () => (
             <ChangelogFeed
-              title="Changelog"
-              description="Sample entries showing the layout."
+              title={fixture.data.title}
+              description={fixture.data.description}
               rssHref="#rss"
               entries={sampleEntries}
-              locale="en-GB"
+              locale={fixture.data.locale}
             />
           ),
         },

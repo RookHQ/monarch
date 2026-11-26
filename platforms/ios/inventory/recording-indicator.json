@@ -1,0 +1,124 @@
+{
+  "id": "recording-indicator",
+  "name": "MonarchRecordingIndicator",
+  "title": "RecordingIndicator",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Text and Circle in a Capsule, TimelineView(.periodic), Duration.TimeFormatStyle",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A \"REC\" capsule with the recorded time, shown while a call or a session is recorded, with an optional stop button.",
+  "whenToUse": "In a call or a session that is being recorded, so everyone can see it. Keep it in the layout while not recording, so starting and stopping are announced.",
+  "whenNotToUse": "Not for the system's own microphone or camera indicators, which iOS draws itself.",
+  "api": [
+    "init(isRecording: Bool, since: Date? = nil, elapsed: TimeInterval? = nil, variant: MonarchRecordingIndicatorVariant = .subtle, isPaused: Bool = false, labels: MonarchRecordingIndicatorLabels = MonarchRecordingIndicatorLabels(), showsElapsed: Bool? = nil, onStop: (@MainActor () -> Void)? = nil)",
+    "enum MonarchRecordingIndicatorVariant { case subtle, solid }",
+    "struct MonarchRecordingIndicatorLabels { init(rec: String? = nil, recording: String? = nil, paused: String? = nil, started: String? = nil, stopped: String? = nil, pausedAnnouncement: String? = nil, resumed: String? = nil, stop: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "isRecording",
+      "type": "Bool",
+      "default": "required",
+      "description": "Whether recording is on. Nothing is drawn while false."
+    },
+    {
+      "name": "since",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When recording started. The time advances from it every second."
+    },
+    {
+      "name": "elapsed",
+      "type": "TimeInterval?",
+      "default": "nil",
+      "description": "The recorded time in seconds, when the product counts it. Takes precedence over since and does not advance by itself."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchRecordingIndicatorVariant",
+      "default": ".subtle",
+      "description": "subtle on the app's surfaces, solid over video."
+    },
+    {
+      "name": "isPaused",
+      "type": "Bool",
+      "default": "false",
+      "description": "The capsule says Paused, shows a pause glyph and the time stops."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchRecordingIndicatorLabels",
+      "default": "MonarchRecordingIndicatorLabels()",
+      "description": "Replacements for the eight built-in strings."
+    },
+    {
+      "name": "showsElapsed",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Whether the time is shown. By default it is shown when since or elapsed is given."
+    },
+    {
+      "name": "onStop",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Stops recording. Adds a stop button."
+    }
+  ],
+  "states": [
+    {
+      "name": "not recording",
+      "description": "Nothing is drawn."
+    },
+    {
+      "name": "recording",
+      "description": "A pulsing dot, \"REC\" and the time."
+    },
+    {
+      "name": "paused",
+      "description": "A pause glyph, \"Paused\" and a time that does not advance."
+    }
+  ],
+  "appearance": "Subtle is a capsule in the subtle danger colour with a danger border and strong danger text. Solid is a capsule in the inverse background colour with inverse text. The dot is the solid danger colour in both.",
+  "platformNotes": "The web variants are named badge and overlay; iOS uses the shared words subtle and solid for the same two looks. The web overlay is translucent; the iOS solid variant is opaque, because colours come from roles and are not dimmed. Strings are replaced through one labels value instead of a messages object. The time is formatted by Duration.TimeFormatStyle in the user's locale.",
+  "accessibility": [
+    "The capsule is one element read as \"Recording\", or \"Recording, Paused\", with the time in words as its value.",
+    "Starting, stopping, pausing and resuming are each announced once; the advancing time is not announced.",
+    "The state is text and a glyph as well as colour.",
+    "The dot does not pulse when Reduce Motion is on.",
+    "The stop button is named \"Stop recording\" and has a 44-point touch target."
+  ],
+  "edgeCases": [
+    "With since and isPaused the time shown is the time since the start at the last redraw, pauses included; pass elapsed to leave pauses out.",
+    "From one hour the time shows hours, for example 1:02:03.",
+    "A start date in the future shows 00:00.",
+    "If the view is removed from the layout while not recording, the start and the stop are not announced."
+  ],
+  "tests": [
+    "MonarchRecordingIndicatorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Start and stop",
+      "fixture": "recording-indicator",
+      "webExample": "Start and stop",
+      "template": "HStack {\n    MonarchButton(isRecording ? {{stop}} : {{start}}, size: .sm) { isRecording.toggle() }\n    MonarchRecordingIndicator(isRecording: isRecording, elapsed: {{elapsedMillis}} / 1000)\n}",
+      "setupTemplate": "@State private var isRecording = true",
+      "setup": "@State private var isRecording = true",
+      "code": "HStack {\n    MonarchButton(isRecording ? \"Stop recording\" : \"Start recording\", size: .sm) { isRecording.toggle() }\n    MonarchRecordingIndicator(isRecording: isRecording, elapsed: 83_000 / 1000)\n}"
+    },
+    {
+      "title": "Paused, over video",
+      "code": "MonarchRecordingIndicator(isRecording: true, elapsed: 252, variant: .solid, isPaused: true)"
+    }
+  ],
+  "webEquivalent": "RecordingIndicator",
+  "dependsOn": [
+    "badge"
+  ]
+}

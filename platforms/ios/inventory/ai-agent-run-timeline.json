@@ -1,0 +1,135 @@
+{
+  "id": "ai-agent-run-timeline",
+  "name": "MonarchAiAgentRunTimeline",
+  "title": "AiAgentRunTimeline",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of DisclosureGroup rows with .disclosureGroupStyle(.monarch), each with a RoundedRectangle bar placed by leading padding in a GeometryReader track; Picker with .pickerStyle(.segmented) for the view; Grid in a ScrollView(.horizontal) for the table, with accessibilityChildren",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The trace of one agent run: every model call, tool call and hand-off as a bar on a shared time axis, totals for time, tokens and cost, and details that open per event, with a table view of the same data.",
+  "whenToUse": "In a developer or operator view of an agent: to see where a run spent its time, tokens and money, and to jump from an event to the conversation part it produced.",
+  "whenNotToUse": "For the steps an assistant shows the person while it works, use MonarchAiChainOfSteps. For usage over a period, use MonarchAiUsageMeter or a chart.",
+  "api": [
+    "init(_ events: [MonarchAiRunEvent], currency: String = \"USD\", now: Date? = nil, mode: Binding<MonarchAiAgentRunTimelineMode>? = nil, initialMode: MonarchAiAgentRunTimelineMode = .timeline, labels: MonarchAiAgentRunTimelineLabels = MonarchAiAgentRunTimelineLabels(), onOpenPart: (@MainActor (MonarchAiRunEvent) -> Void)? = nil)",
+    "struct MonarchAiRunEvent { init(id: String, kind: MonarchAiRunEventKind, name: String, startedAt: Date, endedAt: Date? = nil, inputTokens: Int? = nil, outputTokens: Int? = nil, costMicros: Int? = nil, detail: String? = nil, partId: String? = nil, messageId: String? = nil) }",
+    "enum MonarchAiRunEventKind: String { case model, tool, handoff, error }",
+    "enum MonarchAiAgentRunTimelineMode: String { case timeline, table }",
+    "struct MonarchAiAgentRunTimelineLabels { init(label:modeLabel:mode:kind:events:totalDuration:inputTokens:outputTokens:cost:start:duration:eventColumn:kindColumn:running:empty:notAvailable:openPart:formatDuration:formatOffset:), every parameter optional }"
+  ],
+  "options": [
+    {
+      "name": "events",
+      "type": "[MonarchAiRunEvent]",
+      "default": "required",
+      "description": "The run's events in any order: kind, name, start and end (nil while running), tokens, cost in micros, a detail text, and the conversation part or message it belongs to."
+    },
+    {
+      "name": "currency",
+      "type": "String",
+      "default": "\"USD\"",
+      "description": "The ISO 4217 currency of costMicros."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The end of events that are still running. Without it they end at the latest known time, so the trace never reads the clock."
+    },
+    {
+      "name": "mode",
+      "type": "Binding<MonarchAiAgentRunTimelineMode>?",
+      "default": "nil",
+      "description": "The view, timeline or table. Without it the component keeps the state."
+    },
+    {
+      "name": "initialMode",
+      "type": "MonarchAiAgentRunTimelineMode",
+      "default": ".timeline",
+      "description": "The first view when the component keeps the state."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiAgentRunTimelineLabels",
+      "default": "MonarchAiAgentRunTimelineLabels()",
+      "description": "Replacements for every built-in string, and duration and offset formatters."
+    },
+    {
+      "name": "onOpenPart",
+      "type": "(@MainActor (MonarchAiRunEvent) -> Void)?",
+      "default": "nil",
+      "description": "Adds \"Show in conversation\" to an open event that has a partId or a messageId."
+    }
+  ],
+  "states": [
+    {
+      "name": "timeline",
+      "description": "A time axis (start, middle, end), then one disclosure per event with its kind label, name, duration and bar."
+    },
+    {
+      "name": "open event",
+      "description": "Start offset, duration, the known tokens and cost, the detail in the code style, and Show in conversation."
+    },
+    {
+      "name": "running",
+      "description": "\"Running\" instead of a duration, and a bar that fades into the AI thinking colour."
+    },
+    {
+      "name": "error",
+      "description": "The kind label on the danger subtle fill with danger text, and a danger bar."
+    },
+    {
+      "name": "table",
+      "description": "Event, kind, start, duration, input and output tokens and, when any event has one, cost; unknown values show \"–\". Scrolls sideways."
+    },
+    {
+      "name": "empty",
+      "description": "\"No events yet\" under the totals."
+    }
+  ],
+  "appearance": "Bars use the AI solid colour for model calls, the AI tool colour for tools, info solid for hand-offs and danger solid for errors, on a subtle track. Totals are strong body text with muted captions. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The parity map named Swift Charts; the bars are drawn with shapes instead, because each bar sits inside its event's disclosure so the bar, the header and the details form one row for touch and VoiceOver, which a Chart cannot hold. The web draws a moving shimmer on running bars; iOS draws a still gradient, so Reduce Motion needs no special case. The web's detail is any React node; on iOS it is text. Times are Date values and durations are formatted with the locale; the web also accepts ISO strings and epoch milliseconds. The axis shows three ticks instead of five, for phone widths. Android has the same parameters.",
+  "accessibility": [
+    "The trace is a container named \"Agent run\"; the heading has the header trait.",
+    "Each total is one element, such as \"Total time, 4.2 s\".",
+    "Each event is a disclosure button read as its kind, name and duration, such as \"Tool, search_invoices, 1.6 s\", with an expanded or collapsed value; a running event says \"Running\".",
+    "Bars and the axis are hidden, so nothing depends on their colour or length.",
+    "Each fact of an open event is one element; Show in conversation is a button with a 44-point touch target.",
+    "In the table each row is one element with every known value; the grid is not read cell by cell.",
+    "The view switch is a standard segmented Picker named \"View\"."
+  ],
+  "edgeCases": [
+    "Events are sorted by start; equal starts keep their order.",
+    "An event that ends before it starts is drawn with no length.",
+    "An instant event keeps a 2-point bar.",
+    "Long names wrap in the timeline and widen the table, which scrolls."
+  ],
+  "tests": [
+    "MonarchAiAgentRunTimelineTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "A finished run",
+      "fixture": "ai-agent-run-timeline",
+      "webExample": "A finished run",
+      "template": "MonarchAiAgentRunTimeline(\n    [\n        MonarchAiRunEvent(\n            id: {{events.0.id}},\n            kind: .{{events.0.kind|raw}},\n            name: {{events.0.name}},\n            startedAt: {{events.0.startedAt|date}},\n            endedAt: {{events.0.endedAt|date}},\n            inputTokens: {{events.0.inputTokens}},\n            outputTokens: {{events.0.outputTokens}},\n            costMicros: {{events.0.costMicros}}\n        ),\n        MonarchAiRunEvent(\n            id: {{events.1.id}},\n            kind: .{{events.1.kind|raw}},\n            name: {{events.1.name}},\n            startedAt: {{events.1.startedAt|date}},\n            endedAt: {{events.1.endedAt|date}},\n            detail: {{events.1.detail}}\n        ),\n        MonarchAiRunEvent(\n            id: {{events.2.id}},\n            kind: .{{events.2.kind|raw}},\n            name: {{events.2.name}},\n            startedAt: {{events.2.startedAt|date}},\n            endedAt: {{events.2.endedAt|date}}\n        ),\n        MonarchAiRunEvent(\n            id: {{events.3.id}},\n            kind: .{{events.3.kind|raw}},\n            name: {{events.3.name}},\n            startedAt: {{events.3.startedAt|date}},\n            endedAt: {{events.3.endedAt|date}},\n            inputTokens: {{events.3.inputTokens}},\n            outputTokens: {{events.3.outputTokens}},\n            costMicros: {{events.3.costMicros}}\n        ),\n    ],\n    currency: {{currency}},\n    labels: MonarchAiAgentRunTimelineLabels(label: {{title}})\n)\n.environment(\\.locale, Locale(identifier: {{locale}}))",
+      "code": "MonarchAiAgentRunTimeline(\n    [\n        MonarchAiRunEvent(\n            id: \"1\",\n            kind: .model,\n            name: \"Plan the answer\",\n            startedAt: Date(timeIntervalSince1970: 1_767_268_800),\n            endedAt: Date(timeIntervalSince1970: 1_767_268_801.4),\n            inputTokens: 1850,\n            outputTokens: 240,\n            costMicros: 3100\n        ),\n        MonarchAiRunEvent(\n            id: \"2\",\n            kind: .tool,\n            name: \"search_records\",\n            startedAt: Date(timeIntervalSince1970: 1_767_268_801.4),\n            endedAt: Date(timeIntervalSince1970: 1_767_268_802.6),\n            detail: \"query: \\\"renewals this quarter\\\" · 14 results\"\n        ),\n        MonarchAiRunEvent(\n            id: \"3\",\n            kind: .handoff,\n            name: \"To the analysis agent\",\n            startedAt: Date(timeIntervalSince1970: 1_767_268_802.6),\n            endedAt: Date(timeIntervalSince1970: 1_767_268_802.7)\n        ),\n        MonarchAiRunEvent(\n            id: \"4\",\n            kind: .model,\n            name: \"Write the summary\",\n            startedAt: Date(timeIntervalSince1970: 1_767_268_802.7),\n            endedAt: Date(timeIntervalSince1970: 1_767_268_806.1),\n            inputTokens: 4200,\n            outputTokens: 910,\n            costMicros: 9800\n        ),\n    ],\n    currency: \"EUR\",\n    labels: MonarchAiAgentRunTimelineLabels(label: \"Agent run\")\n)\n.environment(\\.locale, Locale(identifier: \"en-GB\"))"
+    }
+  ],
+  "webEquivalent": "AiAgentRunTimeline",
+  "dependsOn": [
+    "tabular-number",
+    "collapsible",
+    "segmented-control",
+    "button",
+    "ai-conversation"
+  ],
+  "icons": {
+    "row.expand": "ChevronRightGlyph"
+  }
+}

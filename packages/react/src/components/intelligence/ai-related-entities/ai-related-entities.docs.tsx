@@ -5,22 +5,12 @@ import {
   type AiRelatedEntity,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-related-entities.fixture.json';
 
-const ENTITIES: AiRelatedEntity[] = [
-  { id: 'northwind', label: 'Northwind', kind: 'org', weight: 0.92 },
-  { id: 'jordan', label: 'Jordan Lee', kind: 'person', weight: 0.74 },
-  { id: 'sam', label: 'Sam Rivera', kind: 'person', weight: 0.58 },
-  { id: 'q3-plan', label: 'Q3 plan', kind: 'document', weight: 0.51 },
-  { id: 'harbor', label: 'Harbor office', kind: 'place', weight: 0.33 },
-];
+const ENTITIES = fixture.data.entities as AiRelatedEntity[];
 
-const RELATIONS: AiEntityRelation[] = [
-  { from: 'jordan', to: 'northwind', label: 'works at' },
-  { from: 'sam', to: 'northwind', label: 'works at' },
-  { from: 'q3-plan', to: 'northwind', label: 'mentions' },
-  { from: 'jordan', to: 'q3-plan', label: 'wrote' },
-  { from: 'northwind', to: 'harbor', label: 'based at' },
-];
+const RELATIONS = fixture.data.relations as AiEntityRelation[];
 
 function SelectDemo({ variant }: { variant: 'list' | 'graph' }) {
   const [selected, setSelected] = useState<string | null>(null);

@@ -5,22 +5,19 @@ import {
   type AppAccessOption,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './app-access-picker.fixture.json';
 
-const APPS: AppAccessOption[] = [
-  { id: 'notes', name: 'Notes', description: 'Shared notes and documents' },
-  { id: 'planner', name: 'Planner', description: 'Projects, tasks and timelines' },
-  { id: 'calendar', name: 'Calendar', description: 'Team calendars and booking pages' },
-  { id: 'helpdesk', name: 'Helpdesk', description: 'Customer tickets', badge: 'Beta' },
-];
+const APPS: AppAccessOption[] = fixture.data.apps;
 
 function Invite() {
-  const [value, setValue] = useState<string[]>(['notes']);
+  const [value, setValue] = useState<string[]>(fixture.data.selected);
   return (
     <AppAccessPicker
       apps={APPS}
       value={value}
       onValueChange={setValue}
-      description="Joining a workspace grants no app access on its own. These apps are applied when the invitation is accepted."
+      description={fixture.data.description}
     />
   );
 }

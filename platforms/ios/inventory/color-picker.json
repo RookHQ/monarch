@@ -1,0 +1,134 @@
+{
+  "id": "color-picker",
+  "name": "MonarchColorPicker",
+  "title": "ColorPicker",
+  "family": "forms",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "SwiftUI.ColorPicker(selection:supportsOpacity:) for any colour; LazyVGrid of Button for the swatches",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Picks a colour from named swatches, or any colour with the system colour picker. The selection is lower-case #rrggbb text.",
+  "whenToUse": "To choose a colour for a label, a tag, a calendar or a brand setting, where a short list of presets covers most choices.",
+  "whenNotToUse": "When any colour is as likely as another and there are no presets, use the standard ColorPicker alone. For a choice among options that are not colours, use Picker.",
+  "api": [
+    "init(_ label: String, selection: Binding<String?>, swatches: [MonarchColorSwatch] = MonarchColorSwatch.defaults, helper: String? = nil, allowsCustom: Bool = true, customLabel: String? = nil, emptyLabel: String? = nil)",
+    "struct MonarchColorSwatch: Sendable, Hashable, Identifiable { let hex: String; let name: String; var id: String; var color: Color }",
+    "MonarchColorSwatch.init?(hex: String, name: String)",
+    "static var MonarchColorSwatch.defaults: [MonarchColorSwatch]",
+    "static func MonarchColorSwatch.normalizedHex(_ text: String) -> String?",
+    "static func MonarchColorSwatch.color(hex: String) -> Color?"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The visible label, already localised."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<String?>",
+      "default": "required",
+      "description": "The colour as lower-case #rrggbb, or nil for none."
+    },
+    {
+      "name": "swatches",
+      "type": "[MonarchColorSwatch]",
+      "default": "MonarchColorSwatch.defaults",
+      "description": "The presets. An empty array shows only the custom row."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Supporting text under the picker."
+    },
+    {
+      "name": "allowsCustom",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the row that opens the system colour picker."
+    },
+    {
+      "name": "customLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Custom colour\" title of that row."
+    },
+    {
+      "name": "emptyLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"No colour selected\" text."
+    }
+  ],
+  "states": [
+    {
+      "name": "selected",
+      "description": "The chosen swatch has a ring in the default text colour and a check mark on an inverse disc, and the selected trait."
+    },
+    {
+      "name": "custom colour",
+      "description": "A colour that is no swatch selects none of them; the custom row shows its hex value."
+    },
+    {
+      "name": "no selection",
+      "description": "No swatch is marked and the custom row reads \"No colour selected\"."
+    },
+    {
+      "name": "disabled",
+      "description": "With disabled(_:) the label, the row title and the helper use the disabled text colour and nothing responds. Swatch colours are the app's data and are not changed."
+    }
+  ],
+  "appearance": "Swatches are 28-point discs in the colour itself with a default-border hairline, in a grid of 44-point cells. The selection ring uses the default text colour and the check mark sits on the inverse background, so the mark is visible on any swatch in light, dark and both high-contrast themes.",
+  "platformNotes": "The web has a hex text box and a native colour input. On iOS the system colour picker already has a hex field, sliders, a spectrum, an eyedropper and saved colours, so Monarch adds no text box and there is no invalid-hex message; the selected value is shown as text beside the picker. The web's roving arrow-key focus is not reproduced: each swatch is a button. The value is the same lower-case #rrggbb text as on the web and Android, so a stored colour moves between platforms; opacity is not supported. A wide-gamut colour picked in the system picker is clamped to sRGB.",
+  "accessibility": [
+    "Each swatch is a button named by its name and value, for example \"Blue, #2563eb\", with the selected trait on the chosen one.",
+    "The selection is also a ring and a check mark, so it does not depend on seeing the colour.",
+    "The custom row is the standard ColorPicker; its label is the row title followed by the selected value as text.",
+    "The label has the header trait.",
+    "Every swatch has a 44-point touch target; text and swatches scale with Dynamic Type."
+  ],
+  "edgeCases": [
+    "A selection that is not a hex colour is treated as none.",
+    "MonarchColorSwatch(hex:name:) returns nil for text that is not a hex colour, so a list built with compactMap skips it.",
+    "Two swatches with the same colour have the same identity; keep the colours distinct.",
+    "While there is no selection the system picker opens on the theme's text colour; nothing is written until the person picks."
+  ],
+  "tests": [
+    "MonarchColorPickerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "In a Field",
+      "fixture": "color-picker",
+      "webExample": "In a Field",
+      "template": "MonarchColorPicker({{label}}, selection: $hex)",
+      "setupTemplate": "@State private var hex: String? = {{value}}",
+      "setup": "@State private var hex: String? = \"#2563eb\"",
+      "code": "MonarchColorPicker(\"Label colour\", selection: $hex)"
+    },
+    {
+      "title": "Own swatches, no custom colour",
+      "setup": "@State private var hex: String?",
+      "code": "MonarchColorPicker(\n    \"Brand colour\",\n    selection: $hex,\n    swatches: [\n        MonarchColorSwatch(hex: \"#111827\", name: \"Ink\"),\n        MonarchColorSwatch(hex: \"#f59e0b\", name: \"Amber\"),\n    ].compactMap { $0 },\n    allowsCustom: false\n)"
+    },
+    {
+      "title": "Using the selection as a colour",
+      "setup": "@State private var hex: String? = \"#16a34a\"",
+      "code": "MonarchColorPicker(\"Tag colour\", selection: $hex)\nMonarchBadge(\"Tag\")\n    .padding(4)\n    .background(hex.flatMap(MonarchColorSwatch.color(hex:)) ?? Color.clear)"
+    }
+  ],
+  "webEquivalent": "ColorPicker",
+  "dependsOn": [
+    "text"
+  ],
+  "icons": {
+    "selected": "CheckGlyph"
+  }
+}

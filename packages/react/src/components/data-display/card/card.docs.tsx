@@ -1,5 +1,6 @@
 import {
   Button,
+  type ButtonProps,
   Card,
   CardContent,
   CardDescription,
@@ -8,6 +9,14 @@ import {
   CardTitle,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './card.fixture.json';
+
+const action = fixture.data.action as {
+  label: string;
+  variant: NonNullable<ButtonProps['variant']>;
+  size: NonNullable<ButtonProps['size']>;
+};
 
 export default {
   id: 'card',
@@ -83,15 +92,17 @@ export default {
           title: 'Variants',
           render: () => (
             <>
-              {(['outline', 'raised', 'subtle'] as const).map((v) => (
+              {(['outline', 'raised', 'subtle'] as const).map((v, i) => (
                 <Card key={v} variant={v} style={{ width: '16rem' }}>
                   <CardHeader>
-                    <CardTitle>Open tickets</CardTitle>
-                    <CardDescription>{v} card</CardDescription>
+                    <CardTitle>{fixture.data.title}</CardTitle>
+                    <CardDescription>{fixture.data.descriptions[i]}</CardDescription>
                   </CardHeader>
-                  <CardContent>128</CardContent>
+                  <CardContent>{fixture.data.content}</CardContent>
                   <CardFooter>
-                    <Button size="sm">View</Button>
+                    <Button variant={action.variant} size={action.size}>
+                      {action.label}
+                    </Button>
                   </CardFooter>
                 </Card>
               ))}

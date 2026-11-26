@@ -1,6 +1,10 @@
 import { Button, EmptyState, Kbd } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './empty-state.fixture.json';
 import { ListIcon, PlusIcon } from '../../../internal/docs-demo.js';
+
+const tipParts = fixture.data.tip.split(fixture.data.tipKey);
 
 export default {
   id: 'empty-state',
@@ -126,17 +130,19 @@ export default {
           render: () => (
             <EmptyState
               icon={<PlusIcon />}
-              title="No tickets yet"
-              description="New tickets from your inbox and portal appear here."
+              title={fixture.data.title}
+              description={fixture.data.description}
               actions={
                 <>
-                  <Button variant="primary">New ticket</Button>
-                  <Button>Import</Button>
+                  <Button variant="primary">{fixture.data.primaryAction}</Button>
+                  <Button>{fixture.data.secondaryAction}</Button>
                 </>
               }
               tip={
                 <>
-                  Press <Kbd>N</Kbd> to create a ticket from anywhere.
+                  {tipParts[0]}
+                  <Kbd>{fixture.data.tipKey}</Kbd>
+                  {tipParts[1]}
                 </>
               }
             />

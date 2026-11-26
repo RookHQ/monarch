@@ -1,6 +1,8 @@
-import { DropdownMenuItem, SplitButton } from '@rookcom/monarch-react';
+import { DropdownMenuItem, SplitButton, type SplitButtonProps } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { ClockIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './split-button.fixture.json';
 
 export default {
   id: 'split-button',
@@ -133,10 +135,10 @@ export default {
           title: 'Primary with alternatives',
           render: () => (
             <SplitButton
-              variant="primary"
-              items={[{ label: 'Save as draft' }, { label: 'Save and close' }]}
+              variant={fixture.data.variant as NonNullable<SplitButtonProps['variant']>}
+              items={fixture.data.items.map((label) => ({ label }))}
             >
-              Save
+              {fixture.data.label}
             </SplitButton>
           ),
         },

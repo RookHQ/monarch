@@ -1,25 +1,12 @@
 import { StatusBadge } from '@rookcom/monarch-react';
 import { PayslipView, type PayslipLine } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './payslip-view.fixture.json';
 
-const lines: PayslipLine[] = [
-  { name: 'Basic', kind: 'earning', amount: '4200.00', note: '22 of 22 working days' },
-  { name: 'Housing allowance', kind: 'earning', amount: '1300.00' },
-  { name: 'Overtime', kind: 'earning', amount: '180.00', note: '6 hours at 1.5×' },
-  { name: 'Income tax', kind: 'deduction', amount: '820.00' },
-  { name: 'Pension (employee)', kind: 'deduction', amount: '275.00' },
-  { name: 'Travel', kind: 'reimbursement', amount: '64.50' },
-  { name: 'Pension (employer)', kind: 'employer', amount: '275.00' },
-];
+const lines = fixture.data.lines as PayslipLine[];
 
-const details = [
-  { label: 'Employee', value: 'Jordan Park' },
-  { label: 'Employee ID', value: 'E-1042' },
-  { label: 'Department', value: 'Operations' },
-  { label: 'Pay period', value: '1 Mar – 31 Mar 2026' },
-  { label: 'Pay date', value: '31 Mar 2026' },
-  { label: 'Paid days', value: '22 of 22' },
-];
+const details = fixture.data.details;
 
 export default {
   id: 'payslip-view',
@@ -132,27 +119,22 @@ export default {
           stack: true,
           render: () => (
             <PayslipView
-              issuer="Example Co."
-              title="Payslip"
-              subtitle="March 2026 · PS-2026-03-0042"
-              status={<StatusBadge status="success" label="Paid" />}
+              issuer={fixture.data.issuer}
+              title={fixture.data.title}
+              subtitle={fixture.data.subtitle}
+              status={
+                <StatusBadge
+                  status={fixture.data.status.tone as 'success'}
+                  label={fixture.data.status.label}
+                />
+              }
               details={details}
               lines={lines}
-              totals={{
-                gross: '5680.00',
-                deductions: '1095.00',
-                reimbursements: '64.50',
-                net: '4649.50',
-              }}
-              yearToDate={[
-                { label: 'Gross', amount: '17040.00' },
-                { label: 'Deductions', amount: '3285.00' },
-                { label: 'Net', amount: '13755.00' },
-                { label: 'Tax withheld', amount: '2460.00' },
-              ]}
-              yearToDateTitle="Year to date (from January)"
-              currency="USD"
-              locale="en-US"
+              totals={fixture.data.totals}
+              yearToDate={fixture.data.yearToDate}
+              yearToDateTitle={fixture.data.yearToDateTitle}
+              currency={fixture.data.currency}
+              locale={fixture.data.locale}
               onDownload={() => {}}
             />
           ),

@@ -1,30 +1,35 @@
 import { useState } from 'react';
 import { AiConversationList, type AiConversationSummary } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+import fixture from './ai-conversation-list.fixture.json';
 
 const HOUR = 3_600_000;
-const DAY = 24 * HOUR;
+
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+// Midday today: the groups (Today, Previous 7 days) do not depend on the time of day it is viewed.
+const noon = new Date();
+noon.setHours(12, 0, 0, 0);
 
 function sample(): AiConversationSummary[] {
-  const now = Date.now();
-  return [
-    { id: '1', title: 'Launch checklist', updatedAt: now - HOUR, preview: 'Week 9 is confirmed.' },
-    { id: '2', title: 'Hiring plan', updatedAt: now - 2 * HOUR },
-    { id: '3', title: 'Budget review', updatedAt: now - 3 * DAY, preview: 'Travel is 12% over.' },
-    { id: '4', title: 'Team offsite agenda', updatedAt: now - 5 * DAY },
-    { id: '5', title: 'Quarterly goals', updatedAt: now - 40 * DAY, pinned: true },
-    { id: '6', title: 'Release notes draft', updatedAt: now - 60 * DAY },
-  ];
+  const now = noon.getTime();
+  return fixture.data.conversations.map((c) => ({
+    id: c.id,
+    title: c.title,
+    updatedAt: now - c.ageHours * HOUR,
+    ...('preview' in c ? { preview: c.preview } : {}),
+    ...('pinned' in c ? { pinned: c.pinned } : {}),
+  }));
 }
 
 function Demo() {
   const [items, setItems] = useState(sample);
-  const [active, setActive] = useState('1');
+  const [active, setActive] = useState(fixture.data.activeId);
   return (
     <div style={{ width: '100%', maxWidth: '18rem', height: 480 }}>
       <AiConversationList
         conversations={items}
         activeId={active}
+        now={noon}
         onSelect={setActive}
         onNew={() => {
           const id = String(Date.now());

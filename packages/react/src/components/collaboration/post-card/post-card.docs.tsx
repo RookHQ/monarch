@@ -3,6 +3,8 @@ import { IconButton } from '@rookcom/monarch-react';
 import { PostCard } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { PlusIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './post-card.fixture.json';
 
 const NOW = new Date(2026, 4, 10, 12);
 
@@ -140,16 +142,16 @@ export default {
           render: () => (
             <div style={{ width: '100%', maxWidth: '40rem' }}>
               <PostCard
-                title="How do you plan your week?"
+                title={fixture.data.title}
                 href="#post-1"
-                excerpt="I keep a short list every Monday and review it on Friday. Curious what works for others, especially with a lot of meetings."
-                author={{ name: 'Sam Lee' }}
-                publishedAt={new Date(2026, 4, 10, 9)}
-                now={NOW}
-                tags={[{ label: 'Questions' }, { label: 'Planning' }]}
-                answered
-                reactionCount={12}
-                commentCount={8}
+                excerpt={fixture.data.excerpt}
+                author={{ name: fixture.data.author }}
+                publishedAt={new Date(fixture.data.publishedAt)}
+                now={new Date(fixture.data.now)}
+                tags={fixture.data.tags}
+                answered={fixture.data.answered}
+                reactionCount={fixture.data.reactionCount}
+                commentCount={fixture.data.commentCount}
               />
             </div>
           ),

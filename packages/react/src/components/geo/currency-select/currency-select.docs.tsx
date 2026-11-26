@@ -2,17 +2,20 @@ import { useState } from 'react';
 import { Field, FieldDescription, FieldLabel } from '@rookcom/monarch-react';
 import { CurrencySelect } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './currency-select.fixture.json';
 
 function ReportingCurrency() {
-  const [currency, setCurrency] = useState<string | null>('EUR');
+  const [currency, setCurrency] = useState<string | null>(fixture.data.currency);
   return (
     <Field style={{ width: '100%', maxWidth: 320 }}>
-      <FieldLabel>Reporting currency</FieldLabel>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
       <CurrencySelect
+        defaultOpen
         value={currency}
         onValueChange={setCurrency}
-        priority={['EUR', 'GBP', 'USD']}
-        placeholder="Search name, code or symbol"
+        priority={fixture.data.priority}
+        placeholder={fixture.data.placeholder}
       />
       <FieldDescription>Totals convert to {currency ?? 'the chosen currency'}.</FieldDescription>
     </Field>
@@ -125,7 +128,12 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Suggested currencies first', stack: true, render: () => <ReportingCurrency /> },
+        {
+          title: 'Suggested currencies first',
+          stack: true,
+          stage: true,
+          render: () => <ReportingCurrency />,
+        },
         {
           title: 'Code and name, limited list, German',
           stack: true,

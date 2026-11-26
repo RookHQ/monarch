@@ -2,47 +2,37 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { OnboardingChecklist, type OnboardingStep } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './onboarding-checklist.fixture.json';
+
+const STEPS = fixture.data.steps as {
+  id: string;
+  title: string;
+  description?: string;
+  done?: boolean;
+  action?: { label: string; variant: 'secondary' | 'ghost' };
+}[];
 
 function ChecklistDemo() {
-  const [done, setDone] = useState<Record<string, boolean>>({ profile: true });
+  const [done, setDone] = useState<Record<string, boolean>>(
+    Object.fromEntries(STEPS.filter((s) => s.done).map((s) => [s.id, true])),
+  );
   const [collapsed, setCollapsed] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const finish = (id: string) => setDone((d) => ({ ...d, [id]: true }));
-  const steps: OnboardingStep[] = [
-    { id: 'profile', title: 'Complete your profile', done: !!done.profile },
-    {
-      id: 'invite',
-      title: 'Invite your team',
-      description: 'Work is easier to share with the people you work with.',
-      done: !!done.invite,
+  const steps: OnboardingStep[] = STEPS.map((s) => ({
+    id: s.id,
+    title: s.title,
+    ...(s.description !== undefined && { description: s.description }),
+    done: !!done[s.id],
+    ...(s.action !== undefined && {
       action: (
-        <Button size="sm" onClick={() => finish('invite')}>
-          Invite people
+        <Button size="sm" variant={s.action.variant} onClick={() => finish(s.id)}>
+          {s.action.label}
         </Button>
       ),
-    },
-    {
-      id: 'project',
-      title: 'Create your first project',
-      description: 'Start from a template or a blank project.',
-      done: !!done.project,
-      action: (
-        <Button size="sm" variant="secondary" onClick={() => finish('project')}>
-          New project
-        </Button>
-      ),
-    },
-    {
-      id: 'notifications',
-      title: 'Choose your notifications',
-      done: !!done.notifications,
-      action: (
-        <Button size="sm" variant="ghost" onClick={() => finish('notifications')}>
-          Open settings
-        </Button>
-      ),
-    },
-  ];
+    }),
+  }));
   if (dismissed)
     return (
       <Button variant="secondary" onClick={() => setDismissed(false)}>
@@ -52,8 +42,8 @@ function ChecklistDemo() {
   return (
     <OnboardingChecklist
       style={{ width: '100%', maxWidth: 560 }}
-      title="Get started"
-      description="A few steps to set up your workspace."
+      title={fixture.data.title}
+      description={fixture.data.description}
       steps={steps}
       collapsed={collapsed}
       onCollapsedChange={setCollapsed}

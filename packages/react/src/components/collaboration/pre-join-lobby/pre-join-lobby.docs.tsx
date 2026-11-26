@@ -10,10 +10,16 @@ import {
 } from '@rookcom/monarch-react';
 import { PreJoinLobby, type MediaDeviceOption } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './pre-join-lobby.fixture.json';
 
 const devices: MediaDeviceOption[] = [
-  { deviceId: 'mic-desk', kind: 'audioinput', label: 'Desk microphone' },
-  { deviceId: 'cam-built-in', kind: 'videoinput', label: 'Built-in camera' },
+  {
+    deviceId: fixture.data.microphone.id,
+    kind: 'audioinput',
+    label: fixture.data.microphone.label,
+  },
+  { deviceId: fixture.data.camera.id, kind: 'videoinput', label: fixture.data.camera.label },
 ];
 
 /** A gently moving level, standing in for a real microphone in the docs. */
@@ -32,16 +38,16 @@ function useDemoLevel(on: boolean) {
 }
 
 function Lobby({ onDone, inDialog = false }: { onDone?: () => void; inDialog?: boolean }) {
-  const [micOn, setMicOn] = useState(true);
-  const [cameraOn, setCameraOn] = useState(false);
-  const [mic, setMic] = useState<string | null>(null);
-  const [cam, setCam] = useState<string | null>(null);
+  const [micOn, setMicOn] = useState(fixture.data.micOn);
+  const [cameraOn, setCameraOn] = useState(fixture.data.cameraOn);
+  const [mic, setMic] = useState<string | null>(fixture.data.microphone.id);
+  const [cam, setCam] = useState<string | null>(fixture.data.camera.id);
   const [joining, setJoining] = useState(false);
   const level = useDemoLevel(micOn);
   return (
     <PreJoinLobby
-      title={inDialog ? null : 'Join Weekly planning'}
-      aria-label={inDialog ? 'Join Weekly planning' : undefined}
+      title={inDialog ? null : fixture.data.title}
+      aria-label={inDialog ? fixture.data.title : undefined}
       micOn={micOn}
       onMicOnChange={setMicOn}
       cameraOn={cameraOn}
@@ -54,7 +60,7 @@ function Lobby({ onDone, inDialog = false }: { onDone?: () => void; inDialog?: b
         videoInputId: cam,
         onVideoInputChange: setCam,
       }}
-      participants={[{ name: 'Robin Park' }, { name: 'Alex Chen' }, { name: 'Jordan Diaz' }]}
+      participants={fixture.data.participants.map((name) => ({ name }))}
       joining={joining}
       onJoin={() => {
         setJoining(true);
@@ -69,15 +75,15 @@ function Lobby({ onDone, inDialog = false }: { onDone?: () => void; inDialog?: b
 }
 
 function InDialog() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="primary">Join call</Button>
+        <Button variant="primary">{fixture.data.trigger}</Button>
       </DialogTrigger>
       <DialogContent size="md">
         <DialogHeader>
-          <DialogTitle>Join Weekly planning</DialogTitle>
+          <DialogTitle>{fixture.data.title}</DialogTitle>
         </DialogHeader>
         <DialogBody>
           <Lobby inDialog onDone={() => setOpen(false)} />
@@ -206,7 +212,7 @@ export default {
     },
     examples: {
       items: [
-        { title: 'In a dialog', render: () => <InDialog /> },
+        { title: 'In a dialog', stage: { align: 'center' }, render: () => <InDialog /> },
         {
           title: 'Inline, with devices and people already in the call',
           render: () => <Lobby />,

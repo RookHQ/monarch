@@ -1,0 +1,122 @@
+{
+  "id": "embed-block",
+  "name": "MonarchEmbedBlock",
+  "title": "EmbedBlock",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "android.webkit.WebView, androidx.compose.ui.viewinterop.AndroidView, MonarchLinkCard",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Shows a video, design or demo from an allow-listed site in a locked-down web view, and any other web link as a link card.",
+  "whenToUse": "In documents, posts and notes where people paste a share link to a YouTube, Vimeo or Loom video, a Figma file or a CodePen.",
+  "whenNotToUse": "For a link the app has unfurled with a picture and description, use MonarchLinkCard directly. For a web page that is part of the app, use the app's own web view or a Custom Tab.",
+  "api": [
+    "@Composable fun MonarchEmbedBlock(url: String, modifier: Modifier = Modifier, caption: String? = null, title: String? = null, providers: List<MonarchEmbedProvider> = MonarchEmbedProvider.Defaults, onOpenLink: ((String) -> Unit)? = null, labels: MonarchEmbedBlockLabels = MonarchEmbedBlockLabels())",
+    "class MonarchEmbedProvider(id: String, name: String, hosts: List<String>, aspectRatio: Float = 16f / 9f, toEmbedUrl: (Uri) -> String?) { companion object { val YouTube: MonarchEmbedProvider; val Vimeo: MonarchEmbedProvider; val Loom: MonarchEmbedProvider; val Figma: MonarchEmbedProvider; val CodePen: MonarchEmbedProvider; val Defaults: List<MonarchEmbedProvider> } }",
+    "sealed interface MonarchEmbedResolution { val url: String; class Frame(url: String, src: String, provider: MonarchEmbedProvider); class Link(url: String, host: String); class Invalid(url: String); companion object { fun resolve(raw: String, providers: List<MonarchEmbedProvider> = MonarchEmbedProvider.Defaults): MonarchEmbedResolution } }",
+    "class MonarchEmbedBlockLabels(frameTitle: ((provider: String) -> String)? = null, invalid: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "url",
+      "type": "String",
+      "default": "required",
+      "description": "The URL someone pasted: a share link, not an embed code. Only the provider's embed address is ever loaded."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the block."
+    },
+    {
+      "name": "caption",
+      "type": "String?",
+      "default": "null",
+      "description": "Text under the frame or the card. Also the TalkBack name of the frame."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "null",
+      "description": "The TalkBack name of the frame when there is no caption. null uses \"YouTube content\"."
+    },
+    {
+      "name": "providers",
+      "type": "List<MonarchEmbedProvider>",
+      "default": "MonarchEmbedProvider.Defaults",
+      "description": "The sites that may be framed: YouTube, Vimeo, Loom, Figma and CodePen by default. Pass your own list to add or remove sites."
+    },
+    {
+      "name": "onOpenLink",
+      "type": "((String) -> Unit)?",
+      "default": "null",
+      "description": "Opens a link outside the app: the link card, or a tapped link that leaves the provider. null uses LocalUriHandler."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchEmbedBlockLabels",
+      "default": "MonarchEmbedBlockLabels()",
+      "description": "Replacements for the strings monarch_embedblock_*."
+    }
+  ],
+  "states": [
+    {
+      "name": "frame",
+      "description": "An https share link on an allow-listed host: a web view of the provider's embed address in the provider's aspect ratio, on a subtle fill while it loads."
+    },
+    {
+      "name": "link",
+      "description": "Any other http or https link: a MonarchLinkCard with the host and the URL that opens outside the app."
+    },
+    {
+      "name": "invalid",
+      "description": "Any other text (javascript:, data:, relative or malformed URLs, a user name in the URL): \"This link can't be shown.\" in muted text."
+    }
+  ],
+  "appearance": "The frame has the large container radius and the subtle background while the provider's page loads; the page itself is the provider's. The caption is a muted caption under the frame or the card. The link card is MonarchLinkCard. The same roles in light, dark and both high-contrast themes.",
+  "platformNotes": "The web frames with a sandboxed iframe and a sandbox token list per provider; on Android the WebView runs the provider's scripts but has no file or content access, no geolocation, no new windows, no mixed content and no JavaScript bridge, and media play only after a tap. Main-frame navigation is allowed only to https pages on the embed address's host; a tapped link elsewhere opens outside the app, other navigations are blocked. Fullscreen video is not supported (no custom view). A provider's toEmbedUrl takes an android.net.Uri, and aspectRatio is a Float instead of a CSS ratio. The web also ships a Tiptap editor extension with a URL form; Android has no rich-text editor in Monarch, so the block shows URLs only. iOS has no entry yet; the names follow the web.",
+  "accessibility": [
+    "The frame is named by the caption, the title or \"YouTube content\"; the provider's page inside is read by TalkBack as web content.",
+    "The link card is a MonarchLinkCard: one element with a 48dp touch target that opens the link.",
+    "A URL that cannot be shown is written as text.",
+    "The caption wraps at the largest font size."
+  ],
+  "edgeCases": [
+    "An http link to an allow-listed site, or one with a port, is shown as a card, never framed.",
+    "A share link without an embeddable form (a YouTube channel page) is shown as a card.",
+    "Previews in Android Studio show the tinted frame without the page.",
+    "Whether a provider's player plays inside a WebView depends on the provider and the device; check the providers you enable on a device."
+  ],
+  "tests": [
+    "MonarchEmbedBlockTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "A pasted video link",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    MonarchEmbedBlock(\n        url = \"https://vimeo.com/76979871\",\n        caption = \"Walkthrough\",\n    )\n    MonarchEmbedBlock(url = \"https://example.com/handbook/onboarding\")\n}"
+    },
+    {
+      "title": "Only your own allow-list",
+      "code": "MonarchEmbedBlock(\n    url = \"https://vimeo.com/76979871\",\n    providers = listOf(MonarchEmbedProvider.Vimeo, MonarchEmbedProvider.Loom),\n)"
+    }
+  ],
+  "webEquivalent": "EmbedBlock",
+  "dependsOn": [
+    "link-card"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "no-fixture",
+      "platform": "android",
+      "reason": "The web embed block is an editor block that loads a third-party frame by URL; the web example shows the frame chrome only, and the native EmbedBlock cannot show the same web content.",
+      "convention": "Native shows a link card or a system web view, per HIG and Material 3."
+    }
+  ]
+}

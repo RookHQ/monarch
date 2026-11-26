@@ -1,28 +1,9 @@
 import { AiMarkdown } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-markdown.fixture.json';
 
-const ANSWER = `# Release checklist
-
-Here is what is left before the **Friday** release, based on the open tasks[^1].
-
-1. Finish the migration review
-   - [x] Schema changes approved
-   - [ ] Backfill tested on a copy
-2. Update the *changelog* and the ~~old~~ new screenshots
-3. Tell support (see [the handover notes](https://example.com/notes))
-
-> Releases after 16:00 need a second reviewer.
-
-| Task | Owner | Days left |
-| :-- | :-- | --: |
-| Migration review | Sam | 2 |
-| Changelog | Alex | 1 |
-
-\`\`\`bash
-npm run release -- --dry-run
-\`\`\`
-
-[^1]: Tasks tagged \`release\` in the sample project.`;
+const ANSWER = fixture.data.text;
 
 const UNTRUSTED = `Links are checked: [safe](https://example.com), [not safe](javascript:alert(1)).
 

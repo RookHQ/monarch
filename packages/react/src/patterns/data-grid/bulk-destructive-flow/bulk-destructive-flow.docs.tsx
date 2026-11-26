@@ -1,6 +1,9 @@
+import type { ComponentProps } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { BulkDestructiveFlow, type BulkDestructiveFailure } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './bulk-destructive-flow.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
@@ -18,16 +21,18 @@ async function deleteInBatches(total: number, report: (done: number) => void) {
 function DeleteMany() {
   return (
     <BulkDestructiveFlow
-      trigger={<Button variant="danger">Delete 37 contacts</Button>}
-      count={37}
-      noun={contact}
-      sample={['Ada Park', 'Ben Ortiz', 'Cleo Ngata']}
-      consequences={[
-        { kind: 'removed', label: 'notes and activity on these contacts', count: 214 },
-        { kind: 'kept', label: 'Companies they belong to stay' },
-      ]}
+      trigger={<Button variant="danger">{fixture.data.trigger}</Button>}
+      defaultOpen
+      count={fixture.data.count}
+      noun={fixture.data.noun}
+      sample={fixture.data.sample}
+      consequences={
+        fixture.data.consequences as NonNullable<
+          ComponentProps<typeof BulkDestructiveFlow>['consequences']
+        >
+      }
       onDelete={async (report) => {
-        await deleteInBatches(37, report);
+        await deleteInBatches(fixture.data.count, report);
       }}
     />
   );
@@ -204,7 +209,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Many items: type the count, then watch it run', render: () => <DeleteMany /> },
+        {
+          title: 'Many items: type the count, then watch it run',
+          stage: { align: 'center' },
+          render: () => <DeleteMany />,
+        },
         { title: 'Partial failure with retry', render: () => <PartialFailure /> },
         { title: 'Small selection (no typing)', render: () => <SmallSelection /> },
       ],

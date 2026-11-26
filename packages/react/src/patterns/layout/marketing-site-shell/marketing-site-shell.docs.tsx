@@ -139,7 +139,7 @@ export default {
                       Log in
                     </Button>
                     <Button variant="primary" size="sm">
-                      Start free
+                      Get started
                     </Button>
                   </>
                 }

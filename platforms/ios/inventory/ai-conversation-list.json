@@ -1,0 +1,180 @@
+{
+  "id": "ai-conversation-list",
+  "name": "MonarchAiConversationList",
+  "title": "AiConversationList",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "List with a Section per recency group, searchable(text:prompt:), swipeActions(edge:allowsFullSwipe:content:), contextMenu, alert with a TextField for Rename, confirmationDialog for Delete",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The history of an AI chat: conversations grouped into Pinned, Today, Previous 7 days and Older, with search, the open conversation marked, and Rename, Pin and Delete on each row.",
+  "whenToUse": "In the sidebar or history screen of an assistant, where people return to, rename, pin or delete earlier conversations.",
+  "whenNotToUse": "For the messages of one conversation use MonarchAiConversation. For a plain list of items that are not conversations use a List with the system styles.",
+  "api": [
+    "MonarchAiConversationList.init(_ conversations: [MonarchAiConversationSummary], activeID: String? = nil, isSearchable: Bool = true, visibleCount: Int = 200, now: Date? = nil, calendar: Calendar = .current, labels: MonarchAiConversationListLabels = MonarchAiConversationListLabels(), onSearch: (@MainActor (_ query: String) -> Void)? = nil, onNew: (@MainActor () -> Void)? = nil, onRename: (@MainActor (_ id: String, _ title: String) -> Void)? = nil, onPin: (@MainActor (_ id: String, _ isPinned: Bool) -> Void)? = nil, onDelete: (@MainActor (_ id: String) -> Void)? = nil, onSelect: @escaping @MainActor (_ id: String) -> Void)",
+    "MonarchAiConversationSummary.init(id: String, title: String, updatedAt: Date, isPinned: Bool = false, preview: String? = nil)",
+    "MonarchAiConversationSummary.init(id: String, title: String, messages: [MonarchAiConversationMessage], isPinned: Bool = false)",
+    "enum MonarchAiConversationGroup: String { case pinned, today, previous7Days, older }",
+    "MonarchAiConversationListLabels.init(label: String? = nil, group: (@Sendable (_ group: MonarchAiConversationGroup) -> String)? = nil, untitled: String? = nil, newConversation: String? = nil, search: String? = nil, empty: String? = nil, noResults: (@Sendable (_ query: String) -> String)? = nil, results: (@Sendable (_ count: Int) -> String)? = nil, rename: String? = nil, pin: String? = nil, unpin: String? = nil, delete: String? = nil, renameTitle: String? = nil, renameField: String? = nil, save: String? = nil, cancel: String? = nil, deleteTitle: (@Sendable (_ title: String) -> String)? = nil, deleteMessage: String? = nil, deleteConfirm: String? = nil, showMore: (@Sendable (_ count: Int) -> String)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "conversations",
+      "type": "[MonarchAiConversationSummary]",
+      "default": "required",
+      "description": "The history, in any order. A summary can be made from the conversation's MonarchAiConversationMessage values."
+    },
+    {
+      "name": "activeID",
+      "type": "String?",
+      "default": "nil",
+      "description": "The open conversation, marked with the selected trait, a marker and a bold title."
+    },
+    {
+      "name": "isSearchable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Adds the system search field."
+    },
+    {
+      "name": "visibleCount",
+      "type": "Int",
+      "default": "200",
+      "description": "How many rows are shown at first, and how many Show more adds."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for the groups; the current time when nil."
+    },
+    {
+      "name": "calendar",
+      "type": "Calendar",
+      "default": ".current",
+      "description": "The calendar and time zone that decide the day boundaries."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiConversationListLabels",
+      "default": "MonarchAiConversationListLabels()",
+      "description": "Replaces every built-in string."
+    },
+    {
+      "name": "onSearch",
+      "type": "(@MainActor (_ query: String) -> Void)?",
+      "default": "nil",
+      "description": "Searches in the app; the list then shows conversations as given instead of filtering."
+    },
+    {
+      "name": "onNew",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds a New conversation button at the top."
+    },
+    {
+      "name": "onRename",
+      "type": "(@MainActor (_ id: String, _ title: String) -> Void)?",
+      "default": "nil",
+      "description": "Adds Rename; receives the trimmed new title, never an empty or unchanged one."
+    },
+    {
+      "name": "onPin",
+      "type": "(@MainActor (_ id: String, _ isPinned: Bool) -> Void)?",
+      "default": "nil",
+      "description": "Adds Pin or Unpin as a leading swipe and in the menu."
+    },
+    {
+      "name": "onDelete",
+      "type": "(@MainActor (_ id: String) -> Void)?",
+      "default": "nil",
+      "description": "Adds Delete as a trailing swipe and in the menu, after a confirmation."
+    },
+    {
+      "name": "onSelect",
+      "type": "@MainActor (_ id: String) -> Void",
+      "default": "required",
+      "description": "Opens a conversation."
+    }
+  ],
+  "states": [
+    {
+      "name": "grouped",
+      "description": "Pinned, Today, Previous 7 days and Older sections; empty groups are left out."
+    },
+    {
+      "name": "active",
+      "description": "The open row has a leading accent marker, a bold title and the selected trait."
+    },
+    {
+      "name": "empty",
+      "description": "A first-run empty state: \"No conversations yet\"."
+    },
+    {
+      "name": "no results",
+      "description": "A filtered empty state with the query and a Clear filters button that clears the search."
+    },
+    {
+      "name": "long history",
+      "description": "Only visibleCount rows, then a Show more button."
+    },
+    {
+      "name": "renaming",
+      "description": "A dialog with the title in a text field, Save and Cancel."
+    },
+    {
+      "name": "deleting",
+      "description": "A confirmation dialog with a destructive Delete conversation button and Cancel."
+    }
+  ],
+  "appearance": "The system list with Monarch text: titles in default text, previews and group headings in muted text, the new conversation button in the link colour, the active marker in accent solid, the pin swipe in accent and the delete swipe in danger. The high-contrast themes resolve the same roles to stronger colours.",
+  "platformNotes": "Rename uses a system alert with a text field instead of an inline field, and the web's arrow keys, F2 and Delete key are replaced by swipe actions and a context menu. Search is the system search field, so the list must sit in a NavigationStack or NavigationSplitView sidebar for the field to show. onDelete is synchronous; the web can keep its dialog open on a promise. Android uses the same names.",
+  "accessibility": [
+    "The list is named \"Conversation history\"; group headings have the header trait.",
+    "Each row is a button read as its title and preview; the open conversation also has the selected trait.",
+    "The active row is marked by a leading marker and a bold title as well as the trait, not by colour alone.",
+    "Swipe actions and the context menu commands are offered to VoiceOver as actions on the row.",
+    "After a local search changes, the number of matching conversations is announced.",
+    "Rows have a 44-point touch target."
+  ],
+  "edgeCases": [
+    "An empty or white-space title shows \"New conversation\".",
+    "Days are counted in the calendar's time zone; anything dated in the future is Today and seven days before today is still Previous 7 days.",
+    "A summary made from messages uses the last message's time and the text of the last message with text, on one line; with no messages it is dated distantPast.",
+    "Long titles wrap to two lines and previews to one."
+  ],
+  "tests": [
+    "MonarchAiConversationListTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "History with rename, pin and delete",
+      "fixture": "ai-conversation-list",
+      "webExample": "History with rename, pin and delete",
+      "template": "NavigationStack {\n    MonarchAiConversationList(\n        [\n            MonarchAiConversationSummary(id: {{conversations.0.id}}, title: {{conversations.0.title}}, updatedAt: now.addingTimeInterval(-{{conversations.0.ageHours}} * 3_600), isPinned: {{conversations.0.pinned}}),\n            MonarchAiConversationSummary(id: {{conversations.1.id}}, title: {{conversations.1.title}}, updatedAt: now.addingTimeInterval(-{{conversations.1.ageHours}} * 3_600), preview: {{conversations.1.preview}}),\n            MonarchAiConversationSummary(id: {{conversations.2.id}}, title: {{conversations.2.title}}, updatedAt: now.addingTimeInterval(-{{conversations.2.ageHours}} * 3_600)),\n            MonarchAiConversationSummary(id: {{conversations.3.id}}, title: {{conversations.3.title}}, updatedAt: now.addingTimeInterval(-{{conversations.3.ageHours}} * 3_600), preview: {{conversations.3.preview}}),\n            MonarchAiConversationSummary(id: {{conversations.4.id}}, title: {{conversations.4.title}}, updatedAt: now.addingTimeInterval(-{{conversations.4.ageHours}} * 3_600)),\n            MonarchAiConversationSummary(id: {{conversations.5.id}}, title: {{conversations.5.title}}, updatedAt: now.addingTimeInterval(-{{conversations.5.ageHours}} * 3_600)),\n        ],\n        activeID: activeID,\n        now: now,\n        labels: MonarchAiConversationListLabels(newConversation: {{newLabel}}),\n        onNew: {},\n        onRename: { _, _ in },\n        onPin: { _, _ in },\n        onDelete: { _ in },\n        onSelect: { id in activeID = id }\n    )\n    #if os(iOS)\n    .navigationBarTitleDisplayMode(.inline)\n    #endif\n}",
+      "setupTemplate": "@State private var activeID: String? = {{activeId}}\nprivate let now = Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: .now) ?? .now",
+      "setup": "@State private var activeID: String? = \"1\"\nprivate let now = Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: .now) ?? .now",
+      "code": "NavigationStack {\n    MonarchAiConversationList(\n        [\n            MonarchAiConversationSummary(id: \"5\", title: \"Quarterly goals\", updatedAt: now.addingTimeInterval(-960 * 3_600), isPinned: true),\n            MonarchAiConversationSummary(id: \"1\", title: \"Launch checklist\", updatedAt: now.addingTimeInterval(-1 * 3_600), preview: \"Week 9 is confirmed.\"),\n            MonarchAiConversationSummary(id: \"2\", title: \"Hiring plan\", updatedAt: now.addingTimeInterval(-2 * 3_600)),\n            MonarchAiConversationSummary(id: \"3\", title: \"Budget review\", updatedAt: now.addingTimeInterval(-72 * 3_600), preview: \"Travel is 12% over.\"),\n            MonarchAiConversationSummary(id: \"4\", title: \"Team offsite agenda\", updatedAt: now.addingTimeInterval(-120 * 3_600)),\n            MonarchAiConversationSummary(id: \"6\", title: \"Release notes draft\", updatedAt: now.addingTimeInterval(-1440 * 3_600)),\n        ],\n        activeID: activeID,\n        now: now,\n        labels: MonarchAiConversationListLabels(newConversation: \"New conversation\"),\n        onNew: {},\n        onRename: { _, _ in },\n        onPin: { _, _ in },\n        onDelete: { _ in },\n        onSelect: { id in activeID = id }\n    )\n    #if os(iOS)\n    .navigationBarTitleDisplayMode(.inline)\n    #endif\n}"
+    }
+  ],
+  "webEquivalent": "AiConversationList",
+  "dependsOn": [
+    "search-input",
+    "dropdown-menu",
+    "confirm-dialog",
+    "empty-state",
+    "ai-conversation"
+  ],
+  "icons": {
+    "new": "PlusGlyph",
+    "pinned": "StarGlyph",
+    "more": "MoreGlyph",
+    "rename": "PencilGlyph",
+    "delete": "CloseGlyph"
+  }
+}

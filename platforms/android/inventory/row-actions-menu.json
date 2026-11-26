@@ -1,0 +1,86 @@
+{
+  "id": "row-actions-menu",
+  "name": null,
+  "title": "RowActionsMenu",
+  "family": "data-grid",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchIconButton, MonarchMenu, MonarchDialog, androidx.compose.material3.SwipeToDismissBox",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The actions of one row of a list or table: a MonarchIconButton that opens a MonarchMenu with destructive items last and confirmed in a MonarchDialog, and a SwipeToDismissBox for the row's primary action.",
+  "whenToUse": "On each row of a list or table whose items have a few actions of their own: edit, duplicate, archive, delete.",
+  "whenNotToUse": "For actions on several selected rows, use MonarchBulkActionBar. For one obvious action, show it as a button on the row. For actions on the whole screen, use the top app bar.",
+  "api": [
+    "@Composable fun MonarchIconButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, variant: MonarchButtonVariant = MonarchButtonVariant.Ghost, size: MonarchButtonSize = MonarchButtonSize.Md, enabled: Boolean = true, loading: Boolean = false, loadingLabel: String? = null, shape: Shape? = null, interactionSource: MutableInteractionSource? = null, icon: @Composable () -> Unit)",
+    "@Composable fun MonarchMenu(expanded: Boolean, onDismissRequest: () -> Unit, modifier: Modifier = Modifier, offset: DpOffset = DpOffset(0.dp, 4.dp), content: @Composable ColumnScope.() -> Unit)",
+    "@Composable fun MonarchDialog(onDismissRequest: () -> Unit, title: String?, modifier: Modifier = Modifier, description: String? = null, dismissible: Boolean = true, dismissOnClickOutside: Boolean = dismissible, paneTitle: String? = null, actions: (@Composable RowScope.() -> Unit)? = null, content: (@Composable ColumnScope.() -> Unit)? = null)",
+    "@Composable fun SwipeToDismissBox(state: SwipeToDismissBoxState, backgroundContent: @Composable RowScope.() -> Unit, modifier: Modifier = Modifier, enableDismissFromStartToEnd: Boolean = true, enableDismissFromEndToStart: Boolean = true, gesturesEnabled: Boolean = true, onDismiss: (SwipeToDismissBoxValue) -> Unit = {}, content: @Composable RowScope.() -> Unit)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "open",
+      "description": "The menu opens next to the \"more\" button and takes focus."
+    },
+    {
+      "name": "swiped",
+      "description": "Swiping the row from the end reveals the primary action's background; a full swipe runs it."
+    },
+    {
+      "name": "destructive",
+      "description": "A destructive item uses the strong danger text color, sits last after a MonarchDivider, and opens a MonarchDialog before it runs."
+    },
+    {
+      "name": "disabled",
+      "description": "An item with enabled = false is drawn in the disabled colors; disable the MonarchIconButton to block every action."
+    }
+  ],
+  "appearance": "A MonarchIconButton with the app's \"more\" icon in the muted content color, and the Monarch menu in the raised background role; the destructive item takes the strong danger role. The swipe background uses the subtle role of the action's tone. The same mapping in every theme, including both high-contrast themes.",
+  "platformNotes": "The web RowActionsMenu is a component that sorts danger items to the end and opens a ConfirmDialog for items with confirm. On Android the app lists the items in that order with a MonarchDivider before the destructive ones and shows a MonarchDialog itself, so Monarch adds no type. Android adds SwipeToDismissBox for the primary action, which the web does not have; give the same action to TalkBack as a custom action on the row, because a swipe is not reachable with TalkBack. Monarch bundles no icons, so the \"more\" icon is the app's. The web shortcut hint has no touch equivalent. iOS documents the same menu as a native SwiftUI Menu with swipe actions.",
+  "accessibility": [
+    "Name the icon-only trigger after the row (\"Actions for Acme Ltd\") with its content description, so rows are told apart.",
+    "The MonarchIconButton has a 48dp touch target and each menu item a row at least 48dp high.",
+    "The swipe action is also a custom accessibility action on the row, so TalkBack users can run it from the actions menu.",
+    "The confirmation MonarchDialog takes focus; the destructive item says what it does, so color is not the only signal."
+  ],
+  "edgeCases": [
+    "Close the menu in each item's onClick; it does not close by itself.",
+    "Allow only one swipe direction (enableDismissFromStartToEnd = false) so the gesture always means the same action.",
+    "A destructive action that runs at once after a swipe should offer Undo in a snackbar instead of a confirmation."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "With a confirmed delete",
+      "fixture": "row-actions-menu",
+      "webExample": "With a confirmed delete",
+      "template": "Row(verticalAlignment = Alignment.CenterVertically) {\n    MonarchText(text = if (deleted) {{rowLabel}} + \" (deleted)\" else {{rowLabel}}, modifier = Modifier.weight(1f))\n    Box {\n        MonarchIconButton(label = \"Actions for \" + {{rowLabel}}, onClick = { expanded = true }, size = MonarchButtonSize.Sm) {\n            MonarchIcon(SampleIcons.More, contentDescription = null)\n        }\n        MonarchMenu(expanded = expanded, onDismissRequest = { expanded = false }) {\n            MonarchMenuItem(text = {{actions.0.label}}, onClick = { expanded = false })\n            MonarchMenuItem(text = {{actions.1.label}}, onClick = { expanded = false }, shortcut = {{actions.1.shortcut}})\n            MonarchMenuDivider()\n            MonarchMenuItem(\n                text = {{actions.2.label}},\n                onClick = {\n                    expanded = false\n                    confirming = true\n                },\n                destructive = {{actions.2.tone}} == \"danger\",\n            )\n        }\n    }\n}\nif (confirming) {\n    MonarchDialog(\n        onDismissRequest = { confirming = false },\n        title = {{actions.2.confirm.title}},\n        description = {{actions.2.confirm.description}},\n        actions = {\n            MonarchButton(text = \"Cancel\", onClick = { confirming = false }, variant = MonarchButtonVariant.Ghost)\n            MonarchButton(\n                text = {{actions.2.confirm.confirmLabel}},\n                onClick = {\n                    deleted = true\n                    confirming = false\n                },\n                variant = MonarchButtonVariant.Danger,\n            )\n        },\n    )\n}",
+      "setupTemplate": "var expanded by remember { mutableStateOf(true) }\nvar confirming by remember { mutableStateOf(false) }\nvar deleted by remember { mutableStateOf(false) }",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "var expanded by remember { mutableStateOf(true) }\nvar confirming by remember { mutableStateOf(false) }\nvar deleted by remember { mutableStateOf(false) }",
+      "code": "Row(verticalAlignment = Alignment.CenterVertically) {\n    MonarchText(text = if (deleted) \"Report 12\" + \" (deleted)\" else \"Report 12\", modifier = Modifier.weight(1f))\n    Box {\n        MonarchIconButton(label = \"Actions for \" + \"Report 12\", onClick = { expanded = true }, size = MonarchButtonSize.Sm) {\n            MonarchIcon(SampleIcons.More, contentDescription = null)\n        }\n        MonarchMenu(expanded = expanded, onDismissRequest = { expanded = false }) {\n            MonarchMenuItem(text = \"Open\", onClick = { expanded = false })\n            MonarchMenuItem(text = \"Rename\", onClick = { expanded = false }, shortcut = \"F2\")\n            MonarchMenuDivider()\n            MonarchMenuItem(\n                text = \"Delete\",\n                onClick = {\n                    expanded = false\n                    confirming = true\n                },\n                destructive = \"danger\" == \"danger\",\n            )\n        }\n    }\n}\nif (confirming) {\n    MonarchDialog(\n        onDismissRequest = { confirming = false },\n        title = \"Delete Report 12?\",\n        description = \"The report and its history are removed.\",\n        actions = {\n            MonarchButton(text = \"Cancel\", onClick = { confirming = false }, variant = MonarchButtonVariant.Ghost)\n            MonarchButton(\n                text = \"Delete report\",\n                onClick = {\n                    deleted = true\n                    confirming = false\n                },\n                variant = MonarchButtonVariant.Danger,\n            )\n        },\n    )\n}"
+    },
+    {
+      "title": "Swipe a row to archive it, with the same action for TalkBack",
+      "setup": "var companies by remember { mutableStateOf(listOf(\"Acme Ltd\", \"Globex\", \"Initech\")) }",
+      "code": "Column {\n    companies.forEach { company ->\n        key(company) {\n            val archive = { companies = companies - company }\n            SwipeToDismissBox(\n                state = rememberSwipeToDismissBoxState(),\n                backgroundContent = {\n                    Box(\n                        modifier = Modifier.fillMaxSize().background(MonarchTheme.colors.warningSubtle),\n                        contentAlignment = Alignment.CenterEnd,\n                    ) {\n                        MonarchText(text = \"Archive\", color = MonarchTheme.colors.warningStrong)\n                    }\n                },\n                enableDismissFromStartToEnd = false,\n                onDismiss = { archive() },\n            ) {\n                MonarchText(\n                    text = company,\n                    modifier = Modifier\n                        .fillMaxWidth()\n                        .background(MonarchTheme.colors.bgSurface)\n                        .padding(MonarchTheme.spacing.space4)\n                        .semantics {\n                            customActions = listOf(\n                                CustomAccessibilityAction(\"Archive\") {\n                                    archive()\n                                    true\n                                },\n                            )\n                        },\n                )\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "RowActionsMenu",
+  "dependsOn": [
+    "dropdown-menu",
+    "confirm-dialog",
+    "button"
+  ],
+  "icons": {
+    "trigger": "MoreGlyph"
+  }
+}

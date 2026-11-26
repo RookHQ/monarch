@@ -1,5 +1,7 @@
 import { AiResponseSkeleton } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-response-skeleton.fixture.json';
 
 export default {
   id: 'ai-response-skeleton',
@@ -86,7 +88,13 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Text (default)', stack: true, render: () => <AiResponseSkeleton /> },
+        {
+          title: 'Text (default)',
+          stack: true,
+          render: () => (
+            <AiResponseSkeleton shape={fixture.data.shape as 'text' | 'cards' | 'table'} />
+          ),
+        },
         { title: 'Cards', stack: true, render: () => <AiResponseSkeleton shape="cards" /> },
         {
           title: 'Table',

@@ -1,5 +1,7 @@
 import { Money } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './money.fixture.json';
 
 export default {
   id: 'money',
@@ -119,10 +121,15 @@ export default {
           stack: true,
           render: () => (
             <>
-              <Money amount={129900} currency="USD" minorUnits locale="en-US" />
-              <Money amount={129900} currency="EUR" minorUnits locale="de-DE" />
-              <Money amount={12990000} currency="INR" minorUnits locale="en-IN" />
-              <Money amount={4500} currency="JPY" minorUnits locale="ja-JP" />
+              {fixture.data.items.map((item) => (
+                <Money
+                  key={item.currency}
+                  amount={item.amount}
+                  currency={item.currency}
+                  minorUnits
+                  locale={item.locale}
+                />
+              ))}
             </>
           ),
         },

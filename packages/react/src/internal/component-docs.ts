@@ -86,6 +86,14 @@ export interface Example {
   title: string;
   /** Stack the rendered example vertically instead of in an inline row. */
   stack?: boolean;
+  /**
+   * Show the example's overlay open, in place: the docs site renders it in an
+   * overlay stage (internal/overlay-stage.tsx), where a dialog, sheet, menu,
+   * popover or tooltip that starts open (`defaultOpen`) sits in the preview
+   * as a picture of the component, not modal and not portalled. `side` and
+   * `align` place a popup relative to its trigger (default below, start).
+   */
+  stage?: boolean | { side?: 'top' | 'bottom'; align?: 'start' | 'center' | 'end' };
   /** The live demonstration. Import components from '@rookcom/monarch-react'. */
   render: () => ReactNode;
   /**

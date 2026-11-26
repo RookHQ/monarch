@@ -17,6 +17,8 @@ export default tseslint.config(
       // once installed. Generated Figma Code Connect files import a package this repo does not use.
       'templates/starters/**',
       'figma/**/*.figma.tsx',
+      // Native platforms have no JavaScript; this keeps Xcode and Gradle build output out.
+      'platforms/**',
     ],
   },
   js.configs.recommended,

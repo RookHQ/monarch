@@ -3,47 +3,30 @@ import { Avatar, Badge } from '@rookcom/monarch-react';
 import { InboxList, InboxRow } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { InboxIcon, UsersIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './inbox-row.fixture.json';
 
-const NOW = new Date(2026, 4, 10, 12);
+const NOW = new Date(fixture.data.now);
 
-const ROWS = [
-  {
-    id: '41',
-    title: 'Jordan Kim',
-    preview: 'Can I change the delivery address on my order?',
-    at: new Date(2026, 4, 10, 11, 55),
-    unread: true,
-    status: 'Open',
-    tone: 'info' as const,
-  },
-  {
-    id: '40',
-    title: 'Riley Chen',
-    preview: 'Thanks, that fixed it.',
-    at: new Date(2026, 4, 10, 9, 10),
-    unread: false,
-    status: 'Solved',
-    tone: 'success' as const,
-  },
-  {
-    id: '38',
-    title: 'Taylor Brooks',
-    preview: 'The invoice still shows the old company name.',
-    at: new Date(2026, 4, 8, 16, 0),
-    unread: false,
-    status: 'Waiting',
-    tone: 'warning' as const,
-  },
-];
+const ROWS = fixture.data.rows.map((row) => ({
+  id: row.id,
+  title: row.title,
+  preview: row.preview,
+  at: new Date(row.timestamp),
+  unread: false,
+  status: row.status,
+  tone: row.tone as 'info' | 'success' | 'warning',
+}));
 
 function InboxDemo() {
-  const [open, setOpen] = useState('41');
+  const [open, setOpen] = useState(fixture.data.current);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   return (
     <div style={{ width: '100%', maxWidth: '26rem' }}>
-      <InboxList aria-label={`Open conversations, ${ROWS.length}`}>
+      <InboxList aria-label={`${fixture.data.label}, ${ROWS.length}`}>
         {ROWS.map((row) => (
           <InboxRow
+            locale="en-GB"
             key={row.id}
             title={row.title}
             href={`#conversation-${row.id}`}
@@ -53,7 +36,7 @@ function InboxDemo() {
             unread={row.unread && open !== row.id}
             current={open === row.id}
             icon={<InboxIcon />}
-            iconLabel="via email"
+            iconLabel={fixture.data.iconLabel}
             badges={
               <Badge size="sm" tone={row.tone}>
                 {row.status}
@@ -62,7 +45,7 @@ function InboxDemo() {
             trailing={
               <>
                 <span>#{row.id}</span>
-                <Avatar name="Alex Morgan" size="xs" />
+                <Avatar name={fixture.data.assignee} size="xs" />
               </>
             }
             onOpen={() => setOpen(row.id)}
@@ -207,6 +190,7 @@ export default {
             <div style={{ width: '100%', maxWidth: '26rem' }}>
               <InboxList aria-label="Channels">
                 <InboxRow
+                  locale="en-GB"
                   title="Design reviews"
                   href="#channel-design"
                   preview="Sam: the new header is ready for a look"

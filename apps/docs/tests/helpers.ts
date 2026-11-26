@@ -1,7 +1,7 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 const require = createRequire(import.meta.url);
 export const AXE_SOURCE = readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
@@ -204,6 +204,17 @@ export function componentRoutes(): string[] {
  * Waits for entrance animations to finish (the home hero rises in), so contrast
  * is measured on the final colours. Infinite decorative loops are ignored.
  */
+/**
+ * Waits until a component page has hydrated. The prerendered HTML already has
+ * the headline example's controls, and a click or key press on them before
+ * hydration does nothing, which made interaction tests fail under load. The
+ * platform tabs go live only after hydration (pages/components/native-slot.tsx),
+ * so they are the signal.
+ */
+export async function componentPageHydrated(page: Page): Promise<void> {
+  await expect(page.locator('[role="tablist"][data-live]')).toBeAttached({ timeout: 15_000 });
+}
+
 export async function settle(page: Page): Promise<void> {
   await page.waitForFunction(() =>
     document
@@ -212,4 +223,20 @@ export async function settle(page: Page): Promise<void> {
         (a) => a.playState !== 'running' || a.effect?.getComputedTiming().iterations === Infinity,
       ),
   );
+}
+
+/**
+ * `/native/<id>` for every native guide whose Markdown file exists: a guide
+ * that is not written yet has no page (apps/docs/plugins/native.ts).
+ */
+export function nativeGuideRoutes(): string[] {
+  const guides: Record<string, string> = {
+    'adaptive-layout': 'docs/guides/native-adaptive-layout.md',
+    accessibility: 'docs/guides/native-accessibility-and-testing.md',
+    compatibility: 'docs/architecture/NATIVE-COMPATIBILITY.md',
+    contributing: 'docs/guides/native-contributing.md',
+  };
+  return Object.entries(guides)
+    .filter(([, file]) => existsSync(fileURLToPath(new URL(`../../../${file}`, import.meta.url))))
+    .map(([id]) => `/native/${id}`);
 }

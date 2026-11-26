@@ -8,18 +8,25 @@ import {
   Input,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './danger-zone.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
+const [transfer, remove] = fixture.data.items as unknown as [
+  { title: string; description: string; action: { label: string } },
+  { title: string; description: string; action: { label: string } },
+];
+
 function WorkspaceDangerZone() {
   return (
-    <DangerZone description="These actions affect everyone in the workspace and cannot be undone.">
+    <DangerZone heading={fixture.data.heading} description={fixture.data.description}>
       <DangerZoneItem
-        title="Transfer ownership"
-        description="Another member becomes the owner. You stay on as an admin."
+        title={transfer.title}
+        description={transfer.description}
         action={
           <ConfirmDialog
-            trigger={<Button>Transfer ownership</Button>}
+            trigger={<Button>{transfer.action.label}</Button>}
             title="Transfer ownership to Alex Morgan?"
             description="Alex can then remove you or delete the workspace."
             confirmLabel="Transfer ownership"
@@ -28,11 +35,11 @@ function WorkspaceDangerZone() {
         }
       />
       <DangerZoneItem
-        title="Delete this workspace"
-        description="Projects, tasks and files are deleted for everyone."
+        title={remove.title}
+        description={remove.description}
         action={
           <ConfirmDialog
-            trigger={<Button variant="danger">Delete workspace</Button>}
+            trigger={<Button variant="danger">{remove.action.label}</Button>}
             tone="danger"
             title="Delete this workspace?"
             description="This cannot be undone."

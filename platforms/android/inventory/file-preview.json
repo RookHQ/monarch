@@ -1,0 +1,190 @@
+{
+  "id": "file-preview",
+  "name": "MonarchFilePreview",
+  "title": "FilePreview",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.Image; android.graphics.pdf.PdfRenderer in a androidx.compose.foundation.lazy.LazyColumn; androidx.compose.foundation.text.selection.SelectionContainer with verticalScroll; a player slot for androidx.media3.ui.PlayerView",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Shows a file's content in place (a picture, the pages of a PDF, text, or the app's video or audio player) and falls back to the type icon, the name and a download action.",
+  "whenToUse": "In an attachment detail, a document library or a chat, to show a file without leaving the screen.",
+  "whenNotToUse": "To open a file in the app the user chooses, start an ACTION_VIEW intent. For a small icon of the file type use MonarchFileTypeIcon; for a video poster use MonarchVideoThumbnail.",
+  "api": [
+    "@Composable fun MonarchFilePreview(name: String, modifier: Modifier = Modifier, contentType: String? = null, kind: MonarchFilePreviewKind? = null, image: Painter? = null, text: String? = null, pdf: Uri? = null, onDownload: (() -> Unit)? = null, failed: Boolean = false, alwaysShowDownload: Boolean = false, imageDescription: String? = null, labels: MonarchFilePreviewLabels = MonarchFilePreviewLabels(), player: (@Composable () -> Unit)? = null, fallback: (@Composable () -> Unit)? = null)",
+    "enum class MonarchFilePreviewKind { Image, Pdf, Text, Video, Audio, None }",
+    "fun MonarchFilePreviewKind.Companion.of(fileName: String?, contentType: String? = null): MonarchFilePreviewKind",
+    "class MonarchFilePreviewLabels(previewOf: ((name: String) -> String)? = null, unavailable: String? = null, failed: String? = null, download: String? = null, downloadName: ((name: String) -> String)? = null, page: ((number: Int, count: Int) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "name",
+      "type": "String",
+      "default": "required",
+      "description": "The file name, for the kind, the labels and the fallback."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the preview. It fills the width it is given."
+    },
+    {
+      "name": "contentType",
+      "type": "String?",
+      "default": "null",
+      "description": "The MIME type. Decides the kind with the name."
+    },
+    {
+      "name": "kind",
+      "type": "MonarchFilePreviewKind?",
+      "default": "null",
+      "description": "Forces a kind instead of detecting it. None shows the fallback."
+    },
+    {
+      "name": "image",
+      "type": "Painter?",
+      "default": "null",
+      "description": "The picture of an image file, loaded by the app."
+    },
+    {
+      "name": "text",
+      "type": "String?",
+      "default": "null",
+      "description": "The content of a text or code file."
+    },
+    {
+      "name": "pdf",
+      "type": "Uri?",
+      "default": "null",
+      "description": "A file: or content: URI of a PDF the app can read."
+    },
+    {
+      "name": "onDownload",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Shows a Download button; the app saves or opens the file."
+    },
+    {
+      "name": "failed",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Loading the content failed; the fallback says so."
+    },
+    {
+      "name": "alwaysShowDownload",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows Download under every preview, not only in the fallback."
+    },
+    {
+      "name": "imageDescription",
+      "type": "String?",
+      "default": "null",
+      "description": "What the picture shows. null uses the file name; an empty string hides the picture from TalkBack."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchFilePreviewLabels",
+      "default": "MonarchFilePreviewLabels()",
+      "description": "Replacements for the built-in strings (strings_filepreview.xml)."
+    },
+    {
+      "name": "player",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The app's video or audio player, for example a Media3 PlayerView in an AndroidView."
+    },
+    {
+      "name": "fallback",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "Replaces the default fallback."
+    }
+  ],
+  "states": [
+    {
+      "name": "image",
+      "description": "The picture, fitted to the width, at most 70% of the window height."
+    },
+    {
+      "name": "pdf",
+      "description": "The pages, rendered at the width of the preview as they scroll into view, in a column at most 70% of the window height; a surface-coloured placeholder while a page renders."
+    },
+    {
+      "name": "text",
+      "description": "The text in the code style on the surface color, selectable, scrolling inside at most 70% of the window height."
+    },
+    {
+      "name": "video or audio",
+      "description": "The app's player; video sits on the inverse background."
+    },
+    {
+      "name": "no preview",
+      "description": "The type icon, the name, \"There is no preview for this file type.\" and the Download button."
+    },
+    {
+      "name": "waiting",
+      "description": "For a kind that has a preview but whose content was not given yet: the icon and the name without a message."
+    },
+    {
+      "name": "failed",
+      "description": "With failed, or a PDF that cannot be opened: \"The preview could not be loaded.\"."
+    }
+  ],
+  "appearance": "A bordered block with 12dp corners on the subtle background, with a 1dp default border. Text, PDF pages and the download footer sit on the surface color; the footer has a subtle line above it. The fallback is centered, with the name in the strong body style and the message in muted text. PDF pages are drawn on white in every theme, because a page is paper.",
+  "platformNotes": "Android has no single preview view, so each kind has its own renderer, as the plan says; iOS presents Quick Look instead and ships nothing. The web loads every kind from a URL; Monarch for Android adds no networking or image loading, so a picture is a Painter the app loaded, text is a String, a PDF is a local file: or content: URI read with PdfRenderer, and video and audio are a slot for the app's player because Monarch does not depend on Media3 (androidx.media3 is not in the version catalog). The web's captions track belongs to that player. The download link is a callback: the app saves the file with CreateDocument or opens it with an intent. PDF pages are rendered only for the PDF kind; there is no search or zoom.",
+  "accessibility": [
+    "The preview is a traversal group. A picture is named by imageDescription or the file name; an empty imageDescription hides it.",
+    "Text, PDF and player content are named \"Preview of <name>\"; each PDF page is an image named \"Page 1 of 3\".",
+    "The text is selectable and scrolls inside the preview.",
+    "The fallback reads the type (\"Archive\"), the name and the message; the Download button is named \"Download <name>\" and has a 48dp target.",
+    "Text wraps and grows with the font size setting."
+  ],
+  "edgeCases": [
+    "An image file without a painter shows the fallback without a message until the painter arrives.",
+    "A PDF URI that cannot be opened or is not a PDF shows the failed message.",
+    "A PDF is rendered at the current width; rotating the device renders the pages again.",
+    "A video or audio file without a player shows the fallback.",
+    "kind = MonarchFilePreviewKind.None always shows the fallback."
+  ],
+  "tests": [
+    "MonarchFilePreviewTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "A picture loaded by the app",
+      "code": "MonarchFilePreview(\n    name = \"diagram.png\",\n    image = sampleLandscapePainter(),\n    imageDescription = \"Architecture diagram\",\n)",
+      "imports": [
+        "com.rookhq.monarch.testing.samplePainter",
+        "com.rookhq.monarch.testing.sampleLandscapePainter"
+      ]
+    },
+    {
+      "title": "A text file with a download footer",
+      "code": "MonarchFilePreview(\n    name = \"release-notes.md\",\n    text = \"# Release notes\\n\\n- Faster search\",\n    onDownload = {},\n    alwaysShowDownload = true,\n)"
+    },
+    {
+      "title": "A file type without a preview",
+      "code": "MonarchFilePreview(name = \"backup.zip\", contentType = \"application/zip\", onDownload = {})"
+    }
+  ],
+  "webEquivalent": "FilePreview",
+  "dependsOn": [
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "no-fixture",
+      "platform": "android",
+      "reason": "The web example is a lone image scene (SVG) with no visible text.",
+      "convention": "Native previews files with Quick Look (iOS) and the system viewer (Android)."
+    }
+  ]
+}

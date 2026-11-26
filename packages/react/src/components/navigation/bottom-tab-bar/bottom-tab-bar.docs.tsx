@@ -1,6 +1,8 @@
 import { forwardRef, useState, type AnchorHTMLAttributes } from 'react';
 import { BottomTabBar, type BottomTabBarItem } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './bottom-tab-bar.fixture.json';
 import {
   BellIcon,
   HomeIcon,
@@ -28,15 +30,25 @@ const DemoLink = forwardRef<HTMLAnchorElement, AnchorHTMLAttributes<HTMLAnchorEl
   },
 );
 
-const ITEMS: BottomTabBarItem[] = [
-  { key: 'home', label: 'Home', icon: <HomeIcon />, href: '/', exact: true },
-  { key: 'inbox', label: 'Inbox', icon: <InboxIcon />, href: '/inbox', badge: 3 },
-  { key: 'search', label: 'Search', icon: <SearchIcon />, href: '/search' },
-  { key: 'activity', label: 'Activity', icon: <BellIcon />, href: '/activity' },
+// The router links and glyphs are web-only; the labels and the badge come from the fixture.
+type FixtureItem = { key: string; label: string; badge?: number };
+const [HOME, INBOX, SEARCH, ACTIVITY, MORE] = fixture.data.items as [
+  FixtureItem,
+  FixtureItem,
+  FixtureItem,
+  FixtureItem,
+  FixtureItem,
 ];
+const ITEMS: BottomTabBarItem[] = [
+  { key: HOME.key, label: HOME.label, icon: <HomeIcon />, href: '/', exact: true },
+  { key: INBOX.key, label: INBOX.label, icon: <InboxIcon />, href: '/inbox', badge: INBOX.badge },
+  { key: SEARCH.key, label: SEARCH.label, icon: <SearchIcon />, href: '/search' },
+  { key: ACTIVITY.key, label: ACTIVITY.label, icon: <BellIcon />, href: '/activity' },
+];
+const CURRENT_PATH = `/${fixture.data.current}`;
 
 function Demo() {
-  const [path, setPath] = useState('/inbox');
+  const [path, setPath] = useState(CURRENT_PATH);
   const [opened, setOpened] = useState(0);
   return (
     <div style={{ width: '100%', maxWidth: 390 }}>
@@ -53,8 +65,8 @@ function Demo() {
         items={[
           ...ITEMS,
           {
-            key: 'more',
-            label: 'More',
+            key: MORE.key,
+            label: MORE.label,
             icon: <MoreIcon />,
             onSelect: () => setOpened((n) => n + 1),
           },

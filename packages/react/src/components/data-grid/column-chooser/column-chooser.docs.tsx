@@ -5,6 +5,8 @@ import {
   type DataTableColumn,
 } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './column-chooser.fixture.json';
 
 interface Record_ {
   id: string;
@@ -15,40 +17,14 @@ interface Record_ {
   renews: string;
 }
 
-const ROWS: Record_[] = [
-  {
-    id: '1',
-    name: 'Alpha',
-    status: 'Active',
-    owner: 'Sam Lee',
-    region: 'EU',
-    renews: '2027-02-01',
-  },
-  {
-    id: '2',
-    name: 'Bravo',
-    status: 'Paused',
-    owner: 'Ana Ruiz',
-    region: 'US',
-    renews: '2026-11-30',
-  },
-  {
-    id: '3',
-    name: 'Charlie',
-    status: 'Active',
-    owner: 'Kim Park',
-    region: 'APAC',
-    renews: '2027-06-15',
-  },
-];
+const ROWS: Record_[] = fixture.data.rows;
 
-const COLUMNS: DataTableColumn<Record_>[] = [
-  { id: 'name', header: 'Name', hideable: false },
-  { id: 'status', header: 'Status' },
-  { id: 'owner', header: 'Owner' },
-  { id: 'region', header: 'Region', defaultHidden: true },
-  { id: 'renews', header: 'Renews' },
-];
+const COLUMNS: DataTableColumn<Record_>[] = fixture.data.columns.map((column) => ({
+  id: column.id,
+  header: column.header,
+  ...('hideable' in column ? { hideable: column.hideable } : {}),
+  ...(fixture.data.hidden.includes(column.id) ? { defaultHidden: true } : {}),
+}));
 
 function WithTable() {
   const cols = useDataTableColumns(COLUMNS);
@@ -62,7 +38,7 @@ function WithTable() {
     >
       <ColumnChooser {...cols.chooserProps} />
       <DataTable
-        caption="Records"
+        caption={fixture.data.caption}
         columns={COLUMNS}
         rows={ROWS}
         getRowId={(r) => r.id}

@@ -1,0 +1,112 @@
+{
+  "id": "breadcrumb",
+  "name": "MonarchBreadcrumb",
+  "title": "Breadcrumb",
+  "family": "navigation",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "HStack of Button with buttonStyle(.monarchLink(.subtle)), Menu for the collapsed levels, ViewThatFits with ScrollView(.horizontal) and ScrollViewReader",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A trail of the levels above the current screen, the current level last, with the middle levels of a long trail collapsed into a menu.",
+  "whenToUse": "In a deep hierarchy where people need to jump back several levels at once: folders in a file browser, nested projects or categories.",
+  "whenNotToUse": "On ordinary screens of a NavigationStack, where the navigation bar title and the back button already show the place (see back-link). For switching between sibling views use MonarchTabs.",
+  "api": [
+    "MonarchBreadcrumb.init(_ items: [MonarchBreadcrumbItem], maxVisible: Int = 4, labels: MonarchBreadcrumbLabels = MonarchBreadcrumbLabels(), action: @escaping @MainActor (MonarchBreadcrumbItem) -> Void)",
+    "MonarchBreadcrumbItem.init(_ title: String, id: String? = nil, isLinked: Bool = true)",
+    "MonarchBreadcrumbLabels.init(label: String? = nil, more: (@Sendable (String) -> String)? = nil, current: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "[MonarchBreadcrumbItem]",
+      "default": "required",
+      "description": "The levels from the root to the current screen. Each has a title, an id (the title by default) and isLinked."
+    },
+    {
+      "name": "maxVisible",
+      "type": "Int",
+      "default": "4",
+      "description": "The most levels shown. Above it the first level stays, the middle levels collapse into a menu and the last maxVisible - 2 stay. Values below 3 count as 3."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchBreadcrumbLabels",
+      "default": "MonarchBreadcrumbLabels()",
+      "description": "Replacements for the spoken name of the trail (\"Breadcrumb\"), of the menu button (\"Show 3 more levels\") and of the current level's value (\"Current page\")."
+    },
+    {
+      "name": "action",
+      "type": "@MainActor (MonarchBreadcrumbItem) -> Void",
+      "default": "required",
+      "description": "Goes to the chosen level, for example by trimming a NavigationStack path. It is not called for the last level or for a level that is not linked."
+    }
+  ],
+  "states": [
+    {
+      "name": "linked ancestor",
+      "description": "A button in the subtle link style: muted text, underlined while pressed or when Button Shapes is on."
+    },
+    {
+      "name": "not linked",
+      "description": "An ancestor with isLinked false is muted text, and is a disabled item in the collapsed menu."
+    },
+    {
+      "name": "current",
+      "description": "The last level is text in the default colour and a medium weight, never a link."
+    },
+    {
+      "name": "collapsed",
+      "description": "An ellipsis button in the ghost button style stands for the middle levels and opens a Menu of them."
+    },
+    {
+      "name": "overflowing",
+      "description": "When the trail is wider than the space, it scrolls sideways and starts scrolled to the current level."
+    },
+    {
+      "name": "disabled",
+      "description": "disabled(_:) on the trail disables every link and the menu; links take the disabled text colour."
+    }
+  ],
+  "appearance": "Text in the label type role. Ancestors use the muted text colour, the current level the default text colour, and the chevron separators the subtle text colour. The menu button is a ghost button. All roles come from the theme, so the trail follows light, dark and both high-contrast themes.",
+  "platformNotes": "The web Breadcrumb is a nav of links with href and a linkAs component. On iOS each level is a button that calls the action, so the app moves its NavigationStack path or reloads the folder. The web's locale prop is the environment's locale, used to format the hidden count. A web item without href is isLinked false. Android builds the same component with the same name.",
+  "accessibility": [
+    "The trail is one container named \"Breadcrumb\" (replaceable with labels.label); VoiceOver moves through its levels in order.",
+    "Ancestors are buttons with their title as the name. The last level is static text whose value is \"Current page\".",
+    "The chevron separators are decorative and hidden.",
+    "The collapsed-levels button is named \"Show 3 more levels\", with the number formatted for the locale; its menu is the system Menu, and levels without a screen are disabled in it.",
+    "Links and the menu button have a touch target of at least 44 by 44 points. Text scales with Dynamic Type and stays on one line; the trail scrolls instead of truncating.",
+    "The separators use the chevron.forward symbol, which points the reading direction in right-to-left languages."
+  ],
+  "edgeCases": [
+    "An empty items array draws nothing; one item is shown alone as the current level.",
+    "Titles are not truncated. A very long trail scrolls sideways; at the largest text sizes this happens sooner.",
+    "Two levels may share a title; give them distinct ids so the action can tell them apart.",
+    "When items change, the trail scrolls to the new current level."
+  ],
+  "tests": [
+    "MonarchBreadcrumbTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Collapsed trail",
+      "fixture": "breadcrumb",
+      "webExample": "Collapsed trail",
+      "template": "MonarchBreadcrumb([\n    MonarchBreadcrumbItem({{items.0}}),\n    MonarchBreadcrumbItem({{items.1}}),\n    MonarchBreadcrumbItem({{items.2}}),\n    MonarchBreadcrumbItem({{items.3}}),\n    MonarchBreadcrumbItem({{items.4}}, isLinked: false),\n]) { _ in }",
+      "code": "MonarchBreadcrumb([\n    MonarchBreadcrumbItem(\"Workspace\"),\n    MonarchBreadcrumbItem(\"Projects\"),\n    MonarchBreadcrumbItem(\"Website\"),\n    MonarchBreadcrumbItem(\"Sprint 4\"),\n    MonarchBreadcrumbItem(\"Fix sign-in redirect\", isLinked: false),\n]) { _ in }"
+    },
+    {
+      "title": "A level without a screen",
+      "code": "MonarchBreadcrumb(\n    [\n        MonarchBreadcrumbItem(\"Drive\"),\n        MonarchBreadcrumbItem(\"Shared with me\", isLinked: false),\n        MonarchBreadcrumbItem(\"Quarterly report\"),\n    ]\n) { item in\n    print(item.id)\n}"
+    }
+  ],
+  "webEquivalent": "Breadcrumb",
+  "dependsOn": [
+    "link",
+    "dropdown-menu"
+  ]
+}

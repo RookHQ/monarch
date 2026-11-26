@@ -1,0 +1,79 @@
+{
+  "id": "filter-bar",
+  "name": null,
+  "title": "FilterBar",
+  "family": "search",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "searchable(text:prompt:) on a List in a NavigationStack, safeAreaInset(edge: .top) with a horizontal ScrollView of MonarchTag chips (isSelected for quick filters, onRemove for active ones), a toolbar Button that opens MonarchFacetedFilterPanel in a sheet with presentationDetents, and a Menu with a Picker for sorting",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: search in the navigation bar, a row of filter chips above the list (quick toggles and removable active filters, with Clear all), and the full filter set in a sheet.",
+  "whenToUse": "Above any filterable list of records (tickets, orders, people), where people narrow results by status, owner or other fields.",
+  "whenNotToUse": "For a handful of fixed views use a segmented Picker or MonarchSavedViews. For building conditions with operators use MonarchQueryBuilder. For search across the whole app use the command palette recipe.",
+  "api": [
+    "NavigationStack { List { … }.searchable(text:prompt:).safeAreaInset(edge: .top) { ScrollView(.horizontal) { HStack { MonarchTag(_:isSelected:); MonarchTag(_:removeLabel:onRemove:); Button(\"Clear all\") } } }.toolbar { Button(\"Filters (n)\", systemImage:) } }",
+    ".sheet(isPresented:) { NavigationStack { ScrollView { MonarchFacetedFilterPanel(facets:selection:showsTitle: false) } } }.presentationDetents([.medium, .large])",
+    "Menu { Picker(\"Sort by\", selection:) { … } } label: { Label(\"Sort\", systemImage: \"arrow.up.arrow.down\") } for sorting and display options"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "no filters",
+      "description": "Only quick-filter chips; the toolbar button reads \"Filters\"."
+    },
+    {
+      "name": "active filters",
+      "description": "A removable chip per active value, Clear all, and \"Filters (2)\" on the toolbar button."
+    },
+    {
+      "name": "quick filter on",
+      "description": "A selected MonarchTag, read as selected, with a check."
+    },
+    {
+      "name": "editing",
+      "description": "The sheet with MonarchFacetedFilterPanel; the list updates as boxes are ticked."
+    },
+    {
+      "name": "no results",
+      "description": "Show MonarchEmptyState with kind .filtered and onClearFilters in place of the list."
+    }
+  ],
+  "appearance": "The system navigation bar search field, Monarch tags in the neutral tone (filled when selected), ghost Monarch buttons, and the facet panel in a sheet. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web FilterBar is one component: a search input on the leading edge, FilterChips with popover editors, an Add filter menu, Clear all, a result count and trailing controls, which below a width move into a bottom sheet behind a \"Filters (n)\" button. On a phone that narrow layout is the only one, so iOS composes it: search moves into the navigation bar with searchable, chips scroll sideways in the top safe-area inset, and editing a filter happens in the sheet with MonarchFacetedFilterPanel instead of a popover per chip. readFilterParams and writeFilterParams (URL query strings) have no counterpart; persist filters with the app's own state, such as SceneStorage. Android composes the same recipe.",
+  "accessibility": [
+    "The search field is the system's, named by its prompt.",
+    "Quick filters are MonarchTag toggles read with their selected state; active filters are tags with a remove button named \"Remove Status filter\".",
+    "The toolbar button includes the number of active filters in its name.",
+    "Announce the result count when it changes (AccessibilityNotification.Announcement), as the web's live region does.",
+    "Every chip and button is at least 44 points."
+  ],
+  "edgeCases": [
+    "Many chips scroll sideways; keep Clear all at the end of the row so it is reached last.",
+    "Removing the last value of a facet removes the facet from the selection.",
+    "A sheet with detents keeps the list visible behind it at the medium height."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Removable filters",
+      "fixture": "filter-bar",
+      "webExample": "Removable filters",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    MonarchFlowLayout(spacing: theme.spacing.space2) {\n        ForEach(filters) { filter in\n            MonarchTag(\n                filter.name + \": \" + filter.value,\n                removeLabel: \"Remove \" + filter.name + \" filter\",\n                onRemove: { filters.removeAll { $0.id == filter.id } }\n            )\n        }\n        if !filters.isEmpty {\n            Button(\"Clear all\") { filters = [] }\n                .buttonStyle(.plain)\n                .monarchTextStyle(.label)\n                .foregroundStyle(theme.colors.textLink)\n                .monarchMinimumHitTarget()\n        }\n    }\n}\n.padding(theme.spacing.space4)\n.frame(minHeight: theme.spacing.space24)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n\nstruct Filter: Identifiable {\n    let name: String\n    let value: String\n    var id: String { name }\n}\n\n@State private var filters = [\n    Filter(name: {{filters.0.name}}, value: {{filters.0.value}}),\n    Filter(name: {{filters.1.name}}, value: {{filters.1.value}}),\n    Filter(name: {{filters.2.name}}, value: {{filters.2.value}}),\n]",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n\nstruct Filter: Identifiable {\n    let name: String\n    let value: String\n    var id: String { name }\n}\n\n@State private var filters = [\n    Filter(name: \"Status\", value: \"Open\"),\n    Filter(name: \"Assignee\", value: \"Me\"),\n    Filter(name: \"Priority\", value: \"High\"),\n]",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    MonarchFlowLayout(spacing: theme.spacing.space2) {\n        ForEach(filters) { filter in\n            MonarchTag(\n                filter.name + \": \" + filter.value,\n                removeLabel: \"Remove \" + filter.name + \" filter\",\n                onRemove: { filters.removeAll { $0.id == filter.id } }\n            )\n        }\n        if !filters.isEmpty {\n            Button(\"Clear all\") { filters = [] }\n                .buttonStyle(.plain)\n                .monarchTextStyle(.label)\n                .foregroundStyle(theme.colors.textLink)\n                .monarchMinimumHitTarget()\n        }\n    }\n}\n.padding(theme.spacing.space4)\n.frame(minHeight: theme.spacing.space24)"
+    }
+  ],
+  "webEquivalent": "FilterBar",
+  "dependsOn": [
+    "tag",
+    "search-input",
+    "faceted-filter-panel",
+    "sheet"
+  ]
+}

@@ -1,5 +1,7 @@
 import { Button, Checkbox, Popover, PopoverContent, PopoverTrigger } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './popover.fixture.json';
 
 export default {
   id: 'popover',
@@ -64,14 +66,20 @@ export default {
       items: [
         {
           title: 'Filters',
+          stage: true,
           render: () => (
-            <Popover>
+            <Popover defaultOpen>
               <PopoverTrigger asChild>
-                <Button>Filters</Button>
+                <Button>{fixture.data.trigger}</Button>
               </PopoverTrigger>
-              <PopoverContent aria-label="Filters">
-                <Checkbox label="Only mine" defaultChecked />
-                <Checkbox label="Unassigned" />
+              <PopoverContent aria-label={fixture.data.label}>
+                {fixture.data.options.map((option) => (
+                  <Checkbox
+                    key={option.label}
+                    label={option.label}
+                    defaultChecked={option.checked}
+                  />
+                ))}
               </PopoverContent>
             </Popover>
           ),

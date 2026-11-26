@@ -1,0 +1,155 @@
+{
+  "id": "insight-strip",
+  "name": "MonarchInsightStrip",
+  "title": "InsightStrip",
+  "family": "data-display",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "ScrollView(.horizontal) with containerRelativeFrame and scrollTargetBehavior(.viewAligned), VStack, LazyVGrid; MonarchAiInsightCallout",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A row of insights for the top of a dashboard, each labelled with whether a rule or a model raised it, ordered most severe first.",
+  "whenToUse": "At the top of a dashboard or a record, for a few things that need attention now.",
+  "whenNotToUse": "For one message about the content next to it use MonarchBanner. Do not label a rule-based insight as AI.",
+  "api": [
+    "init(_ title: String? = nil, insights: [MonarchInsight], layout: MonarchInsightStripLayout = .scroll, isLoading: Bool = false, error: String? = nil, labels: MonarchInsightStripLabels = MonarchInsightStripLabels(), limit: Int? = nil, sortsBySeverity: Bool = true, onRetry: (@MainActor () -> Void)? = nil, onDismiss: (@MainActor (String) -> Void)? = nil)",
+    "struct MonarchInsight { init(id: String, title: String, why: String, tone: MonarchTone = .info, origin: MonarchInsightOrigin, evidence: String? = nil, actionTitle: String? = nil, action: (@MainActor () -> Void)? = nil) }",
+    "enum MonarchInsightOrigin { case rule, ai }",
+    "enum MonarchInsightStripLayout { case scroll, stack, grid }",
+    "struct MonarchInsightStripLabels { init(showMore: (@Sendable (Int) -> String)? = nil, showLess: String? = nil, empty: String? = nil, loading: String? = nil, retry: String? = nil, dismiss: String? = nil, evidence: String? = nil, ruleOrigin: String? = nil, aiOrigin: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "A heading for the strip."
+    },
+    {
+      "name": "insights",
+      "type": "[MonarchInsight]",
+      "default": "required",
+      "description": "The insights. Each has an id, a title, a reason, a tone, an origin and optionally evidence and one action."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchInsightStripLayout",
+      "default": ".scroll",
+      "description": "scroll is one row that scrolls sideways one card at a time, stack one column, grid as many columns as fit."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows three placeholder cards instead of the insights."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "A failure message, which replaces the insights."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchInsightStripLabels",
+      "default": "MonarchInsightStripLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "limit",
+      "type": "Int?",
+      "default": "nil",
+      "description": "Show at most this many, with a toggle for the rest."
+    },
+    {
+      "name": "sortsBySeverity",
+      "type": "Bool",
+      "default": "true",
+      "description": "Orders danger, warning, info, success, neutral; the given order is kept within a tone."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "With error, adds a \"Try again\" button."
+    },
+    {
+      "name": "onDismiss",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Adds a dismiss button to every insight; the app removes the insight."
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "description": "Three cards drawn as placeholders with redacted(reason: .placeholder)."
+    },
+    {
+      "name": "error",
+      "description": "The message with an icon in the strong danger colour, and \"Try again\" when onRetry is given."
+    },
+    {
+      "name": "empty",
+      "description": "\"Nothing needs attention right now.\" with a checkmark."
+    },
+    {
+      "name": "limited",
+      "description": "Only the first insights are shown, with \"Show N more\"; then \"Show fewer\"."
+    }
+  ],
+  "appearance": "Each insight is a MonarchAiInsightCallout: the tone sets the fill, border, leading bar and icon; the title, the reason and an origin label follow, neutral for a rule and in the assistant colours for a model.",
+  "platformNotes": "Like the web, the strip is built from the insight callout (MonarchAiInsightCallout). Severity is MonarchTone (danger for critical, success for positive) instead of a separate severity type, and the spoken prefix is the tone name. Evidence is a String in a collapsed section, not arbitrary content. The default layout is the scrolling row; grid and stack are also offered. Moving VoiceOver focus to the next insight after a dismissal, which the web does, is not implemented. The web empty={null} has no counterpart: leave the strip out instead. Several closures are optional (onRetry, onDismiss). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onRetry.",
+  "accessibility": [
+    "The title is a heading.",
+    "Each insight title is read with the tone name first and the origin label after it, then the reason follows, so neither the tone nor the origin depends on colour or an icon.",
+    "The evidence section, the action and the dismiss button are separate elements with 44-point touch targets.",
+    "The dismiss button is named \"Dismiss insight\".",
+    "The loading placeholder is one element named \"Loading insights\".",
+    "Text scales with Dynamic Type and wraps inside the cards."
+  ],
+  "edgeCases": [
+    "In the scrolling row every card is 86% of the width, so cards in one row can differ in height.",
+    "A limit of zero or less is ignored.",
+    "An insight with an actionTitle but no action shows no button.",
+    "After a dismissal VoiceOver focus is left to the system.",
+    "The built-in \"Show N more\" text is English; pass labels.showMore for other languages."
+  ],
+  "tests": [
+    "MonarchInsightStripTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Dashboard insights with limit and dismiss",
+      "fixture": "insight-strip",
+      "webExample": "Dashboard insights with limit and dismiss",
+      "template": "MonarchInsightStrip(\n    {{title}},\n    insights: insights,\n    layout: .grid,\n    limit: {{max}},\n    onDismiss: { dismissed.insert($0) }\n)",
+      "setupTemplate": "@State private var dismissed: Set<String> = []\n\nprivate var insights: [MonarchInsight] {\n    [\n        MonarchInsight(\n            id: {{insights.0.id}},\n            title: {{insights.0.title}},\n            why: {{insights.0.why}},\n            tone: {{insights.0.tone|tone}},\n            origin: {{insights.0.origin|case}},\n            evidence: [{{insights.0.evidence.0}}, {{insights.0.evidence.1}}, {{insights.0.evidence.2}}].joined(separator: \"\\n\"),\n            actionTitle: {{insights.0.action}},\n            action: {}\n        ),\n        MonarchInsight(\n            id: {{insights.1.id}},\n            title: {{insights.1.title}},\n            why: {{insights.1.why}},\n            tone: {{insights.1.tone|tone}},\n            origin: {{insights.1.origin|case}}\n        ),\n        MonarchInsight(\n            id: {{insights.2.id}},\n            title: {{insights.2.title}},\n            why: {{insights.2.why}},\n            tone: {{insights.2.tone|tone}},\n            origin: {{insights.2.origin|case}}\n        ),\n        MonarchInsight(\n            id: {{insights.3.id}},\n            title: {{insights.3.title}},\n            why: {{insights.3.why}},\n            tone: {{insights.3.tone|tone}},\n            origin: {{insights.3.origin|case}}\n        ),\n    ]\n    .filter { !dismissed.contains($0.id) }\n}",
+      "setup": "@State private var dismissed: Set<String> = []\n\nprivate var insights: [MonarchInsight] {\n    [\n        MonarchInsight(\n            id: \"expiring\",\n            title: \"3 items expire within 30 days\",\n            why: \"Their end dates fall before 7 December and none has a renewal recorded.\",\n            tone: .danger,\n            origin: .rule,\n            evidence: [\"Item A: 12 November\", \"Item B: 20 November\", \"Item C: 4 December\"].joined(separator: \"\\n\"),\n            actionTitle: \"Review renewals\",\n            action: {}\n        ),\n        MonarchInsight(\n            id: \"usage\",\n            title: \"Weekly use is falling\",\n            why: \"Active people fell from 48 to 29 over the last 30 days.\",\n            tone: .warning,\n            origin: .ai\n        ),\n        MonarchInsight(\n            id: \"deadline\",\n            title: \"Next deadline in 12 days\",\n            why: \"A response is due on 19 November.\",\n            tone: .info,\n            origin: .rule\n        ),\n        MonarchInsight(\n            id: \"target\",\n            title: \"Quarterly target reached\",\n            why: \"Bookings passed the target set for this quarter.\",\n            tone: .success,\n            origin: .rule\n        ),\n    ]\n    .filter { !dismissed.contains($0.id) }\n}",
+      "code": "MonarchInsightStrip(\n    \"Needs attention\",\n    insights: insights,\n    layout: .grid,\n    limit: 3,\n    onDismiss: { dismissed.insert($0) }\n)"
+    },
+    {
+      "title": "One column with a limit",
+      "code": "MonarchInsightStrip(\n    insights: [\n        MonarchInsight(id: \"a\", title: \"Backup failed\", why: \"The disk is full.\", tone: .danger, origin: .rule),\n        MonarchInsight(id: \"b\", title: \"Usage is up\", why: \"More seats are active.\", tone: .success, origin: .rule),\n    ],\n    layout: .stack,\n    limit: 1\n)"
+    }
+  ],
+  "webEquivalent": "InsightStrip",
+  "dependsOn": [
+    "card",
+    "badge",
+    "button",
+    "collapsible"
+  ],
+  "icons": {
+    "tone.info": "InfoGlyph",
+    "tone.warning": "WarningGlyph",
+    "tone.danger": "ErrorGlyph",
+    "tone.success": "SuccessGlyph",
+    "origin.ai": "BotGlyph",
+    "dismiss": "CloseGlyph"
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "id": "ai-voice-input",
+  "name": "MonarchAiVoiceInput",
+  "title": "AiVoiceInput",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Speech framework (SFSpeechRecognizer with SFSpeechAudioBufferRecognitionRequest) fed by an AVAudioEngine input tap, behind the MonarchAiSpeechRecognizer protocol; Toggle with MonarchToggleButtonStyle; MonarchAudioLevelMeter; MonarchInlineNotice",
+  "status": "experimental",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A microphone button that dictates into a prompt (press to start and stop, or hold to talk), with a level meter, the live transcript and guidance when access is off. It only hands text back; it never sends anything.",
+  "whenToUse": "Beside an AI prompt field, so people can speak a request instead of typing it.",
+  "whenNotToUse": "For a spoken, two-way conversation with the assistant, use MonarchAiVoiceMode. For dictation in any text field, the system keyboard's dictation key already works and needs nothing.",
+  "api": [
+    "init(locale: Locale? = nil, mode: MonarchAiVoiceInputMode = .toggle, size: MonarchButtonSize = .md, showsLevel: Bool = true, showsTranscript: Bool = true, recognizer: any MonarchAiSpeechRecognizer = MonarchAiSystemSpeechRecognizer(), labels: MonarchAiVoiceInputLabels = MonarchAiVoiceInputLabels(), onStateChange: (@MainActor (MonarchAiVoiceInputState) -> Void)? = nil, onTranscript: @escaping @MainActor (_ text: String, _ isFinal: Bool) -> Void)",
+    "enum MonarchAiVoiceInputMode { case toggle, pushToTalk }",
+    "enum MonarchAiVoiceInputState { case idle, starting, listening, denied, error }",
+    "@MainActor protocol MonarchAiSpeechRecognizer: AnyObject { func isAvailable(for locale: Locale?) -> Bool; func start(locale: Locale?, continuous: Bool) -> AsyncThrowingStream<MonarchAiSpeechEvent, any Error>; func stop() }",
+    "enum MonarchAiSpeechEvent { case started, level(Double), partial(String), final(String) }",
+    "enum MonarchAiSpeechError: Error { case denied, noSpeech, noMicrophone, unavailable, failed }",
+    "@MainActor final class MonarchAiSystemSpeechRecognizer: MonarchAiSpeechRecognizer { init(prefersOnDeviceRecognition: Bool = false) }",
+    "struct MonarchAiVoiceInputLabels { var dictate, holdToTalk, holdHint, starting, listening, stopped, denied, noSpeech, noMicrophone, unavailable, error, transcript, openSettings: String? }"
+  ],
+  "options": [
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "nil",
+      "description": "The language of the speech. The device language by default."
+    },
+    {
+      "name": "mode",
+      "type": "MonarchAiVoiceInputMode",
+      "default": ".toggle",
+      "description": "toggle: press to start and again to stop. pushToTalk: listen while held."
+    },
+    {
+      "name": "size",
+      "type": "MonarchButtonSize",
+      "default": ".md",
+      "description": "The size of the button: sm, md or lg."
+    },
+    {
+      "name": "showsLevel",
+      "type": "Bool",
+      "default": "true",
+      "description": "Show a five-segment level meter while listening."
+    },
+    {
+      "name": "showsTranscript",
+      "type": "Bool",
+      "default": "true",
+      "description": "Show the words under the button as they are recognised."
+    },
+    {
+      "name": "recognizer",
+      "type": "any MonarchAiSpeechRecognizer",
+      "default": "MonarchAiSystemSpeechRecognizer()",
+      "description": "The speech engine. Conform your own type to use SpeechAnalyzer, a server recogniser or a scripted one."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiVoiceInputLabels",
+      "default": "MonarchAiVoiceInputLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onStateChange",
+      "type": "(@MainActor (MonarchAiVoiceInputState) -> Void)?",
+      "default": "nil",
+      "description": "Called with every change of state."
+    },
+    {
+      "name": "onTranscript",
+      "type": "@MainActor (String, Bool) -> Void",
+      "default": "required",
+      "description": "Recognised text. Guesses have isFinal false and may change; each settled phrase arrives once with isFinal true."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "The button with a microphone symbol, off."
+    },
+    {
+      "name": "starting",
+      "description": "The button is on and the status reads Starting microphone… while permission and the microphone are requested."
+    },
+    {
+      "name": "listening",
+      "description": "The button is on with a filled microphone, the level meter moves, the status reads Listening… and the transcript grows."
+    },
+    {
+      "name": "denied",
+      "description": "A warning notice explains that access is off, with an Open Settings action on iOS."
+    },
+    {
+      "name": "error",
+      "description": "A notice with the reason: nothing heard (info), no microphone or recognition unavailable (warning), or an unexpected failure (danger)."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true) the button uses the disabled roles and does not start; a running session is stopped."
+    }
+  ],
+  "appearance": "The button is the outline toggle button: bordered surface while off, subtle accent fill with an accent border and accent text while listening. The status is a muted caption, the transcript default body text, and the level meter uses the meter's accent and muted roles. The notice uses the tone roles of MonarchInlineNotice.",
+  "platformNotes": "The web uses the browser's Web Speech API and getUserMedia; iOS uses the Speech framework and AVAudioEngine through MonarchAiSystemSpeechRecognizer, and the app must add NSMicrophoneUsageDescription and NSSpeechRecognitionUsageDescription to its Info.plist. Languages, length limits and on-device support differ: SFSpeechRecognizer's supported languages apply, server recognition is limited in length per request and needs a network, and prefersOnDeviceRecognition keeps audio on the device where the language supports it. SpeechAnalyzer (iOS 26) is not built in; an app can conform its own recogniser to MonarchAiSpeechRecognizer. The web's createRecognition hook is the recognizer parameter here. The web's Escape key maps to the VoiceOver escape gesture. With SFSpeechRecognizer, partial results are the whole utterance so far and the final phrase arrives when listening stops.",
+  "accessibility": [
+    "In toggle mode the button is a standard Toggle styled as a button, so VoiceOver reads it as on while listening and off otherwise.",
+    "In push-to-talk mode, which cannot be held with VoiceOver, Switch Control or Full Keyboard Access, the button's default action starts and a second activation stops; its hint says so.",
+    "The VoiceOver escape gesture stops listening.",
+    "\"Listening…\" is announced on start, \"Stopped listening.\" when it ends, and the failure message when it fails.",
+    "The level meter is decorative; with Reduce Motion it shows full or empty instead of following the level.",
+    "The transcript is read as \"Transcript:\" followed by the words.",
+    "The notice has an icon and the tone's spoken name, so the failure is not conveyed by colour alone.",
+    "The button keeps a touch target of at least 44 by 44 points; all text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "When the recogniser is not available for the language the component draws nothing.",
+    "Releasing push-to-talk before the microphone opens stops the session as soon as it starts.",
+    "Leaving the screen cancels the session and discards pending words without an announcement.",
+    "A second start while a session runs is ignored.",
+    "The Open Settings action is shown only on iOS, where the system Settings URL exists.",
+    "Experimental: the default recogniser (MonarchAiSystemSpeechRecognizer: SFSpeechRecognizer, AVAudioEngine and the audio session) compiles but has not yet been run against a real microphone, and its error-code mapping is based on observed codes, not documented API. The component itself is tested with scripted recognisers. It becomes available after a device check."
+  ],
+  "tests": [
+    "MonarchAiVoiceInputTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Scripted demo (works without a microphone)",
+      "fixture": "ai-voice-input",
+      "webExample": "Scripted demo (works without a microphone)",
+      "template": "VStack(alignment: .leading) {\n    MonarchTextField({{promptLabel}}, text: $prompt, axis: .vertical, lineLimit: 3...3, labelVisibility: .hidden)\n    MonarchAiVoiceInput(\n        showsLevel: false,\n        labels: MonarchAiVoiceInputLabels(dictate: {{dictate}})\n    ) { text, isFinal in\n        if isFinal { prompt += (prompt.isEmpty ? \"\" : \" \") + text }\n    }\n}",
+      "setupTemplate": "@State private var prompt = \"\"",
+      "setup": "@State private var prompt = \"\"",
+      "code": "VStack(alignment: .leading) {\n    MonarchTextField(\"Prompt\", text: $prompt, axis: .vertical, lineLimit: 3...3, labelVisibility: .hidden)\n    MonarchAiVoiceInput(\n        showsLevel: false,\n        labels: MonarchAiVoiceInputLabels(dictate: \"Dictate\")\n    ) { text, isFinal in\n        if isFinal { prompt += (prompt.isEmpty ? \"\" : \" \") + text }\n    }\n}"
+    },
+    {
+      "title": "Hold to talk, on the device only",
+      "code": "MonarchAiVoiceInput(\n    mode: .pushToTalk,\n    size: .sm,\n    recognizer: MonarchAiSystemSpeechRecognizer(prefersOnDeviceRecognition: true)\n) { _, _ in }"
+    }
+  ],
+  "webEquivalent": "AiVoiceInput",
+  "dependsOn": [
+    "audio-level-meter",
+    "button",
+    "toggle-button",
+    "inline-notice"
+  ]
+}

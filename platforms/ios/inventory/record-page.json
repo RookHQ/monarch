@@ -1,0 +1,78 @@
+{
+  "id": "record-page",
+  "name": null,
+  "title": "RecordPage",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "NavigationStack with navigationTitle and a toolbar, ScrollView, ViewThatFits(in: .horizontal) that places the side column beside or below the main column, and LabeledContent with .labeledContentStyle(.monarch)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a record detail screen with a header, section tabs, the selected section in the main column, a side column of details and the record's activity.",
+  "whenToUse": "For the detail screen of one record (a deal, a ticket, a contact) that has several sections and a set of properties that stay the same across sections. On iPad, put it in the detail column of a NavigationSplitView (split-layout).",
+  "whenNotToUse": "For a list of records, use a List or MonarchDataTable screen. For a short record with one section, a Form with LabeledContent is enough.",
+  "api": [
+    "NavigationStack { ScrollView { VStack { header; MonarchTabs(_:selection:items:); ViewThatFits(in: .horizontal) { HStack { main; aside }; VStack { main; aside } } } }.navigationTitle(_:).toolbar { … } }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "wide",
+      "description": "When the width fits both, the side column sits beside the main column at a fixed width."
+    },
+    {
+      "name": "narrow",
+      "description": "On a phone the side column moves below the main column; ViewThatFits picks the stacked layout."
+    },
+    {
+      "name": "section",
+      "description": "MonarchTabs switches the main column; the side column stays the same across sections."
+    },
+    {
+      "name": "activity",
+      "description": "The Activity section shows MonarchActivityTimeline with the record's events."
+    }
+  ],
+  "appearance": "Each part keeps its Monarch look: the avatar, status badge and tabs in their roles, the details in the Monarch labelled-content style and the timeline in its own roles. The navigation bar and toolbar are the system ones in every theme.",
+  "platformNotes": "The web ships RecordPage as one component with a RecordHeader, tabs, an aside and an activity slot, and a CSS grid that moves the aside under the main column below a breakpoint. On iOS it is a recipe: the title and actions go to the navigation bar and toolbar (as in the record-header recipe), ViewThatFits replaces the breakpoint, and the activity is one of the tabs. Moving the side column into its own tab is the other choice on phones; add a \"Details\" MonarchTabsItem and show the side column for it. The web's aside width and activity placement props are choices in the recipe's own code.",
+  "accessibility": [
+    "The record's name has the header trait; the side column and section headings have the header trait too.",
+    "MonarchTabs is a group named \"Record sections\"; each tab is a button with the selected trait, and counts are read with the tab.",
+    "Toolbar actions are buttons with text labels that VoiceOver reads; Delete uses the destructive role.",
+    "The layout reflows at large text sizes because ViewThatFits falls back to the stacked layout."
+  ],
+  "edgeCases": [
+    "Long record names wrap in the header and truncate in the navigation bar.",
+    "A disabled tab cannot be chosen and is read as dimmed.",
+    "With no activity, MonarchActivityTimeline shows its empty state."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Record with tabs, details and activity",
+      "fixture": "record-page",
+      "webExample": "Record with tabs, details and activity",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    HStack(alignment: .top, spacing: MonarchTokens.Space.space3) {\n        VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n            HStack(spacing: MonarchTokens.Space.space2) {\n                Text({{title}})\n                    .monarchTextStyle(.title)\n                    .accessibilityAddTraits(.isHeader)\n                MonarchStatusBadge(MonarchStatusDefinition({{status.label}}, tone: {{status.tone|tone}}, systemImage: \"checkmark.circle\"))\n            }\n            Text({{subtitle}})\n                .monarchTextStyle(.bodySmall)\n                .foregroundStyle(theme.colors.textMuted)\n        }\n        Spacer()\n        MonarchButton({{action}}, variant: .secondary, size: .sm) {}\n    }\n    MonarchKeyValue(\n        [\n            MonarchKeyValueItem({{facts.0.term}}, value: {{facts.0.value}}),\n            MonarchKeyValueItem({{facts.1.term}}, value: {{facts.1.value}}),\n        ],\n        separator: .none,\n        layout: .stack\n    )\n    MonarchTabs(\n        \"Record sections\",\n        selection: $tab,\n        items: [\n            MonarchTabsItem({{tabs.0.label}}, value: {{tabs.0.value}}),\n            MonarchTabsItem({{tabs.1.label}}, value: {{tabs.1.value}}, count: String({{tabs.1.count}})),\n            MonarchTabsItem({{tabs.2.label}}, value: {{tabs.2.value}}),\n        ]\n    )\n    if tab == {{tabs.0.value}} {\n        Text({{tabs.0.content}}).monarchTextStyle(.body)\n    } else if tab == {{tabs.1.value}} {\n        Text({{tabs.1.content}}).monarchTextStyle(.body)\n    } else {\n        Text({{tabs.2.content}}).monarchTextStyle(.body)\n    }\n    Text({{aside}}).monarchTextStyle(.body)\n    Text(\"Activity\")\n        .monarchTextStyle(.label)\n        .accessibilityAddTraits(.isHeader)\n    Text({{activity}}).monarchTextStyle(.body)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var tab = {{tabs.0.value}}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var tab = \"overview\"",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    HStack(alignment: .top, spacing: MonarchTokens.Space.space3) {\n        VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n            HStack(spacing: MonarchTokens.Space.space2) {\n                Text(\"Sample record\")\n                    .monarchTextStyle(.title)\n                    .accessibilityAddTraits(.isHeader)\n                MonarchStatusBadge(MonarchStatusDefinition(\"Active\", tone: .success, systemImage: \"checkmark.circle\"))\n            }\n            Text(\"REC-0001\")\n                .monarchTextStyle(.bodySmall)\n                .foregroundStyle(theme.colors.textMuted)\n        }\n        Spacer()\n        MonarchButton(\"Edit\", variant: .secondary, size: .sm) {}\n    }\n    MonarchKeyValue(\n        [\n            MonarchKeyValueItem(\"Owner\", value: \"Person A\"),\n            MonarchKeyValueItem(\"Created\", value: \"1 June 2026\"),\n        ],\n        separator: .none,\n        layout: .stack\n    )\n    MonarchTabs(\n        \"Record sections\",\n        selection: $tab,\n        items: [\n            MonarchTabsItem(\"Overview\", value: \"overview\"),\n            MonarchTabsItem(\"Notes\", value: \"notes\", count: String(2)),\n            MonarchTabsItem(\"Files\", value: \"files\"),\n        ]\n    )\n    if tab == \"overview\" {\n        Text(\"Overview content for the sample record.\").monarchTextStyle(.body)\n    } else if tab == \"notes\" {\n        Text(\"Two sample notes.\").monarchTextStyle(.body)\n    } else {\n        Text(\"No files yet.\").monarchTextStyle(.body)\n    }\n    Text(\"Properties and related records go here.\").monarchTextStyle(.body)\n    Text(\"Activity\")\n        .monarchTextStyle(.label)\n        .accessibilityAddTraits(.isHeader)\n    Text(\"Sample activity entries go here.\").monarchTextStyle(.body)\n}"
+    }
+  ],
+  "webEquivalent": "RecordPage",
+  "dependsOn": [
+    "record-header",
+    "tabs",
+    "description-list",
+    "activity-timeline",
+    "split-layout",
+    "avatar",
+    "status-badge"
+  ],
+  "icons": {
+    "status.success": "SuccessGlyph"
+  }
+}

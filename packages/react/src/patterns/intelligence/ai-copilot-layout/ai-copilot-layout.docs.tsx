@@ -9,6 +9,8 @@ import {
   useAiSelectionContext,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-copilot-layout.fixture.json';
 
 const transport = mockTransport({
   delayMs: 40,
@@ -27,7 +29,7 @@ const transport = mockTransport({
   },
 });
 
-const ROWS = ['Northwind renewal', 'Harbor expansion', 'Summit pilot', 'Atlas migration'];
+const ROWS = fixture.data.rows;
 
 function Table() {
   const { setSelection } = useAiSelectionContext();
@@ -43,10 +45,8 @@ function Table() {
   };
   return (
     <div style={{ display: 'grid', gap: 'var(--mn-space-3)', padding: 'var(--mn-space-4)' }}>
-      <h3 style={{ margin: 0 }}>Opportunities</h3>
-      <p style={{ margin: 0, color: 'var(--mn-color-text-muted)' }}>
-        Select rows, then ask the assistant about them.
-      </p>
+      <h3 style={{ margin: 0 }}>{fixture.data.heading}</h3>
+      <p style={{ margin: 0, color: 'var(--mn-color-text-muted)' }}>{fixture.data.description}</p>
       {ROWS.map((row) => (
         <Checkbox
           key={row}
@@ -73,11 +73,11 @@ function Demo() {
     >
       <AiCopilotLayout
         conversation={chat}
-        title="Assistant"
-        defaultOpen
+        title={fixture.data.assistant.title}
+        defaultOpen={fixture.data.assistant.open}
         launcherProps={{ position: 'inline' }}
-        context={[{ label: 'Page', items: 'Opportunities' }]}
-        panelProps={{ starters: ['Summarise the selection', 'Which one is most at risk?'] }}
+        context={[{ label: 'Page', items: fixture.data.assistant.context }]}
+        panelProps={{ starters: fixture.data.assistant.starters }}
       >
         <Table />
       </AiCopilotLayout>

@@ -1,14 +1,9 @@
 import { CodeBlock, CodeTabs, type CodeSample } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './code-block.fixture.json';
 
-const handler = `export async function handleWebhook(request: Request) {
-  const event = await request.json();
-  if (event.type === 'invoice.paid') {
-    await markInvoicePaid(event.data.id);
-  }
-  return new Response(null, { status: 204 });
-}
-`;
+const handler = fixture.data.code;
 
 const samples: CodeSample[] = [
   {
@@ -166,7 +161,14 @@ export default {
         {
           title: 'A file',
           stack: true,
-          render: () => <CodeBlock code={handler} language="ts" title="webhook.ts" lineNumbers />,
+          render: () => (
+            <CodeBlock
+              code={handler}
+              language={fixture.data.language}
+              title={fixture.data.title}
+              lineNumbers={fixture.data.lineNumbers}
+            />
+          ),
         },
         {
           title: 'An install command',

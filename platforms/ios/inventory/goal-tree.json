@@ -1,0 +1,146 @@
+{
+  "id": "goal-tree",
+  "name": "MonarchGoalTree",
+  "title": "GoalTree",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Nested VStack rows with a Button toggle per goal (chevron, Expand/Collapse labels); ProgressView with .progressViewStyle(.monarchLinear); MonarchStatusBadge, MonarchAvatar, MonarchFlowLayout, MonarchEmptyState",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Nested goals (objectives and key results) with progress, status, owner and alignment; branches open and close and each goal can carry its own actions.",
+  "whenToUse": "For OKRs and other goal hierarchies, where readers scan progress and status and drill into the key results of an objective.",
+  "whenNotToUse": "For a file or folder hierarchy without progress, use List(_:children:) or OutlineGroup (tree-view). For a flat list of tasks, use a List with MonarchOnboardingChecklist or rows.",
+  "api": [
+    "MonarchGoalTree.init(_ goals: [MonarchGoal], expandedIDs: Binding<Set<String>>? = nil, isQuietChildren: Bool = true, labels: MonarchGoalTreeLabels = MonarchGoalTreeLabels(), canAddChild: ((MonarchGoal, Int) -> Bool)? = nil, onAddChild: (@MainActor (MonarchGoal) -> Void)? = nil, @ViewBuilder actions: @escaping (MonarchGoal) -> Actions)",
+    "MonarchGoalTree.init(_ goals: [MonarchGoal], expandedIDs: Binding<Set<String>>? = nil, isQuietChildren: Bool = true, labels: MonarchGoalTreeLabels = MonarchGoalTreeLabels(), canAddChild: ((MonarchGoal, Int) -> Bool)? = nil, onAddChild: (@MainActor (MonarchGoal) -> Void)? = nil) where Actions == EmptyView",
+    "MonarchGoal.init(id: String, parentID: String? = nil, title: String, progress: Double, status: MonarchGoalStatus, ownerName: String? = nil, ownerAvatarURL: URL? = nil, meta: String? = nil, alignedTo: String? = nil)",
+    "enum MonarchGoalStatus { case notStarted, onTrack, atRisk, offTrack, done }",
+    "MonarchGoalTreeLabels.init(status: (@Sendable (MonarchGoalStatus) -> String)? = nil, expand: (@Sendable (String) -> String)? = nil, collapse: (@Sendable (String) -> String)? = nil, alignedTo: String? = nil, addChild: String? = nil, addChildTo: (@Sendable (String) -> String)? = nil, childCount: (@Sendable (Int) -> String)? = nil, empty: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "goals",
+      "type": "[MonarchGoal]",
+      "default": "required",
+      "description": "Every goal, flat. Nesting comes from parentID; a missing or self-referencing parent makes a top-level goal, and a cycle stops at the first repeat."
+    },
+    {
+      "name": "expandedIDs",
+      "type": "Binding<Set<String>>?",
+      "default": "nil",
+      "description": "The ids of open goals. Kept inside when nil, with every goal that has children open at first."
+    },
+    {
+      "name": "isQuietChildren",
+      "type": "Bool",
+      "default": "true",
+      "description": "Children that are on track or not started hide their badge; their status is still spoken."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchGoalTreeLabels",
+      "default": "MonarchGoalTreeLabels()",
+      "description": "Replacements for the status names, the button names, Aligned to, Add key result, the child count and the empty text."
+    },
+    {
+      "name": "canAddChild",
+      "type": "((MonarchGoal, Int) -> Bool)?",
+      "default": "nil",
+      "description": "Which goals get the add-child button, from the goal and its depth (0 at the top). Top-level goals when nil."
+    },
+    {
+      "name": "onAddChild",
+      "type": "(@MainActor (MonarchGoal) -> Void)?",
+      "default": "nil",
+      "description": "Adds an \"Add key result\" button inside the open goals canAddChild allows. Receives the parent; the app adds the goal."
+    },
+    {
+      "name": "actions",
+      "type": "@ViewBuilder (MonarchGoal) -> Actions",
+      "default": "EmptyView",
+      "description": "Controls at the end of each goal's row, such as a Menu with Check in and History."
+    }
+  ],
+  "states": [
+    {
+      "name": "open",
+      "description": "The chevron points down and the children (and the add button) are shown, indented."
+    },
+    {
+      "name": "closed",
+      "description": "The chevron points toward the reading direction and the heading shows the number of children, such as \"3 key results\"."
+    },
+    {
+      "name": "quiet children",
+      "description": "Children on track or not started have no badge."
+    },
+    {
+      "name": "empty",
+      "description": "An empty state, No goals yet."
+    }
+  ],
+  "appearance": "Top-level titles use the strong body role and children the body role. Status badges are subtle MonarchStatusBadge capsules in the neutral, info, warning, danger or success tone with a symbol. The bar uses the Monarch linear progress style (accent fill on the muted track) with the percentage in muted caption text. The same roles adapt to dark and high-contrast themes.",
+  "platformNotes": "The parity map named OutlineGroup; it cannot be controlled from outside, cannot name its disclosure button \"Expand …\" and cannot show a child count or an add button, so the tree draws its own rows with a Button toggle. The progress bar is always in the accent colour because MonarchProgressViewStyle has no tone; the web colours the bar by status. Progress is a fraction from 0 to 1 (the web takes 0 to 100). Titles, facts and alignment are plain strings. Android uses the same name and API shape. Several closures are optional (canAddChild, onAddChild). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is canAddChild.",
+  "accessibility": [
+    "Each goal is one element read as its title, status, owner, facts, alignment and, when closed, its number of children.",
+    "The goal's value is its progress as a percentage in the user's locale.",
+    "The open and close button is a separate element named \"Expand …\" or \"Collapse …\" with a 44-point target.",
+    "The add button is named \"Add key result to …\".",
+    "Status badges carry a symbol and a word, so status does not rely on colour; quiet children still speak their status.",
+    "The chevron's turn follows Reduce Motion; avatars are hidden from VoiceOver because the owner is in the goal's label."
+  ],
+  "edgeCases": [
+    "Progress outside 0 to 1 is clamped; not-a-number and infinity read as 0%.",
+    "Long titles wrap; badges and facts flow onto the next line.",
+    "A goal whose only child is the add button still has a toggle.",
+    "Deep trees indent by half a touch target per level; keep them to three levels on a phone."
+  ],
+  "tests": [
+    "MonarchGoalTreeTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Objectives and key results with actions",
+      "fixture": "goal-tree",
+      "webExample": "Objectives and key results with actions",
+      "template": "MonarchGoalTree(\n    goals,\n    labels: MonarchGoalTreeLabels(addChild: {{addChild}}),\n    onAddChild: { _ in },\n    actions: { goal in\n        MonarchButton(goal.parentID == nil ? {{actions.objective}} : {{actions.keyResult}}, variant: .ghost, size: .sm) {}\n    }\n)",
+      "setupTemplate": "private let goals = [\n    MonarchGoal(id: {{goals.0.id}}, title: {{goals.0.title}}, progress: {{goals.0.progress|double}} / 100, status: {{goals.0.status|case}}, ownerName: {{goals.0.owner.name}}, meta: {{goals.0.meta}}, alignedTo: {{goals.0.alignedTo}}),\n    MonarchGoal(id: {{goals.1.id}}, parentID: {{goals.1.parentId}}, title: {{goals.1.title}}, progress: {{goals.1.progress|double}} / 100, status: {{goals.1.status|case}}, meta: {{goals.1.meta}}),\n    MonarchGoal(id: {{goals.2.id}}, parentID: {{goals.2.parentId}}, title: {{goals.2.title}}, progress: {{goals.2.progress|double}} / 100, status: {{goals.2.status|case}}, meta: {{goals.2.meta}}),\n    MonarchGoal(id: {{goals.3.id}}, parentID: {{goals.3.parentId}}, title: {{goals.3.title}}, progress: {{goals.3.progress|double}} / 100, status: {{goals.3.status|case}}, meta: {{goals.3.meta}}),\n    MonarchGoal(id: {{goals.4.id}}, title: {{goals.4.title}}, progress: {{goals.4.progress|double}} / 100, status: {{goals.4.status|case}}, ownerName: {{goals.4.owner.name}}),\n    MonarchGoal(id: {{goals.5.id}}, parentID: {{goals.5.parentId}}, title: {{goals.5.title}}, progress: {{goals.5.progress|double}} / 100, status: {{goals.5.status|case}}),\n]",
+      "setup": "private let goals = [\n    MonarchGoal(id: \"o1\", title: \"Grow repeat customers\", progress: 62.0 / 100, status: .onTrack, ownerName: \"Sam Lee\", meta: \"weight 40% · due 31 Mar\", alignedTo: \"Customers come back (Company)\"),\n    MonarchGoal(id: \"k1\", parentID: \"o1\", title: \"Launch loyalty emails\", progress: 100.0 / 100, status: .done, meta: \"30%\"),\n    MonarchGoal(id: \"k2\", parentID: \"o1\", title: \"Cut monthly churn to 3%\", progress: 30.0 / 100, status: .atRisk, meta: \"40%\"),\n    MonarchGoal(id: \"k3\", parentID: \"o1\", title: \"Interview 20 customers\", progress: 55.0 / 100, status: .onTrack, meta: \"30%\"),\n    MonarchGoal(id: \"o2\", title: \"Ship the mobile app\", progress: 10.0 / 100, status: .offTrack, ownerName: \"Alex Kim\"),\n    MonarchGoal(id: \"k4\", parentID: \"o2\", title: \"Beta with 50 testers\", progress: 0.0 / 100, status: .notStarted),\n]",
+      "code": "MonarchGoalTree(\n    goals,\n    labels: MonarchGoalTreeLabels(addChild: \"Add key result\"),\n    onAddChild: { _ in },\n    actions: { goal in\n        MonarchButton(goal.parentID == nil ? \"History\" : \"Check in\", variant: .ghost, size: .sm) {}\n    }\n)"
+    }
+  ],
+  "webEquivalent": "GoalTree",
+  "dependsOn": [
+    "tree-view",
+    "progress-bar",
+    "avatar",
+    "status-badge",
+    "dropdown-menu",
+    "empty-state"
+  ],
+  "toneMap": {
+    "BADGE_TONE": {
+      "not-started": "neutral",
+      "on-track": "info",
+      "at-risk": "warning",
+      "off-track": "danger",
+      "done": "success"
+    },
+    "BAR_TONE": {
+      "not-started": "neutral",
+      "on-track": "accent",
+      "at-risk": "warning",
+      "off-track": "danger",
+      "done": "success"
+    }
+  },
+  "icons": {
+    "expand": "ChevronRightGlyph",
+    "addChild": "PlusGlyph"
+  }
+}

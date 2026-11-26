@@ -1,0 +1,79 @@
+{
+  "id": "two-factor-setup",
+  "name": null,
+  "title": "TwoFactorSetup",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "VStack with MonarchStepper over three steps: MonarchButton that opens the otpauth URL with openURL, MonarchCopyField for the setup key and a QR code from Core Image's the CIQRCodeGenerator CIFilter as an Image; MonarchOtpPinInput (the .oneTimeCode content type); MonarchRecoveryCodes",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: turn on two-step verification in three steps: connect an authenticator app, enter a code from it, and save the recovery codes.",
+  "whenToUse": "In account security settings, when a person turns on two-step verification with an authenticator app.",
+  "whenNotToUse": "To ask for a code at sign-in, use MonarchOtpPinInput alone. To re-confirm a signed-in person, use MonarchStepUpAuthDialog. For passkeys, use MonarchPasskeyManager.",
+  "api": [
+    "MonarchStepper(steps, current: step)",
+    "MonarchButton(\"Open in authenticator app\", systemImage: \"key\", variant: .primary, fullWidth: true) { openURL(otpauthURL) }",
+    "MonarchCopyField(\"Setup key\", value: secret, isLabelHidden: true)",
+    "CIFilter(name: \"CIQRCodeGenerator\") → CIContext().createCGImage → Image(decorative:scale:)",
+    "MonarchOtpPinInput(\"6-digit code\", text: $code, error: codeError) { _ in verifyCode() }",
+    "MonarchRecoveryCodes(codes, onAcknowledge: { … })"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "connect",
+      "description": "Open in authenticator app first, the setup key with a copy button, then the QR code for another device, and Next."
+    },
+    {
+      "name": "verify",
+      "description": "A six-cell code field that fills from the keyboard's one-time code suggestion; an incomplete or rejected code shows the field's error."
+    },
+    {
+      "name": "verifying",
+      "description": "Verify shows its spinner."
+    },
+    {
+      "name": "recovery",
+      "description": "The recovery codes with copy, save to file and the \"I have saved my recovery codes\" acknowledgement, which finishes the setup."
+    }
+  ],
+  "appearance": "Existing Monarch components in the theme: the stepper's markers, a primary button, the copy field's monospaced key, the code cells and the recovery codes grid. The QR code stays black on white in every theme so scanners can read it.",
+  "platformNotes": "The web's TwoFactorSetup is a dialog component with its own steps and messages, and the QR code first. On a phone the QR code is secondary, since the camera cannot scan the screen it is on: the otpauth link opens the authenticator app on the same device, and the setup key can be copied. iOS has a first-party QR generator in Core Image (the CIQRCodeGenerator filter), so the recipe draws the code itself, or the app passes an Image from its server. Present the recipe in a sheet with presentationDetents([.large]) when it starts from a settings row. Android composes the same recipe and draws or receives the QR code, because Android has no first-party generator.",
+  "accessibility": [
+    "Each step title has the header trait; the stepper reads each step's position and name, such as \"Step 2 of 3, Enter a code\".",
+    "The QR code is one image element named \"QR code for your authenticator app\"; the setup key beside it gives the same data as text.",
+    "The setup key is a copy field whose button announces the copy.",
+    "The code field is one element named \"6-digit code\" with the code as its value; errors are shown and read in words.",
+    "The recovery codes are a named group with their own acknowledgement toggle."
+  ],
+  "edgeCases": [
+    "Group the setup key in fours for reading, but copy and encode it without spaces in the otpauth link.",
+    "If no authenticator app is installed, opening the otpauth link fails; the setup key still works.",
+    "A rejected code usually means the device clock is wrong; say so in the error."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Full setup (enter 000000 to see a wrong code)",
+      "fixture": "two-factor-setup",
+      "webExample": "Full setup (enter 000000 to see a wrong code)",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    MonarchButton({{trigger}}, variant: .primary) { step = 0 }\n    MonarchStepper(steps, current: step)\n    switch step {\n    case 0:\n        Text(\"Set up two-step verification\")\n            .monarchTextStyle(.title)\n            .accessibilityAddTraits(.isHeader)\n        Text(\"Scan this QR code with an authenticator app, such as 1Password, Google Authenticator or Microsoft Authenticator.\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textMuted)\n        if let otpauth, let qr = qrCode(otpauth.absoluteString) {\n            VStack(spacing: theme.spacing.space2) {\n                MonarchCard {\n                    qr.interpolation(.none)\n                        .resizable()\n                        .scaledToFit()\n                        .frame(width: theme.spacing.space24 * 2)\n                        .accessibilityLabel(\"QR code for your authenticator app\")\n                        .accessibilityAddTraits(.isImage)\n                }\n                .fixedSize()\n                Text(verbatim: {{accountName}})\n                    .monarchTextStyle(.caption)\n                    .foregroundStyle(theme.colors.textMuted)\n            }\n            .frame(maxWidth: .infinity)\n        }\n        Text(\"Can’t scan it? Enter this key in the app instead.\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textMuted)\n        MonarchCopyField(\"Setup key\", value: secret, isLabelHidden: true)\n        HStack(spacing: theme.spacing.space2) {\n            Spacer(minLength: 0)\n            MonarchButton(\"Cancel\", variant: .secondary) { step = 0 }\n            MonarchButton(\"Next\", variant: .primary) { step = 1 }\n        }\n    case 1:\n        MonarchOtpPinInput(\"6-digit code\", text: $code, error: codeError) { _ in verifyCode() }\n        MonarchButton(\"Verify\", variant: .primary, action: verifyCode)\n    default:\n        MonarchRecoveryCodes(codes, onAcknowledge: { step = 0 })\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@Environment(\\.openURL) private var openURL\n@State private var step = 0\n@State private var code = \"\"\n@State private var codeError: String?\nprivate let secret = {{secret}}\nprivate var otpauth: URL? { URL(string: \"otpauth://totp/Example:\" + {{accountName}} + \"?secret=\" + secret + \"&issuer=Example\") }\nprivate let codes: [MonarchRecoveryCode] = [{{recoveryCodes.0}}, {{recoveryCodes.1}}, {{recoveryCodes.2}}, {{recoveryCodes.3}}, {{recoveryCodes.4}}, {{recoveryCodes.5}}]\nprivate let steps = [\n    MonarchStepperStep(id: \"scan\", label: \"Connect your app\"),\n    MonarchStepperStep(id: \"verify\", label: \"Enter a code\"),\n    MonarchStepperStep(id: \"recovery\", label: \"Save recovery codes\"),\n]\n\nprivate func qrCode(_ text: String) -> Image? {\n    guard let filter = CIFilter(name: \"CIQRCodeGenerator\") else { return nil }\n    filter.setValue(Data(text.utf8), forKey: \"inputMessage\")\n    guard let output = filter.outputImage,\n        let image = CIContext().createCGImage(output, from: output.extent)\n    else { return nil }\n    return Image(decorative: image, scale: 1)\n}\n\nprivate func verifyCode() {\n    // The app checks the code with the server, then moves on or sets codeError.\n    codeError = code.count == 6 ? nil : \"Enter all 6 digits.\"\n    if codeError == nil { step = 2 }\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@Environment(\\.openURL) private var openURL\n@State private var step = 0\n@State private var code = \"\"\n@State private var codeError: String?\nprivate let secret = \"JBSWY3DPEHPK3PXPJBSWY3DP\"\nprivate var otpauth: URL? { URL(string: \"otpauth://totp/Example:\" + \"sam@example.com\" + \"?secret=\" + secret + \"&issuer=Example\") }\nprivate let codes: [MonarchRecoveryCode] = [\"k7f2-9qd4\", \"m3x8-2hp6\", \"r5c1-8vt3\", \"w9n4-6bz2\", \"a2j7-4ls9\", \"e6y3-1gu5\"]\nprivate let steps = [\n    MonarchStepperStep(id: \"scan\", label: \"Connect your app\"),\n    MonarchStepperStep(id: \"verify\", label: \"Enter a code\"),\n    MonarchStepperStep(id: \"recovery\", label: \"Save recovery codes\"),\n]\n\nprivate func qrCode(_ text: String) -> Image? {\n    guard let filter = CIFilter(name: \"CIQRCodeGenerator\") else { return nil }\n    filter.setValue(Data(text.utf8), forKey: \"inputMessage\")\n    guard let output = filter.outputImage,\n        let image = CIContext().createCGImage(output, from: output.extent)\n    else { return nil }\n    return Image(decorative: image, scale: 1)\n}\n\nprivate func verifyCode() {\n    // The app checks the code with the server, then moves on or sets codeError.\n    codeError = code.count == 6 ? nil : \"Enter all 6 digits.\"\n    if codeError == nil { step = 2 }\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    MonarchButton(\"Turn on two-step verification\", variant: .primary) { step = 0 }\n    MonarchStepper(steps, current: step)\n    switch step {\n    case 0:\n        Text(\"Set up two-step verification\")\n            .monarchTextStyle(.title)\n            .accessibilityAddTraits(.isHeader)\n        Text(\"Scan this QR code with an authenticator app, such as 1Password, Google Authenticator or Microsoft Authenticator.\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textMuted)\n        if let otpauth, let qr = qrCode(otpauth.absoluteString) {\n            VStack(spacing: theme.spacing.space2) {\n                MonarchCard {\n                    qr.interpolation(.none)\n                        .resizable()\n                        .scaledToFit()\n                        .frame(width: theme.spacing.space24 * 2)\n                        .accessibilityLabel(\"QR code for your authenticator app\")\n                        .accessibilityAddTraits(.isImage)\n                }\n                .fixedSize()\n                Text(verbatim: \"sam@example.com\")\n                    .monarchTextStyle(.caption)\n                    .foregroundStyle(theme.colors.textMuted)\n            }\n            .frame(maxWidth: .infinity)\n        }\n        Text(\"Can’t scan it? Enter this key in the app instead.\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textMuted)\n        MonarchCopyField(\"Setup key\", value: secret, isLabelHidden: true)\n        HStack(spacing: theme.spacing.space2) {\n            Spacer(minLength: 0)\n            MonarchButton(\"Cancel\", variant: .secondary) { step = 0 }\n            MonarchButton(\"Next\", variant: .primary) { step = 1 }\n        }\n    case 1:\n        MonarchOtpPinInput(\"6-digit code\", text: $code, error: codeError) { _ in verifyCode() }\n        MonarchButton(\"Verify\", variant: .primary, action: verifyCode)\n    default:\n        MonarchRecoveryCodes(codes, onAcknowledge: { step = 0 })\n    }\n}"
+    }
+  ],
+  "webEquivalent": "TwoFactorSetup",
+  "dependsOn": [
+    "otp-pin-input",
+    "recovery-codes",
+    "copy-field",
+    "stepper",
+    "button"
+  ]
+}

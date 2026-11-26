@@ -1,0 +1,152 @@
+{
+  "id": "app-access-picker",
+  "name": "MonarchAppAccessPicker",
+  "title": "AppAccessPicker",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of Toggle rows with .toggleStyle(.monarchCheckbox), each with a decorative MonarchAvatar (square), MonarchBadge and caption; MonarchButton for Select all; redacted(reason: .placeholder) while loading. MonarchAppAccessSummary is a flow of MonarchTag",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A checklist of apps to grant a member, with logos, badges, descriptions, Select all and a count, and a one-line summary of granted apps for member lists.",
+  "whenToUse": "When inviting someone to a workspace or editing a member's access to the workspace's apps.",
+  "whenNotToUse": "Not for roles or permissions inside one app; use MonarchRolePicker or MonarchPermissionMatrix. For a plain list of choices without logos, use MonarchCheckboxGroup.",
+  "api": [
+    "init(_ apps: [MonarchAppAccessOption], selection: Binding<Set<String>>, label: String? = nil, helper: String? = nil, isLoading: Bool = false, isLabelHidden: Bool = false, showsBulkActions: Bool = true, labels: MonarchAppAccessPickerLabels = MonarchAppAccessPickerLabels())",
+    "struct MonarchAppAccessOption: Identifiable { init(id: String, name: String, description: String? = nil, logoURL: URL? = nil, badge: String? = nil, isDisabled: Bool = false) }",
+    "struct MonarchAppAccessSummary: View { init(_ apps: [MonarchAppAccessOption], granted: Set<String>, maxVisible: Int = 2, labels: MonarchAppAccessPickerLabels = MonarchAppAccessPickerLabels()) }",
+    "struct MonarchAppAccessPickerLabels { init(label:selectAll:clearAll:count:loading:empty:none:moreCount:more:), every parameter optional }"
+  ],
+  "options": [
+    {
+      "name": "apps",
+      "type": "[MonarchAppAccessOption]",
+      "default": "required",
+      "description": "The apps that can be granted, in order, each with an id, a name, an optional description, logo URL and badge, and whether it is disabled."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<Set<String>>",
+      "default": "required",
+      "description": "The ids of the granted apps."
+    },
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "nil",
+      "description": "The group's label. App access when nil."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Help text under the list, such as when the change takes effect."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows three redacted placeholder rows instead of the apps."
+    },
+    {
+      "name": "isLabelHidden",
+      "type": "Bool",
+      "default": "false",
+      "description": "Hides the label visually; it still names the group for VoiceOver."
+    },
+    {
+      "name": "showsBulkActions",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the count (2 of 5 selected) and the Select all or Clear all button."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAppAccessPickerLabels",
+      "default": "MonarchAppAccessPickerLabels()",
+      "description": "Replacements for every built-in string of the picker and the summary."
+    }
+  ],
+  "states": [
+    {
+      "name": "unselected row",
+      "description": "The row is on the subtle background with no border."
+    },
+    {
+      "name": "selected row",
+      "description": "The row is on the accent subtle background with the accent border, and the checkbox is checked."
+    },
+    {
+      "name": "disabled app",
+      "description": "The app's checkbox and text use the disabled roles; Select all and Clear all leave it as it is."
+    },
+    {
+      "name": "all selected",
+      "description": "The bulk button reads Clear all."
+    },
+    {
+      "name": "loading",
+      "description": "Three redacted rows, read as one Loading apps element; no toolbar."
+    },
+    {
+      "name": "empty",
+      "description": "The muted text No apps are available yet."
+    },
+    {
+      "name": "disabled picker",
+      "description": "With .disabled(true), every checkbox and the bulk button are disabled, for example while saving."
+    },
+    {
+      "name": "summary",
+      "description": "The first names as small tags, then a muted +N; No app access when there are none."
+    }
+  ],
+  "appearance": "Rows have medium rounded corners on the subtle background; a selected row takes the accent subtle background and the accent border, and its checkbox is filled, so selection is not colour alone. Logos are square MonarchAvatars with the app's initial on a colour picked from its id when there is no logo. Names are body strong, descriptions muted captions, badges neutral MonarchBadges. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "The web's fieldset and legend are a container named by the label. The web passes an ordered array of ids; iOS binds a Set, the convention of MonarchCheckboxGroup. The logo is a URL only, because the option is Sendable data. The web's disabled prop is SwiftUI's .disabled(_:). The count is announced after the bulk button rather than as a live region on every change, because each checkbox already announces its own state. Experimental: a domain composite that waits for a Rook iOS app to adopt it.",
+  "accessibility": [
+    "The picker is a container named by its label, also when the label is hidden.",
+    "Each app is a standard toggle (from the Monarch checkbox style) read with its name, badge and description; the logo is hidden.",
+    "Select all and Clear all is a standard button; the new count is announced after it.",
+    "While loading, the placeholder rows are one element read as Loading apps.",
+    "Rows are at least 44 points high; selection is a checked box and a border, not colour alone.",
+    "The summary is one element that reads every name, the hidden ones too, or No app access."
+  ],
+  "edgeCases": [
+    "Ids in the selection that are not in apps are kept and not counted.",
+    "When every app is disabled, the bulk button is disabled.",
+    "Long names wrap and the badge moves to the next line.",
+    "The summary sorts names, shows at least one, and shows the id for an id without a matching app."
+  ],
+  "tests": [
+    "MonarchAppAccessPickerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Invite with app access",
+      "fixture": "app-access-picker",
+      "webExample": "Invite with app access",
+      "template": "MonarchAppAccessPicker(\n    [\n        MonarchAppAccessOption(id: {{apps.0.id}}, name: {{apps.0.name}}, description: {{apps.0.description}}),\n        MonarchAppAccessOption(id: {{apps.1.id}}, name: {{apps.1.name}}, description: {{apps.1.description}}),\n        MonarchAppAccessOption(id: {{apps.2.id}}, name: {{apps.2.name}}, description: {{apps.2.description}}),\n        MonarchAppAccessOption(id: {{apps.3.id}}, name: {{apps.3.name}}, description: {{apps.3.description}}, badge: {{apps.3.badge}}),\n    ],\n    selection: $granted,\n    helper: {{description}}\n)",
+      "setupTemplate": "@State private var granted: Set<String> = [{{selected.0}}]",
+      "setup": "@State private var granted: Set<String> = [\"notes\"]",
+      "code": "MonarchAppAccessPicker(\n    [\n        MonarchAppAccessOption(id: \"notes\", name: \"Notes\", description: \"Shared notes and documents\"),\n        MonarchAppAccessOption(id: \"planner\", name: \"Planner\", description: \"Projects, tasks and timelines\"),\n        MonarchAppAccessOption(id: \"calendar\", name: \"Calendar\", description: \"Team calendars and booking pages\"),\n        MonarchAppAccessOption(id: \"helpdesk\", name: \"Helpdesk\", description: \"Customer tickets\", badge: \"Beta\"),\n    ],\n    selection: $granted,\n    helper: \"Joining a workspace grants no app access on its own. These apps are applied when the invitation is accepted.\"\n)"
+    },
+    {
+      "title": "A member's apps in one line",
+      "code": "MonarchAppAccessSummary(\n    [\n        MonarchAppAccessOption(id: \"mail\", name: \"Mail\"),\n        MonarchAppAccessOption(id: \"docs\", name: \"Docs\"),\n        MonarchAppAccessOption(id: \"notes\", name: \"Notes\"),\n    ],\n    granted: [\"mail\", \"docs\", \"notes\"]\n)"
+    }
+  ],
+  "webEquivalent": "AppAccessPicker",
+  "dependsOn": [
+    "checkbox-group",
+    "checkbox",
+    "badge",
+    "avatar",
+    "tag",
+    "button",
+    "skeleton"
+  ]
+}

@@ -1,0 +1,229 @@
+{
+  "id": "passkey-manager",
+  "name": "MonarchPasskeyManager",
+  "title": "PasskeyManager",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchCard with a androidx.compose.foundation.layout.Column of rows (androidx.compose.material3.Text, MonarchBadge, android.text.format.DateUtils.getRelativeTimeSpanString, MonarchButton), androidx.compose.material3.AlertDialog with a MonarchTextField to rename and with a danger MonarchButton to remove, MonarchInlineNotice, MonarchLoadingState, MonarchEmptyState and MonarchErrorState",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A person's passkeys, with when each was added and last used and a Synced badge, and Add a passkey, Rename and Remove behind a confirmation.",
+  "whenToUse": "On an account's security screen where people manage the passkeys they sign in with.",
+  "whenNotToUse": "To sign in with a passkey, call CredentialManager.getCredential from the sign-in screen. For recovery codes, use MonarchRecoveryCodes. For devices signed in to the account, use MonarchDeviceList.",
+  "api": [
+    "@Composable fun MonarchPasskeyManager(passkeys: List<MonarchPasskey>, modifier: Modifier = Modifier, title: String? = null, description: String? = null, state: MonarchPasskeyManagerState = MonarchPasskeyManagerState.Ready, retrying: Boolean = false, supported: Boolean = true, lastSignInMethod: Boolean = false, now: Long? = null, onRetry: (() -> Unit)? = null, onAdd: (suspend () -> Boolean)? = null, onRename: (suspend (String, String) -> Unit)? = null, onRemove: (suspend (String) -> Unit)? = null, passkeyIcon: (@Composable () -> Unit)? = null, labels: MonarchPasskeyManagerLabels = MonarchPasskeyManagerLabels())",
+    "class MonarchPasskey(id: String, name: String, createdMillis: Long? = null, lastUsedMillis: Long? = null, synced: Boolean = false, detail: String? = null)",
+    "enum class MonarchPasskeyManagerState { Ready, Loading, Failed }",
+    "class MonarchPasskeyManagerLabels(listLabel: String? = null, add: String? = null, rename: String? = null, renameLabel: ((String) -> String)? = null, renameTitle: String? = null, nameField: String? = null, save: String? = null, remove: String? = null, removeLabel: ((String) -> String)? = null, created: String? = null, lastUsed: String? = null, neverUsed: String? = null, synced: String? = null, confirmTitle: ((String) -> String)? = null, confirmMessage: String? = null, lastMethodWarning: String? = null, confirmRemove: String? = null, cancel: String? = null, unsupported: String? = null, cancelled: String? = null, addFailed: String? = null, added: String? = null, renamed: ((String) -> String)? = null, removed: ((String) -> String)? = null, renameFailed: String? = null, removeFailed: ((String) -> String)? = null, loading: String? = null, emptyTitle: String? = null, emptyMessage: String? = null, errorTitle: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "passkeys",
+      "type": "List<MonarchPasskey>",
+      "default": "required",
+      "description": "The person's passkeys, shown in the order given."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the card."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "null",
+      "description": "Replaces the built-in title \"Passkeys\"."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "null",
+      "description": "Replaces the line under the title."
+    },
+    {
+      "name": "state",
+      "type": "MonarchPasskeyManagerState",
+      "default": "MonarchPasskeyManagerState.Ready",
+      "description": "Ready, Loading or Failed. A ready, empty list shows the empty state."
+    },
+    {
+      "name": "retrying",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows the retry button busy in the failed state."
+    },
+    {
+      "name": "supported",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether this device can create passkeys. When false, Add is disabled and a warning notice says why. Pass false when the app knows passkeys are unavailable, for example when no credential provider is set up."
+    },
+    {
+      "name": "lastSignInMethod",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Passkeys are the person's only way to sign in, so removing the last one adds a warning to the confirmation."
+    },
+    {
+      "name": "now",
+      "type": "Long?",
+      "default": "null",
+      "description": "The reference time for relative times, in epoch milliseconds. Without it they follow the clock, refreshed every minute."
+    },
+    {
+      "name": "onRetry",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Retries loading. Shows Try again in the failed state."
+    },
+    {
+      "name": "onAdd",
+      "type": "(suspend () -> Boolean)?",
+      "default": "null",
+      "description": "Runs the app's registration with androidx.credentials CredentialManager.createCredential and the server, and adds the passkey to passkeys. Shows Add a passkey. Return false when the person cancelled (CreateCredentialCancellationException) for a neutral note; throwing shows a failure."
+    },
+    {
+      "name": "onRename",
+      "type": "(suspend (String, String) -> Unit)?",
+      "default": "null",
+      "description": "Saves a new name, given the id and the trimmed name. Shows Rename. Throwing shows a failure notice."
+    },
+    {
+      "name": "onRemove",
+      "type": "(suspend (String) -> Unit)?",
+      "default": "null",
+      "description": "Removes a passkey after the confirmation, given its id. Shows Remove. Throwing shows a failure notice."
+    },
+    {
+      "name": "passkeyIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "An icon at the start of each row, such as a key, hidden from TalkBack. Monarch bundles no icons."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchPasskeyManagerLabels",
+      "default": "MonarchPasskeyManagerLabels()",
+      "description": "Replacements for every other built-in string."
+    }
+  ],
+  "states": [
+    {
+      "name": "list",
+      "description": "One row per passkey with its actions under it, separated by subtle dividers."
+    },
+    {
+      "name": "synced",
+      "description": "An info Synced badge after the name."
+    },
+    {
+      "name": "never used",
+      "description": "\"Never used\" instead of the last-used time."
+    },
+    {
+      "name": "adding",
+      "description": "Add a passkey shows its progress indicator."
+    },
+    {
+      "name": "cancelled",
+      "description": "A neutral inline notice: \"Passkey setup was cancelled. Nothing was changed.\""
+    },
+    {
+      "name": "failed action",
+      "description": "A danger inline notice under the header, announced."
+    },
+    {
+      "name": "busy row",
+      "description": "While a rename or removal runs, the row's Remove shows its progress indicator and the other row actions are disabled."
+    },
+    {
+      "name": "unsupported",
+      "description": "Add is disabled and a warning notice says the device cannot create passkeys."
+    },
+    {
+      "name": "loading",
+      "description": "Two skeleton rows from MonarchLoadingState, announced as \"Loading passkeys\"."
+    },
+    {
+      "name": "empty",
+      "description": "A small MonarchEmptyState; Add stays in the header."
+    },
+    {
+      "name": "failed",
+      "description": "A small MonarchErrorState with Try again when onRetry is given."
+    }
+  ],
+  "appearance": "A MonarchCard with the section header and a small primary Add a passkey button, rows separated by subtle dividers, names in the strong body style, the detail and times in the caption style in the muted color, an info Synced badge, and small ghost Rename and secondary Remove buttons. All are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "Monarch does not create passkeys: the app runs androidx.credentials CredentialManager.createCredential inside onAdd, because the relying party and the server challenge are the app's, and androidx.credentials is not a Monarch dependency. Because a cancelled system sheet is an exception of that library (CreateCredentialCancellationException), onAdd returns false for a cancellation instead of throwing, where iOS recognises the system's cancellation error. The web detects support from window.PublicKeyCredential; on Android the app passes supported. The web renames in place; Android asks for the name in a Material 3 AlertDialog with a MonarchTextField (the prompt dialog) whose Save is disabled while the name is blank or unchanged, as on iOS. The removal confirmation is an AlertDialog that closes when confirmed, so the pending state moves to the row and a failure appears as a notice in the card. The parity map names a LazyColumn; the rows are a plain Column inside the card because the list sits inside a scrolling settings screen. The web's headingLevel and locale props have no equivalent (the title is a heading; DateUtils uses the device's locale).",
+  "accessibility": [
+    "The title is a heading, from MonarchSectionHeader; the list is a traversal group named \"Your passkeys\".",
+    "Each passkey is one element whose content description is its name and whose state is Synced, the detail and the times, built by a tested pure function.",
+    "The passkey icon is decorative and hidden.",
+    "Rename and Remove are separate MonarchButtons with 48dp touch targets, named \"Rename Pixel\" and \"Remove Pixel\".",
+    "Rename and the removal confirmation are Material 3 alert dialogs; the removal confirm button is the danger variant.",
+    "Adding, renaming, removing, cancelling and every failure are announced through a polite live region.",
+    "The unsupported state is said in words in a warning notice, not only by the disabled button."
+  ],
+  "edgeCases": [
+    "The app updates passkeys after onAdd, onRename and onRemove return; the list does not change itself.",
+    "A name made only of spaces cannot be saved; the saved name is trimmed.",
+    "The last-method warning appears only when lastSignInMethod is true and exactly one passkey is left.",
+    "Only one rename or removal runs at a time."
+  ],
+  "tests": [
+    "MonarchPasskeyManagerTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Add, rename and remove",
+      "fixture": "passkey-manager",
+      "webExample": "Add, rename and remove",
+      "template": "MonarchPasskeyManager(\n    passkeys = passkeys,\n    title = {{title}},\n    passkeyIcon = { MonarchIcon(SampleIcons.Key, contentDescription = null) },\n    description = {{description}},\n    now = {{now|millis}},\n    onAdd = {\n        // The app calls CredentialManager.createCredential with its server's challenge here,\n        // returns false on CreateCredentialCancellationException, and reloads the list.\n        true\n    },\n    onRemove = { id -> passkeys = passkeys.filterNot { it.id == id } },\n)",
+      "setupTemplate": "var passkeys by remember {\n    mutableStateOf(\n        listOf(\n            MonarchPasskey(\n                id = {{passkeys.0.id}},\n                name = {{passkeys.0.name}},\n                createdMillis = {{passkeys.0.createdAt|millis}},\n                lastUsedMillis = {{passkeys.0.lastUsedAt|millis}},\n                synced = {{passkeys.0.synced}},\n            ),\n            MonarchPasskey(\n                id = {{passkeys.1.id}},\n                name = {{passkeys.1.name}},\n                createdMillis = {{passkeys.1.createdAt|millis}},\n            ),\n        ),\n    )\n}",
+      "setup": "var passkeys by remember {\n    mutableStateOf(\n        listOf(\n            MonarchPasskey(\n                id = \"pk-1\",\n                name = \"Work laptop\",\n                createdMillis = 1_767_268_800_000L,\n                lastUsedMillis = 1_772_444_160_000L,\n                synced = true,\n            ),\n            MonarchPasskey(\n                id = \"pk-2\",\n                name = \"Security key\",\n                createdMillis = 1_771_588_800_000L,\n            ),\n        ),\n    )\n}",
+      "code": "MonarchPasskeyManager(\n    passkeys = passkeys,\n    title = \"Passkeys\",\n    passkeyIcon = { MonarchIcon(SampleIcons.Key, contentDescription = null) },\n    description = \"Sign in with your fingerprint, face or screen lock instead of a password. Passkeys can’t be phished or reused.\",\n    now = 1_772_452_800_000L,\n    onAdd = {\n        // The app calls CredentialManager.createCredential with its server's challenge here,\n        // returns false on CreateCredentialCancellationException, and reloads the list.\n        true\n    },\n    onRemove = { id -> passkeys = passkeys.filterNot { it.id == id } },\n)",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.foundation.icon.MonarchIcon"
+      ]
+    },
+    {
+      "title": "A device without passkey support",
+      "code": "MonarchPasskeyManager(passkeys = emptyList(), supported = false, onAdd = { true })"
+    }
+  ],
+  "webEquivalent": "PasskeyManager",
+  "dependsOn": [
+    "button",
+    "confirm-dialog",
+    "prompt-dialog",
+    "relative-time",
+    "badge",
+    "card",
+    "section-header",
+    "inline-notice",
+    "text-field",
+    "empty-state",
+    "error-state",
+    "loading-state"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-text",
+      "platform": "android",
+      "reason": "The web label of this button joins its visible text and hidden text with no separator; on Android the button is named with a sentence for TalkBack and its visible text is shown as it is.",
+      "convention": "a control is named in a sentence, not by concatenated visible text (Material accessibility)",
+      "paths": [
+        "Name of Work laptop: Work laptop",
+        "Name of Security key: Security key"
+      ]
+    }
+  ]
+}

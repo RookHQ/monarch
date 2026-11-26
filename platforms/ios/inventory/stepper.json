@@ -1,0 +1,164 @@
+{
+  "id": "stepper",
+  "name": "MonarchStepper",
+  "title": "Stepper",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "HStack and VStack of step markers, ViewThatFits for the compact form, Button for reached steps, ProgressView with MonarchProgressViewStyle",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Multi-step progress for wizards, onboarding and setup flows: a row or a column of numbered steps, or a compact \"Step 2 of 5\" with a progress bar.",
+  "whenToUse": "At the top of a multi-step flow (horizontal, which becomes compact on a phone) or beside it on a wide screen (vertical). Pass onSelect to let people go back to steps they have reached.",
+  "whenNotToUse": "Not for the progress of a task that runs by itself; use ProgressView with the Monarch progress style. Not for switching between unrelated views; use a TabView or a Picker. It is not the system Stepper, which changes a number.",
+  "api": [
+    "init(_ steps: [MonarchStepperStep], current: Int, furthest: Int? = nil, orientation: MonarchStepperOrientation = .horizontal, compact: MonarchStepperCompactMode = .automatic, isFinished: Bool = false, isBusy: Bool = false, labels: MonarchStepperLabels = MonarchStepperLabels(), onSelect: (@MainActor (MonarchStepperStep, Int) -> Void)? = nil)",
+    "init(_ steps: [MonarchStepperStep], currentID: String, furthestID: String? = nil, orientation: MonarchStepperOrientation = .horizontal, compact: MonarchStepperCompactMode = .automatic, isFinished: Bool = false, isBusy: Bool = false, labels: MonarchStepperLabels = MonarchStepperLabels(), onSelect: (@MainActor (MonarchStepperStep, Int) -> Void)? = nil)",
+    "struct MonarchStepperStep { init(id: String, label: String, description: String? = nil, isOptional: Bool = false, isComplete: Bool = false, hasError: Bool = false, isDisabled: Bool = false) }",
+    "enum MonarchStepperOrientation { case horizontal, vertical }",
+    "enum MonarchStepperCompactMode { case automatic, always, never }",
+    "struct MonarchStepperLabels { init(progress: String? = nil, stepOf: (@Sendable (Int, Int) -> String)? = nil, complete: String? = nil, error: String? = nil, current: String? = nil, optional: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "steps",
+      "type": "[MonarchStepperStep]",
+      "default": "required",
+      "description": "The steps, in order. Each has an id, a label, and optionally a description and the flags isOptional, isComplete, hasError and isDisabled."
+    },
+    {
+      "name": "current / currentID",
+      "type": "Int / String",
+      "default": "required",
+      "description": "The current step, by position from 0 or by identifier. Steps before it are complete. A position outside the steps is moved inside; an unknown identifier selects the first step."
+    },
+    {
+      "name": "furthest / furthestID",
+      "type": "Int? / String?",
+      "default": "nil",
+      "description": "The furthest step the user has reached, when they have gone back. Steps up to it stay selectable. By default the current step."
+    },
+    {
+      "name": "orientation",
+      "type": "MonarchStepperOrientation",
+      "default": ".horizontal",
+      "description": "horizontal or vertical."
+    },
+    {
+      "name": "compact",
+      "type": "MonarchStepperCompactMode",
+      "default": ".automatic",
+      "description": "automatic shows the compact form when a horizontal row does not fit the width; always and never fix the form."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchStepperLabels",
+      "default": "MonarchStepperLabels()",
+      "description": "Replacements for the built-in strings: the name \"Progress\", \"Step 2 of 5\", \"completed\", \"needs attention\", \"current step\" and \"Optional\"."
+    },
+    {
+      "name": "onSelect",
+      "type": "(@MainActor (MonarchStepperStep, Int) -> Void)?",
+      "default": "nil",
+      "description": "Makes reached steps (complete ones and any up to furthest, except the current and disabled ones) buttons. Receives the step and its position."
+    },
+    {
+      "name": "isFinished",
+      "type": "Bool",
+      "default": "false",
+      "description": "Every step is done: all markers show the check mark (a step with an error keeps its own), no step is current, and the compact form reads the last step as completed with a full bar."
+    },
+    {
+      "name": "isBusy",
+      "type": "Bool",
+      "default": "false",
+      "description": "The current step is working, for example while it saves: its marker shows a progress indicator in place of its number and VoiceOver adds \"in progress\" (labels.busy). Ignored when isFinished."
+    }
+  ],
+  "states": [
+    {
+      "name": "complete",
+      "description": "A filled accent marker with a checkmark; the line after it is in the accent colour."
+    },
+    {
+      "name": "current",
+      "description": "An accent-bordered marker with the number and a tinted ring; the name is semibold."
+    },
+    {
+      "name": "upcoming",
+      "description": "A bordered marker with the number; the name is muted."
+    },
+    {
+      "name": "error",
+      "description": "A danger-tinted marker with an exclamation mark; the name is in the danger colour. Takes precedence over every other state."
+    },
+    {
+      "name": "disabled",
+      "description": "With onSelect, a step marked isDisabled is not a button and its name is in the disabled text colour."
+    },
+    {
+      "name": "pressed",
+      "description": "A selectable step shows the muted background colour while pressed."
+    },
+    {
+      "name": "compact",
+      "description": "\"Step 2 of 5\", the name of the current step and a progress bar filled up to the current step."
+    }
+  ],
+  "appearance": "Markers are circles sized from the control token and scaled with Dynamic Type. The accent roles of the theme colour the current and finished steps, the danger roles a step with an error, the strong border and muted text an upcoming step. The lines between steps use the default border colour, or the accent after a finished step. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web Stepper switches to the compact form below a width of 36rem; iOS uses ViewThatFits, so the row is shown whenever the names fit on one line and the compact form otherwise, which also covers large text sizes. The web step status override ('complete' or 'error') is the two flags isComplete and hasError. The web step label is any node; here it is a String. Hover styles do not exist; a pressed state replaces them. MonarchTone has no accent case, so the accent colour roles are used directly. Android has the same component.",
+  "accessibility": [
+    "The list is an accessibility container named \"Progress\" (labels.progress).",
+    "Each step is one element. Its label is the position and the name (\"Step 2 of 5, Address\"); its value is the state (\"completed\", \"needs attention\" or \"current step\"), then \"Optional\" and the description.",
+    "A selectable step is a Button, so it has the button trait and is activated by a double tap; its touch target is at least 44 points high.",
+    "State is shown by a checkmark, an exclamation mark or the number, and by the weight of the name, not by colour alone. Markers and lines are hidden from VoiceOver.",
+    "The compact form is one element named \"Progress\" whose value is the position and name of the current step; the bar is not read separately.",
+    "Text scales with Dynamic Type and wraps; the markers scale with it. Marker colour changes are animated and the animation is skipped with Reduce Motion.",
+    "A selectable step shows the focus ring when focused from a hardware keyboard.",
+    "While busy, the current step's value adds \"in progress\"; when finished, the compact form reads the last step as completed."
+  ],
+  "edgeCases": [
+    "No steps draws nothing.",
+    "A horizontal stepper with compact never squeezes the names, which wrap; prefer automatic on a phone.",
+    "With automatic, a long description makes the row too wide and the compact form is shown.",
+    "A vertical stepper is never compact unless compact is always.",
+    "furthest before current is ignored: the current step counts as reached.",
+    "A number of more than two digits shrinks to stay inside the marker.",
+    "Step identifiers must be unique; they identify the rows."
+  ],
+  "tests": [
+    "MonarchStepperTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Wizard with clickable completed steps",
+      "fixture": "stepper",
+      "webExample": "Wizard with clickable completed steps",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    MonarchStepper(\n        [\n            MonarchStepperStep(id: {{steps.0.id}}, label: {{steps.0.label}}),\n            MonarchStepperStep(id: {{steps.1.id}}, label: {{steps.1.label}}),\n            MonarchStepperStep(id: {{steps.2.id}}, label: {{steps.2.label}}, isOptional: {{steps.2.optional}}),\n            MonarchStepperStep(id: {{steps.3.id}}, label: {{steps.3.label}}),\n        ],\n        current: current,\n        furthest: furthest\n    ) { _, index in\n        current = index\n        furthest = max(furthest, index)\n    }\n    HStack(spacing: MonarchTokens.Space.space2) {\n        MonarchButton({{back}}, variant: .secondary) {\n            current -= 1\n        }\n        .disabled(current == 0)\n        MonarchButton({{continue}}, variant: .primary) {\n            current += 1\n            furthest = max(furthest, current)\n        }\n        .disabled(current == 3)\n    }\n}",
+      "setupTemplate": "@State private var current = {{current}}\n@State private var furthest = {{furthest}}",
+      "setup": "@State private var current = 1\n@State private var furthest = 1",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    MonarchStepper(\n        [\n            MonarchStepperStep(id: \"basics\", label: \"Basics\"),\n            MonarchStepperStep(id: \"access\", label: \"Access\"),\n            MonarchStepperStep(id: \"branding\", label: \"Branding\", isOptional: true),\n            MonarchStepperStep(id: \"review\", label: \"Review\"),\n        ],\n        current: current,\n        furthest: furthest\n    ) { _, index in\n        current = index\n        furthest = max(furthest, index)\n    }\n    HStack(spacing: MonarchTokens.Space.space2) {\n        MonarchButton(\"Back\", variant: .secondary) {\n            current -= 1\n        }\n        .disabled(current == 0)\n        MonarchButton(\"Continue\", variant: .primary) {\n            current += 1\n            furthest = max(furthest, current)\n        }\n        .disabled(current == 3)\n    }\n}"
+    },
+    {
+      "title": "A vertical stepper whose reached steps can be selected",
+      "setup": "@State private var current = 2\nprivate let steps = [\n    MonarchStepperStep(id: \"plan\", label: \"Plan\"),\n    MonarchStepperStep(id: \"team\", label: \"Team\", description: \"Invite the people you work with\", isOptional: true),\n    MonarchStepperStep(id: \"billing\", label: \"Billing\"),\n    MonarchStepperStep(id: \"review\", label: \"Review\"),\n]",
+      "code": "MonarchStepper(steps, current: current, furthest: 2, orientation: .vertical) { _, index in\n    current = index\n}"
+    },
+    {
+      "title": "Always compact, with a step that needs attention",
+      "setup": "private let steps = [\n    MonarchStepperStep(id: \"account\", label: \"Account\", hasError: true),\n    MonarchStepperStep(id: \"billing\", label: \"Billing\"),\n]",
+      "code": "MonarchStepper(steps, currentID: \"billing\", compact: .always)"
+    }
+  ],
+  "webEquivalent": "Stepper",
+  "dependsOn": [
+    "text",
+    "icon",
+    "progress-bar"
+  ],
+  "parityExceptions": []
+}

@@ -1,0 +1,128 @@
+{
+  "id": "mini-month",
+  "name": "MonarchMiniMonth",
+  "title": "MiniMonth",
+  "family": "scheduling",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "A month grid drawn by Monarch (LazyVGrid with the system calendar and locale), with an earliest and latest day, unavailable days and up to three dots under days with events",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A month calendar for choosing a day: the system calendar view with an earliest and latest day, days the app marks unavailable, and up to three dots under days that have events.",
+  "whenToUse": "For a calendar that shows which days have events or are available: a sidebar calendar beside an agenda, a booking day picker with unavailable days.",
+  "whenNotToUse": "Not for a plain date field in a form: use DatePicker, which is compact and needs no Monarch code. Not for choosing a range of days or several days; this component selects one day.",
+  "api": [
+    "init(selection: Binding<Date?>, visibleMonth: Binding<Date>? = nil, minimumDate: Date? = nil, maximumDate: Date? = nil, today: Date? = nil, isDateDisabled: (@MainActor (Date) -> Bool)? = nil, dayInfo: (@MainActor (Date) -> MonarchMiniMonthDayInfo?)? = nil)",
+    "MonarchMiniMonthDayInfo.init(dotCount: Int, description: String? = nil)",
+    "MonarchMiniMonthDayInfo.init(dots: [MonarchTone], description: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "selection",
+      "type": "Binding<Date?>",
+      "default": "required",
+      "description": "The selected day: the first moment of that day in the environment's calendar, or nil for none."
+    },
+    {
+      "name": "visibleMonth",
+      "type": "Binding<Date>?",
+      "default": "nil",
+      "description": "Any date in the month on screen. The calendar writes the first day of the month the person moves to. Without it the calendar starts on the month of the selection, or today."
+    },
+    {
+      "name": "minimumDate",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The earliest day that can be chosen. Earlier months cannot be reached."
+    },
+    {
+      "name": "maximumDate",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The latest day that can be chosen. Later months cannot be reached."
+    },
+    {
+      "name": "today",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The day drawn as today. The clock by default; fixes it for tests and previews."
+    },
+    {
+      "name": "isDateDisabled",
+      "type": "(@MainActor (Date) -> Bool)?",
+      "default": "nil",
+      "description": "Returns true for a day that cannot be chosen. Called for every visible day."
+    },
+    {
+      "name": "dayInfo",
+      "type": "(@MainActor (Date) -> MonarchMiniMonthDayInfo?)?",
+      "default": "nil",
+      "description": "The dots and their description for a day. Dots are accent-coloured (dotCount) or toned (dots); at most three are drawn."
+    }
+  ],
+  "states": [
+    {
+      "name": "selected",
+      "description": "The system draws the day in a filled circle in the theme's accent."
+    },
+    {
+      "name": "today",
+      "description": "Today's number is outlined, as on the web; `today` fixes which day it is."
+    },
+    {
+      "name": "unavailable",
+      "description": "Days outside the bounds and days the app disables are dimmed by the system and cannot be chosen."
+    },
+    {
+      "name": "with dots",
+      "description": "Up to three 6-point dots under the day number: the accent, or the solid colour of a tone; the neutral tone is the subtle text colour."
+    },
+    {
+      "name": "month and year picker",
+      "description": "Tapping the month title opens the system's wheel picker for month and year."
+    }
+  ],
+  "appearance": "The grid, the weekday names, the month title and its arrows are drawn by the system and follow light, dark and Increase Contrast. Monarch sets the tint to the accent role and draws the dots from the accent and tone roles of the theme. Day numbers use system label colours, not Monarch text roles.",
+  "platformNotes": "The grid is drawn by Monarch, as the web draws it. Week numbers are not offered. Also not offered: a highlighted range and range preview (it selects single or several separate days), several months side by side, hiding the days of neighbouring months, a fixed number of week rows, and a footer (put a button under the calendar). The month title opens a month list, as the web's month and year pickers do. The locale and first weekday come from the environment's calendar and locale rather than props. Tapping the selected day clears the selection, which the web does not do. The web's accent dot tone is the dotCount initialiser, because MonarchTone has no accent case. On macOS, which is only a build convenience and has no UICalendarView, the host build shows the graphical DatePicker with the bounds and without disabled days and dots. Android builds its own grid under the same name. Several closures are optional (isDateDisabled, dayInfo). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is isDateDisabled.",
+  "accessibility": [
+    "VoiceOver labels, traits and gestures of the days, the month title and the arrows are the system calendar view's.",
+    "The dots view of a day carries the app's description as its accessibility label. Whether VoiceOver reads it with the day was not verified on a device, so also show the selected day's events as text under the calendar.",
+    "The meaning of a dot is never colour alone only if the app gives a description.",
+    "Dynamic Type and right-to-left layout are handled by the system view. Changing the visible month from the binding animates unless Reduce Motion is on.",
+    "Each day is a system cell; the grid takes the full width it is offered."
+  ],
+  "edgeCases": [
+    "A selection outside the bounds is not shown as selected; the binding is left as it is.",
+    "A latest day before the earliest day leaves only the earliest day available.",
+    "A visibleMonth outside the bounds shows the nearest month inside them.",
+    "isDateDisabled and dayInfo are asked again for the visible month on every SwiftUI update, so they must be cheap and must not change state.",
+    "The time zone is the environment calendar's: pass a calendar with the workspace's time zone to show workspace days.",
+    "Experimental: the UICalendarView wrapper has been compiled and laid out but not yet seen drawn on a simulator or device; dot placement, tint, dark appearance, Dynamic Type and VoiceOver reading of the dots are unverified. It becomes available after the simulator run and a VoiceOver check."
+  ],
+  "tests": [
+    "MonarchMiniMonthTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Sidebar calendar with events",
+      "fixture": "mini-month",
+      "webExample": "Sidebar calendar with events",
+      "template": "MonarchMiniMonth(\n    selection: $day,\n    visibleMonth: $month,\n    today: {{today|date}},\n    dayInfo: { date in\n        if calendar.isDate(date, inSameDayAs: {{events.0.date|date}}) {\n            return MonarchMiniMonthDayInfo(dots: [{{events.0.dots.0|tone}}], description: {{events.0.description}})\n        }\n        if calendar.isDate(date, inSameDayAs: {{events.1.date|date}}) {\n            return MonarchMiniMonthDayInfo(dots: [{{events.1.dots.0|tone}}, {{events.1.dots.1|tone}}], description: {{events.1.description}})\n        }\n        if calendar.isDate(date, inSameDayAs: {{events.2.date|date}}) {\n            return MonarchMiniMonthDayInfo(dots: [{{events.2.dots.0|tone}}], description: {{events.2.description}})\n        }\n        if calendar.isDate(date, inSameDayAs: {{events.3.date|date}}) {\n            return MonarchMiniMonthDayInfo(dots: [{{events.3.dots.0|tone}}, {{events.3.dots.1|tone}}, {{events.3.dots.2|tone}}], description: {{events.3.description}})\n        }\n        return nil\n    }\n)\n.environment(\\.calendar, calendar)\n.environment(\\.locale, Locale(identifier: {{locale}}))",
+      "setupTemplate": "@State private var day: Date? = {{value|date}}\n@State private var month = {{value|date}}\nprivate var calendar: Calendar {\n    var calendar = Calendar(identifier: .gregorian)\n    calendar.locale = Locale(identifier: {{locale}})\n    calendar.timeZone = TimeZone(identifier: \"UTC\") ?? .gmt\n    return calendar\n}",
+      "setup": "@State private var day: Date? = Date(timeIntervalSince1970: 1_794_268_800)\n@State private var month = Date(timeIntervalSince1970: 1_794_268_800)\nprivate var calendar: Calendar {\n    var calendar = Calendar(identifier: .gregorian)\n    calendar.locale = Locale(identifier: \"en-GB\")\n    calendar.timeZone = TimeZone(identifier: \"UTC\") ?? .gmt\n    return calendar\n}",
+      "code": "MonarchMiniMonth(\n    selection: $day,\n    visibleMonth: $month,\n    today: Date(timeIntervalSince1970: 1_793_750_400),\n    dayInfo: { date in\n        if calendar.isDate(date, inSameDayAs: Date(timeIntervalSince1970: 1_793_836_800)) {\n            return MonarchMiniMonthDayInfo(dots: [.accent], description: \"1 event\")\n        }\n        if calendar.isDate(date, inSameDayAs: Date(timeIntervalSince1970: 1_794_268_800)) {\n            return MonarchMiniMonthDayInfo(dots: [.accent, .info], description: \"2 events\")\n        }\n        if calendar.isDate(date, inSameDayAs: Date(timeIntervalSince1970: 1_794_960_000)) {\n            return MonarchMiniMonthDayInfo(dots: [.warning], description: \"Deadline\")\n        }\n        if calendar.isDate(date, inSameDayAs: Date(timeIntervalSince1970: 1_795_478_400)) {\n            return MonarchMiniMonthDayInfo(dots: [.accent, .success, .danger], description: \"3 events\")\n        }\n        return nil\n    }\n)\n.environment(\\.calendar, calendar)\n.environment(\\.locale, Locale(identifier: \"en-GB\"))"
+    },
+    {
+      "title": "A booking day in the next 30 days, weekends unavailable",
+      "setup": "@Environment(\\.calendar) private var calendar\n@State private var day: Date?",
+      "code": "MonarchMiniMonth(\n    selection: $day,\n    minimumDate: .now,\n    maximumDate: calendar.date(byAdding: .day, value: 30, to: .now),\n    isDateDisabled: { date in calendar.isDateInWeekend(date) },\n    dayInfo: { date in\n        calendar.isDateInWeekend(date)\n            ? nil\n            : MonarchMiniMonthDayInfo(dots: [.success], description: \"Available\")\n    }\n)"
+    }
+  ],
+  "webEquivalent": "MiniMonth",
+  "dependsOn": [],
+  "parityExceptions": []
+}

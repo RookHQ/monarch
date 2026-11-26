@@ -1,0 +1,70 @@
+{
+  "id": "sticky",
+  "name": null,
+  "title": "Sticky",
+  "family": "layout",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "LazyVStack(pinnedViews: [.sectionHeaders]) for headers that pin while scrolling; safeAreaInset(edge:content:) for a bar fixed to an edge",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Pinned section headers and safe-area insets, both standard SwiftUI. Monarch ships nothing.",
+  "whenToUse": "Use pinnedViews when a section header should stay at the top while its section scrolls under it. Use safeAreaInset for a filter bar or an action bar that is always at the top or bottom of a scroll view; the content is inset so nothing is hidden behind it.",
+  "whenNotToUse": "For the title and actions of a screen use the navigation bar and toolbar, which the system already keeps in place. In a List, section headers pin on their own in the plain style.",
+  "api": [
+    "LazyVStack(alignment: HorizontalAlignment = .center, spacing: CGFloat? = nil, pinnedViews: PinnedScrollableViews = .init(), content: () -> Content)",
+    "func safeAreaInset(edge: VerticalEdge, alignment: HorizontalAlignment = .center, spacing: CGFloat? = nil, content: () -> some View) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "pinned",
+      "description": "A section header stays at the top edge of the scroll view until the next header pushes it away."
+    },
+    {
+      "name": "inset bar",
+      "description": "The bar stays at its edge and the scroll content ends above or below it."
+    }
+  ],
+  "appearance": "A pinned header needs an opaque background, or the rows show through it: use a background role of the theme such as bgSurface. For a bar in a safe-area inset, the system bar material follows the light and dark appearance.",
+  "platformNotes": "The web Sticky pins any element to the top or bottom with an offset, adds a shadow when stuck (elevateWhenStuck) and reports it (onStuckChange). On iOS the two cases are separate APIs: pinnedViews for headers and footers of a lazy stack, safeAreaInset for a bar that never scrolls. There is no stuck signal on iOS 17. A header that must change when pinned reads its own position with a GeometryReader in the scroll view's coordinate space, or, from iOS 18, uses onScrollGeometryChange. The web's offset is the safe area, which the system applies. Android uses stickyHeader in LazyColumn.",
+  "accessibility": [
+    "Pinned headers stay in the reading order at the start of their section; mark them with the header trait.",
+    "A bar in a safe-area inset is read after the scroll content for the bottom edge and before it for the top edge.",
+    "System behaviour: the scroll content is inset by the bar, so VoiceOver focus is never behind it."
+  ],
+  "edgeCases": [
+    "pinnedViews works in LazyVStack, LazyHStack and the lazy grids, not in VStack.",
+    "A pinned header without a background is drawn over the rows.",
+    "safeAreaInset on a view that does not scroll only moves the content."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Header that knows it is pinned",
+      "fixture": "sticky",
+      "webExample": "Header that knows it is pinned",
+      "template": "ScrollView {\n    LazyVStack(alignment: .leading, spacing: MonarchTokens.Space.space2, pinnedViews: [.sectionHeaders]) {\n        Text({{intro}}).monarchTextStyle(.body)\n        Section {\n            ForEach(1...{{rows.count}}, id: \\.self) { number in\n                Text(\"{{rows.prefix|raw}} \\(number)\").monarchTextStyle(.body)\n            }\n        } header: {\n            HStack {\n                Text({{header}}).monarchTextStyle(.bodyStrong)\n                Spacer(minLength: 0)\n                Text({{placeLabel}}).monarchTextStyle(.caption)\n            }\n            .padding(.vertical, MonarchTokens.Space.space2)\n            .background(theme.colors.bgSurface)\n        }\n    }\n    .padding(.horizontal, MonarchTokens.Space.space3)\n}\n.frame(maxHeight: 260)\n.background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous))\n.overlay(RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous).strokeBorder(theme.colors.borderSubtle, lineWidth: MonarchTokens.Space.px))",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme",
+      "setup": "@Environment(\\.monarchTheme) private var theme",
+      "code": "ScrollView {\n    LazyVStack(alignment: .leading, spacing: MonarchTokens.Space.space2, pinnedViews: [.sectionHeaders]) {\n        Text(\"Scroll this box.\").monarchTextStyle(.body)\n        Section {\n            ForEach(1...24, id: \\.self) { number in\n                Text(\"Entry \\(number)\").monarchTextStyle(.body)\n            }\n        } header: {\n            HStack {\n                Text(\"Entries\").monarchTextStyle(.bodyStrong)\n                Spacer(minLength: 0)\n                Text(\"In place\").monarchTextStyle(.caption)\n            }\n            .padding(.vertical, MonarchTokens.Space.space2)\n            .background(theme.colors.bgSurface)\n        }\n    }\n    .padding(.horizontal, MonarchTokens.Space.space3)\n}\n.frame(maxHeight: 260)\n.background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous))\n.overlay(RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous).strokeBorder(theme.colors.borderSubtle, lineWidth: MonarchTokens.Space.px))"
+    }
+  ],
+  "webEquivalent": "Sticky",
+  "dependsOn": [],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "pinnedLabel"
+      ],
+      "reason": "Platform limit, system control used: SwiftUI pinned section headers give no callback when a header is pinned, so the label cannot switch from In place to Pinned.",
+      "convention": "HIG: pinned section headers"
+    }
+  ]
+}

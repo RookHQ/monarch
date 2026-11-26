@@ -4,29 +4,22 @@ import {
   type OAuthConsentScope,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './oauth-consent-screen.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
-const APP: OAuthConsentApp = {
-  name: 'Example Notes',
-  domain: 'notes.example.com',
-  verified: true,
-  privacyUrl: 'https://notes.example.com/privacy',
-  termsUrl: 'https://notes.example.com/terms',
-};
+const APP: OAuthConsentApp = fixture.data.app;
 
-const SCOPES: OAuthConsentScope[] = [
-  { id: 'openid profile', label: 'See your name and profile photo' },
-  { id: 'email', label: 'See your email address' },
-  {
-    id: 'files.write',
-    label: 'Create and change files in your workspace',
-    description: 'Only in the workspace you choose.',
-    sensitive: true,
-  },
-];
+const SCOPE_IDS = ['openid profile', 'email', 'files.write'] as const;
+const SCOPES: OAuthConsentScope[] = fixture.data.scopes.map((scope, i) => ({
+  id: SCOPE_IDS[i] ?? scope.label,
+  label: scope.label,
+  ...('description' in scope && { description: scope.description }),
+  ...(scope.kind === 'warning' && { sensitive: true }),
+}));
 
-const ACCOUNT = { name: 'Sam Rivera', email: 'sam@example.com' };
+const ACCOUNT = fixture.data.account;
 
 export default {
   id: 'oauth-consent-screen',
@@ -159,7 +152,7 @@ export default {
               onAllow={() => wait(800)}
               onDeny={() => wait(400)}
               onSwitchAccount={() => undefined}
-              footnote="You can remove access at any time in your account’s security settings."
+              footnote={fixture.data.footnote}
             />
           ),
         },

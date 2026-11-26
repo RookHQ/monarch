@@ -2,19 +2,17 @@ import { useEffect, useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiVoiceMode, type AiVoiceCaption, type AiVoiceModeState } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-voice-mode.fixture.json';
 
-const AGENT = { name: 'Atlas', role: 'Scheduling assistant' };
+const AGENT = { name: fixture.data.agent.name, role: 'Scheduling assistant' };
 
-const CAPTIONS: AiVoiceCaption[] = [
-  { id: 'c1', speaker: 'user', text: 'What is on my calendar this afternoon?', final: true },
-  {
-    id: 'c2',
-    speaker: 'assistant',
-    text: 'You have two meetings: the design review at two, and a planning call at four.',
-    final: true,
-  },
-  { id: 'c3', speaker: 'user', text: 'Move the planning call to', final: false },
-];
+const CAPTIONS: AiVoiceCaption[] = fixture.data.captions.map((caption) => ({
+  id: caption.id,
+  speaker: caption.speaker as AiVoiceCaption['speaker'],
+  text: caption.text,
+  final: caption.state === 'done',
+}));
 
 /** One step of the scripted call: the state, how long it lasts and the captions by then. */
 interface Beat {
@@ -297,11 +295,11 @@ export default {
           stack: true,
           render: () => (
             <AiVoiceMode
-              state="listening"
-              level={0.6}
+              state={fixture.data.state as AiVoiceModeState}
+              level={fixture.data.level}
               agent={AGENT}
               captions={CAPTIONS}
-              elapsedSeconds={42}
+              elapsedSeconds={fixture.data.elapsedSeconds}
               onMuteChange={() => {}}
               onInterrupt={() => {}}
               onEnd={() => {}}

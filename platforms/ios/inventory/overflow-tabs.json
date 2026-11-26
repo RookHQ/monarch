@@ -1,0 +1,79 @@
+{
+  "id": "overflow-tabs",
+  "name": null,
+  "title": "OverflowTabs",
+  "family": "navigation",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchTabs, which scrolls sideways in a ScrollView when its tabs do not fit",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a tab strip with more tabs than fit. MonarchTabs already scrolls sideways and brings the selected tab into view; when the extra tabs should sit in a More menu, compose MonarchTabs with a Menu.",
+  "whenToUse": "For the sections of a record or a page when there are more of them than fit across a phone, for example six sections of a project.",
+  "whenNotToUse": "For the top-level destinations of an app use TabView (see bottom-tab-bar), which has its own More tab. For two to four sections use MonarchTabs alone or a segmented Picker.",
+  "api": [
+    "MonarchTabs.init(_ label: String, selection: Binding<Value>, items: [MonarchTabsItem<Value>], variant: MonarchTabsVariant = .line)",
+    "Menu(content: () -> some View, label: () -> some View)",
+    "Picker(_ title: String, selection: Binding<Value>, content: () -> some View).pickerStyle(.inline)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "scrolling",
+      "description": "MonarchTabs on its own: the strip scrolls sideways and a newly selected tab scrolls into view."
+    },
+    {
+      "name": "more menu",
+      "description": "The first tabs are in the strip and the rest in a More menu; the menu's label shows the chosen tab's name when one of its tabs is selected."
+    },
+    {
+      "name": "selected in the menu",
+      "description": "No tab in the strip is marked; the More button carries the name, and the Picker in the menu marks it with a checkmark."
+    }
+  ],
+  "appearance": "The strip is MonarchTabs (line or pill) and the More button a ghost Monarch button; the menu is the system's.",
+  "platformNotes": "The web OverflowTabs measures the strip and moves the last tabs into a More menu as the width shrinks. On iOS MonarchTabs scrolls instead, which keeps every tab one swipe away and needs no measuring; the More menu recipe splits at a fixed count chosen by the app. The web's TabsContent panels are the app's own views switched on the selection. Android uses the scrolling tab row of Material 3 natively.",
+  "accessibility": [
+    "MonarchTabs is a tab bar with each tab a button with the selected trait; VoiceOver reaches scrolled-off tabs by swiping.",
+    "The More button names the selected overflow tab, so the selection is not hidden in the menu; the inline Picker in the menu reads which tab is selected.",
+    "Every tab and the More button have a touch target of at least 44 points."
+  ],
+  "edgeCases": [
+    "With the More menu, choose the split so the strip fits at the largest text size, or let the strip scroll as well.",
+    "Tab values must be unique across the strip and the menu."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Wide",
+      "fixture": "overflow-tabs",
+      "webExample": "Wide",
+      "template": "VStack(alignment: .leading, spacing: 16) {\n    // The tabs scroll sideways when they do not fit, so every tab of the web example is in the strip.\n    MonarchTabs(\n        {{label}},\n        selection: $section,\n        items: [\n            MonarchTabsItem({{tabs.0.label}}, value: {{tabs.0.value}}),\n            MonarchTabsItem({{tabs.1.label}}, value: {{tabs.1.value}}, count: \"{{tabs.1.count|raw}}\", countTone: {{tabs.1.countTone|tone}}),\n            MonarchTabsItem({{tabs.2.label}}, value: {{tabs.2.value}}),\n            MonarchTabsItem({{tabs.3.label}}, value: {{tabs.3.value}}),\n            MonarchTabsItem({{tabs.4.label}}, value: {{tabs.4.value}}),\n            MonarchTabsItem({{tabs.5.label}}, value: {{tabs.5.value}}, isDisabled: {{tabs.5.disabled}}),\n            MonarchTabsItem({{tabs.6.label}}, value: {{tabs.6.value}}),\n            MonarchTabsItem({{tabs.7.label}}, value: {{tabs.7.value}}),\n        ]\n    )\n    Text(\"\\(titles[section] ?? \"\") content\")\n}",
+      "setupTemplate": "@State private var section = {{selected}}\nprivate let titles = [{{tabs.0.value}}: {{tabs.0.label}}, {{tabs.1.value}}: {{tabs.1.label}}, {{tabs.2.value}}: {{tabs.2.label}}, {{tabs.3.value}}: {{tabs.3.label}}, {{tabs.4.value}}: {{tabs.4.label}}, {{tabs.5.value}}: {{tabs.5.label}}, {{tabs.6.value}}: {{tabs.6.label}}, {{tabs.7.value}}: {{tabs.7.label}}]",
+      "setup": "@State private var section = \"overview\"\nprivate let titles = [\"overview\": \"Overview\", \"activity\": \"Activity\", \"files\": \"Files\", \"members\": \"Members\", \"integrations\": \"Integrations\", \"billing\": \"Billing\", \"audit\": \"Audit log\", \"settings\": \"Settings\"]",
+      "code": "VStack(alignment: .leading, spacing: 16) {\n    // The tabs scroll sideways when they do not fit, so every tab of the web example is in the strip.\n    MonarchTabs(\n        \"Workspace sections\",\n        selection: $section,\n        items: [\n            MonarchTabsItem(\"Overview\", value: \"overview\"),\n            MonarchTabsItem(\"Activity\", value: \"activity\", count: \"4\", countTone: .accent),\n            MonarchTabsItem(\"Files\", value: \"files\"),\n            MonarchTabsItem(\"Members\", value: \"members\"),\n            MonarchTabsItem(\"Integrations\", value: \"integrations\"),\n            MonarchTabsItem(\"Billing\", value: \"billing\", isDisabled: true),\n            MonarchTabsItem(\"Audit log\", value: \"audit\"),\n            MonarchTabsItem(\"Settings\", value: \"settings\"),\n        ]\n    )\n    Text(\"\\(titles[section] ?? \"\") content\")\n}"
+    },
+    {
+      "title": "The last tabs in a More menu",
+      "setup": "@State private var section = \"overview\"\nprivate let sections = [\n    MonarchTabsItem(\"Overview\", value: \"overview\"),\n    MonarchTabsItem(\"Activity\", value: \"activity\", count: \"3\"),\n    MonarchTabsItem(\"Members\", value: \"members\"),\n    MonarchTabsItem(\"Billing\", value: \"billing\"),\n    MonarchTabsItem(\"Security\", value: \"security\"),\n    MonarchTabsItem(\"Audit log\", value: \"audit\"),\n]",
+      "code": "HStack(spacing: 0) {\n    MonarchTabs(\"Project sections\", selection: $section, items: Array(sections.prefix(3)))\n    Menu {\n        Picker(\"More sections\", selection: $section) {\n            ForEach(sections.dropFirst(3)) { item in\n                Text(item.title).tag(item.value)\n            }\n        }\n        .pickerStyle(.inline)\n    } label: {\n        Label(\n            sections.dropFirst(3).first { $0.value == section }?.title ?? \"More\",\n            systemImage: \"chevron.down\"\n        )\n    }\n    .buttonStyle(.monarch(.ghost, size: .sm))\n}"
+    }
+  ],
+  "webEquivalent": "OverflowTabs",
+  "dependsOn": [
+    "tabs",
+    "dropdown-menu"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web example is wide and shows all eight tabs at once; a 354-point phone column shows the first four and the strip scrolls sideways to the rest (every tab of the web example is in it, none is moved into a menu). A width limit of the device, not a layout change.",
+      "convention": "HIG: a tab strip that does not fit scrolls"
+    }
+  ]
+}

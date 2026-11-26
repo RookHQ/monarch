@@ -1,0 +1,85 @@
+{
+  "id": "date-picker",
+  "name": null,
+  "title": "DatePicker",
+  "family": "scheduling",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "DatePicker(_:selection:in:displayedComponents: .date) with the default .compact style, inside MonarchFormField; a Menu of preset dates beside it",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The standard SwiftUI date picker with displayedComponents: .date, shown in a MonarchFormField row and tinted with the accent by the theme. Monarch ships nothing.",
+  "whenToUse": "For one calendar date in a form: due dates, start dates, birthdays, renewal and expiry dates. Add a Menu of presets (Today, Tomorrow, In a week) beside it when people often pick the same dates.",
+  "whenNotToUse": "For a date and a time, use displayedComponents: [.date, .hourAndMinute]. For a range of dates, use two pickers, the second limited by the first. For browsing a month with events, use MonarchMiniMonth.",
+  "api": [
+    "DatePicker(_ title: String, selection: Binding<Date>, in range: PartialRangeFrom<Date>, displayedComponents: DatePickerComponents)",
+    "DatePicker(_ title: String, selection: Binding<Date>, displayedComponents: DatePickerComponents)",
+    "func datePickerStyle(_ style: some DatePickerStyle) -> some View  // .compact (default), .graphical, .wheel",
+    "MonarchFormField.init(_ label: String, helper: String? = nil, error: String? = nil, …, @ViewBuilder control: () -> Control)",
+    "Menu(_ title: String, @ViewBuilder content: () -> Content)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "set",
+      "description": "The compact button shows the date in the locale's format; tapping it opens the system calendar."
+    },
+    {
+      "name": "limited",
+      "description": "Dates outside the `in:` range are dimmed and cannot be chosen."
+    },
+    {
+      "name": "optional",
+      "description": "The app keeps a Date? and shows Set date and Clear date buttons around the picker (the system picker always has a date)."
+    },
+    {
+      "name": "invalid",
+      "description": "MonarchFormField shows the app's error text with its icon under the row."
+    },
+    {
+      "name": "disabled",
+      "description": "System dimming, with disabled(_:)."
+    }
+  ],
+  "appearance": "The system picker: in a Monarch theme the selected day and today take the accent through the tint; the field label, helper and error come from MonarchFormField in the theme's text and danger roles.",
+  "platformNotes": "The web DatePicker is a typed text field with a calendar popover, ISO string values, presets, min/max, disabled days, week numbers and Field errors. On iOS the system picker is the expected control: it formats and parses in the person's locale and calendar, so there is no typed input to validate. min and max become the `in:` range; presets are a Menu next to the picker; an optional date needs a Date? in the app. Disabled individual days, week numbers and per-day info are not offered by the system picker; for those, show MonarchMiniMonth in a sheet. The value is a Date: store it as a day (DateComponents or an ISO yyyy-MM-dd string) when it must not shift with time zones. Android uses the Material 3 DatePicker.",
+  "accessibility": [
+    "System behaviour: the compact picker is a button read with its label and date; the calendar is navigable by VoiceOver with the selected day marked.",
+    "With .labelsHidden() the visible label comes from MonarchFormField, and the picker keeps its own title for VoiceOver.",
+    "Preset menu items are standard buttons.",
+    "Dynamic Type and right-to-left calendars are handled by the system."
+  ],
+  "edgeCases": [
+    "A Date carries a time: compare days with Calendar.isDate(_:inSameDayAs:), and keep the start of day when saving a pure date.",
+    "A selection outside the `in:` range is clamped by the picker.",
+    "The graphical style takes the full width and about 350 points of height; use it inline only on roomy screens."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Due date with quick picks",
+      "fixture": "date-picker",
+      "webExample": "Due date with quick picks",
+      "template": "MonarchFormField({{label}}, helper: {{helper}}) {\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        MonarchTextField(\n            {{label}},\n            text: .constant(\"\"),\n            prompt: \"DD/MM/YYYY\",\n            labelVisibility: .hidden,\n            leading: { EmptyView() },\n            trailing: { MonarchIcon(systemName: \"calendar\", size: .sm).foregroundStyle(theme.colors.textMuted) }\n        )\n        ForEach(Array(presets.enumerated()), id: \\.offset) { _, preset in\n            Button {\n                due = date(plus: preset.days)\n            } label: {\n                HStack {\n                    Text(preset.label)\n                    Spacer()\n                    Text(shown(preset.days)).foregroundStyle(theme.colors.textMuted)\n                }\n                .monarchTextStyle(.body)\n                .monarchMinimumHitTarget()\n                .contentShape(Rectangle())\n            }\n            .buttonStyle(.plain)\n        }\n        Divider()\n        MonarchMiniMonth(\n                selection: Binding(get: { due }, set: { due = $0 ?? due }),\n                minimumDate: today,\n                today: today\n            )\n    }\n}\n.environment(\\.locale, Locale(identifier: {{locale}}))",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var due = {{today|date}}\nprivate let today = {{today|date}}\nprivate let presets: [(label: String, days: Int)] = [\n    ({{presets.0.label}}, {{presets.0.days}}),\n    ({{presets.1.label}}, {{presets.1.days}}),\n    ({{presets.2.label}}, {{presets.2.days}}),\n    ({{presets.3.label}}, {{presets.3.days}}),\n]\n\nprivate func date(plus days: Int) -> Date {\n    Calendar.current.date(byAdding: .day, value: days, to: today) ?? today\n}\n\nprivate func shown(_ days: Int) -> String {\n    let formatter = DateFormatter()\n    formatter.locale = Locale(identifier: {{locale}})\n    formatter.dateFormat = \"EEE, d MMM\"\n    return formatter.string(from: date(plus: days))\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var due = Date(timeIntervalSince1970: 1_793_750_400)\nprivate let today = Date(timeIntervalSince1970: 1_793_750_400)\nprivate let presets: [(label: String, days: Int)] = [\n    (\"Today\", 0),\n    (\"Tomorrow\", 1),\n    (\"In a week\", 7),\n    (\"In two weeks\", 14),\n]\n\nprivate func date(plus days: Int) -> Date {\n    Calendar.current.date(byAdding: .day, value: days, to: today) ?? today\n}\n\nprivate func shown(_ days: Int) -> String {\n    let formatter = DateFormatter()\n    formatter.locale = Locale(identifier: \"en-GB\")\n    formatter.dateFormat = \"EEE, d MMM\"\n    return formatter.string(from: date(plus: days))\n}",
+      "code": "MonarchFormField(\"Due date\", helper: \"Type a date or pick one.\") {\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        MonarchTextField(\n            \"Due date\",\n            text: .constant(\"\"),\n            prompt: \"DD/MM/YYYY\",\n            labelVisibility: .hidden,\n            leading: { EmptyView() },\n            trailing: { MonarchIcon(systemName: \"calendar\", size: .sm).foregroundStyle(theme.colors.textMuted) }\n        )\n        ForEach(Array(presets.enumerated()), id: \\.offset) { _, preset in\n            Button {\n                due = date(plus: preset.days)\n            } label: {\n                HStack {\n                    Text(preset.label)\n                    Spacer()\n                    Text(shown(preset.days)).foregroundStyle(theme.colors.textMuted)\n                }\n                .monarchTextStyle(.body)\n                .monarchMinimumHitTarget()\n                .contentShape(Rectangle())\n            }\n            .buttonStyle(.plain)\n        }\n        Divider()\n        MonarchMiniMonth(\n                selection: Binding(get: { due }, set: { due = $0 ?? due }),\n                minimumDate: today,\n                today: today\n            )\n    }\n}\n.environment(\\.locale, Locale(identifier: \"en-GB\"))"
+    },
+    {
+      "title": "An optional date with Clear",
+      "setup": "@State private var renewal: Date? = Date(timeIntervalSince1970: 1_794_666_600)",
+      "code": "MonarchFormField(\"Renewal date\") {\n    HStack {\n        if let date = renewal {\n            DatePicker(\"Renewal date\", selection: Binding(get: { date }, set: { renewal = $0 }), displayedComponents: .date)\n                .labelsHidden()\n            MonarchButton(\"Clear date\", variant: .ghost, size: .sm) { renewal = nil }\n        } else {\n            MonarchButton(\"Set date\", systemImage: \"calendar\", size: .sm) { renewal = .now }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "DatePicker",
+  "dependsOn": [
+    "form-field"
+  ],
+  "icons": {
+    "trigger": "CalendarGlyph"
+  }
+}

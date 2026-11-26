@@ -1,0 +1,69 @@
+{
+  "id": "focus-trap",
+  "name": null,
+  "title": "FocusTrap",
+  "family": "interaction",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "sheet(isPresented:content:), fullScreenCover(isPresented:content:), alert and confirmationDialog; accessibilityAddTraits(.isModal) for a custom overlay",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Keeping focus inside a modal surface is done by the system's modal presentations. Monarch ships nothing.",
+  "whenToUse": "Present modal content with sheet, fullScreenCover, alert or confirmationDialog: VoiceOver, Switch Control and the hardware keyboard are confined to it until it is dismissed. For an overlay you draw yourself in the same view tree, add the isModal trait to it.",
+  "whenNotToUse": "Do not confine focus for content that is not modal, such as an inline panel or a popover the person can ignore; leave the rest of the screen reachable.",
+  "api": [
+    "func sheet<Content: View>(isPresented: Binding<Bool>, onDismiss: (() -> Void)? = nil, content: @escaping () -> Content) -> some View",
+    "func fullScreenCover<Content: View>(isPresented: Binding<Bool>, onDismiss: (() -> Void)? = nil, content: @escaping () -> Content) -> some View",
+    "func accessibilityAddTraits(_ traits: AccessibilityTraits) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "presented",
+      "description": "Focus is inside the presentation. Content behind it is not reachable by assistive technology."
+    },
+    {
+      "name": "dismissed",
+      "description": "The system returns VoiceOver focus to the presenting screen."
+    }
+  ],
+  "appearance": "The system draws the presentation in every theme; Monarch draws nothing. The content of the presentation uses Monarch components as usual.",
+  "platformNotes": "The web needs a FocusTrap component and hook because a browser lets Tab leave a dialog. On iOS the presentation is a separate layer the system manages, so there is nothing to build; Android relies on Dialog and ModalBottomSheet in the same way. The web's initialFocus is @AccessibilityFocusState or @FocusState, returnFocus is automatic, and onEscape is the dismissal of the presentation.",
+  "accessibility": [
+    "System behaviour: a presented sheet, cover, alert or dialog confines VoiceOver, Switch Control and Full Keyboard Access to itself.",
+    "System behaviour: when it is dismissed, focus returns to the presenting screen.",
+    "accessibilityAddTraits(.isModal) on a custom overlay makes VoiceOver ignore its sibling elements. It does not confine hardware-keyboard focus; disable or hide the content behind the overlay as well.",
+    "The escape gesture (two-finger Z) dismisses a system presentation. Add accessibilityAction(.escape) to a custom overlay."
+  ],
+  "edgeCases": [
+    "fullScreenCover has no swipe to dismiss; give it a visible close control.",
+    "interactiveDismissDisabled() stops the swipe on a sheet with unsaved changes; keep a button that dismisses.",
+    "fullScreenCover is not available on macOS, so the compiled examples use sheet."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "An inline panel that holds focus until applied or cancelled",
+      "fixture": "focus-trap",
+      "webExample": "An inline panel that holds focus until applied or cancelled",
+      "template": "MonarchButton({{trigger}}) { isEditing = true }\n    .sheet(isPresented: $isEditing) {\n        VStack(alignment: .leading, spacing: theme.spacing.space3) {\n            MonarchTextField({{fields.0.label}}, text: $owner, prompt: {{fields.0.placeholder}}, labelVisibility: .hidden)\n            MonarchTextField({{fields.1.label}}, text: $label, prompt: {{fields.1.placeholder}}, labelVisibility: .hidden)\n            HStack(spacing: theme.spacing.space2) {\n                Spacer()\n                MonarchButton({{cancel}}) { isEditing = false }\n                MonarchButton({{apply}}, variant: .primary) { isEditing = false }\n            }\n        }\n        .padding()\n        .accessibilityElement(children: .contain)\n        .accessibilityLabel({{label}})\n        .presentationDetents([.height(250)])\n    }",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isEditing = false\n@State private var owner = \"\"\n@State private var label = \"\"",
+      "previewPresented": [
+        "isEditing"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isEditing = false\n@State private var owner = \"\"\n@State private var label = \"\"",
+      "code": "MonarchButton(\"Edit filters\") { isEditing = true }\n    .sheet(isPresented: $isEditing) {\n        VStack(alignment: .leading, spacing: theme.spacing.space3) {\n            MonarchTextField(\"Owner\", text: $owner, prompt: \"Owner\", labelVisibility: .hidden)\n            MonarchTextField(\"Label\", text: $label, prompt: \"Label\", labelVisibility: .hidden)\n            HStack(spacing: theme.spacing.space2) {\n                Spacer()\n                MonarchButton(\"Cancel\") { isEditing = false }\n                MonarchButton(\"Apply\", variant: .primary) { isEditing = false }\n            }\n        }\n        .padding()\n        .accessibilityElement(children: .contain)\n        .accessibilityLabel(\"Filters\")\n        .presentationDetents([.height(250)])\n    }"
+    },
+    {
+      "title": "A custom overlay marked as modal",
+      "code": "ZStack {\n    Text(\"Content behind the overlay\")\n        .accessibilityHidden(isShown)\n    if isShown {\n        VStack {\n            Text(\"Discard the draft?\").monarchTextStyle(.bodyStrong)\n            MonarchButton(\"Discard\", variant: .danger) { isShown = false }\n        }\n        .padding()\n        .background(theme.colors.bgRaised, in: RoundedRectangle(cornerRadius: theme.radius.lg))\n        .accessibilityAddTraits(.isModal)\n        .accessibilityAction(.escape) { isShown = false }\n    }\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isShown = true"
+    }
+  ],
+  "webEquivalent": "FocusTrap",
+  "dependsOn": []
+}

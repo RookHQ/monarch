@@ -1,5 +1,15 @@
-import { DeltaIndicator } from '@rookcom/monarch-react/charts';
+import { DeltaIndicator, type DeltaIndicatorProps } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './delta-indicator.fixture.json';
+
+// How the web writes each item's value; native writes it with its own formatter.
+const FORMATS: Partial<DeltaIndicatorProps>[] = [
+  {},
+  {},
+  { format: 'number' },
+  { format: 'currency' },
+];
 
 export default {
   id: 'delta-indicator',
@@ -126,25 +136,14 @@ export default {
           stack: true,
           render: () => (
             <>
-              <DeltaIndicator value={0.124} comparison="vs last month" locale="en-US" />
-              <DeltaIndicator value={-0.052} comparison="vs last month" locale="en-US" />
-              <DeltaIndicator
-                current={182}
-                previous={240}
-                format="number"
-                unit="ms"
-                goodDirection="down"
-                comparison="vs last week"
-                locale="en-US"
-              />
-              <DeltaIndicator
-                value={1250}
-                format="currency"
-                currency="USD"
-                goodDirection="down"
-                comparison="in spend"
-                locale="en-US"
-              />
+              {fixture.data.items.map((item, i) => (
+                <DeltaIndicator
+                  key={i}
+                  {...(item as DeltaIndicatorProps)}
+                  {...FORMATS[i]}
+                  locale={fixture.data.locale}
+                />
+              ))}
             </>
           ),
         },

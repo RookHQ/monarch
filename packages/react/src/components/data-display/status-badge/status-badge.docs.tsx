@@ -1,8 +1,10 @@
 import { StatusBadge, StatusRegistryProvider, defineStatuses } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { ClockIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './status-badge.fixture.json';
 
-const health = ['operational', 'degraded', 'partial', 'down', 'maintenance', 'unknown'] as const;
+const health = fixture.data.statuses;
 const generic = ['success', 'warning', 'danger', 'info', 'neutral'] as const;
 
 // Built on first render: docs files are also imported by Node scripts that do not compile JSX at module scope.

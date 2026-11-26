@@ -2,8 +2,10 @@ import { useState, type FormEvent } from 'react';
 import { Button, Textarea } from '@rookcom/monarch-react';
 import { MessageRow, ThreadPanel } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './thread-panel.fixture.json';
 
-const NOW = new Date('2026-03-10T12:00:00Z');
+const NOW = new Date(fixture.data.now);
 
 interface Reply {
   id: string;
@@ -12,26 +14,12 @@ interface Reply {
   time: Date;
 }
 
-const START: Reply[] = [
-  {
-    id: 'r1',
-    name: 'Ben Okafor',
-    body: 'In the shared release folder, next to the checklist.',
-    time: new Date('2026-03-10T11:02:00Z'),
-  },
-  {
-    id: 'r2',
-    name: 'Ben Okafor',
-    body: 'I can move last quarter’s notes there too.',
-    time: new Date('2026-03-10T11:03:00Z'),
-  },
-  {
-    id: 'r3',
-    name: 'Chen Li',
-    body: 'Sounds good to me.',
-    time: new Date('2026-03-10T11:20:00Z'),
-  },
-];
+const START: Reply[] = fixture.data.replies.map((reply, i) => ({
+  id: `r${i + 1}`,
+  name: reply.name,
+  body: reply.body,
+  time: new Date(reply.time),
+}));
 
 function Composer({ onSend }: { onSend: (text: string) => void }) {
   const [text, setText] = useState('');
@@ -48,7 +36,7 @@ function Composer({ onSend }: { onSend: (text: string) => void }) {
     >
       <Textarea
         aria-label="Reply"
-        placeholder="Reply…"
+        placeholder={fixture.data.placeholder}
         rows={1}
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -73,11 +61,12 @@ function Basic() {
         onClose={() => {}}
         root={
           <MessageRow
-            author={{ name: 'Ana Ruiz' }}
-            time={new Date('2026-03-10T11:00:00Z')}
+            locale="en-GB"
+            author={{ name: fixture.data.root.name }}
+            time={new Date(fixture.data.root.time)}
             now={NOW}
           >
-            Where should the launch notes live?
+            {fixture.data.root.body}
           </MessageRow>
         }
         composer={
@@ -93,6 +82,7 @@ function Basic() {
       >
         {replies.map((r, i) => (
           <MessageRow
+            locale="en-GB"
             key={r.id}
             author={{ name: r.name }}
             time={r.time}

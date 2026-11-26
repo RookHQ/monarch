@@ -2,35 +2,29 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { LogDrawer } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './log-drawer.fixture.json';
 
 function RequestDetails() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   return (
     <>
-      <Button onClick={() => setOpen(true)}>View request</Button>
+      <Button onClick={() => setOpen(true)}>{fixture.data.trigger}</Button>
       <LogDrawer
         open={open}
         onOpenChange={setOpen}
-        description="Request and response bodies are not stored."
+        title={fixture.data.title}
+        description={fixture.data.description}
         request={{
-          method: 'POST',
-          path: '/v1/orders',
-          status: 429,
-          errorCode: 'rate_limited',
-          id: 'req_7f3a2c90d1',
-          at: new Date(Date.now() - 4 * 60_000),
-          durationMs: 84,
+          method: fixture.data.request.method,
+          path: fixture.data.request.path,
+          status: fixture.data.request.status,
+          errorCode: fixture.data.request.errorCode,
+          id: fixture.data.request.id,
+          at: new Date(Date.now() - fixture.data.request.minutesAgo * 60_000),
+          durationMs: fixture.data.request.durationMs,
         }}
-        fields={[
-          { label: 'Credential', value: 'Reporting job' },
-          {
-            label: 'Origin',
-            value: 'https://shop.example.com',
-            mono: true,
-            copyValue: 'https://shop.example.com',
-          },
-          { label: 'Units', value: '1 request' },
-        ]}
+        fields={fixture.data.fields}
       />
     </>
   );
@@ -185,7 +179,7 @@ export default {
     },
     examples: {
       items: [
-        { title: 'API request', render: () => <RequestDetails /> },
+        { title: 'API request', stage: { align: 'end' }, render: () => <RequestDetails /> },
         { title: 'Webhook delivery with payload', render: () => <DeliveryDetails /> },
         { title: 'Loading', render: () => <Loading /> },
       ],

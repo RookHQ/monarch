@@ -1,0 +1,160 @@
+{
+  "id": "ai-trace-view",
+  "name": "MonarchAiTraceView",
+  "title": "AiTraceView",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "LazyVStack of tree rows (chevron Button and row Button with a duration bar), Picker with .pickerStyle(.segmented) for the filter, LabeledContent with .labeledContentStyle(.monarch) for totals and facts, and sheet(item:) with a NavigationStack for the details",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The technical trace of one agent run: every model call, tool call, retrieval and sub-agent as a row in a tree with its duration, tokens, cost and a bar on a shared time scale, and its details in a sheet.",
+  "whenToUse": "In developer, audit or support screens where someone needs to see exactly what one agent run did, how long each step took, what it cost and where it failed.",
+  "whenNotToUse": "Not for people using the assistant, who need the plain-language story of the run: use MonarchAiAgentRunTimeline or MonarchAiChainOfSteps. Not for agents handing work to each other, which is MonarchAiSubagentTree.",
+  "api": [
+    "init(_ spans: [MonarchAiTraceSpan], currency: String = \"USD\", now: TimeInterval? = nil, selection: Binding<String?>? = nil, filter: Binding<MonarchAiTraceFilter>? = nil, expandedIDs: Binding<Set<String>>? = nil, labels: MonarchAiTraceViewLabels = MonarchAiTraceViewLabels(), onOpenPart: (@MainActor (MonarchAiTraceSpan) -> Void)? = nil)",
+    "MonarchAiTraceSpan.init(id: String, parentId: String? = nil, kind: MonarchAiTraceSpanKind, name: String, status: MonarchAiTraceSpanStatus, start: TimeInterval, end: TimeInterval? = nil, inputTokens: Int? = nil, outputTokens: Int? = nil, costMicros: Int? = nil, currency: String? = nil, model: String? = nil, error: String? = nil, attributes: [String: String] = [:], input: String? = nil, output: String? = nil, partId: String? = nil, messageId: String? = nil)",
+    "enum MonarchAiTraceSpanKind: String { case model, tool, retrieval, agent, guardrail, other }",
+    "enum MonarchAiTraceSpanStatus: String { case ok, error, cancelled, running }",
+    "enum MonarchAiTraceFilter: String { case all, errors, slowest }",
+    "MonarchAiTraceViewLabels.init(label:filterLabel:filter:kind:status:totalDuration:totalTokens:totalCost:errors:notAvailable:empty:noErrors:formatDuration:timing:closeDetails:openPart:start:end:duration:inputTokens:outputTokens:model:statusName:kindName:error:attributes:input:output:expand:collapse:)"
+  ],
+  "options": [
+    {
+      "name": "spans",
+      "type": "[MonarchAiTraceSpan]",
+      "default": "required",
+      "description": "The spans of one run in any order; children are found through parentId and shown in start order. Times are seconds from the start of the run."
+    },
+    {
+      "name": "currency",
+      "type": "String",
+      "default": "\"USD\"",
+      "description": "The ISO 4217 currency of spans that do not name one."
+    },
+    {
+      "name": "now",
+      "type": "TimeInterval?",
+      "default": "nil",
+      "description": "The current time in seconds from the run start, where the bars of running spans end. Without it they end at the latest known time, so rendering is deterministic."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<String?>?",
+      "default": "nil",
+      "description": "The span whose details are open in the sheet. Kept inside when nil."
+    },
+    {
+      "name": "filter",
+      "type": "Binding<MonarchAiTraceFilter>?",
+      "default": "nil",
+      "description": "All spans, failed spans with their parents, or siblings slowest first. Kept inside, starting at all, when nil."
+    },
+    {
+      "name": "expandedIDs",
+      "type": "Binding<Set<String>>?",
+      "default": "nil",
+      "description": "The open spans. Kept inside when nil: top-level spans, failed spans and their parents start open."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiTraceViewLabels",
+      "default": "MonarchAiTraceViewLabels()",
+      "description": "Replacements for every built-in string, the duration format and the spoken timing."
+    },
+    {
+      "name": "onOpenPart",
+      "type": "(@MainActor (MonarchAiTraceSpan) -> Void)?",
+      "default": "nil",
+      "description": "Adds Show in conversation to the details of a span with a partId or messageId."
+    }
+  ],
+  "states": [
+    {
+      "name": "ok",
+      "description": "The bar takes the colour of the kind: model, tool, retrieval, agent, guardrail or other."
+    },
+    {
+      "name": "error",
+      "description": "An error icon, the word Error in the strong danger role, a danger bar; the span and its parents start open."
+    },
+    {
+      "name": "running",
+      "description": "The word Running instead of a duration and an AI thinking bar that ends at now."
+    },
+    {
+      "name": "cancelled",
+      "description": "The word Cancelled and a strong border coloured bar."
+    },
+    {
+      "name": "selected",
+      "description": "The row takes the subtle AI fill and a strong AI bar at its leading edge, and the details open in a sheet."
+    },
+    {
+      "name": "filtered",
+      "description": "Errors only shows failed spans and their parents, or \"No errors in this run\"; Slowest first sorts siblings by duration."
+    },
+    {
+      "name": "empty",
+      "description": "\"No spans recorded\"."
+    }
+  ],
+  "appearance": "Rows on the page background with the name in default text, facts in muted text and a bar on the subtle track; bar colours come from the AI, info, accent, warning and danger roles. The totals use the Monarch labelled-content style. Every colour is a theme role, so it follows light, dark and both high-contrast themes.",
+  "platformNotes": "The web shows a six-column tree grid with arrow-key navigation, typeahead-free windowing and an inline details panel. A phone cannot fit six columns, so each row shows the name with a facts line and the bar under it, and the details open in a sheet with a NavigationStack, as the plan describes. The parity map named OutlineGroup; its rows toggle on tap and cannot select, so the rows are a LazyVStack with separate chevron and row buttons. LazyVStack replaces the web's manual windowing. Times are seconds (TimeInterval) rather than milliseconds, and attributes are strings. Durations and costs use the same formatting as MonarchAiAgentRunTimeline.",
+  "accessibility": [
+    "The trace is a container named \"Run trace\", and the title has the header trait.",
+    "Each row is a button read as name, status unless OK or running, kind, duration or Running, tokens, cost and \"Starts at +1.2 s, takes 850 ms\".",
+    "The selected row has the selected trait and a visible bar, not only a fill.",
+    "Spans with children have a separate 44-point chevron button, \"Show spans inside <name>\".",
+    "Failures have an icon and the word Error, not colour alone; bars are hidden from VoiceOver because the timing is in the row's label.",
+    "The filter is a standard segmented Picker named \"Show\".",
+    "The details are a sheet with a Close button, labelled facts, and input and output in MonarchAiCodeBlock with Copy."
+  ],
+  "edgeCases": [
+    "A span whose parent is missing, itself, or in a loop is shown at the top level; a repeated id keeps the first span.",
+    "Token and cost totals add every span, so a parent should carry only its own usage.",
+    "Costs in several currencies are listed per currency, joined with +.",
+    "A trace of zero length still draws bars, at least the minimum width.",
+    "A very deep tree is indented one step per level and gets narrow on a phone."
+  ],
+  "tests": [
+    "MonarchAiTraceViewTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "A finished run",
+      "fixture": "ai-trace-view",
+      "webExample": "A finished run",
+      "template": "MonarchAiTraceView(\n    [\n        MonarchAiTraceSpan(id: {{spans.0.id}}, kind: {{spans.0.kind|case}}, name: {{spans.0.name}}, status: {{spans.0.status|case}}, start: {{spans.0.startMs}} / 1000, end: {{spans.0.endMs}} / 1000),\n        MonarchAiTraceSpan(id: {{spans.1.id}}, parentId: {{spans.1.parentId}}, kind: {{spans.1.kind|case}}, name: {{spans.1.name}}, status: {{spans.1.status|case}}, start: {{spans.1.startMs}} / 1000, end: {{spans.1.endMs}} / 1000),\n        MonarchAiTraceSpan(id: {{spans.2.id}}, parentId: {{spans.2.parentId}}, kind: {{spans.2.kind|case}}, name: {{spans.2.name}}, status: {{spans.2.status|case}}, start: {{spans.2.startMs}} / 1000, end: {{spans.2.endMs}} / 1000, inputTokens: {{spans.2.inputTokens}}, outputTokens: {{spans.2.outputTokens}}, costMicros: {{spans.2.costMicros}}),\n        MonarchAiTraceSpan(id: {{spans.3.id}}, parentId: {{spans.3.parentId}}, kind: {{spans.3.kind|case}}, name: {{spans.3.name}}, status: {{spans.3.status|case}}, start: {{spans.3.startMs}} / 1000, end: {{spans.3.endMs}} / 1000),\n        MonarchAiTraceSpan(id: {{spans.4.id}}, parentId: {{spans.4.parentId}}, kind: {{spans.4.kind|case}}, name: {{spans.4.name}}, status: {{spans.4.status|case}}, start: {{spans.4.startMs}} / 1000, end: {{spans.4.endMs}} / 1000),\n        MonarchAiTraceSpan(id: {{spans.5.id}}, parentId: {{spans.5.parentId}}, kind: {{spans.5.kind|case}}, name: {{spans.5.name}}, status: {{spans.5.status|case}}, start: {{spans.5.startMs}} / 1000, end: {{spans.5.endMs}} / 1000, inputTokens: {{spans.5.inputTokens}}, outputTokens: {{spans.5.outputTokens}}, costMicros: {{spans.5.costMicros}}),\n    ],\n    currency: {{currency}}\n)\n.environment(\\.locale, Locale(identifier: {{locale}}))",
+      "code": "MonarchAiTraceView(\n    [\n        MonarchAiTraceSpan(id: \"run\", kind: .agent, name: \"Answer question\", status: .ok, start: 0 / 1000, end: 6100 / 1000),\n        MonarchAiTraceSpan(id: \"guard\", parentId: \"run\", kind: .guardrail, name: \"Check request\", status: .ok, start: 0 / 1000, end: 120 / 1000),\n        MonarchAiTraceSpan(id: \"plan\", parentId: \"run\", kind: .model, name: \"Plan the answer\", status: .ok, start: 120 / 1000, end: 1400 / 1000, inputTokens: 1850, outputTokens: 240, costMicros: 3100),\n        MonarchAiTraceSpan(id: \"search\", parentId: \"run\", kind: .retrieval, name: \"Search records\", status: .ok, start: 1400 / 1000, end: 2600 / 1000),\n        MonarchAiTraceSpan(id: \"analysis\", parentId: \"run\", kind: .agent, name: \"Analysis agent\", status: .ok, start: 2600 / 1000, end: 6100 / 1000),\n        MonarchAiTraceSpan(id: \"analysis-model\", parentId: \"analysis\", kind: .model, name: \"Write the summary\", status: .ok, start: 2900 / 1000, end: 6100 / 1000, inputTokens: 4200, outputTokens: 910, costMicros: 9800),\n    ],\n    currency: \"EUR\"\n)\n.environment(\\.locale, Locale(identifier: \"en-GB\"))"
+    },
+    {
+      "title": "Errors only, with a running span",
+      "setup": "@State private var filter = MonarchAiTraceFilter.errors",
+      "code": "MonarchAiTraceView(\n    [\n        MonarchAiTraceSpan(id: \"run\", kind: .agent, name: \"Answer question\", status: .running, start: 0),\n        MonarchAiTraceSpan(id: \"check\", parentId: \"run\", kind: .guardrail, name: \"Safety check\", status: .error, start: 0.5, end: 0.7),\n    ],\n    now: 2,\n    filter: $filter\n)"
+    }
+  ],
+  "webEquivalent": "AiTraceView",
+  "dependsOn": [
+    "tree-view",
+    "ai-agent-run-timeline",
+    "sheet",
+    "description-list",
+    "ai-code-block"
+  ],
+  "icons": {
+    "row.expand": "ChevronRightGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "phone-width",
+      "platform": "ios",
+      "reason": "The web shows a table with Span, Kind, Duration, Tokens, Cost and Timeline columns. On a phone each span is a stacked row (name and duration, then kind with tokens and cost, then the bar); the data, order, tones and bars are the same.",
+      "convention": "a six-column table does not fit a 402 pt screen"
+    }
+  ]
+}

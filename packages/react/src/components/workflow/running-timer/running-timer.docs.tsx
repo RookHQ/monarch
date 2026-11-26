@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Button, Field, FieldLabel, Input } from '@rookcom/monarch-react';
 import { RunningTimer } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './running-timer.fixture.json';
 
 function PanelDemo() {
-  const [startedAt, setStartedAt] = useState<number | null>(null);
-  const [note, setNote] = useState('');
+  const [startedAt, setStartedAt] = useState<number | null>(fixture.data.startedAt);
+  const [note, setNote] = useState(fixture.data.note);
   return (
     <RunningTimer
       startedAt={startedAt}
@@ -16,7 +18,7 @@ function PanelDemo() {
       onDiscard={() => setStartedAt(null)}
     >
       <Field>
-        <FieldLabel>What are you working on?</FieldLabel>
+        <FieldLabel>{fixture.data.fieldLabel}</FieldLabel>
         <Input value={note} onChange={(e) => setNote(e.target.value)} />
       </Field>
     </RunningTimer>

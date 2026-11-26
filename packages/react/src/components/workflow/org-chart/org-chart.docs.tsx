@@ -2,41 +2,36 @@ import { useState } from 'react';
 import { Badge, Button } from '@rookcom/monarch-react';
 import { OrgChart, type OrgChartNode } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './org-chart.fixture.json';
 
-const PEOPLE: OrgChartNode[] = [
-  { id: 'p1', name: 'Alex Kim', title: 'Chief executive' },
-  {
-    id: 'p2',
-    parentId: 'p1',
-    name: 'Sam Lee',
-    title: 'Engineering lead',
-    meta: <Badge size="sm">Engineering</Badge>,
-  },
-  {
-    id: 'p3',
-    parentId: 'p1',
-    name: 'Riya Shah',
-    title: 'Finance lead',
-    meta: <Badge size="sm">Finance</Badge>,
-  },
-  {
-    id: 'p4',
-    parentId: 'p1',
-    name: 'Noor Ali',
-    title: 'People lead',
-    dashed: true,
-    meta: (
-      <Badge size="sm" tone="warning">
-        Acting
-      </Badge>
-    ),
-  },
-  { id: 'p5', parentId: 'p2', name: 'Jo Park', title: 'Engineer' },
-  { id: 'p6', parentId: 'p2', name: 'Ola Berg', title: 'Engineer' },
-  { id: 'p7', parentId: 'p2', name: 'Product designer', kind: 'vacancy', meta: 'Engineering' },
-  { id: 'p8', parentId: 'p3', name: 'Mia Chen', title: 'Accountant' },
-  { id: 'p9', parentId: 'p4', name: 'Leo Grant', title: 'Recruiter', childCount: 2 },
-];
+type PersonData = {
+  id: string;
+  parentId?: string;
+  name: string;
+  title?: string;
+  kind?: 'vacancy';
+  dashed?: boolean;
+  meta?: string;
+  metaTone?: 'warning';
+  childCount?: number;
+};
+
+const PEOPLE: OrgChartNode[] = (fixture.data.nodes as PersonData[]).map(
+  ({ meta, metaTone, ...node }) => ({
+    ...node,
+    ...(meta !== undefined && {
+      meta:
+        node.kind === 'vacancy' ? (
+          meta
+        ) : (
+          <Badge size="sm" {...(metaTone !== undefined && { tone: metaTone })}>
+            {meta}
+          </Badge>
+        ),
+    }),
+  }),
+);
 
 function ChartDemo() {
   const [nodes, setNodes] = useState(PEOPLE);
@@ -46,7 +41,7 @@ function ChartDemo() {
       <OrgChart
         nodes={nodes}
         focusId={selected}
-        dottedLines={[{ from: 'p8', to: 'p2' }]}
+        dottedLines={fixture.data.dottedLines}
         onSelect={(n) => setSelected(n.id)}
         onLoadChildren={(n) =>
           new Promise<void>((resolve) =>
@@ -64,7 +59,7 @@ function ChartDemo() {
           if (to === undefined) return;
           setNodes((all) => all.map((x) => (x.id === n.id ? { ...x, parentId: to } : x)));
         }}
-        toolbar={<Button size="sm">Export</Button>}
+        toolbar={<Button size="sm">{fixture.data.exportLabel}</Button>}
         style={{ ['--mn-org-chart-height' as string]: '28rem' }}
       />
       <p style={{ margin: 0 }}>

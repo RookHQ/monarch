@@ -1,5 +1,14 @@
-import { EventChip } from '@rookcom/monarch-react/scheduling';
+import { EventChip, type EventChipStatus } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './event-chip.fixture.json';
+
+const events = fixture.data.events as readonly {
+  title: string;
+  time: string;
+  status: string;
+  color?: string;
+}[];
 
 export default {
   id: 'event-chip',
@@ -137,10 +146,15 @@ export default {
           stack: true,
           render: () => (
             <div style={{ display: 'grid', gap: 2, width: 220 }}>
-              <EventChip title="Stand-up" time="09:00" color="#0f766e" />
-              <EventChip title="Design review" time="11:00" status="tentative" color="#7c3aed" />
-              <EventChip title="Retrospective" time="16:00" status="cancelled" color="#c2410c" />
-              <EventChip title="Vendor call" time="17:30" status="declined" />
+              {events.map((event) => (
+                <EventChip
+                  key={event.title}
+                  title={event.title}
+                  time={event.time}
+                  status={event.status as EventChipStatus}
+                  {...(event.color && { color: `#${event.color}` })}
+                />
+              ))}
             </div>
           ),
         },

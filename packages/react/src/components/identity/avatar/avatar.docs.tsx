@@ -1,5 +1,7 @@
-import { Avatar, AvatarGroup } from '@rookcom/monarch-react';
+import { Avatar, AvatarGroup, type AvatarProps } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './avatar.fixture.json';
 
 export default {
   id: 'avatar',
@@ -129,11 +131,14 @@ export default {
           title: 'Sizes and fallback',
           render: () => (
             <>
-              <Avatar name="Ada Lovelace" size="xs" />
-              <Avatar name="Grace Hopper" size="sm" />
-              <Avatar name="Katherine Johnson" />
-              <Avatar name="Margaret Hamilton" size="lg" shape="square" />
-              <Avatar name="Rook" size="xl" />
+              {fixture.data.avatars.map((avatar) => (
+                <Avatar
+                  key={avatar.name}
+                  name={avatar.name}
+                  size={avatar.size as NonNullable<AvatarProps['size']>}
+                  shape={avatar.shape as NonNullable<AvatarProps['shape']>}
+                />
+              ))}
             </>
           ),
         },

@@ -556,7 +556,13 @@ export const AiThread = forwardRef<HTMLDivElement, AiThreadProps>(function AiThr
         {renderMessage ? (
           renderMessage(message, context)
         ) : (
-          <AiMessageView locale={locale} {...props} message={message} announce={!announce} />
+          <AiMessageView
+            locale={locale}
+            timeZone={timeZone}
+            {...props}
+            message={message}
+            announce={!announce}
+          />
         )}
       </div>
     );

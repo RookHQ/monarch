@@ -7,6 +7,8 @@ import {
   useAiConversation,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-thinking-indicator.fixture.json';
 
 const slow = mockTransport({
   delayMs: 4500,
@@ -132,7 +134,12 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Shimmer (default)', render: () => <AiThinkingIndicator /> },
+        {
+          title: 'Shimmer (default)',
+          render: () => (
+            <AiThinkingIndicator variant={fixture.data.variant as 'shimmer' | 'mark'} />
+          ),
+        },
         { title: 'Bot mark', render: () => <AiThinkingIndicator variant="mark" /> },
         {
           title: 'Custom label, already waiting',

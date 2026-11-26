@@ -1,0 +1,186 @@
+{
+  "id": "username-availability-input",
+  "name": "MonarchUsernameAvailabilityInput",
+  "title": "UsernameAvailabilityInput",
+  "family": "identity",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "TextField with .task(id:) for the debounced check",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A labelled text field whose value is checked while the person types, with the status shown as an icon and a message and announced.",
+  "whenToUse": "For handles, workspace addresses and slugs that must be unique.",
+  "whenNotToUse": "For validation that needs no request, use MonarchTextField with its error parameter.",
+  "api": [
+    "init(_ label: String, text: Binding<String>, prompt: String? = nil, helper: String? = nil, prefix: String? = nil, isRequired: Bool = false, debounce: Duration = .milliseconds(400), checkingLabel: String? = nil, validLabel: String? = nil, invalidLabel: String? = nil, errorLabel: String? = nil, retryLabel: String? = nil, transform: ((String) -> String)? = nil, onStatusChange: (@MainActor (MonarchUsernameAvailabilityStatus, String?) -> Void)? = nil, validate: @escaping @Sendable (String) async throws -> MonarchUsernameAvailabilityResult?)",
+    "struct MonarchUsernameAvailabilityResult { init(isValid: Bool, message: String? = nil) }",
+    "enum MonarchUsernameAvailabilityStatus { case idle, checking, valid, invalid, error }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The visible label, already localised."
+    },
+    {
+      "name": "text",
+      "type": "Binding<String>",
+      "default": "required",
+      "description": "The text to edit and check."
+    },
+    {
+      "name": "prompt",
+      "type": "String?",
+      "default": "nil",
+      "description": "Placeholder shown while the field is empty."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Supporting text under the field, shown while there is no status message."
+    },
+    {
+      "name": "prefix",
+      "type": "String?",
+      "default": "nil",
+      "description": "Fixed text before the value, such as a domain."
+    },
+    {
+      "name": "debounce",
+      "type": "Duration",
+      "default": ".milliseconds(400)",
+      "description": "How long typing must pause before the check runs."
+    },
+    {
+      "name": "checkingLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Checking availability…\"."
+    },
+    {
+      "name": "validLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Available\"."
+    },
+    {
+      "name": "invalidLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Not available\"."
+    },
+    {
+      "name": "errorLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Couldn’t check availability.\""
+    },
+    {
+      "name": "retryLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Try again\"."
+    },
+    {
+      "name": "transform",
+      "type": "((String) -> String)?",
+      "default": "nil",
+      "description": "Rewrites typed text before it is stored, such as lower-casing."
+    },
+    {
+      "name": "onStatusChange",
+      "type": "(@MainActor (MonarchUsernameAvailabilityStatus, String?) -> Void)?",
+      "default": "nil",
+      "description": "Runs when the status or its message changes."
+    },
+    {
+      "name": "validate",
+      "type": "@Sendable (String) async throws -> MonarchUsernameAvailabilityResult?",
+      "default": "required",
+      "description": "The check. Return nil when there is nothing to check. Throwing sets the error status."
+    },
+    {
+      "name": "isRequired",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the required mark after the label."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "A plain field; the helper text shows."
+    },
+    {
+      "name": "checking",
+      "description": "A progress indicator at the end of the field and \"Checking availability…\" under it."
+    },
+    {
+      "name": "valid",
+      "description": "A success border, a check symbol and the message in the success colour."
+    },
+    {
+      "name": "invalid",
+      "description": "A danger border, a warning symbol and the message in the danger colour."
+    },
+    {
+      "name": "error",
+      "description": "An information symbol in the warning colour, the message and a \"Try again\" button."
+    },
+    {
+      "name": "focused",
+      "description": "Draws the theme's focus ring around the field."
+    },
+    {
+      "name": "disabled",
+      "description": "Subtle background and the disabled text colour, set with disabled(_:)."
+    }
+  ],
+  "appearance": "The same field as MonarchTextField, with the prefix in the muted text colour before the text and the status icon after it.",
+  "platformNotes": "The web passes an AbortSignal to the check; here the check runs in a task that SwiftUI cancels when the text changes, which also cancels URLSession requests made in it. The web has sm, md and lg sizes; iOS has the one size of MonarchTextField. The web reports the first idle status on mount; onStatusChange runs on changes only. Monarch does no networking. Several closures are optional (transform, onStatusChange). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is transform.",
+  "accessibility": [
+    "The field is one VoiceOver element: label, value, and a hint made of the prefix, the helper text and the status message.",
+    "Settled results (\"Available\", \"Not available\", a failure) are announced; \"Checking\" is not.",
+    "Each status has its own icon and message, not colour alone.",
+    "The \"Try again\" button is a separate element with a 44-point touch target.",
+    "The field is at least 44 points high and the whole field focuses the input.",
+    "Text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Empty text is idle and is never checked.",
+    "A check cancelled by new typing never writes its result, so the status always describes the latest text.",
+    "\"Try again\" runs the check at once, without the wait.",
+    "The message returned by the check replaces the built-in and overridden texts.",
+    "Changing validate does not start a new check; the next edit does."
+  ],
+  "tests": [
+    "MonarchUsernameAvailabilityInputTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Workspace address",
+      "fixture": "username-availability-input",
+      "webExample": "Workspace address",
+      "template": "MonarchUsernameAvailabilityInput(\n    {{label}},\n    text: $address,\n    prompt: {{placeholder}},\n    helper: {{description}},\n    prefix: {{prefix}},\n    isRequired: {{required}}\n) { address in\n    MonarchUsernameAvailabilityResult(isValid: ![{{taken.0}}, {{taken.1}}, {{taken.2}}, {{taken.3}}].contains(address))\n}",
+      "setupTemplate": "@State private var address = \"\"",
+      "setup": "@State private var address = \"\"",
+      "code": "MonarchUsernameAvailabilityInput(\n    \"Workspace address\",\n    text: $address,\n    prompt: \"your-team\",\n    helper: \"Try “team” to see a taken address.\",\n    prefix: \"example.com/\",\n    isRequired: true\n) { address in\n    MonarchUsernameAvailabilityResult(isValid: ![\"admin\", \"help\", \"support\", \"team\"].contains(address))\n}"
+    },
+    {
+      "title": "Lower-casing and blocking submit until valid",
+      "code": "MonarchUsernameAvailabilityInput(\n    \"Workspace address\",\n    text: $slug,\n    helper: \"Letters, numbers and dashes.\",\n    transform: { $0.lowercased() },\n    onStatusChange: { status, _ in canSubmit = status == .valid },\n    validate: { slug in\n        slug.count < 3\n            ? MonarchUsernameAvailabilityResult(isValid: false, message: \"Use at least 3 characters.\")\n            : MonarchUsernameAvailabilityResult(isValid: true)\n    }\n)\nMonarchButton(\"Create\", variant: .primary) {}\n    .disabled(!canSubmit)",
+      "setup": "@State private var slug = \"\"\n@State private var canSubmit = false"
+    }
+  ],
+  "webEquivalent": "UsernameAvailabilityInput",
+  "dependsOn": [
+    "text-field",
+    "spinner"
+  ]
+}

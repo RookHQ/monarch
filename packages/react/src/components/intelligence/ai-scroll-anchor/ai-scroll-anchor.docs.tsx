@@ -1,16 +1,54 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiScrollAnchor, useAiScrollAnchor } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-scroll-anchor.fixture.json';
 
-const LINES = [
-  'The draft has three sections.',
-  'The first summarises the request.',
-  'The second lists the open questions.',
-  'The third proposes next steps.',
-  'Each step has an owner and a date.',
-  'Nothing is sent until you approve it.',
-];
+const LINES = fixture.data.lines;
+
+/** A finished answer, scrolled up by the reader, so the jump button shows. */
+function ScrolledUpLog() {
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    // Two frames: the anchor pins to the bottom on its first measure, then the reader scrolls up.
+    let second = 0;
+    const first = requestAnimationFrame(() => {
+      second = requestAnimationFrame(() => {
+        const el = scroller.current;
+        if (el) el.scrollTop = el.scrollHeight - el.clientHeight - 160;
+      });
+    });
+    return () => {
+      cancelAnimationFrame(first);
+      cancelAnimationFrame(second);
+    };
+  }, []);
+  return (
+    <AiScrollAnchor
+      ref={scroller}
+      watch={10}
+      tabIndex={0}
+      aria-label="Answer"
+      style={{ height: 180, overflow: 'auto', border: '1px solid var(--mn-color-border-subtle)' }}
+      footer={({ atBottom, scrollToBottom }) =>
+        atBottom ? null : (
+          <div style={{ position: 'sticky', bottom: 8, textAlign: 'center' }}>
+            <Button size="sm" onClick={() => scrollToBottom()}>
+              {fixture.data.jump}
+            </Button>
+          </div>
+        )
+      }
+    >
+      {Array.from({ length: fixture.data.count }, (_, i) => (
+        <p key={i} style={{ margin: 8 }}>
+          {LINES[i % LINES.length]}
+        </p>
+      ))}
+    </AiScrollAnchor>
+  );
+}
 
 function GrowingLog() {
   const [count, setCount] = useState(2);
@@ -160,7 +198,12 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Growing content with a jump button', stack: true, render: () => <GrowingLog /> },
+        {
+          title: 'Scrolled up, with a jump button',
+          stack: true,
+          render: () => <ScrolledUpLog />,
+        },
+        { title: 'Growing content', stack: true, render: () => <GrowingLog /> },
         { title: 'The hook on your own elements', stack: true, render: () => <HookDemo /> },
       ],
     },

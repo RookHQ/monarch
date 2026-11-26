@@ -1,5 +1,7 @@
 import { VirtualList } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './virtual-list.fixture.json';
 
 interface Contact {
   id: string;
@@ -7,10 +9,17 @@ interface Contact {
   team: string;
 }
 
-const TEAMS = ['Design', 'Finance', 'Support', 'Engineering'];
-const CONTACTS: Contact[] = Array.from({ length: 5000 }, (_, i) => ({
+const data = fixture.data as unknown as {
+  label: string;
+  itemLabel: string;
+  count: number;
+  height: number;
+  teams: string[];
+};
+const TEAMS = data.teams;
+const CONTACTS: Contact[] = Array.from({ length: data.count }, (_, i) => ({
   id: `c${i}`,
-  name: `Contact ${i + 1}`,
+  name: `${data.itemLabel} ${i + 1}`,
   team: TEAMS[i % TEAMS.length] ?? 'Design',
 }));
 
@@ -129,10 +138,10 @@ export default {
           stack: true,
           render: () => (
             <VirtualList
-              label="Contacts"
+              label={data.label}
               items={CONTACTS}
               getItemKey={(c) => c.id}
-              height={320}
+              height={data.height}
               estimatedItemHeight={41}
               renderItem={(c) => <ContactRow contact={c} />}
             />

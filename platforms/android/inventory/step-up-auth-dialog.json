@@ -1,0 +1,174 @@
+{
+  "id": "step-up-auth-dialog",
+  "name": "MonarchStepUpAuthDialog",
+  "title": "StepUpAuthDialog",
+  "family": "identity",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Content for MonarchBottomSheet: MonarchPasswordInput, MonarchOtpPinInput, androidx.compose.material3.SecondaryScrollableTabRow, MonarchButton and MonarchInlineNotice; androidx.biometric.BiometricPrompt and Credential Manager run by the app through callbacks",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Asks a signed-in person to confirm it is still them, with their password, an authenticator code, a passkey or the device's biometrics or screen lock, before a high-risk action.",
+  "whenToUse": "Before a high-risk action in a signed-in session, such as deleting a workspace, revoking keys or changing the sign-in email, when the server asks for a recent confirmation.",
+  "whenNotToUse": "To sign in, use the SignInForm recipe. For a confirmation without re-authentication, use a MonarchDialog with a Danger MonarchButton (ConfirmDialog).",
+  "api": [
+    "@Composable fun MonarchStepUpAuthDialog(onVerify: suspend (MonarchStepUpCredential) -> Unit, modifier: Modifier = Modifier, title: String? = null, description: String? = null, methods: List<MonarchStepUpMethod> = listOf(MonarchStepUpMethod.Password), errorMessage: ((Throwable) -> String?)? = null, onRequestBiometric: (suspend () -> Boolean)? = null, onForgot: (() -> Unit)? = null, onCancel: (() -> Unit)? = null, onVerified: (() -> Unit)? = null, onVerifyingChange: ((Boolean) -> Unit)? = null, labels: MonarchStepUpAuthDialogLabels = MonarchStepUpAuthDialogLabels())",
+    "enum class MonarchStepUpMethod { Password, Code, Passkey, DeviceOwner }",
+    "sealed interface MonarchStepUpCredential { val method: MonarchStepUpMethod; data class Password(val password: String); data class Code(val code: String); data object Passkey; data object DeviceOwner }",
+    "class MonarchStepUpAuthDialogLabels(title: String? = null, description: String? = null, methodPicker: String? = null, methodName: ((MonarchStepUpMethod) -> String)? = null, passwordLabel: String? = null, passwordRequired: String? = null, codeLabel: String? = null, codeHelper: String? = null, codeIncomplete: String? = null, passkeyDescription: String? = null, passkeyButton: String? = null, deviceOwnerDescription: String? = null, deviceOwnerButton: String? = null, submit: String? = null, cancel: String? = null, forgot: String? = null, genericError: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "onVerify",
+      "type": "suspend (MonarchStepUpCredential) -> Unit",
+      "default": "required",
+      "description": "Checks the credential with the server. Return when accepted; throw to show the failure. For Passkey run the Credential Manager assertion here. For DeviceOwner the system check has already passed."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the dialog content; give it the sheet's padding."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "null",
+      "description": "Replaces the title \"Confirm it’s you\"."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "null",
+      "description": "Why the person is asked, such as \"Deleting a workspace needs your password.\". Pass the same text as the BiometricPrompt subtitle."
+    },
+    {
+      "name": "methods",
+      "type": "List<MonarchStepUpMethod>",
+      "default": "listOf(MonarchStepUpMethod.Password)",
+      "description": "The methods offered, most preferred first. Repeats are dropped; empty means the password; DeviceOwner is offered only with onRequestBiometric. With more than one, tabs switch between them."
+    },
+    {
+      "name": "errorMessage",
+      "type": "((Throwable) -> String?)?",
+      "default": "null",
+      "description": "Turns a thrown error into a message. Without it, or when it returns null, \"That did not work. Try again.\" is shown."
+    },
+    {
+      "name": "onRequestBiometric",
+      "type": "(suspend () -> Boolean)?",
+      "default": "null",
+      "description": "Shows BiometricPrompt (the app owns it: it needs androidx.biometric and a FragmentActivity) and returns true when it passed, false when cancelled."
+    },
+    {
+      "name": "onForgot",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Starts password recovery. Shows a Forgot your password? ghost button under the password field."
+    },
+    {
+      "name": "onCancel",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Shows Cancel, which calls this. Close the sheet in it."
+    },
+    {
+      "name": "onVerified",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Called after onVerify succeeds. Close the sheet and run the protected action here."
+    },
+    {
+      "name": "onVerifyingChange",
+      "type": "((Boolean) -> Unit)?",
+      "default": "null",
+      "description": "Called with true when a check starts and false when it ends; pass it to the sheet's dismissible so it cannot be swiped away meanwhile."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchStepUpAuthDialogLabels",
+      "default": "MonarchStepUpAuthDialogLabels()",
+      "description": "Replacements for every built-in string, including the method names and button titles."
+    }
+  ],
+  "states": [
+    {
+      "name": "password",
+      "description": "MonarchPasswordInput with show and hide and the current-password autofill purpose; Forgot your password? when onForgot is given. Done on the keyboard submits."
+    },
+    {
+      "name": "code",
+      "description": "MonarchOtpPinInput with 6 digit cells in two groups of three; the code submits itself when complete and is cleared after a failure."
+    },
+    {
+      "name": "passkey",
+      "description": "A line of text and a Use passkey primary button."
+    },
+    {
+      "name": "device owner",
+      "description": "A line of text and a Use screen lock primary button that calls onRequestBiometric, then onVerify when it passed."
+    },
+    {
+      "name": "missing entry",
+      "description": "Confirm with an empty password or fewer than 6 digits shows \"Enter your password.\" or \"Enter all 6 digits.\" on the field, announced, without calling onVerify."
+    },
+    {
+      "name": "verifying",
+      "description": "The primary button shows its progress indicator; the fields, tabs, Forgot and Cancel are disabled; onVerifyingChange(true) lets the app lock the sheet."
+    },
+    {
+      "name": "failed",
+      "description": "The message is shown on the password or code field, or in a danger MonarchInlineNotice for passkey and device owner, and announced. A cancellation shows nothing."
+    }
+  ],
+  "appearance": "The title in the heading style, the description in the body style in the muted text color, then the method tabs, the field and full-width primary and ghost buttons, on the sheet's surface. All colors are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "Same names as iOS. The web dialog is the content of a sheet: the app presents it in a MonarchBottomSheet and closes it in onVerified and onCancel, the Android form of the iOS sheet that dismisses itself. iOS's async throws onVerify is a suspend function. iOS runs LocalAuthentication itself; Android's BiometricPrompt needs androidx.biometric, which Monarch does not depend on, and a FragmentActivity, so the app runs it in onRequestBiometric, and the device method is left out without it. For the same reason the passkey sheet is the app's Credential Manager call inside onVerify. The device button reads Use screen lock instead of naming Face ID or Touch ID, because BiometricPrompt chooses the sensor. The web's totp method is called Code; forgotHref is onForgot, because leaving a sheet is the app's navigation. The method picker is a scrollable tab row rather than a segmented control, so the names stay readable at large font sizes.",
+  "accessibility": [
+    "The title has the heading semantics.",
+    "The password and code fields are MonarchPasswordInput and MonarchOtpPinInput, so their labels, the show-password toggle, the one-time-code and password autofill types and the field errors come from those components.",
+    "Missing entries and failures are written in words and announced through a polite live region on an always-present node.",
+    "The method picker is a Material 3 tab row named \"Verification method\", with the selected state and 48dp tabs.",
+    "The primary button names what happens (Confirm, Use passkey, Use screen lock); every button is a MonarchButton with a 48dp target and the primary one reads its loading state while verifying.",
+    "With onVerifyingChange wired to the sheet's dismissible the sheet cannot be dismissed while verifying, so an announcement is not lost."
+  ],
+  "edgeCases": [
+    "Each presentation starts clean on the first method, because the sheet's content is created anew; the password and code are never saved in the instance state.",
+    "Changing the method clears the errors.",
+    "Only digits are kept in the code, at most 6.",
+    "A cancelled or failed BiometricPrompt leaves the dialog open with no error.",
+    "Credential.Password never prints the password in toString."
+  ],
+  "tests": [
+    "MonarchStepUpAuthDialogTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Password with a forgot link",
+      "fixture": "step-up-auth-dialog",
+      "webExample": "Password with a forgot link",
+      "template": "MonarchButton(text = {{trigger}}, onClick = { open = true }, variant = MonarchButtonVariant.Danger)\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }, dismissible = !verifying) {\n        MonarchStepUpAuthDialog(\n            onVerify = { _ ->\n                // Send the credential to the server; throw if it is refused.\n            },\n            description = {{description}},\n            methods = listOf(MonarchStepUpMethod.Password),\n            onForgot = {},\n            onCancel = { open = false },\n            onVerified = { open = false },\n            onVerifyingChange = { verifying = it },\n        )\n    }\n}",
+      "setupTemplate": "var open by rememberSaveable { mutableStateOf(true) }\nvar verifying by remember { mutableStateOf(false) }",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "var open by rememberSaveable { mutableStateOf(true) }\nvar verifying by remember { mutableStateOf(false) }",
+      "code": "MonarchButton(text = \"Delete workspace\", onClick = { open = true }, variant = MonarchButtonVariant.Danger)\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }, dismissible = !verifying) {\n        MonarchStepUpAuthDialog(\n            onVerify = { _ ->\n                // Send the credential to the server; throw if it is refused.\n            },\n            description = \"Deleting a workspace needs your password. Try “correct”.\",\n            methods = listOf(MonarchStepUpMethod.Password),\n            onForgot = {},\n            onCancel = { open = false },\n            onVerified = { open = false },\n            onVerifyingChange = { verifying = it },\n        )\n    }\n}"
+    },
+    {
+      "title": "With the device's biometrics or screen lock",
+      "code": "MonarchStepUpAuthDialog(\n    onVerify = { _ ->\n        // For DeviceOwner the system check has passed: tell the server.\n    },\n    methods = listOf(MonarchStepUpMethod.DeviceOwner, MonarchStepUpMethod.Password),\n    onRequestBiometric = {\n        // Show androidx.biometric.BiometricPrompt from the FragmentActivity and return whether it passed.\n        false\n    },\n)"
+    }
+  ],
+  "webEquivalent": "StepUpAuthDialog",
+  "dependsOn": [
+    "sheet",
+    "password-input",
+    "otp-pin-input",
+    "button"
+  ]
+}

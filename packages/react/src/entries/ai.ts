@@ -12,9 +12,9 @@ export {
   messageText,
   isStreaming,
   readServerSentEvents,
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   mapRookIntelligenceEvent,
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   rookIntelligenceTransport,
   mockTransport,
   textDeltas,

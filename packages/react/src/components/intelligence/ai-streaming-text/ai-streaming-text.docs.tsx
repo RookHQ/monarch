@@ -8,13 +8,13 @@ import {
   useAiConversation,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-streaming-text.fixture.json';
 
-const REPLY = `## Summary
+/** The reply as it stands partway through the stream: up to the second list item. */
+const MID_STREAM = fixture.data.text;
 
-The sample project has **three open tasks** and one is overdue. Here is the order I suggest:
-
-1. Review the *migration plan* first, since two tasks depend on it.
-2. Update the changelog.
+const REPLY = `${MID_STREAM}
 3. Draft the handover notes.
 
 | Task | Due |
@@ -181,6 +181,17 @@ export default {
     },
     examples: {
       items: [
+        {
+          title: 'Partway through an answer',
+          stack: true,
+          render: () => (
+            <AiStreamingText
+              text={MID_STREAM}
+              streaming={fixture.data.streaming}
+              announce={false}
+            />
+          ),
+        },
         { title: 'Streaming from a mock transport', stack: true, render: () => <StreamingDemo /> },
         {
           title: 'A finished answer (nothing is announced)',

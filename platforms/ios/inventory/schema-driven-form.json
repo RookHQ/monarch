@@ -1,0 +1,165 @@
+{
+  "id": "schema-driven-form",
+  "name": "MonarchSchemaDrivenForm",
+  "title": "SchemaDrivenForm",
+  "family": "forms",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Form with .formStyle(.grouped) of MonarchFieldRenderer rows in Section groups, inside ScrollViewReader; FocusState and AccessibilityFocusState for the first invalid question; ToolbarItem(placement: .confirmationAction / .cancellationAction), confirmationDialog and interactiveDismissDisabled for edit forms; LabeledContent with .labeledContentStyle(.monarch) when read only",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A form generated from a list of question definitions: the right input for each question, sections and conditional questions, validation, and a Save button that shows progress and errors.",
+  "whenToUse": "For forms whose questions are data: admin-authored intake forms, settings defined on the server, surveys and applications. The same MonarchFormFieldDefinition values drive MonarchFieldRenderer and the form builder's preview.",
+  "whenNotToUse": "For a fixed form known at build time, compose a Form of MonarchTextField, Picker and the other inputs directly, which allows custom layout. For a single question, use MonarchFieldRenderer.",
+  "api": [
+    "init(_ fields: [MonarchFormFieldDefinition], values: Binding<[String: MonarchFormFieldValue]>, validateOn: MonarchSchemaDrivenFormValidateOn = .blur, isReadOnly: Bool = false, isDirty: Bool? = nil, errors: [String: String] = [:], labels: MonarchSchemaDrivenFormLabels = MonarchSchemaDrivenFormLabels(), onSubmit: (@MainActor ([String: MonarchFormFieldValue]) async throws -> Void)? = nil, onDiscard: (@MainActor () -> Void)? = nil)",
+    "enum MonarchSchemaDrivenFormValidateOn: Hashable, Sendable, CaseIterable { case blur, submit }",
+    "struct MonarchSchemaDrivenFormLabels: Sendable { init(submit: String? = nil, submitFailed: String? = nil, empty: String? = nil, saving: String? = nil, discard: String? = nil, discardTitle: String? = nil, discardMessage: String? = nil, discardConfirm: String? = nil, keepEditing: String? = nil, fields: MonarchFieldRendererLabels = MonarchFieldRendererLabels()) }",
+    "enum MonarchSchemaDrivenFormDefaults { static func visibleFields(_ fields: [MonarchFormFieldDefinition], values: [String: MonarchFormFieldValue], calendar: Calendar = .current) -> [MonarchFormFieldDefinition]; static func problems(_ fields: [MonarchFormFieldDefinition], values: [String: MonarchFormFieldValue], calendar: Calendar = .current) -> [String: MonarchFormFieldProblem]; static func submittedValues(_ fields: [MonarchFormFieldDefinition], values: [String: MonarchFormFieldValue], calendar: Calendar = .current) -> [String: MonarchFormFieldValue] }"
+  ],
+  "options": [
+    {
+      "name": "fields",
+      "type": "[MonarchFormFieldDefinition]",
+      "default": "required",
+      "description": "The questions and section headings, in order. A section question starts a Section that lasts until the next one."
+    },
+    {
+      "name": "values",
+      "type": "Binding<[String: MonarchFormFieldValue]>",
+      "default": "required",
+      "description": "The answers keyed by question id; a missing key is no answer, and clearing an answer removes its key."
+    },
+    {
+      "name": "validateOn",
+      "type": "MonarchSchemaDrivenFormValidateOn",
+      "default": ".blur",
+      "description": ".blur shows a typed question's error once the person leaves it and a choice's once it is answered; .submit waits for a submit attempt."
+    },
+    {
+      "name": "isReadOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the shown answers as LabeledContent rows instead of inputs."
+    },
+    {
+      "name": "isDirty",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "nil puts the Save button after the questions; a value makes Save (and Discard with onDiscard) navigation bar buttons, Save enabled while true, and stops the sheet from being swiped away while true."
+    },
+    {
+      "name": "errors",
+      "type": "[String: String]",
+      "default": "[:]",
+      "description": "Messages from the app, such as the server's, keyed by question id; shown at once, in place of the question's own error."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSchemaDrivenFormLabels",
+      "default": "MonarchSchemaDrivenFormLabels()",
+      "description": "Replacements for Save, the failure message, what VoiceOver reads for an unanswered question in the read-only view, the discard confirmation, and the questions' strings."
+    },
+    {
+      "name": "onSubmit",
+      "type": "(@MainActor ([String: MonarchFormFieldValue]) async throws -> Void)?",
+      "default": "nil",
+      "description": "Receives the shown answers once they are valid; without it there is no Save button. Throw to show the error's description in a danger banner. A trailing closure is this parameter."
+    },
+    {
+      "name": "onDiscard",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "With isDirty, shows Discard in the navigation bar; it asks for confirmation, then calls this."
+    }
+  ],
+  "states": [
+    {
+      "name": "editing",
+      "description": "Each shown question with its input, label, help and required mark; no errors until validateOn says."
+    },
+    {
+      "name": "invalid",
+      "description": "After a submit attempt, every invalid question shows its message; the form scrolls to the first one and moves VoiceOver focus, and keyboard focus for a typed question, to it."
+    },
+    {
+      "name": "submitting",
+      "description": "Save shows the MonarchButton loading state (or a progress indicator named Saving in the navigation bar) and the questions are disabled until onSubmit returns."
+    },
+    {
+      "name": "failed",
+      "description": "onSubmit threw: its description, or The form could not be saved. Try again., in a danger MonarchBanner after the questions, announced to VoiceOver."
+    },
+    {
+      "name": "dirty",
+      "description": "With isDirty, Save is enabled in the navigation bar while true; Discard asks Discard unsaved changes? before calling onDiscard."
+    },
+    {
+      "name": "disabled",
+      "description": "disabled(true): inputs, Save and Discard are disabled."
+    },
+    {
+      "name": "read only",
+      "description": "The shown answers as LabeledContent rows: option labels, Yes or No, an abbreviated date, a locale number and file names, joined as a locale list; an unanswered question shows a dash, read as Not set."
+    }
+  ],
+  "appearance": "A grouped system Form with the canvas background role behind the sections and the surface role on each row. Questions take the roles of the inputs MonarchFieldRenderer chooses; section headings use the subheading text style and default text role, their help the caption style and muted text role. Save is a full-width primary MonarchButton and a failure a danger MonarchBanner. The same roles adapt to dark and both high-contrast themes.",
+  "platformNotes": "The web's SchemaDrivenForm has its own field schema (text, textarea, number, select, checkbox, switch, date) with regular-expression patterns, custom validate functions and nested section objects. iOS, like Android, renders the MonarchFormFieldDefinition schema that MonarchFieldRenderer and the form builder use, so it covers more types (email, phone, web address, time, radio, checkboxes, multi-select, yes or no, consent, rating, file) and their rules; there is no pattern or validate function: the app adds its own checks through errors. Sections are section questions in the flat list, shown as system Form sections with the heading as the header, and conditions are MonarchCondition values. Differences from Android, in Swift idiom: values is a Binding instead of values plus onValuesChange (so the changed question id is not passed; use onChange), enabled is the disabled(_:) modifier, the answers dictionary has no nil values (no key means no answer, and submittedValues leaves unanswered questions out instead of mapping them to null), onSubmit is an async throwing closure, and readOnly, dirty are isReadOnly, isDirty. Android's state, contentPadding and locale parameters are not offered: the system Form scrolls itself, and the locale, calendar and time zone come from the environment. Android's secondaryActions are not offered: Cancel and other actions belong in the navigation bar, where the app adds them with toolbar. Android pins a MonarchFormActionsBar under the questions with dirty; iOS has no such bar (form-actions-bar is native on iOS) and puts Save and Discard in the navigation bar, so the form must be in a NavigationStack in that mode. Touch has no blur: a typed question counts as left when keyboard focus moves away or another question is answered. Several closures are optional (onSubmit, onDiscard). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onSubmit.",
+  "accessibility": [
+    "Each question keeps the semantics of MonarchFieldRenderer: the label names the input, the required mark and help are its hint, and a new error is announced.",
+    "Section headings have the header trait.",
+    "An invalid submit scrolls to the first invalid question and moves VoiceOver focus to it with AccessibilityFocusState; a typed question also takes keyboard focus.",
+    "A failed submit posts its message as an accessibility announcement and stays visible in a danger MonarchBanner, whose tone is spoken.",
+    "While saving, the Save MonarchButton shows its loading state; in the navigation bar a ProgressView named Saving replaces Save, and the questions are disabled.",
+    "In the read-only view an unanswered question shows a dash that VoiceOver reads as Not set.",
+    "Save has a 44-point touch target and wraps at the largest text sizes."
+  ],
+  "edgeCases": [
+    "Hidden questions, and every question of a hidden section, are neither validated nor submitted; their answers stay in values.",
+    "errors win over the question's own message and show before any submit attempt; they do not block Save, which only checks the questions' own rules.",
+    "A question with isReadOnly keeps a readable text field; other read-only questions are disabled, as in MonarchFieldRenderer.",
+    "onSubmit = nil shows no Save button; MonarchSchemaDrivenFormDefaults.problems and submittedValues let the app submit from its own button.",
+    "The form is a scrolling Form: give it the screen or a bounded height and do not put it in a ScrollView.",
+    "A section heading with no shown questions still shows its header; a form with no questions is an empty Form with only Save.",
+    "With isDirty, Save and Discard appear only inside a NavigationStack, because they are toolbar items."
+  ],
+  "tests": [
+    "MonarchSchemaDrivenFormTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Booking form with sections and a conditional field",
+      "fixture": "schema-driven-form",
+      "webExample": "Booking form with sections and a conditional field",
+      "template": "MonarchSchemaDrivenForm(\n    form,\n    values: $answers,\n    labels: MonarchSchemaDrivenFormLabels(submit: {{submitLabel}})\n) { answers in\n    try await send(answers)\n}\n.environment(\\.locale, Locale(identifier: {{locale}}))",
+      "setupTemplate": "@State private var answers: [String: MonarchFormFieldValue] = [\"reminder\": .flag({{reminder.value}})]\nprivate let form = [\n    MonarchFormFieldDefinition(id: \"you\", type: .section, label: {{you.title}}),\n    MonarchFormFieldDefinition(id: \"name\", type: .shortText, label: {{name.label}}, isRequired: true),\n    MonarchFormFieldDefinition(id: \"email\", type: .email, label: {{email.label}}, isRequired: true),\n    MonarchFormFieldDefinition(id: \"visit\", type: .section, label: {{visit.title}}, description: {{visit.description}}),\n    MonarchFormFieldDefinition(\n        id: \"topic\",\n        type: .select,\n        label: {{topic.label}},\n        placeholder: {{topic.placeholder}},\n        isRequired: true,\n        options: [\n            MonarchFormFieldOption(value: {{topic.options.0.value}}, label: {{topic.options.0.label}}),\n            MonarchFormFieldOption(value: {{topic.options.1.value}}, label: {{topic.options.1.label}}),\n            MonarchFormFieldOption(value: {{topic.options.2.value}}, label: {{topic.options.2.label}}),\n        ]\n    ),\n    MonarchFormFieldDefinition(id: \"guests\", type: .number, label: {{guests.label}}, min: {{guests.min}}, max: {{guests.max}}),\n    MonarchFormFieldDefinition(id: \"date\", type: .date, label: {{date.label}}, minDate: {{date.min|date}}),\n    MonarchFormFieldDefinition(id: \"reminder\", type: .yesNo, label: {{reminder.label}}, description: {{reminder.description}}).asSwitch(),\n    MonarchFormFieldDefinition(id: \"consent\", type: .consent, label: {{consent.label}}, isRequired: true),\n]\nprivate func send(_ answers: [String: MonarchFormFieldValue]) async throws {}",
+      "setup": "@State private var answers: [String: MonarchFormFieldValue] = [\"reminder\": .flag(true)]\nprivate let form = [\n    MonarchFormFieldDefinition(id: \"you\", type: .section, label: \"Your details\"),\n    MonarchFormFieldDefinition(id: \"name\", type: .shortText, label: \"Full name\", isRequired: true),\n    MonarchFormFieldDefinition(id: \"email\", type: .email, label: \"Email\", isRequired: true),\n    MonarchFormFieldDefinition(id: \"visit\", type: .section, label: \"Your visit\", description: \"Tell us what to prepare.\"),\n    MonarchFormFieldDefinition(\n        id: \"topic\",\n        type: .select,\n        label: \"Topic\",\n        placeholder: \"Choose…\",\n        isRequired: true,\n        options: [\n            MonarchFormFieldOption(value: \"demo\", label: \"Product demo\"),\n            MonarchFormFieldOption(value: \"support\", label: \"Support question\"),\n            MonarchFormFieldOption(value: \"other\", label: \"Something else\"),\n        ]\n    ),\n    MonarchFormFieldDefinition(id: \"guests\", type: .number, label: \"Guests\", min: 1, max: 10),\n    MonarchFormFieldDefinition(id: \"date\", type: .date, label: \"Preferred date\", minDate: Date(timeIntervalSince1970: 1_767_225_600)),\n    MonarchFormFieldDefinition(id: \"reminder\", type: .yesNo, label: \"Email reminder\", description: \"One day before.\").asSwitch(),\n    MonarchFormFieldDefinition(id: \"consent\", type: .consent, label: \"I agree to be contacted about this booking\", isRequired: true),\n]\nprivate func send(_ answers: [String: MonarchFormFieldValue]) async throws {}",
+      "code": "MonarchSchemaDrivenForm(\n    form,\n    values: $answers,\n    labels: MonarchSchemaDrivenFormLabels(submit: \"Book\")\n) { answers in\n    try await send(answers)\n}\n.environment(\\.locale, Locale(identifier: \"en-GB\"))"
+    },
+    {
+      "title": "An edit form that saves from the navigation bar",
+      "setup": "@State private var saved: [String: MonarchFormFieldValue] = [\"workspace\": .text(\"Rook\")]\n@State private var answers: [String: MonarchFormFieldValue] = [\"workspace\": .text(\"Rook\")]\nprivate let form = [\n    MonarchFormFieldDefinition(id: \"workspace\", type: .shortText, label: \"Workspace name\", isRequired: true)\n]",
+      "code": "NavigationStack {\n    MonarchSchemaDrivenForm(\n        form,\n        values: $answers,\n        isDirty: answers != saved,\n        onSubmit: { values in saved = values },\n        onDiscard: { answers = saved }\n    )\n    .monarchCanvas()\n    .navigationTitle(\"Workspace\")\n}"
+    },
+    {
+      "title": "Answers shown read only",
+      "setup": "private let form = [\n    MonarchFormFieldDefinition(id: \"workspace\", type: .shortText, label: \"Workspace name\"),\n    MonarchFormFieldDefinition(id: \"seats\", type: .number, label: \"Seats\"),\n]",
+      "code": "MonarchSchemaDrivenForm(form, values: .constant([\"workspace\": .text(\"Rook\")]), isReadOnly: true)"
+    }
+  ],
+  "webEquivalent": "SchemaDrivenForm",
+  "dependsOn": [
+    "field-renderer",
+    "form-actions-bar",
+    "button",
+    "alert",
+    "description-list"
+  ],
+  "icons": {
+    "date": "CalendarGlyph"
+  }
+}

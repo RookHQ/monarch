@@ -23,7 +23,8 @@ Exports:
   `./contrast-report.json`.
 - `./appearance` (pre-paint boot script) and a TS API (`themes`,
   `resolveTheme`, `contrast`, `brand`, `products`, `deriveTheme`,
-  `neutralAccent`).
+  `neutralAccent`, and `emitted`: a colour at the precision the CSS prints,
+  where every contrast guarantee is measured).
 
 Tailwind 4, in the CSS file that imports Tailwind:
 

@@ -1,0 +1,126 @@
+{
+  "id": "table-block",
+  "name": "MonarchTableBlock",
+  "title": "TableBlock",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Grid inside ScrollView(.horizontal); TextField(axis: .vertical) per editable cell; Menu for the controls",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A small table of text inside a document: a read-only form that scrolls sideways, and an editable form with a text field per cell and a menu to add and delete rows and columns.",
+  "whenToUse": "For a few rows and columns of text in a document or a note: a comparison, a schedule, a glossary.",
+  "whenNotToUse": "For app data that people sort, filter or select, use the system Table or List. For side-by-side prose, use two columns of text.",
+  "api": [
+    "init(_ caption: String? = nil, data: MonarchTableBlockData, label: String? = nil)",
+    "init(_ caption: String? = nil, data: Binding<MonarchTableBlockData>, label: String? = nil, labels: MonarchTableBlockLabels = MonarchTableBlockLabels(), onDelete: (@MainActor () -> Void)? = nil)",
+    "struct MonarchTableBlockData: Sendable, Hashable",
+    "MonarchTableBlockData.init(rows: [[String]], hasHeaderRow: Bool = true)",
+    "MonarchTableBlockData.init(rowCount: Int = 3, columnCount: Int = 3, hasHeaderRow: Bool = true)",
+    "MonarchTableBlockData: static let maximumRowCount = 50, static let maximumColumnCount = 20, private(set) var rows: [[String]], var hasHeaderRow: Bool, var rowCount: Int, var columnCount: Int, var canAddRow: Bool, var canAddColumn: Bool, var canDeleteRow: Bool, var canDeleteColumn: Bool, subscript(row: Int, column: Int) -> String, func isHeader(row: Int) -> Bool",
+    "MonarchTableBlockData: mutating func addRow(after row: Int) -> Bool, addColumn(after column: Int) -> Bool, deleteRow(at row: Int) -> Bool, deleteColumn(at column: Int) -> Bool",
+    "struct MonarchTableBlockLabels: Sendable { init(controls: String? = nil, addRow: String? = nil, addColumn: String? = nil, deleteRow: String? = nil, deleteColumn: String? = nil, headerRow: String? = nil, deleteTable: String? = nil, emptyCell: String? = nil, cellPosition: (@Sendable (_ row: Int, _ column: Int) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "caption",
+      "type": "String?",
+      "default": "nil",
+      "description": "Text above the table. Also the spoken name of the table."
+    },
+    {
+      "name": "data",
+      "type": "MonarchTableBlockData or Binding<MonarchTableBlockData>",
+      "default": "required",
+      "description": "The cells. A value gives a read-only table; a binding gives an editable one."
+    },
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "nil",
+      "description": "The spoken name of the table when the caption is not the right one."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchTableBlockLabels",
+      "default": "MonarchTableBlockLabels()",
+      "description": "Replacements for the built-in strings. Editable form only."
+    },
+    {
+      "name": "onDelete",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds \"Delete table\" to the menu. The app removes the table. Editable form only."
+    }
+  ],
+  "states": [
+    {
+      "name": "read-only",
+      "description": "Cells are text. Columns are between 96 and 240 points wide before Dynamic Type and text wraps inside them."
+    },
+    {
+      "name": "editable",
+      "description": "Every cell is a text field in a 144-point column, at least 44 points high, and a \"Table\" menu button sits above the table."
+    },
+    {
+      "name": "header row",
+      "description": "The first row has a subtle fill, stronger text and the header trait. Switched in the menu or with hasHeaderRow."
+    },
+    {
+      "name": "at a limit",
+      "description": "Add row is disabled at 50 rows, add column at 20 columns, delete row and delete column at one."
+    },
+    {
+      "name": "disabled",
+      "description": "With disabled(_:) the text uses the disabled colour and the fields and the menu do not respond."
+    }
+  ],
+  "appearance": "Cells sit on the surface colour, header cells on the subtle background, with default-border hairlines between cells and around the table and 8-point outer corners. The caption is caption text in the muted colour. The same roles are used in light, dark and both high-contrast themes.",
+  "platformNotes": "The web component is two things: a scrolling frame for a static table, and a Tiptap node with prosemirror-tables. There is no block editor on iOS yet, so the editable form is a self-contained view over a MonarchTableBlockData binding that a block editor can host later; the data type has the web's commands (add row and column after, delete row and column, header row) and limits (50 by 20). Not offered: cell selection across several cells, merged cells (colspan and rowspan), rich text inside a cell, and Tab to move between cells (the keyboard's own field navigation applies). The web shows the controls only while the caret is in the table; here the menu is always shown above an editable table and acts on the cell that last had focus, or on the last row and column when none had. The built-in strings are replaced through one MonarchTableBlockLabels value instead of one parameter each, because there are nine.",
+  "accessibility": [
+    "The scrolling table is a container named by label, else the caption, else \"Table\"; a caption that is the spoken name is hidden so it is not read twice.",
+    "A read-only cell is one element: its text, or \"Empty\", as the label and \"Row 2, column 1\" as the value.",
+    "An editable cell is a text field whose label is its position.",
+    "Header cells have the header trait and stronger text, so the header does not depend on its fill.",
+    "The controls are a standard Menu; the header row item is a Toggle with a check mark; \"Delete table\" has the destructive role.",
+    "Editable cells are at least 44 points high and text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Ragged rows are padded with empty cells; an empty input becomes one empty cell; rows past 50 and columns past 20 are dropped.",
+    "Reading a cell outside the table gives an empty string and writing one does nothing.",
+    "After a row or column is added the new row or column takes focus.",
+    "At the largest text size columns are wider and the table scrolls sooner.",
+    "The grid is not lazy: it is meant for small tables, which the limits enforce."
+  ],
+  "tests": [
+    "MonarchTableBlockTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Static table",
+      "fixture": "table-block",
+      "webExample": "Static table",
+      "template": "MonarchTableBlock(\n    {{caption}},\n    data: MonarchTableBlockData(rows: [\n        [{{rows.0.0}}, {{rows.0.1}}],\n        [{{rows.1.0}}, {{rows.1.1}}],\n        [{{rows.2.0}}, {{rows.2.1}}],\n    ])\n)",
+      "code": "MonarchTableBlock(\n    \"Support hours\",\n    data: MonarchTableBlockData(rows: [\n        [\"Day\", \"Hours\"],\n        [\"Monday to Friday\", \"08:00–18:00\"],\n        [\"Saturday\", \"10:00–14:00\"],\n    ])\n)"
+    },
+    {
+      "title": "An editable table",
+      "setup": "@State private var table = MonarchTableBlockData(rowCount: 2, columnCount: 2)\n@State private var isRemoved = false",
+      "code": "if !isRemoved {\n    MonarchTableBlock(\"Schedule\", data: $table) {\n        isRemoved = true\n    }\n}"
+    },
+    {
+      "title": "Changing the data in code",
+      "setup": "@State private var table = MonarchTableBlockData(rows: [[\"Name\"], [\"Ada\"]])",
+      "code": "MonarchTableBlock(data: table)\nMonarchButton(\"Add a column\") {\n    table.addColumn(after: table.columnCount - 1)\n}"
+    }
+  ],
+  "webEquivalent": "TableBlock",
+  "dependsOn": [
+    "button",
+    "text"
+  ]
+}

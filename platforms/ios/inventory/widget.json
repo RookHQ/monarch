@@ -1,0 +1,183 @@
+{
+  "id": "widget",
+  "name": "MonarchWidget",
+  "title": "Widget",
+  "family": "data-display",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchCard (or a plain VStack) with a header of Text, Button and Menu with .menuStyle(.button); MonarchEmptyState, MonarchInlineErrorRetry and MonarchInlineNotice for the states; TimelineView(.everyMinute) for the updated line",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The frame of a dashboard widget: a title with a period, header actions, an overflow menu, View all, and its own loading, empty and error states.",
+  "whenToUse": "On a home or dashboard screen made of independent sections that load on their own, or when a section needs a period label, View all or an overflow menu (refresh, export, remove).",
+  "whenNotToUse": "For a single figure inside another surface, use MonarchMetric. For a container with no data states, use MonarchCard. For a titled section without a box, use MonarchSectionHeader.",
+  "api": [
+    "init(_ title: String, description: String? = nil, period: String? = nil, systemImage: String? = nil, variant: MonarchWidgetVariant = .card, state: MonarchWidgetState = .ready, isRetrying: Bool = false, updatedAt: Date? = nil, footer: String? = nil, labels: MonarchWidgetLabels = MonarchWidgetLabels(), onRetry: (@MainActor () -> Void)? = nil, onViewAll: (@MainActor () -> Void)? = nil, @ViewBuilder actions: () -> Actions, @ViewBuilder menu: () -> MenuItems, @ViewBuilder content: () -> Content)",
+    "init(… the same …, @ViewBuilder menu: () -> MenuItems, @ViewBuilder content: () -> Content) where Actions == EmptyView",
+    "init(… the same …, @ViewBuilder content: () -> Content) where Actions == EmptyView, MenuItems == EmptyView",
+    "enum MonarchWidgetState { case ready, loading, empty(String? = nil), failed(String? = nil) }",
+    "enum MonarchWidgetVariant { case card, plain }",
+    "struct MonarchWidgetLabels { var menu, viewAllLabel, loading, updated: (@Sendable (String) -> String)?; var viewAll, error, empty: String? }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The widget's title. It has the header trait."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "A caption line under the title."
+    },
+    {
+      "name": "period",
+      "type": "String?",
+      "default": "nil",
+      "description": "The period the figures cover, muted beside the title."
+    },
+    {
+      "name": "systemImage",
+      "type": "String?",
+      "default": "nil",
+      "description": "A decorative SF Symbol before the title."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchWidgetVariant",
+      "default": ".card",
+      "description": "card draws a MonarchCard without a shadow; plain has no surface, for a widget inside another surface."
+    },
+    {
+      "name": "state",
+      "type": "MonarchWidgetState",
+      "default": ".ready",
+      "description": "ready shows the content; loading three placeholder lines; empty a small MonarchEmptyState; failed the message, with Try again when onRetry is set."
+    },
+    {
+      "name": "isRetrying",
+      "type": "Bool",
+      "default": "false",
+      "description": "With failed and onRetry: the Try again button is busy."
+    },
+    {
+      "name": "updatedAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "Shown in the footer as \"Updated 5 minutes ago\", refreshed every minute. Hidden while loading."
+    },
+    {
+      "name": "footer",
+      "type": "String?",
+      "default": "nil",
+      "description": "A note under the body. Hidden while loading."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchWidgetLabels",
+      "default": "MonarchWidgetLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds Try again to the failed state."
+    },
+    {
+      "name": "onViewAll",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds a View all button to the header; the app navigates."
+    },
+    {
+      "name": "actions",
+      "type": "@ViewBuilder () -> Actions",
+      "default": "none (the shorter initialisers)",
+      "description": "Controls in the header before the menu, such as a small segmented Picker."
+    },
+    {
+      "name": "menu",
+      "type": "@ViewBuilder () -> MenuItems",
+      "default": "none (the shortest initialiser)",
+      "description": "The overflow menu's items: Button, Toggle, Divider. A destructive item takes role: .destructive."
+    },
+    {
+      "name": "content",
+      "type": "@ViewBuilder () -> Content",
+      "default": "required",
+      "description": "The body, shown in the ready state."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The content is shown under the header."
+    },
+    {
+      "name": "loading",
+      "description": "Three static placeholder lines in the muted background colour, one element read as \"Loading\" and the title. The footer is hidden."
+    },
+    {
+      "name": "empty",
+      "description": "A small MonarchEmptyState with the given title or \"Nothing to show yet\"."
+    },
+    {
+      "name": "failed",
+      "description": "A MonarchInlineErrorRetry with Try again when onRetry is set, otherwise a plain danger MonarchInlineNotice. The failure is announced."
+    }
+  ],
+  "appearance": "The card variant is a MonarchCard without a shadow: the surface background and the subtle border role. The title is label-size semibold text in the default text role; the period, description and footer use the muted text role. Header buttons are small ghost MonarchButtons. The placeholder lines use the muted background role. Light, dark and both high-contrast themes come from these roles.",
+  "platformNotes": "The web Widget is a <section> landmark with a heading level, a link for View all and an items array for the menu. On iOS the title has the header trait (there are no landmarks or heading levels), View all is a button whose action the app uses to navigate, and the menu takes standard Menu items through a view builder. The web `span` belongs to its DashboardGrid and has no equivalent here. The web loading placeholder can be replaced with `skeleton`; on iOS pass state .ready with content redacted by .redacted(reason: .placeholder) instead. The web's Try again can wait on a promise; on iOS the app sets isRetrying. Android uses the same name and options. Several closures are optional (onRetry, onViewAll). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onRetry.",
+  "accessibility": [
+    "The title has the header trait, so the Headings rotor moves between widgets; the icon is hidden.",
+    "The menu button is icon-only and named \"More actions for\" and the title; View all is named \"View all:\" and the title, starting with its visible text.",
+    "The loading placeholder is one element named \"Loading\" and the title.",
+    "A change to the failed state is announced with the message; Try again is a separate button from MonarchInlineErrorRetry.",
+    "At the accessibility text sizes the header controls move under the title instead of squeezing it.",
+    "Header buttons keep 44-point touch targets through MonarchButtonStyle."
+  ],
+  "edgeCases": [
+    "Long titles wrap; the header controls keep their size.",
+    "The updated line is relative to the current time and refreshes every minute.",
+    "The ready state with no content shows only the header."
+  ],
+  "tests": [
+    "MonarchWidgetTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Widget with period, view-all link, menu and updated time",
+      "fixture": "widget",
+      "webExample": "Widget with period, view-all link, menu and updated time",
+      "template": "MonarchWidget(\n    {{title}},\n    period: {{period}},\n    updatedAt: Date(timeIntervalSinceNow: {{updatedAt|date}}.timeIntervalSince({{now|date}})),\n    onViewAll: {},\n    menu: {\n        Button({{menu.0.label}}) {}\n        Button({{menu.1.label}}) {}\n        if {{menu.2.separatorBefore}} { Divider() }\n        Button({{menu.2.label}}, role: {{menu.2.destructive}} ? .destructive : nil) {}\n    },\n    content: {\n        Text({{body}})\n            .monarchTextStyle(.body)\n    }\n)",
+      "code": "MonarchWidget(\n    \"Team load\",\n    period: \"Open now\",\n    updatedAt: Date(timeIntervalSinceNow: Date(timeIntervalSince1970: 1_794_045_480).timeIntervalSince(Date(timeIntervalSince1970: 1_794_045_600))),\n    onViewAll: {},\n    menu: {\n        Button(\"Refresh\") {}\n        Button(\"Export CSV\") {}\n        if true { Divider() }\n        Button(\"Remove from dashboard\", role: true ? .destructive : nil) {}\n    },\n    content: {\n        Text(\"12 open tickets across 4 people.\")\n            .monarchTextStyle(.body)\n    }\n)"
+    },
+    {
+      "title": "Loading, empty and failed",
+      "setup": "@State private var isRetrying = false",
+      "code": "VStack {\n    MonarchWidget(\"Approvals\", state: .loading) { EmptyView() }\n    MonarchWidget(\"Mentions\", state: .empty(\"No mentions this week\")) { EmptyView() }\n    MonarchWidget(\"Revenue\", state: .failed(), isRetrying: isRetrying, onRetry: { isRetrying = true }) {\n        EmptyView()\n    }\n}"
+    }
+  ],
+  "webEquivalent": "Widget",
+  "dependsOn": [
+    "card",
+    "dropdown-menu",
+    "skeleton",
+    "empty-state",
+    "error-state",
+    "inline-error-retry",
+    "inline-notice",
+    "button"
+  ],
+  "icons": {
+    "viewAll": "ChevronRightGlyph",
+    "menu": "MoreGlyph"
+  }
+}

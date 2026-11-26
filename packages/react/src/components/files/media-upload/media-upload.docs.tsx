@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { MediaUpload, type MediaUploadContext } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './media-upload.fixture.json';
 
 /** Pretends to store the file: reports progress, then returns a local object URL. */
 function simulateUpload(file: File, { onProgress, signal }: MediaUploadContext): Promise<string> {
@@ -26,13 +28,13 @@ function ImageOnly() {
   return (
     <div style={{ maxWidth: 420 }}>
       <MediaUpload
-        label="Cover image"
-        description="Shown at the top of the page."
+        label={fixture.data.label}
+        description={fixture.data.description}
         value={url}
         onChange={setUrl}
         onUpload={simulateUpload}
-        maxImageSize={10 * 1024 * 1024}
-        videoUnavailable="Videos can’t be added to this item."
+        maxImageSize={fixture.data.maxImageSize}
+        videoUnavailable={fixture.data.videoUnavailable}
       />
     </div>
   );

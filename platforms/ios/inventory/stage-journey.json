@@ -1,0 +1,179 @@
+{
+  "id": "stage-journey",
+  "name": "MonarchStageJourney",
+  "title": "StageJourney",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "ScrollView(.horizontal) with ScrollViewReader for the stage strip, MonarchFlowLayout and MonarchButton for the moves, TimelineView(.everyMinute) with RelativeDateTimeFormatter for times; MonarchStageHistory is a VStack timeline",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Where an item is in its pipeline and what can happen next: a strip of stages grouped by phase, a card for the current stage with how long it has been there, and buttons for the moves the product allows; with MonarchStageHistory for the record of past moves.",
+  "whenToUse": "On the detail screen of an item that moves through fixed stages: a patent application, a deal, a candidate, an order. Use the strip variant in a header or a row.",
+  "whenNotToUse": "Not for the steps of a form or a setup flow the user goes through; use MonarchStepper. Not for a free status with no order; use MonarchStatusBadge.",
+  "api": [
+    "init(_ stages: [MonarchStageJourneyStage], currentID: String, terminal: MonarchStageJourneyTerminal? = nil, enteredAt: Date? = nil, currentMeta: String? = nil, variant: MonarchStageJourneyVariant = .full, transitions: [MonarchStageJourneyTransition] = [], now: Date? = nil, labels: MonarchStageJourneyLabels = MonarchStageJourneyLabels(), onTransition: (@MainActor (MonarchStageJourneyTransition) async throws -> Void)? = nil, @ViewBuilder content: () -> Content)",
+    "init(_ stages: [MonarchStageJourneyStage], currentID: String, terminal: MonarchStageJourneyTerminal? = nil, enteredAt: Date? = nil, currentMeta: String? = nil, variant: MonarchStageJourneyVariant = .full, transitions: [MonarchStageJourneyTransition] = [], now: Date? = nil, labels: MonarchStageJourneyLabels = MonarchStageJourneyLabels(), onTransition: (@MainActor (MonarchStageJourneyTransition) async throws -> Void)? = nil) where Content == EmptyView",
+    "struct MonarchStageJourneyStage: Identifiable { init(id: String, label: String, group: String? = nil, description: String? = nil) }",
+    "struct MonarchStageJourneyTransition: Identifiable { init(id: String, label: String, kind: MonarchStageJourneyTransitionKind = .forward, needsInput: Bool = false, isDisabled: Bool = false) }",
+    "enum MonarchStageJourneyTransitionKind { case forward, exit, back }",
+    "enum MonarchStageJourneyTerminal { case success, closed }",
+    "enum MonarchStageJourneyVariant { case full, strip }",
+    "struct MonarchStageJourneyLabels { init(stages:now:since:done:current:success:closed:nextSteps:moveTo:backTo:needsInput:moved:failed:), every parameter optional }",
+    "struct MonarchStageHistory: View { init(_ entries: [MonarchStageHistoryEntry], now: Date? = nil, emptyMessage: String? = nil, labels: MonarchStageHistoryLabels = MonarchStageHistoryLabels()) }",
+    "struct MonarchStageHistoryEntry: Identifiable { init(id: String, from: String? = nil, to: String, at: Date, actor: String? = nil, meta: String? = nil, note: String? = nil, isBackward: Bool = false) }",
+    "struct MonarchStageHistoryLabels { init(started: (@Sendable (String) -> String)? = nil, to: String? = nil, movedBack: String? = nil, empty: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "stages",
+      "type": "[MonarchStageJourneyStage]",
+      "default": "required",
+      "description": "Every stage in pipeline order, each with an id, a label, an optional group (phase) and an optional description shown while it is current."
+    },
+    {
+      "name": "currentID",
+      "type": "String",
+      "default": "required",
+      "description": "The id of the current stage. Stages before it are done. With an unknown id every stage is upcoming and no card is shown."
+    },
+    {
+      "name": "terminal",
+      "type": "MonarchStageJourneyTerminal?",
+      "default": "nil",
+      "description": "The current stage ends the journey: success (granted, won, hired) or closed (withdrawn, lost)."
+    },
+    {
+      "name": "enteredAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the item entered the current stage, shown as \"since 3 days ago\" and updated once a minute."
+    },
+    {
+      "name": "currentMeta",
+      "type": "String?",
+      "default": "nil",
+      "description": "A short note shown as a neutral MonarchBadge next to the current stage."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchStageJourneyVariant",
+      "default": ".full",
+      "description": "full: strip, card and moves. strip: the strip only."
+    },
+    {
+      "name": "transitions",
+      "type": "[MonarchStageJourneyTransition]",
+      "default": "[]",
+      "description": "The moves from the current stage: forward (the first is primary), exit (quiet) and one back (\"Back to …\")."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "A fixed reference time for enteredAt, which also stops the minute updates."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchStageJourneyLabels",
+      "default": "MonarchStageJourneyLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onTransition",
+      "type": "(@MainActor (MonarchStageJourneyTransition) async throws -> Void)?",
+      "default": "nil",
+      "description": "Called with the chosen move; its button shows a spinner until it returns and a thrown error is shown in the card. The product then changes currentID. Without it no moves are shown."
+    },
+    {
+      "name": "content",
+      "type": "@ViewBuilder () -> Content",
+      "default": "no content",
+      "description": "Extra content at the end of the card, such as a checklist."
+    }
+  ],
+  "states": [
+    {
+      "name": "done",
+      "description": "A stage before the current one: accent subtle fill, accent border and a checkmark; read as \"done\"."
+    },
+    {
+      "name": "current",
+      "description": "The current stage: solid accent fill and medium weight; read as \"current stage\" and selected."
+    },
+    {
+      "name": "upcoming",
+      "description": "A stage after the current one: outlined with muted text."
+    },
+    {
+      "name": "success",
+      "description": "The current stage ended the journey well: solid success stage, success-tinted card with a filled checkmark; read as \"Completed\"."
+    },
+    {
+      "name": "closed",
+      "description": "The journey ended early: emphasis stage with a strong border, subtle card with an x mark; read as \"Closed\"."
+    },
+    {
+      "name": "moving",
+      "description": "The chosen move's button shows a spinner and the other moves are disabled."
+    },
+    {
+      "name": "failed",
+      "description": "A thrown error is shown in the card with an icon and announced."
+    }
+  ],
+  "appearance": "Stages are capsules in the caption type role, grouped under small uppercase phase names in the muted text colour. Done stages use the accent subtle fill and border with a strong accent checkmark, the current stage the solid accent and its on-solid text, upcoming stages the default border and muted text. The card is the surface colour with the subtle border, the success roles when the journey succeeded and the subtle background when closed. All colours are theme roles, so the dark and high-contrast themes need nothing else.",
+  "platformNotes": "The parity map named a horizontal stage strip and a timeline; both are here, the timeline as MonarchStageHistory, which the web exports from the same module (StageHistory). The strip scrolls sideways inside itself and starts scrolled to the current stage. The web's currentMeta and history actor, meta and note take any content; here they are strings (currentMeta is shown as a badge); put richer content in the card's content slot. The web's DateInput accepts strings and numbers; here times are Date. Times use RelativeDateTimeFormatter in the environment's locale instead of the RelativeTime component, because a fixed reference time is needed for snapshots and the strip needs plain text.",
+  "accessibility": [
+    "The strip is a container named \"Stages\"; each stage is one element read by its name, with \"done\", \"current stage\" or the outcome as its value; the current stage has the selected trait.",
+    "Done stages have a checkmark and the ended stage its outcome symbol, so the status is not colour alone.",
+    "The card's title (\"Now: Examination\") is a heading and is read with the outcome (\"Now: Granted, Completed\"); \"Next steps\" is a heading too.",
+    "A move button is read as \"Move to Granted\" or \"Back to Filed\", with \", asks for details\" when needsInput is true.",
+    "A change of current stage is announced (\"Moved to Granted\"); a failed move is announced with its message.",
+    "Each history entry is one element read as the move in words (\"Filed to Examination\"), \"(moved back)\", the time, the actor, the facts and the note; the dots and the line are hidden.",
+    "Text wraps and scales with Dynamic Type; move buttons are MonarchButton with 44-point touch targets and wrap onto new rows."
+  ],
+  "edgeCases": [
+    "An unknown currentID shows every stage as upcoming and no card.",
+    "Stages without a group are shown without a phase name; a group name repeated later starts a new run.",
+    "Only the first back move is shown.",
+    "A transition with isDisabled stays disabled; while a move runs the other moves are disabled.",
+    "An empty history shows \"No stage moves yet.\" or emptyMessage.",
+    "Long stage names do not wrap in the strip; the strip scrolls instead."
+  ],
+  "tests": [
+    "MonarchStageJourneyTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Journey with moves",
+      "fixture": "stage-journey",
+      "webExample": "Journey with moves",
+      "template": "MonarchStageJourney(\n    stages,\n    currentID: current,\n    enteredAt: {{now|date}}.addingTimeInterval(-{{enteredDaysAgo}} * 86400),\n    currentMeta: {{currentMeta}},\n    transitions: [\n        MonarchStageJourneyTransition(id: {{transitions.0.id}}, label: {{transitions.0.label}}),\n        MonarchStageJourneyTransition(id: {{transitions.1.id}}, label: {{transitions.1.label}}, kind: {{transitions.1.kind|case}}),\n        MonarchStageJourneyTransition(id: {{transitions.2.id}}, label: {{transitions.2.label}}, kind: {{transitions.2.kind|case}}),\n    ],\n    now: {{now|date}},\n    onTransition: { move in current = move.id }\n)",
+      "setupTemplate": "@State private var current = {{currentId}}\nprivate let stages = [\n    MonarchStageJourneyStage(id: {{stages.0.id}}, label: {{stages.0.label}}, group: {{stages.0.group}}, description: {{stages.0.description}}),\n    MonarchStageJourneyStage(id: {{stages.1.id}}, label: {{stages.1.label}}, group: {{stages.1.group}}, description: {{stages.1.description}}),\n    MonarchStageJourneyStage(id: {{stages.2.id}}, label: {{stages.2.label}}, group: {{stages.2.group}}, description: {{stages.2.description}}),\n    MonarchStageJourneyStage(id: {{stages.3.id}}, label: {{stages.3.label}}, group: {{stages.3.group}}, description: {{stages.3.description}}),\n    MonarchStageJourneyStage(id: {{stages.4.id}}, label: {{stages.4.label}}, group: {{stages.4.group}}, description: {{stages.4.description}}),\n]",
+      "setup": "@State private var current = \"filed\"\nprivate let stages = [\n    MonarchStageJourneyStage(id: \"draft\", label: \"Draft\", group: \"Prepare\", description: \"The application is being written.\"),\n    MonarchStageJourneyStage(id: \"review\", label: \"Review\", group: \"Prepare\", description: \"A second person checks the draft.\"),\n    MonarchStageJourneyStage(id: \"filed\", label: \"Filed\", group: \"Prosecute\", description: \"Submitted; waiting for the office to respond.\"),\n    MonarchStageJourneyStage(id: \"examined\", label: \"Examined\", group: \"Prosecute\", description: \"The office has issued its report.\"),\n    MonarchStageJourneyStage(id: \"granted\", label: \"Granted\", group: \"Maintain\", description: \"Protection is in force.\"),\n]",
+      "code": "MonarchStageJourney(\n    stages,\n    currentID: current,\n    enteredAt: Date(timeIntervalSince1970: 1_768_212_000).addingTimeInterval(-3 * 86400),\n    currentMeta: \"Prosecute\",\n    transitions: [\n        MonarchStageJourneyTransition(id: \"examined\", label: \"Examined\"),\n        MonarchStageJourneyTransition(id: \"withdrawn\", label: \"Withdrawn\", kind: .exit),\n        MonarchStageJourneyTransition(id: \"review\", label: \"Review\", kind: .back),\n    ],\n    now: Date(timeIntervalSince1970: 1_768_212_000),\n    onTransition: { move in current = move.id }\n)"
+    },
+    {
+      "title": "The strip in a header, after a successful end",
+      "setup": "private let stages = [\n    MonarchStageJourneyStage(id: \"lead\", label: \"Lead\"),\n    MonarchStageJourneyStage(id: \"proposal\", label: \"Proposal\"),\n    MonarchStageJourneyStage(id: \"won\", label: \"Won\"),\n]",
+      "code": "MonarchStageJourney(stages, currentID: \"won\", terminal: .success, variant: .strip)"
+    },
+    {
+      "title": "The history of moves",
+      "setup": "private let moves = [\n    MonarchStageHistoryEntry(id: \"2\", from: \"Filed\", to: \"Examination\", at: Date.now.addingTimeInterval(-86400), actor: \"Automation\", meta: \"2 deadlines added\"),\n    MonarchStageHistoryEntry(id: \"1\", to: \"Filed\", at: Date.now.addingTimeInterval(-9 * 86400), actor: \"Alex\"),\n]",
+      "code": "MonarchStageHistory(moves)"
+    }
+  ],
+  "webEquivalent": "StageJourney",
+  "dependsOn": [
+    "relative-time",
+    "button",
+    "badge",
+    "icon"
+  ]
+}

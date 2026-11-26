@@ -112,3 +112,200 @@ jobs:
           done
         env:
           GH_TOKEN: ${{ github.token }}
+
+  # Monarch for Android and iOS. The native version is the monarch-react version
+  # (decision D7): Maven publishes com.rookhq.monarch:*:<version> and SwiftPM
+  # resolves the plain git tag <version>. Both run after `stable`, for the same
+  # commit, and only when the Native workflow passed for that commit too.
+  native-uat-artifacts:
+    name: Native / uat AARs
+    # uat publishes nothing to Maven Central: the libraries are attached to the run instead.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'uat' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: platforms/android
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { ref: '${{ github.event.workflow_run.head_sha }}' }
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with: { cache-read-only: true }
+      - name: Build the libraries into build/repo (unsigned)
+        run: |
+          ./gradlew :monarch-tokens:publishAllPublicationsToLocalRepository \
+            :monarch-compose:publishAllPublicationsToLocalRepository \
+            :monarch-fonts-poppins:publishAllPublicationsToLocalRepository --stacktrace
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: monarch-android-${{ github.event.workflow_run.head_sha }}
+          path: platforms/android/build/repo
+          retention-days: 30
+
+  native-maven:
+    name: Native / Maven Central
+    if: github.event.workflow_run.head_branch == 'main'
+    needs: stable
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    # The environment holds the four secrets below and is limited to main. Its
+    # protection rules (reviewers, branch policy) apply before any step runs.
+    environment: maven-central
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
+    env:
+      # 'true' or 'false' only; no secret value is ever printed or written.
+      HAS_CREDENTIALS: >-
+        ${{ secrets.MAVEN_CENTRAL_USERNAME != '' && secrets.MAVEN_CENTRAL_PASSWORD != '' &&
+        secrets.MAVEN_SIGNING_KEY != '' && secrets.MAVEN_SIGNING_KEY_PASSWORD != '' }}
+      SHA: ${{ github.event.workflow_run.head_sha }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { ref: '${{ github.event.workflow_run.head_sha }}' }
+      - name: Decide whether to publish
+        id: plan
+        run: |
+          set -euo pipefail
+          skip() { echo "::notice::Maven Central: $1"; echo "publish=false" >>"$GITHUB_OUTPUT"; exit 0; }
+          [[ "$HAS_CREDENTIALS" == true ]] ||
+            skip "the maven-central environment does not have all of MAVEN_CENTRAL_USERNAME, MAVEN_CENTRAL_PASSWORD, MAVEN_SIGNING_KEY and MAVEN_SIGNING_KEY_PASSWORD; nothing is published."
+          if ls .changeset/*.md 2>/dev/null | grep -qv README; then
+            skip "pending changesets; the native libraries publish with the next stable release."
+          fi
+          node scripts/native/sync-version.mjs --check
+          version="$(node scripts/native/sync-version.mjs --print)"
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+          pom="https://repo1.maven.org/maven2/com/rookhq/monarch/monarch-compose/$version/monarch-compose-$version.pom"
+          if curl -sfI "$pom" >/dev/null; then
+            skip "com.rookhq.monarch $version is already on Maven Central."
+          fi
+          echo "publish=true" >>"$GITHUB_OUTPUT"
+      - name: Wait for the Native workflow on this commit
+        if: steps.plan.outputs.publish == 'true'
+        run: |
+          set -euo pipefail
+          # Up to 45 minutes: Native runs in parallel with CI on the same push.
+          for _ in $(seq 90); do
+            run="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/native.yml/runs?head_sha=$SHA&event=push" \
+              --jq '.workflow_runs | sort_by(.created_at) | last | if . == null then "none" else .status + " " + (.conclusion // "") end')"
+            case "$run" in
+              "completed success") echo "Native passed for $SHA"; exit 0 ;;
+              completed*) echo "::error::Native did not pass for $SHA ($run); nothing is published."; exit 1 ;;
+              none) echo "::error::No Native run for $SHA."; exit 1 ;;
+            esac
+            sleep 30
+          done
+          echo "::error::Native has not finished for $SHA after 45 minutes."
+          exit 1
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        if: steps.plan.outputs.publish == 'true'
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        if: steps.plan.outputs.publish == 'true'
+        with: { cache-read-only: true }
+      # Signs every publication in memory and uploads both libraries to the Central Portal,
+      # which validates and releases them. The same build writes the signed files to
+      # build/repo for the attestation below. -Pmonarch.javadoc=dokka builds the javadoc jars
+      # from the Dokka HTML.
+      - name: Publish to Maven Central
+        if: steps.plan.outputs.publish == 'true'
+        working-directory: platforms/android
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MAVEN_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MAVEN_SIGNING_KEY_PASSWORD }}
+        run: |
+          ./gradlew -Pmonarch.javadoc=dokka --stacktrace \
+            :monarch-tokens:publishAllPublicationsToLocalRepository \
+            :monarch-compose:publishAllPublicationsToLocalRepository \
+            :monarch-fonts-poppins:publishAllPublicationsToLocalRepository \
+            publishAndReleaseToMavenCentral
+      - name: Attest the published files
+        if: steps.plan.outputs.publish == 'true'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            platforms/android/build/repo/**/*.aar
+            platforms/android/build/repo/**/*.jar
+            platforms/android/build/repo/**/*.pom
+            platforms/android/build/repo/**/*.module
+
+  native-swiftpm-tag:
+    name: Native / SwiftPM tag
+    if: github.event.workflow_run.head_branch == 'main'
+    needs: stable
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      actions: read
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { ref: '${{ github.event.workflow_run.head_sha }}' }
+      - name: Decide whether to tag
+        id: plan
+        run: |
+          set -euo pipefail
+          skip() { echo "::notice::SwiftPM tag: $1"; echo "tag=false" >>"$GITHUB_OUTPUT"; exit 0; }
+          if ls .changeset/*.md 2>/dev/null | grep -qv README; then
+            skip "pending changesets; the tag is created with the next stable release."
+          fi
+          node scripts/native/sync-version.mjs --check
+          node scripts/native/emit-root-package.mjs --check
+          version="$(node scripts/native/sync-version.mjs --print)"
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+          # The npm release of this version comes first (job `stable` tags it).
+          git ls-remote --exit-code --tags origin "refs/tags/@rookcom/monarch-react@$version" >/dev/null ||
+            skip "@rookcom/monarch-react@$version is not tagged yet; nothing to follow."
+          if existing="$(git ls-remote --exit-code --tags origin "refs/tags/$version")"; then
+            [[ "${existing%%[[:space:]]*}" == "$SHA" ]] ||
+              echo "::warning::Tag $version already exists on another commit; a release tag is never moved."
+            skip "tag $version already exists."
+          fi
+          echo "tag=true" >>"$GITHUB_OUTPUT"
+      - name: Wait for the Native workflow on this commit
+        if: steps.plan.outputs.tag == 'true'
+        run: |
+          set -euo pipefail
+          for _ in $(seq 90); do
+            run="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/native.yml/runs?head_sha=$SHA&event=push" \
+              --jq '.workflow_runs | sort_by(.created_at) | last | if . == null then "none" else .status + " " + (.conclusion // "") end')"
+            case "$run" in
+              "completed success") echo "Native passed for $SHA"; exit 0 ;;
+              completed*) echo "::error::Native did not pass for $SHA ($run); no tag is created."; exit 1 ;;
+              none) echo "::error::No Native run for $SHA."; exit 1 ;;
+            esac
+            sleep 30
+          done
+          echo "::error::Native has not finished for $SHA after 45 minutes."
+          exit 1
+      # A plain version tag (0.14.N), the form SwiftPM resolves for
+      # .package(url: "https://github.com/RookHQ/monarch", from: "0.14.0").
+      - name: Tag ${{ steps.plan.outputs.version }}
+        if: steps.plan.outputs.tag == 'true'
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+        run: |
+          git tag "$VERSION" "$SHA"
+          git push origin "refs/tags/$VERSION"
+          echo "::notice::Tagged $SHA as $VERSION for Swift Package Manager."

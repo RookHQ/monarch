@@ -2,15 +2,17 @@ import { useRef, useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiInlinePrompt } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-inline-prompt.fixture.json';
 
-const PARAGRAPH =
-  'The team shipped the new onboarding flow in March. Early numbers suggest more people finish setup on their first visit, although the sample is still small and support tickets have not changed much yet.';
+const PARAGRAPH = fixture.data.paragraph;
 
 function SelectionDemo() {
   const paragraph = useRef<HTMLParagraphElement>(null);
   const button = useRef<HTMLButtonElement>(null);
-  const [open, setOpen] = useState(false);
-  const [selection, setSelection] = useState('');
+  // Opens on the whole paragraph, as after pressing the button below.
+  const [open, setOpen] = useState(true);
+  const [selection, setSelection] = useState(PARAGRAPH);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const [last, setLast] = useState('');
 
@@ -40,7 +42,7 @@ function SelectionDemo() {
             setOpen(true);
           }}
         >
-          Edit paragraph with AI
+          {fixture.data.button}
         </Button>
       </div>
       {last ? <p style={{ margin: 0 }}>Sent: “{last}”</p> : null}
@@ -49,7 +51,7 @@ function SelectionDemo() {
         open={open}
         onOpenChange={setOpen}
         context={selection}
-        suggestions={['Shorten', 'Make it more formal', 'Fix spelling and grammar']}
+        suggestions={fixture.data.suggestions}
         onSubmit={setLast}
       />
     </div>
@@ -155,6 +157,7 @@ export default {
         {
           title: 'Over a selection (select text, or use the button)',
           stack: true,
+          stage: true,
           render: () => <SelectionDemo />,
         },
       ],

@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { Field, FieldDescription, FieldLabel } from '@rookcom/monarch-react';
+import { Field, FieldDescription, FieldLabel, Textarea } from '@rookcom/monarch-react';
 import {
   MentionPicker,
-  parseMentionTokens,
   useMentionTextarea,
   type MentionItem,
   type MentionSearch,
 } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './mention-picker.fixture.json';
 
 const DIRECTORY: MentionItem[] = [
   { id: 'u_ana', label: 'Ana Lopez', description: 'Design' },
-  { id: 'u_ben', label: 'Ben Okafor', description: 'Engineering' },
+  ...fixture.data.suggestions,
   { id: 'u_chloe', label: 'Chloé Martin', description: 'Support' },
   { id: 'u_dev', label: 'Dev Patel', description: 'Billing' },
   { id: 'u_eli', label: 'Eli Novak', description: 'No access to this project', disabled: true },
@@ -37,43 +38,36 @@ const demoSearch: MentionSearch = (text, { trigger, signal }) =>
     });
   });
 
-const textareaStyle = {
-  boxSizing: 'border-box' as const,
-  width: '100%',
-  minHeight: 96,
-  padding: '8px 10px',
-  border: '1px solid var(--mn-color-border-input)',
-  borderRadius: 'var(--mn-radius-md)',
-  background: 'var(--mn-color-bg-surface)',
-  color: 'var(--mn-color-text-default)',
-  font: 'inherit',
-  resize: 'vertical' as const,
-};
-
 function CommentDemo() {
-  const [value, setValue] = useState('Thanks @[Ana Lopez](u_ana), looping in ');
+  const [value, setValue] = useState('Thanks @Ana Lopez, looping in ');
+  const [notify, setNotify] = useState<MentionItem[]>(DIRECTORY.slice(0, 1));
   const mention = useMentionTextarea({
     value,
     onChange: setValue,
     search: demoSearch,
     triggers: ['@', '#'],
+    // Readable text in the field; the ids to notify are kept beside it.
+    serialize: (item, trigger) => `${trigger}${item.label}`,
+    onMention: (item) =>
+      setNotify((list) => (list.some((i) => i.id === item.id) ? list : [...list, item])),
   });
-  const mentioned = parseMentionTokens(value).filter((s) => s.type === 'mention');
+  const named = notify.filter((i) => value.includes(i.label));
   return (
     <div style={{ width: '100%', maxWidth: 480 }}>
       <Field>
         <FieldLabel htmlFor="mention-demo">Comment</FieldLabel>
-        <textarea id="mention-demo" style={textareaStyle} {...mention.textareaProps} />
-        <FieldDescription>Type @ for people or # for channels.</FieldDescription>
+        <Textarea id="mention-demo" rows={3} {...mention.textareaProps} />
+        <FieldDescription>
+          Type @ for people or # for channels. Will notify:{' '}
+          {named.map((i) => i.label).join(', ') || 'nobody'}.
+        </FieldDescription>
       </Field>
       <MentionPicker {...mention.pickerProps} />
-      <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--mn-color-text-muted)' }}>
-        Will notify:{' '}
-        {mentioned.map((s) => (s.type === 'mention' ? s.label : '')).join(', ') || 'nobody'}
-      </p>
     </div>
   );
 }
+
+const BEN = DIRECTORY.filter((d) => d.id === 'u_ben');
 
 export default {
   id: 'mention-picker',
@@ -208,6 +202,35 @@ export default {
     },
     examples: {
       items: [
+        {
+          title: 'Suggestions while typing a mention',
+          stage: true,
+          render: () => (
+            <div style={{ width: '100%', maxWidth: 480 }}>
+              <Field>
+                <FieldLabel htmlFor="mention-open-demo">{fixture.data.label}</FieldLabel>
+                <Textarea
+                  id="mention-open-demo"
+                  rows={3}
+                  defaultValue={fixture.data.text}
+                  aria-controls="mention-open-listbox"
+                  aria-activedescendant="mention-open-opt-u_ben"
+                />
+                <FieldDescription>{fixture.data.hint}</FieldDescription>
+              </Field>
+              <MentionPicker
+                id="mention-open"
+                open
+                anchor={{ top: 0, left: 0, height: 0 }}
+                items={BEN}
+                status="ready"
+                activeId="u_ben"
+                onSelect={() => {}}
+                onActiveChange={() => {}}
+              />
+            </div>
+          ),
+        },
         {
           title: 'Comment field with people and channels',
           render: () => <CommentDemo />,

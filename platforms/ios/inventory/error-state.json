@@ -1,0 +1,158 @@
+{
+  "id": "error-state",
+  "name": "MonarchErrorState",
+  "title": "ErrorState",
+  "family": "feedback",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "VStack, Image, Text",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A region failed to load: what failed, why in plain words, and a retry button, in the layout of MonarchEmptyState.",
+  "whenToUse": "When a screen, a list or a card could not load its content and nothing can be shown in its place.",
+  "whenNotToUse": "For a compact row inside a card, or above stale data that is still shown, use MonarchInlineErrorRetry. For an empty result, use MonarchEmptyState.",
+  "api": [
+    "init(_ title: String, message: String? = nil, systemImage: String? = nil, kind: MonarchErrorStateKind = .error, size: MonarchEmptyStateSize = .md, requestID: String? = nil, isRetrying: Bool = false, retryLabel: String? = nil, retryingLabel: String? = nil, requestIDLabel: String? = nil, actionTitle: String? = nil, onRetry: (@MainActor () -> Void)? = nil, action: (@MainActor () -> Void)? = nil)",
+    "enum MonarchErrorStateKind { case error, forbidden, notFound, offline, server, maintenance }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "What failed."
+    },
+    {
+      "name": "message",
+      "type": "String?",
+      "default": "nil",
+      "description": "Why, in plain words, and what to do."
+    },
+    {
+      "name": "systemImage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the SF Symbol of the kind."
+    },
+    {
+      "name": "kind",
+      "type": "MonarchErrorStateKind",
+      "default": ".error",
+      "description": "Selects the icon, its colour and whether a retry is offered."
+    },
+    {
+      "name": "size",
+      "type": "MonarchEmptyStateSize",
+      "default": ".md",
+      "description": "The same sizes as MonarchEmptyState."
+    },
+    {
+      "name": "requestID",
+      "type": "String?",
+      "default": "nil",
+      "description": "The id of the failed request, shown in the code type role under the buttons."
+    },
+    {
+      "name": "isRetrying",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the retry button as busy; its action does not run."
+    },
+    {
+      "name": "retryLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Try again\" title."
+    },
+    {
+      "name": "retryingLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Retrying\" spoken value."
+    },
+    {
+      "name": "requestIDLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Request ID\" text."
+    },
+    {
+      "name": "actionTitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "Title of a second button, such as \"Contact support\". No button without it."
+    },
+    {
+      "name": "onRetry",
+      "type": "(() -> Void)?",
+      "default": "nil",
+      "description": "Runs when the retry button is activated. No retry button without it."
+    },
+    {
+      "name": "action",
+      "type": "(() -> Void)?",
+      "default": "nil",
+      "description": "Runs when the second button is activated."
+    }
+  ],
+  "states": [
+    {
+      "name": "retrying",
+      "description": "A spinner replaces the icon of the retry button and VoiceOver reads \"Retrying\" as its value."
+    },
+    {
+      "name": "forbidden, notFound",
+      "description": "A muted icon and no retry button, even when onRetry is given."
+    },
+    {
+      "name": "maintenance",
+      "description": "A muted icon; retry is offered."
+    },
+    {
+      "name": "error, offline, server",
+      "description": "An icon in the strong danger colour; retry is offered."
+    }
+  ],
+  "appearance": "The layout of MonarchEmptyState: a centred icon, the title in the default text colour and the message in the muted text colour. The icon uses the strong danger colour for failures and the muted text colour for no access, not found and maintenance. The request id is muted, in the monospaced code role.",
+  "platformNotes": "The web has a copy button beside the request id; here the id uses the system text selection, so it is copied with the standard Copy menu, and Monarch does not write to the pasteboard. One extra action by title and closure instead of the web's actions slot. The web errorKindFromStatus helper is not offered. The busy state is always controlled with isRetrying. Android builds the same component. Several closures are optional (onRetry, action). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onRetry.",
+  "accessibility": [
+    "The title has the header trait; the icon is hidden from VoiceOver. The title and message say what failed, so nothing depends on the icon or its colour.",
+    "While isRetrying is true the retry button stays focusable, does not run its action and has the value \"Retrying\".",
+    "The request id is one element read as its label, a colon and the id.",
+    "Buttons have touch targets of at least 44 points.",
+    "The state does not announce itself when it replaces content; post an announcement if the failure follows a user action."
+  ],
+  "edgeCases": [
+    "onRetry is ignored for the forbidden and notFound kinds.",
+    "An empty requestID shows no request id row.",
+    "A long request id moves under its label.",
+    "A trailing closure is the retry action."
+  ],
+  "tests": [
+    "MonarchErrorStateTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Error with retry and request id",
+      "fixture": "error-state",
+      "webExample": "Error with retry and request id",
+      "template": "MonarchErrorState(\n    {{title}},\n    message: {{description}},\n    kind: .error,\n    requestID: {{requestId}},\n    onRetry: {}\n)",
+      "code": "MonarchErrorState(\n    \"Couldn't load invoices\",\n    message: \"Check your connection and try again.\",\n    kind: .error,\n    requestID: \"req_7f3a91c2\",\n    onRetry: {}\n)"
+    },
+    {
+      "title": "A server error with a request id",
+      "code": "MonarchErrorState(\n    \"Something went wrong\",\n    message: \"Quote the request ID if you contact support.\",\n    kind: .server,\n    size: .sm,\n    requestID: \"req_8f2k1c9d\",\n    onRetry: { attempts += 1 }\n)",
+      "setup": "@State private var attempts = 0"
+    }
+  ],
+  "webEquivalent": "ErrorState",
+  "dependsOn": [
+    "empty-state",
+    "button",
+    "text"
+  ]
+}

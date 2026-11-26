@@ -2,6 +2,14 @@ import { useState } from 'react';
 import { ToggleGroup, ToggleGroupItem } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { BoardIcon, GridIcon, ListIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './toggle-group.fixture.json';
+
+const data = fixture.data as unknown as {
+  label: string;
+  selected: string[];
+  options: { value: string; label: string }[];
+};
 
 function SingleDemo() {
   const [view, setView] = useState<string>('list');
@@ -155,10 +163,12 @@ export default {
         {
           title: 'Multiple (formatting)',
           render: () => (
-            <ToggleGroup aria-label="Text style" defaultValue={['bold']}>
-              <ToggleGroupItem value="bold">Bold</ToggleGroupItem>
-              <ToggleGroupItem value="italic">Italic</ToggleGroupItem>
-              <ToggleGroupItem value="underline">Underline</ToggleGroupItem>
+            <ToggleGroup aria-label={data.label} defaultValue={data.selected}>
+              {data.options.map((o) => (
+                <ToggleGroupItem key={o.value} value={o.value}>
+                  {o.label}
+                </ToggleGroupItem>
+              ))}
             </ToggleGroup>
           ),
         },

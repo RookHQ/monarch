@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { IncomingCall } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './incoming-call.fixture.json';
 
 function Ringing({ kind }: { kind: 'audio' | 'video' }) {
   const [state, setState] = useState<'ringing' | 'joining' | string>('ringing');
@@ -11,8 +13,8 @@ function Ringing({ kind }: { kind: 'audio' | 'video' }) {
     <IncomingCall
       placement="inline"
       kind={kind}
-      caller={{ name: 'Robin Park' }}
-      detail="Design team"
+      caller={{ name: fixture.data.caller }}
+      detail={fixture.data.detail}
       joining={state === 'joining'}
       onAccept={({ video }) => {
         setState('joining');

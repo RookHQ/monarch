@@ -1,0 +1,154 @@
+{
+  "id": "ai-mention-context",
+  "name": "MonarchAiMentionContext",
+  "title": "AiMentionContext",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.material3.ListItem rows with androidx.compose.foundation.clickable in an androidx.compose.foundation.lazy.LazyColumn, MonarchAvatar, MonarchSkeleton and MonarchInlineErrorRetry; MonarchMentionQuery for the query",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The @ context menu of an AI prompt: documents, people, records and apps that can be added to what the AI sees, grouped by kind, with token estimates and loading, empty and error states.",
+  "whenToUse": "Above an AI prompt field, while the person types @ to add a document, person, record or app to the conversation's context; the chosen result becomes a MonarchAiContextChips chip.",
+  "whenNotToUse": "To mention people or channels in a message to other people, use MonarchMentionPicker. For slash commands, use MonarchSlashMenu.",
+  "api": [
+    "@Composable fun MonarchAiMentionContext(query: MonarchMentionQuery?, items: List<MonarchAiMentionItem>, onSelect: (MonarchAiMentionItem) -> Unit, modifier: Modifier = Modifier, status: MonarchMentionPickerStatus = MonarchMentionPickerStatus.Ready, onRetry: (() -> Unit)? = null, kindIcon: (@Composable (MonarchAiMentionKind) -> Unit)? = null, labels: MonarchAiMentionContextLabels = MonarchAiMentionContextLabels())",
+    "data class MonarchAiMentionItem(id: String, kind: MonarchAiMentionKind, label: String, description: String? = null, tokens: Int? = null, image: Painter? = null, enabled: Boolean = true) { val contextItem: MonarchAiContextItem }",
+    "enum class MonarchAiMentionKind { Doc, Person, Record, App; val contextKind: MonarchAiContextKind }",
+    "class MonarchAiMentionContextLabels(label: String? = null, group: ((MonarchAiMentionKind) -> String)? = null, loading: String? = null, empty: ((query: String) -> String)? = null, error: String? = null, retry: String? = null, tokens: ((formatted: String, count: Int) -> String)? = null, count: ((Int) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "query",
+      "type": "MonarchMentionQuery?",
+      "default": "required",
+      "description": "The @ query found with MonarchMentionQuery.find. Nothing is drawn while it is null."
+    },
+    {
+      "name": "items",
+      "type": "List<MonarchAiMentionItem>",
+      "default": "required",
+      "description": "The results of the product's search, without ids already in the context."
+    },
+    {
+      "name": "onSelect",
+      "type": "(MonarchAiMentionItem) -> Unit",
+      "default": "required",
+      "description": "Receives the chosen result. Add item.contextItem to the context and remove the query from the prompt."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the strip."
+    },
+    {
+      "name": "status",
+      "type": "MonarchMentionPickerStatus",
+      "default": "MonarchMentionPickerStatus.Ready",
+      "description": "Loading shows placeholder rows, Failed an error, Ready the results or the empty text."
+    },
+    {
+      "name": "onRetry",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Repeats a failed search; adds a Retry button."
+    },
+    {
+      "name": "kindIcon",
+      "type": "(@Composable (MonarchAiMentionKind) -> Unit)?",
+      "default": "null",
+      "description": "A decorative icon for documents, records and apps; without it a tinted tile with the first letter."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiMentionContextLabels",
+      "default": "MonarchAiMentionContextLabels()",
+      "description": "Replacements for every built-in string."
+    }
+  ],
+  "states": [
+    {
+      "name": "results",
+      "description": "Rows with an avatar or tile, the label, the description and the token estimate; headings when more than one kind is present."
+    },
+    {
+      "name": "searching",
+      "description": "Three placeholder rows read as Searching…."
+    },
+    {
+      "name": "empty",
+      "description": "\"Type to search\" for an empty query, else \"Nothing matches “q3”\"."
+    },
+    {
+      "name": "failed",
+      "description": "\"Couldn’t load results.\", with Retry when onRetry is given."
+    },
+    {
+      "name": "disabled result",
+      "description": "Disabled text color; the row cannot be chosen."
+    },
+    {
+      "name": "closed",
+      "description": "Nothing is drawn while query is null, or after a query with a space found nothing."
+    }
+  ],
+  "appearance": "A strip on the surface color with a subtle top border; labels in default text, descriptions, token estimates and headings in muted text, disabled results in the disabled text color. All are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web is a listbox under the caret driven by aria-activedescendant and a useAiMentionContext hook that wires it into the prompt input. Compose gives no caret rectangle, so this is a strip above the keyboard (the layout of MonarchMentionPicker) and results are buttons; the app finds the query with MonarchMentionQuery and searches in a LaunchedEffect keyed by it. There is no highlighted result or arrow-key navigation, and no hook. The status reuses MonarchMentionPickerStatus (Loading, Ready, Failed) where the web has idle, loading, ready and error. The parity map called it a mention picker preset; MonarchMentionPicker's items are people and channels only, so this component has its own item type and reuses the picker's query and open rule. aiMentionToContextChip is the contextItem property. Monarch bundles no icons, so kind icons are a slot. Same names and parameters as iOS, with the query as a named parameter. Experimental: an AI product composite that waits for a Rook app to adopt it.",
+  "accessibility": [
+    "Each result is a button read as its label, description and token estimate (\"Q3 report.pdf, Finance, 12.4K tokens\"), built by a tested pure function; a disabled result is reported disabled.",
+    "The strip is a traversal group named \"Add context\" whose state description is Searching…, the number of results, the empty text or the error, in a polite live region, so focus stays in the prompt.",
+    "Group names are headings when more than one kind is present.",
+    "Rows are at least 48dp high and grow with the font size; avatars and icons are decorative."
+  ],
+  "edgeCases": [
+    "A query with a space that finds nothing closes the strip: it is ordinary prose.",
+    "A negative token estimate reads as 0 tokens.",
+    "The order within a kind is kept; kinds follow Documents, People, Records, Apps.",
+    "The list scrolls after about four rows."
+  ],
+  "tests": [
+    "MonarchAiMentionContextTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "@ adds context chips",
+      "fixture": "ai-mention-context",
+      "webExample": "@ adds context chips",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchAiMentionContext(\n        query = MonarchMentionQuery.find({{query}}),\n        items = listOf(\n            MonarchAiMentionItem({{directory.0.id}}, MonarchAiMentionKind.{{directory.0.kind|pascal}}, {{directory.0.label}}, {{directory.0.description}}, tokens = {{directory.0.tokens}}),\n            MonarchAiMentionItem({{directory.1.id}}, MonarchAiMentionKind.{{directory.1.kind|pascal}}, {{directory.1.label}}, {{directory.1.description}}, tokens = {{directory.1.tokens}}),\n            MonarchAiMentionItem({{directory.2.id}}, MonarchAiMentionKind.{{directory.2.kind|pascal}}, {{directory.2.label}}, {{directory.2.description}}, tokens = {{directory.2.tokens}}),\n            MonarchAiMentionItem({{directory.3.id}}, MonarchAiMentionKind.{{directory.3.kind|pascal}}, {{directory.3.label}}, {{directory.3.description}}, tokens = {{directory.3.tokens}}),\n            MonarchAiMentionItem({{directory.4.id}}, MonarchAiMentionKind.{{directory.4.kind|pascal}}, {{directory.4.label}}, {{directory.4.description}}, tokens = {{directory.4.tokens}}),\n            MonarchAiMentionItem({{directory.5.id}}, MonarchAiMentionKind.{{directory.5.kind|pascal}}, {{directory.5.label}}, {{directory.5.description}}, tokens = {{directory.5.tokens}}),\n            MonarchAiMentionItem({{directory.6.id}}, MonarchAiMentionKind.{{directory.6.kind|pascal}}, {{directory.6.label}}, {{directory.6.description}}, enabled = !{{directory.6.disabled}}),\n        ),\n        onSelect = { item -> context = context + item.contextItem },\n    )\n    MonarchAiPromptInput(\n        label = \"Message the assistant\",\n        state = rememberTextFieldState({{query}}),\n        onSubmit = {},\n        sendIcon = { MonarchIcon(SampleIcons.ArrowUp, contentDescription = null) },\n    )\n    MonarchAiContextChips(\n        items = context,\n        onRemove = { id -> context = context.filterNot { it.id == id } },\n    )\n}",
+      "setupTemplate": "var context by remember {\n    mutableStateOf(\n        listOf(\n            MonarchAiContextItem({{context.id}}, MonarchAiContextKind.{{context.kind|pascal}}, {{context.label}}, tokens = {{context.tokens}}, removable = {{context.removable}}),\n        ),\n    )\n}",
+      "imports": [
+        "androidx.compose.foundation.text.input.rememberTextFieldState",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "var context by remember {\n    mutableStateOf(\n        listOf(\n            MonarchAiContextItem(\"page\", MonarchAiContextKind.Page, \"Current page\", tokens = 650, removable = false),\n        ),\n    )\n}",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchAiMentionContext(\n        query = MonarchMentionQuery.find(\"@\"),\n        items = listOf(\n            MonarchAiMentionItem(\"doc-plan\", MonarchAiMentionKind.Doc, \"Quarterly plan\", \"Planning\", tokens = 4200),\n            MonarchAiMentionItem(\"doc-notes\", MonarchAiMentionKind.Doc, \"Launch notes\", \"Product\", tokens = 1800),\n            MonarchAiMentionItem(\"p-ana\", MonarchAiMentionKind.Person, \"Ana Lopez\", \"Design lead\", tokens = 120),\n            MonarchAiMentionItem(\"p-sam\", MonarchAiMentionKind.Person, \"Sam Okafor\", \"Engineering\", tokens = 110),\n            MonarchAiMentionItem(\"r-1042\", MonarchAiMentionKind.Record, \"Account 1042\", \"Customer\", tokens = 300),\n            MonarchAiMentionItem(\"app-cal\", MonarchAiMentionKind.App, \"Calendar\", \"Next 14 days\", tokens = 900),\n            MonarchAiMentionItem(\"doc-board\", MonarchAiMentionKind.Doc, \"Board minutes\", \"No access for the assistant\", enabled = !true),\n        ),\n        onSelect = { item -> context = context + item.contextItem },\n    )\n    MonarchAiPromptInput(\n        label = \"Message the assistant\",\n        state = rememberTextFieldState(\"@\"),\n        onSubmit = {},\n        sendIcon = { MonarchIcon(SampleIcons.ArrowUp, contentDescription = null) },\n    )\n    MonarchAiContextChips(\n        items = context,\n        onRemove = { id -> context = context.filterNot { it.id == id } },\n    )\n}"
+    },
+    {
+      "title": "A failed search",
+      "code": "MonarchAiMentionContext(\n    query = MonarchMentionQuery.find(\"@q3\"),\n    items = emptyList(),\n    onSelect = {},\n    status = MonarchMentionPickerStatus.Failed,\n    onRetry = {},\n)",
+      "imports": [
+        "com.rookhq.monarch.components.collaboration.mentionpicker.MonarchMentionQuery",
+        "com.rookhq.monarch.components.collaboration.mentionpicker.MonarchMentionPickerStatus"
+      ]
+    }
+  ],
+  "webEquivalent": "AiMentionContext",
+  "dependsOn": [
+    "mention-picker",
+    "ai-context-chips"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "layout",
+      "platform": "android",
+      "reason": "The web list is a bordered card of 40px rows. Each result is a 48dp touch row on Android, so fewer rows show before the list scrolls (the Records heading is cut at the list height, as the web cuts it).",
+      "convention": "Material touch target of 48dp for a list row"
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "id": "settings-section",
+  "name": null,
+  "title": "SettingsSection",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "Form with Section(content:header:footer:), Toggle, Picker and Button(role: .destructive) rows, toolbar with ToolbarItem(placement: .cancellationAction) and .confirmationAction for Discard and Save, confirmationDialog, and redacted(reason: .placeholder) for loading; MonarchSectionCard for a card on a scrolling page",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a titled group of settings as a Form section with a header and a footer, Save and Discard in the toolbar while there are unsaved changes, a danger zone section, and a loading state through redacted.",
+  "whenToUse": "For a settings screen of grouped options, the way iOS Settings and every system app lay them out. Use the MonarchSectionCard form when settings sit on a scrolling page among other cards, for example on iPad.",
+  "whenNotToUse": "For a single toggle inside other content, use a Toggle row on its own. For a long form people fill in once, use a Form with MonarchFormField rows and a submit button.",
+  "api": [
+    "Form { Section { Toggle(_:isOn:); Picker(_:selection:content:) } header: { Text(title) } footer: { Text(description) } }",
+    "Section { Button(_:role: .destructive, action:) } header: { Text(\"Danger zone\") }",
+    ".toolbar { ToolbarItem(placement: .cancellationAction) { Button(\"Discard\") }; ToolbarItem(placement: .confirmationAction) { Button(\"Save\") } }",
+    ".redacted(reason: isLoading ? .placeholder : [])",
+    "MonarchSectionCard(_:description:content:actions:footer:) with MonarchButton(\"Save changes\", variant: .primary) in the footer"
+  ],
+  "options": [
+    {
+      "name": "isDirty",
+      "type": "Bool (app state)",
+      "default": "false",
+      "description": "The draft differs from the saved settings: Discard and Save are enabled."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool (app state)",
+      "default": "false",
+      "description": "The settings are loading: the form is redacted and disabled."
+    },
+    {
+      "name": "danger zone",
+      "type": "Section with Button(role: .destructive)",
+      "default": "none",
+      "description": "Destructive actions in their own section, each behind a confirmationDialog."
+    },
+    {
+      "name": "no access",
+      "type": "MonarchEmptyState or a footer",
+      "default": "none",
+      "description": "When the person cannot change the settings, disable the controls and say who can in the section footer, or show MonarchEmptyState in place of the form."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The sections with their headers, rows and footers; Save and Discard are disabled while nothing has changed."
+    },
+    {
+      "name": "dirty",
+      "description": "Save and Discard are enabled in the toolbar; in the card form, \"You have unsaved changes.\" and the two buttons appear in the footer."
+    },
+    {
+      "name": "loading",
+      "description": "redacted(reason: .placeholder) draws the rows as placeholders and disabled stops input."
+    },
+    {
+      "name": "danger zone",
+      "description": "A section whose button has the destructive role and opens a confirmation."
+    },
+    {
+      "name": "no access",
+      "description": "Disabled rows with a footer that says who can change them."
+    }
+  ],
+  "appearance": "The system grouped form: section headers and footers in the system's secondary styles, rows on the grouped background, switches and pickers tinted with the accent fill, destructive buttons in the system red. The card form uses the MonarchSectionCard surface and Monarch buttons. Both follow the dark and high-contrast appearances.",
+  "platformNotes": "The parity map named a MonarchSettingsSectionStyle for Form sections (Android planned a MonarchSettingsSection type and shipped a recipe). Following the native-first rule this is a recipe on iOS as well: SwiftUI has no SectionStyle to customise, and a Form Section already gives the titled group, header, footer, grouped rows, Dynamic Type and VoiceOver order that iOS settings use, so a Monarch style or type would only imitate it. The web's save footer becomes Save and Discard in the toolbar, the iOS pattern for editing screens; the web's sticky footer is not needed because the toolbar stays visible. The web's SettingsRow is a Form row (Toggle, Picker, LabeledContent) and its SettingsActionRow is a Button row. The web's loading skeleton is redacted(reason: .placeholder), and its no-access notice is a footer or MonarchEmptyState. On a scrolling page the web's card look is MonarchSectionCard with the buttons in its footer.",
+  "accessibility": [
+    "Section headers are read as headings by VoiceOver in a Form, and footers are read after their rows.",
+    "Toggles and pickers are the system controls, with their roles, values and labels.",
+    "Save and Discard are toolbar buttons with text labels and are read as dimmed while disabled.",
+    "Destructive actions use the destructive role and confirm before acting.",
+    "While loading, the redacted rows are disabled, so nothing can be changed by accident."
+  ],
+  "edgeCases": [
+    "Long titles and footers wrap in the Form.",
+    "Leaving the screen with unsaved changes should ask first: pair it with the unsaved-changes-guard recipe.",
+    "Settings that apply at once (a single switch) need no Save: drop the toolbar buttons."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Profile settings",
+      "fixture": "settings-section",
+      "webExample": "Profile settings",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    // The title and description sit above the card, as on the web; the rows are divided and the footer is a bar.\n    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n        Text({{title}}).monarchTextStyle(.bodyStrong).foregroundStyle(theme.colors.textDefault)\n            .accessibilityAddTraits(.isHeader)\n        Text({{description}}).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n    }\n    VStack(spacing: 0) {\n        MonarchTextField({{rows.0.label}}, text: $displayName, helper: {{rows.0.description}}, isRequired: {{rows.0.required}})\n            .padding(theme.spacing.space4)\n        Rectangle().fill(theme.colors.borderSubtle).frame(height: 1)\n        Toggle({{rows.1.label}}, isOn: $showsStatus)\n            .monarchTextStyle(.label)\n            .padding(theme.spacing.space4)\n        Rectangle().fill(theme.colors.borderSubtle).frame(height: 1)\n        MonarchButton({{action}}, variant: .primary) {}\n            .frame(maxWidth: .infinity, alignment: .trailing)\n            .padding(theme.spacing.space3)\n            .background(theme.colors.bgSubtle)\n    }\n    .background(theme.colors.bgSurface)\n    .clipShape(RoundedRectangle(cornerRadius: theme.radius.lg))\n    .overlay(RoundedRectangle(cornerRadius: theme.radius.lg).strokeBorder(theme.colors.borderSubtle, lineWidth: 1))\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var displayName = {{rows.0.value}}\n@State private var showsStatus = {{rows.1.on}}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var displayName = \"Ada Lovelace\"\n@State private var showsStatus = true",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    // The title and description sit above the card, as on the web; the rows are divided and the footer is a bar.\n    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n        Text(\"Profile\").monarchTextStyle(.bodyStrong).foregroundStyle(theme.colors.textDefault)\n            .accessibilityAddTraits(.isHeader)\n        Text(\"How you appear to your teammates.\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n    }\n    VStack(spacing: 0) {\n        MonarchTextField(\"Display name\", text: $displayName, helper: \"Shown on comments and assignments.\", isRequired: true)\n            .padding(theme.spacing.space4)\n        Rectangle().fill(theme.colors.borderSubtle).frame(height: 1)\n        Toggle(\"Show my status\", isOn: $showsStatus)\n            .monarchTextStyle(.label)\n            .padding(theme.spacing.space4)\n        Rectangle().fill(theme.colors.borderSubtle).frame(height: 1)\n        MonarchButton(\"Save\", variant: .primary) {}\n            .frame(maxWidth: .infinity, alignment: .trailing)\n            .padding(theme.spacing.space3)\n            .background(theme.colors.bgSubtle)\n    }\n    .background(theme.colors.bgSurface)\n    .clipShape(RoundedRectangle(cornerRadius: theme.radius.lg))\n    .overlay(RoundedRectangle(cornerRadius: theme.radius.lg).strokeBorder(theme.colors.borderSubtle, lineWidth: 1))\n}"
+    },
+    {
+      "title": "A settings card on a scrolling page",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var digest = false\n@State private var saved = true",
+      "code": "MonarchSectionCard(\"Workspace\", description: \"Changes apply to everyone in the workspace.\") {\n    Toggle(\"Weekly digest\", isOn: $digest)\n        .monarchTextStyle(.body)\n} actions: {\n    EmptyView()\n} footer: {\n    if digest != saved {\n        Text(\"You have unsaved changes.\")\n            .monarchTextStyle(.caption)\n            .foregroundStyle(theme.colors.textMuted)\n        MonarchButton(\"Discard\", variant: .ghost, size: .sm) { digest = saved }\n        MonarchButton(\"Save changes\", variant: .primary, size: .sm) { saved = digest }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "SettingsSection",
+  "dependsOn": [
+    "section-card",
+    "switch",
+    "button",
+    "skeleton",
+    "confirm-dialog"
+  ]
+}

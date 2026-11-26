@@ -1,5 +1,15 @@
-import { ProgressCircle } from '@rookcom/monarch-react';
+import { ProgressCircle, type ProgressCircleProps } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './progress-circle.fixture.json';
+
+const rings = fixture.data.rings as unknown as readonly {
+  label: string;
+  value: number;
+  size: NonNullable<ProgressCircleProps['size']>;
+  tone: NonNullable<ProgressCircleProps['tone']>;
+  showValue: boolean;
+}[];
 
 export default {
   id: 'progress-circle',
@@ -111,10 +121,16 @@ export default {
           title: 'Determinate',
           render: () => (
             <>
-              <ProgressCircle value={25} label="Upload" size="sm" />
-              <ProgressCircle value={60} label="Import" />
-              <ProgressCircle value={72} label="Sync" size="lg" showValue />
-              <ProgressCircle value={100} label="Backup" size="xl" showValue tone="success" />
+              {rings.map((ring) => (
+                <ProgressCircle
+                  key={ring.label}
+                  value={ring.value}
+                  label={ring.label}
+                  size={ring.size}
+                  tone={ring.tone}
+                  showValue={ring.showValue}
+                />
+              ))}
             </>
           ),
         },

@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { AiMessageView, type AiMessage } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-message.fixture.json';
 
-const AT = '2026-03-02T10:15:00.000Z';
+const AT = fixture.data.createdAt;
 
 const QUESTION: AiMessage = {
   id: 'q1',
@@ -17,38 +19,28 @@ const ANSWER: AiMessage = {
   id: 'a1',
   role: 'assistant',
   createdAt: AT,
-  agent: { name: 'Assistant', role: 'Writing assistant' },
-  branch: { index: 1, count: 2 },
+  agent: fixture.data.agent,
+  branch: fixture.data.branch,
   parts: [
     {
       type: 'reasoning',
-      text: 'Find the decisions first, then the owners.',
+      text: fixture.data.reasoning.text,
       state: 'done',
-      durationMs: 3000,
+      durationMs: fixture.data.reasoning.durationMs,
     },
     {
       type: 'tool-call',
-      id: 't1',
-      name: 'search_documents',
-      input: { query: 'meeting notes' },
+      id: fixture.data.tool.id,
+      name: fixture.data.tool.name,
+      input: { query: fixture.data.tool.query },
       state: 'succeeded',
-      startedAt: '2026-03-02T10:15:00.000Z',
-      endedAt: '2026-03-02T10:15:01.600Z',
+      startedAt: fixture.data.tool.startedAt,
+      endedAt: fixture.data.tool.endedAt,
     },
-    {
-      type: 'text',
-      text: 'The team agreed on the launch date.\n\n- Confirm the venue\n- Share the agenda\n- Book a review',
-      state: 'done',
-    },
-    {
-      type: 'source',
-      id: 's1',
-      title: 'Weekly meeting notes',
-      url: 'https://example.com/notes',
-      kind: 'doc',
-    },
-    { type: 'citation', id: 'c1', sourceId: 's1' },
-    { type: 'file', name: 'agenda.pdf', mediaType: 'application/pdf', size: 48_000 },
+    { type: 'text', text: fixture.data.answer, state: 'done' },
+    { type: 'source', ...fixture.data.source, kind: 'doc' },
+    { type: 'citation', ...fixture.data.citation },
+    { type: 'file', ...fixture.data.file },
   ],
 };
 
@@ -58,6 +50,7 @@ function EditDemo() {
   return (
     <AiMessageView
       message={message}
+      timeZone="Europe/London"
       actionsVisibility="always"
       onEdit={() => setEditing(true)}
       editing={editing}
@@ -75,7 +68,9 @@ function AnswerDemo() {
   return (
     <AiMessageView
       message={message}
+      timeZone="Europe/London"
       actionsVisibility="always"
+      locale={fixture.data.locale}
       onRegenerate={() => {}}
       onFeedback={(feedback) => setMessage({ ...message, feedback })}
       onBranch={(index) => setMessage({ ...message, branch: { index, count: 2 } })}

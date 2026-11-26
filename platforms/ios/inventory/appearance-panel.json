@@ -1,0 +1,121 @@
+{
+  "id": "appearance-panel",
+  "name": "MonarchAppearancePanel",
+  "title": "AppearancePanel",
+  "family": "interaction",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "VStack of rows divided by MonarchDivider: MonarchThemeToggle for the theme, Picker with .pickerStyle(.segmented) for contrast, motion and density, Picker with .pickerStyle(.menu) for the accent",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A settings panel for appearance with labelled, described rows for theme, contrast, accent, motion and density, bound to one MonarchAppearancePreferences value.",
+  "whenToUse": "On an app's Appearance or Accessibility settings screen, to let people override the device's light/dark, contrast and motion settings and choose density or an accent.",
+  "whenNotToUse": "For the theme alone, in a toolbar or account menu, use MonarchThemeToggle. When the app always follows the device settings, show nothing.",
+  "api": [
+    "init(_ title: String? = nil, selection: Binding<MonarchAppearancePreferences>, rows: [MonarchAppearancePanelRow] = MonarchAppearancePanelRow.standard, accents: [MonarchAccent] = MonarchTokens.Accents.all, labels: MonarchAppearancePanelLabels = MonarchAppearancePanelLabels())",
+    "struct MonarchAppearancePreferences { var scheme: MonarchSchemePreference; var contrast: MonarchContrastPreference; var accent: MonarchAccent; var motion: MonarchAppearanceMotion; var density: MonarchAppearanceDensity }",
+    "MonarchAppearancePreferences.init(scheme: MonarchSchemePreference = .system, contrast: MonarchContrastPreference = .system, accent: MonarchAccent = MonarchTokens.Accents.rook, motion: MonarchAppearanceMotion = .system, density: MonarchAppearanceDensity = .comfortable)",
+    "var MonarchAppearancePreferences.appearance: MonarchAppearance { get }",
+    "func MonarchAppearancePreferences.reducesMotion(systemReducesMotion: Bool) -> Bool",
+    "enum MonarchAppearanceMotion { case system, reduce }",
+    "enum MonarchAppearanceDensity { case comfortable, compact }",
+    "enum MonarchAppearancePanelRow { case theme, contrast, accent, motion, density; static let standard: [MonarchAppearancePanelRow] }",
+    "struct MonarchAppearancePanelLabels { var theme, themeDescription, light, dark, system, contrast, contrastDescription, contrastStandard, contrastMore, contrastSystem, accent, accentDescription, motion, motionDescription, motionSystem, motionReduce, density, densityDescription, densityComfortable, densityCompact: String? }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "A heading above the rows, with the header trait."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<MonarchAppearancePreferences>",
+      "default": "required",
+      "description": "All choices. Pass selection.appearance to .monarchTheme(_:); apply motion and density in the app."
+    },
+    {
+      "name": "rows",
+      "type": "[MonarchAppearancePanelRow]",
+      "default": "MonarchAppearancePanelRow.standard",
+      "description": "The rows to show, in order, each once. The standard rows are theme, contrast, motion and density, as on the web; add .accent for the accent menu."
+    },
+    {
+      "name": "accents",
+      "type": "[MonarchAccent]",
+      "default": "MonarchTokens.Accents.all",
+      "description": "The accents the accent row offers. The current accent is always offered, even when it is not in the list."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAppearancePanelLabels",
+      "default": "MonarchAppearancePanelLabels()",
+      "description": "Replacements for every built-in row label, description and choice name. Unset theme names keep MonarchThemeToggle's."
+    }
+  ],
+  "states": [
+    {
+      "name": "device settings",
+      "description": "The default: System scheme, System contrast and System motion are selected, so the theme follows Dark Mode, Increase Contrast and Reduce Motion."
+    },
+    {
+      "name": "overridden",
+      "description": "Any row set to a fixed choice; its segment is selected or the accent menu shows the chosen accent's name."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true) the system dims every picker and the theme toggle."
+    }
+  ],
+  "appearance": "Row labels in the default text role and descriptions in the muted text role, rows divided by the subtle border role. The controls are system segmented and menu pickers tinted with the accent through the theme's tint, and look like the system controls in light, dark and both high-contrast themes.",
+  "platformNotes": "The web panel writes the rook_theme and mn_contrast cookies and applies all four choices to the html element. On iOS the panel only changes its binding: the app applies scheme, contrast and accent with .monarchTheme(preferences.appearance) and stores the choices itself (for example with @AppStorage). SwiftUI does not let an app turn on Reduce Motion for other views, so motion is applied by the app's own animations through reducesMotion(systemReducesMotion:); Monarch components keep following the device setting. Density has no Monarch-wide meaning on iOS yet; the app reads preferences.density (for example to choose a smaller controlSize). The accent row is native-only, because the note for this entry asks for the accent as a theme input; the web panel has no accent row. The default theme is System, where the web default is Light, because iOS apps follow the device. Android has the same rows.",
+  "accessibility": [
+    "Each row's label and description are combined into one element, read before the row's control.",
+    "Contrast, motion and density are standard segmented Pickers, so VoiceOver reads each choice as a button and the current one as selected.",
+    "The theme row is MonarchThemeToggle, named by the row label.",
+    "The accent row is a standard menu Picker named by the row label, whose value is the current accent's name; accents are chosen by name, not by colour.",
+    "The title has the header trait.",
+    "Text wraps and scales with Dynamic Type; the accent menu has a touch target of at least 44 points."
+  ],
+  "edgeCases": [
+    "Long translated choice names are truncated by the system segmented control; keep them short.",
+    "An accent that is not in accents is added to the end of the menu, so the current choice is always visible.",
+    "A row listed twice is shown once; an empty rows list shows only the title.",
+    "Accent names come from the tokens' MonarchAccent.label (English); an app that translates them passes its own MonarchAccent values or leaves the accent row out."
+  ],
+  "tests": [
+    "MonarchAppearancePanelTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "All preferences (kept in memory on this page)",
+      "fixture": "appearance-panel",
+      "webExample": "All preferences (kept in memory on this page)",
+      "template": "MonarchAppearancePanel(\n    {{heading}},\n    selection: $preferences,\n    rows: [{{rows.0|case}}, {{rows.1|case}}, {{rows.2|case}}, {{rows.3|case}}]\n)",
+      "setupTemplate": "@State private var preferences = MonarchAppearancePreferences(\n    scheme: {{preferences.theme|case}},\n    contrast: {{preferences.contrast|case}},\n    motion: {{preferences.motion|case}},\n    density: {{preferences.density|case}}\n)",
+      "setup": "@State private var preferences = MonarchAppearancePreferences(\n    scheme: .light,\n    contrast: .system,\n    motion: .system,\n    density: .comfortable\n)",
+      "code": "MonarchAppearancePanel(\n    \"Appearance\",\n    selection: $preferences,\n    rows: [.theme, .contrast, .motion, .density]\n)"
+    },
+    {
+      "title": "Accent and contrast only, with a short accent list",
+      "setup": "@State private var preferences = MonarchAppearancePreferences(contrast: .more)",
+      "code": "MonarchAppearancePanel(\n    selection: $preferences,\n    rows: [.accent, .contrast],\n    accents: [MonarchTokens.Accents.rook, MonarchTokens.Accents.neutral]\n)"
+    },
+    {
+      "title": "Motion applied by the app",
+      "setup": "@State private var preferences = MonarchAppearancePreferences(motion: .reduce)\n@State private var isExpanded = false\n@Environment(\\.accessibilityReduceMotion) private var systemReducesMotion",
+      "code": "VStack(alignment: .leading) {\n    MonarchAppearancePanel(selection: $preferences, rows: [.motion])\n    MonarchButton(isExpanded ? \"Collapse\" : \"Expand\") {\n        if preferences.reducesMotion(systemReducesMotion: systemReducesMotion) {\n            isExpanded.toggle()\n        } else {\n            withAnimation { isExpanded.toggle() }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "AppearancePanel",
+  "dependsOn": [
+    "theme-toggle",
+    "segmented-control",
+    "switch"
+  ]
+}

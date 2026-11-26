@@ -7,6 +7,8 @@ import {
   useAiConversation,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-follow-up-suggestions.fixture.json';
 
 const transport = mockTransport({
   delayMs: 40,
@@ -18,7 +20,7 @@ const transport = mockTransport({
   ],
 });
 
-const SUGGESTIONS = ['Make it shorter', 'Add a timeline', 'Who owns each goal?'];
+const SUGGESTIONS = fixture.data.suggestions;
 
 function Demo() {
   const chat = useAiConversation({ transport });
@@ -34,7 +36,7 @@ function Demo() {
           />
         </div>
       ) : (
-        <p style={{ margin: 0 }}>The quarterly plan has three goals and a launch in week 9.</p>
+        <p style={{ margin: 0 }}>{fixture.data.message}</p>
       )}
       <AiFollowUpSuggestions
         suggestions={SUGGESTIONS}

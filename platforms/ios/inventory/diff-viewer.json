@@ -1,0 +1,161 @@
+{
+  "id": "diff-viewer",
+  "name": "MonarchDiffViewer",
+  "title": "DiffViewer",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "LazyVStack of rows of monospaced Text built from AttributedString (background, strikethrough and underline attributes), in a ScrollViewReader; Picker with .pickerStyle(.segmented) for the layout and MonarchButton for previous, next and expand",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Shows what changed between two texts or two versions of a document, unified or side by side: added and removed lines, changed words inside them, folded unchanged runs, totals and previous and next change buttons.",
+  "whenToUse": "To review changes between two versions of a text, a configuration or a document (one block per paragraph), for example in a version history or before restoring a version.",
+  "whenNotToUse": "Not for a patch that is already a diff (use MonarchCodeBlock with isDiff), not for comparing records field by field (use MonarchMergeDialog) and not for timesheet changes (use MonarchTimesheetDiff).",
+  "api": [
+    "init(before: [String], after: [String], mode: Binding<MonarchDiffViewerMode>? = nil, granularity: MonarchDiffViewerGranularity = .word, context: Int? = 3, beforeLabel: String? = nil, afterLabel: String? = nil, showsModeSwitch: Bool = true, showsLineNumbers: Bool = true, labels: MonarchDiffViewerLabels = MonarchDiffViewerLabels(), @ViewBuilder actions: () -> Actions)",
+    "init(before: String, after: String, mode: Binding<MonarchDiffViewerMode>? = nil, granularity: MonarchDiffViewerGranularity = .word, context: Int? = 3, beforeLabel: String? = nil, afterLabel: String? = nil, showsModeSwitch: Bool = true, showsLineNumbers: Bool = true, labels: MonarchDiffViewerLabels = MonarchDiffViewerLabels(), @ViewBuilder actions: () -> Actions)",
+    "init(before: [String], after: [String], mode: Binding<MonarchDiffViewerMode>? = nil, granularity: MonarchDiffViewerGranularity = .word, context: Int? = 3, beforeLabel: String? = nil, afterLabel: String? = nil, showsModeSwitch: Bool = true, showsLineNumbers: Bool = true, labels: MonarchDiffViewerLabels = MonarchDiffViewerLabels()) where Actions == EmptyView",
+    "init(before: String, after: String, mode: Binding<MonarchDiffViewerMode>? = nil, granularity: MonarchDiffViewerGranularity = .word, context: Int? = 3, beforeLabel: String? = nil, afterLabel: String? = nil, showsModeSwitch: Bool = true, showsLineNumbers: Bool = true, labels: MonarchDiffViewerLabels = MonarchDiffViewerLabels()) where Actions == EmptyView",
+    "MonarchDiffViewerLine.init(_ kind: MonarchDiffViewerLineKind, text: String, oldNumber: Int? = nil, newNumber: Int? = nil)",
+    "static func MonarchDiffViewerLine.diff(from before: [String], to after: [String]) -> [MonarchDiffViewerLine]",
+    "static func MonarchDiffViewerLine.lines(of text: String) -> [String]",
+    "enum MonarchDiffViewerLineKind { case same, added, removed }",
+    "enum MonarchDiffViewerMode { case unified, split }",
+    "enum MonarchDiffViewerGranularity { case line, word }",
+    "struct MonarchDiffViewerLabels { init(caption: (@Sendable (String, String) -> String)? = nil, before: String? = nil, after: String? = nil, mode: String? = nil, unified: String? = nil, split: String? = nil, stats: (@Sendable (Int, Int) -> String)? = nil, added: String? = nil, removed: String? = nil, blankLine: String? = nil, expand: (@Sendable (Int) -> String)? = nil, previous: String? = nil, next: String? = nil, position: (@Sendable (Int, Int) -> String)? = nil, noChanges: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "before",
+      "type": "String or [String]",
+      "default": "required",
+      "description": "The earlier text, split on line breaks, or its lines or blocks (one entry per paragraph for a document)."
+    },
+    {
+      "name": "after",
+      "type": "String or [String]",
+      "default": "required",
+      "description": "The later text, in the same shape."
+    },
+    {
+      "name": "mode",
+      "type": "Binding<MonarchDiffViewerMode>?",
+      "default": "nil",
+      "description": "The layout when the app owns it. nil shows side by side at regular width and unified otherwise, and the reader's choice in the switch is kept inside the view."
+    },
+    {
+      "name": "granularity",
+      "type": "MonarchDiffViewerGranularity",
+      "default": ".word",
+      "description": "word also marks the changed words inside a changed line; line marks whole lines only."
+    },
+    {
+      "name": "context",
+      "type": "Int?",
+      "default": "3",
+      "description": "Unchanged lines kept around each change; longer runs fold behind a Show N unchanged lines button. nil never folds."
+    },
+    {
+      "name": "beforeLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "The name of the earlier side, such as a version name; read in the caption and for side by side rows."
+    },
+    {
+      "name": "afterLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "The name of the later side."
+    },
+    {
+      "name": "showsModeSwitch",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the segmented layout switch is shown. It is only shown at regular width."
+    },
+    {
+      "name": "showsLineNumbers",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether line numbers are shown: both numbers in unified, one per side in side by side."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchDiffViewerLabels",
+      "default": "MonarchDiffViewerLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "actions",
+      "type": "@ViewBuilder () -> Actions",
+      "default": "EmptyView",
+      "description": "Controls at the end of the header, such as Restore."
+    }
+  ],
+  "states": [
+    {
+      "name": "unified",
+      "description": "One column: removed lines, then added lines of each change, each with both line numbers and a + or − marker."
+    },
+    {
+      "name": "side by side",
+      "description": "Two columns: the k-th removed line beside the k-th added line; an empty side has the subtle fill."
+    },
+    {
+      "name": "folded",
+      "description": "Unchanged runs longer than the context fold into a full-width button that shows them."
+    },
+    {
+      "name": "current change",
+      "description": "After previous or next, the first row of that change has an accent bar at its leading edge and is scrolled into view."
+    },
+    {
+      "name": "no changes",
+      "description": "\"No changes.\" in the muted text colour instead of the lines."
+    }
+  ],
+  "appearance": "Added lines use the subtle success fill and removed lines the subtle danger fill; changed words have the success or danger border colour as a fill, removed words are struck through and added words underlined. Markers and totals use the strong success and danger colours, line numbers the subtle text colour, inside a container with a subtle border.",
+  "platformNotes": "The diff algorithm is ported from the web (longest common subsequence over lines, then over words, with the same limits), not shared. The web is a table that scrolls sideways; on iOS long lines wrap so the text scales with Dynamic Type, and the layout switch appears only at regular width because two columns do not fit a phone. Previous and next scroll with ScrollViewReader and move VoiceOver focus; scrolling needs the view inside the app's ScrollView. Android uses the same name and options.",
+  "accessibility": [
+    "The lines are a container named \"Changes from <before> to <after>\".",
+    "Each unified line is one element read as its text after \"Added\" or \"Removed\"; an empty line reads \"Blank line\". Line numbers are not read.",
+    "A side by side row reads each side after its name, or once when the line is unchanged.",
+    "The totals read \"3 added, 1 removed\".",
+    "Previous and next announce \"Change 2 of 5\" and move VoiceOver focus to the change.",
+    "Changes are marked by + and − signs, strikethrough and underline as well as colour.",
+    "Text scales with Dynamic Type and wraps; buttons have 44-point touch targets."
+  ],
+  "edgeCases": [
+    "Inputs with more than a million line pairs show every line removed and added; lines with more than 250,000 word pairs are not split into words.",
+    "A change of the texts resets the expanded runs and the current change.",
+    "A run of unchanged lines only one longer than the context is shown instead of folded.",
+    "An empty before shows every line as added."
+  ],
+  "tests": [
+    "MonarchDiffViewerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Unified",
+      "fixture": "diff-viewer",
+      "webExample": "Unified",
+      "template": "ScrollView {\n    MonarchDiffViewer(\n        before: [{{before.0}}, {{before.1}}, {{before.2}}, {{before.3}}, {{before.4}}],\n        after: [{{after.0}}, {{after.1}}, {{after.2}}, {{after.3}}, {{after.4}}, {{after.5}}],\n        beforeLabel: {{beforeLabel}},\n        afterLabel: {{afterLabel}}\n    )\n    .padding()\n}",
+      "code": "ScrollView {\n    MonarchDiffViewer(\n        before: [\"# Refund policy\", \"Refunds are available within 14 days.\", \"Contact support to start a refund.\", \"Refunds go back to the original payment method.\", \"Processing takes up to 10 days.\"],\n        after: [\"# Refund policy\", \"Refunds are available within 30 days.\", \"Contact support or use the billing page to start a refund.\", \"Refunds go back to the original payment method.\", \"Processing takes up to 5 business days.\", \"Partial refunds are possible for annual plans.\"],\n        beforeLabel: \"Version 3\",\n        afterLabel: \"Version 4\"\n    )\n    .padding()\n}"
+    },
+    {
+      "title": "Document blocks side by side",
+      "setup": "@State private var mode = MonarchDiffViewerMode.split",
+      "code": "MonarchDiffViewer(\n    before: [\"Our plan for the quarter.\", \"Hire two engineers.\"],\n    after: [\"Our plan for the quarter.\", \"Hire three engineers.\"],\n    mode: $mode,\n    showsLineNumbers: false\n)"
+    }
+  ],
+  "webEquivalent": "DiffViewer",
+  "dependsOn": [
+    "code-block",
+    "segmented-control",
+    "button"
+  ]
+}

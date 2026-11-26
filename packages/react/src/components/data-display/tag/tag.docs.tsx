@@ -1,6 +1,13 @@
 import { useState } from 'react';
-import { Tag, TagGroup } from '@rookcom/monarch-react';
+import { Tag, TagGroup, type TagProps } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './tag.fixture.json';
+
+const items = fixture.data.items as readonly {
+  tone: NonNullable<TagProps['tone']>;
+  label: string;
+}[];
 
 function RemovableLabels() {
   const [labels, setLabels] = useState(['Design', 'Research', 'Billing', 'Mobile']);
@@ -161,12 +168,11 @@ export default {
           title: 'Tones',
           render: () => (
             <>
-              <Tag>Neutral</Tag>
-              <Tag tone="accent">Accent</Tag>
-              <Tag tone="info">Info</Tag>
-              <Tag tone="success">Success</Tag>
-              <Tag tone="warning">Warning</Tag>
-              <Tag tone="danger">Danger</Tag>
+              {items.map((item) => (
+                <Tag key={item.label} tone={item.tone}>
+                  {item.label}
+                </Tag>
+              ))}
             </>
           ),
         },

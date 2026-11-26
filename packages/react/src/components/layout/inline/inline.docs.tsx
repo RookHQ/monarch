@@ -1,5 +1,12 @@
-import { Badge, Button, Inline } from '@rookcom/monarch-react';
+import { Badge, Button, Inline, type ButtonProps } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './inline.fixture.json';
+
+const ACTIONS = fixture.data.actions as readonly {
+  label: string;
+  variant: NonNullable<ButtonProps['variant']>;
+}[];
 
 export default {
   id: 'inline',
@@ -88,9 +95,11 @@ export default {
           title: 'Actions',
           render: () => (
             <Inline>
-              <Button>Save</Button>
-              <Button variant="secondary">Preview</Button>
-              <Button variant="ghost">Cancel</Button>
+              {ACTIONS.map((a) => (
+                <Button key={a.label} variant={a.variant}>
+                  {a.label}
+                </Button>
+              ))}
             </Inline>
           ),
         },

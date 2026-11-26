@@ -1,17 +1,26 @@
-import { SignInWithRookButton } from '@rookcom/monarch-react/rook';
+import { SignInWithRookButton, type SignInWithRookButtonProps } from '@rookcom/monarch-react/rook';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './sign-in-with-rook-button.fixture.json';
+
+const { label } = fixture.data;
+const variants = fixture.data.variants as unknown as readonly [
+  NonNullable<SignInWithRookButtonProps['variant']>,
+  NonNullable<SignInWithRookButtonProps['variant']>,
+  NonNullable<SignInWithRookButtonProps['variant']>,
+];
 
 function Surfaces() {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
       <div data-mn-theme="light" style={{ padding: 16, background: 'var(--mn-color-bg-surface)' }}>
-        <SignInWithRookButton variant="light" />
+        <SignInWithRookButton label={label} variant={variants[0]} />
       </div>
       <div data-mn-theme="dark" style={{ padding: 16, background: 'var(--mn-color-bg-canvas)' }}>
-        <SignInWithRookButton variant="dark" />
+        <SignInWithRookButton label={label} variant={variants[1]} />
       </div>
       <div style={{ padding: 16 }}>
-        <SignInWithRookButton variant="neutral" />
+        <SignInWithRookButton label={label} variant={variants[2]} />
       </div>
     </div>
   );

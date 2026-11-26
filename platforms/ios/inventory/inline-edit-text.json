@@ -1,0 +1,188 @@
+{
+  "id": "inline-edit-text",
+  "name": "MonarchInlineEditText",
+  "title": "InlineEditText",
+  "family": "forms",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Button that swaps to TextField (or TextEditor for several lines) with @FocusState; MonarchButton for Save and Cancel",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Text that turns into a field in place, with an asynchronous save, a pending state and an error that keeps the editor open.",
+  "whenToUse": "For one value that is edited where it is shown: a title, a name, a short description.",
+  "whenNotToUse": "For several fields edited together, use a form with MonarchTextField and Save in the toolbar. For text that is always editable, use MonarchTextField.",
+  "api": [
+    "init(_ label: String, text: Binding<String>, prompt: String? = nil, error: String? = nil, isMultiline: Bool = false, startsEditing: Bool = false, trimsWhitespace: Bool = true, savesOnFocusLoss: Bool = true, editHint: String? = nil, saveTitle: String? = nil, cancelTitle: String? = nil, savingLabel: String? = nil, failureMessage: String? = nil, validate: (@MainActor (String) -> String?)? = nil, onCancel: (@MainActor () -> Void)? = nil, onSave: @escaping @MainActor (String) async throws -> Void)"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "What the text is, for example \"Title\". Read by VoiceOver; not drawn."
+    },
+    {
+      "name": "text",
+      "type": "Binding<String>",
+      "default": "required",
+      "description": "The saved value. Written after a successful save."
+    },
+    {
+      "name": "prompt",
+      "type": "String?",
+      "default": "nil",
+      "description": "Shown in view mode while the value is empty, and as the placeholder of the field."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "An error from the app, for example an edit conflict, shown while editing."
+    },
+    {
+      "name": "isMultiline",
+      "type": "Bool",
+      "default": "false",
+      "description": "Uses a TextEditor: Return adds a line and Save saves."
+    },
+    {
+      "name": "startsEditing",
+      "type": "Bool",
+      "default": "false",
+      "description": "Opens the editor when the view first appears."
+    },
+    {
+      "name": "trimsWhitespace",
+      "type": "Bool",
+      "default": "true",
+      "description": "Trims the draft before comparing and saving."
+    },
+    {
+      "name": "savesOnFocusLoss",
+      "type": "Bool",
+      "default": "true",
+      "description": "Saves the draft when focus leaves the field."
+    },
+    {
+      "name": "editHint",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Edit\" hint."
+    },
+    {
+      "name": "saveTitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Save\" title."
+    },
+    {
+      "name": "cancelTitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Cancel\" title."
+    },
+    {
+      "name": "savingLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Saving\" spoken value of the Save button."
+    },
+    {
+      "name": "failureMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in message of a failed save whose error has no description."
+    },
+    {
+      "name": "validate",
+      "type": "(@MainActor (String) -> String?)?",
+      "default": "nil",
+      "description": "Returns a message to refuse a draft before saving."
+    },
+    {
+      "name": "onCancel",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Runs when the person cancels."
+    },
+    {
+      "name": "onSave",
+      "type": "@MainActor (String) async throws -> Void",
+      "default": "required",
+      "description": "Persists a new value. Not called when the value is unchanged. Throwing keeps the editor open."
+    }
+  ],
+  "states": [
+    {
+      "name": "viewing",
+      "description": "The value in the default text colour with a small pencil; an empty value shows the prompt in the subtle colour."
+    },
+    {
+      "name": "editing",
+      "description": "A bordered field with the focus ring, and Save and Cancel buttons under it."
+    },
+    {
+      "name": "saving",
+      "description": "The field is disabled, Save shows progress and Cancel is disabled."
+    },
+    {
+      "name": "error",
+      "description": "A danger border, and an icon and message under the field. The draft is kept."
+    },
+    {
+      "name": "disabled",
+      "description": "With disabled(_:) the value is plain text in the disabled colour and cannot be edited."
+    }
+  ],
+  "appearance": "View mode is body text with a muted pencil. The editor is a surface-coloured field with an input border and 8-point corners, the theme's focus ring, a small primary Save button and a ghost Cancel button. The same roles are used in light, dark and both high-contrast themes.",
+  "platformNotes": "On the web, Enter saves and Escape cancels, and Save and Cancel buttons are optional for a single line. A touch keyboard has no Escape key, so on iOS the two buttons are always shown; Return still saves a single line and a hardware Escape still cancels. The web shows a spinner inside the field; here the Save button shows the progress. The value is a binding that the component writes after onSave succeeds, in place of the web's controlled value. The web's controlled editing state is reduced to startsEditing, and onSaveError is the error thrown by onSave, which the app can catch inside its own closure. The multi-line editor has a fixed height that scales with Dynamic Type and scrolls, because TextEditor does not size itself to its text. Several closures are optional (validate, onCancel). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is validate.",
+  "accessibility": [
+    "In view mode it is one button: label, then the value (or the prompt) as the value, then \"Edit\" as the hint.",
+    "In edit mode the field has the same label, and an error is its hint, spoken as \"Error: …\".",
+    "A new error is announced when it appears, and is shown with an icon and text, not colour alone.",
+    "While saving, the Save button's value is \"Saving\".",
+    "The text in view mode and the field are at least 44 points high; text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "A draft equal to the saved value closes the editor without calling onSave.",
+    "A draft that has just been refused or has failed is not saved again when focus leaves the field.",
+    "A second save and Cancel are ignored while a save runs.",
+    "An error of a type that conforms to LocalizedError shows its errorDescription; any other error shows failureMessage or the built-in sentence.",
+    "With no value and no prompt the view mode shows only the pencil.",
+    "If the view goes away while a save runs, the save still finishes and writes the binding."
+  ],
+  "tests": [
+    "MonarchInlineEditTextTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Title with validation",
+      "fixture": "inline-edit-text",
+      "webExample": "Title with validation",
+      "template": "MonarchInlineEditText(\n    {{label}},\n    text: $title,\n    validate: { $0.isEmpty ? {{emptyError}} : nil }\n) { newTitle in\n    try await rename(to: newTitle)\n}\n.monarchInlineEditTextStyle(.heading)",
+      "setupTemplate": "@State private var title = {{value}}\n\nprivate func rename(to newTitle: String) async throws {\n    try await Task.sleep(for: .milliseconds(600))\n}",
+      "setup": "@State private var title = \"Update onboarding checklist\"\n\nprivate func rename(to newTitle: String) async throws {\n    try await Task.sleep(for: .milliseconds(600))\n}",
+      "code": "MonarchInlineEditText(\n    \"Title\",\n    text: $title,\n    validate: { $0.isEmpty ? \"Enter a title.\" : nil }\n) { newTitle in\n    try await rename(to: newTitle)\n}\n.monarchInlineEditTextStyle(.heading)"
+    },
+    {
+      "title": "Validation",
+      "setup": "@State private var name = \"Ada\"",
+      "code": "MonarchInlineEditText(\n    \"Name\",\n    text: $name,\n    validate: { $0.isEmpty ? \"Enter a name.\" : nil },\n    onSave: { _ in }\n)"
+    },
+    {
+      "title": "Several lines, open for a new item",
+      "setup": "@State private var notes = \"\"",
+      "code": "MonarchInlineEditText(\"Notes\", text: $notes, prompt: \"Add notes\", isMultiline: true, startsEditing: true) { _ in }"
+    }
+  ],
+  "webEquivalent": "InlineEditText",
+  "dependsOn": [
+    "button",
+    "icon",
+    "text"
+  ]
+}

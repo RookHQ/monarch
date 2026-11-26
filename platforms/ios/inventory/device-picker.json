@@ -1,0 +1,165 @@
+{
+  "id": "device-picker",
+  "name": "MonarchDevicePicker",
+  "title": "DevicePicker",
+  "family": "collaboration",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Picker with .pickerStyle(.menu) in MonarchFormField for the microphone and camera; AVKit AVRoutePickerView (UIViewRepresentable) for the audio output; AVCaptureDevice.authorizationStatus / requestAccess for access; MonarchInlineNotice for the access notices",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Microphone and camera menus and the system audio route picker for a lobby or a call's settings, with notices that explain camera and microphone access and a way to fix it.",
+  "whenToUse": "To let people choose the microphone, camera and audio output of a call before joining and during it, or for any capture feature that should let people pick the input.",
+  "whenNotToUse": "To list signed-in phones and computers, use the device list (device-list). To capture media, use AVFoundation: the picker only chooses ids and the product opens the session.",
+  "api": [
+    "init(microphone: Binding<String?>? = nil, camera: Binding<String?>? = nil, microphones: [MonarchDevicePickerDevice] = [], cameras: [MonarchDevicePickerDevice] = [], showsAudioOutput: Bool = false, access: MonarchDevicePickerAccess? = nil, size: MonarchDevicePickerSize = .md, labels: MonarchDevicePickerLabels = MonarchDevicePickerLabels(), onRequestAccess: (@MainActor @Sendable () async -> Void)? = nil)",
+    "MonarchDevicePickerDevice.init(_ id: String, name: String)",
+    "MonarchDevicePickerDevice.init(camera: AVCaptureDevice)",
+    "MonarchDevicePickerDevice.init(input: AVAudioSessionPortDescription) // iOS",
+    "enum MonarchDevicePickerAccess { case granted, notDetermined, denied, unavailable }",
+    "enum MonarchDevicePickerSize { case sm, md }",
+    "MonarchDevicePickerLabels.init(microphone: String? = nil, camera: String? = nil, speaker: String? = nil, systemDefault: String? = nil, unnamedMicrophone: (@Sendable (Int) -> String)? = nil, unnamedCamera: (@Sendable (Int) -> String)? = nil, notDetermined: String? = nil, allowAccess: String? = nil, denied: String? = nil, openSettings: String? = nil, unavailable: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "microphone",
+      "type": "Binding<String?>?",
+      "default": "nil",
+      "description": "The chosen microphone's id; nil is \"System default\". Shows the microphone field."
+    },
+    {
+      "name": "camera",
+      "type": "Binding<String?>?",
+      "default": "nil",
+      "description": "The chosen camera's id; nil is \"System default\". Shows the camera field."
+    },
+    {
+      "name": "microphones",
+      "type": "[MonarchDevicePickerDevice]",
+      "default": "[]",
+      "description": "The microphones offered, usually AVAudioSession.availableInputs mapped with init(input:)."
+    },
+    {
+      "name": "cameras",
+      "type": "[MonarchDevicePickerDevice]",
+      "default": "[]",
+      "description": "The cameras offered, usually an AVCaptureDevice.DiscoverySession's devices mapped with init(camera:)."
+    },
+    {
+      "name": "showsAudioOutput",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the speaker row: the current output's name and the system route picker (iOS only)."
+    },
+    {
+      "name": "access",
+      "type": "MonarchDevicePickerAccess?",
+      "default": "nil",
+      "description": "The access to explain. When nil, the picker reads AVCaptureDevice.authorizationStatus for the fields it shows, and again after asking."
+    },
+    {
+      "name": "size",
+      "type": "MonarchDevicePickerSize",
+      "default": ".md",
+      "description": "sm uses small controls and tighter spacing for a popover during a call."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchDevicePickerLabels",
+      "default": "MonarchDevicePickerLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onRequestAccess",
+      "type": "(@MainActor @Sendable () async -> Void)?",
+      "default": "nil",
+      "description": "Replaces the system request of Allow access (AVCaptureDevice.requestAccess for the shown kinds)."
+    }
+  ],
+  "states": [
+    {
+      "name": "granted",
+      "description": "No notice; the fields only."
+    },
+    {
+      "name": "not asked",
+      "description": "An info notice \"Allow camera and microphone access to choose devices.\" with Allow access, which shows the system prompt or runs onRequestAccess."
+    },
+    {
+      "name": "denied",
+      "description": "A warning notice that access is off, with Open Settings, which opens the app's page in Settings (iOS)."
+    },
+    {
+      "name": "unavailable",
+      "description": "A neutral notice \"No camera or microphone was found.\", also shown when access is granted but no shown field has a device."
+    },
+    {
+      "name": "removed device",
+      "description": "A selected id that is no longer listed stays selected as \"Microphone 1\" or \"Camera 1\"."
+    },
+    {
+      "name": "disabled",
+      "description": "With disabled(true) the menus and the notice's button are disabled and the labels take the disabled text colour."
+    }
+  ],
+  "appearance": "System menus in the theme's tint inside MonarchFormField, with Monarch type and colours for the labels. Notices are MonarchInlineNotice in the info, warning or neutral tone. The route picker is tinted with the default text colour and the accent solid colour while another route is active.",
+  "platformNotes": "The web lists devices with navigator.mediaDevices and selects outputs with setSinkId; on iOS the app lists inputs with AVAudioSession and cameras with AVCaptureDevice.DiscoverySession (the device initialisers convert them) and applies the choice itself, and audio output must use the system route picker, so there is no speaker menu and no speaker id. The picker does not observe hardware changes: the app passes new lists (for example on AVAudioSession.routeChangeNotification). Device names are always known on iOS, so the web's \"names hidden\" state becomes the not-asked state. The speaker row is iOS only and is left out of the macOS build convenience. Android ships the same MonarchDevicePicker with its own output picker.",
+  "accessibility": [
+    "Each menu is the standard Picker named by its field label, with the current choice as its value; MonarchFormField gives it the label.",
+    "Notices are MonarchInlineNotice: the tone name, then the message; the action is a separate button with a 44-point target.",
+    "A notice that appears or changes is announced once.",
+    "The route picker is a 44-point system button labelled \"Speaker\" with the current output's name as its value; the visible label and name beside it are hidden from VoiceOver.",
+    "States are text, never colour alone."
+  ],
+  "edgeCases": [
+    "Devices with an empty id are left out; an empty selection is the system default.",
+    "Devices without a name are numbered by their position: \"Camera 2\".",
+    "Allow access with the default request needs NSCameraUsageDescription and NSMicrophoneUsageDescription in the app's Info.plist; without them iOS ends the app. Pass onRequestAccess when the app asks elsewhere.",
+    "AVAudioSession.availableInputs only lists inputs for a record-capable session category; configure the session before listing.",
+    "The route picker, the system prompt and Open Settings were compiled for iOS but not tried on a device or with VoiceOver; options, access and notice logic are unit-tested."
+  ],
+  "tests": [
+    "MonarchDevicePickerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Before access is allowed",
+      "fixture": "device-picker",
+      "webExample": "Before access is allowed",
+      "template": "MonarchDevicePicker(\n    microphone: $microphone,\n    camera: $camera,\n    microphones: [\n        MonarchDevicePickerDevice({{microphones.0.id}}, name: {{microphones.0.label}}),\n        MonarchDevicePickerDevice({{microphones.1.id}}, name: {{microphones.1.label}}),\n    ],\n    cameras: [MonarchDevicePickerDevice({{cameras.0.id}}, name: {{cameras.0.label}})],\n    showsAudioOutput: true,\n    access: .notDetermined,\n    onRequestAccess: {}\n)",
+      "setupTemplate": "@State private var microphone: String?\n@State private var camera: String?",
+      "setup": "@State private var microphone: String?\n@State private var camera: String?",
+      "code": "MonarchDevicePicker(\n    microphone: $microphone,\n    camera: $camera,\n    microphones: [\n        MonarchDevicePickerDevice(\"a\", name: \"\"),\n        MonarchDevicePickerDevice(\"b\", name: \"\"),\n    ],\n    cameras: [MonarchDevicePickerDevice(\"c\", name: \"\")],\n    showsAudioOutput: true,\n    access: .notDetermined,\n    onRequestAccess: {}\n)"
+    },
+    {
+      "title": "Before access is allowed",
+      "setup": "@State private var microphone: String?\n@State private var access = MonarchDevicePickerAccess.notDetermined",
+      "code": "MonarchDevicePicker(\n    microphone: $microphone,\n    access: access,\n    onRequestAccess: { access = .granted }\n)"
+    }
+  ],
+  "webEquivalent": "DevicePicker",
+  "dependsOn": [
+    "select",
+    "form-field",
+    "inline-notice"
+  ],
+  "icons": {
+    "notice": "InfoGlyph",
+    "select.chevron": "ChevronDownGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "speakers"
+      ],
+      "reason": "iOS shows the audio output with the system AVRoutePickerView, which lists the routes itself; an app cannot supply a speaker list.",
+      "convention": "HIG: system route picker"
+    }
+  ]
+}

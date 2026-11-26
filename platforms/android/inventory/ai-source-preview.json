@@ -1,0 +1,145 @@
+{
+  "id": "ai-source-preview",
+  "name": "MonarchAiSourcePreview",
+  "title": "AiSourcePreview",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column with androidx.compose.foundation.verticalScroll and androidx.compose.foundation.text.selection.SelectionContainer, presented by the app in MonarchBottomSheet",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The content of a sheet that shows the document, record or page an AI answer cited, with the quoted passage highlighted and scrolled into view, and a button that opens the original.",
+  "whenToUse": "When someone taps a citation or a source of an AI answer and should see the passage that backs the answer without leaving the conversation. Present it in a MonarchBottomSheet.",
+  "whenNotToUse": "For the list of all sources use MonarchAiSourceList. To open a source in full, open its address directly. For a link preview in a chat message use MonarchLinkCard.",
+  "api": [
+    "@Composable fun MonarchAiSourcePreview(source: MonarchAiSourcePart, modifier: Modifier = Modifier, quote: String? = null, content: String? = null, originalUrl: String? = null, favicon: Painter? = null, labels: MonarchAiSourcePreviewLabels = MonarchAiSourcePreviewLabels(), onClose: (() -> Unit)? = null, onOpenOriginal: ((String) -> Unit)? = null)",
+    "class MonarchAiSourcePreviewLabels(quoted: String? = null, openOriginal: String? = null, noPreview: String? = null, close: String? = null, kind: ((kind: MonarchAiSourceKind) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "source",
+      "type": "MonarchAiSourcePart",
+      "default": "required",
+      "description": "The cited source from the conversation model: title, address, kind and product."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the preview."
+    },
+    {
+      "name": "quote",
+      "type": "String?",
+      "default": "null",
+      "description": "The cited passage. Highlighted where it first appears in content, ignoring case and spacing, and scrolled into view."
+    },
+    {
+      "name": "content",
+      "type": "String?",
+      "default": "null",
+      "description": "The text of the source. Paragraphs are separated by blank lines."
+    },
+    {
+      "name": "originalUrl",
+      "type": "String?",
+      "default": "null",
+      "description": "Where Open original goes. Defaults to the source's address. Shown only for http, https and mailto."
+    },
+    {
+      "name": "favicon",
+      "type": "Painter?",
+      "default": "null",
+      "description": "The favicon the app loaded for the source; without it MonarchFavicon draws a letter tile."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiSourcePreviewLabels",
+      "default": "MonarchAiSourcePreviewLabels()",
+      "description": "Replacements for the quote caption, Open original, the empty text, Close and the kind names."
+    },
+    {
+      "name": "onClose",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Adds a Close button that calls this, for example to hide the sheet."
+    },
+    {
+      "name": "onOpenOriginal",
+      "type": "((String) -> Unit)?",
+      "default": "null",
+      "description": "Called with the address instead of opening it with LocalUriHandler, for example to open a Custom Tab."
+    }
+  ],
+  "states": [
+    {
+      "name": "quote found",
+      "description": "The passage is highlighted in its paragraph and scrolled to the middle of the viewport."
+    },
+    {
+      "name": "quote not found",
+      "description": "The quote is shown on its own under a Quoted passage caption, above the content."
+    },
+    {
+      "name": "quote only",
+      "description": "No content: only the quote block."
+    },
+    {
+      "name": "empty",
+      "description": "Neither content nor quote: No preview is available for this source."
+    },
+    {
+      "name": "no original",
+      "description": "Without a safe address there is no Open original button."
+    }
+  ],
+  "appearance": "The title in the subheading style and default text, the meta line in muted caption text, the favicon at the medium size. The highlighted passage has the AI subtle fill and an underline; the quote block has a bar in the AI border color at its start. Open original is a full-width secondary button and Close a small ghost button.",
+  "platformNotes": "The web component is a side sheet with open and onOpenChange; on Android, as on iOS, it is the content of a sheet: the app presents it in a MonarchBottomSheet, which owns the drag handle, the scrim, the back gesture and returning TalkBack focus. The web accepts arbitrary nodes as content and scrolls to the first mark; here content is plain text. Open original opens through LocalUriHandler or onOpenOriginal instead of a new tab. The underline of the passage is in the text color, because a Compose SpanStyle cannot color an underline (iOS uses the AI citation color). The favicon is a Painter the app loads; the kind names are shared with MonarchAiSourceList. iOS takes originalURL as a URL; Android takes a String.",
+  "accessibility": [
+    "The source title is a heading.",
+    "The highlighted passage has an underline as well as a fill, and its paragraph reads \"Quoted passage\" as its state.",
+    "The passage is scrolled into view when the preview appears, with the theme's motion, which is an immediate jump when animations are off.",
+    "Close and Open original are buttons with 48dp touch targets; Open original appears only for safe addresses.",
+    "The text can be selected."
+  ],
+  "edgeCases": [
+    "Only the first match of the quote is highlighted.",
+    "A quote that crosses a blank line is highlighted in each paragraph it covers.",
+    "Characters such as . or ( in the quote are matched literally.",
+    "A javascript: or relative address shows no Open original.",
+    "Very long content scrolls inside the preview; Open original stays under it.",
+    "The text scrolls itself, so the preview needs a bounded height (a sheet gives one) and cannot sit inside another vertically scrolling container."
+  ],
+  "tests": [
+    "MonarchAiSourcePreviewTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Document text with a quote",
+      "fixture": "ai-source-preview",
+      "webExample": "Document text with a quote",
+      "template": "MonarchButton(text = {{trigger}}, onClick = { open = true })\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }) {\n        MonarchAiSourcePreview(\n            source = MonarchAiSourcePart(\n                id = {{source.id}},\n                title = {{source.title}},\n                url = {{source.url}},\n                kind = MonarchAiSourceKind.{{source.kind|pascal}},\n                product = {{source.product}},\n            ),\n            quote = {{quote}},\n            content = {{content}},\n            onClose = { open = false },\n        )\n    }\n}",
+      "setupTemplate": "var open by remember { mutableStateOf(true) }",
+      "setup": "var open by remember { mutableStateOf(true) }",
+      "code": "MonarchButton(text = \"Preview source\", onClick = { open = true })\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }) {\n        MonarchAiSourcePreview(\n            source = MonarchAiSourcePart(\n                id = \"s1\",\n                title = \"Team handbook\",\n                url = \"https://example.com/handbook\",\n                kind = MonarchAiSourceKind.Doc,\n                product = \"Docs\",\n            ),\n            quote = \"Requests are answered within two working days.\",\n            content = \"Welcome to the team. This handbook explains how we work together.\\n\\nRequests are answered within two working days. Urgent issues go to the on-call queue, which answers within two hours.\\n\\nEvery request gets an owner. The owner keeps the requester up to date until it is closed.\",\n            onClose = { open = false },\n        )\n    }\n}"
+    },
+    {
+      "title": "A quote without the source text",
+      "code": "MonarchAiSourcePreview(\n    source = MonarchAiSourcePart(\"s2\", \"Acme Corp\", kind = MonarchAiSourceKind.Record, product = \"CRM\"),\n    quote = \"Renewal is due in March.\",\n)"
+    }
+  ],
+  "webEquivalent": "AiSourcePreview",
+  "dependsOn": [
+    "sheet",
+    "link",
+    "button",
+    "favicon",
+    "ai-source-list",
+    "ai-conversation"
+  ]
+}

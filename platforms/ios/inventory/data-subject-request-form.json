@@ -1,0 +1,88 @@
+{
+  "id": "data-subject-request-form",
+  "name": null,
+  "title": "DataSubjectRequestForm",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "VStack of MonarchRadioCardGroup, a segmented Picker in a MonarchFormField, MonarchTextFields, MonarchCountrySelect, a vertical TextField in a MonarchFormField, a Toggle with .monarchCheckbox and a primary MonarchButton, replaced by a success MonarchBanner",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a privacy request form (get a copy, delete, correct, object, opt out) for the person the data is about or their authorised agent, with validation on send and a reference on success.",
+  "whenToUse": "On a privacy or help screen where people exercise their data rights (GDPR, CCPA and similar laws) and the request goes to the company's privacy team.",
+  "whenNotToUse": "For the signed-in person downloading their own data, use MonarchDataExportRequest. For deleting their own account, use the delete-account-flow recipe. For consent choices, use MonarchConsentPreferences.",
+  "api": [
+    "MonarchRadioCardGroup(\"What would you like to do?\", selection: $type, options: [MonarchRadioCardOption(\"access\", title:, description:), …])",
+    "MonarchFormField(\"Who is this request for?\") { Picker(…).pickerStyle(.segmented) }",
+    "MonarchTextField(\"Email\", text: $email, helper:, error:)",
+    "MonarchCountrySelect(\"Country or region where the person lives\", selection: $country, error:, isRequired: true)",
+    "MonarchFormField(\"Details\", helper:, error:, isRequired:) { TextField(\"Details\", text: $details, axis: .vertical) }",
+    "Toggle(\"The information I gave is accurate\", isOn: $isAccurate).toggleStyle(.monarchCheckbox)",
+    "MonarchButton(\"Send request\", variant: .primary, isLoading: isSending, fullWidth: true)",
+    "MonarchBanner(\"Request received\", message:, tone: .success)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "empty",
+      "description": "Nothing chosen; errors are not shown until the first send."
+    },
+    {
+      "name": "agent",
+      "description": "Choosing Someone I act for renames the person's fields and adds the agent's own name."
+    },
+    {
+      "name": "invalid",
+      "description": "After Send, each missing or wrong answer shows its error with an icon, and the problem count is announced."
+    },
+    {
+      "name": "sending",
+      "description": "The send button shows progress."
+    },
+    {
+      "name": "received",
+      "description": "The form is replaced by a success banner with the reference."
+    }
+  ],
+  "appearance": "Monarch's radio cards, text fields, country select, checkbox and primary button on the page background; errors use the danger roles with an icon, and the confirmation is a success banner. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "The web DataSubjectRequestForm is one component with default request types, an error summary that links to each field, a verification note, a response time note and translatable messages. On iOS it is a recipe built from Monarch fields: the request types are the app's MonarchRadioCardOptions (which types apply where is for the product's legal team), the relationship is a segmented Picker, the country is MonarchCountrySelect with Foundation's names, and the submission is the app's call. There is no error summary with links; each field shows and announces its own error. Android composes the same recipe.",
+  "accessibility": [
+    "Every field has a visible label read by VoiceOver; required fields add Required to their hint.",
+    "Errors appear only after Send, each with an icon and text, and Monarch fields announce a new error.",
+    "The radio cards read their title and description and mark the choice with the selected trait.",
+    "The acknowledgement is a real Toggle with the checkbox style, read as a checkbox with its state."
+  ],
+  "edgeCases": [
+    "Details become required for a correction, since the team needs to know what to fix.",
+    "Keep everything typed when the send fails, and show the failure with MonarchInlineNotice above the button.",
+    "Prefill the email of a signed-in person, but let them change it.",
+    "Long request descriptions wrap in the cards at every text size."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Public privacy request form",
+      "fixture": "data-subject-request-form",
+      "webExample": "Public privacy request form",
+      "template": "if let reference {\n    MonarchBanner(\"Request received\", message: \"Your reference is \\(reference).\", tone: .success)\n} else {\n    VStack(alignment: .leading, spacing: theme.spacing.space4) {\n        MonarchRadioCardGroup(\n            \"What would you like to do?\",\n            selection: $type,\n            options: [\n                MonarchRadioCardOption({{types.0.id}}, title: {{types.0.label}}, description: {{types.0.description}}),\n                MonarchRadioCardOption({{types.1.id}}, title: {{types.1.label}}, description: {{types.1.description}}),\n                MonarchRadioCardOption({{types.2.id}}, title: {{types.2.label}}, description: {{types.2.description}}),\n                MonarchRadioCardOption({{types.3.id}}, title: {{types.3.label}}, description: {{types.3.description}}),\n                MonarchRadioCardOption({{types.4.id}}, title: {{types.4.label}}, description: {{types.4.description}}),\n                MonarchRadioCardOption({{types.5.id}}, title: {{types.5.label}}, description: {{types.5.description}}),\n            ],\n            columns: 2,\n            compactColumns: 2,\n            isRequired: true\n        )\n        MonarchRadioCardGroup(\n            \"Who is this request for?\",\n            selection: Binding(get: { isAgent ? \"agent\" : \"myself\" }, set: { isAgent = $0 == \"agent\" }),\n            options: [\n                MonarchRadioCardOption(\"myself\", title: \"Myself\"),\n                MonarchRadioCardOption(\"agent\", title: \"Someone I am authorized to act for\"),\n            ],\n            columns: 2,\n            compactColumns: 2\n        )\n        MonarchFormField(isAgent ? \"Their full name\" : \"Full name\", optionalText: \"Optional\") {\n            MonarchTextField(isAgent ? \"Their full name\" : \"Full name\", text: $name, prompt: \"\", labelVisibility: .hidden)\n        }\n        MonarchFormField(\n            isAgent ? \"Their email\" : \"Email\",\n            helper: \"Used to identify the account and to reply about this request.\",\n            error: emailError,\n            isRequired: true\n        ) {\n            MonarchTextField(isAgent ? \"Their email\" : \"Email\", text: $email, prompt: \"\", labelVisibility: .hidden)\n        }\n        MonarchCountrySelect(\n            \"Country or region where the person lives\",\n            selection: $country,\n            prompt: \"Choose a country or region\",\n            error: showsErrors && country == nil ? \"Choose a country or region.\" : nil,\n            isRequired: true\n        )\n        MonarchFormField(\"Details\", helper: \"Anything that helps find the information or explains the request.\", isRequired: type == {{types.2.id}}, optionalText: \"Optional\") {\n            MonarchTextField(\"Details\", text: $details, prompt: \"\", axis: .vertical, lineLimit: 3...6, labelVisibility: .hidden)\n        }\n        MonarchInlineNotice({{verificationNote}}, tone: .info)\n        Toggle(\"The information I gave is accurate\", isOn: $isAccurate)\n            .toggleStyle(.monarchCheckbox)\n        MonarchButton(\"Send request\", variant: .primary, fullWidth: true) {\n            showsErrors = true\n            guard type != nil, emailError == nil, country != nil, isAccurate else { return }\n            // Send the request to the app's privacy service here.\n            reference = \"DSR-1042\"\n        }\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var type: String?\n@State private var isAgent = false\n@State private var name = \"\"\n@State private var email = \"\"\n@State private var country: String?\n@State private var details = \"\"\n@State private var isAccurate = false\n@State private var showsErrors = false\n@State private var reference: String?\n\nprivate var emailError: String? {\n    guard showsErrors else { return nil }\n    return email.contains(\"@\") ? nil : \"Enter an email address like name@example.com.\"\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var type: String?\n@State private var isAgent = false\n@State private var name = \"\"\n@State private var email = \"\"\n@State private var country: String?\n@State private var details = \"\"\n@State private var isAccurate = false\n@State private var showsErrors = false\n@State private var reference: String?\n\nprivate var emailError: String? {\n    guard showsErrors else { return nil }\n    return email.contains(\"@\") ? nil : \"Enter an email address like name@example.com.\"\n}",
+      "code": "if let reference {\n    MonarchBanner(\"Request received\", message: \"Your reference is \\(reference).\", tone: .success)\n} else {\n    VStack(alignment: .leading, spacing: theme.spacing.space4) {\n        MonarchRadioCardGroup(\n            \"What would you like to do?\",\n            selection: $type,\n            options: [\n                MonarchRadioCardOption(\"access\", title: \"Get a copy of my data\", description: \"Receive a copy of the personal information held about you.\"),\n                MonarchRadioCardOption(\"delete\", title: \"Delete my data\", description: \"Ask for your personal information to be deleted.\"),\n                MonarchRadioCardOption(\"correct\", title: \"Correct my data\", description: \"Fix personal information that is wrong or incomplete.\"),\n                MonarchRadioCardOption(\"object\", title: \"Object to or restrict processing\", description: \"Ask for your information to stop being used, or to be used less.\"),\n                MonarchRadioCardOption(\"opt-out\", title: \"Opt out of sale or sharing\", description: \"Stop your information from being sold or shared for advertising.\"),\n                MonarchRadioCardOption(\"withdraw-consent\", title: \"Withdraw consent\", description: \"Take back consent you gave earlier, for example for marketing.\"),\n            ],\n            columns: 2,\n            compactColumns: 2,\n            isRequired: true\n        )\n        MonarchRadioCardGroup(\n            \"Who is this request for?\",\n            selection: Binding(get: { isAgent ? \"agent\" : \"myself\" }, set: { isAgent = $0 == \"agent\" }),\n            options: [\n                MonarchRadioCardOption(\"myself\", title: \"Myself\"),\n                MonarchRadioCardOption(\"agent\", title: \"Someone I am authorized to act for\"),\n            ],\n            columns: 2,\n            compactColumns: 2\n        )\n        MonarchFormField(isAgent ? \"Their full name\" : \"Full name\", optionalText: \"Optional\") {\n            MonarchTextField(isAgent ? \"Their full name\" : \"Full name\", text: $name, prompt: \"\", labelVisibility: .hidden)\n        }\n        MonarchFormField(\n            isAgent ? \"Their email\" : \"Email\",\n            helper: \"Used to identify the account and to reply about this request.\",\n            error: emailError,\n            isRequired: true\n        ) {\n            MonarchTextField(isAgent ? \"Their email\" : \"Email\", text: $email, prompt: \"\", labelVisibility: .hidden)\n        }\n        MonarchCountrySelect(\n            \"Country or region where the person lives\",\n            selection: $country,\n            prompt: \"Choose a country or region\",\n            error: showsErrors && country == nil ? \"Choose a country or region.\" : nil,\n            isRequired: true\n        )\n        MonarchFormField(\"Details\", helper: \"Anything that helps find the information or explains the request.\", isRequired: type == \"correct\", optionalText: \"Optional\") {\n            MonarchTextField(\"Details\", text: $details, prompt: \"\", axis: .vertical, lineLimit: 3...6, labelVisibility: .hidden)\n        }\n        MonarchInlineNotice(\"To protect the account, we will email a link to confirm the request before acting on it.\", tone: .info)\n        Toggle(\"The information I gave is accurate\", isOn: $isAccurate)\n            .toggleStyle(.monarchCheckbox)\n        MonarchButton(\"Send request\", variant: .primary, fullWidth: true) {\n            showsErrors = true\n            guard type != nil, emailError == nil, country != nil, isAccurate else { return }\n            // Send the request to the app's privacy service here.\n            reference = \"DSR-1042\"\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "DataSubjectRequestForm",
+  "dependsOn": [
+    "radio-card-group",
+    "text-field",
+    "country-select",
+    "checkbox",
+    "button",
+    "form-field",
+    "segmented-control",
+    "alert"
+  ]
+}

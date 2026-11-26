@@ -1,6 +1,22 @@
 import { Badge } from '@rookcom/monarch-react';
 import { Leaderboard } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './leaderboard.fixture.json';
+
+const [ada, bea, cal, dee] = fixture.data.entries as unknown as readonly [
+  { id: string; name: string; value: number; change: number },
+  {
+    id: string;
+    name: string;
+    value: number;
+    change: number;
+    badge: string;
+    badgeTone: 'danger';
+  },
+  { id: string; name: string; value: number; current: true },
+  { id: string; name: string; value: number; secondary: string },
+];
 
 export default {
   id: 'leaderboard',
@@ -118,28 +134,28 @@ export default {
           render: () => (
             <Leaderboard
               style={{ maxWidth: '28rem' }}
-              label="Tickets solved this month"
-              valueLabel="tickets solved"
+              label={fixture.data.label}
+              valueLabel={fixture.data.valueLabel}
               sort="desc"
               highlightTop
-              total={9}
+              total={fixture.data.total}
               moreHref="#report"
-              limit={4}
+              limit={fixture.data.limit}
               entries={[
-                { id: 'a', name: 'Ada Moss', value: 64, change: { value: 0.12 } },
+                { id: ada.id, name: ada.name, value: ada.value, change: { value: ada.change } },
                 {
-                  id: 'b',
-                  name: 'Bea Lund',
-                  value: 51,
-                  change: { value: -0.04 },
+                  id: bea.id,
+                  name: bea.name,
+                  value: bea.value,
+                  change: { value: bea.change },
                   badge: (
-                    <Badge tone="danger" size="sm">
-                      2 breached
+                    <Badge tone={bea.badgeTone} size="sm">
+                      {bea.badge}
                     </Badge>
                   ),
                 },
-                { id: 'c', name: 'Cal Ortiz', value: 51, current: true },
-                { id: 'd', name: 'Dee Park', value: 38, secondary: 'Billing team' },
+                { id: cal.id, name: cal.name, value: cal.value, current: cal.current },
+                { id: dee.id, name: dee.name, value: dee.value, secondary: dee.secondary },
               ]}
             />
           ),

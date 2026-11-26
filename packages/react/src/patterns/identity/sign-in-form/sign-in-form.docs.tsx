@@ -1,6 +1,8 @@
 import { SignInForm } from '@rookcom/monarch-react/patterns';
 import { SignInWithRookButton } from '@rookcom/monarch-react/rook';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './sign-in-form.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
@@ -141,6 +143,8 @@ export default {
               forgotPasswordHref="#reset"
               signUpHref="#sign-up"
               rememberMe
+              defaultIdentifier={fixture.data.email}
+              defaultRemember={fixture.data.keepSignedIn}
             />
           ),
         },

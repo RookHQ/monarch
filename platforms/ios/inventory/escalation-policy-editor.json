@@ -1,0 +1,156 @@
+{
+  "id": "escalation-policy-editor",
+  "name": "MonarchEscalationPolicyEditor",
+  "title": "EscalationPolicyEditor",
+  "family": "workflow",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "VStack of MonarchCard levels, each with MonarchDurationInput (TextField with a Stepper) for the delay and MonarchCheckboxGroup (Toggle with .toggleStyle(.monarchCheckbox)) for the targets",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Edits an escalation ladder: at each level, after how long and whom to notify, so an alert or request nobody acts on reaches someone else.",
+  "whenToUse": "In incident, on-call or support settings, where an admin sets who is told when nobody acknowledges.",
+  "whenNotToUse": "For ordered approvers use MonarchApprovalChainEditor. For one response-time target use MonarchSlaIndicator to show it and a MonarchDurationInput to set it.",
+  "api": [
+    "init(levels: Binding<[MonarchEscalationLevel]>, targets: [MonarchEscalationTarget], timing: MonarchEscalationPolicyTiming = .cumulative, description: String? = nil, defaultStepMinutes: Int = 15, minLevels: Int = 1, maxLevels: Int = 10, showsErrors: Bool = false, labels: MonarchEscalationPolicyEditorLabels = MonarchEscalationPolicyEditorLabels(), makeID: @escaping @MainActor () -> String = { UUID().uuidString })",
+    "nonisolated static func validate(_ levels: [MonarchEscalationLevel], timing: MonarchEscalationPolicyTiming = .cumulative) -> [String: MonarchEscalationLevelProblem]",
+    "MonarchEscalationLevel.init(id: String, afterMinutes: Int, targets: [String] = [])",
+    "MonarchEscalationTarget.init(id: String, label: String, description: String? = nil)",
+    "enum MonarchEscalationPolicyTiming { case cumulative, interval }",
+    "enum MonarchEscalationLevelProblem { case targets, order }",
+    "MonarchEscalationPolicyEditorLabels.init(label:level:after:notify:summary:nobody:remove:add:noTargets:problem:maxReached:), every parameter optional"
+  ],
+  "options": [
+    {
+      "name": "levels",
+      "type": "Binding<[MonarchEscalationLevel]>",
+      "default": "required",
+      "description": "The levels in order: id, minutes before the level fires, and the ids of the targets it notifies."
+    },
+    {
+      "name": "targets",
+      "type": "[MonarchEscalationTarget]",
+      "default": "required",
+      "description": "What a level can notify: channels, people, rotas."
+    },
+    {
+      "name": "timing",
+      "type": "MonarchEscalationPolicyTiming",
+      "default": ".cumulative",
+      "description": "cumulative: times count from the start and must increase. interval: each time counts from the previous level."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "Help under the list."
+    },
+    {
+      "name": "defaultStepMinutes",
+      "type": "Int",
+      "default": "15",
+      "description": "Minutes added to the last level for a new one."
+    },
+    {
+      "name": "minLevels",
+      "type": "Int",
+      "default": "1",
+      "description": "The fewest levels; remove is disabled at this count."
+    },
+    {
+      "name": "maxLevels",
+      "type": "Int",
+      "default": "10",
+      "description": "The most levels; the add button becomes \"A policy can have up to 10 levels.\"."
+    },
+    {
+      "name": "showsErrors",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows each level's problem, for example after a save attempt."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchEscalationPolicyEditorLabels",
+      "default": "MonarchEscalationPolicyEditorLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "makeID",
+      "type": "@MainActor () -> String",
+      "default": "{ UUID().uuidString }",
+      "description": "Makes the id of a new level."
+    }
+  ],
+  "states": [
+    {
+      "name": "levels",
+      "description": "One card per level: \"Level 1\", the summary, Remove, After (a duration with a stepper) and Notify (checkboxes)."
+    },
+    {
+      "name": "no targets",
+      "description": "A warning with an icon: there is nothing to notify yet."
+    },
+    {
+      "name": "missing targets",
+      "description": "With showsErrors, the checkbox group shows \"Choose at least one target …\"."
+    },
+    {
+      "name": "out of order",
+      "description": "With showsErrors and cumulative timing, the delay shows \"This level must come later than the one before it.\"."
+    },
+    {
+      "name": "at the minimum",
+      "description": "Remove is disabled."
+    },
+    {
+      "name": "full",
+      "description": "The add button is replaced by a muted note."
+    },
+    {
+      "name": "disabled",
+      "description": "Every control is disabled."
+    }
+  ],
+  "appearance": "Monarch cards on the surface colour with a label-weight title, a muted summary, the Monarch duration field and checkboxes; the no-targets warning uses the strong warning role and problems the strong danger role, each with an icon. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web shows a numbered marker beside each level and an ordered list; iOS shows the number in the title and reads each level as one container. The web uses Checkbox and DurationInput; iOS uses MonarchCheckboxGroup and MonarchDurationInput, whose stepper replaces the web's arrow keys. Levels are not reordered, as on the web: their order is the order of their delays. The web moves focus after add and remove; iOS leaves focus to VoiceOver. Android uses the same name and options.",
+  "accessibility": [
+    "The list is a container named \"Escalation levels\".",
+    "Each level is a container read as \"Level 1, After 1 hour, 30 minutes, notify On-call rota\", with the delay spelled out in the locale; the visible short summary is hidden to avoid reading it twice.",
+    "The remove button is named \"Remove level 1\" and is disabled at minLevels.",
+    "The delay and the targets are labelled fields; problems are text with an icon on the field they concern.",
+    "The no-targets warning is text with an icon, not only colour.",
+    "Touch targets are at least 44 points."
+  ],
+  "edgeCases": [
+    "A delay cleared in the field becomes one minute.",
+    "Target ids that are no longer offered are read by their id in the summary and dropped when a box is changed.",
+    "Interval timing never reports order problems.",
+    "Long target names wrap in the checkbox group and the summary."
+  ],
+  "tests": [
+    "MonarchEscalationPolicyEditorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Incident escalation with a problem shown",
+      "fixture": "escalation-policy-editor",
+      "webExample": "Incident escalation with a problem shown",
+      "template": "MonarchEscalationPolicyEditor(\n    levels: $levels,\n    targets: [\n        MonarchEscalationTarget(id: {{targets.0.value}}, label: {{targets.0.label}}),\n        MonarchEscalationTarget(id: {{targets.1.value}}, label: {{targets.1.label}}, description: {{targets.1.description}}),\n        MonarchEscalationTarget(id: {{targets.2.value}}, label: {{targets.2.label}}, description: {{targets.2.description}}),\n        MonarchEscalationTarget(id: {{targets.3.value}}, label: {{targets.3.label}}, description: {{targets.3.description}}),\n    ],\n    description: {{description}},\n    showsErrors: true,\n    makeID: { \"level-\\(levels.count + 1)\" }\n)",
+      "setupTemplate": "@State private var levels = [\n    MonarchEscalationLevel(id: {{levels.0.id}}, afterMinutes: {{levels.0.afterMinutes}}, targets: [{{levels.0.targets.0}}]),\n    MonarchEscalationLevel(id: {{levels.1.id}}, afterMinutes: {{levels.1.afterMinutes}}, targets: [{{levels.1.targets.0}}, {{levels.1.targets.1}}]),\n    MonarchEscalationLevel(id: {{levels.2.id}}, afterMinutes: {{levels.2.afterMinutes}}, targets: []),\n]",
+      "setup": "@State private var levels = [\n    MonarchEscalationLevel(id: \"1\", afterMinutes: 5, targets: [\"oncall\"]),\n    MonarchEscalationLevel(id: \"2\", afterMinutes: 20, targets: [\"chat\", \"lead\"]),\n    MonarchEscalationLevel(id: \"3\", afterMinutes: 60, targets: []),\n]",
+      "code": "MonarchEscalationPolicyEditor(\n    levels: $levels,\n    targets: [\n        MonarchEscalationTarget(id: \"oncall\", label: \"On-call rota\"),\n        MonarchEscalationTarget(id: \"chat\", label: \"Team chat\", description: \"Chat channel\"),\n        MonarchEscalationTarget(id: \"email\", label: \"Operations email\", description: \"Email list\"),\n        MonarchEscalationTarget(id: \"lead\", label: \"Team lead\", description: \"Person\"),\n    ],\n    description: \"Each level fires only if nobody has acknowledged yet. Times are measured from when the incident opened.\",\n    showsErrors: true,\n    makeID: { \"level-\\(levels.count + 1)\" }\n)"
+    }
+  ],
+  "webEquivalent": "EscalationPolicyEditor",
+  "dependsOn": [
+    "duration-input",
+    "checkbox-group",
+    "card",
+    "button"
+  ]
+}

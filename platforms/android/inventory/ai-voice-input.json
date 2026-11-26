@@ -1,0 +1,180 @@
+{
+  "id": "ai-voice-input",
+  "name": "MonarchAiVoiceInput",
+  "title": "AiVoiceInput",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "android.speech.SpeechRecognizer (through MonarchAiSystemSpeechRecognizer, behind the MonarchAiSpeechRecognizer interface), androidx.activity.compose.rememberLauncherForActivityResult with ActivityResultContracts.RequestMultiplePermissions; MonarchButton, MonarchAudioLevelMeter and MonarchInlineNotice",
+  "status": "experimental",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A microphone button that dictates into a prompt (press to start and again to stop, or hold to talk), with a level meter, the words as they are recognised and guidance when microphone access is refused.",
+  "whenToUse": "Beside an AI prompt field, so people can speak a prompt instead of typing it. The text goes into the field; the person still sends it.",
+  "whenNotToUse": "For a live spoken conversation with the assistant use MonarchAiVoiceMode. For a recording that is kept as audio use the app's own recorder.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchAiVoiceInput(onTranscript: (text: String, final: Boolean) -> Unit, modifier: Modifier = Modifier, recognizer: MonarchAiSpeechRecognizer? = null, locale: Locale? = null, mode: MonarchAiVoiceInputMode = MonarchAiVoiceInputMode.Toggle, size: MonarchButtonSize = MonarchButtonSize.Md, enabled: Boolean = true, showLevel: Boolean = true, showTranscript: Boolean = true, icon: (@Composable () -> Unit)? = null, labels: MonarchAiVoiceInputLabels = MonarchAiVoiceInputLabels(), onStateChange: ((MonarchAiVoiceInputState) -> Unit)? = null)",
+    "enum class MonarchAiVoiceInputMode { Toggle, PushToTalk }",
+    "enum class MonarchAiVoiceInputState { Idle, Starting, Listening, Denied, Error }",
+    "interface MonarchAiSpeechRecognizer { val requiredPermissions: List<String> get() = emptyList(); fun isAvailable(locale: Locale?): Boolean; fun start(locale: Locale?, continuous: Boolean): Flow<MonarchAiSpeechEvent>; fun stop() }",
+    "sealed interface MonarchAiSpeechEvent { data object Started; data class Level(value: Float); data class Partial(text: String); data class Final(text: String) }",
+    "enum class MonarchAiSpeechError { Denied, NoSpeech, NoMicrophone, Unavailable, Failed }",
+    "class MonarchAiSpeechException(error: MonarchAiSpeechError) : Exception",
+    "@ExperimentalMonarchApi class MonarchAiSystemSpeechRecognizer(context: Context, preferOffline: Boolean = false) : MonarchAiSpeechRecognizer",
+    "class MonarchAiVoiceInputLabels(dictate: String? = null, holdToTalk: String? = null, holdHint: String? = null, starting: String? = null, listening: String? = null, stopped: String? = null, denied: String? = null, noSpeech: String? = null, noMicrophone: String? = null, unavailable: String? = null, error: String? = null, transcript: String? = null, openSettings: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "onTranscript",
+      "type": "(text: String, final: Boolean) -> Unit",
+      "default": "required",
+      "description": "Recognised text. Guesses come with final false and may change; each settled phrase comes once with final true. Put final text into the prompt; never send it automatically."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the voice input."
+    },
+    {
+      "name": "recognizer",
+      "type": "MonarchAiSpeechRecognizer?",
+      "default": "null",
+      "description": "The speech engine. null uses MonarchAiSystemSpeechRecognizer (the device's android.speech.SpeechRecognizer). Implement the interface for a server recogniser, an on-device model or a scripted one."
+    },
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "null",
+      "description": "The language of the speech. The device language by default."
+    },
+    {
+      "name": "mode",
+      "type": "MonarchAiVoiceInputMode",
+      "default": "MonarchAiVoiceInputMode.Toggle",
+      "description": "Toggle: press to start and again to stop. PushToTalk: listen while held."
+    },
+    {
+      "name": "size",
+      "type": "MonarchButtonSize",
+      "default": "MonarchButtonSize.Md",
+      "description": "The size of the button: Sm, Md or Lg."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the button can start a session. Turning it off stops a running session."
+    },
+    {
+      "name": "showLevel",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows a five-segment level meter while listening."
+    },
+    {
+      "name": "showTranscript",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the words under the button as they are recognised."
+    },
+    {
+      "name": "icon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "A microphone icon before the label. Monarch bundles no icons."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiVoiceInputLabels",
+      "default": "MonarchAiVoiceInputLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onStateChange",
+      "type": "((MonarchAiVoiceInputState) -> Unit)?",
+      "default": "null",
+      "description": "Called with every change of state."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "The button in the secondary variant, off."
+    },
+    {
+      "name": "starting",
+      "description": "The button is on (primary variant) and the status reads Starting microphone… while the permission and the microphone are requested."
+    },
+    {
+      "name": "listening",
+      "description": "The button is on, the level meter moves, the status reads Listening… and the transcript grows."
+    },
+    {
+      "name": "denied",
+      "description": "A warning notice explains that microphone access is off, with an Open settings action that opens the app's page in the system settings."
+    },
+    {
+      "name": "error",
+      "description": "A notice with the reason: nothing heard (info), no microphone or recognition unavailable (warning), or an unexpected failure (danger)."
+    },
+    {
+      "name": "disabled",
+      "description": "With enabled false the button uses the disabled roles and does not start; a running session is stopped."
+    }
+  ],
+  "appearance": "The button is MonarchButton: the secondary variant when idle and the primary accent variant while listening. The level meter is the small MonarchAudioLevelMeter, the status is muted caption text, the transcript body text, and failures use MonarchInlineNotice in the info, warning or danger tone. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web uses the browser's Web Speech API and getUserMedia; iOS uses the Speech framework; Android uses android.speech.SpeechRecognizer through MonarchAiSystemSpeechRecognizer, behind the same recogniser abstraction (a Kotlin Flow of events instead of an AsyncThrowingStream). The app must declare android.permission.RECORD_AUDIO and, on Android 11 and later, list android.speech.RecognitionService in <queries>; the component asks for the permission at run time with the Activity Result API. Languages, session length and on-device support depend on the installed recognition service (usually the Google app); preferOffline asks for on-device recognition where the language allows. The system recogniser stops after a pause, so in toggle mode it is restarted after each phrase until stopped. TalkBack has no escape gesture, so Escape on a hardware keyboard stops listening; there is no Android equivalent of iOS's escape gesture. The web's createRecognition hook is the recognizer parameter. Experimental: MonarchAiSystemSpeechRecognizer compiles and its error mapping is unit tested, but it has not been run against a device's recognition service; the component itself is tested with scripted recognisers.",
+  "accessibility": [
+    "In toggle mode the button is a MonarchButton that also reports an on or off toggle state, so TalkBack reads it as on while listening.",
+    "In push-to-talk mode, which cannot be held with TalkBack or Switch Access, the button's click action starts and a second one stops; the action is labelled \"start or stop listening\".",
+    "\"Listening…\" is announced on start and \"Stopped listening.\" when it ends, through an always-present polite live region; failures are announced by the notice.",
+    "The level meter is decorative; when animations are off it follows MonarchAudioLevelMeter's still form.",
+    "The transcript is read as \"Transcript:\" followed by the words; the visible status is not read twice.",
+    "The notice has the tone's spoken name and the message, so the failure is not conveyed by color alone.",
+    "The button keeps a touch target of at least 48dp by 48dp; text wraps at large font sizes."
+  ],
+  "edgeCases": [
+    "When the recogniser is not available the component draws nothing.",
+    "Releasing push-to-talk, or pressing again, while the permission request is open ends the session at once.",
+    "Leaving the composition cancels the session and discards pending words without an announcement.",
+    "A second start while a session runs is ignored.",
+    "Without an ActivityResultRegistryOwner (for example in a bare preview) a missing permission counts as refused.",
+    "Empty guesses and phrases are ignored."
+  ],
+  "tests": [
+    "MonarchAiVoiceInputTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Scripted demo (works without a microphone)",
+      "fixture": "ai-voice-input",
+      "webExample": "Scripted demo (works without a microphone)",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nColumn {\n    MonarchTextField(\n        value = prompt,\n        onValueChange = { prompt = it },\n        label = {{promptLabel}},\n        singleLine = false,\n        minLines = 3,\n        labelVisibility = MonarchTextFieldLabelVisibility.Hidden,\n    )\n    MonarchAiVoiceInput(\n        onTranscript = { text, final ->\n            if (final) prompt = listOf(prompt, text).filter { it.isNotEmpty() }.joinToString(\" \")\n        },\n        recognizer = recognizer,\n        showLevel = false,\n        icon = { MonarchIcon(SampleIcons.Mic, contentDescription = null) },\n        labels = MonarchAiVoiceInputLabels(dictate = {{dictate}}),\n    )\n}",
+      "setupTemplate": "var prompt by remember { mutableStateOf(\"\") }\n// The app's own speech engine; the default is the device recogniser.\nval recognizer = object : MonarchAiSpeechRecognizer {\n    override fun isAvailable(locale: Locale?) = true\n    override fun start(locale: Locale?, continuous: Boolean): Flow<MonarchAiSpeechEvent> = emptyFlow()\n    override fun stop() = Unit\n}",
+      "setup": "var prompt by remember { mutableStateOf(\"\") }\n// The app's own speech engine; the default is the device recogniser.\nval recognizer = object : MonarchAiSpeechRecognizer {\n    override fun isAvailable(locale: Locale?) = true\n    override fun start(locale: Locale?, continuous: Boolean): Flow<MonarchAiSpeechEvent> = emptyFlow()\n    override fun stop() = Unit\n}",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nColumn {\n    MonarchTextField(\n        value = prompt,\n        onValueChange = { prompt = it },\n        label = \"Prompt\",\n        singleLine = false,\n        minLines = 3,\n        labelVisibility = MonarchTextFieldLabelVisibility.Hidden,\n    )\n    MonarchAiVoiceInput(\n        onTranscript = { text, final ->\n            if (final) prompt = listOf(prompt, text).filter { it.isNotEmpty() }.joinToString(\" \")\n        },\n        recognizer = recognizer,\n        showLevel = false,\n        icon = { MonarchIcon(SampleIcons.Mic, contentDescription = null) },\n        labels = MonarchAiVoiceInputLabels(dictate = \"Dictate\"),\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.foundation.icon.MonarchIcon",
+        "kotlinx.coroutines.flow.Flow",
+        "kotlinx.coroutines.flow.emptyFlow",
+        "java.util.Locale"
+      ]
+    },
+    {
+      "title": "Hold to talk",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiVoiceInput(\n    onTranscript = { _, _ -> },\n    mode = MonarchAiVoiceInputMode.PushToTalk,\n    size = MonarchButtonSize.Sm,\n)"
+    }
+  ],
+  "webEquivalent": "AiVoiceInput",
+  "dependsOn": [
+    "audio-level-meter",
+    "button",
+    "inline-notice"
+  ]
+}

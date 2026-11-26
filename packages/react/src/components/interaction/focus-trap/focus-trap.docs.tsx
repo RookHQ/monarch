@@ -1,19 +1,38 @@
 import { useRef, useState } from 'react';
 import { Button, FocusTrap, Input } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './focus-trap.fixture.json';
 
 function PanelDemo() {
-  const [open, setOpen] = useState(false);
+  // Shown open. The trap turns on once focus is in the panel, so the preview
+  // never pulls focus away from the rest of the page.
+  const [open, setOpen] = useState(true);
+  const [engaged, setEngaged] = useState<'button' | 'focus' | null>(null);
+  const close = () => {
+    setOpen(false);
+    setEngaged(null);
+  };
   return (
     <div style={{ display: 'grid', gap: 12, width: '100%', maxWidth: 420 }}>
-      <Button onClick={() => setOpen(true)} disabled={open}>
-        Edit filters
+      <Button
+        onClick={() => {
+          setOpen(true);
+          setEngaged('button');
+        }}
+        disabled={open}
+      >
+        {fixture.data.trigger}
       </Button>
       {open ? (
         <FocusTrap
           role="group"
-          aria-label="Filters"
-          onEscape={() => setOpen(false)}
+          aria-label={fixture.data.label}
+          active={engaged !== null}
+          // Focus that is already inside stays where it is.
+          initialFocus={engaged === 'focus' ? false : 'first'}
+          onFocus={() => setEngaged((e) => e ?? 'focus')}
+          onEscape={close}
           style={{
             display: 'grid',
             gap: 12,
@@ -22,13 +41,16 @@ function PanelDemo() {
             borderRadius: 'var(--mn-radius-lg)',
           }}
         >
-          <Input aria-label="Owner" placeholder="Owner" />
-          <Input aria-label="Label" placeholder="Label" />
+          {fixture.data.fields.map((field) => (
+            <Input key={field.label} aria-label={field.label} placeholder={field.placeholder} />
+          ))}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <Button variant="secondary" onClick={() => setOpen(false)}>
-              Cancel
+            <Button variant="secondary" onClick={close}>
+              {fixture.data.cancel}
             </Button>
-            <Button onClick={() => setOpen(false)}>Apply</Button>
+            <Button variant="primary" onClick={close}>
+              {fixture.data.apply}
+            </Button>
           </div>
         </FocusTrap>
       ) : null}

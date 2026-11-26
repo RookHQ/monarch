@@ -11,14 +11,13 @@ import {
 import { FileList, type FileListItem } from '@rookcom/monarch-react/data';
 import { MoreIcon } from '../../../internal/docs-demo.js';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './file-list.fixture.json';
 
-const FILES: FileListItem[] = [
-  { id: '1', name: 'project-brief.pdf', size: 1_800_000, meta: 'Edited yesterday' },
-  { id: '2', name: 'wireframes.png', size: 4_200_000, meta: 'Edited 3 days ago' },
-  { id: '3', name: 'estimates.xlsx', size: 96_000, meta: 'Edited last week' },
-  { id: '4', name: 'kickoff-recording.mp4', size: 182_000_000, meta: 'Edited last week' },
-  { id: '5', name: 'source-assets.zip', size: 54_000_000, meta: 'Edited last month' },
-];
+const FILES: FileListItem[] = fixture.data.files;
+const MENU = fixture.data.menu as unknown as readonly [string, string, string];
+const BULK = fixture.data.bulkActions as unknown as readonly [string, string];
+const LAYOUTS = fixture.data.layouts as readonly { value: 'list' | 'grid'; label: string }[];
 
 function RowMenu({ item }: { item: FileListItem }) {
   return (
@@ -27,16 +26,16 @@ function RowMenu({ item }: { item: FileListItem }) {
         <IconButton label={`More actions for ${item.name}`} icon={<MoreIcon />} size="sm" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem>Download</DropdownMenuItem>
-        <DropdownMenuItem>Rename</DropdownMenuItem>
-        <DropdownMenuItem tone="danger">Move to trash</DropdownMenuItem>
+        <DropdownMenuItem>{MENU[0]}</DropdownMenuItem>
+        <DropdownMenuItem>{MENU[1]}</DropdownMenuItem>
+        <DropdownMenuItem tone="danger">{MENU[2]}</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
 function FilesDemo() {
-  const [layout, setLayout] = useState<'list' | 'grid'>('list');
+  const [layout, setLayout] = useState<'list' | 'grid'>(fixture.data.layout as 'list' | 'grid');
   const [selected, setSelected] = useState<string[]>([]);
   return (
     <div style={{ display: 'grid', gap: 12, width: '100%', maxWidth: 640 }}>
@@ -44,13 +43,10 @@ function FilesDemo() {
         aria-label="Layout"
         value={layout}
         onValueChange={(v: string) => setLayout(v as 'list' | 'grid')}
-        options={[
-          { value: 'list', label: 'List' },
-          { value: 'grid', label: 'Grid' },
-        ]}
+        options={LAYOUTS.map(({ value, label }) => ({ value, label }))}
       />
       <FileList
-        label="Project files"
+        label={fixture.data.label}
         items={FILES}
         layout={layout}
         selectable
@@ -60,9 +56,9 @@ function FilesDemo() {
         renderActions={(item) => <RowMenu item={item} />}
         bulkActions={() => (
           <>
-            <Button size="sm">Download</Button>
+            <Button size="sm">{BULK[0]}</Button>
             <Button size="sm" variant="danger-subtle">
-              Move to trash
+              {BULK[1]}
             </Button>
           </>
         )}

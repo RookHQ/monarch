@@ -1,0 +1,175 @@
+{
+  "id": "version-history-panel",
+  "name": "MonarchVersionHistoryPanel",
+  "title": "VersionHistoryPanel",
+  "family": "files",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "NavigationStack(path:) with a List of NavigationLink rows and navigationDestination(for:), a segmented Picker, MonarchDiffViewer and confirmationDialog; presented by the app in .sheet or .inspector",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The version history of a document or record: the saved versions, what changed between a version and now, its full text, and restore behind a confirmation.",
+  "whenToUse": "For a document, page or record whose versions are kept, when people need to see what changed and go back to an earlier version.",
+  "whenNotToUse": "Not for a log of who did what (use MonarchActivityTimeline), and not for comparing two arbitrary texts (use MonarchDiffViewer).",
+  "api": [
+    "init(_ title: String? = nil, versions: [MonarchVersionHistoryPanelVersion], selection: Binding<String?>, currentLines: [String], selectedLines: [String]? = nil, currentID: String? = nil, isLoading: Bool = false, labels: MonarchVersionHistoryPanelLabels = MonarchVersionHistoryPanelLabels(), onSaveVersion: (@MainActor (String) async throws -> Void)? = nil, onRestore: (@MainActor (String) async throws -> Void)? = nil, onClose: (@MainActor () -> Void)? = nil)",
+    "struct MonarchVersionHistoryPanelVersion: Identifiable, Sendable { init(id: String, date: Date, authorName: String, authorImage: Image?, note: String? = nil, isAutomatic: Bool = false); init(id: String, date: Date, authorName: String, authorURL: URL? = nil, note: String? = nil, isAutomatic: Bool = false) }",
+    "struct MonarchVersionHistoryPanelLabels: Sendable { init(close:noteLabel:notePlaceholder:save:saved:saveFailed:empty:current:automatic:versions:changes:fullText:now:identical:restore:restoreTitle:restoreDescription:restoreConfirm:restored:restoreFailed:loading:view: String? = nil, diff: MonarchDiffViewerLabels = MonarchDiffViewerLabels()) }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "The title of the list. \"History\" when nil."
+    },
+    {
+      "name": "versions",
+      "type": "[MonarchVersionHistoryPanelVersion]",
+      "default": "required",
+      "description": "The saved versions, newest first: id, date, author name and picture, name and whether it was saved automatically."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<String?>",
+      "default": "required",
+      "description": "The id of the version on screen, or nil for the list. It is the navigation path; the back button and gesture set it to nil."
+    },
+    {
+      "name": "currentLines",
+      "type": "[String]",
+      "default": "required",
+      "description": "The content now, one entry per block or paragraph."
+    },
+    {
+      "name": "selectedLines",
+      "type": "[String]?",
+      "default": "nil",
+      "description": "The selected version's content. Load it when selection changes; a placeholder shows while it is nil."
+    },
+    {
+      "name": "currentID",
+      "type": "String?",
+      "default": "nil",
+      "description": "The version that matches the content now, marked Current and without Restore. The newest when nil."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows redacted placeholder rows while the list loads."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchVersionHistoryPanelLabels",
+      "default": "MonarchVersionHistoryPanelLabels()",
+      "description": "Replacements for the built-in strings, and the diff's strings."
+    },
+    {
+      "name": "onSaveVersion",
+      "type": "(@MainActor (String) async throws -> Void)?",
+      "default": "nil",
+      "description": "Shows a name field and Save version at the top of the list. Receives the trimmed name (at most 200 characters). Throw to show an error."
+    },
+    {
+      "name": "onRestore",
+      "type": "(@MainActor (String) async throws -> Void)?",
+      "default": "nil",
+      "description": "Shows Restore this version on versions other than the current one, behind a confirmation. Throw to keep the screen with an error; on success the list shows again."
+    },
+    {
+      "name": "onClose",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows a Close button in the navigation bar."
+    }
+  ],
+  "states": [
+    {
+      "name": "list",
+      "description": "The versions, each with an avatar, a relative time, the author and the name; the current one has an info badge."
+    },
+    {
+      "name": "loading",
+      "description": "Redacted placeholder rows, read as \"Loading\"."
+    },
+    {
+      "name": "empty",
+      "description": "An empty state: \"No versions yet. Save one to mark this moment.\""
+    },
+    {
+      "name": "saving",
+      "description": "Save version shows progress and the name field is disabled; an error shows under it."
+    },
+    {
+      "name": "version, loading",
+      "description": "The version's screen shows redacted lines until selectedLines arrives."
+    },
+    {
+      "name": "changes",
+      "description": "A diff of the version against now, with totals and folded unchanged runs, or \"This version is identical to the current one.\""
+    },
+    {
+      "name": "full text",
+      "description": "The version's paragraphs, selectable."
+    },
+    {
+      "name": "restoring",
+      "description": "Restore shows progress after the confirmation; an error shows above it."
+    }
+  ],
+  "appearance": "System list rows with the default and muted text roles, a subtle info badge for Current, and the diff's success and danger roles for added and removed lines. Dark and high-contrast themes resolve the same roles.",
+  "platformNotes": "The web is an aside panel that swaps its list for a detail view with tabs; on iPhone it is a navigation stack with the system back button and swipe gesture, a segmented control for the two views and the system confirmation dialog for restore. The app presents it in a sheet, or in an inspector beside the document on iPad. Times are relative and refresh every minute through TimelineView; the absolute date is written on the version's screen instead of a tooltip. Android uses the same name.",
+  "accessibility": [
+    "Each version is one navigation link read as the relative time, the author and the version's name or \"Saved automatically\"; the current version has the value \"Current\".",
+    "Avatars are decorative, because the author's name is written beside them.",
+    "On the version's screen the author line and the date are read as one element, and the navigation title is the relative time.",
+    "The diff is read as described for MonarchDiffViewer: each line after \"Added\" or \"Removed\".",
+    "Placeholders are read as \"Loading\".",
+    "\"Version saved\", \"Version restored\" and the save and restore errors are announced.",
+    "Restore is behind the system confirmation dialog with a destructive button and the system Cancel."
+  ],
+  "edgeCases": [
+    "A selection that is not among versions shows an empty screen until the list contains it.",
+    "Long names and notes wrap in the rows.",
+    "Version names are cut to 200 characters, as on the web.",
+    "Restore is never offered on the current version."
+  ],
+  "tests": [
+    "MonarchVersionHistoryPanelTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Browse, compare, save and restore",
+      "fixture": "version-history-panel",
+      "webExample": "Browse, compare, save and restore",
+      "template": "MonarchVersionHistoryPanel(\n    {{title}},\n    versions: versions,\n    selection: $selection,\n    currentLines: content[{{versions.0.id}}] ?? [],\n    selectedLines: selection.flatMap { content[$0] },\n    currentID: {{versions.0.id}},\n    onSaveVersion: { _ in },\n    onRestore: { _ in },\n    onClose: { selection = nil }\n)",
+      "setupTemplate": "@State private var selection: String?\n\nprivate let content: [String: [String]] = [\n    {{versions.0.id}}: [{{versions.0.lines.0}}, {{versions.0.lines.1}}, {{versions.0.lines.2}}, {{versions.0.lines.3}}, {{versions.0.lines.4}}],\n    {{versions.1.id}}: [{{versions.1.lines.0}}, {{versions.1.lines.1}}, {{versions.1.lines.2}}, {{versions.1.lines.3}}],\n    {{versions.2.id}}: [{{versions.2.lines.0}}, {{versions.2.lines.1}}, {{versions.2.lines.2}}],\n    {{versions.3.id}}: [{{versions.3.lines.0}}, {{versions.3.lines.1}}],\n]\nprivate let versions = [\n    MonarchVersionHistoryPanelVersion(id: {{versions.0.id}}, date: Date(timeIntervalSinceNow: -{{versions.0.ageSeconds}}), authorName: {{versions.0.author}}),\n    MonarchVersionHistoryPanelVersion(id: {{versions.1.id}}, date: Date(timeIntervalSinceNow: -{{versions.1.ageSeconds}}), authorName: {{versions.1.author}}, note: {{versions.1.note}}),\n    MonarchVersionHistoryPanelVersion(id: {{versions.2.id}}, date: Date(timeIntervalSinceNow: -{{versions.2.ageSeconds}}), authorName: {{versions.2.author}}, isAutomatic: {{versions.2.automatic}}),\n    MonarchVersionHistoryPanelVersion(id: {{versions.3.id}}, date: Date(timeIntervalSinceNow: -{{versions.3.ageSeconds}}), authorName: {{versions.3.author}}, note: {{versions.3.note}}),\n]",
+      "setup": "@State private var selection: String?\n\nprivate let content: [String: [String]] = [\n    \"v4\": [\"# Onboarding guide\", \"Welcome to the team.\", \"Your first week: meet your buddy, set up your laptop, read the handbook.\", \"Ask questions in the help channel.\", \"Book a check-in with your manager on Friday.\"],\n    \"v3\": [\"# Onboarding guide\", \"Welcome to the team.\", \"Your first week: meet your buddy and set up your laptop.\", \"Ask questions in the help channel.\"],\n    \"v2\": [\"# Onboarding guide\", \"Welcome!\", \"Your first week: set up your laptop.\"],\n    \"v1\": [\"# Onboarding guide\", \"Draft.\"],\n]\nprivate let versions = [\n    MonarchVersionHistoryPanelVersion(id: \"v4\", date: Date(timeIntervalSinceNow: -300), authorName: \"Robin Park\"),\n    MonarchVersionHistoryPanelVersion(id: \"v3\", date: Date(timeIntervalSinceNow: -10_800), authorName: \"Alex Chen\", note: \"Reviewed\"),\n    MonarchVersionHistoryPanelVersion(id: \"v2\", date: Date(timeIntervalSinceNow: -93_600), authorName: \"Robin Park\", isAutomatic: true),\n    MonarchVersionHistoryPanelVersion(id: \"v1\", date: Date(timeIntervalSinceNow: -518_400), authorName: \"Jordan Diaz\", note: \"First draft\"),\n]",
+      "code": "MonarchVersionHistoryPanel(\n    \"History\",\n    versions: versions,\n    selection: $selection,\n    currentLines: content[\"v4\"] ?? [],\n    selectedLines: selection.flatMap { content[$0] },\n    currentID: \"v4\",\n    onSaveVersion: { _ in },\n    onRestore: { _ in },\n    onClose: { selection = nil }\n)"
+    },
+    {
+      "title": "Saving named versions",
+      "setup": "@State private var selection: String?",
+      "code": "MonarchVersionHistoryPanel(\n    \"Page history\",\n    versions: [],\n    selection: $selection,\n    currentLines: [\"Welcome.\"],\n    onSaveVersion: { _ in }\n)"
+    }
+  ],
+  "webEquivalent": "VersionHistoryPanel",
+  "dependsOn": [
+    "diff-viewer",
+    "sheet",
+    "relative-time",
+    "confirm-dialog",
+    "avatar",
+    "badge",
+    "empty-state",
+    "skeleton"
+  ],
+  "icons": {
+    "close": "CloseGlyph"
+  }
+}

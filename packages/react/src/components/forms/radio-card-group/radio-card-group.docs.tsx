@@ -1,7 +1,15 @@
 import { useState } from 'react';
-import { Field, FieldDescription, FieldLabel, RadioCardGroup } from '@rookcom/monarch-react';
+import {
+  Field,
+  FieldDescription,
+  FieldLabel,
+  RadioCardGroup,
+  type RadioCardGroupProps,
+} from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { BoardIcon, CalendarIcon, ListIcon, UsersIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './radio-card-group.fixture.json';
 
 function ChannelType() {
   const [value, setValue] = useState('open');
@@ -156,28 +164,9 @@ export default {
           title: 'With meta and description',
           render: () => (
             <RadioCardGroup
-              label="Delivery"
-              defaultValue="standard"
-              options={[
-                {
-                  value: 'standard',
-                  title: 'Standard',
-                  meta: '€4.90',
-                  description: 'Arrives in 3 to 5 working days.',
-                },
-                {
-                  value: 'express',
-                  title: 'Express',
-                  meta: '€12.00',
-                  description: 'Arrives the next working day.',
-                },
-                {
-                  value: 'pickup',
-                  title: 'Pick up in store',
-                  description: 'Not available for this order.',
-                  disabled: true,
-                },
-              ]}
+              label={fixture.data.label}
+              defaultValue={fixture.data.selected}
+              options={fixture.data.options as unknown as RadioCardGroupProps['options']}
             />
           ),
         },

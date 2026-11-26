@@ -1,5 +1,7 @@
 import { Input, Textarea } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './text-field.fixture.json';
 
 export default {
   id: 'text-field',
@@ -96,12 +98,12 @@ export default {
           stack: true,
           render: () => (
             <>
-              <Input size="sm" aria-label="Small" placeholder="Small" />
-              <Input aria-label="Default" placeholder="Default" />
-              <Input size="lg" aria-label="Large" placeholder="Large" />
-              <Input aria-label="Invalid" invalid defaultValue="Invalid value" />
-              <Input aria-label="Disabled" disabled placeholder="Disabled" />
-              <Textarea aria-label="Notes" placeholder="Notes" />
+              <Input size="sm" aria-label="Small" placeholder={fixture.data.small} />
+              <Input aria-label="Default" placeholder={fixture.data.default} />
+              <Input size="lg" aria-label="Large" placeholder={fixture.data.large} />
+              <Input aria-label="Invalid" invalid defaultValue={fixture.data.invalidValue} />
+              <Input aria-label="Disabled" disabled placeholder={fixture.data.disabled} />
+              <Textarea aria-label="Notes" placeholder={fixture.data.notes} />
             </>
           ),
         },

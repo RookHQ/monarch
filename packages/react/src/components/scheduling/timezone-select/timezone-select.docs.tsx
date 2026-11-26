@@ -2,24 +2,35 @@ import { useState } from 'react';
 import { Field, FieldDescription, FieldLabel } from '@rookcom/monarch-react';
 import { TimezoneSelect } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './timezone-select.fixture.json';
 
 // A fixed instant so the examples (and their screenshots) show the same offsets all year.
 const NOW = Date.UTC(2026, 0, 15, 12);
+const data = fixture.data as unknown as {
+  label: string;
+  value: string;
+  detectedZone: string;
+  pinned: string[];
+  placeholder: string;
+  description: string;
+  now: string;
+};
 
 function WorkspaceZone() {
-  const [zone, setZone] = useState<string | null>('Asia/Kolkata');
+  const [zone, setZone] = useState<string | null>(data.value);
   return (
     <Field style={{ width: '100%', maxWidth: 320 }}>
-      <FieldLabel>Workspace time zone</FieldLabel>
+      <FieldLabel>{data.label}</FieldLabel>
       <TimezoneSelect
         value={zone}
         onValueChange={setZone}
-        now={NOW}
-        detectedZone="Asia/Kolkata"
-        pinned={['Europe/London', 'America/New_York']}
-        placeholder="Search city, country or offset"
+        now={Date.parse(data.now)}
+        detectedZone={data.detectedZone}
+        pinned={data.pinned}
+        placeholder={data.placeholder}
       />
-      <FieldDescription>Reports and reminders use this zone.</FieldDescription>
+      <FieldDescription>{data.description}</FieldDescription>
     </Field>
   );
 }

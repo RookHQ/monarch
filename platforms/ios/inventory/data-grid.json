@@ -1,0 +1,239 @@
+{
+  "id": "data-grid",
+  "name": "MonarchDataGrid",
+  "title": "DataGrid",
+  "family": "data-grid",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "ScrollView([.horizontal, .vertical]) with a LazyVStack(pinnedViews: [.sectionHeaders]) of rows under a pinned header row; pinned columns held at their edge with visualEffect measuring against the scroll view's named coordinate space; Menu for the column menu and row actions; Toggle with .toggleStyle(.monarchCheckbox), and Toggle(sources:isOn:) for the mixed select-all; MonarchEditableCell for editing; at compact width MonarchDataTable(layout: .list) with a sheet holding a NavigationStack and Form as the record editor",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "An editable grid of records: fixed-width columns that sort, pin, hide and resize from a menu on their header, cells that edit in place, selection, row actions and a load-more footer; at compact width a list of records whose editor opens in a sheet.",
+  "whenToUse": "For spreadsheet-like screens on iPad and with hardware keyboards: many rows, values edited in place, wide data where key columns stay pinned.",
+  "whenNotToUse": "For read-only records people scan, sort and open, use MonarchDataTable. For a long list without columns, use a List (virtual-list) or MonarchCursorList. For one record, use a Form.",
+  "api": [
+    "init(_ label: String, rows: [Row], columns: [MonarchDataGridColumn<Row>], sort: Binding<MonarchDataTableSort?>? = nil, selection: Binding<Set<Row.ID>>? = nil, hiddenColumns: Binding<Set<String>>? = nil, columnOrder: [String] = [], pinning: Binding<[String: MonarchDataGridPin]?>? = nil, columnWidths: Binding<[String: CGFloat]>? = nil, layout: MonarchDataTableLayout = .automatic, density: MonarchDataGridDensity = .comfortable, sortsRows: Bool = true, isLoading: Bool = false, footer: MonarchLoadMore? = nil, labels: MonarchDataGridLabels = MonarchDataGridLabels(), rowLabel: ((Row) -> String)? = nil, isRowSelectable: ((Row) -> Bool)? = nil, rowActions: ((Row) -> [MonarchDataTableRowAction])? = nil, onOpen: (@MainActor (Row) -> Void)? = nil) where Row: Identifiable",
+    "MonarchDataGridColumn<Row>.init(_ title: String, id: String? = nil, isNumeric: Bool = false, isSortable: Bool = true, isHideable: Bool = true, isPinnable: Bool = true, pinned: MonarchDataGridPin? = nil, width: CGFloat? = nil, edit: MonarchDataGridEdit<Row>? = nil, value: @escaping @Sendable (Row) -> String, sortBy: (@Sendable (Row, Row) -> Bool)? = nil)",
+    "MonarchDataGridColumn<Row>.tableColumn: MonarchDataTableColumn<Row>",
+    "MonarchDataGridColumn<Row>.chooserColumn: MonarchColumnChooserColumn",
+    "MonarchDataGridEdit<Row>.init(kind: MonarchEditableCellKind = .text, options: [MonarchEditableCellOption] = [], placeholder: String? = nil, minimum: Double? = nil, maximum: Double? = nil, minimumDate: Date? = nil, maximumDate: Date? = nil, isRequired: Bool = false, isEditable: ((Row) -> Bool)? = nil, format: (@MainActor (MonarchEditableCellValue) -> String)? = nil, validate: (@MainActor (Row, MonarchEditableCellValue) -> String?)? = nil, value: @escaping (Row) -> MonarchEditableCellValue, onCommit: @escaping @MainActor (Row, MonarchEditableCellValue) async throws -> Void)",
+    "enum MonarchDataGridPin { case start, end }",
+    "enum MonarchDataGridDensity { case comfortable, compact }",
+    "struct MonarchDataGridLabels { var selectAll, actionsHeader, columnOptions, sortAscending, sortDescending, clearSort, pinStart, pinEnd, unpin, hideColumn, widen, narrow, sortedAscending, sortedDescending, notSorted, pinnedStart, pinnedEnd, open, sort, editRecord, done, noValue, loading, emptyTitle, emptyMessage: String?; var selectRow, rowActions: (@Sendable (String) -> String)?; var selectedCount: (@Sendable (Int) -> String)?; var editLabel, cell: (@Sendable (String, String) -> String)?; var editableCell: MonarchEditableCellLabels }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "Names the grid for VoiceOver, such as \"Invoices\"."
+    },
+    {
+      "name": "rows",
+      "type": "[Row]",
+      "default": "required",
+      "description": "The rows, in the app's order. Row is Identifiable; its id is the selection key."
+    },
+    {
+      "name": "columns",
+      "type": "[MonarchDataGridColumn<Row>]",
+      "default": "required",
+      "description": "Every column in its default order: title, id, numeric, sortable, hideable, pinnable, pinned, width, edit, the cell text and the sort rule."
+    },
+    {
+      "name": "sort",
+      "type": "Binding<MonarchDataTableSort?>?",
+      "default": "nil",
+      "description": "The sort: one column and a direction. With it, column menus offer Sort ascending, Sort descending and Clear sort, and the record list a Sort menu."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<Set<Row.ID>>?",
+      "default": "nil",
+      "description": "The selected ids. With it, rows get checkboxes and the header an on, off or mixed select-all checkbox."
+    },
+    {
+      "name": "hiddenColumns",
+      "type": "Binding<Set<String>>?",
+      "default": "nil",
+      "description": "Ids of hidden columns, as MonarchColumnChooser writes them. With it, column menus offer Hide column."
+    },
+    {
+      "name": "columnOrder",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Column ids in display order; missing ids follow in their default order."
+    },
+    {
+      "name": "pinning",
+      "type": "Binding<[String: MonarchDataGridPin]?>?",
+      "default": "nil",
+      "description": "Every pinned column by id; a nil value inside the binding uses each column's own pin. With it, column menus offer Pin to start, Pin to end and Unpin."
+    },
+    {
+      "name": "columnWidths",
+      "type": "Binding<[String: CGFloat]>?",
+      "default": "nil",
+      "description": "Widths by column id, replacing the columns' own widths. With it, column menus offer Widen column and Narrow column in 16-point steps between 96 and 480 points."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchDataTableLayout",
+      "default": ".automatic",
+      "description": ".table draws the grid, .list the records with an editor sheet; .automatic picks the grid at regular width below the accessibility text sizes."
+    },
+    {
+      "name": "density",
+      "type": "MonarchDataGridDensity",
+      "default": ".comfortable",
+      "description": "Padding above and below cells; .compact keeps 44-point rows."
+    },
+    {
+      "name": "sortsRows",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the grid sorts rows itself; false when the server sorts."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "Without rows shows placeholder rows; with rows shows an indeterminate progress bar above them."
+    },
+    {
+      "name": "footer",
+      "type": "MonarchLoadMore?",
+      "default": "nil",
+      "description": "A load-more footer under the rows; with autoLoads: true it loads the next page when the end comes into view."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchDataGridLabels",
+      "default": "MonarchDataGridLabels()",
+      "description": "Replacements for the built-in strings, including those of the editable cells."
+    },
+    {
+      "name": "rowLabel",
+      "type": "((Row) -> String)?",
+      "default": "nil",
+      "description": "A row's name in spoken labels and the record list. By default the first shown cell."
+    },
+    {
+      "name": "isRowSelectable",
+      "type": "((Row) -> Bool)?",
+      "default": "nil",
+      "description": "Whether a row has a checkbox."
+    },
+    {
+      "name": "rowActions",
+      "type": "((Row) -> [MonarchDataTableRowAction])?",
+      "default": "nil",
+      "description": "A row's actions: an actions column with a menu, the context menu, VoiceOver actions and, in the record list, swipe actions."
+    },
+    {
+      "name": "onOpen",
+      "type": "(@MainActor (Row) -> Void)?",
+      "default": "nil",
+      "description": "Opens a row: a tap on a read-only cell, a tap on a record without editable cells, or Open details in the record editor."
+    }
+  ],
+  "states": [
+    {
+      "name": "grid",
+      "description": "A header row on the subtle fill pinned to the top, then a row per record: a checkbox column, start-pinned columns with a line at their inner edge, columns that scroll sideways together with the header, end-pinned columns and an actions column."
+    },
+    {
+      "name": "list",
+      "description": "At compact width and accessibility text sizes: MonarchDataTable's list with select-all and Sort, one record per row with its name and a \"Field value\" line per column. Tapping a record with editable cells opens the record editor sheet."
+    },
+    {
+      "name": "sorted",
+      "description": "The sorted header shows an arrow and reads \"Sorted ascending\" or \"Sorted descending\"; its menu offers the other direction and Clear sort."
+    },
+    {
+      "name": "pinned",
+      "description": "A pinned column stays at its edge while the other columns scroll; its header reads \"Pinned to start\" or \"Pinned to end\". Pins that would take more than half the width scroll with the rest."
+    },
+    {
+      "name": "editing",
+      "description": "An editable cell opens its MonarchEditableCell editor in place: a text field with Save and Cancel, a menu or the compact date picker. It shows progress while saving and keeps the editor open with the message when saving fails."
+    },
+    {
+      "name": "selected",
+      "description": "The row fills with the accent's subtle fill and its checkbox is checked; the select-all checkbox is on, off or mixed."
+    },
+    {
+      "name": "loading",
+      "description": "Without rows: placeholder rows named \"Loading rows\". With rows: an indeterminate progress bar above them."
+    },
+    {
+      "name": "empty",
+      "description": "No rows: MonarchEmptyState with \"Nothing here yet\", or the labels' title and message."
+    }
+  ],
+  "appearance": "Rows on the surface fill with a hairline subtle divider, the header row on the subtle background with muted labels, a default-border line at the inner edge of pinned columns, selected rows on the accent's subtle fill. Numeric cells align to the trailing edge with tabular digits; an empty cell shows a muted dash; the first cell is link-coloured when rows open. Every colour is a theme role, so dark and both high-contrast themes follow.",
+  "platformNotes": "SwiftUI's Table does not edit cells, pin columns or scroll sideways, so Monarch draws the grid in one ScrollView that scrolls both ways, with a LazyVStack of rows and a header pinned as a section header; pinned columns are held at their edge by a visualEffect offset, so scrolling redraws no view body. It keeps DataTable's types (MonarchDataTableSort, MonarchDataTableRowAction, MonarchDataTableLayout) as the web DataGrid keeps DataTable's column model, and Android does the same. Matching Android, tapping a header opens the column menu (sort, pin, unpin, hide, widen, narrow) instead of sorting at once, and the web's drag-to-resize header edge becomes Widen column and Narrow column in 16-point steps, as the web's Alt+Arrow keys do, so resizing never needs a drag. iPhone gets the mobile pattern instead of a squeezed grid: MonarchDataTable's list of records and an editor in a sheet. State follows SwiftUI bindings instead of Android's value-and-callback pairs; a feature whose binding is absent is not offered, as on Android. Paging uses MonarchLoadMore (with autoLoads) instead of Android's onEndReached, as MonarchDataTable does on iOS; there is no actionsIcon or emptyState slot (the actions button uses the system ellipsis symbol and the empty state takes the labels' title and message). Each editable column carries a MonarchDataGridEdit with MonarchEditableCellValue and its own onCommit instead of the web's one onCellEdit with untyped values. Not offered: multi-sort, Shift-click range selection, type-to-edit, keyboard shortcuts for selection, the WAI-ARIA grid's single tab stop with arrow-key cell movement (the system focus moves between cells instead) and aria-rowcount for rows not yet loaded. Several closures are optional (rowLabel, isRowSelectable, rowActions, onOpen). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is rowLabel. MonarchDataGridEdit has several optional closures (isEditable, format, validate). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is isEditable.",
+  "accessibility": [
+    "The grid is a container named by label.",
+    "Headers have the header trait; a header with menu items is a button whose value is its sort and pin, such as \"Sorted descending, Pinned to end\" (\"Not sorted\" for a sortable column), and whose hint is \"Column options\".",
+    "A read-only cell is one element read as \"Column: value\", with \"No value\" for an empty cell; with onOpen it is a button whose hint is \"Open details\".",
+    "An editable cell is a MonarchEditableCell named \"Column for row\", such as \"Customer for INV-1\".",
+    "Row actions are an actions menu named \"Actions for row\", the row's context menu, and VoiceOver actions on each read-only cell of the row.",
+    "Row checkboxes are named \"Select row\"; the header's select-all checkbox is a Toggle over every selectable row, so VoiceOver reads it as on, off or mixed.",
+    "Column resizing, pinning and hiding are menu choices, so every change works with VoiceOver and Switch Control; nothing needs a drag.",
+    "In the list layout each record is one element; a record with editable cells has the hint \"Edit\" and opens the record editor, and with onOpen a VoiceOver action \"Open details\".",
+    "Headers, cells, checkboxes and the actions button are at least 44 points tall; checkboxes and the actions button at least 44 points wide."
+  ],
+  "edgeCases": [
+    "Pinned columns that would take more than half of the grid's width scroll with the others, so a narrow iPad window is never filled by pinned columns.",
+    "Each column has a fixed width; long text wraps in its cell and the row grows.",
+    "Rows sort by the column's sortBy or its text compared as Finder does, stably; a sort on an unknown or unsortable column leaves the app's order.",
+    "Row ids must be unique; the same id twice breaks the lazy stack and the selection.",
+    "The grid fills the space it is given and scrolls both ways; give it a bounded height and do not put it inside another scroll view.",
+    "A column whose edit says a row is not editable shows that row's cell as read-only text, not a disabled control.",
+    "The value of an editable cell is read from the row: the app saves in onCommit and passes the changed rows back. The record editor finds its row by id on each change, so saved values show at once; when the row disappears the sheet closes.",
+    "Selecting all keeps selected rows that are not in rows (another page) and adds every selectable row."
+  ],
+  "tests": [
+    "MonarchDataGridTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "10,000 editable invoices",
+      "fixture": "data-grid",
+      "webExample": "10,000 editable invoices",
+      "template": "MonarchDataGrid(\n    {{label}},\n    rows: invoices,\n    columns: [\n        MonarchDataGridColumn({{columns.0.header}}, id: {{columns.0.id}}, isHideable: false, pinned: .start, width: {{columns.0.width}}, value: { $0.number }),\n        MonarchDataGridColumn(\n            {{columns.1.header}},\n            id: {{columns.1.id}},\n            width: {{columns.1.width}},\n            edit: MonarchDataGridEdit(\n                isRequired: true,\n                value: { .text($0.customer) },\n                onCommit: { invoice, value in\n                    guard case .text(let text) = value else { return }\n                    update(invoice.id) { $0.customer = text }\n                }\n            ),\n            value: { $0.customer }\n        ),\n        MonarchDataGridColumn(\n            {{columns.2.header}},\n            id: {{columns.2.id}},\n            width: {{columns.2.width}},\n            edit: MonarchDataGridEdit(\n                kind: .select,\n                options: Self.statuses.map { MonarchEditableCellOption($0, value: $0) },\n                value: { .text($0.status) },\n                onCommit: { invoice, value in\n                    guard case .text(let text) = value else { return }\n                    update(invoice.id) { $0.status = text }\n                }\n            ),\n            value: { $0.status }\n        ),\n        MonarchDataGridColumn(\n            {{columns.3.header}},\n            id: {{columns.3.id}},\n            isNumeric: true,\n            width: {{columns.3.width}},\n            edit: MonarchDataGridEdit(\n                kind: .number,\n                minimum: 0,\n                value: { .number($0.amount) },\n                onCommit: { invoice, value in\n                    guard case .number(let amount) = value else { return }\n                    update(invoice.id) { $0.amount = amount }\n                }\n            ),\n            value: { String(format: \"%.2f\", $0.amount) }\n        ),\n        MonarchDataGridColumn({{columns.4.header}}, id: {{columns.4.id}}, width: {{columns.4.width}}, value: { $0.due }),\n    ],\n    sort: $sort,\n    selection: $selection,\n    layout: .table,\n    rowActions: { invoice in\n        [\n            MonarchDataTableRowAction({{rowActions.0}}) {},\n            MonarchDataTableRowAction({{rowActions.1}}, isDestructive: true) {\n                invoices.removeAll { $0.id == invoice.id }\n            },\n        ]\n    }\n)\n.frame(height: 900)",
+      "setupTemplate": "struct Invoice: Identifiable, Sendable {\n    let id: String\n    let number: String\n    var customer: String\n    var status: String\n    var amount: Double\n    let due: String\n}\n\nprivate static let customers = [{{customers.0}}, {{customers.1}}, {{customers.2}}, {{customers.3}}]\nprivate static let statuses = [{{statuses.0}}, {{statuses.1}}, {{statuses.2}}, {{statuses.3}}]\n@State private var invoices: [Invoice] = (0..<{{rowCount}}).map { (i: Int) -> Invoice in\n    Invoice(\n        id: \"inv-\\(i)\",\n        number: \"INV-\" + String(format: \"%05d\", i + 1),\n        customer: Self.customers[i % Self.customers.count],\n        status: Self.statuses[i % Self.statuses.count],\n        amount: Double((i * 7919) % 50_000) / 100,\n        due: String(format: \"2026-%02d-%02d\", i % 12 + 1, i % 27 + 1)\n    )\n}\n@State private var sort: MonarchDataTableSort?\n@State private var selection: Set<String> = []\n\nprivate func update(_ id: String, _ change: (inout Invoice) -> Void) {\n    guard let index = invoices.firstIndex(where: { $0.id == id }) else { return }\n    change(&invoices[index])\n}",
+      "setup": "struct Invoice: Identifiable, Sendable {\n    let id: String\n    let number: String\n    var customer: String\n    var status: String\n    var amount: Double\n    let due: String\n}\n\nprivate static let customers = [\"Example Ltd\", \"Sample Co\", \"Demo GmbH\", \"Placeholder Inc\"]\nprivate static let statuses = [\"Draft\", \"Sent\", \"Paid\", \"Overdue\"]\n@State private var invoices: [Invoice] = (0..<10_000).map { (i: Int) -> Invoice in\n    Invoice(\n        id: \"inv-\\(i)\",\n        number: \"INV-\" + String(format: \"%05d\", i + 1),\n        customer: Self.customers[i % Self.customers.count],\n        status: Self.statuses[i % Self.statuses.count],\n        amount: Double((i * 7919) % 50_000) / 100,\n        due: String(format: \"2026-%02d-%02d\", i % 12 + 1, i % 27 + 1)\n    )\n}\n@State private var sort: MonarchDataTableSort?\n@State private var selection: Set<String> = []\n\nprivate func update(_ id: String, _ change: (inout Invoice) -> Void) {\n    guard let index = invoices.firstIndex(where: { $0.id == id }) else { return }\n    change(&invoices[index])\n}",
+      "code": "MonarchDataGrid(\n    \"Invoices\",\n    rows: invoices,\n    columns: [\n        MonarchDataGridColumn(\"Invoice\", id: \"number\", isHideable: false, pinned: .start, width: 140, value: { $0.number }),\n        MonarchDataGridColumn(\n            \"Customer\",\n            id: \"customer\",\n            width: 200,\n            edit: MonarchDataGridEdit(\n                isRequired: true,\n                value: { .text($0.customer) },\n                onCommit: { invoice, value in\n                    guard case .text(let text) = value else { return }\n                    update(invoice.id) { $0.customer = text }\n                }\n            ),\n            value: { $0.customer }\n        ),\n        MonarchDataGridColumn(\n            \"Status\",\n            id: \"status\",\n            width: 140,\n            edit: MonarchDataGridEdit(\n                kind: .select,\n                options: Self.statuses.map { MonarchEditableCellOption($0, value: $0) },\n                value: { .text($0.status) },\n                onCommit: { invoice, value in\n                    guard case .text(let text) = value else { return }\n                    update(invoice.id) { $0.status = text }\n                }\n            ),\n            value: { $0.status }\n        ),\n        MonarchDataGridColumn(\n            \"Amount\",\n            id: \"amount\",\n            isNumeric: true,\n            width: 130,\n            edit: MonarchDataGridEdit(\n                kind: .number,\n                minimum: 0,\n                value: { .number($0.amount) },\n                onCommit: { invoice, value in\n                    guard case .number(let amount) = value else { return }\n                    update(invoice.id) { $0.amount = amount }\n                }\n            ),\n            value: { String(format: \"%.2f\", $0.amount) }\n        ),\n        MonarchDataGridColumn(\"Due\", id: \"due\", width: 150, value: { $0.due }),\n    ],\n    sort: $sort,\n    selection: $selection,\n    layout: .table,\n    rowActions: { invoice in\n        [\n            MonarchDataTableRowAction(\"Open\") {},\n            MonarchDataTableRowAction(\"Delete\", isDestructive: true) {\n                invoices.removeAll { $0.id == invoice.id }\n            },\n        ]\n    }\n)\n.frame(height: 900)"
+    },
+    {
+      "title": "A grid that pins, hides and resizes from its column menus",
+      "setup": "struct Line: Identifiable, Sendable {\n    let id: String\n    let customer: String\n    let amount: String\n}\n\n@State private var hidden: Set<String> = []\n@State private var pinning: [String: MonarchDataGridPin]?\n@State private var widths: [String: CGFloat] = [:]",
+      "code": "MonarchDataGrid(\n    \"Invoices\",\n    rows: [\n        Line(id: \"INV-1\", customer: \"Example Ltd\", amount: \"120.00\"),\n        Line(id: \"INV-2\", customer: \"Sample Co\", amount: \"80.50\"),\n    ],\n    columns: [\n        MonarchDataGridColumn(\"Invoice\", value: { $0.id }),\n        MonarchDataGridColumn(\"Customer\", value: { $0.customer }),\n        MonarchDataGridColumn(\"Amount\", isNumeric: true, value: { $0.amount }),\n    ],\n    hiddenColumns: $hidden,\n    pinning: $pinning,\n    columnWidths: $widths,\n    layout: .table,\n    density: .compact,\n    footer: MonarchLoadMore(hasMore: true, autoLoads: true, onLoadMore: { /* Load the next page here. */ }),\n    rowActions: { _ in [MonarchDataTableRowAction(\"Void\", systemImage: \"trash\", isDestructive: true) {}] }\n)\n.frame(height: 320)"
+    },
+    {
+      "title": "The record list with an editor sheet, as on iPhone",
+      "setup": "struct Contact: Identifiable, Sendable {\n    let id: Int\n    var name: String\n    var phone: String\n}\n\n@State private var contacts = [Contact(id: 1, name: \"Ana Lima\", phone: \"\")]",
+      "code": "MonarchDataGrid(\n    \"Contacts\",\n    rows: contacts,\n    columns: [\n        MonarchDataGridColumn(\"Name\", value: { $0.name }),\n        MonarchDataGridColumn(\n            \"Phone\",\n            edit: MonarchDataGridEdit(\n                placeholder: \"Add a phone number\",\n                value: { .text($0.phone) },\n                onCommit: { contact, value in\n                    if case .text(let text) = value { contacts[contact.id - 1].phone = text }\n                }\n            ),\n            value: { $0.phone }\n        ),\n    ],\n    layout: .list\n)\n.frame(height: 320)"
+    }
+  ],
+  "webEquivalent": "DataGrid",
+  "dependsOn": [
+    "editable-cell",
+    "checkbox",
+    "column-menu",
+    "row-actions-menu",
+    "data-table",
+    "load-more"
+  ],
+  "icons": {
+    "columnMenu": "ChevronDownGlyph",
+    "rowActions": "MoreGlyph"
+  },
+  "parityExceptions": []
+}

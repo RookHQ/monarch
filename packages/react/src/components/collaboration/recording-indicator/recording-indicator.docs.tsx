@@ -2,16 +2,29 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { RecordingIndicator } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './recording-indicator.fixture.json';
 
+/** Opens 1 minute 23 seconds into a recording; Start and Stop then run a live one. */
 function RecordingDemo() {
   const [since, setSince] = useState<number | null>(null);
-  const recording = since !== null;
+  const [opening, setOpening] = useState(true);
+  const recording = opening || since !== null;
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
-      <Button size="sm" onClick={() => setSince(recording ? null : Date.now())}>
-        {recording ? 'Stop recording' : 'Start recording'}
+      <Button
+        size="sm"
+        onClick={() => {
+          setOpening(false);
+          setSince(recording ? null : Date.now());
+        }}
+      >
+        {recording ? fixture.data.stop : fixture.data.start}
       </Button>
-      <RecordingIndicator recording={recording} since={since ?? undefined} />
+      <RecordingIndicator
+        recording={recording}
+        {...(opening ? { elapsed: fixture.data.elapsedMillis } : { since: since ?? undefined })}
+      />
     </div>
   );
 }

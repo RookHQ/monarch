@@ -1,0 +1,120 @@
+{
+  "id": "ai-slash-commands",
+  "name": "MonarchAiSlashCommands",
+  "title": "AiSlashCommands",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchSlashMenu (MonarchListRow rows in a androidx.compose.foundation.lazy.LazyColumn placed above the prompt field), found with MonarchSlashMenuQuery over androidx.compose.ui.text.input.TextFieldValue",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The / command menu of an AI prompt: commands such as /summarize filtered by what is typed after the slash, replaced with the app's text when picked.",
+  "whenToUse": "Above an AI prompt field, to offer commands that change the request or run an action (/summarize, /translate, /clear).",
+  "whenNotToUse": "For inserting blocks in a document editor use MonarchSlashMenu; for @mentions use MonarchMentionPicker; for saved prompts use MonarchAiPromptTemplatePicker.",
+  "api": [
+    "@Composable fun MonarchAiSlashCommands(value: TextFieldValue, onValueChange: (TextFieldValue) -> Unit, commands: List<MonarchAiSlashCommand>, onSelect: (MonarchAiSlashCommand) -> String?, modifier: Modifier = Modifier, trigger: Char = '/', labels: MonarchAiSlashCommandsLabels = MonarchAiSlashCommandsLabels())",
+    "class MonarchAiSlashCommand(val id: String, val name: String, val description: String? = null, val icon: Painter? = null, val keywords: List<String> = emptyList(), val enabled: Boolean = true)",
+    "class MonarchAiSlashCommandsLabels(label: String? = null, empty: ((typed: String) -> String)? = null, count: ((count: Int) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "value",
+      "type": "TextFieldValue",
+      "default": "required",
+      "description": "The prompt field's text and caret; the command is the word before the caret that starts with the trigger."
+    },
+    {
+      "name": "onValueChange",
+      "type": "(TextFieldValue) -> Unit",
+      "default": "required",
+      "description": "Called with the text and caret after a command is picked."
+    },
+    {
+      "name": "commands",
+      "type": "List<MonarchAiSlashCommand>",
+      "default": "required",
+      "description": "Every command, in the app's order."
+    },
+    {
+      "name": "onSelect",
+      "type": "(MonarchAiSlashCommand) -> String?",
+      "default": "required",
+      "description": "Called with the picked command; returns the text that replaces the typed command (\"/summarize \" keeps it), or null to remove it."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the strip."
+    },
+    {
+      "name": "trigger",
+      "type": "Char",
+      "default": "'/'",
+      "description": "The character that starts a command; also written before each name."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiSlashCommandsLabels",
+      "default": "MonarchAiSlashCommandsLabels()",
+      "description": "Replacements for \"Commands\", the empty message and the count."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "Nothing is drawn while no command is being typed."
+    },
+    {
+      "name": "open",
+      "description": "The matching commands as rows with \"/name\" and the description."
+    },
+    {
+      "name": "no match",
+      "description": "\"No commands match “/text”\" in the muted color, announced."
+    },
+    {
+      "name": "disabled command",
+      "description": "The row is in the disabled colors and cannot be picked."
+    }
+  ],
+  "appearance": "MonarchSlashMenu's strip: the raised surface with a subtle line above it, names in the default text color, descriptions muted, disabled rows in the disabled text color. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web AiSlashCommands is a listbox under AiPromptInput's trigger with arrow keys, Enter and Tab to pick, wired by the useAiSlashCommands hook, and combineAiPromptMenus merges it with mentions. On Android it works over any text field's TextFieldValue: the strip sits directly above the field because Compose gives no caret rectangle to anchor a popup to, focus stays in the field, and commands are picked by tapping a row (the web's highlighted option and keyboard picking are not offered). MonarchSlashMenu's own filter also matches the command id. The web's onSelect may return nothing; here it returns String?. Experimental until a Rook app adopts it. No iOS entry exists yet.",
+  "accessibility": [
+    "The strip is a traversal group named \"Commands\", and a polite live region whose state is the number of matches (\"4 commands\") or the no-match message.",
+    "Each command is a button row with a 48dp touch target, read as \"/name\" and its description.",
+    "A disabled command is read as disabled and cannot be picked.",
+    "Focus stays in the text field while the menu is open."
+  ],
+  "edgeCases": [
+    "A slash inside a word (\"and/or\") does not open the menu.",
+    "A leading slash in a command's name is ignored.",
+    "Long descriptions wrap; the list scrolls past its maximum height."
+  ],
+  "tests": [
+    "MonarchAiSlashCommandsTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Insert the command",
+      "fixture": "ai-slash-commands",
+      "webExample": "Insert the command",
+      "template": "Column {\n    MonarchAiSlashCommands(\n        value = prompt,\n        onValueChange = { prompt = it },\n        commands = commands,\n        onSelect = { command -> \"/${command.name} \" },\n    )\n    MonarchTextField(\n        value = prompt,\n        onValueChange = { prompt = it },\n        modifier = Modifier.fillMaxWidth(),\n        label = {{label}},\n        placeholder = {{placeholder}},\n        singleLine = false,\n    )\n}",
+      "setupTemplate": "var prompt by remember { mutableStateOf(TextFieldValue({{typed}}, selection = TextRange({{typed}}.length))) }\nval commands = listOf(\n    MonarchAiSlashCommand({{commands.0.id}}, {{commands.0.name}}, description = {{commands.0.description}}, icon = rememberVectorPainter(SampleIcons.List), keywords = listOf(\"shorten\", \"recap\")),\n    MonarchAiSlashCommand({{commands.1.id}}, {{commands.1.name}}, description = {{commands.1.description}}, icon = rememberVectorPainter(SampleIcons.Pencil)),\n    MonarchAiSlashCommand({{commands.2.id}}, {{commands.2.name}}, description = {{commands.2.description}}, icon = rememberVectorPainter(SampleIcons.Search)),\n    MonarchAiSlashCommand({{commands.3.id}}, {{commands.3.name}}, description = {{commands.3.description}}, icon = rememberVectorPainter(SampleIcons.Calendar), enabled = !{{commands.3.disabled}}),\n)",
+      "setup": "var prompt by remember { mutableStateOf(TextFieldValue(\"/\", selection = TextRange(\"/\".length))) }\nval commands = listOf(\n    MonarchAiSlashCommand(\"summarize\", \"summarize\", description = \"Summarize the open document\", icon = rememberVectorPainter(SampleIcons.List), keywords = listOf(\"shorten\", \"recap\")),\n    MonarchAiSlashCommand(\"rewrite\", \"rewrite\", description = \"Rewrite the selection in a different tone\", icon = rememberVectorPainter(SampleIcons.Pencil)),\n    MonarchAiSlashCommand(\"search\", \"search\", description = \"Search connected documents\", icon = rememberVectorPainter(SampleIcons.Search)),\n    MonarchAiSlashCommand(\"schedule\", \"schedule\", description = \"Needs a calendar connection\", icon = rememberVectorPainter(SampleIcons.Calendar), enabled = !true),\n)",
+      "code": "Column {\n    MonarchAiSlashCommands(\n        value = prompt,\n        onValueChange = { prompt = it },\n        commands = commands,\n        onSelect = { command -> \"/${command.name} \" },\n    )\n    MonarchTextField(\n        value = prompt,\n        onValueChange = { prompt = it },\n        modifier = Modifier.fillMaxWidth(),\n        label = \"Message the assistant\",\n        placeholder = \"Type / for commands\",\n        singleLine = false,\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ]
+    }
+  ],
+  "webEquivalent": "AiSlashCommands",
+  "dependsOn": [
+    "slash-menu"
+  ]
+}

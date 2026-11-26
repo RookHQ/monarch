@@ -6,6 +6,8 @@ import {
   type SupportChatEvent,
 } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './support-panel.fixture.json';
 
 /** Docs only: an in-memory client that answers every message after a moment. */
 function useDemoClient(): SupportChatClient {
@@ -19,18 +21,18 @@ function useDemoClient(): SupportChatClient {
           {
             id: 'm1',
             author: 'system',
-            text: 'Conversation started',
-            createdAt: '2026-11-04T09:58:00Z',
+            text: fixture.data.chat.system,
+            createdAt: fixture.data.chat.at,
           },
           {
             id: 'm2',
             author: 'agent',
-            authorName: 'Sam',
-            text: 'Hi! What can we help you with today?',
-            createdAt: '2026-11-04T09:58:00Z',
+            authorName: fixture.data.chat.agent,
+            text: fixture.data.chat.text,
+            createdAt: fixture.data.chat.at,
           },
         ],
-        availability: { online: true, expectedReply: 'Typically replies in a few minutes' },
+        availability: { online: true, expectedReply: fixture.data.chat.expectedReply },
       }),
       send: async (text) => {
         n += 1;
@@ -63,7 +65,7 @@ const utcTime = (d: Date) => `${d.toISOString().slice(11, 16)} UTC`;
 
 function Basic() {
   const client = useDemoClient();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   return (
     <>
       <Button
@@ -71,7 +73,7 @@ function Basic() {
         aria-controls={open ? 'support-demo' : undefined}
         onClick={() => setOpen(true)}
       >
-        Help &amp; support
+        {fixture.data.trigger}
       </Button>
       <SupportPanel
         id="support-demo"
@@ -81,28 +83,24 @@ function Basic() {
         formatTime={utcTime}
         articles={
           <ul style={{ margin: 0, paddingLeft: 'var(--mn-space-5)', lineHeight: 1.9 }}>
-            <li>
-              <a href="#getting-started">Getting started</a>
-            </li>
-            <li>
-              <a href="#invite-your-team">Invite your team</a>
-            </li>
-            <li>
-              <a href="#billing-questions">Billing questions</a>
-            </li>
+            {fixture.data.articles.map((article) => (
+              <li key={article}>
+                <a href={`#${article.toLowerCase().replace(/ /g, '-')}`}>{article}</a>
+              </li>
+            ))}
           </ul>
         }
         contacts={[
           {
-            label: 'Email support',
-            href: 'mailto:support@example.com',
-            description: 'support@example.com',
+            label: fixture.data.contact.label,
+            href: `mailto:${fixture.data.contact.description}`,
+            description: fixture.data.contact.description,
           },
         ]}
         status={{
           href: 'https://status.example.com',
           tone: 'operational',
-          text: 'All systems normal',
+          text: fixture.data.status,
         }}
         helpHref="https://help.example.com"
       />
@@ -262,6 +260,7 @@ export default {
       items: [
         {
           title: 'Chat, help articles, contacts and status',
+          stage: { align: 'end' },
           render: () => <Basic />,
         },
         {

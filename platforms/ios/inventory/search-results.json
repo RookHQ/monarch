@@ -1,0 +1,153 @@
+{
+  "id": "search-results",
+  "name": "MonarchSearchResults",
+  "title": "SearchResults",
+  "family": "search",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "List with .listStyle(.plain) and a Section per group, rows of MonarchSearchResultItem; MonarchErrorState, MonarchEmptyState and redacted(reason: .placeholder) skeleton rows for the states",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Search results in labelled groups with counts, highlighted matches, a summary that is announced, Show all buttons, and loading, empty and error states.",
+  "whenToUse": "As the content of a search screen, usually with .searchable, when results come back in groups (documents, people, projects) or as one list.",
+  "whenNotToUse": "For suggestions while typing, use .searchSuggestions. For one result row elsewhere, use MonarchSearchResultItem.",
+  "api": [
+    "init(groups: [MonarchSearchResultGroup], query: String = \"\", isLoading: Bool = false, isFailed: Bool = false, errorMessage: String? = nil, loadingRows: Int = 4, labels: MonarchSearchResultsLabels = MonarchSearchResultsLabels(), onRetry: (@MainActor () -> Void)? = nil, onShowAll: (@MainActor (MonarchSearchResultGroup) -> Void)? = nil, onSelect: @escaping @MainActor (MonarchSearchResult, MonarchSearchResultGroup) -> Void)",
+    "struct MonarchSearchResultGroup: Identifiable { init(_ title: String?, id: String, results: [MonarchSearchResult], total: Int? = nil, systemImage: String? = nil) }",
+    "struct MonarchSearchResult: Identifiable { init(_ title: String, id: String, path: [String] = [], snippet: String? = nil, titleRanges: [Range<Int>]? = nil, snippetRanges: [Range<Int>]? = nil, snippetHasMarkTags: Bool = false, systemImage: String? = nil, fileName: String? = nil, meta: String? = nil) }",
+    "struct MonarchSearchResultsLabels { var summary: ((Int, String) -> String)?; var loading: String?; var emptyTitle: ((String) -> String)?; var emptyMessage, errorTitle, retry: String?; var showAll: ((String?, Int) -> String)?; var groupCount: ((Int) -> String)? }"
+  ],
+  "options": [
+    {
+      "name": "groups",
+      "type": "[MonarchSearchResultGroup]",
+      "default": "required",
+      "description": "Results in groups; a group with a nil title has no heading, for results without groups. Empty groups are left out."
+    },
+    {
+      "name": "query",
+      "type": "String",
+      "default": "\"\"",
+      "description": "What the person searched for: its words are highlighted and it is named in the summary and empty title."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "A search is running: skeleton rows when there are no results yet, otherwise the results stay and the summary reads Searching…."
+    },
+    {
+      "name": "isFailed",
+      "type": "Bool",
+      "default": "false",
+      "description": "The search failed: an error state replaces the results."
+    },
+    {
+      "name": "errorMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "The reason, shown under Search failed."
+    },
+    {
+      "name": "loadingRows",
+      "type": "Int",
+      "default": "4",
+      "description": "Skeleton rows while loading with no results."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSearchResultsLabels",
+      "default": "MonarchSearchResultsLabels()",
+      "description": "Replacements for every built-in string; counted strings are closures."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds Try again to the error state."
+    },
+    {
+      "name": "onShowAll",
+      "type": "(@MainActor (MonarchSearchResultGroup) -> Void)?",
+      "default": "nil",
+      "description": "Adds \"Show all 24 in Documents\" after a group whose total is larger than its results."
+    },
+    {
+      "name": "onSelect",
+      "type": "@MainActor (MonarchSearchResult, MonarchSearchResultGroup) -> Void",
+      "default": "required",
+      "description": "Opens a result."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The summary line, then the groups with headings, counts and highlighted rows."
+    },
+    {
+      "name": "refreshing",
+      "description": "Results stay, the summary reads Searching… with a small spinner."
+    },
+    {
+      "name": "loading",
+      "description": "Redacted skeleton rows, hidden from VoiceOver."
+    },
+    {
+      "name": "empty",
+      "description": "MonarchEmptyState (filtered kind) with \"No results for “query”\" and a hint."
+    },
+    {
+      "name": "error",
+      "description": "MonarchErrorState with Search failed, the message and Try again."
+    }
+  ],
+  "appearance": "The summary and counts in the muted text role, headings in the default text role, counts on a muted capsule, rows from MonarchSearchResultItem with matches on the subtle warning fill. The list background is cleared so the screen's canvas shows, in light, dark and both high-contrast themes.",
+  "platformNotes": "The web results are one Tab stop with arrow-key navigation; on iOS each result is a button in a List and VoiceOver moves through them in order, with the Headings rotor on group headings. The web's heading level and custom empty node are not offered; the web's linkComponent and href become onSelect. The web shows results without groups when given results instead of groups; here pass one group with a nil title. Android has the same parameters. Several closures are optional (onRetry, onShowAll). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onRetry.",
+  "accessibility": [
+    "The summary is announced when it changes (results count, Searching…, or the empty title), as the web's live region; Search failed is announced when the search fails.",
+    "Group headings have the header trait and are read with their count, such as \"Documents, 24 results\"; the icon is decorative.",
+    "Each result is a button read as title, location path, snippet and meta (from MonarchSearchResultItem).",
+    "Skeleton rows are hidden from VoiceOver.",
+    "The empty and error states keep their own accessibility (header titles, retry button).",
+    "Rows are at least 44 points tall and text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "A total smaller than the results shown is raised to the number shown.",
+    "An error wins over results and loading; results win over loading.",
+    "A query of only spaces is treated as no query in the summary and empty title.",
+    "The List scrolls itself, so do not put the results inside another ScrollView; give the screen the full height."
+  ],
+  "tests": [
+    "MonarchSearchResultsTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Grouped results",
+      "fixture": "search-results",
+      "webExample": "Grouped results",
+      "template": "MonarchSearchResults(\n    groups: [\n        MonarchSearchResultGroup(\n            {{groups.0.label}},\n            id: {{groups.0.id}},\n            results: [\n                MonarchSearchResult(\n                    {{groups.0.items.0.title}},\n                    id: {{groups.0.items.0.id}},\n                    path: [{{groups.0.items.0.path.0}}, {{groups.0.items.0.path.1}}],\n                    snippet: {{groups.0.items.0.snippet}},\n                    meta: {{groups.0.items.0.meta}}\n                ).metaAsBadge(),\n                MonarchSearchResult(\n                    {{groups.0.items.1.title}},\n                    id: {{groups.0.items.1.id}},\n                    path: [{{groups.0.items.1.path.0}}],\n                    snippet: {{groups.0.items.1.snippet}}\n                ),\n            ],\n            total: {{groups.0.total}},\n            systemImage: \"tray\"\n        ),\n        MonarchSearchResultGroup(\n            {{groups.1.label}},\n            id: {{groups.1.id}},\n            results: [\n                MonarchSearchResult(\n                    {{groups.1.items.0.title}},\n                    id: {{groups.1.items.0.id}},\n                    path: [{{groups.1.items.0.path.0}}],\n                    meta: {{groups.1.items.0.meta}}\n                ),\n            ],\n            systemImage: \"calendar\"\n        ),\n        MonarchSearchResultGroup(\n            {{groups.2.label}},\n            id: {{groups.2.id}},\n            results: [\n                MonarchSearchResult(\n                    {{groups.2.items.0.title}},\n                    id: {{groups.2.items.0.id}},\n                    snippet: {{groups.2.items.0.snippet}}\n                ),\n            ],\n            systemImage: \"person.2\"\n        ),\n    ],\n    query: {{query}},\n    onShowAll: { _ in },\n    onSelect: { _, _ in }\n)\n.frame(height: 760)",
+      "code": "MonarchSearchResults(\n    groups: [\n        MonarchSearchResultGroup(\n            \"Documents\",\n            id: \"documents\",\n            results: [\n                MonarchSearchResult(\n                    \"Travel policy\",\n                    id: \"doc-1\",\n                    path: [\"Handbook\", \"Policies\"],\n                    snippet: \"Book travel at least two weeks ahead and share the plan with your team.\",\n                    meta: \"Policy\"\n                ).metaAsBadge(),\n                MonarchSearchResult(\n                    \"Team travel checklist\",\n                    id: \"doc-2\",\n                    path: [\"Operations\"],\n                    snippet: \"Passports, insurance and a contact sheet for every trip.\"\n                ),\n            ],\n            total: 8,\n            systemImage: \"tray\"\n        ),\n        MonarchSearchResultGroup(\n            \"Events\",\n            id: \"events\",\n            results: [\n                MonarchSearchResult(\n                    \"Travel planning review\",\n                    id: \"event-1\",\n                    path: [\"Calendar\"],\n                    meta: \"Thursday\"\n                ),\n            ],\n            systemImage: \"calendar\"\n        ),\n        MonarchSearchResultGroup(\n            \"People\",\n            id: \"people\",\n            results: [\n                MonarchSearchResult(\n                    \"Alex Kim\",\n                    id: \"person-1\",\n                    snippet: \"Travel coordinator\"\n                ),\n            ],\n            systemImage: \"person.2\"\n        ),\n    ],\n    query: \"travel\",\n    onShowAll: { _ in },\n    onSelect: { _, _ in }\n)\n.frame(height: 760)"
+    },
+    {
+      "title": "The empty state",
+      "code": "MonarchSearchResults(groups: [], query: \"zzz\") { _, _ in }"
+    },
+    {
+      "title": "A failed search with retry",
+      "setup": "@State private var isFailed = true",
+      "code": "MonarchSearchResults(\n    groups: [],\n    isFailed: isFailed,\n    errorMessage: \"The search service did not respond.\",\n    onRetry: { isFailed = false },\n    onSelect: { _, _ in }\n)"
+    }
+  ],
+  "webEquivalent": "SearchResults",
+  "dependsOn": [
+    "search-result-item",
+    "skeleton",
+    "empty-state",
+    "error-state",
+    "button"
+  ]
+}

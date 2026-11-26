@@ -1,0 +1,90 @@
+{
+  "id": "share-dialog",
+  "name": null,
+  "title": "ShareDialog",
+  "family": "collaboration",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:) with .presentationDetents([.medium, .large]) holding a NavigationStack and a Form: MonarchEntityPicker and a Picker for inviting, MonarchMemberRow rows for people with access, a Picker for general access, MonarchCopyField and ShareLink for the link, and a Done toolbar button",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: sharing one record with people and setting its access in a sheet, with an invite field and role, the people who have access with their roles, general access and the link.",
+  "whenToUse": "A Share action on a document, project, board or other record whose access the app controls, where people are invited with a role and the link opens the record for those allowed.",
+  "whenNotToUse": "To send a link or file to another app or person outside the product, use ShareLink with the system share sheet (see share-button). To manage the members of a whole workspace, use a pushed settings screen with MonarchMemberRow rows (see member-row).",
+  "api": [
+    "func sheet(isPresented: Binding<Bool>, onDismiss: (() -> Void)? = nil, content: @escaping () -> some View) -> some View",
+    "func presentationDetents(_ detents: Set<PresentationDetent>) -> some View",
+    "MonarchEntityPicker.init(_ label: String, selection: Binding<[String]>, entities: [MonarchEntityPickerEntity], …, prompt: String? = nil, …)",
+    "Picker(_ title: String, selection: Binding<SelectionValue>, content: () -> Content)",
+    "MonarchMemberRow.init(_ name: String, url: URL?, email: String? = nil, …, status: MonarchMemberRowStatus = .active, role: String? = nil, roles: [MonarchRoleOption<String>] = [], …, isSelf: Bool = false, …, onRoleChange: (@MainActor (String) async throws -> Void)? = nil, …, onRemove: (@MainActor () async throws -> Void)? = nil)",
+    "MonarchCopyField.init(_ label: String, value: String, …, isLabelHidden: Bool = false, …)",
+    "ShareLink(_ title: String, item: String)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "inviting",
+      "description": "People are chosen in MonarchEntityPicker (people who already have access are disabled), the role for them in a menu Picker, and Invite adds them as invited members and announces \"2 people invited.\""
+    },
+    {
+      "name": "people with access",
+      "description": "Each person is a MonarchMemberRow with their role menu and Remove (Revoke invite for invited people); the signed-in person shows You and cannot be changed."
+    },
+    {
+      "name": "general access",
+      "description": "A Picker of who can open the record without an invitation, with what the choice means in the section footer; a change is announced."
+    },
+    {
+      "name": "link",
+      "description": "MonarchCopyField copies the link; ShareLink sends it through the system share sheet."
+    },
+    {
+      "name": "saving",
+      "description": "MonarchMemberRow keeps its own busy and failure states for async role changes and removals; Invite uses MonarchButton's isLoading while the app saves."
+    }
+  ],
+  "appearance": "A system sheet on the theme's surface colour with a grouped Form. Monarch rows and fields use their own theme colours; the Invite button is primary; section headers and footers use the system grouped style.",
+  "platformNotes": "The web ShareDialog is a component with a trigger, a dialog, a combobox with email invites, a native select for roles, a members list, a general access select, a main link with copy and a list of share links with passwords, expiry, views and revoke. On iOS the app composes it in a sheet from Monarch rows and system pickers; inviting a typed email address is MonarchEntityPicker's onCreate; share links with passwords and expiry are a pushed screen in the app, not part of the recipe. Sending the link out of the app uses the system share sheet through ShareLink. Android plans the same recipe. Status experimental: it is a product screen until a Rook app adopts it.",
+  "accessibility": [
+    "The sheet's title is the navigation title; Done is in the toolbar with the confirmation placement.",
+    "MonarchEntityPicker, the Pickers and MonarchCopyField are named by their labels; the role and access menus are standard pickers read with their value.",
+    "Each MonarchMemberRow reads the name, email, role and status, with its role menu and Remove as separate controls.",
+    "Post an AccessibilityNotification.Announcement after inviting (\"2 people invited.\") and after general access changes, since focus stays where it was."
+  ],
+  "edgeCases": [
+    "Disable people who already have access in the picker so they cannot be invited twice.",
+    "Keep the owner's role locked (canChangeRole: false) and the signed-in person with isSelf: true.",
+    "At the medium detent the form scrolls; the large detent shows more rows.",
+    "Show a save failure with MonarchInlineNotice in the invite section and keep the chosen people."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Invite people and set access",
+      "fixture": "share-dialog",
+      "webExample": "Invite people and set access",
+      "template": "MonarchButton({{trigger}}) { isOpen = true }\n    .monarchDialog(\n        isPresented: $isOpen,\n        title: \"Share \\u{201C}\" + {{itemName}} + \"\\u{201D}\",\n        message: {{description}},\n        showsCloseButton: true\n    ) {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            inviteRow\n            Text(\"People with access\").monarchTextStyle(.bodyStrong)\n            peopleRows\n            Text(\"General access\").monarchTextStyle(.bodyStrong)\n            generalAccess\n        }\n    } footer: {\n        EmptyView()\n    }",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = false\n@State private var invitees: [String] = []\n@State private var inviteRole = {{defaultInviteRole}}\n@State private var access = {{access.value}}\n@State private var roleOf = [{{people.0.email}}: {{people.0.role}}, {{people.1.email}}: {{people.1.role}}]\nprivate let roles = [\n    MonarchRoleOption({{roles.0.value}}, title: {{roles.0.label}}),\n    MonarchRoleOption({{roles.1.value}}, title: {{roles.1.label}}),\n    MonarchRoleOption({{roles.2.value}}, title: {{roles.2.label}}),\n]\nprivate let directory = [\n    MonarchEntityPickerEntity(id: {{candidates.0.value}}, name: {{candidates.0.label}}, description: {{candidates.0.description}}),\n    MonarchEntityPickerEntity(id: {{candidates.1.value}}, name: {{candidates.1.label}}, description: {{candidates.1.description}}),\n    MonarchEntityPickerEntity(id: {{candidates.2.value}}, name: {{candidates.2.label}}, description: {{candidates.2.description}}),\n]\n\nprivate var inviteRow: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        MonarchEntityPicker(\"Invite people\", selection: $invitees, entities: directory, prompt: \"Name or email\")\n        HStack(alignment: .center, spacing: theme.spacing.space2) {\n            MonarchSelectField(\n                \"Role for new people\",\n                selection: $inviteRole,\n                options: roles.map { MonarchSelectOption($0.title, value: $0.value) },\n                labelVisibility: .hidden\n            )\n            .frame(width: theme.spacing.space24 * 1.1)\n            MonarchButton(\"Invite\", variant: .primary) { invitees = [] }\n                .disabled(invitees.isEmpty)\n        }\n    }\n}\n\nprivate var peopleRows: some View {\n    VStack(alignment: .leading, spacing: 0) {\n        MonarchMemberRow({{people.0.name}}, url: nil, email: {{people.0.email}}, role: {{people.0.role}}, roles: roles, isSelf: {{people.0.isSelf}})\n        MonarchMemberRow(\n            {{people.1.name}},\n            url: nil,\n            email: {{people.1.email}},\n            role: roleOf[{{people.1.email}}],\n            roles: roles,\n            onRoleChange: { roleOf[{{people.1.email}}] = $0 },\n            onRemove: {}\n        )\n        MonarchMemberRow(\n            {{people.2.name}},\n            url: nil,\n            email: {{people.2.email}},\n            status: {{people.2.status|case}},\n            role: {{people.2.role}},\n            roles: roles,\n            onRoleChange: { _ in },\n            onRemove: {}\n        )\n    }\n}\n\nprivate var generalAccess: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        MonarchSelectField(\n            \"Who can open it\",\n            selection: $access,\n            options: [\n                MonarchSelectOption({{access.options.0.label}}, value: {{access.options.0.value}}),\n                MonarchSelectOption({{access.options.1.label}}, value: {{access.options.1.value}}),\n            ],\n            helper: access == {{access.options.0.value}} ? {{access.options.0.description}} : {{access.options.1.description}}\n        )\n        MonarchCopyField(\"Link\", value: {{link}}, isLabelHidden: true)\n    }\n}",
+      "previewPresented": [
+        "isOpen"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = false\n@State private var invitees: [String] = []\n@State private var inviteRole = \"viewer\"\n@State private var access = \"invited\"\n@State private var roleOf = [\"alex@example.com\": \"editor\", \"sam@example.com\": \"commenter\"]\nprivate let roles = [\n    MonarchRoleOption(\"viewer\", title: \"Viewer\"),\n    MonarchRoleOption(\"commenter\", title: \"Commenter\"),\n    MonarchRoleOption(\"editor\", title: \"Editor\"),\n]\nprivate let directory = [\n    MonarchEntityPickerEntity(id: \"u4\", name: \"Jordan Kim\", description: \"jordan@example.com\"),\n    MonarchEntityPickerEntity(id: \"u5\", name: \"Riley Chen\", description: \"riley@example.com\"),\n    MonarchEntityPickerEntity(id: \"u6\", name: \"Taylor Brooks\", description: \"taylor@example.com\"),\n]\n\nprivate var inviteRow: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        MonarchEntityPicker(\"Invite people\", selection: $invitees, entities: directory, prompt: \"Name or email\")\n        HStack(alignment: .center, spacing: theme.spacing.space2) {\n            MonarchSelectField(\n                \"Role for new people\",\n                selection: $inviteRole,\n                options: roles.map { MonarchSelectOption($0.title, value: $0.value) },\n                labelVisibility: .hidden\n            )\n            .frame(width: theme.spacing.space24 * 1.1)\n            MonarchButton(\"Invite\", variant: .primary) { invitees = [] }\n                .disabled(invitees.isEmpty)\n        }\n    }\n}\n\nprivate var peopleRows: some View {\n    VStack(alignment: .leading, spacing: 0) {\n        MonarchMemberRow(\"Alex Morgan\", url: nil, email: \"alex@example.com\", role: \"editor\", roles: roles, isSelf: true)\n        MonarchMemberRow(\n            \"Sam Lee\",\n            url: nil,\n            email: \"sam@example.com\",\n            role: roleOf[\"sam@example.com\"],\n            roles: roles,\n            onRoleChange: { roleOf[\"sam@example.com\"] = $0 },\n            onRemove: {}\n        )\n        MonarchMemberRow(\n            \"Jamie Fox\",\n            url: nil,\n            email: \"jamie@example.com\",\n            status: .invited,\n            role: \"viewer\",\n            roles: roles,\n            onRoleChange: { _ in },\n            onRemove: {}\n        )\n    }\n}\n\nprivate var generalAccess: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        MonarchSelectField(\n            \"Who can open it\",\n            selection: $access,\n            options: [\n                MonarchSelectOption(\"Only people invited\", value: \"invited\"),\n                MonarchSelectOption(\"Anyone in the workspace\", value: \"workspace\"),\n            ],\n            helper: access == \"invited\" ? \"Only the people listed above can open it.\" : \"Everyone in the workspace can find and open it.\"\n        )\n        MonarchCopyField(\"Link\", value: \"https://example.com/d/quarterly-plan\", isLabelHidden: true)\n    }\n}",
+      "code": "MonarchButton(\"Share\") { isOpen = true }\n    .monarchDialog(\n        isPresented: $isOpen,\n        title: \"Share \\u{201C}\" + \"Quarterly plan\" + \"\\u{201D}\",\n        message: \"People you invite get the role you choose.\",\n        showsCloseButton: true\n    ) {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            inviteRow\n            Text(\"People with access\").monarchTextStyle(.bodyStrong)\n            peopleRows\n            Text(\"General access\").monarchTextStyle(.bodyStrong)\n            generalAccess\n        }\n    } footer: {\n        EmptyView()\n    }"
+    }
+  ],
+  "webEquivalent": "ShareDialog",
+  "dependsOn": [
+    "sheet",
+    "entity-picker",
+    "role-picker",
+    "member-row",
+    "copy-field",
+    "share-button",
+    "button"
+  ],
+  "parityExceptions": []
+}

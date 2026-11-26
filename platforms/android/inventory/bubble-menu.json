@@ -1,0 +1,95 @@
+{
+  "id": "bubble-menu",
+  "name": null,
+  "title": "BubbleMenu",
+  "family": "files",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "androidx.compose.foundation.text.contextmenu.modifier.appendTextContextMenuComponents with androidx.compose.foundation.text.contextmenu.builder.item",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Actions over selected text are items added to the system text selection menu (the floating toolbar with Cut, Copy and Paste) with Modifier.appendTextContextMenuComponents. Monarch ships nothing.",
+  "whenToUse": "For a few actions that apply to the selected text of a field, such as Comment, Bold or Ask AI, without a permanent toolbar.",
+  "whenNotToUse": "For formatting that people use all the time, use MonarchEditorToolbar above the text (MonarchRichTextEditor and MonarchBlockEditor have one). Not for actions on a whole item: use a MonarchMenu or MonarchContextMenu.",
+  "api": [
+    "fun Modifier.appendTextContextMenuComponents(builder: TextContextMenuBuilderScope.() -> Unit): Modifier",
+    "fun TextContextMenuBuilderScope.item(key: Any, label: String, leadingIcon: Int = Resources.ID_NULL, onClick: TextContextMenuSession.() -> Unit)",
+    "fun TextContextMenuBuilderScope.separator()",
+    "interface TextContextMenuSession { fun close() }",
+    "fun Modifier.filterTextContextMenuComponents(filter: (TextContextMenuComponent) -> Boolean): Modifier"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "hidden",
+      "description": "Nothing is shown while there is no selection; the builder is asked again each time the menu opens."
+    },
+    {
+      "name": "open",
+      "description": "After a selection is made, the system floating toolbar shows Cut, Copy, Paste and Select all, then the added items; extra items go into its overflow."
+    },
+    {
+      "name": "after an action",
+      "description": "Call close() in the item's onClick to dismiss the menu; the selection stays as the app leaves it."
+    }
+  ],
+  "appearance": "The system draws the floating toolbar in the device theme (with a hardware mouse, a dropdown menu), not in the Monarch theme; added items look like the system's own Cut and Copy.",
+  "platformNotes": "The web BubbleMenu is a Monarch toolbar that floats over a Tiptap selection, with Alt+F10 to reach it and placement and offset props. On Android a second floating toolbar would cover or fight the system selection toolbar, so actions are added to that toolbar instead, as Google Docs and Keep do. The parity map named LocalTextToolbar custom actions: the TextToolbar interface only shows the system's own items, so the API is the text context menu builder of Compose foundation 1.8 and later (on by default in 1.12). The items are text, not toggles, so a format's on or off state is not shown in the menu; show it in a MonarchEditorToolbar. Placement, offset, Alt+F10 and Escape are the system's. iOS covers the same idea with the system edit menu.",
+  "accessibility": [
+    "System behavior: the floating toolbar and its items are read by TalkBack like the system's Cut and Copy, and are reached by its actions on the selected text.",
+    "Give each item a short verb as its label (\"Comment\", \"Bold\"); the label is all TalkBack reads.",
+    "The menu never takes focus from the text; the selection is kept when the menu closes."
+  ],
+  "edgeCases": [
+    "The builder runs each time the menu opens: read the field's current selection there and add nothing when it is collapsed.",
+    "On a small screen the toolbar shows a few items and puts the rest in its overflow; put the most used action first.",
+    "The same modifier works on BasicTextField, MonarchTextField, MonarchTextField and SelectionContainer."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Inline formatting",
+      "fixture": "bubble-menu",
+      "webExample": "Inline formatting",
+      "template": "MonarchTextField(\n    value = note,\n    onValueChange = { note = it },\n    label = {{label}},\n    labelVisibility = MonarchTextFieldLabelVisibility.Hidden,\n    singleLine = false,\n)",
+      "setupTemplate": "var note by remember { mutableStateOf(TextFieldValue({{text}}, TextRange({{selection.start}}, {{selection.end}}))) }",
+      "setup": "var note by remember { mutableStateOf(TextFieldValue(\"Select any words in this paragraph to see the menu. It floats above the selection, flips below near the top of the window, and never takes focus until you ask for it with Alt+F10.\", TextRange(7, 16))) }",
+      "code": "MonarchTextField(\n    value = note,\n    onValueChange = { note = it },\n    label = \"Sample text\",\n    labelVisibility = MonarchTextFieldLabelVisibility.Hidden,\n    singleLine = false,\n)"
+    },
+    {
+      "title": "A Comment action on the selected text",
+      "imports": [
+        "androidx.compose.foundation.text.contextmenu.builder.item",
+        "androidx.compose.foundation.text.contextmenu.modifier.appendTextContextMenuComponents"
+      ],
+      "setup": "var note by remember { mutableStateOf(TextFieldValue(\"Ship the release on Friday\", TextRange(5, 16))) }\nvar comment by remember { mutableStateOf<String?>(null) }",
+      "code": "MonarchTextField(\n    value = note,\n    onValueChange = { note = it },\n    modifier = Modifier.appendTextContextMenuComponents {\n        if (!note.selection.collapsed) {\n            separator()\n            item(key = \"comment\", label = \"Comment\") {\n                comment = note.text.substring(note.selection.min, note.selection.max)\n                close()\n            }\n        }\n    },\n    label = \"Note\",\n    singleLine = false,\n)"
+    },
+    {
+      "title": "Bold and italic on a Monarch text field",
+      "imports": [
+        "androidx.compose.foundation.text.contextmenu.builder.item",
+        "androidx.compose.foundation.text.contextmenu.modifier.appendTextContextMenuComponents"
+      ],
+      "setup": "var text by remember { mutableStateOf(\"Quarterly report\") }\nvar applied by remember { mutableStateOf(\"\") }",
+      "code": "MonarchTextField(\n    value = text,\n    onValueChange = { text = it },\n    modifier = Modifier.appendTextContextMenuComponents {\n        separator()\n        item(key = \"bold\", label = \"Bold\") { applied = \"bold\"; close() }\n        item(key = \"italic\", label = \"Italic\") { applied = \"italic\"; close() }\n    },\n    label = \"Title\",\n)"
+    }
+  ],
+  "webEquivalent": "BubbleMenu",
+  "dependsOn": [
+    "rich-text-editor"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "scenario",
+      "platform": "android",
+      "reason": "The web draws its own floating toolbar above the selected words. On Android the formatting actions (Bold, Italic, Strikethrough, Code, Link) are added to the system text selection toolbar, which the app cannot draw or capture, so the preview shows the selection without the toolbar.",
+      "convention": "Android text selection toolbar (the floating action mode); formatting actions belong in its menu"
+    }
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "id": "passkey-manager",
+  "name": "MonarchPasskeyManager",
+  "title": "PasskeyManager",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchCard with a VStack of rows (MonarchIcon, Text, MonarchBadge, RelativeDateTimeFormatter in a TimelineView(.everyMinute)), MonarchButton, alert(_:isPresented:presenting:actions:message:) with a TextField for rename and Button(role: .destructive) for remove, MonarchInlineNotice, MonarchEmptyState and MonarchErrorState",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A person's passkeys, with when each was added and last used and a Synced badge, and Add a passkey, Rename and Remove behind a confirmation.",
+  "whenToUse": "On an account security screen where people add, rename and remove the passkeys that sign them in.",
+  "whenNotToUse": "To sign in with a passkey, use the sign-in form recipe with ASAuthorizationController. For devices that have accessed the account use MonarchDeviceList.",
+  "api": [
+    "init(_ passkeys: [MonarchPasskey], title: String? = nil, description: String? = nil, state: MonarchPasskeyManagerState = .ready, isRetrying: Bool = false, isSupported: Bool = true, isLastSignInMethod: Bool = false, now: Date? = nil, labels: MonarchPasskeyManagerLabels = MonarchPasskeyManagerLabels(), onRetry: (@MainActor () -> Void)? = nil, onAdd: (@MainActor () async throws -> Void)? = nil, onRename: (@MainActor (String, String) async throws -> Void)? = nil, onRemove: (@MainActor (String) async throws -> Void)? = nil)",
+    "struct MonarchPasskey { init(id: String, name: String, created: Date? = nil, lastUsed: Date? = nil, isSynced: Bool = false, detail: String? = nil) }",
+    "enum MonarchPasskeyManagerState { case ready, loading, failed }",
+    "struct MonarchPasskeyManagerLabels { init(title:, description:, listLabel:, add:, rename:, renameLabel:, renameTitle:, nameField:, save:, remove:, removeLabel:, created:, lastUsed:, neverUsed:, synced:, confirmTitle:, confirmMessage:, lastMethodWarning:, confirmRemove:, cancel:, unsupported:, cancelled:, addFailed:, added:, removed:, renameFailed:, removeFailed:, loading:, emptyTitle:, emptyMessage:, errorTitle:) }"
+  ],
+  "options": [
+    {
+      "name": "passkeys",
+      "type": "[MonarchPasskey]",
+      "default": "required",
+      "description": "The person's passkeys, shown in the order given."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in title \"Passkeys\"."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the line under the title."
+    },
+    {
+      "name": "state",
+      "type": "MonarchPasskeyManagerState",
+      "default": ".ready",
+      "description": "Loaded, loading or failed. A loaded empty list shows the empty state."
+    },
+    {
+      "name": "isRetrying",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the retry button busy in the failed state."
+    },
+    {
+      "name": "isSupported",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether this device can create passkeys. When false, Add is disabled and a warning notice says why. Every supported iOS version can; pass false for managed devices where the app knows passkeys are blocked."
+    },
+    {
+      "name": "isLastSignInMethod",
+      "type": "Bool",
+      "default": "false",
+      "description": "Passkeys are the person's only way to sign in, so removing the last one adds a warning to the confirmation."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for relative times. Without it they follow the clock, updated every minute."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchPasskeyManagerLabels",
+      "default": "MonarchPasskeyManagerLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Retries loading. Shows Try again in the failed state."
+    },
+    {
+      "name": "onAdd",
+      "type": "(@MainActor () async throws -> Void)?",
+      "default": "nil",
+      "description": "Runs the app's passkey registration with ASAuthorizationController and the server. Shows Add a passkey. Throwing ASAuthorizationError.canceled or CancellationError shows a neutral note; another error shows its LocalizedError description or a built-in failure."
+    },
+    {
+      "name": "onRename",
+      "type": "(@MainActor (String, String) async throws -> Void)?",
+      "default": "nil",
+      "description": "Saves a new name, given the id and the trimmed name. Shows Rename. Throwing shows a failure notice."
+    },
+    {
+      "name": "onRemove",
+      "type": "(@MainActor (String) async throws -> Void)?",
+      "default": "nil",
+      "description": "Removes a passkey after the confirmation. Shows Remove. Throwing shows a failure notice."
+    }
+  ],
+  "states": [
+    {
+      "name": "list",
+      "description": "One row per passkey with its actions under it, separated by dividers."
+    },
+    {
+      "name": "synced",
+      "description": "An info Synced badge after the name."
+    },
+    {
+      "name": "never used",
+      "description": "\"Never used\" instead of the last-used time."
+    },
+    {
+      "name": "adding",
+      "description": "Add a passkey shows its spinner."
+    },
+    {
+      "name": "cancelled",
+      "description": "A neutral inline notice: \"Passkey setup was cancelled. Nothing was changed.\""
+    },
+    {
+      "name": "failed action",
+      "description": "A danger inline notice under the header, announced."
+    },
+    {
+      "name": "busy row",
+      "description": "While a rename or removal runs, the row's Remove shows its spinner and the other row actions are disabled."
+    },
+    {
+      "name": "unsupported",
+      "description": "Add is disabled and a warning notice explains that the device cannot create passkeys."
+    },
+    {
+      "name": "loading",
+      "description": "A progress indicator with \"Loading passkeys\"."
+    },
+    {
+      "name": "empty",
+      "description": "A small MonarchEmptyState; Add stays in the header."
+    },
+    {
+      "name": "failed",
+      "description": "A small MonarchErrorState with Try again when onRetry is given."
+    }
+  ],
+  "appearance": "A MonarchCard with the subheading style title, a caption line in the muted text colour and a small primary Add button. Rows have the key symbol in the muted text colour, the name in the strong body style, a subtle info badge and caption lines in the muted text colour, then small ghost buttons. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "Monarch does not create passkeys: on iOS the app runs ASAuthorizationController (with ASAuthorizationPlatformPublicKeyCredentialProvider) inside onAdd, because the relying party and the server challenge are the app's; Android does the same with CredentialManager. The web detects browser support from window.PublicKeyCredential; iOS 17 always supports passkeys, so isSupported is a parameter for apps that know they are blocked. The web renames in place with an inline editor; iOS asks for the name in a system alert with a text field (prompt-dialog on iOS) whose Save is disabled while the name is blank or unchanged. The confirmation is a system alert, which cannot stay open while the removal runs, so the pending state moves to the row and a failure appears as a notice in the card. The web's headingLevel and locale props have no equivalent (the title is a header; the SwiftUI locale environment is used). Several closures are optional (onRetry, onAdd, onRename, onRemove). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onRetry.",
+  "accessibility": [
+    "The title has the header trait.",
+    "Each passkey is one element whose label is its name and whose value is Synced, the detail and the times, built by a tested pure function.",
+    "The key symbol is decorative and hidden.",
+    "Rename and Remove are separate MonarchButtons with 44-point touch targets, named \"Rename <name>\" and \"Remove <name>\".",
+    "Rename and the removal confirmation are system alerts; the removal button has the destructive role.",
+    "Adding, removing and every failure are posted as announcements.",
+    "The unsupported state is said in words in a warning notice, not only by the disabled button."
+  ],
+  "edgeCases": [
+    "The app updates passkeys after onAdd, onRename and onRemove return; the list does not change itself.",
+    "A name made only of spaces cannot be saved; the saved name is trimmed.",
+    "The last-method warning appears only when isLastSignInMethod is true and exactly one passkey is left.",
+    "Only one rename or removal runs at a time."
+  ],
+  "tests": [
+    "MonarchPasskeyManagerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Add, rename and remove",
+      "fixture": "passkey-manager",
+      "webExample": "Add, rename and remove",
+      "template": "MonarchPasskeyManager(\n    passkeys,\n    title: {{title}},\n    description: {{description}},\n    now: {{now|date}},\n    onAdd: {\n        // The app runs ASAuthorizationController and registers the key on its server.\n        try await Task.sleep(for: .milliseconds(300))\n    },\n    onRename: { id, name in\n        try await Task.sleep(for: .milliseconds(300))\n    },\n    onRemove: { id in\n        try await Task.sleep(for: .milliseconds(300))\n        passkeys.removeAll { $0.id == id }\n    }\n)",
+      "setupTemplate": "@State private var passkeys = [\n    MonarchPasskey(\n        id: {{passkeys.0.id}},\n        name: {{passkeys.0.name}},\n        created: {{passkeys.0.createdAt|date}},\n        lastUsed: {{passkeys.0.lastUsedAt|date}},\n        isSynced: {{passkeys.0.synced}}\n    ),\n    MonarchPasskey(\n        id: {{passkeys.1.id}},\n        name: {{passkeys.1.name}},\n        created: {{passkeys.1.createdAt|date}}\n    ),\n]",
+      "setup": "@State private var passkeys = [\n    MonarchPasskey(\n        id: \"pk-1\",\n        name: \"Work laptop\",\n        created: Date(timeIntervalSince1970: 1_767_268_800),\n        lastUsed: Date(timeIntervalSince1970: 1_772_444_160),\n        isSynced: true\n    ),\n    MonarchPasskey(\n        id: \"pk-2\",\n        name: \"Security key\",\n        created: Date(timeIntervalSince1970: 1_771_588_800)\n    ),\n]",
+      "code": "MonarchPasskeyManager(\n    passkeys,\n    title: \"Passkeys\",\n    description: \"Sign in with your fingerprint, face or screen lock instead of a password. Passkeys can’t be phished or reused.\",\n    now: Date(timeIntervalSince1970: 1_772_452_800),\n    onAdd: {\n        // The app runs ASAuthorizationController and registers the key on its server.\n        try await Task.sleep(for: .milliseconds(300))\n    },\n    onRename: { id, name in\n        try await Task.sleep(for: .milliseconds(300))\n    },\n    onRemove: { id in\n        try await Task.sleep(for: .milliseconds(300))\n        passkeys.removeAll { $0.id == id }\n    }\n)"
+    },
+    {
+      "title": "A device that cannot create passkeys",
+      "code": "MonarchPasskeyManager([], isSupported: false, onAdd: {})"
+    }
+  ],
+  "webEquivalent": "PasskeyManager",
+  "dependsOn": [
+    "button",
+    "confirm-dialog",
+    "prompt-dialog",
+    "relative-time",
+    "badge",
+    "card",
+    "inline-notice",
+    "empty-state",
+    "error-state"
+  ]
+}

@@ -5,6 +5,8 @@ import {
   CollapsibleTrigger,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './collapsible.fixture.json';
 
 export default {
   id: 'collapsible',
@@ -124,10 +126,10 @@ export default {
           title: 'Advanced settings',
           stack: true,
           render: () => (
-            <Collapsible>
-              <CollapsibleTrigger chevron>Advanced settings</CollapsibleTrigger>
+            <Collapsible defaultOpen={fixture.data.open}>
+              <CollapsibleTrigger chevron>{fixture.data.label}</CollapsibleTrigger>
               <CollapsibleContent>
-                <p>Retry failed deliveries up to five times with a growing delay.</p>
+                <p>{fixture.data.content}</p>
               </CollapsibleContent>
             </Collapsible>
           ),

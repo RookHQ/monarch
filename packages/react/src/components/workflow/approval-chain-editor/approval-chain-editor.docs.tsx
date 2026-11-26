@@ -8,36 +8,13 @@ import {
   type ApprovalChainStep,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './approval-chain-editor.fixture.json';
 
-const TYPES: ApprovalApproverType[] = [
-  { value: 'manager', label: 'Reporting manager' },
-  { value: 'manager-2', label: 'Manager’s manager' },
-  { value: 'head', label: 'Department head' },
-  {
-    value: 'role',
-    label: 'Anyone with a role',
-    targetLabel: 'Role',
-    targets: [
-      { value: 'finance', label: 'Finance team' },
-      { value: 'people', label: 'People team' },
-    ],
-  },
-  {
-    value: 'person',
-    label: 'A named person',
-    targetLabel: 'Person',
-    targets: [
-      { value: 'p1', label: 'Jo Park' },
-      { value: 'p2', label: 'Ana Ruiz' },
-    ],
-  },
-];
+const TYPES = fixture.data.approverTypes as ApprovalApproverType[];
 
 function ChainDemo() {
-  const [steps, setSteps] = useState<ApprovalChainStep[]>([
-    { id: '1', approver: 'manager' },
-    { id: '2', approver: 'role', label: 'Finance check' },
-  ]);
+  const [steps, setSteps] = useState<ApprovalChainStep[]>(fixture.data.steps);
   const [tried, setTried] = useState(false);
   const [saved, setSaved] = useState('');
   return (
@@ -47,7 +24,7 @@ function ChainDemo() {
         onChange={setSteps}
         approverTypes={TYPES}
         showErrors={tried}
-        description="Each step is decided by one of the people it names. A step whose approver is the requester is skipped."
+        description={fixture.data.description}
       />
       <div>
         <Button
@@ -58,7 +35,7 @@ function ChainDemo() {
               setSaved(summarizeApprovalChain(steps, TYPES));
           }}
         >
-          Save chain
+          {fixture.data.saveLabel}
         </Button>
       </div>
       <p role="status" style={{ margin: 0 }}>

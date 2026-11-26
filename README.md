@@ -71,6 +71,24 @@ Full steps, including the legacy bridge for existing shadcn variables, in
 [docs/guides/getting-started.md](docs/guides/getting-started.md) and
 [docs/guides/migration.md](docs/guides/migration.md).
 
+## Android and iOS
+
+Monarch also has native implementations that share the tokens, colour roles,
+type roles and component vocabulary. They look like Monarch and behave like
+the platform:
+
+| Platform | Where                                              | Library                                                             |
+| -------- | -------------------------------------------------- | ------------------------------------------------------------------- |
+| Android  | [`platforms/android`](platforms/android/README.md) | Jetpack Compose: `com.rookhq.monarch:monarch-compose`               |
+| iOS      | [`platforms/ios`](platforms/ios/README.md)         | SwiftUI: the Swift package products `MonarchUI` and `MonarchTokens` |
+
+Both cover the 515 web components (built, styled, adopted from the platform,
+composed, or documented as web only) and are not released yet. Their version
+is the `@rookcom/monarch-react` version: Maven `0.14.N`, and a plain `0.14.N`
+git tag for Swift Package Manager, which reads the generated root
+`Package.swift`. The architecture is in
+[docs/architecture/NATIVE-PLATFORMS.md](docs/architecture/NATIVE-PLATFORMS.md).
+
 ## Repository layout
 
 ```
@@ -83,6 +101,11 @@ registry/
   product.schema.json   compatibility.json   deprecations.json   roadmap-waves.json
   component-demand.json how many products need each component (counts only)
   components.json       generated component registry (scripts/registry)
+platforms/
+  parity.json     how each web component is covered on native
+  android/        Gradle build: monarch-tokens, monarch-compose, sample, inventory/
+  ios/            Swift package: MonarchTokens, MonarchUI, Sample, inventory/
+Package.swift     generated from platforms/ios/Package.swift, so SwiftPM can resolve the repository
 docs/
   architecture/   adr/   guides/   governance/   roadmap/   ROADMAP.md
 .github/workflows/   ci.yml (verify, SARIF, secret scan, reproducible build)  release.yml (canary + changesets, npm provenance)  conformance.yml (reusable, for apps)
@@ -107,7 +130,7 @@ required files, CSS order and docs-file contract are in
 ## Governance
 
 - Brand: [docs/guides/brand.md](docs/guides/brand.md)
-- Versioning and API stability: [docs/governance/versioning.md](docs/governance/versioning.md)
+- Versioning and API stability: [docs/governance/versioning.md](docs/governance/versioning.md); native: [native API stability](docs/governance/native-api-stability.md), [native release and maintenance](docs/governance/native-release-and-maintenance.md)
 - Component governance, contribution and deprecation: [docs/governance/COMPONENT-GOVERNANCE.md](docs/governance/COMPONENT-GOVERNANCE.md), [CONTRIBUTION-GUIDELINES.md](docs/governance/CONTRIBUTION-GUIDELINES.md), [DEPRECATION-POLICY.md](docs/governance/DEPRECATION-POLICY.md)
 - Component registry (generated): [registry/components.json](registry/components.json); architecture index: [docs/README.md](docs/README.md)
 - Exceptions: [docs/governance/exceptions.md](docs/governance/exceptions.md)

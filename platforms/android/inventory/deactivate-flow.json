@@ -1,0 +1,117 @@
+{
+  "id": "deactivate-flow",
+  "name": null,
+  "title": "DeactivateFlow",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet with rememberModalBottomSheetState(confirmValueChange) to stop dismissal while working, holding a verticalScroll Column of MonarchText, MonarchConsequenceList, MonarchTextField, MonarchInlineNotice and MonarchButtons",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: confirm a reversible pause (a partnership, a tracker, a person) in a sheet that says where to turn it back on, lists what changes meanwhile and can record a reason; the same sheet confirms reactivation.",
+  "whenToUse": "Before pausing something that can be turned back on and keeps its data, when the person should see what stops working meanwhile and may give a reason.",
+  "whenNotToUse": "For something that cannot be undone, such as deleting, use the confirm dialog (an MonarchDialog with a danger MonarchButton) or MonarchTypeToConfirmInput. For a pause with no consequences and no reason, a MonarchDialog with a primary button is enough.",
+  "api": [
+    "ModalBottomSheet(onDismissRequest = { if (!working) open = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { !working })) { … }",
+    "MonarchConsequenceList(items: List<MonarchConsequence>, heading = \"While it is deactivated\")",
+    "MonarchTextField(value = reason, onValueChange = …, label = \"Reason (optional)\", helperText = \"Kept with the change history.\")",
+    "MonarchInlineNotice(message = failure, tone = MonarchTone.Danger)",
+    "MonarchButton(text = \"Deactivate\", onClick = …, modifier = Modifier.fillMaxWidth(), variant = MonarchButtonVariant.Primary, loading = working)"
+  ],
+  "options": [
+    {
+      "name": "deactivated",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The app's state of the thing: false asks to deactivate, true asks to reactivate."
+    },
+    {
+      "name": "reason",
+      "type": "String",
+      "default": "\"\"",
+      "description": "The optional reason, sent with the request only when it is not blank."
+    },
+    {
+      "name": "working",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Passed to the confirm button's loading while the request runs; it also stops the sheet from being dismissed."
+    },
+    {
+      "name": "failure",
+      "type": "String?",
+      "default": "null",
+      "description": "A failed request, shown in a danger MonarchInlineNotice above the buttons; the sheet stays open."
+    }
+  ],
+  "states": [
+    {
+      "name": "deactivate",
+      "description": "Title \"Deactivate …?\", the description that nothing is deleted, the line saying where to reactivate, what changes while it is deactivated, the optional reason and Deactivate."
+    },
+    {
+      "name": "reactivate",
+      "description": "Title \"Reactivate …?\", what changes once it is back, and Reactivate; no reversibility line and no reason."
+    },
+    {
+      "name": "working",
+      "description": "The confirm button shows its progress indicator, Cancel and the reason are disabled, and the sheet cannot be swiped or backed away."
+    },
+    {
+      "name": "failed",
+      "description": "The error in a danger MonarchInlineNotice above the buttons; the sheet stays open so the person can retry or cancel."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component in the theme on the Material 3 sheet surface: the title in the title style, the consequence list with its kind marks, the text field with its helper text, and a full-width primary button over a ghost Cancel. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web DeactivateFlow is a warning-toned ConfirmDialog. On Android a MonarchDialog has room for neither a consequence list nor a text field, so, as on iOS, the recipe uses a MonarchBottomSheet with a primary (not danger) confirm button, since nothing is deleted; Monarch has no warning button variant. The web's mode, subject and reactivateFrom props become the app's own state and strings in the recipe. rememberModalBottomSheetState's confirmValueChange keeps the sheet open while the request runs, where iOS uses interactiveDismissDisabled. The parity map lists confirm-dialog: the dialog is replaced by the sheet for the reason above.",
+  "accessibility": [
+    "The title uses the title style, which MonarchText marks as a heading.",
+    "The reversibility line is plain text, read in order after the description.",
+    "MonarchConsequenceList reads each consequence with its kind, not by its mark's color alone.",
+    "The reason field is a MonarchTextField with its label and helper text.",
+    "Buttons are MonarchButtons with 48dp touch targets and a busy state while working; the sheet cannot be dismissed while the request runs."
+  ],
+  "edgeCases": [
+    "If the request fails, keep the sheet open with the error so the person can retry or cancel.",
+    "Send the reason with the request only when it is not blank.",
+    "Offer reactivation from the place the reversibility line names, so the promise in the line is true."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Deactivate with consequences and a reason",
+      "fixture": "deactivate-flow",
+      "webExample": "Deactivate with consequences and a reason",
+      "template": "MonarchButton(text = action, onClick = { open = true }, variant = MonarchButtonVariant.Warning)\nif (open) {\n    // While the work runs, a swipe, back or a tap outside does not close the sheet.\n    MonarchBottomSheet(onDismissRequest = { open = false }, dismissible = !working) {\n        val sheet = this\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            if (!deactivated) {\n                // The amber warning badge above the title, as on the web.\n                Box(\n                    modifier = Modifier\n                        .size(MonarchTheme.spacing.space8)\n                        .background(MonarchTheme.colors.warningSubtle, MonarchTheme.shapes.full),\n                    contentAlignment = Alignment.Center,\n                ) {\n                    MonarchIcon(imageVector = SampleIcons.Warning, contentDescription = null, tint = MonarchTheme.colors.warningStrong)\n                }\n            }\n            MonarchText(text = \"$action $subject?\", style = MonarchTextStyle.Title)\n            MonarchText(\n                text = if (deactivated) {\n                    \"It starts working again straight away.\"\n                } else {\n                    \"It stops working until you turn it back on. Nothing is deleted.\"\n                },\n                color = MonarchTheme.colors.textMuted,\n            )\n            if (!deactivated) {\n                Row(\n                    modifier = Modifier\n                        .fillMaxWidth()\n                        .background(MonarchTheme.colors.bgSubtle, MonarchTheme.shapes.md)\n                        .padding(MonarchTheme.spacing.space3),\n                    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n                ) {\n                    MonarchIcon(imageVector = SampleIcons.Retry, contentDescription = null, size = MonarchIconSize.Sm, tint = MonarchTheme.colors.textMuted)\n                    MonarchText(text = \"You can reactivate it at any time from $reactivateFrom.\")\n                }\n            }\n            MonarchConsequenceList(\n                items = if (deactivated) {\n                    listOf(MonarchConsequence(MonarchConsequenceKind.Changed, \"Shared reports update again\"))\n                } else {\n                    listOf(\n                        MonarchConsequence(MonarchConsequenceKind.{{consequences.0.kind|pascal}}, {{consequences.0.label}}),\n                        MonarchConsequence(MonarchConsequenceKind.{{consequences.1.kind|pascal}}, {{consequences.1.label}}),\n                        MonarchConsequence(MonarchConsequenceKind.{{consequences.2.kind|pascal}}, {{consequences.2.label}}),\n                    )\n                },\n                heading = if (deactivated) \"Once it is reactivated\" else \"While it is deactivated\",\n            )\n            if (asksReason && !deactivated) {\n                MonarchTextField(\n                    value = reason,\n                    onValueChange = { reason = it },\n                    label = \"Reason (optional)\",\n                    helperText = \"Kept with the change history.\",\n                    enabled = !working,\n                    singleLine = false,\n                )\n            }\n            failure?.let { MonarchInlineNotice(message = it, tone = MonarchTone.Danger) }\n            Row(\n                modifier = Modifier.fillMaxWidth(),\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2, Alignment.End),\n            ) {\n                MonarchButton(\n                    text = \"Cancel\",\n                    onClick = { open = false },\n                    variant = MonarchButtonVariant.Secondary,\n                    enabled = !working,\n                )\n                MonarchButton(\n                    text = action,\n                    onClick = {\n                        working = true\n                        failure = null\n                        scope.launch {\n                            // The app sends the request here, with reason.ifBlank { null }.\n                            // On failure: failure = \"Couldn’t update the partnership. Try again.\"\n                            working = false\n                            deactivated = !deactivated\n                            reason = \"\"\n                            sheet.dismiss()\n                        }\n                    },\n                                    variant = MonarchButtonVariant.Danger,\n                    loading = working,\n                )\n            }\n        }\n    }\n}",
+      "setupTemplate": "val scope = rememberCoroutineScope()\nvar open by remember { mutableStateOf(true) }\nvar deactivated by rememberSaveable { mutableStateOf(false) }\nvar reason by rememberSaveable { mutableStateOf(\"\") }\nvar working by remember { mutableStateOf(false) }\nvar failure by remember { mutableStateOf<String?>(null) }\nval action = if (deactivated) \"Reactivate\" else {{trigger}}\nval asksReason = {{reason}}\nval subject = {{subject}}\nval reactivateFrom = {{reactivateFrom}}",
+      "imports": [
+        "kotlinx.coroutines.launch",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.ui.Alignment",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.foundation.icon.MonarchIcon",
+        "com.rookhq.monarch.foundation.icon.MonarchIconSize"
+      ],
+      "setup": "val scope = rememberCoroutineScope()\nvar open by remember { mutableStateOf(true) }\nvar deactivated by rememberSaveable { mutableStateOf(false) }\nvar reason by rememberSaveable { mutableStateOf(\"\") }\nvar working by remember { mutableStateOf(false) }\nvar failure by remember { mutableStateOf<String?>(null) }\nval action = if (deactivated) \"Reactivate\" else \"Deactivate\"\nval asksReason = true\nval subject = \"this partnership\"\nval reactivateFrom = \"Settings › Partners\"",
+      "code": "MonarchButton(text = action, onClick = { open = true }, variant = MonarchButtonVariant.Warning)\nif (open) {\n    // While the work runs, a swipe, back or a tap outside does not close the sheet.\n    MonarchBottomSheet(onDismissRequest = { open = false }, dismissible = !working) {\n        val sheet = this\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            if (!deactivated) {\n                // The amber warning badge above the title, as on the web.\n                Box(\n                    modifier = Modifier\n                        .size(MonarchTheme.spacing.space8)\n                        .background(MonarchTheme.colors.warningSubtle, MonarchTheme.shapes.full),\n                    contentAlignment = Alignment.Center,\n                ) {\n                    MonarchIcon(imageVector = SampleIcons.Warning, contentDescription = null, tint = MonarchTheme.colors.warningStrong)\n                }\n            }\n            MonarchText(text = \"$action $subject?\", style = MonarchTextStyle.Title)\n            MonarchText(\n                text = if (deactivated) {\n                    \"It starts working again straight away.\"\n                } else {\n                    \"It stops working until you turn it back on. Nothing is deleted.\"\n                },\n                color = MonarchTheme.colors.textMuted,\n            )\n            if (!deactivated) {\n                Row(\n                    modifier = Modifier\n                        .fillMaxWidth()\n                        .background(MonarchTheme.colors.bgSubtle, MonarchTheme.shapes.md)\n                        .padding(MonarchTheme.spacing.space3),\n                    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n                ) {\n                    MonarchIcon(imageVector = SampleIcons.Retry, contentDescription = null, size = MonarchIconSize.Sm, tint = MonarchTheme.colors.textMuted)\n                    MonarchText(text = \"You can reactivate it at any time from $reactivateFrom.\")\n                }\n            }\n            MonarchConsequenceList(\n                items = if (deactivated) {\n                    listOf(MonarchConsequence(MonarchConsequenceKind.Changed, \"Shared reports update again\"))\n                } else {\n                    listOf(\n                        MonarchConsequence(MonarchConsequenceKind.Changed, \"New referrals are not tracked\"),\n                        MonarchConsequence(MonarchConsequenceKind.Changed, \"The partner cannot sign in to the portal\"),\n                        MonarchConsequence(MonarchConsequenceKind.Kept, \"Past referrals and payouts stay in reports\"),\n                    )\n                },\n                heading = if (deactivated) \"Once it is reactivated\" else \"While it is deactivated\",\n            )\n            if (asksReason && !deactivated) {\n                MonarchTextField(\n                    value = reason,\n                    onValueChange = { reason = it },\n                    label = \"Reason (optional)\",\n                    helperText = \"Kept with the change history.\",\n                    enabled = !working,\n                    singleLine = false,\n                )\n            }\n            failure?.let { MonarchInlineNotice(message = it, tone = MonarchTone.Danger) }\n            Row(\n                modifier = Modifier.fillMaxWidth(),\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2, Alignment.End),\n            ) {\n                MonarchButton(\n                    text = \"Cancel\",\n                    onClick = { open = false },\n                    variant = MonarchButtonVariant.Secondary,\n                    enabled = !working,\n                )\n                MonarchButton(\n                    text = action,\n                    onClick = {\n                        working = true\n                        failure = null\n                        scope.launch {\n                            // The app sends the request here, with reason.ifBlank { null }.\n                            // On failure: failure = \"Couldn’t update the partnership. Try again.\"\n                            working = false\n                            deactivated = !deactivated\n                            reason = \"\"\n                            sheet.dismiss()\n                        }\n                    },\n                                    variant = MonarchButtonVariant.Danger,\n                    loading = working,\n                )\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "DeactivateFlow",
+  "dependsOn": [
+    "confirm-dialog",
+    "consequence-list",
+    "sheet",
+    "text-field",
+    "button",
+    "inline-notice"
+  ]
+}

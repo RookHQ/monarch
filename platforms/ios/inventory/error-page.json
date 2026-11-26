@@ -1,0 +1,93 @@
+{
+  "id": "error-page",
+  "name": null,
+  "title": "ErrorPage",
+  "family": "feedback",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchErrorState (ContentUnavailableView) with size .lg in a frame that fills the screen on the canvas background",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a whole screen that failed (not found, forbidden, server error, offline or maintenance) as MonarchErrorState filling the screen.",
+  "whenToUse": "When a whole destination cannot be shown: a deep link to something deleted, a screen the person may not see, the service down for maintenance.",
+  "whenNotToUse": "For a part of a screen that failed, use MonarchErrorState at its normal size or MonarchInlineErrorRetry. For an empty list, use MonarchEmptyState.",
+  "api": [
+    "MonarchErrorState(_ title: String, message: String?, kind: MonarchErrorStateKind, size: .lg, requestID: String?, isRetrying: Bool, actionTitle: String?, onRetry: (() -> Void)?, action: (() -> Void)?).frame(maxWidth: .infinity, maxHeight: .infinity).background(theme.colors.bgCanvas)"
+  ],
+  "options": [
+    {
+      "name": "actionVariant",
+      "type": "MonarchButtonVariant",
+      "default": ".ghost",
+      "description": "How the second button is drawn."
+    },
+    {
+      "name": "secondaryActionTitle / secondaryAction",
+      "type": "String? / (() -> Void)?",
+      "default": "nil",
+      "description": "A third button, such as Go back."
+    }
+  ],
+  "states": [
+    {
+      "name": "not found and forbidden",
+      "description": "kind .notFound or .forbidden: no retry button; offer a way out with actionTitle and action."
+    },
+    {
+      "name": "server, offline and maintenance",
+      "description": "kind .server, .offline or .maintenance: a retry button with onRetry; isRetrying makes it busy."
+    },
+    {
+      "name": "with a request id",
+      "description": "requestID shows the id so the person can quote it to support."
+    }
+  ],
+  "appearance": "The large empty-state layout of MonarchErrorState centred on the canvas background, with the kind's icon, the title, the message and the buttons.",
+  "platformNotes": "The web ErrorPage is a component with a large faint numeral (404, 403, 500), an optional brand above, a support slot, a copy button for the request id and a retry when the browser comes back online. On iOS a destination that fails is a screen inside the app's navigation, so the recipe fills it with MonarchErrorState; the numeral is left out because it means little in an app, and the title says what happened. To retry when the network returns, watch NWPathMonitor in the app and call the same retry. Android shares the recipe approach.",
+  "accessibility": [
+    "The title has the header trait and the icon is hidden from VoiceOver (MonarchErrorState).",
+    "The retry and action buttons are standard buttons with 44-point touch targets; while retrying, the retry button reads \"Retrying\".",
+    "To have VoiceOver start at the title after navigation, post AccessibilityNotification.ScreenChanged when the screen appears."
+  ],
+  "edgeCases": [
+    "Keep the message to what the person can do next; do not show raw error text.",
+    "In a sheet, apply the same frame so the state is centred in the sheet."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Not found, inside the shell",
+      "fixture": "error-page",
+      "webExample": "Not found, inside the shell",
+      "template": "VStack(spacing: -theme.spacing.space12) {\n    Text(\"404\")\n        .font(.system(size: 120, weight: .bold))\n        .monospacedDigit()\n        .foregroundStyle(theme.colors.textDefault.opacity(0.06))\n        .accessibilityHidden(true)\n    MonarchErrorState(\n        {{title}},\n        message: {{description}},\n        kind: {{kind|case}},\n        size: .lg,\n        actionTitle: {{primaryAction}},\n        actionVariant: .primary,\n        secondaryActionTitle: {{secondaryAction}},\n        action: {},\n        secondaryAction: {}\n    )\n}",
+      "code": "VStack(spacing: -theme.spacing.space12) {\n    Text(\"404\")\n        .font(.system(size: 120, weight: .bold))\n        .monospacedDigit()\n        .foregroundStyle(theme.colors.textDefault.opacity(0.06))\n        .accessibilityHidden(true)\n    MonarchErrorState(\n        \"Page not found\",\n        message: \"The link may be broken, or the page may have moved.\",\n        kind: .notFound,\n        size: .lg,\n        actionTitle: \"Go to dashboard\",\n        actionVariant: .primary,\n        secondaryActionTitle: \"Go back\",\n        action: {},\n        secondaryAction: {}\n    )\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme",
+      "setup": "@Environment(\\.monarchTheme) private var theme"
+    },
+    {
+      "title": "Maintenance with retry",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isRetrying = false",
+      "code": "MonarchErrorState(\n    \"We're doing maintenance\",\n    message: \"The service is back in about 20 minutes.\",\n    kind: .maintenance,\n    size: .lg,\n    isRetrying: isRetrying,\n    onRetry: { isRetrying = true }\n)\n.frame(maxWidth: .infinity, maxHeight: .infinity)\n.background(theme.colors.bgCanvas)"
+    }
+  ],
+  "webEquivalent": "ErrorPage",
+  "dependsOn": [
+    "error-state",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "code"
+      ],
+      "reason": "Decision: the large faint 404 numeral behind the icon is web decoration and is not drawn; the icon, title, description and both actions are the web's.",
+      "convention": "none: decoration"
+    }
+  ]
+}

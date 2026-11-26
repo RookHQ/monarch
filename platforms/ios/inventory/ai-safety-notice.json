@@ -1,0 +1,130 @@
+{
+  "id": "ai-safety-notice",
+  "name": "MonarchAiSafetyNotice",
+  "title": "AiSafetyNotice",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of Text with MonarchBanner's tokens and colours, MonarchButton for Edit prompt, Link with MonarchLinkStyle for the guidelines",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Says, calmly and specifically, that a safety system blocked a request, changed an answer or removed parts of it, with an optional reason, next steps, an Edit prompt button and a link to the content guidelines.",
+  "whenToUse": "In place of an answer a safety system blocked (blocked), or above an answer that was changed (modified) or had parts removed (filtered).",
+  "whenNotToUse": "For technical failures such as timeouts or rate limits use MonarchAiErrorMessage. For a general reminder that AI can be wrong use MonarchAiDisclaimer.",
+  "api": [
+    "MonarchAiSafetyNotice.init(_ kind: MonarchAiSafetyNoticeKind, title: String? = nil, message: String? = nil, reason: String? = nil, nextSteps: String? = nil, learnMoreURL: URL? = nil, labels: MonarchAiSafetyNoticeLabels = MonarchAiSafetyNoticeLabels(), onEditPrompt: (@MainActor () -> Void)? = nil)",
+    "enum MonarchAiSafetyNoticeKind: String { case blocked, modified, filtered }",
+    "MonarchAiSafetyNoticeLabels.init(title: (@Sendable (_ kind: MonarchAiSafetyNoticeKind) -> String)? = nil, message: (@Sendable (_ kind: MonarchAiSafetyNoticeKind) -> String)? = nil, reason: String? = nil, editPrompt: String? = nil, learnMore: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "kind",
+      "type": "MonarchAiSafetyNoticeKind",
+      "default": "required",
+      "description": "What the safety system did. Sets the tone, the symbol and the default title and explanation."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the title of the kind for this notice."
+    },
+    {
+      "name": "message",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the explanation of the kind for this notice."
+    },
+    {
+      "name": "reason",
+      "type": "String?",
+      "default": "nil",
+      "description": "Why, in plain words, shown after a bold \"Reason:\" label. Empty text is not shown."
+    },
+    {
+      "name": "nextSteps",
+      "type": "String?",
+      "default": "nil",
+      "description": "What the person can do next, as a sentence."
+    },
+    {
+      "name": "learnMoreURL",
+      "type": "URL?",
+      "default": "nil",
+      "description": "Adds a \"Content guidelines\" link. Only http, https and mailto links are shown."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiSafetyNoticeLabels",
+      "default": "MonarchAiSafetyNoticeLabels()",
+      "description": "Replaces the built-in titles, explanations, \"Reason:\", \"Edit prompt\" and \"Content guidelines\"."
+    },
+    {
+      "name": "onEditPrompt",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds an \"Edit prompt\" button, usually to put the prompt back in the composer."
+    }
+  ],
+  "states": [
+    {
+      "name": "blocked",
+      "description": "Warning colours and a lock symbol: \"This request wasn’t answered\"."
+    },
+    {
+      "name": "modified",
+      "description": "Info colours and a pencil symbol: \"This response was adjusted\"."
+    },
+    {
+      "name": "filtered",
+      "description": "Info colours and a filter symbol: \"Some content was hidden\"."
+    },
+    {
+      "name": "static",
+      "description": "Without onEditPrompt and learnMoreURL the notice has no actions."
+    }
+  ],
+  "appearance": "Drawn like MonarchBanner: the tone's subtle background, the tone's border and the tone's strong colour on the symbol, with default text. The high-contrast themes resolve the same roles to stronger colours.",
+  "platformNotes": "The web takes rich content for the reason and next steps; iOS takes plain strings, and an app that needs more places its own views after the notice. The link opens through the environment's openURL action (the browser by default) instead of the same tab. The web uses the accent edge only through logical CSS; iOS mirrors the whole layout in right to left. Android uses the same names.",
+  "accessibility": [
+    "The title, the explanation, the reason with its \"Reason:\" label and the next steps are one element, read in that order.",
+    "The symbol is decorative; each kind has its own title, so the kind does not depend on colour or on the symbol.",
+    "\"Edit prompt\" is a button and the guidelines link keeps the link trait and is read with \"opens in the browser\"; both are separate elements with 44-point touch targets.",
+    "The notice does not announce itself; place it where the answer would have been."
+  ],
+  "edgeCases": [
+    "A reason or next steps that are empty or only spaces are not shown.",
+    "A javascript:, file: or custom-scheme URL is dropped and no link is shown.",
+    "The actions sit on one line when they fit and stack when they do not, at large text sizes."
+  ],
+  "tests": [
+    "MonarchAiSafetyNoticeTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Blocked request with next steps",
+      "fixture": "ai-safety-notice",
+      "webExample": "Blocked request with next steps",
+      "template": "MonarchAiSafetyNotice(\n    {{kind|case}},\n    reason: {{reason}},\n    nextSteps: {{nextSteps}},\n    learnMoreURL: URL(string: {{learnMoreHref}}),\n    onEditPrompt: {}\n)",
+      "code": "MonarchAiSafetyNotice(\n    .blocked,\n    reason: \"The request asked for someone’s home address.\",\n    nextSteps: \"Ask about public information instead, such as a company’s office location.\",\n    learnMoreURL: URL(string: \"https://example.com/guidelines\"),\n    onEditPrompt: {}\n)"
+    },
+    {
+      "title": "Adjusted answer",
+      "code": "MonarchAiSafetyNotice(.modified, reason: \"Medical dosage details were removed.\")"
+    }
+  ],
+  "webEquivalent": "AiSafetyNotice",
+  "dependsOn": [
+    "alert",
+    "link",
+    "button"
+  ],
+  "icons": {
+    "blocked": "LockGlyph",
+    "editPrompt": "PencilGlyph"
+  }
+}

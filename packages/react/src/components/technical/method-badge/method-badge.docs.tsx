@@ -1,5 +1,7 @@
 import { MethodBadge } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './method-badge.fixture.json';
 
 const endpoints = [
   { method: 'GET', path: '/v1/projects' },
@@ -111,7 +113,7 @@ export default {
           title: 'Every method',
           render: () => (
             <>
-              {['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'].map((m) => (
+              {fixture.data.methods.map((m) => (
                 <MethodBadge key={m} method={m} />
               ))}
             </>

@@ -1,0 +1,160 @@
+{
+  "id": "subscriptions-table",
+  "name": "MonarchSubscriptionsTable",
+  "title": "SubscriptionsTable",
+  "family": "billing",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of rows (androidx.compose.foundation.clickable, MonarchText, MonarchStatusBadge, MonarchMoney, androidx.compose.material3.HorizontalDivider), MonarchEmptyState when empty",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A list of recurring agreements: name and plan, customer, status, price per billing period, the monthly figure and the next renewal, each amount in its own currency.",
+  "whenToUse": "To show a customer's or a workspace's subscriptions, contracts or licenses, with their status and next renewal, on a phone or a tablet.",
+  "whenNotToUse": "For upcoming renewals with owners and actions, use MonarchRenewalsPanel. For what unused items cost, use MonarchSavingsPanel. It does not sort, filter or add up; do that in the app.",
+  "api": [
+    "@Composable fun MonarchSubscriptionsTable(subscriptions: List<MonarchSubscription>, modifier: Modifier = Modifier, registry: MonarchStatusRegistry? = null, locale: Locale? = null, showCustomer: Boolean = true, showMonthly: Boolean? = null, onSelect: ((MonarchSubscription) -> Unit)? = null, labels: MonarchSubscriptionsTableLabels = MonarchSubscriptionsTableLabels())",
+    "object MonarchSubscriptionsTableDefaults { @Composable fun statuses(): MonarchStatusRegistry }",
+    "class MonarchSubscription(id: String, name: String, status: String, amount: BigDecimal?, currencyCode: String, plan: String? = null, quantity: Int = 1, customer: String? = null, interval: MonarchSubscriptionInterval? = MonarchSubscriptionInterval.Month, intervalCount: Int = 1, monthly: MonarchSubscriptionMonthly? = null, renewalDateMillis: Long? = null, renewsAutomatically: Boolean = true, cancelsAtMillis: Long? = null, changesAtMillis: Long? = null)",
+    "enum class MonarchSubscriptionInterval { Day, Week, Month, Year }",
+    "sealed interface MonarchSubscriptionMonthly { class Amount(amount: BigDecimal, currencyCode: String); data object NotConverted }",
+    "class MonarchSubscriptionsTableLabels(caption: String? = null, subscription: String? = null, customer: String? = null, status: String? = null, price: String? = null, monthly: String? = null, renewal: String? = null, customPrice: String? = null, quantity: ((Int) -> String)? = null, interval: ((MonarchSubscriptionInterval?, Int) -> String)? = null, priceSuffix: ((String) -> String)? = null, spokenPrice: ((String, String) -> String)? = null, spokenOneTimePrice: ((String) -> String)? = null, cancels: ((String) -> String)? = null, changes: ((String) -> String)? = null, renews: ((String) -> String)? = null, ends: ((String) -> String)? = null, evergreen: String? = null, notConverted: String? = null, notConvertedHint: String? = null, noValue: String? = null, emptyTitle: String? = null, emptyMessage: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "subscriptions",
+      "type": "List<MonarchSubscription>",
+      "default": "required",
+      "description": "The rows, in display order. Empty shows the empty state."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the table."
+    },
+    {
+      "name": "registry",
+      "type": "MonarchStatusRegistry?",
+      "default": "null",
+      "description": "More statuses, or replacements for the built-in draft, trial, active, past_due, paused, cancelled and expired."
+    },
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "null",
+      "description": "The locale of amounts and dates. null uses the first locale of the configuration."
+    },
+    {
+      "name": "showCustomer",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the customer. Turn it off on a single customer's screen."
+    },
+    {
+      "name": "showMonthly",
+      "type": "Boolean?",
+      "default": "null",
+      "description": "Shows the monthly figure; null shows it when any subscription has one."
+    },
+    {
+      "name": "onSelect",
+      "type": "((MonarchSubscription) -> Unit)?",
+      "default": "null",
+      "description": "Makes each row a button called with its subscription, for example to open it. Replaces the web href and renderLink."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSubscriptionsTableLabels",
+      "default": "MonarchSubscriptionsTableLabels()",
+      "description": "Replacements for every built-in string, including the period words and the spoken price."
+    }
+  ],
+  "states": [
+    {
+      "name": "compact",
+      "description": "Below 640dp each row has the name, the plan line and customer · renewal at the start, and the status badge, the price with its period and the monthly figure at the end."
+    },
+    {
+      "name": "wide",
+      "description": "From 640dp the rows are a table with Subscription, Customer, Status, Price, Monthly and Renewal columns under muted headings."
+    },
+    {
+      "name": "selectable",
+      "description": "With onSelect each row is a button at least 48dp tall with a focus ring."
+    },
+    {
+      "name": "not converted",
+      "description": "A live (active or past due) subscription whose monthly figure could not be converted shows \"Not converted\"; TalkBack also reads the explanation."
+    },
+    {
+      "name": "evergreen",
+      "description": "No renewal date shows \"Evergreen\"; a subscription that does not renew shows \"Ends …\"."
+    },
+    {
+      "name": "empty",
+      "description": "No subscriptions: a small MonarchEmptyState, \"No subscriptions\"."
+    }
+  ],
+  "appearance": "Rows on the surrounding surface separated by subtle dividers, names in the default text color and secondary lines in the muted color; each status badge carries its tone and its words. The same in light, dark and both high-contrast themes.",
+  "platformNotes": "The web SubscriptionsTable is an HTML table with container queries and links. On Android it is a Column of rows at compact width and a table with weighted columns from 640dp, rather than a LazyColumn, so it can sit inside the screen's verticalScroll with other content; this matches iOS. Links (href, renderLink) become onSelect, which the app uses for navigation. Amounts are BigDecimal in major units; minorUnits is not offered. Dates are epoch milliseconds (UTC) written with android.icu.text.DateFormat; there is no timeZone parameter. The relative-time dependency of the plan is not used: renewal dates are absolute, as on the web. The caption is the table's spoken name only (labels.caption), and the not-converted hint, a hover title on the web, is read by TalkBack. The default statuses are MonarchSubscriptionsTableDefaults.statuses(), with localised labels. iOS ships the same MonarchSubscriptionsTable.",
+  "accessibility": [
+    "Each row is one TalkBack element read in words: name, plan line, customer, status, price \"per month\", monthly figure and renewal.",
+    "The table is a traversal group named \"Subscriptions\" with collection info; each row carries its row index.",
+    "With onSelect each row has the button role, a 48dp minimum height and a focus ring.",
+    "The column headings of the wide table and the empty-cell dashes are hidden from TalkBack.",
+    "Status is always written in words in its badge, not only by color.",
+    "Text wraps at font scale 2.0; right to left, the name and the price mirror."
+  ],
+  "edgeCases": [
+    "Amounts are never converted or added; each stays in its own currency.",
+    "A quantity of 1 is not written; 3 is written \"3 ×\" before the plan.",
+    "Every 3 months is written \"quarter\".",
+    "A missing price or monthly figure is a dash read as \"No value\".",
+    "An unknown status key is shown in the neutral tone with a label made from the key (\"on_hold\" gives \"On hold\")."
+  ],
+  "tests": [
+    "MonarchSubscriptionsTableTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Across customers",
+      "fixture": "subscriptions-table",
+      "webExample": "Across customers",
+      "template": "MonarchSubscriptionsTable(\n    subscriptions = listOf(\n        MonarchSubscription(\n            id = \"s1\",\n            name = {{subscriptions.0.name}},\n            status = {{subscriptions.0.status}},\n            amount = BigDecimal({{subscriptions.0.amount}}).movePointLeft(2),\n            currencyCode = {{subscriptions.0.currency}},\n            plan = {{subscriptions.0.plan}},\n            quantity = {{subscriptions.0.quantity}},\n            customer = {{subscriptions.0.customer}},\n            interval = MonarchSubscriptionInterval.{{subscriptions.0.interval|pascal}},\n            monthly = MonarchSubscriptionMonthly.Amount(BigDecimal({{subscriptions.0.monthly.amount}}).movePointLeft(2), {{subscriptions.0.monthly.currency}}),\n            renewalDateMillis = {{subscriptions.0.renewalDate|millis}},\n        ),\n        MonarchSubscription(\n            id = \"s2\",\n            name = {{subscriptions.1.name}},\n            status = {{subscriptions.1.status}},\n            amount = BigDecimal({{subscriptions.1.amount}}).movePointLeft(2),\n            currencyCode = {{subscriptions.1.currency}},\n            plan = {{subscriptions.1.plan}},\n            customer = {{subscriptions.1.customer}},\n            interval = MonarchSubscriptionInterval.{{subscriptions.1.interval|pascal}},\n            monthly = MonarchSubscriptionMonthly.NotConverted,\n            renewalDateMillis = {{subscriptions.1.renewalDate|millis}},\n            renewsAutomatically = {{subscriptions.1.autoRenew}},\n        ),\n        MonarchSubscription(\n            id = \"s3\",\n            name = {{subscriptions.2.name}},\n            status = {{subscriptions.2.status}},\n            amount = BigDecimal({{subscriptions.2.amount}}).movePointLeft(2),\n            currencyCode = {{subscriptions.2.currency}},\n            customer = {{subscriptions.2.customer}},\n            interval = MonarchSubscriptionInterval.{{subscriptions.2.interval|pascal}},\n            intervalCount = {{subscriptions.2.intervalCount}},\n            monthly = MonarchSubscriptionMonthly.Amount(BigDecimal({{subscriptions.2.monthly.amount}}).movePointLeft(2), {{subscriptions.2.monthly.currency}}),\n            cancelsAtMillis = {{subscriptions.2.cancelAt|millis}},\n        ),\n    ),\n    locale = Locale.forLanguageTag({{locale}}),\n    // The web table names the customer and the renewal under the plan, not in columns of their own.\n    showMonthly = false,\n    renewalUnderName = true,\n)",
+      "imports": [
+        "java.math.BigDecimal",
+        "java.util.Locale"
+      ],
+      "code": "MonarchSubscriptionsTable(\n    subscriptions = listOf(\n        MonarchSubscription(\n            id = \"s1\",\n            name = \"Support plan\",\n            status = \"active\",\n            amount = BigDecimal(12_000).movePointLeft(2),\n            currencyCode = \"GBP\",\n            plan = \"Standard\",\n            quantity = 3,\n            customer = \"Northwind Ltd\",\n            interval = MonarchSubscriptionInterval.Month,\n            monthly = MonarchSubscriptionMonthly.Amount(BigDecimal(12_000).movePointLeft(2), \"GBP\"),\n            renewalDateMillis = 1_799_971_200_000L,\n        ),\n        MonarchSubscription(\n            id = \"s2\",\n            name = \"Hosting\",\n            status = \"past_due\",\n            amount = BigDecimal(90_000).movePointLeft(2),\n            currencyCode = \"EUR\",\n            plan = \"Annual hosting\",\n            customer = \"Harbor Labs\",\n            interval = MonarchSubscriptionInterval.Year,\n            monthly = MonarchSubscriptionMonthly.NotConverted,\n            renewalDateMillis = 1_803_859_200_000L,\n            renewsAutomatically = false,\n        ),\n        MonarchSubscription(\n            id = \"s3\",\n            name = \"Workshop series\",\n            status = \"trial\",\n            amount = BigDecimal(45_000).movePointLeft(2),\n            currencyCode = \"GBP\",\n            customer = \"Acme Studio\",\n            interval = MonarchSubscriptionInterval.Month,\n            intervalCount = 3,\n            monthly = MonarchSubscriptionMonthly.Amount(BigDecimal(15_000).movePointLeft(2), \"GBP\"),\n            cancelsAtMillis = 1_801_440_000_000L,\n        ),\n    ),\n    locale = Locale.forLanguageTag(\"en-GB\"),\n    // The web table names the customer and the renewal under the plan, not in columns of their own.\n    showMonthly = false,\n    renewalUnderName = true,\n)"
+    },
+    {
+      "title": "A product status added to the defaults",
+      "imports": [
+        "java.math.BigDecimal"
+      ],
+      "code": "MonarchSubscriptionsTable(\n    subscriptions = listOf(\n        MonarchSubscription(id = \"a\", name = \"Archive\", status = \"on_hold\", amount = BigDecimal(\"9.00\"), currencyCode = \"USD\"),\n    ),\n    registry = MonarchStatusRegistry(mapOf(\"on_hold\" to MonarchStatusDefinition(\"On hold\", MonarchTone.Warning))),\n    showCustomer = false,\n)"
+    }
+  ],
+  "webEquivalent": "SubscriptionsTable",
+  "dependsOn": [
+    "money",
+    "status-badge",
+    "relative-time"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "android",
+      "paths": [
+        "timeZone"
+      ],
+      "reason": "The panel writes its dates as plain calendar days in UTC, which is the fixture time zone, so no time zone value is passed; a date at midnight UTC never moves to the previous day.",
+      "convention": "day-granular dates are written in UTC, so no zone parameter is needed"
+    }
+  ]
+}

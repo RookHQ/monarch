@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import {
+  componentPageHydrated,
   componentRoutes,
+  nativeGuideRoutes,
   mountPreviews,
   pageUrl,
   runAxe,
@@ -33,6 +35,17 @@ const PAGES = [
   '/products',
   '/governance',
   '/marketing',
+  '/android',
+  '/android/get-started',
+  '/android/guide',
+  '/android/components',
+  '/android/releases',
+  '/ios',
+  '/ios/get-started',
+  '/ios/guide',
+  '/ios/components',
+  '/ios/releases',
+  ...nativeGuideRoutes(),
   '/__gallery',
   '/__marketing',
 ];
@@ -58,8 +71,12 @@ for (const theme of ['light', 'dark'] as const) {
         await expect(page.locator('main')).toBeVisible({ timeout: heavy ? 45_000 : 5_000 });
         // Pages are lazy chunks: wait for the page itself, not the shell.
         await expect(page.locator('h1').first()).toBeAttached();
-        // Examples mount near the viewport; scan all of them.
-        if (route.startsWith('/components/')) await mountPreviews(page);
+        // The platform tabs replace their prerendered copy once the page has hydrated, and
+        // examples mount near the viewport: scan the page once both are done.
+        if (route.startsWith('/components/')) {
+          await componentPageHydrated(page);
+          await mountPreviews(page);
+        }
         await settle(page);
         const violations = await runAxe(page, route === '/colours' ? ['.docs-swatch__chip'] : []);
         expect(
@@ -135,6 +152,7 @@ test('search: ⌘K / Ctrl K opens the palette and a result navigates', async ({ 
 test('component page: Show code reveals the extracted source', async ({ page }) => {
   await setAppearance(page, 'light');
   await page.goto(pageUrl('/components/button'));
+  await componentPageHydrated(page);
   const show = page.getByRole('button', { name: 'Show code' }).first();
   await show.click();
   await expect(page.getByRole('button', { name: 'Hide code' }).first()).toHaveAttribute(
@@ -144,6 +162,63 @@ test('component page: Show code reveals the extracted source', async ({ page }) 
   await expect(page.getByRole('region', { name: 'Code: Variants' })).toContainText(
     "import { Button } from '@rookcom/monarch-react';",
   );
+});
+
+test('component page: Web, iOS and Android tabs', async ({ page }) => {
+  await setAppearance(page, 'light');
+  // The prerendered HTML has every panel, with Web selected.
+  const html = await (await page.request.get(pageUrl('/components/button'))).text();
+  expect(html).toContain('id="panel-ios"');
+  expect(html).toContain('id="panel-android"');
+  expect(html).toMatch(
+    /id="tab-web"[^>]*aria-selected="true"|aria-selected="true"[^>]*id="tab-web"/,
+  );
+
+  await page.goto(pageUrl('/components/button'));
+  await componentPageHydrated(page);
+  const tabs = page.getByRole('tablist', { name: 'Platform' });
+  const web = tabs.getByRole('tab', { name: 'Web' });
+  const ios = tabs.getByRole('tab', { name: 'iOS' });
+  const android = tabs.getByRole('tab', { name: 'Android' });
+  await expect(web).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#panel-web')).toBeVisible();
+  await expect(page.locator('#panel-ios')).toBeHidden();
+
+  // Roving focus with automatic activation: arrows move and select, and wrap.
+  await web.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(ios).toBeFocused();
+  await expect(ios).toHaveAttribute('aria-selected', 'true');
+  await expect(ios).toHaveAttribute('tabindex', '0');
+  await expect(web).toHaveAttribute('tabindex', '-1');
+  await expect(page.locator('#panel-ios')).toBeVisible();
+  await expect(page.locator('#panel-web')).toBeHidden();
+  expect(new URL(page.url()).hash).toBe('#ios');
+  await page.keyboard.press('End');
+  await expect(android).toBeFocused();
+  await expect(page.locator('#panel-android')).toBeVisible();
+  await page.keyboard.press('ArrowRight');
+  await expect(web).toBeFocused();
+  await expect(page.locator('#panel-web')).toBeVisible();
+  expect(new URL(page.url()).hash).toBe('');
+  await page.keyboard.press('ArrowLeft');
+  await expect(android).toBeFocused();
+  await page.keyboard.press('Home');
+  await expect(web).toBeFocused();
+
+  // "On this page" lists only the sections of the selected tab.
+  await android.click();
+  const toc = page.getByRole('navigation', { name: 'On this page' });
+  if (await toc.isVisible()) {
+    await expect(toc.getByRole('link', { name: 'Android', exact: true })).toBeVisible();
+    await expect(toc.getByRole('link', { name: 'Examples', exact: true })).toHaveCount(0);
+  }
+
+  // A deep link opens its tab, as the existing #ios and #android links expect.
+  await page.goto(`${pageUrl('/components/button')}#ios`);
+  await expect(page.getByRole('tab', { name: 'iOS' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#panel-ios')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'iOS' })).toBeInViewport();
 });
 
 test('keyboard: skip link, nav and page title', async ({ page, browserName }) => {
@@ -229,6 +304,7 @@ for (const theme of ['light', 'dark'] as const) {
     await setAppearance(page, theme);
     await page.goto(pageUrl('/components/toast'));
     await waitForFonts(page);
+    await componentPageHydrated(page);
     const trigger = page.getByRole('button', { name: 'Archive ticket' }).first();
     // Keyboard activation: WebKit does not focus buttons on click.
     await trigger.focus();

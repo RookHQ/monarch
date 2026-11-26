@@ -1,38 +1,34 @@
 import { useEffect, useState } from 'react';
 import { VersionHistoryPanel, type VersionHistoryItem } from '@rookcom/monarch-react/editor';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './version-history-panel.fixture.json';
 
 const NOW = Date.now();
 
-const CONTENT: Record<string, string[]> = {
-  v4: [
-    '# Onboarding guide',
-    'Welcome to the team.',
-    'Your first week: meet your buddy, set up your laptop, read the handbook.',
-    'Ask questions in the help channel.',
-    'Book a check-in with your manager on Friday.',
-  ],
-  v3: [
-    '# Onboarding guide',
-    'Welcome to the team.',
-    'Your first week: meet your buddy and set up your laptop.',
-    'Ask questions in the help channel.',
-  ],
-  v2: ['# Onboarding guide', 'Welcome!', 'Your first week: set up your laptop.'],
-  v1: ['# Onboarding guide', 'Draft.'],
+const data = fixture.data as unknown as {
+  title: string;
+  versions: {
+    id: string;
+    ageSeconds: number;
+    author: string;
+    note?: string;
+    automatic?: boolean;
+    lines: string[];
+  }[];
 };
 
-const VERSIONS: VersionHistoryItem[] = [
-  { id: 'v4', createdAt: NOW - 5 * 60_000, author: { name: 'Robin Park' } },
-  { id: 'v3', createdAt: NOW - 3 * 3_600_000, author: { name: 'Alex Chen' }, note: 'Reviewed' },
-  { id: 'v2', createdAt: NOW - 26 * 3_600_000, author: { name: 'Robin Park' }, automatic: true },
-  {
-    id: 'v1',
-    createdAt: NOW - 6 * 86_400_000,
-    author: { name: 'Jordan Diaz' },
-    note: 'First draft',
-  },
-];
+const CONTENT: Record<string, string[]> = Object.fromEntries(
+  data.versions.map((v) => [v.id, v.lines]),
+);
+
+const VERSIONS: VersionHistoryItem[] = data.versions.map((v) => ({
+  id: v.id,
+  createdAt: NOW - v.ageSeconds * 1000,
+  author: { name: v.author },
+  ...(v.note !== undefined && { note: v.note }),
+  ...(v.automatic !== undefined && { automatic: v.automatic }),
+}));
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 

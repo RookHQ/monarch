@@ -6,6 +6,7 @@ import { appearanceScript } from '@rookcom/monarch-tokens/appearance';
 import { productScript } from './src/lib/appearance.js';
 import { monarchDocs } from './plugins/monarch-docs.js';
 import { guides } from './plugins/guides.js';
+import { monarchNative } from './plugins/native.js';
 
 /**
  * Injects Monarch's pre-paint appearance script, exactly as an app would, plus
@@ -161,7 +162,8 @@ export default defineConfig({
   plugins: [
     entryStyles(),
     monarchDocs({ repoRoot }),
-    guides(),
+    monarchNative({ repoRoot }),
+    guides({ repoRoot }),
     react() as unknown as PluginOption,
     appearance(),
     fonts(),

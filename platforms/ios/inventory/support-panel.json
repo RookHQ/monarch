@@ -1,0 +1,88 @@
+{
+  "id": "support-panel",
+  "name": null,
+  "title": "SupportPanel",
+  "family": "overlays",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:) with presentationDetents([.medium, .large]) holding a NavigationStack with a segmented Picker for Chat and Help; Chat is a ScrollView of MonarchMessageRow with MonarchMessageComposer in safeAreaInset(edge: .bottom); Help is a List with Sections of article Buttons, Link rows and MonarchStatusDot, with searchable(text:prompt:)",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: help and support in a sheet, with a chat with support, help articles, contact options and the service status.",
+  "whenToUse": "Behind a Help & support button or menu item, in products that offer in-app support chat or help articles.",
+  "whenNotToUse": "For a full help site use the help-center-home recipe in a navigation stack. For one message to the team use a mailto Link or ShareLink. For the assistant of the product use MonarchAiConversation.",
+  "api": [
+    ".sheet(isPresented: $showsSupport) { NavigationStack { Picker(\"Section\", selection:) { … }.pickerStyle(.segmented); chat or help }.navigationTitle(\"Help & support\") }.presentationDetents([.medium, .large])",
+    "Chat: ScrollView { LazyVStack { MonarchMessageRow(_:time:now:content:) } }.safeAreaInset(edge: .bottom) { MonarchMessageComposer(_:text:showsEmojiButton:onSend:) }",
+    "Help: List { Section(\"Popular articles\") { Button or NavigationLink }; Section(\"Contact us\") { Link(destination:) { Label(_:systemImage:) } }; Section(\"Status\") { MonarchStatusDot(_:tone:); Link(_:destination:).buttonStyle(.monarchLink(.standalone, isExternal: true)) } }.searchable(text:prompt:)",
+    "MonarchSearchResults(groups:query:onSelect:) in place of the article list while a search is typed"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "chat",
+      "description": "The support conversation with the composer pinned above the keyboard."
+    },
+    {
+      "name": "help",
+      "description": "Popular articles, contact options and the status, searchable."
+    },
+    {
+      "name": "searching",
+      "description": "Show MonarchSearchResults for the query in place of the sections."
+    },
+    {
+      "name": "connecting or offline",
+      "description": "Show MonarchLoadingState while the chat client connects and MonarchErrorState with a retry when it fails; disable the composer with disabledReason."
+    },
+    {
+      "name": "status",
+      "description": "MonarchStatusDot with a tone and a word, such as \"All systems normal\" (success) or \"Degraded performance\" (warning)."
+    }
+  ],
+  "appearance": "The system sheet with the theme's surface, a segmented control, Monarch message rows and composer, the system list with Monarch links and a status dot in its tone. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web SupportPanel is a side sheet beside the app rail with Chat and Help tabs, driven by the product's Support Chat API client, and it filters link schemes. On iOS it is a recipe: the system sheet with medium and large detents and a navigation bar, a segmented Picker for the two tabs, and the app's own chat client feeding MonarchMessageRow and MonarchMessageComposer. Links open with the system (mailto:, tel:, https:) through Link, so no scheme filtering is needed. The web's connect timeout and own chat surface are the app's concern. Android composes the same recipe in a modal bottom sheet.",
+  "accessibility": [
+    "The sheet has a navigation title, read as a header, and a Done button.",
+    "The segmented Picker is read as a tab-like control with its selected value.",
+    "Each message is read as its author, time and text (MonarchMessageRow); new messages should be announced by the app.",
+    "Contact options are links with a label and icon; the status is a dot with a word, not only a colour.",
+    "Every control is at least 44 points."
+  ],
+  "edgeCases": [
+    "Keep the conversation in the app's model so it survives closing the sheet, as the web keeps it.",
+    "A large detent keeps the composer above the keyboard; the medium detent suits the Help tab.",
+    "Hide the Chat tab when the product has no support chat; the Help tab stands alone."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Chat, help articles, contacts and status",
+      "fixture": "support-panel",
+      "webExample": "Chat, help articles, contacts and status",
+      "template": "NavigationStack {\n    VStack(spacing: 0) {\n        Text(\"Chat with the support team.\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textMuted)\n            .frame(maxWidth: .infinity, alignment: .leading)\n            .padding(.horizontal, theme.spacing.space4)\n        Picker(\"Section\", selection: $showsChat) {\n            Text(\"Chat\").tag(true)\n            Text(\"Help\").tag(false)\n        }\n        .pickerStyle(.segmented)\n        .padding(theme.spacing.space4)\n        if showsChat {\n            Text({{chat.expectedReply}})\n                .monarchTextStyle(.caption)\n                .foregroundStyle(theme.colors.textMuted)\n                .frame(maxWidth: .infinity, alignment: .leading)\n                .padding(.horizontal, theme.spacing.space4)\n            ScrollView {\n                LazyVStack(alignment: .leading, spacing: theme.spacing.space3) {\n                    VStack(spacing: theme.spacing.space3) {\n                        Text(\"09:58 UTC\")\n                        Text({{chat.system}})\n                    }\n                    .monarchTextStyle(.caption)\n                    .foregroundStyle(theme.colors.textMuted)\n                    .frame(maxWidth: .infinity)\n                    ForEach(messages, id: \\.self) { text in\n                        MonarchMessageRow(MonarchMessageRowAuthor({{chat.agent}}), time: now, now: now, timeStyle: .clock) {\n                            Text(text)\n                        }\n                    }\n                }\n                .padding(.horizontal, theme.spacing.space4)\n            }\n            .safeAreaInset(edge: .bottom) {\n                VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                    MonarchMessageComposer(\n                        \"Message support\",\n                        text: $draft,\n                        placeholder: \"Write a message…\",\n                        showsEmojiButton: false,\n                        showsFormatting: false\n                    ) { message in\n                        messages.append(message.text)\n                    }\n                    HStack(spacing: theme.spacing.space4) {\n                        MonarchStatusDot(\"System status: \" + {{status}}, tone: .success)\n                        if let help = URL(string: \"https://help.example.com\") {\n                            Link(destination: help) { Label(\"Help Center\", systemImage: \"book\") }\n                                .monarchTextStyle(.caption)\n                                .buttonStyle(.monarchLink(.standalone, isExternal: true))\n                        }\n                    }\n                }\n                .padding(theme.spacing.space4)\n            }\n        } else {\n            List {\n                Section(\"Popular articles\") {\n                    Button({{articles.0}}) {}\n                    Button({{articles.1}}) {}\n                    Button({{articles.2}}) {}\n                }\n                Section(\"Contact us\") {\n                    if let email = URL(string: \"mailto:\" + {{contact.description}}) {\n                        Link(destination: email) {\n                            VStack(alignment: .leading) {\n                                Text({{contact.label}})\n                                Text({{contact.description}}).monarchTextStyle(.caption)\n                            }\n                        }\n                    }\n                }\n                Section(\"Status\") {\n                    MonarchStatusDot({{status}}, tone: .success)\n                    if let status = URL(string: \"https://status.example.com\") {\n                        Link(\"System status\", destination: status)\n                            .buttonStyle(.monarchLink(.standalone, isExternal: true))\n                    }\n                }\n            }\n        }\n    }\n    .monarchCanvas()\n    .navigationTitle({{trigger}})\n    #if os(iOS)\n    .navigationBarTitleDisplayMode(.inline)\n    #endif\n}\n.frame(minHeight: theme.spacing.space24 * 5)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var showsChat = true\n@State private var draft = \"\"\n@State private var messages = [{{chat.text}}]\nprivate let now = {{chat.at|date}}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var showsChat = true\n@State private var draft = \"\"\n@State private var messages = [\"Hi! What can we help you with today?\"]\nprivate let now = Date(timeIntervalSince1970: 1_793_786_280)",
+      "code": "NavigationStack {\n    VStack(spacing: 0) {\n        Text(\"Chat with the support team.\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textMuted)\n            .frame(maxWidth: .infinity, alignment: .leading)\n            .padding(.horizontal, theme.spacing.space4)\n        Picker(\"Section\", selection: $showsChat) {\n            Text(\"Chat\").tag(true)\n            Text(\"Help\").tag(false)\n        }\n        .pickerStyle(.segmented)\n        .padding(theme.spacing.space4)\n        if showsChat {\n            Text(\"Typically replies in a few minutes\")\n                .monarchTextStyle(.caption)\n                .foregroundStyle(theme.colors.textMuted)\n                .frame(maxWidth: .infinity, alignment: .leading)\n                .padding(.horizontal, theme.spacing.space4)\n            ScrollView {\n                LazyVStack(alignment: .leading, spacing: theme.spacing.space3) {\n                    VStack(spacing: theme.spacing.space3) {\n                        Text(\"09:58 UTC\")\n                        Text(\"Conversation started\")\n                    }\n                    .monarchTextStyle(.caption)\n                    .foregroundStyle(theme.colors.textMuted)\n                    .frame(maxWidth: .infinity)\n                    ForEach(messages, id: \\.self) { text in\n                        MonarchMessageRow(MonarchMessageRowAuthor(\"Sam\"), time: now, now: now, timeStyle: .clock) {\n                            Text(text)\n                        }\n                    }\n                }\n                .padding(.horizontal, theme.spacing.space4)\n            }\n            .safeAreaInset(edge: .bottom) {\n                VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                    MonarchMessageComposer(\n                        \"Message support\",\n                        text: $draft,\n                        placeholder: \"Write a message…\",\n                        showsEmojiButton: false,\n                        showsFormatting: false\n                    ) { message in\n                        messages.append(message.text)\n                    }\n                    HStack(spacing: theme.spacing.space4) {\n                        MonarchStatusDot(\"System status: \" + \"All systems normal\", tone: .success)\n                        if let help = URL(string: \"https://help.example.com\") {\n                            Link(destination: help) { Label(\"Help Center\", systemImage: \"book\") }\n                                .monarchTextStyle(.caption)\n                                .buttonStyle(.monarchLink(.standalone, isExternal: true))\n                        }\n                    }\n                }\n                .padding(theme.spacing.space4)\n            }\n        } else {\n            List {\n                Section(\"Popular articles\") {\n                    Button(\"Getting started\") {}\n                    Button(\"Invite your team\") {}\n                    Button(\"Billing questions\") {}\n                }\n                Section(\"Contact us\") {\n                    if let email = URL(string: \"mailto:\" + \"support@example.com\") {\n                        Link(destination: email) {\n                            VStack(alignment: .leading) {\n                                Text(\"Email support\")\n                                Text(\"support@example.com\").monarchTextStyle(.caption)\n                            }\n                        }\n                    }\n                }\n                Section(\"Status\") {\n                    MonarchStatusDot(\"All systems normal\", tone: .success)\n                    if let status = URL(string: \"https://status.example.com\") {\n                        Link(\"System status\", destination: status)\n                            .buttonStyle(.monarchLink(.standalone, isExternal: true))\n                    }\n                }\n            }\n        }\n    }\n    .monarchCanvas()\n    .navigationTitle(\"Help & support\")\n    #if os(iOS)\n    .navigationBarTitleDisplayMode(.inline)\n    #endif\n}\n.frame(minHeight: theme.spacing.space24 * 5)"
+    },
+    {
+      "title": "Opened in a sheet",
+      "setup": "@State private var showsSupport = false",
+      "code": "MonarchButton(\"Help & support\", systemImage: \"questionmark.circle\") { showsSupport = true }\n    .sheet(isPresented: $showsSupport) {\n        NavigationStack {\n            List {\n                Section(\"Popular articles\") { Button(\"Reset your password\") {} }\n            }\n            .navigationTitle(\"Help & support\")\n        }\n        .presentationDetents([.medium, .large])\n    }"
+    }
+  ],
+  "webEquivalent": "SupportPanel",
+  "dependsOn": [
+    "sheet",
+    "message-row",
+    "message-composer",
+    "search-results",
+    "link",
+    "status-dot",
+    "segmented-control"
+  ]
+}

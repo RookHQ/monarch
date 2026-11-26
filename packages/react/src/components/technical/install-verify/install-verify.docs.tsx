@@ -2,30 +2,14 @@ import { useState } from 'react';
 import { Button, InlineNotice } from '@rookcom/monarch-react';
 import { InstallVerify, type InstallSnippet } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './install-verify.fixture.json';
 
 const box = { width: '100%', maxWidth: '40rem' } as const;
-const now = '2026-01-10T12:00:00Z';
+const { data } = fixture;
+const now = data.now;
 
-const snippets: InstallSnippet[] = [
-  {
-    id: 'html',
-    label: 'HTML',
-    code: '<script src="https://cdn.example.com/widget.js" data-key="pk_test_4f1a9c" async></script>',
-    description: 'Paste it before the closing </body> tag on every page.',
-  },
-  {
-    id: 'react',
-    label: 'React',
-    code: 'import { Widget } from \'example-widget\';\n\nexport function App() {\n  return <Widget publishableKey="pk_test_4f1a9c" />;\n}',
-    description: 'Render it once, near the root of your app.',
-  },
-  {
-    id: 'npm',
-    label: 'npm',
-    code: 'npm install example-widget',
-    description: 'Install the package, then use the React snippet.',
-  },
-];
+const snippets = data.snippets as InstallSnippet[];
 
 function Simulated() {
   const [connected, setConnected] = useState(false);
@@ -35,21 +19,17 @@ function Simulated() {
         snippets={snippets}
         status={connected ? 'connected' : 'waiting'}
         targets={[
-          { label: 'www.example.com', lastSeenAt: connected ? '2026-01-10T11:59:00Z' : null },
+          { label: data.target.label, lastSeenAt: connected ? data.target.lastSeenAt : null },
         ]}
         now={now}
-        credential={
-          <InlineNotice tone="success">
-            Publishable key ready. It only works on your listed websites.
-          </InlineNotice>
-        }
-        developerInstructions="Add this snippet to every page of www.example.com: <script src=…>"
+        credential={<InlineNotice tone="success">{data.credential}</InlineNotice>}
+        developerInstructions={data.developerInstructions}
         developerEmailHref="mailto:?subject=Install%20the%20widget"
-        testHref="https://example.com/try"
-        testHint="A page running the real widget, so you can try it yourself."
+        testHref={data.testHref}
+        testHint={data.testHint}
       />
       <Button size="sm" onClick={() => setConnected((c) => !c)}>
-        {connected ? 'Reset demo' : 'Simulate the site reporting in'}
+        {connected ? data.reset : data.simulate}
       </Button>
     </div>
   );

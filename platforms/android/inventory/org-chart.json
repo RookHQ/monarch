@@ -1,0 +1,211 @@
+{
+  "id": "org-chart",
+  "name": "MonarchOrgChart",
+  "title": "OrgChart",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Row and Column tree in horizontalScroll and verticalScroll with a scaling layout modifier, androidx.compose.foundation.gestures.transformable for pinch, Canvas drawing (drawBehind) for connector and dotted lines, detectDragGesturesAfterLongPress for moving, CustomAccessibilityAction; the list layout is androidx.compose.foundation.lazy.LazyColumn; MonarchAvatar, MonarchText, MonarchButton",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "People as cards under their managers, with teams that open and close, teams loaded on demand, zoom and pan, dotted reporting lines and drag to move; an indented list on a phone or at large font sizes.",
+  "whenToUse": "To show who reports to whom across an organization, let people explore teams, open a person's details, and let admins move people to a new manager. Large organizations pass childCount and load teams with onLoadChildren.",
+  "whenNotToUse": "For a hierarchy of things rather than people (folders, departments), use MonarchTreeView. For goals with progress, use MonarchGoalTree. For a flat directory with filters, use a list of rows with a detail screen.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchOrgChart(nodes: List<MonarchOrgChartNode>, expandIcon: @Composable () -> Unit, modifier: Modifier = Modifier, expanded: Set<String>? = null, onExpandedChange: ((Set<String>) -> Unit)? = null, focusId: String? = null, dottedLines: List<MonarchOrgChartDottedLine> = emptyList(), layout: MonarchOrgChartLayout = MonarchOrgChartLayout.Auto, zoomable: Boolean = true, enabled: Boolean = true, labels: MonarchOrgChartLabels = MonarchOrgChartLabels(), onSelect: ((MonarchOrgChartNode) -> Unit)? = null, onLoadChildren: (suspend (MonarchOrgChartNode) -> Unit)? = null, onMoveRequest: ((MonarchOrgChartNode, MonarchOrgChartMoveTarget) -> Unit)? = null)",
+    "class MonarchOrgChartNode(id: String, parentId: String? = null, name: String, title: String? = null, meta: String? = null, image: Painter? = null, kind: MonarchOrgChartNodeKind = MonarchOrgChartNodeKind.Person, dashed: Boolean = false, childCount: Int? = null)",
+    "enum class MonarchOrgChartNodeKind { Person, Vacancy }",
+    "class MonarchOrgChartDottedLine(from: String, to: String)",
+    "enum class MonarchOrgChartLayout { Auto, Chart, List }",
+    "sealed interface MonarchOrgChartMoveTarget { data class Manager(id: String); data object TopLevel; data object Unspecified }",
+    "class MonarchOrgChartLabels(label: String? = null, vacant: String? = null, dashed: String? = null, alsoReportsTo: ((String) -> String)? = null, reports: ((Int) -> String)? = null, expanded: String? = null, collapsed: String? = null, loading: String? = null, expand: ((String) -> String)? = null, collapse: ((String) -> String)? = null, move: String? = null, moveHint: String? = null, loadFailed: ((String) -> String)? = null, zoomIn: String? = null, zoomOut: String? = null, zoomReset: ((String) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "nodes",
+      "type": "List<MonarchOrgChartNode>",
+      "default": "required",
+      "description": "Every person and open position, flat. Reporting lines come from parentId; a node whose manager is missing or itself is top level; a repeated id keeps its first node; nodes reachable only through a cycle are not drawn."
+    },
+    {
+      "name": "expandIcon",
+      "type": "@Composable () -> Unit",
+      "default": "required",
+      "description": "A chevron that points to the end, shown in the team chips; it turns to point down when the team is shown. Monarch bundles no icons."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the chart. Both layouts scroll themselves, so it needs a bounded height."
+    },
+    {
+      "name": "expanded",
+      "type": "Set<String>?",
+      "default": "null",
+      "description": "The ids of people whose team is shown. null keeps the state inside the chart, starting with the top level, the level under it when there are three or fewer top-level people, and the path to focusId; teams that still need loading start hidden."
+    },
+    {
+      "name": "onExpandedChange",
+      "type": "((Set<String>) -> Unit)?",
+      "default": "null",
+      "description": "Called with the new set of ids when a team is shown or hidden, or when focusId opens a path."
+    },
+    {
+      "name": "focusId",
+      "type": "String?",
+      "default": "null",
+      "description": "The person to highlight: the path to them opens, the chart scrolls to them, and their card has a thicker accent border and the selected state."
+    },
+    {
+      "name": "dottedLines",
+      "type": "List<MonarchOrgChartDottedLine>",
+      "default": "emptyList()",
+      "description": "Secondary reporting lines: dashed curves in the chart layout, and \"Also reports to …\" on the card in both layouts."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchOrgChartLayout",
+      "default": "MonarchOrgChartLayout.Auto",
+      "description": "Chart, List, or Auto: the chart when the component is at least 640dp wide at a font scale of 1.3 or less, the list otherwise."
+    },
+    {
+      "name": "zoomable",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the zoom buttons (40% to 160% in steps of 10%) and allows pinching, in the chart layout."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "false gives text the disabled role and borders the subtle role; cards, chips and drag do not respond."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchOrgChartLabels",
+      "default": "MonarchOrgChartLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onSelect",
+      "type": "((MonarchOrgChartNode) -> Unit)?",
+      "default": "null",
+      "description": "Called when a card is tapped, for example to open a detail screen. Without it, cards are not buttons."
+    },
+    {
+      "name": "onLoadChildren",
+      "type": "(suspend (MonarchOrgChartNode) -> Unit)?",
+      "default": "null",
+      "description": "Loads a team whose childCount is larger than the reports in nodes; the app adds the reports to nodes. The team opens when it returns; an exception is announced."
+    },
+    {
+      "name": "onMoveRequest",
+      "type": "((MonarchOrgChartNode, MonarchOrgChartMoveTarget) -> Unit)?",
+      "default": "null",
+      "description": "Turns on moving and shows the move hint. Receives the person and Manager(id) for a drop on a card, TopLevel for a drop on the background, or Unspecified when Move was chosen from the TalkBack actions."
+    }
+  ],
+  "states": [
+    {
+      "name": "team shown and hidden",
+      "description": "The chip under a manager shows the number of reports and a chevron that points to the end when the team is hidden and down when it is shown; the team is drawn beneath, joined by lines (chart) or indented (list)."
+    },
+    {
+      "name": "loading",
+      "description": "While onLoadChildren runs, the chip shows a spinner (none when animations are off) and is disabled, and the state reads \"Loading team\"."
+    },
+    {
+      "name": "focused",
+      "description": "The focusId card has a 2dp accent border and the selected state."
+    },
+    {
+      "name": "vacancy",
+      "description": "A muted card with a dashed strong border, a plain tile instead of an avatar and the line \"Open position\". It cannot be moved or take people."
+    },
+    {
+      "name": "temporary line",
+      "description": "dashed draws a dashed strong border; read with \"Temporary reporting line\"."
+    },
+    {
+      "name": "dragging",
+      "description": "After touch and hold, with a haptic tick, the card follows the finger; the card under it takes the subtle accent fill and strong accent border when the move is allowed."
+    },
+    {
+      "name": "disabled",
+      "description": "Text takes the disabled role, borders the subtle role, and nothing responds."
+    },
+    {
+      "name": "empty",
+      "description": "With no nodes nothing is drawn inside the scrolling area."
+    }
+  ],
+  "appearance": "Cards use the surface fill with a subtle border, the muted fill for open positions, the strong border role for dashed borders, the accent solid role for the focused card and the subtle accent fill with the strong accent border for a drop target. Names are in the body strong style and default text role; titles, meta and notes in the caption style and muted role. Connector lines and chip borders use the default border role; dotted lines the subtle text role. Every color is a theme role, so dark and both high-contrast themes follow.",
+  "platformNotes": "The web OrgChart is an ARIA tree with roving focus and arrow keys; on Android each card is one TalkBack element with Show team or Hide team and Move custom actions, and the chip under a manager is also a button, which is the platform's equivalent. The web switches to the list below 40rem of its own width; Android does the same at 640dp and also above a font scale of 1.3, as iOS does at accessibility sizes. The list is a LazyColumn of cards with the chip at the start and an indent that stops after four levels, the phone pattern. The web's renderNode and ReactNode meta are not offered: meta is a line of text, because a card is one element and must not hold controls. The web's toolbar slot is not offered: put export or other buttons beside the chart. Ctrl/Cmd + wheel zoom becomes pinch, and the keyboard M shortcut becomes the Move custom action. Moving uses touch and hold, then drag, inside the chart (not the system drag and drop, so it works in both layouts and is hit-tested against the cards); a refused drop (own team, current manager, an open position) does nothing. The parity map named a custom tree Layout: the tree is laid out with Row and Column and a layout modifier reports the zoomed size to the scroll views; lines are drawn from the measured card positions, so they follow right to left. While a card is dragged it is drawn above its own siblings but can pass under cards of other branches. The zoom buttons show + and − as text with spoken names, because Monarch bundles no icons. expandIcon is required for the same reason, as in MonarchTreeView. Images are a Painter loaded by the app, not a URL. Experimental: a domain pattern until a Rook app adopts it.",
+  "accessibility": [
+    "The chart is a traversal group named \"Organization chart\" (labels.label).",
+    "Each card is one element read as name, title, meta, then \"Open position\", \"Temporary reporting line\" and \"Also reports to …\" when they apply.",
+    "A manager's state says \"Team shown\", \"Team hidden\" or \"Loading team\" and the number of direct reports; a person without reports has no state.",
+    "Custom actions \"Show team of …\" or \"Hide team of …\" and, with onMoveRequest, \"Move\"; with onSelect the card is a button.",
+    "The focused person has the selected state.",
+    "Avatars, the vacancy tile, connector lines, dotted lines and the chip's count and chevron are hidden; the chip is a button named \"Show team of …\" or \"Hide team of …\" with the team state.",
+    "A team that fails to load is announced through a polite live region (\"Could not load the team of Jo Park.\"); the zoom level button is a polite live region named \"Reset zoom, 80%\", and the zoom buttons have spoken names.",
+    "Chips, cards and zoom buttons have 48dp touch targets; card width grows with the font scale in the chart, and names wrap without being cut."
+  ],
+  "edgeCases": [
+    "Nodes with a missing manager, or that are their own manager, are top level; nodes in a cycle are not drawn; a repeated id keeps its first node.",
+    "Long names and titles wrap inside the card.",
+    "The list stops indenting after four levels, so deep teams keep room on a phone.",
+    "Both layouts scroll themselves, so the chart needs a height from its parent; in a scrolling screen give it a fixed height.",
+    "Scrolling to focusId uses the zoomed position as the scroll views report it; away from 100% zoom the person may not be centered exactly.",
+    "Teams opened or closed while another team loads are kept when it finishes.",
+    "At zoom levels below 100% the chips are drawn smaller than 48dp; zoom is the user's choice and the list layout keeps full targets."
+  ],
+  "tests": [
+    "MonarchOrgChartTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Chart with lazy loading, dotted line and moving",
+      "fixture": "org-chart",
+      "webExample": "Chart with lazy loading, dotted line and moving",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    Row(\n        modifier = Modifier.fillMaxWidth(),\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n        verticalAlignment = Alignment.CenterVertically,\n    ) {\n        MonarchText(text = \"Drag a person onto their new manager, or select them and press M.\", modifier = Modifier.weight(1f), style = MonarchTextStyle.Caption)\n        MonarchButton(\n            text = {{exportLabel}},\n            onClick = {},\n            variant = MonarchButtonVariant.Secondary,\n            size = MonarchButtonSize.Sm,\n        )\n    }\n    Box(\n        modifier = Modifier\n            .fillMaxWidth()\n            .border(MonarchTheme.spacing.px, MonarchTheme.colors.borderSubtle, MonarchTheme.shapes.lg)\n            .background(MonarchTheme.colors.bgSubtle, MonarchTheme.shapes.lg),\n    ) {\n        @OptIn(ExperimentalMonarchApi::class)\n        MonarchOrgChart(\n            nodes = people,\n            expandIcon = {\n                MonarchIcon(\n                    imageVector = SampleIcons.ChevronRight,\n                    contentDescription = null,\n                    size = MonarchIconSize.Sm,\n                )\n            },\n            modifier = Modifier.height(900.dp),\n            focusId = selectedId,\n            dottedLines = listOf(MonarchOrgChartDottedLine(from = {{dottedLines.0.from}}, to = {{dottedLines.0.to}})),\n            layout = MonarchOrgChartLayout.List,\n            onSelect = { person -> selectedId = person.id },\n        )\n    }\n    MonarchText(text = \"Selected: \" + (people.firstOrNull { it.id == selectedId }?.name ?: \"nobody\"))\n}",
+      "setupTemplate": "val people = listOf(\n    MonarchOrgChartNode(id = {{nodes.0.id}}, name = {{nodes.0.name}}, title = {{nodes.0.title}}),\n    MonarchOrgChartNode(id = {{nodes.1.id}}, parentId = {{nodes.1.parentId}}, name = {{nodes.1.name}}, title = {{nodes.1.title}}, meta = {{nodes.1.meta}}),\n    MonarchOrgChartNode(id = {{nodes.2.id}}, parentId = {{nodes.2.parentId}}, name = {{nodes.2.name}}, title = {{nodes.2.title}}),\n    MonarchOrgChartNode(id = {{nodes.3.id}}, parentId = {{nodes.3.parentId}}, name = {{nodes.3.name}}, title = {{nodes.3.title}}),\n    MonarchOrgChartNode(id = {{nodes.4.id}}, parentId = {{nodes.4.parentId}}, name = {{nodes.4.name}}, meta = {{nodes.4.meta}}, kind = MonarchOrgChartNodeKind.{{nodes.4.kind|pascal}}),\n    MonarchOrgChartNode(id = {{nodes.5.id}}, parentId = {{nodes.5.parentId}}, name = {{nodes.5.name}}, title = {{nodes.5.title}}, meta = {{nodes.5.meta}}),\n    MonarchOrgChartNode(id = {{nodes.6.id}}, parentId = {{nodes.6.parentId}}, name = {{nodes.6.name}}, title = {{nodes.6.title}}),\n    MonarchOrgChartNode(id = {{nodes.7.id}}, parentId = {{nodes.7.parentId}}, name = {{nodes.7.name}}, title = {{nodes.7.title}}, meta = {{nodes.7.meta}}, dashed = {{nodes.7.dashed}}, metaTone = MonarchTone.{{nodes.7.metaTone|pascal}}),\n    MonarchOrgChartNode(id = {{nodes.8.id}}, parentId = {{nodes.8.parentId}}, name = {{nodes.8.name}}, title = {{nodes.8.title}}, childCount = {{nodes.8.childCount}}),\n)\nvar selectedId by remember { mutableStateOf<String?>(null) }",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.ui.Alignment",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.foundation.MonarchTone",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.background"
+      ],
+      "setup": "val people = listOf(\n    MonarchOrgChartNode(id = \"p1\", name = \"Alex Kim\", title = \"Chief executive\"),\n    MonarchOrgChartNode(id = \"p2\", parentId = \"p1\", name = \"Sam Lee\", title = \"Engineering lead\", meta = \"Engineering\"),\n    MonarchOrgChartNode(id = \"p5\", parentId = \"p2\", name = \"Jo Park\", title = \"Engineer\"),\n    MonarchOrgChartNode(id = \"p6\", parentId = \"p2\", name = \"Ola Berg\", title = \"Engineer\"),\n    MonarchOrgChartNode(id = \"p7\", parentId = \"p2\", name = \"Product designer\", meta = \"Engineering\", kind = MonarchOrgChartNodeKind.Vacancy),\n    MonarchOrgChartNode(id = \"p3\", parentId = \"p1\", name = \"Riya Shah\", title = \"Finance lead\", meta = \"Finance\"),\n    MonarchOrgChartNode(id = \"p8\", parentId = \"p3\", name = \"Mia Chen\", title = \"Accountant\"),\n    MonarchOrgChartNode(id = \"p4\", parentId = \"p1\", name = \"Noor Ali\", title = \"People lead\", meta = \"Acting\", dashed = true, metaTone = MonarchTone.Warning),\n    MonarchOrgChartNode(id = \"p9\", parentId = \"p4\", name = \"Leo Grant\", title = \"Recruiter\", childCount = 2),\n)\nvar selectedId by remember { mutableStateOf<String?>(null) }",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    Row(\n        modifier = Modifier.fillMaxWidth(),\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n        verticalAlignment = Alignment.CenterVertically,\n    ) {\n        MonarchText(text = \"Drag a person onto their new manager, or select them and press M.\", modifier = Modifier.weight(1f), style = MonarchTextStyle.Caption)\n        MonarchButton(\n            text = \"Export\",\n            onClick = {},\n            variant = MonarchButtonVariant.Secondary,\n            size = MonarchButtonSize.Sm,\n        )\n    }\n    Box(\n        modifier = Modifier\n            .fillMaxWidth()\n            .border(MonarchTheme.spacing.px, MonarchTheme.colors.borderSubtle, MonarchTheme.shapes.lg)\n            .background(MonarchTheme.colors.bgSubtle, MonarchTheme.shapes.lg),\n    ) {\n        @OptIn(ExperimentalMonarchApi::class)\n        MonarchOrgChart(\n            nodes = people,\n            expandIcon = {\n                MonarchIcon(\n                    imageVector = SampleIcons.ChevronRight,\n                    contentDescription = null,\n                    size = MonarchIconSize.Sm,\n                )\n            },\n            modifier = Modifier.height(900.dp),\n            focusId = selectedId,\n            dottedLines = listOf(MonarchOrgChartDottedLine(from = \"p8\", to = \"p2\")),\n            layout = MonarchOrgChartLayout.List,\n            onSelect = { person -> selectedId = person.id },\n        )\n    }\n    MonarchText(text = \"Selected: \" + (people.firstOrNull { it.id == selectedId }?.name ?: \"nobody\"))\n}"
+    },
+    {
+      "title": "Teams loaded on demand and moving people",
+      "setup": "var people by remember {\n    mutableStateOf(\n        listOf(\n            MonarchOrgChartNode(id = \"ana\", name = \"Ana Silva\", title = \"Chief executive\"),\n            MonarchOrgChartNode(id = \"jo\", parentId = \"ana\", name = \"Jo Park\", title = \"Head of engineering\", childCount = 2),\n            MonarchOrgChartNode(id = \"sam\", parentId = \"ana\", name = \"Sam Lee\", title = \"Head of finance\"),\n        ),\n    )\n}",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchOrgChart(\n    nodes = people,\n    expandIcon = { Text(\"›\") },\n    modifier = Modifier.height(420.dp),\n    layout = MonarchOrgChartLayout.List,\n    onLoadChildren = { manager ->\n        people = people + listOf(\n            MonarchOrgChartNode(id = \"ola\", parentId = manager.id, name = \"Ola Berg\"),\n            MonarchOrgChartNode(id = \"kai\", parentId = manager.id, name = \"Kai Moss\"),\n        )\n    },\n    onMoveRequest = { person, target ->\n        val manager = when (target) {\n            is MonarchOrgChartMoveTarget.Manager -> target.id\n            MonarchOrgChartMoveTarget.TopLevel -> null\n            // Ask where, for example in a dialog.\n            MonarchOrgChartMoveTarget.Unspecified -> return@MonarchOrgChart\n        }\n        people = people.map {\n            if (it.id == person.id) MonarchOrgChartNode(id = it.id, parentId = manager, name = it.name, title = it.title) else it\n        }\n    },\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ]
+    }
+  ],
+  "webEquivalent": "OrgChart",
+  "dependsOn": [
+    "avatar",
+    "card",
+    "tree-view"
+  ],
+  "parityExceptions": []
+}

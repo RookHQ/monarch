@@ -8,6 +8,8 @@ import {
   usePrompt,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './prompt-dialog.fixture.json';
 import { MoreIcon, PencilIcon } from '../../../internal/docs-demo.js';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
@@ -15,14 +17,15 @@ const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(re
 function NameView() {
   return (
     <PromptDialog
-      trigger={<Button>Save view as</Button>}
-      title="Name this view"
-      description="Saved views appear in the sidebar."
-      label="View name"
-      placeholder="For example: Open this week"
+      trigger={<Button>{fixture.data.trigger}</Button>}
+      defaultOpen
+      title={fixture.data.title}
+      description={fixture.data.description}
+      label={fixture.data.label}
+      placeholder={fixture.data.placeholder}
       required
-      maxLength={60}
-      submitLabel="Save view"
+      maxLength={fixture.data.maxLength}
+      submitLabel={fixture.data.submitLabel}
       onSubmit={() => wait(800)}
     />
   );
@@ -258,7 +261,7 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Name a saved view', render: () => <NameView /> },
+        { title: 'Name a saved view', stage: { align: 'center' }, render: () => <NameView /> },
         { title: 'Link address (url)', render: () => <AddLink /> },
         { title: 'Multi-line note', render: () => <AddNote /> },
         { title: 'Prefilled, with validation and a save error', render: () => <RenameWithError /> },

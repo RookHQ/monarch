@@ -2,52 +2,58 @@ import { useState } from 'react';
 import { InsightStrip, type InsightStripItem } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './insight-strip.fixture.json';
+
+type Fixed = {
+  id: string;
+  tone: 'danger' | 'warning' | 'info' | 'success';
+  origin: 'rule' | 'ai';
+  title: string;
+  why: string;
+  evidence?: string[];
+  action?: string;
+};
+const fixed = fixture.data.insights as unknown as readonly [Fixed, Fixed, Fixed, Fixed];
+const SEVERITY = {
+  danger: 'critical',
+  warning: 'warning',
+  info: 'info',
+  success: 'positive',
+} as const;
+
 const sample: InsightStripItem[] = [
   {
-    id: 'expiring',
-    severity: 'critical',
-    origin: 'rule',
-    title: '3 items expire within 30 days',
-    why: 'Their end dates fall before 7 December and none has a renewal recorded.',
+    id: fixed[0].id,
+    severity: SEVERITY[fixed[0].tone],
+    origin: fixed[0].origin,
+    title: fixed[0].title,
+    why: fixed[0].why,
     evidence: (
       <ul style={{ margin: 0, paddingInlineStart: 'var(--mn-space-4)' }}>
-        <li>Item A: 12 November</li>
-        <li>Item B: 20 November</li>
-        <li>Item C: 4 December</li>
+        {(fixed[0].evidence ?? []).map((line) => (
+          <li key={line}>{line}</li>
+        ))}
       </ul>
     ),
-    action: { label: 'Review renewals', onClick: () => {} },
+    action: { label: fixed[0].action ?? '', onClick: () => {} },
   },
-  {
-    id: 'usage',
-    severity: 'warning',
-    origin: 'ai',
-    title: 'Weekly use is falling',
-    why: 'Active people fell from 48 to 29 over the last 30 days.',
-  },
-  {
-    id: 'deadline',
-    severity: 'info',
-    origin: 'rule',
-    title: 'Next deadline in 12 days',
-    why: 'A response is due on 19 November.',
-  },
-  {
-    id: 'target',
-    severity: 'positive',
-    origin: 'rule',
-    title: 'Quarterly target reached',
-    why: 'Bookings passed the target set for this quarter.',
-  },
+  ...([fixed[1], fixed[2], fixed[3]] as const).map((item): InsightStripItem => ({
+    id: item.id,
+    severity: SEVERITY[item.tone],
+    origin: item.origin,
+    title: item.title,
+    why: item.why,
+  })),
 ];
 
 function DismissDemo() {
   const [items, setItems] = useState(sample);
   return (
     <InsightStrip
-      title="Needs attention"
+      title={fixture.data.title}
       insights={items}
-      max={3}
+      max={fixture.data.max}
       onDismiss={(id) => setItems((list) => list.filter((i) => i.id !== id))}
     />
   );

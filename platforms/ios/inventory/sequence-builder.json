@@ -1,0 +1,87 @@
+{
+  "id": "sequence-builder",
+  "name": null,
+  "title": "SequenceBuilder",
+  "family": "workflow",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "VStack of MonarchCard steps, each with MonarchDurationInput for the wait, MonarchTextField for the subject, a vertical TextField in MonarchFormField for the message, a Menu of variables, a DisclosureGroup with .disclosureGroupStyle(.monarch) for the preview, and a reorder Menu with accessibilityActions",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a multi-step outreach sequence where each step waits a duration then sends a message on a channel, with variables inserted as {{token}} and a preview with sample data.",
+  "whenToUse": "In a CRM or marketing app where people define follow-up emails and messages that are sent after set delays.",
+  "whenNotToUse": "For the actions of a rule use MonarchActionEditor; for a single scheduled message use a DatePicker with a message field; for a fixed onboarding list use MonarchOnboardingChecklist.",
+  "api": [
+    "MonarchCard.init(elevation: MonarchElevationLevel = .xs, @ViewBuilder content: () -> Content)",
+    "MonarchDurationInput.init(_ label: String, minutes: Binding<Int?>, …, helper: String? = nil, error: String? = nil, …)",
+    "MonarchTextField.init(_ label: String, text: Binding<String>, prompt: String? = nil, helper: String? = nil, error: String? = nil, isSecure: Bool = false)",
+    "MonarchFormField.init(_ label: String, helper: String? = nil, error: String? = nil, …, @ViewBuilder control: () -> Control)",
+    "TextField(_ title: String, text: Binding<String>, axis: Axis).lineLimit(_ limit: ClosedRange<Int>)",
+    "Menu(_ title: String, systemImage: String, content: () -> Content)",
+    "DisclosureGroup(_ title: String, content: () -> Content).disclosureGroupStyle(.monarch)",
+    "View.accessibilityActions(_ content: () -> some View)",
+    "AccessibilityNotification.Announcement(_ string: String).post()"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "steps",
+      "description": "Each step is a card titled \"Step 1, Email\" with the wait, the subject (email only), the message, Insert a variable and a folded preview."
+    },
+    {
+      "name": "straight away",
+      "description": "A wait of 0 reads \"Sent straight away\" under the duration."
+    },
+    {
+      "name": "incomplete",
+      "description": "An empty subject or message shows \"Write a subject line.\" or \"Write the message.\" with an icon."
+    },
+    {
+      "name": "preview",
+      "description": "Opening the preview shows the subject and message with sample values in place of {{firstName}} and {{product}}."
+    },
+    {
+      "name": "full",
+      "description": "The add buttons are disabled at the app's step limit (20 in the example)."
+    }
+  ],
+  "appearance": "Steps are MonarchCards on the surface role; fields, errors and the preview use their Monarch components and roles, and adapt to the dark and high-contrast themes.",
+  "platformNotes": "The web SequenceBuilder is a component with channels and variables as data, validateSequence, findTemplateVariables and renderSequenceTemplate helpers, inserts variables at the cursor and checks message length per channel. On iOS it is a recipe of existing components that the app owns: variables are appended to the message (SwiftUI's TextField does not expose the cursor before iOS 18), the app validates and renders templates itself as in the example, and reordering is a Menu plus accessibility actions instead of drag. It is marked experimental until a Rook app adopts it. Android plans the same recipe.",
+  "accessibility": [
+    "Each step card is a container named \"Step 1, Email\" whose title has the header trait.",
+    "Move up and Move down are accessibility actions on each card, and \"Moved to position 2.\" is announced.",
+    "The reorder menu and remove button are icon-only with spoken names (\"Reorder step 1\", \"Remove step 1\").",
+    "MonarchDurationInput, MonarchTextField and MonarchFormField label every field and read their errors as hints.",
+    "The preview is a Monarch disclosure group that reads Expanded or Collapsed."
+  ],
+  "edgeCases": [
+    "Unknown variables stay as written in the preview; validate them before saving.",
+    "A wait of 0 on the first step sends at the start of the sequence.",
+    "Long messages grow the field up to eight lines, then scroll."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Two-step outreach",
+      "fixture": "sequence-builder",
+      "webExample": "Two-step outreach",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    ForEach(Array(steps.enumerated()), id: \\.element.id) { index, step in\n        MonarchCard {\n            VStack(alignment: .leading, spacing: theme.spacing.space3) {\n                HStack(alignment: .top, spacing: theme.spacing.space2) {\n                    MonarchIcon(systemName: \"circle.grid.2x3.fill\", size: .sm)\n                        .foregroundStyle(theme.colors.textMuted)\n                        .padding(.top, theme.spacing.space1)\n                    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                        Text(\"Step \\(index + 1), \\(channel(step.channel).label)\")\n                            .monarchTextStyle(.bodyStrong)\n                            .accessibilityAddTraits(.isHeader)\n                        Text(when(step.waitMinutes)).monarchTextStyle(.caption)\n                    }\n                    Spacer(minLength: 0)\n                    MonarchButton(\"Remove step \\(index + 1)\", systemImage: \"xmark\", variant: .ghost, size: .sm, isIconOnly: true) {\n                        steps.remove(at: index)\n                    }\n                    MonarchButton(\"Move step \\(index + 1) up\", systemImage: \"chevron.up\", variant: .ghost, size: .sm, isIconOnly: true) {\n                        steps.swapAt(index, index - 1)\n                    }\n                    .disabled(index == 0)\n                    MonarchButton(\"Move step \\(index + 1) down\", systemImage: \"chevron.down\", variant: .ghost, size: .sm, isIconOnly: true) {\n                        steps.swapAt(index, index + 1)\n                    }\n                    .disabled(index == steps.count - 1)\n                }\n                MonarchDurationInput(\"Wait before sending\", minutes: $steps[index].waitMinutes, largestUnit: .days, helper: \"For example 2d, 4h or 30m.\", showsStepper: false)\n                if channel(step.channel).hasSubject {\n                    MonarchTextField(\"Subject\", text: $steps[index].subject, isRequired: true)\n                }\n                MonarchTextField(\"Message\", text: $steps[index].message, isRequired: true, axis: .vertical, lineLimit: 4...8)\n                if let maxLength = channel(step.channel).maxLength {\n                    Text(verbatim: \"\\(step.message.count) / \\(maxLength)\").monarchTextStyle(.caption)\n                }\n                MonarchFlowLayout(spacing: theme.spacing.space2) {\n                    Text(\"Insert a variable\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                    ForEach(variables, id: \\.token) { variable in\n                        MonarchButton(variable.label, variant: .secondary, size: .sm) {\n                            steps[index].message += \"{{\\(variable.token)}}\"\n                        }\n                    }\n                }\n                DisclosureGroup {\n                    if channel(step.channel).hasSubject {\n                        Text(render(step.subject)).monarchTextStyle(.bodyStrong)\n                    }\n                    Text(render(step.message)).monarchTextStyle(.body)\n                } label: {\n                    Text(\"Preview with sample data\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                }\n                .padding(theme.spacing.space2)\n                .background(RoundedRectangle(cornerRadius: MonarchTokens.Radius.md).fill(theme.colors.bgSubtle))\n            }\n        }\n    }\n    MonarchFlowLayout(spacing: theme.spacing.space2) {\n        ForEach(channels, id: \\.id) { option in\n            MonarchButton(\"Add \\(option.label) step\", systemImage: \"plus\", variant: .secondary, size: .sm) {\n                steps.append(Step(id: String(steps.count + 1), channel: option.id, waitMinutes: 1_440, subject: \"\", message: \"\"))\n            }\n        }\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n\nprivate struct Step: Identifiable {\n    let id: String\n    var channel: String\n    var waitMinutes: Int?\n    var subject: String\n    var message: String\n}\n\nprivate let channels: [(id: String, label: String, hasSubject: Bool, maxLength: Int?)] = [\n    (id: {{channels.0.value}}, label: {{channels.0.label}}, hasSubject: {{channels.0.hasSubject}}, maxLength: nil),\n    (id: {{channels.1.value}}, label: {{channels.1.label}}, hasSubject: false, maxLength: {{channels.1.maxLength}}),\n]\nprivate let variables: [(token: String, label: String, sample: String)] = [\n    (token: {{variables.0.token}}, label: {{variables.0.label}}, sample: {{variables.0.sample}}),\n    (token: {{variables.1.token}}, label: {{variables.1.label}}, sample: {{variables.1.sample}}),\n    (token: {{variables.2.token}}, label: {{variables.2.label}}, sample: {{variables.2.sample}}),\n]\n@State private var steps = [\n    Step(id: \"1\", channel: {{steps.0.channel}}, waitMinutes: {{steps.0.delayMinutes}}, subject: {{steps.0.subject}}, message: {{steps.0.body}}),\n    Step(id: \"2\", channel: {{steps.1.channel}}, waitMinutes: {{steps.1.delayMinutes}}, subject: \"\", message: {{steps.1.body}}),\n]\n\nprivate func channel(_ id: String) -> (id: String, label: String, hasSubject: Bool, maxLength: Int?) {\n    channels.first { $0.id == id } ?? channels[0]\n}\n\nprivate func render(_ template: String) -> String {\n    variables.reduce(template) { $0.replacingOccurrences(of: \"{{\\($1.token)}}\", with: $1.sample) }\n}\n\nprivate func when(_ minutes: Int?) -> String {\n    switch minutes ?? 0 {\n    case 0: \"Sent straight away\"\n    case let m where m % 1_440 == 0: \"Sent \\(m / 1_440)d after the previous step\"\n    case let m where m % 60 == 0: \"Sent \\(m / 60)h after the previous step\"\n    case let m: \"Sent \\(m)m after the previous step\"\n    }\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n\nprivate struct Step: Identifiable {\n    let id: String\n    var channel: String\n    var waitMinutes: Int?\n    var subject: String\n    var message: String\n}\n\nprivate let channels: [(id: String, label: String, hasSubject: Bool, maxLength: Int?)] = [\n    (id: \"email\", label: \"Email\", hasSubject: true, maxLength: nil),\n    (id: \"chat\", label: \"Chat message\", hasSubject: false, maxLength: 1000),\n]\nprivate let variables: [(token: String, label: String, sample: String)] = [\n    (token: \"firstName\", label: \"First name\", sample: \"Sam\"),\n    (token: \"product.name\", label: \"Product name\", sample: \"Atlas\"),\n    (token: \"product.url\", label: \"Product link\", sample: \"https://example.com\"),\n]\n@State private var steps = [\n    Step(id: \"1\", channel: \"email\", waitMinutes: 0, subject: \"A quick intro to {{product.name}}\", message: \"Hi {{firstName}},\\n\\nHere is {{product.name}}: {{product.url}}.\\n\\nWorth a short look?\"),\n    Step(id: \"2\", channel: \"chat\", waitMinutes: 2880, subject: \"\", message: \"Hi {{firstName}}, a gentle nudge about {{product.name}}.\"),\n]\n\nprivate func channel(_ id: String) -> (id: String, label: String, hasSubject: Bool, maxLength: Int?) {\n    channels.first { $0.id == id } ?? channels[0]\n}\n\nprivate func render(_ template: String) -> String {\n    variables.reduce(template) { $0.replacingOccurrences(of: \"{{\\($1.token)}}\", with: $1.sample) }\n}\n\nprivate func when(_ minutes: Int?) -> String {\n    switch minutes ?? 0 {\n    case 0: \"Sent straight away\"\n    case let m where m % 1_440 == 0: \"Sent \\(m / 1_440)d after the previous step\"\n    case let m where m % 60 == 0: \"Sent \\(m / 60)h after the previous step\"\n    case let m: \"Sent \\(m)m after the previous step\"\n    }\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    ForEach(Array(steps.enumerated()), id: \\.element.id) { index, step in\n        MonarchCard {\n            VStack(alignment: .leading, spacing: theme.spacing.space3) {\n                HStack(alignment: .top, spacing: theme.spacing.space2) {\n                    MonarchIcon(systemName: \"circle.grid.2x3.fill\", size: .sm)\n                        .foregroundStyle(theme.colors.textMuted)\n                        .padding(.top, theme.spacing.space1)\n                    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                        Text(\"Step \\(index + 1), \\(channel(step.channel).label)\")\n                            .monarchTextStyle(.bodyStrong)\n                            .accessibilityAddTraits(.isHeader)\n                        Text(when(step.waitMinutes)).monarchTextStyle(.caption)\n                    }\n                    Spacer(minLength: 0)\n                    MonarchButton(\"Remove step \\(index + 1)\", systemImage: \"xmark\", variant: .ghost, size: .sm, isIconOnly: true) {\n                        steps.remove(at: index)\n                    }\n                    MonarchButton(\"Move step \\(index + 1) up\", systemImage: \"chevron.up\", variant: .ghost, size: .sm, isIconOnly: true) {\n                        steps.swapAt(index, index - 1)\n                    }\n                    .disabled(index == 0)\n                    MonarchButton(\"Move step \\(index + 1) down\", systemImage: \"chevron.down\", variant: .ghost, size: .sm, isIconOnly: true) {\n                        steps.swapAt(index, index + 1)\n                    }\n                    .disabled(index == steps.count - 1)\n                }\n                MonarchDurationInput(\"Wait before sending\", minutes: $steps[index].waitMinutes, largestUnit: .days, helper: \"For example 2d, 4h or 30m.\", showsStepper: false)\n                if channel(step.channel).hasSubject {\n                    MonarchTextField(\"Subject\", text: $steps[index].subject, isRequired: true)\n                }\n                MonarchTextField(\"Message\", text: $steps[index].message, isRequired: true, axis: .vertical, lineLimit: 4...8)\n                if let maxLength = channel(step.channel).maxLength {\n                    Text(verbatim: \"\\(step.message.count) / \\(maxLength)\").monarchTextStyle(.caption)\n                }\n                MonarchFlowLayout(spacing: theme.spacing.space2) {\n                    Text(\"Insert a variable\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                    ForEach(variables, id: \\.token) { variable in\n                        MonarchButton(variable.label, variant: .secondary, size: .sm) {\n                            steps[index].message += \"{{\\(variable.token)}}\"\n                        }\n                    }\n                }\n                DisclosureGroup {\n                    if channel(step.channel).hasSubject {\n                        Text(render(step.subject)).monarchTextStyle(.bodyStrong)\n                    }\n                    Text(render(step.message)).monarchTextStyle(.body)\n                } label: {\n                    Text(\"Preview with sample data\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                }\n                .padding(theme.spacing.space2)\n                .background(RoundedRectangle(cornerRadius: MonarchTokens.Radius.md).fill(theme.colors.bgSubtle))\n            }\n        }\n    }\n    MonarchFlowLayout(spacing: theme.spacing.space2) {\n        ForEach(channels, id: \\.id) { option in\n            MonarchButton(\"Add \\(option.label) step\", systemImage: \"plus\", variant: .secondary, size: .sm) {\n                steps.append(Step(id: String(steps.count + 1), channel: option.id, waitMinutes: 1_440, subject: \"\", message: \"\"))\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "SequenceBuilder",
+  "dependsOn": [
+    "reorderable-list",
+    "duration-input",
+    "text-field",
+    "card",
+    "form-field",
+    "accordion"
+  ]
+}

@@ -1,0 +1,164 @@
+{
+  "id": "document-relations",
+  "name": "MonarchDocumentRelations",
+  "title": "DocumentRelations",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of clickable rows with MonarchFileTypeIcon; androidx.compose.material3.IconButton or MonarchButton to remove; androidx.compose.material3.ModalBottomSheet with MonarchSelect, MonarchSearchBar and an androidx.compose.foundation.lazy.LazyColumn of results to add",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Typed links between documents (Parent of, Supersedes, Related to), read the right way round from either side, with a bottom sheet to add one by searching and a remove button on each.",
+  "whenToUse": "On a document's detail screen, to show and edit how it connects to other documents: a plan and its children, a spec and what implements it, a policy and the one it replaced.",
+  "whenNotToUse": "For untyped links and web pages attached to a record use MonarchLinkedDocsPanel. For files attached to a record use MonarchFileList.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchDocumentRelations(relations: List<MonarchDocumentRelation>, modifier: Modifier = Modifier, types: List<MonarchDocumentRelationType> = MonarchDocumentRelationType.defaults(), candidates: List<MonarchDocumentRelationTarget> = emptyList(), defaultType: String? = null, showEmpty: Boolean = false, onSearch: ((String) -> Unit)? = null, onOpen: ((MonarchDocumentRelationTarget) -> Unit)? = null, onAdd: (suspend (targetId: String, type: String) -> Unit)? = null, onRemove: (suspend (relationId: String) -> Unit)? = null, removeIcon: (@Composable () -> Unit)? = null, labels: MonarchDocumentRelationsLabels = MonarchDocumentRelationsLabels())",
+    "class MonarchDocumentRelation(id: String, type: String, target: MonarchDocumentRelationTarget, direction: MonarchDocumentRelationDirection = MonarchDocumentRelationDirection.Outgoing)",
+    "enum class MonarchDocumentRelationDirection { Outgoing, Incoming }",
+    "class MonarchDocumentRelationTarget(id: String, title: String, description: String? = null, fileName: String? = null)",
+    "class MonarchDocumentRelationType(value: String, label: String, inverse: String? = null) { companion object { @Composable fun defaults(): List<MonarchDocumentRelationType> } }",
+    "class MonarchDocumentRelationsLabels(label: String? = null, add: String? = null, sheetTitle: String? = null, sheetDescription: String? = null, type: String? = null, search: String? = null, results: String? = null, noResults: String? = null, cancel: String? = null, removeText: String? = null, remove: ((title: String) -> String)? = null, added: ((title: String) -> String)? = null, removed: ((title: String) -> String)? = null, failed: String? = null, none: String? = null, working: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "relations",
+      "type": "List<MonarchDocumentRelation>",
+      "default": "required",
+      "description": "This document's relations: type, direction and the document at the other end."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the component."
+    },
+    {
+      "name": "types",
+      "type": "List<MonarchDocumentRelationType>",
+      "default": "MonarchDocumentRelationType.defaults()",
+      "description": "The relation types, their labels and inverses. The defaults are the web's seven types with built-in labels from strings_documentrelations.xml."
+    },
+    {
+      "name": "candidates",
+      "type": "List<MonarchDocumentRelationTarget>",
+      "default": "emptyList()",
+      "description": "Documents that can be linked, listed in the sheet without those already related, at most twelve."
+    },
+    {
+      "name": "defaultType",
+      "type": "String?",
+      "default": "null",
+      "description": "The type chosen when the sheet opens; related-to, or the first type, by default."
+    },
+    {
+      "name": "showEmpty",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows \"No relations yet.\" when there are none."
+    },
+    {
+      "name": "onSearch",
+      "type": "((String) -> Unit)?",
+      "default": "null",
+      "description": "Searches on the server as the person types, with the trimmed text; update candidates with the results. Without it, candidates are filtered by title."
+    },
+    {
+      "name": "onOpen",
+      "type": "((MonarchDocumentRelationTarget) -> Unit)?",
+      "default": "null",
+      "description": "Opens a related document, usually by navigating to it. Without it, rows are not interactive."
+    },
+    {
+      "name": "onAdd",
+      "type": "(suspend (targetId: String, type: String) -> Unit)?",
+      "default": "null",
+      "description": "Adds a relation with the target's id and the type's value, and shows Add relation. Throw to keep the sheet open with the error."
+    },
+    {
+      "name": "onRemove",
+      "type": "(suspend (relationId: String) -> Unit)?",
+      "default": "null",
+      "description": "Removes a relation by its id, and shows a remove button on each row. A thrown error is shown under the list."
+    },
+    {
+      "name": "removeIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The icon of each remove button. Monarch bundles no icons; without it the button is the text \"Remove\"."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchDocumentRelationsLabels",
+      "default": "MonarchDocumentRelationsLabels()",
+      "description": "Replacements for the built-in strings. Type labels are replaced by passing types."
+    }
+  ],
+  "states": [
+    {
+      "name": "read only",
+      "description": "Rows without remove buttons and without Add relation; not interactive without onOpen."
+    },
+    {
+      "name": "empty",
+      "description": "Nothing is drawn, or \"No relations yet.\" with showEmpty, then Add relation."
+    },
+    {
+      "name": "adding",
+      "description": "The chosen document shows a progress indicator and the other results, the type and the search are disabled until onAdd returns; the sheet then closes."
+    },
+    {
+      "name": "removing",
+      "description": "The row's remove button becomes a progress indicator and the other remove buttons and Add relation are disabled."
+    },
+    {
+      "name": "failed",
+      "description": "The error's message, or \"That didn't work. Try again.\", in a danger notice in the sheet or under the list."
+    }
+  ],
+  "appearance": "The relation's type is a caption in the muted text role above the title, which takes the link role when the row opens its document and the default text role otherwise; descriptions use the muted role and file icons the file type colors. The sheet uses the surface role. All come from MonarchTheme in light, dark and both high-contrast themes.",
+  "platformNotes": "The web DocumentRelations shows chips with an arrow glyph and links, and a modal dialog with a native select and a search field. On Android the relations are the web's pill chips in a wrapping row, each with its direction arrow, the type, the title and a remove button (the target's description is for the picker only), the dialog is a Material 3 bottom sheet with MonarchSelect for the type and MonarchSearchBar, and choosing a result adds the relation directly, as on iOS. The relation is also said in words, not by the arrow alone. The web's href and renderLink become onOpen, so the app navigates. The chips are a plain FlowRow, so the component can sit in a scrolling detail screen. The web's promise callbacks become suspend functions; an exception's message is shown like the web's error message. Each target can carry a file name for MonarchFileTypeIcon, which the web does not show. The web moves focus to the next remove button after a removal; on Android TalkBack keeps its place and the removal is announced. iOS also offers a context menu on each row; Android does not. Experimental until a Rook app adopts it.",
+  "accessibility": [
+    "The list is a traversal group named \"Relations\".",
+    "Each row is one element read as \"Parent of, Q3 plan, Finance\", a button when onOpen is set, at least 48dp high.",
+    "The remove button is a separate element named \"Remove relation to Q3 plan\" with a 48dp target.",
+    "Adding and removing are announced through a polite live region (\"Relation to Q3 plan removed\").",
+    "The file icon is decorative; the relation is said in words.",
+    "In the sheet, the title is a heading, the type is a MonarchSelect, the results have a heading and each result is a button read as its title and description."
+  ],
+  "edgeCases": [
+    "An unknown type value is shown as the value itself.",
+    "An incoming relation whose type has no inverse is read as the type itself, like related-to.",
+    "Documents already related are not offered again; the list shows at most twelve candidates.",
+    "While an add runs, dismissing the sheet is ignored until onAdd returns or throws.",
+    "Long titles wrap; the remove button stays at the end of the row."
+  ],
+  "tests": [
+    "MonarchDocumentRelationsTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Add, read both ways, remove",
+      "fixture": "document-relations",
+      "webExample": "Add, read both ways, remove",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchDocumentRelations(\n    relations = relations,\n    candidates = library,\n    onOpen = { /* The app navigates to the document. */ },\n    onAdd = { id, type ->\n        // The app stores the relation on its server here.\n        library.firstOrNull { it.id == id }?.let { target ->\n            relations = relations + MonarchDocumentRelation(\"r\" + (relations.size + 1), type, target)\n        }\n    },\n    onRemove = { id -> relations = relations.filterNot { it.id == id } },\n)",
+      "setupTemplate": "val library = listOf(\n    MonarchDocumentRelationTarget(\"d1\", \"Hiring plan\", description = \"People\"),\n    MonarchDocumentRelationTarget(\"d2\", \"Company handbook\", description = \"Workspace root\"),\n    MonarchDocumentRelationTarget(\"d3\", \"Travel policy (2025)\", description = \"Operations\"),\n    MonarchDocumentRelationTarget(\"d4\", \"Budget 2027\", description = \"Finance\"),\n    MonarchDocumentRelationTarget(\"d5\", \"Brand guidelines\", description = \"Marketing\"),\n    MonarchDocumentRelationTarget(\"d6\", \"Security checklist\", description = \"Engineering\"),\n)\nvar relations by remember {\n    mutableStateOf(\n        listOf(\n            MonarchDocumentRelation(\n                id = {{relations.0.id}},\n                type = {{relations.0.type}},\n                direction = MonarchDocumentRelationDirection.{{relations.0.direction|pascal}},\n                target = MonarchDocumentRelationTarget({{relations.0.target.id}}, {{relations.0.target.title}}, description = {{relations.0.target.description}}),\n            ),\n            MonarchDocumentRelation(\n                id = {{relations.1.id}},\n                type = {{relations.1.type}},\n                direction = MonarchDocumentRelationDirection.{{relations.1.direction|pascal}},\n                target = MonarchDocumentRelationTarget({{relations.1.target.id}}, {{relations.1.target.title}}, description = {{relations.1.target.description}}),\n            ),\n            MonarchDocumentRelation(\n                id = {{relations.2.id}},\n                type = {{relations.2.type}},\n                direction = MonarchDocumentRelationDirection.{{relations.2.direction|pascal}},\n                target = MonarchDocumentRelationTarget({{relations.2.target.id}}, {{relations.2.target.title}}, description = {{relations.2.target.description}}),\n            ),\n        ),\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "val library = listOf(\n    MonarchDocumentRelationTarget(\"d1\", \"Hiring plan\", description = \"People\"),\n    MonarchDocumentRelationTarget(\"d2\", \"Company handbook\", description = \"Workspace root\"),\n    MonarchDocumentRelationTarget(\"d3\", \"Travel policy (2025)\", description = \"Operations\"),\n    MonarchDocumentRelationTarget(\"d4\", \"Budget 2027\", description = \"Finance\"),\n    MonarchDocumentRelationTarget(\"d5\", \"Brand guidelines\", description = \"Marketing\"),\n    MonarchDocumentRelationTarget(\"d6\", \"Security checklist\", description = \"Engineering\"),\n)\nvar relations by remember {\n    mutableStateOf(\n        listOf(\n            MonarchDocumentRelation(\n                id = \"r1\",\n                type = \"parent-of\",\n                direction = MonarchDocumentRelationDirection.Outgoing,\n                target = MonarchDocumentRelationTarget(\"d1\", \"Hiring plan\", description = \"People\"),\n            ),\n            MonarchDocumentRelation(\n                id = \"r2\",\n                type = \"parent-of\",\n                direction = MonarchDocumentRelationDirection.Incoming,\n                target = MonarchDocumentRelationTarget(\"d2\", \"Company handbook\", description = \"Workspace root\"),\n            ),\n            MonarchDocumentRelation(\n                id = \"r3\",\n                type = \"supersedes\",\n                direction = MonarchDocumentRelationDirection.Outgoing,\n                target = MonarchDocumentRelationTarget(\"d3\", \"Travel policy (2025)\", description = \"Operations\"),\n            ),\n        ),\n    )\n}",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchDocumentRelations(\n    relations = relations,\n    candidates = library,\n    onOpen = { /* The app navigates to the document. */ },\n    onAdd = { id, type ->\n        // The app stores the relation on its server here.\n        library.firstOrNull { it.id == id }?.let { target ->\n            relations = relations + MonarchDocumentRelation(\"r\" + (relations.size + 1), type, target)\n        }\n    },\n    onRemove = { id -> relations = relations.filterNot { it.id == id } },\n)"
+    }
+  ],
+  "webEquivalent": "DocumentRelations",
+  "dependsOn": [
+    "combobox",
+    "select",
+    "file-type-icon"
+  ]
+}

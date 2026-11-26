@@ -1,0 +1,185 @@
+{
+  "id": "sla-indicator",
+  "name": "MonarchSlaIndicator",
+  "title": "SlaIndicator",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "TimelineView with a custom TimelineSchedule, Text, Duration.UnitsFormatStyle, Date.FormatStyle",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A service-level target at a glance: on track, at risk, breached, paused, met or not applicable, with the time left or overdue, as a chip or as an icon with text.",
+  "whenToUse": "In ticket and task lists and headers (chip), and in the rows of a detail panel that lists the targets of one item (text).",
+  "whenNotToUse": "Not for a general status; use MonarchBadge. Not for a plain date or age; use the platform's relative date formatting (see RelativeTime).",
+  "api": [
+    "init(_ state: MonarchSlaIndicatorState, dueAt: Date? = nil, warnBefore: TimeInterval? = nil, target: String? = nil, variant: MonarchSlaIndicatorVariant = .chip, hasEarlierBreach: Bool = false, showsNotApplicable: Bool = false, isLive: Bool = true, announcesChanges: Bool = false, now: Date? = nil, labels: MonarchSlaIndicatorLabels = MonarchSlaIndicatorLabels(), onStateChange: (@MainActor (MonarchSlaIndicatorState) -> Void)? = nil)",
+    "enum MonarchSlaIndicatorState { case onTrack, atRisk, breached, paused, met, notApplicable }",
+    "enum MonarchSlaIndicatorVariant { case chip, text }",
+    "struct MonarchSlaIndicatorLabels { init(onTrack: String? = nil, atRisk: String? = nil, breached: String? = nil, paused: String? = nil, met: String? = nil, notApplicable: String? = nil, notApplicableMark: String? = nil, remaining: (@Sendable (String) -> String)? = nil, overdue: (@Sendable (String) -> String)? = nil, duration: (@Sendable (TimeInterval) -> String)? = nil, due: (@Sendable (String) -> String)? = nil, earlierBreach: String? = nil, changed: (@Sendable (String, String?) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "state",
+      "type": "MonarchSlaIndicatorState",
+      "default": "required",
+      "description": "The state the server reported: onTrack, atRisk, breached, paused, met or notApplicable. A running state is re-derived from dueAt and the clock."
+    },
+    {
+      "name": "dueAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the target is due. It drives the countdown (\"2h 15m left\") and the overdue time (\"Overdue 40m\")."
+    },
+    {
+      "name": "warnBefore",
+      "type": "TimeInterval?",
+      "default": "nil",
+      "description": "Turns an on-track target at risk once it is due within this many seconds. By default the state is trusted."
+    },
+    {
+      "name": "target",
+      "type": "String?",
+      "default": "nil",
+      "description": "The name of the target, such as \"First response\". Read by VoiceOver, not shown."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchSlaIndicatorVariant",
+      "default": ".chip",
+      "description": "chip is a compact rounded rectangle; text is an icon and text without a surface."
+    },
+    {
+      "name": "hasEarlierBreach",
+      "type": "Bool",
+      "default": "false",
+      "description": "An earlier target of the same item was breached. VoiceOver says so."
+    },
+    {
+      "name": "showsNotApplicable",
+      "type": "Bool",
+      "default": "false",
+      "description": "Write a missing target as \"No SLA\" and not as a dash."
+    },
+    {
+      "name": "isLive",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether a running target with a due time follows the clock by itself."
+    },
+    {
+      "name": "announcesChanges",
+      "type": "Bool",
+      "default": "false",
+      "description": "Announce a change of state to VoiceOver. For one prominent indicator, not for every row of a list."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "A fixed reference time, which also stops the clock."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSlaIndicatorLabels",
+      "default": "MonarchSlaIndicatorLabels()",
+      "description": "Replacements for the built-in strings, including the duration formatter."
+    },
+    {
+      "name": "onStateChange",
+      "type": "(@MainActor (MonarchSlaIndicatorState) -> Void)?",
+      "default": "nil",
+      "description": "Called when the shown state changes after the indicator appeared, such as when a countdown runs out."
+    }
+  ],
+  "states": [
+    {
+      "name": "onTrack",
+      "description": "Clock icon, muted text, no fill. Shows the time left when dueAt is given."
+    },
+    {
+      "name": "atRisk",
+      "description": "Clock icon, warning colours; the chip has a tinted fill and a border. Shows the time left."
+    },
+    {
+      "name": "breached",
+      "description": "Exclamation icon. The chip is solid danger; the text variant is danger-coloured text. Shows the time overdue when dueAt has passed."
+    },
+    {
+      "name": "paused",
+      "description": "Pause icon, muted text; the chip has a muted fill. No countdown."
+    },
+    {
+      "name": "met",
+      "description": "Checkmark icon, success-coloured text, no fill."
+    },
+    {
+      "name": "notApplicable",
+      "description": "No icon, subtle text in the regular weight: a dash, or \"No SLA\" with showsNotApplicable."
+    }
+  ],
+  "appearance": "Caption text with a small icon. Colours come from the theme by role: muted text for on track and paused, the warning roles for at risk, solid danger for a breached chip, the strong success colour for met and the subtle text colour when no target applies. In the high-contrast themes a chip that has no border of its own gets the strong border colour.",
+  "platformNotes": "The parity map named MonarchBadge with Text(timerInterval:). Neither fits: the badge has no border on a tinted fill, no transparent form and a capsule shape, and Text(timerInterval:) writes a running clock (1:59:07), not \"2h 15m left\", and cannot change the state at the due time. The indicator draws its own chip and uses TimelineView with a schedule aligned to the due time, so it redraws once a minute and exactly when it becomes at risk or breached. The web state none is notApplicable here, because none reads as Optional.none in Swift. The web shows the due date in a tooltip; iOS reads it as the accessibility value. The web live interval and locale options are not offered: redraws are aligned to the minute and the locale comes from the environment. The web file also exports SlaTargetList; on iOS that is LabeledContent rows with the text variant (see the last example). Android has the same component.",
+  "accessibility": [
+    "One accessibility element. The label is the target name and the time left or overdue in words (\"First response, 2 hours, 15 minutes left\"), or the state name when there is no countdown.",
+    "The value is the state name when the label is a countdown, then the due date and time, then a note when an earlier target was breached.",
+    "Every state has its own icon and text, so the state does not depend on colour.",
+    "With announcesChanges a change of the shown state is posted as an announcement, such as \"First response: Breached\".",
+    "The text scales with Dynamic Type and wraps; the icon scales with it.",
+    "The indicator is not interactive."
+  ],
+  "edgeCases": [
+    "A running target whose due time has passed is shown as breached even if the server still reports on track.",
+    "Durations are whole minutes rounded down, in at most two units: \"<1m\", \"45m\", \"2h 15m\", \"3d 4h\". Units are written by Duration.UnitsFormatStyle in the locale of the environment; only \"<1m\" comes from the strings table.",
+    "A breached target without a due time, or with one in the future, shows \"Breached\".",
+    "paused, met, breached and notApplicable are never changed by the clock, and their indicators are not redrawn by time.",
+    "With now set, or isLive false, the text is computed once per draw and does not advance.",
+    "onStateChange and the announcement fire for a change of the shown state, whether the clock or a new state value caused it."
+  ],
+  "tests": [
+    "MonarchSlaIndicatorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Every state",
+      "fixture": "sla-indicator",
+      "webExample": "Every state",
+      "template": "MonarchFlowLayout(spacing: 8) {\n    MonarchSlaIndicator({{indicators.0.state|case}}, dueAt: {{now|date}}.addingTimeInterval({{indicators.0.dueInMinutes}} * 60), now: {{now|date}})\n    MonarchSlaIndicator({{indicators.1.state|case}}, dueAt: {{now|date}}.addingTimeInterval({{indicators.1.dueInMinutes}} * 60), now: {{now|date}})\n    MonarchSlaIndicator({{indicators.2.state|case}}, dueAt: {{now|date}}.addingTimeInterval({{indicators.2.dueInMinutes}} * 60), now: {{now|date}})\n    MonarchSlaIndicator({{indicators.3.state|case}})\n    MonarchSlaIndicator({{indicators.4.state|case}})\n    MonarchSlaIndicator(.notApplicable, showsNotApplicable: {{indicators.5.showNone}})\n}",
+      "code": "MonarchFlowLayout(spacing: 8) {\n    MonarchSlaIndicator(.onTrack, dueAt: Date(timeIntervalSince1970: 1_768_212_000).addingTimeInterval(135 * 60), now: Date(timeIntervalSince1970: 1_768_212_000))\n    MonarchSlaIndicator(.atRisk, dueAt: Date(timeIntervalSince1970: 1_768_212_000).addingTimeInterval(20 * 60), now: Date(timeIntervalSince1970: 1_768_212_000))\n    MonarchSlaIndicator(.breached, dueAt: Date(timeIntervalSince1970: 1_768_212_000).addingTimeInterval(-40 * 60), now: Date(timeIntervalSince1970: 1_768_212_000))\n    MonarchSlaIndicator(.paused)\n    MonarchSlaIndicator(.met)\n    MonarchSlaIndicator(.notApplicable, showsNotApplicable: true)\n}"
+    },
+    {
+      "title": "States without a countdown",
+      "code": "HStack {\n    MonarchSlaIndicator(.paused)\n    MonarchSlaIndicator(.met)\n    MonarchSlaIndicator(.breached)\n}"
+    },
+    {
+      "title": "The targets of one item, in a detail panel",
+      "setup": "private let nextDue = Date.now.addingTimeInterval(40 * 60)",
+      "code": "VStack(alignment: .leading) {\n    LabeledContent(\"First response\") {\n        MonarchSlaIndicator(.met, variant: .text)\n    }\n    LabeledContent(\"Next response\") {\n        MonarchSlaIndicator(.atRisk, dueAt: nextDue, variant: .text)\n    }\n    LabeledContent(\"Resolution\") {\n        MonarchSlaIndicator(.notApplicable, variant: .text, showsNotApplicable: true)\n    }\n}\n.monarchTextStyle(.caption)"
+    }
+  ],
+  "webEquivalent": "SlaIndicator",
+  "dependsOn": [
+    "text",
+    "icon"
+  ],
+  "icons": {
+    "on-track": "ClockGlyph",
+    "at-risk": "ClockGlyph",
+    "breached": "ErrorGlyph",
+    "met": "SuccessGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "indicators.5.state"
+      ],
+      "reason": "Naming only: the web state none is the native case notApplicable; the state shown is the same.",
+      "convention": "naming: same state"
+    }
+  ]
+}

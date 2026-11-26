@@ -1,5 +1,7 @@
 import { Button, Celebration, CelebrationPanel } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './celebration.fixture.json';
 
 export default {
   id: 'celebration',
@@ -122,11 +124,14 @@ export default {
       items: [
         {
           title: 'Verification dialog',
+          stage: { align: 'center' },
           render: () => (
             <Celebration
-              trigger={<Button>Show celebration</Button>}
-              title="Workspace verified"
-              description="Your public profile now shows the verified badge."
+              trigger={<Button>{fixture.data.trigger}</Button>}
+              defaultOpen
+              title={fixture.data.title}
+              description={fixture.data.description}
+              continueLabel={fixture.data.continue}
             />
           ),
         },

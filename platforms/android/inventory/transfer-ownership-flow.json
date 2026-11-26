@@ -1,0 +1,116 @@
+{
+  "id": "transfer-ownership-flow",
+  "name": null,
+  "title": "TransferOwnershipFlow",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet holding MonarchStepper, MonarchEntityPicker, MonarchConsequenceList and MonarchButton, opened from a danger MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Hands a workspace to another member in three steps inside a bottom sheet: choose the new owner, review what changes for both sides, then confirm.",
+  "whenToUse": "In workspace or organization settings, for the owner to transfer ownership to another eligible member.",
+  "whenNotToUse": "For changing an ordinary member's role use a role picker on the member row; for deleting the workspace use a danger-zone confirmation.",
+  "api": [
+    "MonarchBottomSheet(onDismissRequest = …, title = \"Transfer ownership\") { Column(Modifier.verticalScroll(rememberScrollState())) { MonarchStepper(steps = steps, current = step); when (step) { 0 -> MonarchEntityPicker(label = \"New owner\", entities = members, selected = newOwner, onSelectedChange = …); 1 -> MonarchConsequenceList(items = …, heading = \"What changes\"); else -> MonarchText(…) }; Row { MonarchButton(text = \"Back\", variant = MonarchButtonVariant.Ghost, …); MonarchButton(text = \"Continue\" or \"Transfer ownership\", variant = Primary or Danger, enabled = newOwner != null, …) } } }"
+  ],
+  "options": [
+    {
+      "name": "members",
+      "type": "List<MonarchEntityPickerEntity>",
+      "default": "required",
+      "description": "Members who could become the owner, without the current owner; members who cannot (not an admin) are listed with enabled = false and a hint saying why."
+    },
+    {
+      "name": "steps",
+      "type": "List<MonarchStepperStep>",
+      "default": "required",
+      "description": "Choose the new owner, What changes, Confirm."
+    },
+    {
+      "name": "consequences",
+      "type": "List<MonarchConsequence>",
+      "default": "required",
+      "description": "What changes for you (your new role, what you can no longer do) and for the new owner, with Changed, Removed and Warning kinds."
+    },
+    {
+      "name": "your role",
+      "type": "MonarchSelect or MonarchRadioCardGroup",
+      "default": "optional",
+      "description": "Add on the review step when the owner can choose their role after the transfer."
+    },
+    {
+      "name": "re-authentication",
+      "type": "MonarchStepUpAuthDialog",
+      "default": "optional",
+      "description": "Ask before running the transfer when the product requires it."
+    },
+    {
+      "name": "result",
+      "type": "MonarchBanner",
+      "default": "after the transfer",
+      "description": "\"<name> is now the owner.\", or \"Waiting for <name> to accept\" when the new owner must accept."
+    }
+  ],
+  "states": [
+    {
+      "name": "choose",
+      "description": "The entity picker; Continue is disabled until a member is chosen."
+    },
+    {
+      "name": "review",
+      "description": "The consequence list for both sides."
+    },
+    {
+      "name": "confirm",
+      "description": "A sentence naming the new owner and a danger Transfer ownership button."
+    },
+    {
+      "name": "done",
+      "description": "The sheet closes and a success banner names the new owner."
+    }
+  ],
+  "appearance": "The Material 3 bottom sheet on the raised surface with its drag handle; inside, MonarchStepper, the entity picker field, the consequence list with its kind marks and the danger button keep their own appearance in light, dark and both high-contrast themes.",
+  "platformNotes": "The web TransferOwnershipFlow is one component built on WizardDialog, AssigneePicker and ConsequenceList with built-in strings, eligibility by role, a role select, step-up authentication and a pending-acceptance screen. On a phone a multi-step dialog is a bottom sheet, so Android composes a MonarchBottomSheet with MonarchStepper and the same parts; eligibility, the role choice, step-up and acceptance are the app's additions to the recipe (see options). The system back gesture closes the sheet. iOS has no entry yet.",
+  "accessibility": [
+    "The sheet title is a heading and MonarchStepper says which step of three is current.",
+    "Members who cannot become the owner are read as disabled, with the reason in their hint.",
+    "Each consequence is read with its kind in words.",
+    "The final button names the action (\"Transfer ownership\") and uses the danger variant, not color alone.",
+    "Continue is disabled, and read as disabled, until a member is chosen."
+  ],
+  "edgeCases": [
+    "Opening the sheet again starts at the first step with nobody chosen.",
+    "Dismissing the sheet by dragging or Back cancels without transferring.",
+    "With nobody eligible, show a message instead of the picker and keep Continue disabled."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "From a danger zone",
+      "fixture": "transfer-ownership-flow",
+      "webExample": "From a danger zone",
+      "template": "MonarchSectionCard(title = {{zone}}, tone = MonarchTone.Danger) {\n    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n        transferredTo?.let { MonarchBanner(message = \"$it is now the owner.\", tone = MonarchTone.Success) }\n        MonarchText(text = {{item.title}}, style = MonarchTextStyle.BodyStrong, heading = true)\n        MonarchText(text = {{item.description}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n        MonarchButton(\n            text = {{item.action}},\n            onClick = {\n                step = 0\n                newOwner = null\n                open = true\n            },\n            variant = MonarchButtonVariant.Secondary,\n        )\n    }\n}\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }, title = \"Transfer ownership\") {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            MonarchStepper(steps = steps, current = step)\n            when (step) {\n                0 -> Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n                    MonarchText(\n                        text = \"The new owner gets full control of the workspace, including billing.\",\n                        color = MonarchTheme.colors.textMuted,\n                    )\n                    MonarchEntityPicker(\n                        label = \"New owner\",\n                        entities = members,\n                        selected = newOwner,\n                        onSelectedChange = { newOwner = it },\n                        placeholder = \"Choose a member\",\n                        helperText = \"Choose a member to continue.\",\n                    )\n                }\n                1 -> MonarchConsequenceList(\n                    items = listOf(\n                        MonarchConsequence(MonarchConsequenceKind.Changed, \"Your role changes to Admin\"),\n                        MonarchConsequence(\n                            MonarchConsequenceKind.Removed,\n                            \"You can no longer delete the workspace or transfer ownership\",\n                        ),\n                        MonarchConsequence(MonarchConsequenceKind.Changed, \"$name becomes the owner\"),\n                        MonarchConsequence(\n                            MonarchConsequenceKind.Warning,\n                            \"$name can change your role or remove you\",\n                        ),\n                    ),\n                    heading = \"What changes\",\n                )\n                else -> MonarchText(text = \"Ownership moves to $name. Only the new owner can transfer it back.\")\n            }\n            Row(\n                modifier = Modifier.fillMaxWidth(),\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2, Alignment.End),\n            ) {\n                MonarchButton(\n                    text = if (step == 0) \"Cancel\" else \"Back\",\n                    onClick = { if (step == 0) open = false else step-- },\n                    variant = MonarchButtonVariant.Secondary,\n                )\n                MonarchButton(\n                    text = if (step == steps.lastIndex) \"Transfer ownership\" else \"Continue\",\n                    onClick = {\n                        if (step == steps.lastIndex) {\n                            // Run the transfer through your API here, then close.\n                            transferredTo = name\n                            open = false\n                        } else {\n                            step++\n                        }\n                    },\n                    variant = if (step == steps.lastIndex) {\n                        MonarchButtonVariant.Danger\n                    } else {\n                        MonarchButtonVariant.Primary\n                    },\n                    enabled = newOwner != null,\n                )\n            }\n        }\n    }\n}",
+      "setupTemplate": "var open by rememberSaveable { mutableStateOf(true) }\nvar step by rememberSaveable { mutableIntStateOf(0) }\nvar newOwner by rememberSaveable { mutableStateOf<String?>(null) }\nvar transferredTo by rememberSaveable { mutableStateOf<String?>(null) }\nval members = listOf(\n    MonarchEntityPickerEntity({{candidates.0.id}}, {{candidates.0.name}}, description = {{candidates.0.email}}),\n    MonarchEntityPickerEntity({{candidates.1.id}}, {{candidates.1.name}}, description = {{candidates.1.email}}),\n    MonarchEntityPickerEntity({{candidates.2.id}}, {{candidates.2.name}}, description = {{candidates.2.email}}, hint = \"Only admins can become the owner\", enabled = false),\n    MonarchEntityPickerEntity({{candidates.3.id}}, {{candidates.3.name}}, description = {{candidates.3.email}}, hint = {{candidates.3.ineligibleReason}}, enabled = false),\n)\nval steps = listOf(\n    MonarchStepperStep(\"pick\", \"Choose the new owner\"),\n    MonarchStepperStep(\"review\", \"What changes\"),\n    MonarchStepperStep(\"confirm\", \"Confirm\"),\n)\nval name = members.firstOrNull { it.id == newOwner }?.name.orEmpty()",
+      "setup": "var open by rememberSaveable { mutableStateOf(true) }\nvar step by rememberSaveable { mutableIntStateOf(0) }\nvar newOwner by rememberSaveable { mutableStateOf<String?>(null) }\nvar transferredTo by rememberSaveable { mutableStateOf<String?>(null) }\nval members = listOf(\n    MonarchEntityPickerEntity(\"m1\", \"Alex Morgan\", description = \"alex@example.com\"),\n    MonarchEntityPickerEntity(\"m2\", \"Priya Shah\", description = \"priya@example.com\"),\n    MonarchEntityPickerEntity(\"m3\", \"Jordan Lee\", description = \"jordan@example.com\", hint = \"Only admins can become the owner\", enabled = false),\n    MonarchEntityPickerEntity(\"m4\", \"Chris Novak\", description = \"chris@example.com\", hint = \"Invite not accepted yet\", enabled = false),\n)\nval steps = listOf(\n    MonarchStepperStep(\"pick\", \"Choose the new owner\"),\n    MonarchStepperStep(\"review\", \"What changes\"),\n    MonarchStepperStep(\"confirm\", \"Confirm\"),\n)\nval name = members.firstOrNull { it.id == newOwner }?.name.orEmpty()",
+      "code": "MonarchSectionCard(title = \"Danger zone\", tone = MonarchTone.Danger) {\n    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n        transferredTo?.let { MonarchBanner(message = \"$it is now the owner.\", tone = MonarchTone.Success) }\n        MonarchText(text = \"Transfer ownership\", style = MonarchTextStyle.BodyStrong, heading = true)\n        MonarchText(text = \"Another member becomes the owner. You choose your role afterwards.\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n        MonarchButton(\n            text = \"Transfer ownership\",\n            onClick = {\n                step = 0\n                newOwner = null\n                open = true\n            },\n            variant = MonarchButtonVariant.Secondary,\n        )\n    }\n}\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }, title = \"Transfer ownership\") {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            MonarchStepper(steps = steps, current = step)\n            when (step) {\n                0 -> Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n                    MonarchText(\n                        text = \"The new owner gets full control of the workspace, including billing.\",\n                        color = MonarchTheme.colors.textMuted,\n                    )\n                    MonarchEntityPicker(\n                        label = \"New owner\",\n                        entities = members,\n                        selected = newOwner,\n                        onSelectedChange = { newOwner = it },\n                        placeholder = \"Choose a member\",\n                        helperText = \"Choose a member to continue.\",\n                    )\n                }\n                1 -> MonarchConsequenceList(\n                    items = listOf(\n                        MonarchConsequence(MonarchConsequenceKind.Changed, \"Your role changes to Admin\"),\n                        MonarchConsequence(\n                            MonarchConsequenceKind.Removed,\n                            \"You can no longer delete the workspace or transfer ownership\",\n                        ),\n                        MonarchConsequence(MonarchConsequenceKind.Changed, \"$name becomes the owner\"),\n                        MonarchConsequence(\n                            MonarchConsequenceKind.Warning,\n                            \"$name can change your role or remove you\",\n                        ),\n                    ),\n                    heading = \"What changes\",\n                )\n                else -> MonarchText(text = \"Ownership moves to $name. Only the new owner can transfer it back.\")\n            }\n            Row(\n                modifier = Modifier.fillMaxWidth(),\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2, Alignment.End),\n            ) {\n                MonarchButton(\n                    text = if (step == 0) \"Cancel\" else \"Back\",\n                    onClick = { if (step == 0) open = false else step-- },\n                    variant = MonarchButtonVariant.Secondary,\n                )\n                MonarchButton(\n                    text = if (step == steps.lastIndex) \"Transfer ownership\" else \"Continue\",\n                    onClick = {\n                        if (step == steps.lastIndex) {\n                            // Run the transfer through your API here, then close.\n                            transferredTo = name\n                            open = false\n                        } else {\n                            step++\n                        }\n                    },\n                    variant = if (step == steps.lastIndex) {\n                        MonarchButtonVariant.Danger\n                    } else {\n                        MonarchButtonVariant.Primary\n                    },\n                    enabled = newOwner != null,\n                )\n            }\n        }\n    }\n}",
+      "imports": [
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.foundation.layout.fillMaxWidth"
+      ]
+    }
+  ],
+  "webEquivalent": "TransferOwnershipFlow",
+  "dependsOn": [
+    "sheet",
+    "entity-picker",
+    "consequence-list",
+    "stepper",
+    "button"
+  ]
+}

@@ -1,0 +1,203 @@
+{
+  "id": "block-editor",
+  "name": "MonarchBlockEditor",
+  "title": "BlockEditor",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "List with ForEach(onMove:), swipeActions, List(selection:) in edit mode and safeAreaInset; each block a TextField(axis: .vertical) with focused(_:equals:), or MonarchCalloutBlock, MonarchToggleBlock (DisclosureGroup), MonarchTableBlock and MonarchEmbedBlock; MonarchEditorToolbar, MonarchSlashMenu and Menu for block actions",
+  "status": "experimental",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A block document editor: paragraphs, headings, lists, checklists, quotes, code, callouts, toggles, tables and embeds as rows of a List, with a slash menu, block actions, reordering, multiple selection and undo.",
+  "whenToUse": "For a document that people build from blocks on the phone: notes, briefs, wiki pages, launch plans. Make it the main content of a screen.",
+  "whenNotToUse": "For a comment, a description or any text that needs inline bold, italic or links, use MonarchRichTextEditor. For a single plain field, use MonarchTextField or TextEditor.",
+  "api": [
+    "init(_ label: String, blocks: Binding<[MonarchBlock]>, prompt: String? = nil, kinds: [MonarchBlockKind] = MonarchBlockKind.defaultKinds, embedProviders: [MonarchEmbedProvider] = MonarchEmbedProvider.defaults, isReadOnly: Bool = false, showsToolbar: Bool = true, slashItems: [MonarchSlashMenuItem] = [], labels: MonarchBlockEditorLabels = MonarchBlockEditorLabels(), onSlashItem: (@MainActor (MonarchSlashMenuItem, String) -> Void)? = nil)",
+    "struct MonarchBlock: Identifiable, Sendable, Hashable { var id: String; var kind: MonarchBlockKind; var text: String; var detail: String; var isChecked: Bool; var isExpanded: Bool; var table: MonarchTableBlockData?; init(id: String = UUID().uuidString, kind: MonarchBlockKind = .paragraph, text: String = \"\", detail: String = \"\", isChecked: Bool = false, isExpanded: Bool = true, table: MonarchTableBlockData? = nil) }",
+    "enum MonarchBlockKind: Sendable, Hashable { case paragraph, heading(Int), bulletList, orderedList, taskList, blockquote, codeBlock, callout(MonarchTone), toggle, table, embed; static let defaultKinds: [MonarchBlockKind]; var isText: Bool }",
+    "struct MonarchBlockEditorLabels: Sendable { init(handle: (@Sendable (String) -> String)? = nil, handleHint: String? = nil, moveUp: String? = nil, moveDown: String? = nil, duplicate: String? = nil, deleteBlock: String? = nil, deleteSelected: String? = nil, turnInto: String? = nil, tone: String? = nil, toneNames: [MonarchTone: String] = [:], select: String? = nil, done: String? = nil, selectedCount: (@Sendable (Int) -> String)? = nil, listItem: (@Sendable (String, Int) -> String)? = nil, blockNames: [MonarchBlockKind: String] = [:], blockDescriptions: [MonarchBlockKind: String] = [:], groupText: String? = nil, groupLists: String? = nil, groupBlocks: String? = nil, summaryPrompt: String? = nil, detailPrompt: String? = nil, embedPrompt: String? = nil, addBlock: String? = nil, toolbar: MonarchEditorToolbarLabels = MonarchEditorToolbarLabels(), slashMenu: MonarchSlashMenuLabels = MonarchSlashMenuLabels(), table: MonarchTableBlockLabels = MonarchTableBlockLabels(), embed: MonarchEmbedBlockLabels = MonarchEmbedBlockLabels()) }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The editor's name for VoiceOver, already localised, such as the document's title."
+    },
+    {
+      "name": "blocks",
+      "type": "Binding<[MonarchBlock]>",
+      "default": "required",
+      "description": "The document. The editor never leaves it empty: deleting every block leaves one empty paragraph."
+    },
+    {
+      "name": "prompt",
+      "type": "String?",
+      "default": "nil",
+      "description": "Placeholder of an empty paragraph with the caret, and of a one-block empty document. Built in: Write, or type / for blocks."
+    },
+    {
+      "name": "kinds",
+      "type": "[MonarchBlockKind]",
+      "default": "MonarchBlockKind.defaultKinds",
+      "description": "The kinds offered by the slash menu, the toolbar and Turn into, in order. .callout(tone) sets the tone a new callout starts with. Kinds already in the document are always shown."
+    },
+    {
+      "name": "embedProviders",
+      "type": "[MonarchEmbedProvider]",
+      "default": "MonarchEmbedProvider.defaults",
+      "description": "The sites that embed blocks may frame; other links show as link cards."
+    },
+    {
+      "name": "isReadOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the blocks as text, without the toolbar, action buttons, swipes, dragging or the slash menu."
+    },
+    {
+      "name": "showsToolbar",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the toolbar with undo, redo, text styles, lists and Select blocks above the document."
+    },
+    {
+      "name": "slashItems",
+      "type": "[MonarchSlashMenuItem]",
+      "default": "[]",
+      "description": "Product items added to the slash menu after the block kinds."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchBlockEditorLabels",
+      "default": "MonarchBlockEditorLabels()",
+      "description": "Replacements for every built-in string, including the toolbar's, the slash menu's, tables' and embeds'."
+    },
+    {
+      "name": "onSlashItem",
+      "type": "(@MainActor (MonarchSlashMenuItem, String) -> Void)?",
+      "default": "nil",
+      "description": "Receives a product slash item and the id of the block it was typed in, after the typed command is removed from the text."
+    }
+  ],
+  "states": [
+    {
+      "name": "editing",
+      "description": "Each block is a field in its kind's style, with an action button before it; the toolbar shows the kind of the block with the caret as on."
+    },
+    {
+      "name": "slash menu",
+      "description": "While a / command is typed at the start of a word, the slash menu shows above the keyboard and filters as people type."
+    },
+    {
+      "name": "selecting",
+      "description": "Select blocks puts the list in multiple selection; a bar shows how many are selected with Duplicate, Delete and Done."
+    },
+    {
+      "name": "dragging",
+      "description": "Touching and holding a block lifts it with the system list reordering."
+    },
+    {
+      "name": "empty",
+      "description": "One empty paragraph shows the prompt."
+    },
+    {
+      "name": "read-only",
+      "description": "Blocks are text; tables and embeds are read-only; no toolbar, buttons, swipes or dragging."
+    },
+    {
+      "name": "disabled",
+      "description": "As read-only, with the disabled text colour."
+    }
+  ],
+  "appearance": "A borderless document on the surface colour. Text uses the default text colour by kind (title, heading and subheading styles for headings 1 to 3, code style on the subtle fill for code); list markers are muted, ticked checklist items are muted and struck through, quotes have a strong border bar. Callouts, toggles, tables and embeds keep their own components' roles, so dark and both high-contrast themes follow.",
+  "platformNotes": "The web BlockEditor is one Tiptap document with rich inline text. iOS has no shared engine, so each block is its own field and block text is plain: inline bold, italic, code and links are not stored (use MonarchRichTextEditor for rich text in one field). Selecting text across several blocks is replaced by the iPhone pattern, multiple selection of whole blocks. The web's columns and image blocks are not offered: columns do not fit beside each other on a phone and images need the app's upload. There is no selection bubble menu (see bubble-menu: the system edit menu is used), and keyboard shortcuts (Alt+Shift+arrows, Cmd+Z) are replaced by the action button, accessibility actions and the toolbar's undo and redo. Backspace in an empty block does not delete it; use the swipe or the action button. The value is an array of MonarchBlock, not HTML or JSON. Android has not built it yet; it plans the same name.",
+  "accessibility": [
+    "The editor is a container named by label.",
+    "Each block's field is named by its kind (Heading 2, Numbered list, item 3); headings have the header trait.",
+    "Each block's action button is named Block actions: <kind>, has a hint, and offers Move up and Move down as accessibility actions, so moving never needs a drag.",
+    "Checklist boxes are standard toggles (Monarch checkbox style) named by the item's text; ticked state is the checkmark and the toggle value, not colour alone.",
+    "List markers and the quote bar are hidden from VoiceOver.",
+    "The slash menu announces how many options match while focus stays in the text.",
+    "Rows, the action buttons and the add button are at least 44 points high; text follows Dynamic Type."
+  ],
+  "edgeCases": [
+    "Return in a list item starts another item; Return in an empty item ends the list.",
+    "Markdown shortcuts only apply to paragraphs and only for kinds in kinds.",
+    "Typing in one block is undone as one step; moving the caret to another block starts a new step. The history keeps 100 steps and is lost when the view is recreated.",
+    "A table block without data shows an empty 3 by 3 table; deleting the table from its own menu deletes the block.",
+    "Embeds wait for a tap before loading anything from the site.",
+    "Duplicate ids in the document are not supported: give every block a unique id.",
+    "The editor needs a height: in a ScrollView give it a frame."
+  ],
+  "tests": [
+    "MonarchBlockEditorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Document with outline",
+      "fixture": "block-editor",
+      "webExample": "Document with outline",
+      "template": "VStack(alignment: .leading, spacing: 24) {\n    MonarchBlockEditor({{label}}, blocks: $blocks)\n        .frame(height: 1000)\n    MonarchPageOutline(\n        [\n            MonarchPageOutlineHeading({{blocks.0.text}}, level: {{blocks.0.level}}, id: {{blocks.0.text}}),\n            MonarchPageOutlineHeading({{blocks.2.text}}, level: {{blocks.2.level}}, id: {{blocks.2.text}}),\n            MonarchPageOutlineHeading({{blocks.6.text}}, level: {{blocks.6.level}}, id: {{blocks.6.text}}),\n            MonarchPageOutlineHeading({{blocks.8.text}}, level: {{blocks.8.level}}, id: {{blocks.8.text}}),\n        ],\n        currentID: {{blocks.0.text}},\n        stats: MonarchPageOutlineStats(words: {{outline.words}}, minutes: {{outline.minutes}}),\n        labels: MonarchPageOutlineLabels(title: {{outline.title}})\n    ) { _ in }\n    .frame(maxWidth: .infinity, alignment: .leading)\n}",
+      "setupTemplate": "@State private var blocks = [\n    MonarchBlock(kind: .heading(1), text: {{blocks.0.text}}),\n    MonarchBlock(text: {{blocks.1.text}}),\n    MonarchBlock(kind: .heading(2), text: {{blocks.2.text}}),\n    MonarchBlock(kind: .taskList, text: {{blocks.3.text}}, isChecked: {{blocks.3.checked}}),\n    MonarchBlock(kind: .taskList, text: {{blocks.4.text}}, isChecked: {{blocks.4.checked}}),\n    MonarchBlock(kind: .callout({{blocks.5.tone|tone}}), text: {{blocks.5.text}}),\n    MonarchBlock(kind: .heading(2), text: {{blocks.6.text}}),\n    MonarchBlock(text: {{blocks.7.columns.0.text}}),\n    MonarchBlock(text: {{blocks.7.columns.1.text}}),\n    MonarchBlock(kind: .heading(2), text: {{blocks.8.text}}),\n    MonarchBlock(\n        kind: .table,\n        table: MonarchTableBlockData(rows: [[{{blocks.9.rows.0.0}}, {{blocks.9.rows.0.1}}], [{{blocks.9.rows.1.0}}, {{blocks.9.rows.1.1}}]])\n    ),\n    MonarchBlock(kind: .toggle, text: {{blocks.10.text}}, detail: {{blocks.10.body}}, isExpanded: {{blocks.10.open}}),\n]",
+      "setup": "@State private var blocks = [\n    MonarchBlock(kind: .heading(1), text: \"Project brief\"),\n    MonarchBlock(text: \"Type / on an empty line to add a block, or drag the handle beside a block to move it.\"),\n    MonarchBlock(kind: .heading(2), text: \"Goals\"),\n    MonarchBlock(kind: .taskList, text: \"Agree on scope\", isChecked: true),\n    MonarchBlock(kind: .taskList, text: \"Share the timeline\", isChecked: false),\n    MonarchBlock(kind: .callout(.info), text: \"Decisions are recorded at the end of this page.\"),\n    MonarchBlock(kind: .heading(2), text: \"Options\"),\n    MonarchBlock(text: \"Option A: phased rollout.\"),\n    MonarchBlock(text: \"Option B: single release.\"),\n    MonarchBlock(kind: .heading(2), text: \"Timeline\"),\n    MonarchBlock(\n        kind: .table,\n        table: MonarchTableBlockData(rows: [[\"Phase\", \"Dates\"], [\"Design\", \"Weeks 1–2\"]])\n    ),\n    MonarchBlock(kind: .toggle, text: \"Background\", detail: \"Notes from the earlier review.\", isExpanded: false),\n]",
+      "code": "VStack(alignment: .leading, spacing: 24) {\n    MonarchBlockEditor(\"Project brief\", blocks: $blocks)\n        .frame(height: 1000)\n    MonarchPageOutline(\n        [\n            MonarchPageOutlineHeading(\"Project brief\", level: 1, id: \"Project brief\"),\n            MonarchPageOutlineHeading(\"Goals\", level: 2, id: \"Goals\"),\n            MonarchPageOutlineHeading(\"Options\", level: 2, id: \"Options\"),\n            MonarchPageOutlineHeading(\"Timeline\", level: 2, id: \"Timeline\"),\n        ],\n        currentID: \"Project brief\",\n        stats: MonarchPageOutlineStats(words: 59, minutes: 1),\n        labels: MonarchPageOutlineLabels(title: \"Document outline\")\n    ) { _ in }\n    .frame(maxWidth: .infinity, alignment: .leading)\n}"
+    },
+    {
+      "title": "Fewer kinds and a product slash item",
+      "setup": "@State private var blocks = [MonarchBlock(text: \"Meeting notes\")]\n@State private var lastBlock: String?",
+      "code": "MonarchBlockEditor(\n    \"Meeting notes\",\n    blocks: $blocks,\n    kinds: [.paragraph, .heading(2), .bulletList, .taskList],\n    slashItems: [MonarchSlashMenuItem(id: \"date\", label: \"Today's date\", systemImage: \"calendar\")],\n    onSlashItem: { _, block in lastBlock = block }\n)\n.frame(height: 360)"
+    },
+    {
+      "title": "Read-only",
+      "setup": "private let blocks = [\n    MonarchBlock(kind: .heading(2), text: \"Published brief\"),\n    MonarchBlock(kind: .bulletList, text: \"Scope\"),\n    MonarchBlock(kind: .bulletList, text: \"Timeline\"),\n]",
+      "code": "MonarchBlockEditor(\"Published brief\", blocks: .constant(blocks), isReadOnly: true)\n    .frame(height: 240)"
+    }
+  ],
+  "webEquivalent": "BlockEditor",
+  "dependsOn": [
+    "slash-menu",
+    "drag-handle",
+    "editor-toolbar",
+    "callout-block",
+    "embed-block",
+    "table-block",
+    "toggle-block",
+    "checkbox"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "blocks.1.code",
+        "blocks.7.columns.0.bold",
+        "blocks.7.columns.1.bold"
+      ],
+      "reason": "NATIVE GAP: the web draws the slash as inline code and Option A and Option B as bold, and shows the two options as side by side columns with a tone switcher on the callout; native text blocks carry plain text and there is no columns block, so the two options are two text blocks",
+      "convention": "none: recorded in native-gaps.json"
+    },
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "blocks.0.type",
+        "blocks.1.type",
+        "blocks.2.type",
+        "blocks.3.type",
+        "blocks.4.type",
+        "blocks.5.type",
+        "blocks.6.type",
+        "blocks.7.type",
+        "blocks.8.type",
+        "blocks.9.type",
+        "blocks.10.type"
+      ],
+      "reason": "The block kind is expressed by the native block constructor (heading, text, task list, callout, table, toggle), not by a string; the type only selects the web HTML builder",
+      "convention": "none: structural, the kind is the constructor"
+    }
+  ]
+}

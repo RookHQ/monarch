@@ -1,0 +1,133 @@
+{
+  "id": "data-subject-request-form",
+  "name": null,
+  "title": "DataSubjectRequestForm",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.layout.Column with androidx.compose.foundation.verticalScroll, holding MonarchRadioCardGroup, MonarchTextField, MonarchCountrySelect, MonarchCheckboxRow, MonarchButton and MonarchBanner",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A privacy request form (access, deletion, correction) composed from Monarch fields: the request type as radio cards, who it is for, contact details, the country or region, details, an accuracy acknowledgement, an error summary on submit and the reference once sent.",
+  "whenToUse": "On a privacy or account screen where people ask for a copy of their data, its deletion or correction, in line with GDPR, CCPA and similar laws.",
+  "whenNotToUse": "For deleting the signed-in account directly use a danger-zone action with a confirmation; for consent toggles use MonarchConsentManager.",
+  "api": [
+    "Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) { if (submitted && problems.isNotEmpty()) MonarchBanner(title = …, message = …, tone = MonarchTone.Danger, announcement = MonarchBannerAnnouncement.Assertive); MonarchRadioCardGroup(options = types, selected = type, onSelect = …, label = \"What would you like to do?\"); MonarchRadioCardGroup(options = listOf(MonarchRadioCardOption(true, \"Myself\"), MonarchRadioCardOption(false, \"Someone I am authorized to act for\")), …); MonarchTextField(name, …); MonarchTextField(email, …, errorText = …, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)); if (!forSelf) MonarchTextField(agentName, …); MonarchCountrySelect(selected = country, onSelectedChange = …, errorText = …); MonarchTextField(details, …, singleLine = false); MonarchCheckboxRow(checked = accurate, onCheckedChange = …, label = \"The information I gave is accurate\"); MonarchButton(text = \"Send request\", onClick = …, variant = MonarchButtonVariant.Primary) }",
+    "MonarchBanner(title = \"Request received\", message = \"Your reference is …\", tone = MonarchTone.Success, announcement = MonarchBannerAnnouncement.Polite)"
+  ],
+  "options": [
+    {
+      "name": "request types",
+      "type": "List<MonarchRadioCardOption<String>>",
+      "default": "required",
+      "description": "The kinds of request the product offers (access, delete, correct, object, opt out, withdraw consent); which apply where is for the product's legal team."
+    },
+    {
+      "name": "relationship",
+      "type": "MonarchRadioCardGroup<Boolean>",
+      "default": "Myself",
+      "description": "Whether the request is for the person or made by an authorized agent; an agent also gives their own name (and email)."
+    },
+    {
+      "name": "email",
+      "type": "MonarchTextField",
+      "default": "required",
+      "description": "Identifies the account; validated on submit with KeyboardType.Email."
+    },
+    {
+      "name": "country",
+      "type": "MonarchCountrySelect",
+      "default": "required",
+      "description": "The jurisdiction, as an ISO code from the locale's country list; limit it with countries."
+    },
+    {
+      "name": "details",
+      "type": "MonarchTextField(singleLine = false)",
+      "default": "optional",
+      "description": "Required for a correction request."
+    },
+    {
+      "name": "acknowledgement",
+      "type": "MonarchCheckboxRow",
+      "default": "required",
+      "description": "The form is not sent until it is ticked."
+    },
+    {
+      "name": "error summary",
+      "type": "MonarchBanner(tone = Danger, announcement = Assertive)",
+      "default": "after an invalid submit",
+      "description": "Lists every problem in words; each field also shows its own error."
+    },
+    {
+      "name": "success",
+      "type": "MonarchBanner(tone = Success)",
+      "default": "after sending",
+      "description": "Shows the reference the app's API returns."
+    }
+  ],
+  "states": [
+    {
+      "name": "filling in",
+      "description": "No errors are shown until Send request is tapped."
+    },
+    {
+      "name": "invalid",
+      "description": "A danger banner with the number of problems and each message, and each field's own error."
+    },
+    {
+      "name": "agent",
+      "description": "Labels change to \"Their full name\" and \"Their email\" and the agent's own name field appears."
+    },
+    {
+      "name": "sent",
+      "description": "The form is replaced by a success banner with the reference."
+    }
+  ],
+  "appearance": "Each part keeps its own appearance: radio cards with the accent border when chosen, text fields with the input border and the danger color in error, the danger and success banners in their tones. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web DataSubjectRequestForm is one component with default request types, built-in strings, a promise-based onSubmit with a busy state, and focus moved to the first problem. On Android it is a recipe the app owns: the request types, the strings and the API call are the app's, the country comes from MonarchCountrySelect (the web takes the product's own list or a text input), and the error summary is an assertive MonarchBanner instead of moving focus. Wrap the Column in a screen with verticalScroll; the catalogue page leaves the scroll out because the catalogue scrolls. iOS has no entry yet.",
+  "accessibility": [
+    "Both radio card groups are named by their questions and read each card's title and description.",
+    "Every field has a visible label; errors are shown under the field and read with it.",
+    "After an invalid submit the danger banner is announced assertively with the number of problems and each message.",
+    "The acknowledgement is one MonarchCheckboxRow: one TalkBack element with the checkbox role and a 48dp row.",
+    "The success banner is announced politely with the reference."
+  ],
+  "edgeCases": [
+    "Errors appear only after the first submit and update as the person fixes them.",
+    "A correction request needs details; other types do not.",
+    "Switching to an agent request asks for the agent's name; switching back keeps what was typed but does not require it."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Public privacy request form",
+      "fixture": "data-subject-request-form",
+      "webExample": "Public privacy request form",
+      "template": "val sent = reference\nif (sent != null) {\n    MonarchBanner(\n        title = \"Request received\",\n        message = \"Your reference is $sent. Keep it in case you need to ask about the request.\",\n        tone = MonarchTone.Success,\n        announcement = MonarchBannerAnnouncement.Polite,\n    )\n} else {\n    Column(\n        modifier = Modifier.verticalScroll(rememberScrollState()),\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n    ) {\n        if (submitted && problems.isNotEmpty()) {\n            MonarchBanner(\n                title = if (problems.size == 1) {\n                    \"There is a problem with 1 answer\"\n                } else {\n                    \"There are problems with ${problems.size} answers\"\n                },\n                message = problems.joinToString(\" \"),\n                tone = MonarchTone.Danger,\n                announcement = MonarchBannerAnnouncement.Assertive,\n            )\n        }\n        MonarchRadioCardGroup(\n            options = listOf(\n                MonarchRadioCardOption({{types.0.id}}, {{types.0.label}}, {{types.0.description}}),\n                MonarchRadioCardOption({{types.1.id}}, {{types.1.label}}, {{types.1.description}}),\n                MonarchRadioCardOption({{types.2.id}}, {{types.2.label}}, {{types.2.description}}),\n                MonarchRadioCardOption({{types.3.id}}, {{types.3.label}}, {{types.3.description}}),\n                MonarchRadioCardOption({{types.4.id}}, {{types.4.label}}, {{types.4.description}}),\n                MonarchRadioCardOption({{types.5.id}}, {{types.5.label}}, {{types.5.description}}),\n            ),\n            selected = type,\n            onSelect = { type = it },\n            label = \"What would you like to do?\",\n        )\n        MonarchRadioCardGroup(\n            options = listOf(\n                MonarchRadioCardOption(true, \"Myself\"),\n                MonarchRadioCardOption(false, \"Someone I am authorized to act for\"),\n            ),\n            selected = forSelf,\n            onSelect = { forSelf = it },\n            label = \"Who is this request for?\",\n        )\n        MonarchTextField(\n            value = name,\n            onValueChange = { name = it },\n            label = if (forSelf) \"Full name\" else \"Their full name\",\n            helperText = \"Optional\",\n        )\n        MonarchTextField(\n            value = email,\n            onValueChange = { email = it },\n            label = if (forSelf) \"Email\" else \"Their email\",\n            required = true,\n            helperText = \"Used to identify the account and to reply about this request.\",\n            errorText = if (submitted && !emailValid) \"Enter an email address like name@example.com.\" else null,\n            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),\n        )\n        if (!forSelf) {\n            MonarchTextField(\n                value = agentName,\n                onValueChange = { agentName = it },\n                label = \"Your full name\",\n                helperText = \"You may be asked for proof that you can act for this person.\",\n                errorText = if (submitted && agentName.isBlank()) \"Enter your full name.\" else null,\n            )\n        }\n        MonarchCountrySelect(\n            selected = country,\n            onSelectedChange = { country = it },\n            errorText = if (submitted && country == null) \"Choose a country or region.\" else null,\n            placeholder = \"Choose a country or region\",\n            labels = MonarchCountrySelectLabels(label = \"Country or region where the person lives\"),\n        )\n        MonarchTextField(\n            value = details,\n            onValueChange = { details = it },\n            label = \"Details\",\n            helperText = \"Anything that helps find the information or explains the request.\",\n            errorText = if (submitted && type == {{types.2.id}} && details.isBlank()) {\n                \"Describe what needs correcting.\"\n            } else {\n                null\n            },\n            singleLine = false,\n        )\n        MonarchInlineNotice(message = {{verificationNote}}, tone = MonarchTone.Info)\n        MonarchCheckboxRow(\n            checked = accurate,\n            onCheckedChange = { accurate = it },\n            label = \"The information I gave is accurate\",\n        )\n        MonarchButton(\n            text = \"Send request\",\n            onClick = {\n                submitted = true\n                // Send the request to your API here; show its reference when it succeeds.\n                if (problems.isEmpty()) reference = \"DSR-1042\"\n            },\n            variant = MonarchButtonVariant.Primary,\n        )\n    }\n}",
+      "setupTemplate": "var type by rememberSaveable { mutableStateOf<String?>(null) }\nvar forSelf by rememberSaveable { mutableStateOf(true) }\nvar name by rememberSaveable { mutableStateOf(\"\") }\nvar email by rememberSaveable { mutableStateOf(\"\") }\nvar agentName by rememberSaveable { mutableStateOf(\"\") }\nvar country by rememberSaveable { mutableStateOf<String?>(null) }\nvar details by rememberSaveable { mutableStateOf(\"\") }\nvar accurate by rememberSaveable { mutableStateOf(false) }\nvar submitted by rememberSaveable { mutableStateOf(false) }\nvar reference by rememberSaveable { mutableStateOf<String?>(null) }\nval emailValid = Regex(\"^[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+$\").matches(email.trim())\nval problems = buildList {\n    if (type == null) add(\"Choose what you would like to do.\")\n    if (!emailValid) add(\"Enter an email address like name@example.com.\")\n    if (!forSelf && agentName.isBlank()) add(\"Enter your full name.\")\n    if (country == null) add(\"Choose a country or region.\")\n    if (type == \"correct\" && details.isBlank()) add(\"Describe what needs correcting.\")\n    if (!accurate) add(\"Confirm that the information is accurate.\")\n}",
+      "setup": "var type by rememberSaveable { mutableStateOf<String?>(null) }\nvar forSelf by rememberSaveable { mutableStateOf(true) }\nvar name by rememberSaveable { mutableStateOf(\"\") }\nvar email by rememberSaveable { mutableStateOf(\"\") }\nvar agentName by rememberSaveable { mutableStateOf(\"\") }\nvar country by rememberSaveable { mutableStateOf<String?>(null) }\nvar details by rememberSaveable { mutableStateOf(\"\") }\nvar accurate by rememberSaveable { mutableStateOf(false) }\nvar submitted by rememberSaveable { mutableStateOf(false) }\nvar reference by rememberSaveable { mutableStateOf<String?>(null) }\nval emailValid = Regex(\"^[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+$\").matches(email.trim())\nval problems = buildList {\n    if (type == null) add(\"Choose what you would like to do.\")\n    if (!emailValid) add(\"Enter an email address like name@example.com.\")\n    if (!forSelf && agentName.isBlank()) add(\"Enter your full name.\")\n    if (country == null) add(\"Choose a country or region.\")\n    if (type == \"correct\" && details.isBlank()) add(\"Describe what needs correcting.\")\n    if (!accurate) add(\"Confirm that the information is accurate.\")\n}",
+      "code": "val sent = reference\nif (sent != null) {\n    MonarchBanner(\n        title = \"Request received\",\n        message = \"Your reference is $sent. Keep it in case you need to ask about the request.\",\n        tone = MonarchTone.Success,\n        announcement = MonarchBannerAnnouncement.Polite,\n    )\n} else {\n    Column(\n        modifier = Modifier.verticalScroll(rememberScrollState()),\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n    ) {\n        if (submitted && problems.isNotEmpty()) {\n            MonarchBanner(\n                title = if (problems.size == 1) {\n                    \"There is a problem with 1 answer\"\n                } else {\n                    \"There are problems with ${problems.size} answers\"\n                },\n                message = problems.joinToString(\" \"),\n                tone = MonarchTone.Danger,\n                announcement = MonarchBannerAnnouncement.Assertive,\n            )\n        }\n        MonarchRadioCardGroup(\n            options = listOf(\n                MonarchRadioCardOption(\"access\", \"Get a copy of my data\", \"Receive a copy of the personal information held about you.\"),\n                MonarchRadioCardOption(\"delete\", \"Delete my data\", \"Ask for your personal information to be deleted.\"),\n                MonarchRadioCardOption(\"correct\", \"Correct my data\", \"Fix personal information that is wrong or incomplete.\"),\n                MonarchRadioCardOption(\"object\", \"Object to or restrict processing\", \"Ask for your information to stop being used, or to be used less.\"),\n                MonarchRadioCardOption(\"opt-out\", \"Opt out of sale or sharing\", \"Stop your information from being sold or shared for advertising.\"),\n                MonarchRadioCardOption(\"withdraw-consent\", \"Withdraw consent\", \"Take back consent you gave earlier, for example for marketing.\"),\n            ),\n            selected = type,\n            onSelect = { type = it },\n            label = \"What would you like to do?\",\n        )\n        MonarchRadioCardGroup(\n            options = listOf(\n                MonarchRadioCardOption(true, \"Myself\"),\n                MonarchRadioCardOption(false, \"Someone I am authorized to act for\"),\n            ),\n            selected = forSelf,\n            onSelect = { forSelf = it },\n            label = \"Who is this request for?\",\n        )\n        MonarchTextField(\n            value = name,\n            onValueChange = { name = it },\n            label = if (forSelf) \"Full name\" else \"Their full name\",\n            helperText = \"Optional\",\n        )\n        MonarchTextField(\n            value = email,\n            onValueChange = { email = it },\n            label = if (forSelf) \"Email\" else \"Their email\",\n            required = true,\n            helperText = \"Used to identify the account and to reply about this request.\",\n            errorText = if (submitted && !emailValid) \"Enter an email address like name@example.com.\" else null,\n            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),\n        )\n        if (!forSelf) {\n            MonarchTextField(\n                value = agentName,\n                onValueChange = { agentName = it },\n                label = \"Your full name\",\n                helperText = \"You may be asked for proof that you can act for this person.\",\n                errorText = if (submitted && agentName.isBlank()) \"Enter your full name.\" else null,\n            )\n        }\n        MonarchCountrySelect(\n            selected = country,\n            onSelectedChange = { country = it },\n            errorText = if (submitted && country == null) \"Choose a country or region.\" else null,\n            placeholder = \"Choose a country or region\",\n            labels = MonarchCountrySelectLabels(label = \"Country or region where the person lives\"),\n        )\n        MonarchTextField(\n            value = details,\n            onValueChange = { details = it },\n            label = \"Details\",\n            helperText = \"Anything that helps find the information or explains the request.\",\n            errorText = if (submitted && type == \"correct\" && details.isBlank()) {\n                \"Describe what needs correcting.\"\n            } else {\n                null\n            },\n            singleLine = false,\n        )\n        MonarchInlineNotice(message = \"To protect the account, we will email a link to confirm the request before acting on it.\", tone = MonarchTone.Info)\n        MonarchCheckboxRow(\n            checked = accurate,\n            onCheckedChange = { accurate = it },\n            label = \"The information I gave is accurate\",\n        )\n        MonarchButton(\n            text = \"Send request\",\n            onClick = {\n                submitted = true\n                // Send the request to your API here; show its reference when it succeeds.\n                if (problems.isEmpty()) reference = \"DSR-1042\"\n            },\n            variant = MonarchButtonVariant.Primary,\n        )\n    }\n}"
+    }
+  ],
+  "webEquivalent": "DataSubjectRequestForm",
+  "dependsOn": [
+    "radio-card-group",
+    "text-field",
+    "country-select",
+    "checkbox",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "layout",
+      "platform": "android",
+      "reason": "The web marks the optional answers inline after the label (Full name Optional, Details Optional), puts the asterisk after the questions What would you like to do? and Country or region, and draws the radio on the left of each card. The Android fields show Optional as supporting text under the field, the group and country labels carry no asterisk (required is spoken by the field's name only), and the radio sits at the end of the card as in Material list items. The cards are one per line, full width, as the phone pattern for a list of choices (the web has two columns at 614px); the question order, copy and the notice, checkbox and button are the web's.",
+      "convention": "Material 3 text field: supporting text under the field; trailing radio in selectable rows"
+    }
+  ]
+}

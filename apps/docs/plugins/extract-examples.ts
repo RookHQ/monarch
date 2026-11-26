@@ -18,6 +18,8 @@
  * that is not a function) throws an `ExampleExtractionError`, which fails the
  * docs build and the tests rather than showing wrong code.
  */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import ts from 'typescript';
 
 export interface ExtractedExample {
@@ -111,16 +113,170 @@ function dedent(code: string, firstColumn: number): string {
     .trim();
 }
 
+/** How the extractor reads a parity fixture a docs file imports. */
+export interface ExtractOptions {
+  /** The parsed JSON of an imported `*.fixture.json`; by default read next to the docs file. */
+  readFixture?: (specifier: string) => unknown;
+}
+
+/** A parity fixture import: `import fixture from './<id>.fixture.json'`. */
+const isFixtureImport = (specifier: string) => /\.fixture\.json$/.test(specifier);
+
+const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
+
+/** A JSON value as a JavaScript literal: single-quoted strings, unquoted keys where possible. */
+export function jsLiteral(value: unknown, indent = ''): string {
+  if (typeof value === 'string') return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  const inner = `${indent}  `;
+  if (Array.isArray(value)) {
+    if (!value.length) return '[]';
+    return `[\n${value.map((v) => `${inner}${jsLiteral(v, inner)},`).join('\n')}\n${indent}]`;
+  }
+  const entries = Object.entries(value as Record<string, unknown>);
+  if (!entries.length) return '{}';
+  const one = `{ ${entries.map(([k, v]) => `${IDENTIFIER.test(k) ? k : jsLiteral(k)}: ${jsLiteral(v, inner)}`).join(', ')} }`;
+  if (one.length <= 80 && !one.includes('\n')) return one;
+  return `{\n${entries.map(([k, v]) => `${inner}${IDENTIFIER.test(k) ? k : jsLiteral(k)}: ${jsLiteral(v, inner)},`).join('\n')}\n${indent}}`;
+}
+
 /** The example snippets of one docs file. */
-export function extractExamples(fileName: string, text: string): ExtractedExample[] {
-  return extractDocs(fileName, text).examples;
+export function extractExamples(
+  fileName: string,
+  text: string,
+  options: ExtractOptions = {},
+): ExtractedExample[] {
+  return extractDocs(fileName, text, options).examples;
 }
 
 /** Id, title, summary and example snippets of one docs file. */
-export function extractDocs(fileName: string, text: string): ExtractedDocs {
+export function extractDocs(
+  fileName: string,
+  text: string,
+  options: ExtractOptions = {},
+): ExtractedDocs {
   const { sourceFile: sf, checker } = createChecker(fileName, text);
   const fail = (node: ts.Node | undefined, message: string): never => {
     throw new ExampleExtractionError(fileName, node, message);
+  };
+  const readFixture =
+    options.readFixture ??
+    ((specifier: string) =>
+      JSON.parse(readFileSync(path.resolve(path.dirname(fileName), specifier), 'utf8')) as unknown);
+
+  // Parity fixtures: the imported JSON, and top-level consts that are a path into it.
+  /** Declaration (import clause or variable declaration) -> the JSON value it stands for. */
+  const fixtureValues = new Map<ts.Node, unknown>();
+  for (const stmt of sf.statements) {
+    if (!ts.isImportDeclaration(stmt)) continue;
+    const specifier = (stmt.moduleSpecifier as ts.StringLiteral).text;
+    if (!isFixtureImport(specifier) || !stmt.importClause?.name) continue;
+    fixtureValues.set(stmt.importClause, readFixture(specifier));
+  }
+  /** The JSON value of a static path into a fixture (`f.data.rows[0].label`), or `undefined`. */
+  const fixtureValue = (expr: ts.Expression): { value: unknown } | undefined => {
+    const e = unwrap(expr);
+    if (ts.isIdentifier(e)) {
+      for (const decl of checker.getSymbolAtLocation(e)?.declarations ?? []) {
+        if (fixtureValues.has(decl)) return { value: fixtureValues.get(decl) };
+      }
+      return undefined;
+    }
+    let key: string | undefined;
+    let base: ts.Expression;
+    if (ts.isPropertyAccessExpression(e)) {
+      key = e.name.text;
+      base = e.expression;
+    } else if (ts.isElementAccessExpression(e)) {
+      const arg = e.argumentExpression;
+      if (ts.isNumericLiteral(arg) || ts.isStringLiteral(arg)) key = arg.text;
+      base = e.expression;
+    } else return undefined;
+    const parent = fixtureValue(base);
+    if (!parent) return undefined;
+    // `rows[i]` with a runtime key is code that uses the fixture, not one fixture value.
+    if (key === undefined) return undefined;
+    const holder = parent.value as Record<string, unknown> | null;
+    if (holder === null || holder === undefined)
+      return fail(e, `the fixture has no \`${key}\` here`);
+    // `rows.map`, `rows.length`, `text.slice`: a method or inherited member is code, not a fixture value.
+    if (typeof holder !== 'object' || (!Object.hasOwn(holder, key) && key in holder))
+      return undefined;
+    if (!(key in holder)) return fail(e, `the fixture has no \`${key}\` here`);
+    return { value: holder[key] };
+  };
+  for (const stmt of sf.statements) {
+    if (!ts.isVariableStatement(stmt)) continue;
+    for (const decl of stmt.declarationList.declarations) {
+      const found = decl.initializer ? fixtureValue(decl.initializer) : undefined;
+      if (found) fixtureValues.set(decl, found.value);
+    }
+  }
+  /** Is this declaration a fixture import or a fixture alias (left out of snippets)? */
+  const isFixtureDecl = (decl: ts.Node) => fixtureValues.has(decl);
+  /** A fixture path as the code it stands for, in its place in JSX or in an expression. */
+  const inlineFixture = (node: ts.Expression, value: unknown): { node: ts.Node; text: string } => {
+    const parent = node.parent;
+    if (parent && ts.isJsxExpression(parent)) {
+      const holder = parent.parent;
+      if (
+        typeof value === 'string' &&
+        holder &&
+        ts.isJsxAttribute(holder) &&
+        !/["\\\n]/.test(value)
+      )
+        return { node: parent, text: `"${value}"` };
+      if (
+        typeof value === 'string' &&
+        holder &&
+        !ts.isJsxAttribute(holder) &&
+        !/[{}<>\n]/.test(value)
+      )
+        return { node: parent, text: value };
+      return { node: parent, text: `{${jsLiteral(value)}}` };
+    }
+    return { node, text: jsLiteral(value) };
+  };
+  /** The source text from `start` to `end` with every fixture path in it written out. */
+  const sliceWithFixtures = (start: number, end: number): string => {
+    const edits: { start: number; end: number; text: string }[] = [];
+    const visit = (node: ts.Node) => {
+      if (node.end <= start || node.pos >= end) return;
+      if (ts.isExpression(node) && !ts.isJsxExpression(node)) {
+        const found = fixtureValue(node);
+        // Only the outermost path: `a.b.c`, not `a.b` inside it.
+        const outer =
+          found &&
+          !(
+            node.parent &&
+            (ts.isPropertyAccessExpression(node.parent) ||
+              ts.isElementAccessExpression(node.parent)) &&
+            node.parent.expression === node &&
+            fixtureValue(node.parent as ts.Expression)
+          );
+        if (found && outer) {
+          const edit = inlineFixture(node, found.value);
+          const at = edit.node.getStart(sf);
+          // A literal over several lines takes the indentation of the line it is written on.
+          const lineStart = sf.text.lastIndexOf('\n', at - 1) + 1;
+          const indent = /^[ \t]*/.exec(sf.text.slice(lineStart, at))?.[0] ?? '';
+          edits.push({
+            start: at,
+            end: edit.node.end,
+            text: edit.text.replace(/\n/g, `\n${indent}`),
+          });
+          return;
+        }
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(sf);
+    let out = sf.text.slice(start, end);
+    for (const edit of edits.sort((a, b) => b.start - a.start)) {
+      if (edit.start < start || edit.end > end) continue;
+      out = out.slice(0, edit.start - start) + edit.text + out.slice(edit.end - start);
+    }
+    return out;
   };
   const column = (node: ts.Node) => sf.getLineAndCharacterOfPosition(node.getStart(sf)).character;
 
@@ -230,10 +386,13 @@ export function extractDocs(fileName: string, text: string): ExtractedDocs {
 
     const collect = (root: ts.Node) => {
       const visit = (node: ts.Node) => {
+        // A fixture path is written out as a literal: nothing in it (a cast's type) is a dependency.
+        if (ts.isExpression(node) && !ts.isIdentifier(node) && fixtureValue(node)) return;
         if (ts.isIdentifier(node)) {
           const symbol = checker.getSymbolAtLocation(node);
           for (const decl of symbol?.declarations ?? []) {
             if (decl.getSourceFile() !== sf) continue;
+            if (isFixtureDecl(decl)) continue;
             if (
               ts.isImportSpecifier(decl) ||
               ts.isImportClause(decl) ||
@@ -320,7 +479,7 @@ export function extractDocs(fileName: string, text: string): ExtractedDocs {
     // Declarations, in file order.
     for (const stmt of sf.statements) {
       if (!statements.has(stmt)) continue;
-      parts.push(dedent(sf.text.slice(stmt.getStart(sf, true), stmt.end), 0));
+      parts.push(dedent(sliceWithFixtures(stmt.getStart(sf, true), stmt.end), 0));
     }
 
     parts.push(renderBody(body));
@@ -333,7 +492,7 @@ export function extractDocs(fileName: string, text: string): ExtractedDocs {
       if (!stmts.length) return '';
       const first = stmts[0] as ts.Statement;
       const last = stmts[stmts.length - 1] as ts.Statement;
-      return dedent(sf.text.slice(first.getStart(sf, true), last.end), column(first));
+      return dedent(sliceWithFixtures(first.getStart(sf, true), last.end), column(first));
     }
     const expr = unwrap(body as ts.Expression);
     if (ts.isJsxFragment(expr)) {
@@ -343,9 +502,9 @@ export function extractDocs(fileName: string, text: string): ExtractedDocs {
       const first = children[0];
       const last = children[children.length - 1];
       if (!first || !last) return '';
-      return dedent(sf.text.slice(first.getStart(sf), last.end), column(first));
+      return dedent(sliceWithFixtures(first.getStart(sf), last.end), column(first));
     }
-    return dedent(expr.getText(sf), column(expr));
+    return dedent(sliceWithFixtures(expr.getStart(sf), expr.end), column(expr));
   }
 }
 

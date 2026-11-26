@@ -15,6 +15,8 @@ import {
   Input,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './dialog.fixture.json';
 
 function RenameDialog() {
   const [open, setOpen] = useState(false);
@@ -178,24 +180,23 @@ export default {
       items: [
         {
           title: 'Confirmation',
+          stage: { align: 'center' },
           render: () => (
-            <Dialog>
+            <Dialog defaultOpen>
               <DialogTrigger asChild>
-                <Button variant="danger">Delete project</Button>
+                <Button variant="danger">{fixture.data.trigger}</Button>
               </DialogTrigger>
               <DialogContent size="sm">
                 <DialogHeader>
-                  <DialogTitle>Delete project?</DialogTitle>
-                  <DialogDescription>
-                    This removes all tasks and sprints. It cannot be undone.
-                  </DialogDescription>
+                  <DialogTitle>{fixture.data.title}</DialogTitle>
+                  <DialogDescription>{fixture.data.description}</DialogDescription>
                 </DialogHeader>
-                <DialogBody>Type the project name to confirm.</DialogBody>
+                <DialogBody>{fixture.data.body}</DialogBody>
                 <DialogFooter>
                   <DialogClose asChild>
-                    <Button>Cancel</Button>
+                    <Button>{fixture.data.cancel}</Button>
                   </DialogClose>
-                  <Button variant="danger">Delete</Button>
+                  <Button variant="danger">{fixture.data.confirm}</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>

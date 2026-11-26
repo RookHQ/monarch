@@ -12,6 +12,7 @@ import {
   type KeyboardEvent,
 } from 'react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { StagePortal, stagedLayerProps, useOverlayStage } from '../../../internal/overlay-stage.js';
 import { cx } from '../../../internal/cx.js';
 import { useDirection } from '../../../internal/direction.js';
 import { CloseGlyph } from '../../../internal/icons.js';
@@ -322,6 +323,7 @@ export const TagInput = forwardRef<HTMLInputElement, TagInputProps>(function Tag
       }
     : {};
 
+  const staged = useOverlayStage();
   return (
     <div className={cx('mn-tag-input', className)} data-size={size}>
       <PopoverPrimitive.Root open={listOpen} onOpenChange={setOpen}>
@@ -389,7 +391,7 @@ export const TagInput = forwardRef<HTMLInputElement, TagInputProps>(function Tag
           </div>
         </PopoverPrimitive.Anchor>
         {suggestions ? (
-          <PopoverPrimitive.Portal>
+          <StagePortal portal={PopoverPrimitive.Portal}>
             <PopoverPrimitive.Content
               align="start"
               sideOffset={4}
@@ -399,6 +401,7 @@ export const TagInput = forwardRef<HTMLInputElement, TagInputProps>(function Tag
                 if (controlRef.current?.contains(e.target as Node)) e.preventDefault();
               }}
               className="mn-menu mn-tag-input__content"
+              {...stagedLayerProps(staged)}
             >
               <div
                 id={listId}
@@ -429,7 +432,7 @@ export const TagInput = forwardRef<HTMLInputElement, TagInputProps>(function Tag
                 ))}
               </div>
             </PopoverPrimitive.Content>
-          </PopoverPrimitive.Portal>
+          </StagePortal>
         ) : null}
       </PopoverPrimitive.Root>
       {message ? (

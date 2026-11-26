@@ -1,23 +1,23 @@
 import { useState } from 'react';
 import { SpaceSwitcher } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './space-switcher.fixture.json';
 
-const spaces = [
-  { id: 's-eng', name: 'Engineering', description: '18 members' },
-  { id: 's-mkt', name: 'Marketing', description: '9 members' },
-  { id: 's-ops', name: 'Operations', description: '6 members' },
-  { id: 's-sales', name: 'Sales', description: '12 members' },
-];
+const spaces = fixture.data.spaces;
 
 function Basic() {
   const [space, setSpace] = useState<string | null>(null);
+  const [open, setOpen] = useState(true);
   return (
     <div style={{ width: '15rem' }}>
       <SpaceSwitcher
+        open={open}
+        onOpenChange={setOpen}
         spaces={spaces}
         value={space}
         onValueChange={setSpace}
-        manageHref="https://id.example.com/spaces"
+        manageHref={fixture.data.manageHref}
         onCreate={() => {}}
       />
     </div>
@@ -150,6 +150,7 @@ export default {
       items: [
         {
           title: 'All spaces, with New and Manage',
+          stage: true,
           render: () => <Basic />,
         },
         {

@@ -1,68 +1,15 @@
 import { Roadmap, type RoadmapGroup, type RoadmapItem } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+import fixture from './roadmap.fixture.json';
 
-const TODAY = '2026-01-14';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+const TODAY = fixture.data.today;
+const GROUPS = fixture.data.groups as RoadmapGroup[];
 
-const GROUPS: RoadmapGroup[] = [
-  {
-    id: 'growth',
-    label: 'Grow repeat customers',
-    start: '2026-01-01',
-    end: '2026-06-30',
-    health: 'on-track',
-  },
-  {
-    id: 'quality',
-    label: 'Fewer support tickets',
-    start: '2026-02-01',
-    end: '2026-08-31',
-    health: 'at-risk',
-  },
-];
-
-const PROJECTS: RoadmapItem[] = [
-  {
-    id: 'p1',
-    label: 'Loyalty emails',
-    groupId: 'growth',
-    start: '2026-01-05',
-    end: '2026-03-20',
-    progress: 40,
-    progressText: '8/20',
-    health: 'on-track',
-  },
-  {
-    id: 'p2',
-    label: 'Referral page',
-    groupId: 'growth',
-    start: '2026-03-01',
-    end: '2026-05-15',
-    progress: 10,
-    progressText: '1/10',
-    health: null,
-  },
-  {
-    id: 'p3',
-    label: 'Help centre search',
-    groupId: 'quality',
-    start: '2026-02-02',
-    end: '2026-04-30',
-    progress: 25,
-    progressText: '3/12',
-    health: 'at-risk',
-  },
-  {
-    id: 'p4',
-    label: 'Crash fixes',
-    groupId: 'quality',
-    start: '2026-01-12',
-    end: '2026-02-27',
-    progress: 70,
-    progressText: '14/20',
-    health: 'off-track',
-  },
-  { id: 'p5', label: 'Billing revamp', progressText: '0/6' },
-];
+type FixtureProject = Omit<RoadmapItem, 'health'> & { health?: RoadmapItem['health'] };
+const PROJECTS: RoadmapItem[] = (fixture.data.items as FixtureProject[]).map(
+  ({ health, ...project }) => ({ ...project, ...(health !== undefined && { health }) }),
+);
 
 export default {
   id: 'roadmap',
@@ -185,9 +132,10 @@ export default {
               items={PROJECTS}
               groups={GROUPS}
               today={TODAY}
-              defaultStart="2026-01-01"
-              dependencies={[{ id: 'd1', from: 'p4', to: 'p3' }]}
-              milestones={[{ id: 'm1', label: 'Launch', date: '2026-03-20', itemId: 'p1' }]}
+              defaultStart={fixture.data.defaultStart}
+              locale="en-GB"
+              dependencies={[fixture.data.dependency]}
+              milestones={[fixture.data.milestone]}
               onOpen={() => {}}
             />
           ),

@@ -2,9 +2,16 @@ import { useState } from 'react';
 import { Button, ToastProvider } from '@rookcom/monarch-react';
 import { AiUndoBanner, useAiUndoToast, type AiChange } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-undo-banner.fixture.json';
 
-const BEFORE = { status: 'Open', owner: 'Unassigned', priority: 'Normal' };
-const AFTER = { status: 'In progress', owner: 'Sam Lee', priority: 'High' };
+const CHANGES = fixture.data.changes as unknown as readonly [AiChange, AiChange, AiChange];
+const BEFORE = {
+  status: CHANGES[0].before,
+  owner: CHANGES[1].before,
+  priority: CHANGES[2].before,
+};
+const AFTER = { status: CHANGES[0].after, owner: CHANGES[1].after, priority: CHANGES[2].after };
 
 function changesOf(from: typeof BEFORE, to: typeof BEFORE): AiChange[] {
   return [
@@ -15,7 +22,8 @@ function changesOf(from: typeof BEFORE, to: typeof BEFORE): AiChange[] {
 }
 
 function BannerDemo() {
-  const [record, setRecord] = useState(BEFORE);
+  // Opens just after the assistant triaged the ticket.
+  const [record, setRecord] = useState(AFTER);
   const [key, setKey] = useState(0);
   const changed = record !== BEFORE;
   return (
@@ -37,8 +45,8 @@ function BannerDemo() {
       {changed ? (
         <AiUndoBanner
           key={key}
-          title="AI changed 3 fields"
-          changes={changesOf(BEFORE, AFTER)}
+          title={fixture.data.title}
+          changes={[...CHANGES]}
           auditHref="#"
           onUndo={() =>
             new Promise<void>((resolve) =>

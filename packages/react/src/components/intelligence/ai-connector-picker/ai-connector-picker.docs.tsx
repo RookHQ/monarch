@@ -5,85 +5,28 @@ import {
   type AiConnectorPickerProps,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-connector-picker.fixture.json';
 
-const CONNECTORS: AiConnector[] = [
-  {
-    id: 'calendar',
-    name: 'Calendar',
-    description: 'Events and availability',
-    status: 'connected',
-    account: 'ada@example.com',
-    enabled: true,
-    tools: [
-      {
-        id: 'list',
-        name: 'List events',
-        description: 'Reads the events in a date range.',
-        risk: 'read',
-        permission: 'allow',
-      },
-      {
-        id: 'create',
-        name: 'Create event',
-        description: 'Adds an event and invites guests.',
-        risk: 'write',
-        permission: 'ask',
-      },
-      {
-        id: 'delete',
-        name: 'Delete event',
-        description: 'Removes an event for everyone invited.',
-        risk: 'destructive',
-        permission: 'ask',
-      },
-    ],
-  },
-  {
-    id: 'files',
-    name: 'Files',
-    description: 'Documents in the shared drive',
-    status: 'connected',
-    account: 'ada@example.com',
-    enabled: false,
-    tools: [
-      {
-        id: 'search',
-        name: 'Search files',
-        description: 'Finds documents by name or content.',
-        risk: 'read',
-        permission: 'allow',
-      },
-      {
-        id: 'edit',
-        name: 'Edit document',
-        description: 'Changes the text of a document.',
-        risk: 'write',
-        permission: 'never',
-      },
-    ],
-  },
-  {
-    id: 'mail',
-    name: 'Mail',
-    description: 'Read and draft messages',
-    status: 'needs-sign-in',
-    enabled: false,
-  },
-  {
-    id: 'tracker',
-    name: 'Issue tracker',
-    description: 'Tickets and their comments',
-    status: 'error',
-    enabled: true,
-  },
-  {
-    id: 'records',
-    name: 'Customer records',
-    description: 'Turned off by your administrator',
-    status: 'unavailable',
-    enabled: false,
-  },
-];
+const CONNECTORS: AiConnector[] = fixture.data.connectors.map((c) => ({
+  id: c.id,
+  name: c.name,
+  description: c.description,
+  status: c.status as AiConnector['status'],
+  ...('account' in c ? { account: c.account } : {}),
+  enabled: c.enabled,
+  ...('tools' in c
+    ? {
+        tools: c.tools.map((t) => ({
+          id: t.id,
+          name: t.name,
+          description: t.description,
+          risk: t.risk as 'read' | 'write' | 'destructive',
+          permission: t.permission as 'allow' | 'ask' | 'never',
+        })),
+      }
+    : {}),
+}));
 
 /** The product owns the data: this demo keeps it in state and applies each decision. */
 function Demo({
@@ -268,7 +211,7 @@ export default {
         {
           title: 'Connectors with tools',
           stack: true,
-          render: () => <Demo defaultExpandedIds={['calendar']} />,
+          render: () => <Demo defaultExpandedIds={fixture.data.expanded} />,
         },
         {
           title: 'Search with no match',

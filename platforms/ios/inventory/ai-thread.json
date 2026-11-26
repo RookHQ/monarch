@@ -1,0 +1,220 @@
+{
+  "id": "ai-thread",
+  "name": "MonarchAiThread",
+  "title": "AiThread",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "ScrollView with LazyVStack and .defaultScrollAnchor(.bottom), ScrollViewReader.scrollTo for pinning and Jump to latest, composing MonarchAiMessage, MonarchAiContextDivider, MonarchAiThinkingIndicator, MonarchLoadMore, MonarchInlineNotice and MonarchButton",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The scrolling list of an AI conversation: messages oldest first with day labels, pinned to the newest, with Jump to latest, Load earlier, a thinking indicator, connection notices and one announcer for the whole conversation.",
+  "whenToUse": "The message area of an assistant screen, with a MonarchAiPromptInput in .safeAreaInset(edge: .bottom), fed from a MonarchAiConversation.",
+  "whenNotToUse": "For person-to-person chat use MonarchVirtualMessageList with MonarchMessageRow. For one answer without a conversation use MonarchAiMessage or MonarchAiStructuredAnswer on their own.",
+  "api": [
+    "public struct MonarchAiThread<Message: View, Empty: View>: View",
+    "public init(_ messages: [MonarchAiConversationMessage], status: MonarchAiConversationStatus = .idle, error: MonarchAiConversationError? = nil, isOffline: Bool = false, queuedCount: Int = 0, isSlow: Bool = false, hasEarlier: Bool = false, isLoadingEarlier: Bool = false, showsDaySeparators: Bool = true, now: Date? = nil, announces: Bool = true, announceInterval: Duration = .seconds(1), labels: MonarchAiThreadLabels = MonarchAiThreadLabels(), onStop: (@MainActor () -> Void)? = nil, onLoadEarlier: (@MainActor () -> Void)? = nil, @ViewBuilder empty: () -> Empty, @ViewBuilder message: @escaping (MonarchAiConversationMessage, MonarchAiThreadMessageContext) -> Message)",
+    "extension MonarchAiThread where Empty == EmptyView { public init(_ messages:, status:, error:, isOffline:, queuedCount:, isSlow:, hasEarlier:, isLoadingEarlier:, showsDaySeparators:, now:, announces:, announceInterval:, labels:, onStop:, onLoadEarlier:, @ViewBuilder message: @escaping (MonarchAiConversationMessage, MonarchAiThreadMessageContext) -> Message) }",
+    "extension MonarchAiThread where Message == MonarchAiMessage<EmptyView, EmptyView> { public init(_ messages:, status:, error:, isOffline:, queuedCount:, isSlow:, hasEarlier:, isLoadingEarlier:, showsDaySeparators:, now:, announces:, announceInterval:, labels:, onStop:, onLoadEarlier:, @ViewBuilder empty: () -> Empty) }",
+    "extension MonarchAiThread where Message == MonarchAiMessage<EmptyView, EmptyView>, Empty == EmptyView { public init(_ messages:, status:, error:, isOffline:, queuedCount:, isSlow:, hasEarlier:, isLoadingEarlier:, showsDaySeparators:, now:, announces:, announceInterval:, labels:, onStop:, onLoadEarlier:) }",
+    "public struct MonarchAiThreadMessageContext: Sendable, Hashable { public let index: Int; public let isLast: Bool; public let announces: Bool; public init(index: Int, isLast: Bool, announces: Bool) }",
+    "public struct MonarchAiThreadLabels: Sendable { public init(label: String? = nil, jumpToLatest: String? = nil, newMessages: (@Sendable (Int) -> String)? = nil, loadEarlier: String? = nil, loadingEarlier: String? = nil, thinking: String? = nil, responseComplete: String? = nil, responseStopped: String? = nil, error: (@Sendable (String) -> String)? = nil, codeBlock: String? = nil, table: String? = nil, today: String? = nil, yesterday: String? = nil, offline: String? = nil, offlineQueued: (@Sendable (Int) -> String)? = nil, sendingQueued: (@Sendable (Int) -> String)? = nil, slow: String? = nil, stop: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "messages",
+      "type": "[MonarchAiConversationMessage]",
+      "default": "required",
+      "description": "The visible conversation, oldest first: MonarchAiConversation.messages. Ids must be unique and stable: they are the row identities."
+    },
+    {
+      "name": "status",
+      "type": "MonarchAiConversationStatus",
+      "default": ".idle",
+      "description": "submitted shows the thinking indicator; submitted and streaming let Escape and the Magic Tap call onStop; stopped ends the announcement with \"Response stopped\"."
+    },
+    {
+      "name": "error",
+      "type": "MonarchAiConversationError?",
+      "default": "nil",
+      "description": "Announced with high priority as \"Error: <message>\" when the newest message has no error part of its own. Nothing is drawn for it."
+    },
+    {
+      "name": "isOffline",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the offline notice under the messages."
+    },
+    {
+      "name": "queuedCount",
+      "type": "Int",
+      "default": "0",
+      "description": "How many messages wait for the connection: named in the offline notice, and once online shows \"Back online. Sending N queued messages…\"."
+    },
+    {
+      "name": "isSlow",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows \"This is taking longer than usual. Still working…\" while a reply is submitted or streaming."
+    },
+    {
+      "name": "hasEarlier",
+      "type": "Bool",
+      "default": "false",
+      "description": "Older messages exist. With onLoadEarlier, \"Load earlier messages\" (MonarchLoadMore) is the top row."
+    },
+    {
+      "name": "isLoadingEarlier",
+      "type": "Bool",
+      "default": "false",
+      "description": "The load row shows progress and \"Loading earlier messages…\"."
+    },
+    {
+      "name": "showsDaySeparators",
+      "type": "Bool",
+      "default": "true",
+      "description": "A MonarchAiContextDivider day label above the first message of each calendar day."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for Today and Yesterday. nil reads the clock."
+    },
+    {
+      "name": "announces",
+      "type": "Bool",
+      "default": "true",
+      "description": "The thread announces for the whole conversation and tells each message not to; false lets each message announce itself."
+    },
+    {
+      "name": "announceInterval",
+      "type": "Duration",
+      "default": ".seconds(1)",
+      "description": "The least time between two announcements while a reply streams."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiThreadLabels",
+      "default": "MonarchAiThreadLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onStop",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Called by the Escape key and the VoiceOver Magic Tap while a reply is submitted or streaming."
+    },
+    {
+      "name": "onLoadEarlier",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Loads older messages; prepend them to messages."
+    },
+    {
+      "name": "empty",
+      "type": "@ViewBuilder () -> Empty",
+      "default": "EmptyView",
+      "description": "Shown instead of the list when there are no messages, nothing to load and no submitted reply, for example a MonarchAiWelcome."
+    },
+    {
+      "name": "message",
+      "type": "@ViewBuilder (MonarchAiConversationMessage, MonarchAiThreadMessageContext) -> Message",
+      "default": "MonarchAiMessage(message, announces: context.announces)",
+      "description": "Draws one message, given its index, whether it is the newest and whether it should announce itself."
+    }
+  ],
+  "states": [
+    {
+      "name": "pinned",
+      "description": "While the invisible row under the newest message is on screen, a new message scrolls into view (animated unless Reduce Motion is on) and a growing reply, a new indicator or a notice keeps the bottom in view."
+    },
+    {
+      "name": "scrolled up",
+      "description": "New messages do not scroll the view; a small secondary \"Jump to latest\" button over the bottom trailing corner counts them (\"2 new messages\") and scrolls back."
+    },
+    {
+      "name": "submitted",
+      "description": "A MonarchAiThinkingIndicator is the bottom row, and \"Thinking…\" is announced once."
+    },
+    {
+      "name": "streaming",
+      "description": "The reply is read out in whole sentences, then \"Response complete\" or \"Response stopped\" when it ends."
+    },
+    {
+      "name": "earlier",
+      "description": "\"Load earlier messages\" (MonarchLoadMore) is the top row; while loading it shows progress."
+    },
+    {
+      "name": "offline / sending / slow",
+      "description": "One MonarchInlineNotice under the list, offline first: warning tone with a no-connection or upload symbol for the connection, neutral with a clock for a slow reply."
+    },
+    {
+      "name": "error",
+      "description": "An error no message shows is announced with high priority; nothing is drawn for it."
+    },
+    {
+      "name": "empty",
+      "description": "The empty content replaces the list."
+    }
+  ],
+  "appearance": "The thread has no surface of its own: it shows on the screen's background. Messages, day labels, the thinking indicator and the load row keep their own roles; the notice uses the warning or neutral tone of MonarchInlineNotice, and the jump button is a small secondary MonarchButton. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web renders a scrolling div with role=log, measures rows and windows them itself after 200 messages (virtualizeAfter, keepLast, estimatedMessageHeight). On iOS the LazyVStack builds only the rows near the screen, so those parameters do not exist; .defaultScrollAnchor(.bottom) opens on the newest message and ScrollViewReader follows new rows while the bottom is on screen, the same approach as MonarchVirtualMessageList. Android uses a reversed LazyColumn; the parameters match Android's in Swift form: offline, slow and loadingEarlier are isOffline, isSlow and isLoadingEarlier, daySeparators is showsDaySeparators, announceIntervalMillis is a Duration, and nowMillis is a Date. Android's timeZone parameter and the web's locale and timeZone are the SwiftUI environment here (\\.timeZone, \\.calendar, \\.locale), which MonarchAiContextDivider and MonarchAiMessage already read. Android's contentPadding and LazyListState are not offered: the thread pads its rows by the space-4 token, an app adds margins with .contentMargins, and scrolling is the system's. The web's renderMessage and messageProps are the message closure; pass MonarchAiMessage's parameters there. Android's jumpIcon is not needed: the jump button uses the arrow.down SF Symbol. The web's Escape key is .onKeyPress(.escape) for hardware keyboards, and the VoiceOver Magic Tap is added on iOS for the same stop. The announcer names code blocks and tables (\"Code block\", \"Table\") as the web does, through MonarchAiStreamingText's speech rules. The web draws warning and clock glyphs in the notice; iOS uses SF Symbols through MonarchInlineNotice. The composer is not part of the thread on any platform. Experimental until a Rook app adopts it.",
+  "accessibility": [
+    "The list is a VoiceOver container named \"Conversation\" (labels.label).",
+    "Day labels are MonarchAiContextDividers, read as one element: \"Today\", \"Yesterday\" or the date.",
+    "With announces, the thread posts one stream of announcements: \"Thinking…\" when a reply is submitted, a reply that arrives while the thread is shown in whole sentences at most once per announceInterval, then \"Response complete\" or \"Response stopped\"; replies that were already finished are not read.",
+    "The messages get announces == false from the context, so streamed text is not read token by token.",
+    "A conversation error that no message shows is announced with the high announcement priority.",
+    "The offline, sending and slow notices are announced when their text changes.",
+    "\"Jump to latest\" and \"Load earlier messages\" are standard buttons of at least 44 points; the jump button is named \"Jump to latest, 2 new messages\" when messages arrived.",
+    "The Magic Tap (two-finger double tap) and the Escape key call onStop while a reply is submitted or streaming.",
+    "Jumping scrolls without animation when Reduce Motion is on."
+  ],
+  "edgeCases": [
+    "Give the thread a bounded height; it cannot sit in a vertically scrolling parent.",
+    "Message ids must be unique and stable: they are the row identities and the scroll targets.",
+    "A message whose createdAt is not an ISO 8601 time gets no day label, and the next message starts a new day, as on the web.",
+    "Without onLoadEarlier, hasEarlier shows nothing.",
+    "The empty content shows only when there are no messages, nothing to load and no submitted reply.",
+    "Offline wins over the sending and slow notices; slow shows only while a reply is running.",
+    "Whether prepending older messages keeps the visible rows still depends on SwiftUI's bottom anchoring of the scroll view, as for MonarchVirtualMessageList; it has not been checked on a device."
+  ],
+  "tests": [
+    "MonarchAiThreadTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "A finished turn",
+      "fixture": "ai-thread",
+      "webExample": "A finished turn",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    MonarchAiThread(\n        [\n            MonarchAiConversationMessage(\n                id: {{messages.0.id}},\n                role: {{messages.0.role|case}},\n                parts: [.text(MonarchAiTextPart(text: {{messages.0.text}}))],\n                createdAt: {{messages.0.createdAt}}\n            ),\n            MonarchAiConversationMessage(\n                id: {{messages.1.id}},\n                role: {{messages.1.role|case}},\n                parts: [.text(MonarchAiTextPart(text: {{messages.1.text}}))],\n                agent: MonarchAiAgentRef(name: {{messages.1.agent.name}}, role: {{messages.1.agent.role}}),\n                createdAt: {{messages.1.createdAt}}\n            ),\n        ],\n        now: {{now|date}}\n    )\n    .frame(height: 560)\n    .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(theme.colors.borderSubtle))\n    HStack(spacing: theme.spacing.space2) {\n        MonarchButton(\"Send a message\", variant: .primary) {}\n        MonarchButton(\"Stop\", variant: .secondary) {}\n            .disabled(true)\n    }\n}\n.environment(\\.locale, Locale(identifier: {{locale}}))\n.environment(\\.timeZone, TimeZone(identifier: {{timeZone}}) ?? .gmt)",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    MonarchAiThread(\n        [\n            MonarchAiConversationMessage(\n                id: \"turn-1\",\n                role: .user,\n                parts: [.text(MonarchAiTextPart(text: \"Summarise the meeting notes\"))],\n                createdAt: \"2026-11-04T09:30:00Z\"\n            ),\n            MonarchAiConversationMessage(\n                id: \"turn-2\",\n                role: .assistant,\n                parts: [.text(MonarchAiTextPart(text: \"The team agreed to move the launch to Thursday 12 November. Priya will update the release notes, and Sam will check the migration on staging before Wednesday. Two questions stay open: the pricing page copy and who signs off the support rota.\"))],\n                agent: MonarchAiAgentRef(name: \"Assistant\", role: \"Writing assistant\"),\n                createdAt: \"2026-11-04T09:30:06Z\"\n            ),\n        ],\n        now: Date(timeIntervalSince1970: 1_793_784_660)\n    )\n    .frame(height: 560)\n    .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(theme.colors.borderSubtle))\n    HStack(spacing: theme.spacing.space2) {\n        MonarchButton(\"Send a message\", variant: .primary) {}\n        MonarchButton(\"Stop\", variant: .secondary) {}\n            .disabled(true)\n    }\n}\n.environment(\\.locale, Locale(identifier: \"en-GB\"))\n.environment(\\.timeZone, TimeZone(identifier: \"Europe/London\") ?? .gmt)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme",
+      "setup": "@Environment(\\.monarchTheme) private var theme"
+    },
+    {
+      "title": "Older history, a custom message and the offline notice",
+      "setup": "private let messages: [MonarchAiConversationMessage] = (0..<6).map { (index: Int) -> MonarchAiConversationMessage in\n    MonarchAiConversationMessage(\n        id: \"m\\(index)\",\n        role: index % 2 == 0 ? .user : .assistant,\n        parts: [.text(MonarchAiTextPart(text: \"Message \\(index + 1)\"))],\n        createdAt: \"2026-11-05T09:0\\(index):00.000Z\"\n    )\n}\n@State private var isLoading = false",
+      "code": "MonarchAiThread(\n    messages,\n    isOffline: true,\n    queuedCount: 1,\n    hasEarlier: true,\n    isLoadingEarlier: isLoading,\n    onLoadEarlier: { isLoading = true },\n    message: { message, context in\n        MonarchAiMessage(message, showsActions: context.isLast, announces: context.announces)\n    }\n)\n.environment(\\.timeZone, TimeZone(identifier: \"Europe/Madrid\") ?? .current)\n.frame(height: 360)"
+    },
+    {
+      "title": "A welcome while the conversation is empty",
+      "code": "MonarchAiThread([], empty: {\n    MonarchEmptyState(\"Ask anything\", message: \"Start a conversation with the assistant.\")\n})\n.frame(height: 240)"
+    }
+  ],
+  "webEquivalent": "AiThread",
+  "dependsOn": [
+    "ai-message",
+    "ai-scroll-anchor",
+    "ai-thinking-indicator",
+    "ai-context-divider",
+    "load-more",
+    "inline-notice",
+    "button"
+  ]
+}

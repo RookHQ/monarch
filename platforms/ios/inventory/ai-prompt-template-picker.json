@@ -1,0 +1,138 @@
+{
+  "id": "ai-prompt-template-picker",
+  "name": "MonarchAiPromptTemplatePicker",
+  "title": "AiPromptTemplatePicker",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "NavigationStack with a List, searchable(text:prompt:), a Picker for categories and navigationDestination(item:destination:) to a ScrollView form of MonarchTextField fields; presented by the app in sheet(isPresented:content:)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Picks a saved prompt and fills in its blanks: a searchable list of templates, then a page with one field per {{blank}} and a live preview, and Use template hands the filled text to the app.",
+  "whenToUse": "When people reuse prompts with blanks (a customer name, a topic) and the filled prompt should go into the prompt field for review before sending.",
+  "whenNotToUse": "For a few one-tap suggestions on an empty conversation use MonarchAiStarterPrompts. For suggestions after an answer use MonarchAiFollowUpSuggestions.",
+  "api": [
+    "MonarchAiPromptTemplatePicker.init(_ templates: [MonarchAiPromptTemplate], categories: [MonarchAiPromptTemplateCategory] = [], initialTemplateID: String? = nil, labels: MonarchAiPromptTemplatePickerLabels = MonarchAiPromptTemplatePickerLabels(), onCancel: (@MainActor () -> Void)? = nil, onUse: @escaping @MainActor (_ text: String, _ template: MonarchAiPromptTemplate, _ values: [String: String]) -> Void)",
+    "MonarchAiPromptTemplate.init(id: String, title: String, body: String, description: String? = nil, category: String? = nil, keywords: [String] = [], variables: [MonarchAiPromptTemplateVariable]? = nil)",
+    "static func MonarchAiPromptTemplate.variableNames(in body: String) -> [String]",
+    "static func MonarchAiPromptTemplate.fill(_ body: String, values: [String: String]) -> String",
+    "var MonarchAiPromptTemplate.resolvedVariables: [MonarchAiPromptTemplateVariable]",
+    "MonarchAiPromptTemplateVariable.init(_ name: String, label: String, isRequired: Bool = false, placeholder: String? = nil, helper: String? = nil, isMultiline: Bool = false, defaultValue: String? = nil)",
+    "MonarchAiPromptTemplateCategory.init(id: String, label: String)",
+    "MonarchAiPromptTemplatePickerLabels.init(title: String? = nil, search: String? = nil, category: String? = nil, allCategories: String? = nil, template: String? = nil, preview: String? = nil, use: String? = nil, cancel: String? = nil, optional: String? = nil, missing: (@Sendable (_ label: String) -> String)? = nil, empty: String? = nil, noResults: (@Sendable (_ query: String) -> String)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "templates",
+      "type": "[MonarchAiPromptTemplate]",
+      "default": "required",
+      "description": "The templates, each with a title, a body with {{blanks}}, and optional description, category, keywords and variables."
+    },
+    {
+      "name": "categories",
+      "type": "[MonarchAiPromptTemplateCategory]",
+      "default": "[]",
+      "description": "Adds a category picker above the list."
+    },
+    {
+      "name": "initialTemplateID",
+      "type": "String?",
+      "default": "nil",
+      "description": "Opens this template's page at first."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiPromptTemplatePickerLabels",
+      "default": "MonarchAiPromptTemplatePickerLabels()",
+      "description": "Replaces every built-in string."
+    },
+    {
+      "name": "onCancel",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds a Cancel button in the navigation bar."
+    },
+    {
+      "name": "onUse",
+      "type": "@MainActor (_ text: String, _ template: MonarchAiPromptTemplate, _ values: [String: String]) -> Void",
+      "default": "required",
+      "description": "Receives the filled prompt, the template and the trimmed values. Put the text in the prompt field; do not send it without the person seeing it."
+    }
+  ],
+  "states": [
+    {
+      "name": "gallery",
+      "description": "The searchable list, with the category picker when categories are given."
+    },
+    {
+      "name": "empty",
+      "description": "A first-run empty state: \"No templates yet\"."
+    },
+    {
+      "name": "no results",
+      "description": "A filtered empty state with the query and a Clear filters button that clears the search and the category."
+    },
+    {
+      "name": "template without blanks",
+      "description": "The description, the template text and Use template."
+    },
+    {
+      "name": "template with blanks",
+      "description": "One field per blank (multi-line where asked), a live preview with [Label] for empty blanks, and Use template."
+    },
+    {
+      "name": "missing value",
+      "description": "After Use template, each empty required field shows \"Enter …\" with an icon until it is filled."
+    }
+  ],
+  "appearance": "The system list and navigation bar with Monarch text: titles in default text, descriptions in muted text and an AI strong symbol on each row; fields are MonarchTextField or a multi-line field with the same colours; the template and the preview sit on the subtle background; Use template is a full-width primary button. The high-contrast themes resolve the same roles to stronger colours.",
+  "platformNotes": "The web shows the gallery and a preview side by side, then a form step; iOS pushes a page per template in its own NavigationStack, so it belongs in a sheet. Categories are a Picker instead of filter chips. A multi-line blank uses a text field drawn with MonarchTextField's tokens until a shared multi-line field exists. Android uses the same names.",
+  "accessibility": [
+    "Each template is one button read as its title and description.",
+    "Each field is read with its label, \"Optional\" when it may be empty, and its error or help as the hint.",
+    "When Use template finds an empty required field, the first error is announced and every error is written with an icon, not shown by colour alone.",
+    "The Template and Prompt preview headings have the header trait; the preview text can be selected.",
+    "Rows and buttons have 44-point touch targets and all text wraps at every size."
+  ],
+  "edgeCases": [
+    "A blank used twice is one field and is filled everywhere.",
+    "A blank without a value stays as {{name}} in fill(_:values:); an empty value removes it, so an empty optional blank disappears from the used prompt.",
+    "Without variables every blank is required and labelled from its name: customer_name becomes \"Customer name\".",
+    "Search ignores case and diacritics and looks at the title, description, body and keywords."
+  ],
+  "tests": [
+    "MonarchAiPromptTemplatePickerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Gallery, form and preview",
+      "fixture": "ai-prompt-template-picker",
+      "webExample": "Gallery, form and preview",
+      "template": "MonarchAiPromptTemplatePicker(\n    [\n        MonarchAiPromptTemplate(\n            id: {{templates.0.id}},\n            title: {{templates.0.title}},\n            body: {{templates.0.body}},\n            description: {{templates.0.description}},\n            category: {{templates.0.category}},\n            variables: [\n                MonarchAiPromptTemplateVariable({{templates.0.variables.0.name}}, label: {{templates.0.variables.0.label}}, isRequired: {{templates.0.variables.0.required}}, placeholder: {{templates.0.variables.0.placeholder}}),\n                MonarchAiPromptTemplateVariable({{templates.0.variables.1.name}}, label: {{templates.0.variables.1.label}}, isRequired: {{templates.0.variables.1.required}}, placeholder: {{templates.0.variables.1.placeholder}}, isMultiline: {{templates.0.variables.1.multiline}}),\n                MonarchAiPromptTemplateVariable({{templates.0.variables.2.name}}, label: {{templates.0.variables.2.label}}, helper: {{templates.0.variables.2.description}}, defaultValue: {{templates.0.variables.2.defaultValue}}),\n            ]\n        ),\n        MonarchAiPromptTemplate(id: {{templates.1.id}}, title: {{templates.1.title}}, body: {{templates.1.body}}, description: {{templates.1.description}}, category: {{templates.1.category}}),\n        MonarchAiPromptTemplate(id: {{templates.2.id}}, title: {{templates.2.title}}, body: {{templates.2.body}}, description: {{templates.2.description}}, category: {{templates.2.category}}),\n        MonarchAiPromptTemplate(id: {{templates.3.id}}, title: {{templates.3.title}}, body: {{templates.3.body}}, description: {{templates.3.description}}, category: {{templates.3.category}}),\n    ],\n    categories: [\n        MonarchAiPromptTemplateCategory(id: {{categories.0.id}}, label: {{categories.0.label}}),\n        MonarchAiPromptTemplateCategory(id: {{categories.1.id}}, label: {{categories.1.label}}),\n    ],\n    onUse: { _, _, _ in }\n)\n.frame(height: 740)",
+      "code": "MonarchAiPromptTemplatePicker(\n    [\n        MonarchAiPromptTemplate(\n            id: \"reply\",\n            title: \"Customer reply\",\n            body: \"Write a reply to {{customer}} about {{topic}}. Keep it {{length}} and offer one next step.\",\n            description: \"Answer a customer question politely.\",\n            category: \"support\",\n            variables: [\n                MonarchAiPromptTemplateVariable(\"customer\", label: \"Customer name\", isRequired: true, placeholder: \"Ana Lopez\"),\n                MonarchAiPromptTemplateVariable(\"topic\", label: \"Topic\", isRequired: true, placeholder: \"The order that arrived late\", isMultiline: true),\n                MonarchAiPromptTemplateVariable(\"length\", label: \"Length\", helper: \"For example short or detailed.\", defaultValue: \"short\"),\n            ]\n        ),\n        MonarchAiPromptTemplate(id: \"summary\", title: \"Meeting summary\", body: \"Summarize {{meeting_notes}} as decisions, open questions and actions with owners.\", description: \"Turn notes into decisions and actions.\", category: \"internal\"),\n        MonarchAiPromptTemplate(id: \"brief\", title: \"Project brief\", body: \"Draft a one-page brief for {{project}} with goal, scope, risks and milestones.\", description: \"A one-page brief from a goal.\", category: \"internal\"),\n        MonarchAiPromptTemplate(id: \"recap\", title: \"Conversation recap\", body: \"Recap this conversation in three sentences.\", description: \"No blanks: used as is.\", category: \"internal\"),\n    ],\n    categories: [\n        MonarchAiPromptTemplateCategory(id: \"support\", label: \"Support\"),\n        MonarchAiPromptTemplateCategory(id: \"internal\", label: \"Internal\"),\n    ],\n    onUse: { _, _, _ in }\n)\n.frame(height: 740)"
+    },
+    {
+      "title": "Filling a template in code",
+      "code": "Text(MonarchAiPromptTemplate.fill(\"Summarise {{topic}} for {{audience}}.\", values: [\"topic\": \"Q3 sales\", \"audience\": \"the board\"]))"
+    }
+  ],
+  "webEquivalent": "AiPromptTemplatePicker",
+  "dependsOn": [
+    "sheet",
+    "search-input",
+    "text-field",
+    "empty-state"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web shows search, category chips and template cards inline. iOS keeps the template list as one pushed screen with the system search field and the Continue bar, because the next step (the form) is pushed onto the same stack; cards, copy, order and the Continue state are the same.",
+      "convention": "HIG: a multi-step choice is a navigation stack with a searchable list"
+    }
+  ]
+}

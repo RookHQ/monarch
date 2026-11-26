@@ -1,0 +1,92 @@
+{
+  "id": "command-palette",
+  "name": null,
+  "title": "CommandPalette",
+  "family": "search",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:) with NavigationStack, searchable(text:prompt:), toolbar(.cancellationAction) and keyboardShortcut(\"k\", modifiers: .command) on the trigger, with MonarchSearchResults as the list of commands",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a full-height sheet with the system search field and the app's actions as grouped results, opened from a button or Command-K on a hardware keyboard.",
+  "whenToUse": "In an app with many actions or places, as one searchable way to run them: create a record, jump to a screen, change a setting.",
+  "whenNotToUse": "For searching content (documents, people) use searchable with MonarchSearchResults on the screen itself; for a handful of actions use a Menu or a toolbar.",
+  "api": [
+    "func sheet<Content: View>(isPresented: Binding<Bool>, onDismiss: (() -> Void)? = nil, content: @escaping () -> Content) -> some View",
+    "func searchable(text: Binding<String>, prompt: String) -> some View",
+    "func keyboardShortcut(_ key: KeyEquivalent, modifiers: EventModifiers = .command) -> some View",
+    "MonarchSearchResults.init(groups: [MonarchSearchResultGroup], query: String = \"\", …, onSelect: @escaping @MainActor (MonarchSearchResult, MonarchSearchResultGroup) -> Void)",
+    "MonarchSearchResult.init(_ title: String, id: String, path: [String] = [], snippet: String? = nil, …, systemImage: String? = nil, fileName: String? = nil, meta: String? = nil, tone: MonarchTone? = nil)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "closed",
+      "description": "The trigger: a MonarchButton in a toolbar or header. Command-K opens it from a hardware keyboard."
+    },
+    {
+      "name": "open",
+      "description": "A sheet with a navigation bar, Close, the search field and every command grouped with its symbol and shortcut."
+    },
+    {
+      "name": "filtered",
+      "description": "Typing narrows the commands; matched words are highlighted by MonarchSearchResults and empty groups disappear."
+    },
+    {
+      "name": "no match",
+      "description": "MonarchSearchResults shows its empty state, \"No results for …\"."
+    },
+    {
+      "name": "ran",
+      "description": "Choosing a command runs it and closes the sheet; the query is cleared on close."
+    }
+  ],
+  "appearance": "The sheet, navigation bar and search field are the system's in every theme; rows are MonarchSearchResultItem rows with the symbol, the highlighted title and the shortcut as muted meta text.",
+  "platformNotes": "The web CommandPalette is one component: a centred dialog with its own input, arrow-key navigation, recent items, nested pages and a global Mod+K hotkey. On iOS it is a recipe of system parts: a sheet is the phone's surface for a modal task, searchable gives the system field with dictation and the keyboard's Search key, and keyboardShortcut gives Command-K on a hardware keyboard and lists it in the iPad's shortcut overlay (it has no meaning on a phone without a keyboard). Arrow-key focus and Return in the list come from the system List. Nested pages are NavigationLink pushes inside the NavigationStack. The search field is not focused when the sheet opens on iOS 17; on iOS 18 add searchFocused.",
+  "accessibility": [
+    "The trigger is a MonarchButton with a 44-point target; the shortcut is announced by the system on iPad.",
+    "The sheet has a Close button in the cancellation position and can be dismissed by swipe or the VoiceOver escape gesture.",
+    "Each command is a button read with its title and shortcut; group headings have the header trait and are read with their count.",
+    "The results summary is announced when the query changes, as MonarchSearchResults does."
+  ],
+  "edgeCases": [
+    "Clear the query when the sheet closes so it opens fresh.",
+    "Run commands that open another sheet after the palette has dismissed (onDismiss), because a sheet cannot present while it is closing.",
+    "With many commands, filter by keywords as well as titles; MonarchSearchResults highlights only the title words that match."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Commands, groups and shortcut hints",
+      "fixture": "command-palette",
+      "webExample": "Commands, groups and shortcut hints",
+      "template": "VStack(alignment: .leading) {\n    MonarchButton({{trigger}}, systemImage: \"magnifyingglass\") { isOpen = true }\n        .keyboardShortcut(\"k\", modifiers: .command)\n        .sheet(isPresented: $isOpen) {\n            NavigationStack {\n                MonarchSearchResults(groups: matches, query: query) { command, _ in\n                    lastCommand = command.title\n                    isOpen = false\n                }\n                .searchable(text: $query, prompt: \"Type a command or search\")\n                .navigationTitle(\"Command palette\")\n                #if os(iOS)\n                .navigationBarTitleDisplayMode(.inline)\n                #endif\n                .toolbar {\n                    ToolbarItem(placement: .cancellationAction) {\n                        Button(\"Close\") { isOpen = false }\n                    }\n                }\n            }\n            .presentationDragIndicator(.visible)\n            .onDisappear { query = \"\" }\n        }\n    Text(lastCommand.map { \"Ran: \" + $0 } ?? {{hint}})\n}",
+      "setupTemplate": "@State private var isOpen = false\n@State private var query = \"\"\n@State private var lastCommand: String?\n\nprivate let commands = [\n    MonarchSearchResultGroup(\n        {{groups.0.title}},\n        id: {{groups.0.id}},\n        results: [\n            MonarchSearchResult({{groups.0.items.0.label}}, id: {{groups.0.items.0.id}}, systemImage: \"plus\", meta: \"C\", tone: .neutral),\n            MonarchSearchResult({{groups.0.items.1.label}}, id: {{groups.0.items.1.id}}, systemImage: \"pencil\", meta: \"F2\", tone: .neutral),\n            MonarchSearchResult({{groups.0.items.2.label}}, id: {{groups.0.items.2.id}}, systemImage: \"trash\", tone: {{groups.0.items.2.tone|tone}}),\n        ]\n    ),\n    MonarchSearchResultGroup(\n        {{groups.1.title}},\n        id: {{groups.1.id}},\n        results: [\n            MonarchSearchResult({{groups.1.items.0.label}}, id: {{groups.1.items.0.id}}, systemImage: \"rectangle.split.3x1\", meta: \"G B\", tone: .neutral),\n            MonarchSearchResult({{groups.1.items.1.label}}, id: {{groups.1.items.1.id}}, systemImage: \"list.bullet\", meta: \"G M\", tone: .neutral),\n            MonarchSearchResult({{groups.1.items.2.label}}, id: {{groups.1.items.2.id}}, snippet: {{groups.1.items.2.description}}, meta: \"⌘,\", tone: .neutral),\n        ]\n    ),\n]\n\nprivate var matches: [MonarchSearchResultGroup] {\n    guard !query.isEmpty else { return commands }\n    return commands.map { group in\n        MonarchSearchResultGroup(\n            group.title,\n            id: group.id,\n            results: group.results.filter { $0.title.localizedCaseInsensitiveContains(query) }\n        )\n    }\n}",
+      "previewPresented": [
+        "isOpen"
+      ],
+      "setup": "@State private var isOpen = false\n@State private var query = \"\"\n@State private var lastCommand: String?\n\nprivate let commands = [\n    MonarchSearchResultGroup(\n        \"Actions\",\n        id: \"actions\",\n        results: [\n            MonarchSearchResult(\"Create task\", id: \"new\", systemImage: \"plus\", meta: \"C\", tone: .neutral),\n            MonarchSearchResult(\"Rename\", id: \"rename\", systemImage: \"pencil\", meta: \"F2\", tone: .neutral),\n            MonarchSearchResult(\"Archive\", id: \"archive\", systemImage: \"trash\", tone: .danger),\n        ]\n    ),\n    MonarchSearchResultGroup(\n        \"Go to\",\n        id: \"go-to\",\n        results: [\n            MonarchSearchResult(\"Board\", id: \"board\", systemImage: \"rectangle.split.3x1\", meta: \"G B\", tone: .neutral),\n            MonarchSearchResult(\"My tasks\", id: \"list\", systemImage: \"list.bullet\", meta: \"G M\", tone: .neutral),\n            MonarchSearchResult(\"Settings\", id: \"settings\", snippet: \"Workspace\", meta: \"⌘,\", tone: .neutral),\n        ]\n    ),\n]\n\nprivate var matches: [MonarchSearchResultGroup] {\n    guard !query.isEmpty else { return commands }\n    return commands.map { group in\n        MonarchSearchResultGroup(\n            group.title,\n            id: group.id,\n            results: group.results.filter { $0.title.localizedCaseInsensitiveContains(query) }\n        )\n    }\n}",
+      "code": "VStack(alignment: .leading) {\n    MonarchButton(\"Search commands\", systemImage: \"magnifyingglass\") { isOpen = true }\n        .keyboardShortcut(\"k\", modifiers: .command)\n        .sheet(isPresented: $isOpen) {\n            NavigationStack {\n                MonarchSearchResults(groups: matches, query: query) { command, _ in\n                    lastCommand = command.title\n                    isOpen = false\n                }\n                .searchable(text: $query, prompt: \"Type a command or search\")\n                .navigationTitle(\"Command palette\")\n                #if os(iOS)\n                .navigationBarTitleDisplayMode(.inline)\n                #endif\n                .toolbar {\n                    ToolbarItem(placement: .cancellationAction) {\n                        Button(\"Close\") { isOpen = false }\n                    }\n                }\n            }\n            .presentationDragIndicator(.visible)\n            .onDisappear { query = \"\" }\n        }\n    Text(lastCommand.map { \"Ran: \" + $0 } ?? \"Press ⌘K or Ctrl+K anywhere on this page.\")\n}"
+    },
+    {
+      "title": "Recent commands in a pushed search screen",
+      "setup": "@State private var query = \"\"\nprivate let recent = [\n    MonarchSearchResult(\"Export report\", id: \"export\", systemImage: \"square.and.arrow.up\"),\n    MonarchSearchResult(\"Invite teammate\", id: \"invite\", systemImage: \"person.crop.circle.badge.plus\"),\n]",
+      "code": "NavigationStack {\n    MonarchSearchResults(\n        groups: [MonarchSearchResultGroup(\"Recent\", id: \"recent\", results: recent)],\n        query: query\n    ) { _, _ in }\n    .monarchCanvas()\n    .searchable(text: $query, prompt: \"Search commands\")\n}"
+    }
+  ],
+  "webEquivalent": "CommandPalette",
+  "dependsOn": [
+    "search-input",
+    "search-results",
+    "sheet",
+    "button"
+  ],
+  "icons": {
+    "item.new": "PlusGlyph",
+    "item.rename": "PencilGlyph"
+  }
+}

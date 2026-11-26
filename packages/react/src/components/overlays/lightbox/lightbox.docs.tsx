@@ -1,16 +1,12 @@
 import { useState } from 'react';
 import { Button, Lightbox, type LightboxItem } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './lightbox.fixture.json';
 
-const PHOTOS = [
-  {
-    alt: 'Planning board with three columns of notes',
-    caption: 'Sprint planning board',
-    fill: '#94a3b8',
-  },
-  { alt: 'Pencil sketch of a settings screen', caption: 'Settings sketch', fill: '#a3b18a' },
-  { alt: 'Plain sample image in a warm grey', fill: '#c9ada7' },
-];
+const FILLS = ['#94a3b8', '#a3b18a', '#c9ada7'];
+
+const PHOTOS = fixture.data.photos.map((photo, i) => ({ ...photo, fill: FILLS[i] }));
 
 /** Demo images: solid SVGs served as `blob:` URLs, which Lightbox accepts. */
 function sampleItems(): LightboxItem[] {
@@ -31,22 +27,24 @@ function sampleItems(): LightboxItem[] {
 }
 
 function Gallery() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [index, setIndex] = useState(0);
   const [items] = useState(sampleItems);
   return (
     <>
-      {items.map((item, i) => (
-        <Button
-          key={item.alt}
-          onClick={() => {
-            setIndex(i);
-            setOpen(true);
-          }}
-        >
-          View image {i + 1}
-        </Button>
-      ))}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {items.map((item, i) => (
+          <Button
+            key={item.alt}
+            onClick={() => {
+              setIndex(i);
+              setOpen(true);
+            }}
+          >
+            {fixture.data.buttonLabel} {i + 1}
+          </Button>
+        ))}
+      </div>
       <Lightbox
         items={items}
         open={open}
@@ -190,7 +188,7 @@ export default {
       ],
     },
     examples: {
-      items: [{ title: 'Gallery of three images', render: () => <Gallery /> }],
+      items: [{ title: 'Gallery of three images', stage: true, render: () => <Gallery /> }],
     },
     doDont: {
       do: [

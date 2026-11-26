@@ -1,0 +1,71 @@
+{
+  "id": "responsive-dialog",
+  "name": null,
+  "title": "ResponsiveDialog",
+  "family": "overlays",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "sheet(isPresented:onDismiss:content:), which is a sheet from the bottom at compact width and a centred form sheet at regular width, with presentationDetents for the phone and a NavigationStack toolbar for the actions",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A dialog that is a centred panel on a large screen and a bottom sheet on a phone is the standard SwiftUI sheet, which adapts to the window size by itself. Monarch ships nothing.",
+  "whenToUse": "For a short task or form that should be a centred dialog on an iPad and a sheet on an iPhone: editing a record, inviting a person, choosing export options.",
+  "whenNotToUse": "For a message with one or two buttons use alert (see dialog). For a long, multi-screen task use a pushed screen or fullScreenCover.",
+  "api": [
+    "func sheet(isPresented: Binding<Bool>, onDismiss: (() -> Void)? = nil, content: () -> some View) -> some View",
+    "func presentationDetents(_ detents: Set<PresentationDetent>) -> some View",
+    "func presentationDragIndicator(_ visibility: Visibility) -> some View",
+    "func interactiveDismissDisabled(_ isDisabled: Bool = true) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "compact width",
+      "description": "A sheet from the bottom at the detents given, with a drag indicator."
+    },
+    {
+      "name": "regular width",
+      "description": "A form sheet centred over a dimmed screen; detents are not used."
+    },
+    {
+      "name": "guarded",
+      "description": "With interactiveDismissDisabled the sheet cannot be swiped away (see unsaved-changes-guard)."
+    }
+  ],
+  "appearance": "The system draws the sheet and its dimming. presentationBackground with the theme's surface colour and Monarch components inside make it match the theme in light, dark and both high-contrast themes.",
+  "platformNotes": "The web ResponsiveDialog switches from Dialog to a bottom sheet below a breakpoint (sheetBelow) and shows a grab handle. The iOS sheet already does this by size class: there is no breakpoint to set, and handle is presentationDragIndicator. On iOS 18 and later presentationSizing(.form) or (.page) chooses the size at regular width; Monarch supports iOS 17, so the system default form sheet is used. Android builds a MonarchResponsiveDialog because Compose has no adaptive sheet.",
+  "accessibility": [
+    "System behaviour: the sheet is modal at every size, VoiceOver focus moves into it and returns to the presenting control when it closes, and the escape gesture dismisses it unless dismissal is disabled.",
+    "Give the content a title in a NavigationStack (navigationTitle), which VoiceOver reads first.",
+    "Put Cancel and the main action in the toolbar with the cancellationAction and confirmationAction placements, so their roles are clear."
+  ],
+  "edgeCases": [
+    "At the largest text sizes the medium detent may be too short; include .large.",
+    "Detents apply only at compact width; test both widths.",
+    "Do not nest a second sheet for a confirmation inside the sheet; use an alert or confirmationDialog."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Invite form",
+      "fixture": "responsive-dialog",
+      "webExample": "Invite form",
+      "template": "MonarchButton({{trigger}}) { isOpen = true }\n    .sheet(isPresented: $isOpen) {\n        NavigationStack {\n            VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                Text({{description}})\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textMuted)\n                MonarchTextField({{field}}, text: $email, prompt: {{placeholder}})\n            }\n            .padding(theme.spacing.space4)\n            .frame(maxHeight: .infinity, alignment: .top)\n            .navigationTitle({{title}})\n            #if os(iOS)\n            .navigationBarTitleDisplayMode(.inline)\n            #endif\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button({{cancel}}) { isOpen = false }\n                }\n                ToolbarItem(placement: .confirmationAction) {\n                    Button({{confirm}}) { isOpen = false }\n                }\n            }\n        }\n        .presentationDetents([.medium, .large])\n        .presentationDragIndicator(.visible)\n        .presentationBackground(theme.colors.bgSurface)\n    }",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = true\n@State private var email = \"\"",
+      "previewPresented": [
+        "isOpen"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = true\n@State private var email = \"\"",
+      "code": "MonarchButton(\"Invite people\") { isOpen = true }\n    .sheet(isPresented: $isOpen) {\n        NavigationStack {\n            VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                Text(\"They get an email with a link to join.\")\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textMuted)\n                MonarchTextField(\"Email address\", text: $email, prompt: \"name@example.com\")\n            }\n            .padding(theme.spacing.space4)\n            .frame(maxHeight: .infinity, alignment: .top)\n            .navigationTitle(\"Invite people\")\n            #if os(iOS)\n            .navigationBarTitleDisplayMode(.inline)\n            #endif\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button(\"Cancel\") { isOpen = false }\n                }\n                ToolbarItem(placement: .confirmationAction) {\n                    Button(\"Send invite\") { isOpen = false }\n                }\n            }\n        }\n        .presentationDetents([.medium, .large])\n        .presentationDragIndicator(.visible)\n        .presentationBackground(theme.colors.bgSurface)\n    }"
+    }
+  ],
+  "webEquivalent": "ResponsiveDialog",
+  "dependsOn": [
+    "dialog",
+    "sheet"
+  ]
+}

@@ -6,6 +6,8 @@ import {
   type LocationValue,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './location-fields.fixture.json';
 
 // Demo adapter with a handful of entries. Monarch ships no geographic data:
 // a product implements LocationAdapter against its own API.
@@ -87,22 +89,15 @@ const failingAdapter: LocationAdapter = {
 };
 
 function ControlledDemo() {
-  const [value, setValue] = useState<LocationValue>({
-    country: 'CA',
-    region: 'CA-ON',
-    regionName: 'Ontario',
-    city: 'Toronto',
-    cityId: 'ca-tor',
-    postalCode: '',
-  });
+  const [value, setValue] = useState<LocationValue>(fixture.data.value);
   return (
     <div style={{ display: 'grid', gap: 12, width: '100%', maxWidth: 640 }}>
       <LocationFields
         adapter={demoAdapter}
-        legend="Billing address"
+        legend={fixture.data.legend}
         value={value}
         onValueChange={setValue}
-        required={['country', 'city']}
+        required={fixture.data.required as ('country' | 'city')[]}
       />
       <pre style={{ margin: 0, fontSize: 12, overflowX: 'auto' }}>
         {JSON.stringify(value, null, 2)}

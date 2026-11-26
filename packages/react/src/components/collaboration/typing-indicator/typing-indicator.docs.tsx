@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { TypingIndicator, type TypingPerson } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './typing-indicator.fixture.json';
 
+const [typing] = fixture.data.typing as [{ name: string }];
 const PEOPLE: TypingPerson[] = [
-  { id: 'u1', name: 'Ana' },
+  { id: 'u1', name: typing.name },
   { id: 'u2', name: 'Ben' },
   { id: 'u3', name: 'Chloé' },
 ];

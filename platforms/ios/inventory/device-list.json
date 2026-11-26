@@ -1,0 +1,174 @@
+{
+  "id": "device-list",
+  "name": "MonarchDeviceList",
+  "title": "DeviceList",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchCard with a VStack of rows (MonarchIcon, Text, MonarchBadge, RelativeDateTimeFormatter in a TimelineView(.everyMinute)), MonarchButton, alert(_:isPresented:presenting:actions:message:) with Button(role: .destructive), MonarchEmptyState and MonarchErrorState",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The devices that have accessed an account: name, system and browser, location, when each was last used and first seen, This device and Blocked badges, and an optional Remove action behind a confirmation.",
+  "whenToUse": "On a security screen where people review the phones, computers and tablets that have accessed their account and remove one they do not recognise, or in an admin view of one person's devices.",
+  "whenNotToUse": "For browser sessions or API keys use the revoke access recipe with the app's own list. For a single new-sign-in alert use MonarchSecurityAlertCard.",
+  "api": [
+    "init(_ devices: [MonarchDevice], title: String? = nil, description: String? = nil, state: MonarchDeviceListState = .ready, isRetrying: Bool = false, confirmsRemoval: Bool = true, now: Date? = nil, labels: MonarchDeviceListLabels = MonarchDeviceListLabels(), onRetry: (@MainActor () -> Void)? = nil, onRemove: (@MainActor (String) async throws -> Void)? = nil, @ViewBuilder rowActions: @escaping (MonarchDevice) -> RowActions)",
+    "init(_ devices: [MonarchDevice], title: String? = nil, description: String? = nil, state: MonarchDeviceListState = .ready, isRetrying: Bool = false, confirmsRemoval: Bool = true, now: Date? = nil, labels: MonarchDeviceListLabels = MonarchDeviceListLabels(), onRetry: (@MainActor () -> Void)? = nil, onRemove: (@MainActor (String) async throws -> Void)? = nil) where RowActions == EmptyView",
+    "struct MonarchDevice { init(id: String, name: String, kind: MonarchDeviceKind = .desktop, os: String? = nil, browser: String? = nil, location: String? = nil, lastUsed: Date? = nil, firstSeen: Date? = nil, isBlocked: Bool = false, isCurrent: Bool = false) }",
+    "enum MonarchDeviceKind: String { case desktop, mobile, tablet, unknown }",
+    "enum MonarchDeviceListState { case ready, loading, failed }",
+    "struct MonarchDeviceListLabels { init(title:, description:, listLabel:, unnamed:, current:, blocked:, lastUsed:, firstSeen:, remove:, removeLabel:, confirmTitle:, confirmMessage:, cancel:, removed:, removeFailed:, loading:, emptyTitle:, emptyMessage:, errorTitle:) }"
+  ],
+  "options": [
+    {
+      "name": "devices",
+      "type": "[MonarchDevice]",
+      "default": "required",
+      "description": "The devices, shown in the order given."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in title \"Devices\"."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the line under the title."
+    },
+    {
+      "name": "state",
+      "type": "MonarchDeviceListState",
+      "default": ".ready",
+      "description": "Loaded, loading or failed. A loaded empty list shows the empty state."
+    },
+    {
+      "name": "isRetrying",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the retry button busy in the failed state."
+    },
+    {
+      "name": "confirmsRemoval",
+      "type": "Bool",
+      "default": "true",
+      "description": "Asks with a system alert before removing. Set false when onRemove opens the app's own confirmation, such as the revoke access recipe."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for relative times. Without it they follow the clock, updated every minute."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchDeviceListLabels",
+      "default": "MonarchDeviceListLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Retries loading. Shows Try again in the failed state."
+    },
+    {
+      "name": "onRemove",
+      "type": "(@MainActor (String) async throws -> Void)?",
+      "default": "nil",
+      "description": "Signs the device out and forgets it, given its id. Shows Remove on every device except the current one; throwing shows the failure."
+    },
+    {
+      "name": "rowActions",
+      "type": "@ViewBuilder (MonarchDevice) -> RowActions",
+      "default": "no extra controls",
+      "description": "Extra controls at the end of a row, such as a block or rename menu."
+    }
+  ],
+  "states": [
+    {
+      "name": "list",
+      "description": "One row per device, separated by dividers."
+    },
+    {
+      "name": "current",
+      "description": "A success This device badge and no Remove button."
+    },
+    {
+      "name": "blocked",
+      "description": "A danger Blocked badge and the device icon in the strong danger colour."
+    },
+    {
+      "name": "removing",
+      "description": "The row's Remove button shows its spinner; other Remove buttons are disabled."
+    },
+    {
+      "name": "remove failed",
+      "description": "A danger inline notice under the header, \"Couldn’t remove <name>. Try again.\", announced."
+    },
+    {
+      "name": "loading",
+      "description": "A progress indicator with \"Loading devices\"."
+    },
+    {
+      "name": "empty",
+      "description": "A small MonarchEmptyState."
+    },
+    {
+      "name": "failed",
+      "description": "A small MonarchErrorState with Try again when onRetry is given."
+    }
+  ],
+  "appearance": "A MonarchCard with the subheading style title and a caption line in the muted text colour. Rows have the device icon in the muted text colour (strong danger when blocked), the name in the strong body style, subtle success and danger badges, and caption lines in the muted text colour. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The parity map names List rows; the rows are a VStack inside a MonarchCard instead, because the list is placed inside the app's own scrolling settings screen, where a nested List would not size itself. The web's renderActions is rowActions, a view builder. The web's headingLevel has no iOS equivalent (the title is a header) and its locale prop is the SwiftUI locale environment. The confirmation is the system alert (confirm-dialog on iOS), which cannot stay open while the removal runs, so the pending state moves to the row's button and a failure appears as a notice in the card instead of inside the dialog. Android builds the same component. Several closures are optional (onRetry, onRemove). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onRetry.",
+  "accessibility": [
+    "The title has the header trait.",
+    "Each device is one element whose label is its name and whose value is the badges, the system, browser and location and the times, built by a tested pure function; Blocked and This device are words, not only colour or an icon.",
+    "The device icon is decorative and hidden.",
+    "The Remove button is a separate MonarchButton with a 44-point touch target, named \"Remove <name>\".",
+    "The confirmation is a system alert with a destructive button and a cancel button.",
+    "Removal and a failed removal are posted as announcements.",
+    "Rows stack the actions under the text when they do not fit, so nothing is cut off at the largest text sizes."
+  ],
+  "edgeCases": [
+    "A device with a blank name reads \"Unknown device\".",
+    "Missing system, browser or location parts are left out of the detail line; with none, there is no detail line.",
+    "The app removes the device from devices after onRemove returns; the list does not remove it itself.",
+    "Only one removal runs at a time."
+  ],
+  "tests": [
+    "MonarchDeviceListTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Remove a device",
+      "fixture": "device-list",
+      "webExample": "Remove a device",
+      "template": "MonarchDeviceList(\n    devices,\n    title: {{title}},\n    description: {{description}},\n    now: {{now|date}},\n    onRemove: { id in\n        // The app signs the device out on the server.\n        try await Task.sleep(for: .milliseconds(300))\n        devices.removeAll { $0.id == id }\n    }\n)",
+      "setupTemplate": "@State private var devices = [\n    MonarchDevice(\n        id: {{devices.0.id}},\n        name: {{devices.0.name}},\n        os: {{devices.0.os}},\n        browser: {{devices.0.browser}},\n        location: {{devices.0.location}},\n        lastUsed: {{devices.0.lastUsedAt|date}},\n        firstSeen: {{devices.0.firstSeenAt|date}},\n        isCurrent: {{devices.0.current}}\n    ),\n    MonarchDevice(\n        id: {{devices.1.id}},\n        name: {{devices.1.name}},\n        kind: {{devices.1.kind|case}},\n        os: {{devices.1.os}},\n        browser: {{devices.1.browser}},\n        lastUsed: {{devices.1.lastUsedAt|date}},\n        firstSeen: {{devices.1.firstSeenAt|date}}\n    ),\n    MonarchDevice(\n        id: {{devices.2.id}},\n        name: {{devices.2.name}},\n        kind: {{devices.2.kind|case}},\n        os: {{devices.2.os}},\n        location: {{devices.2.location}},\n        lastUsed: {{devices.2.lastUsedAt|date}},\n        isBlocked: {{devices.2.blocked}}\n    ),\n]",
+      "setup": "@State private var devices = [\n    MonarchDevice(\n        id: \"d-1\",\n        name: \"Work laptop\",\n        os: \"macOS\",\n        browser: \"Chrome\",\n        location: \"Lisbon, Portugal\",\n        lastUsed: Date(timeIntervalSince1970: 1_795_003_200),\n        firstSeen: Date(timeIntervalSince1970: 1_787_227_200),\n        isCurrent: true\n    ),\n    MonarchDevice(\n        id: \"d-2\",\n        name: \"Phone\",\n        kind: .mobile,\n        os: \"Android\",\n        browser: \"Chrome\",\n        lastUsed: Date(timeIntervalSince1970: 1_794_985_200),\n        firstSeen: Date(timeIntervalSince1970: 1_792_411_200)\n    ),\n    MonarchDevice(\n        id: \"d-3\",\n        name: \"Shared tablet\",\n        kind: .tablet,\n        os: \"iPadOS\",\n        location: \"198.51.100.24\",\n        lastUsed: Date(timeIntervalSince1970: 1_793_966_400),\n        isBlocked: true\n    ),\n]",
+      "code": "MonarchDeviceList(\n    devices,\n    title: \"Devices\",\n    description: \"Devices that have accessed your account.\",\n    now: Date(timeIntervalSince1970: 1_795_003_200),\n    onRemove: { id in\n        // The app signs the device out on the server.\n        try await Task.sleep(for: .milliseconds(300))\n        devices.removeAll { $0.id == id }\n    }\n)"
+    },
+    {
+      "title": "Loading and failed",
+      "code": "VStack {\n    MonarchDeviceList([], state: .loading)\n    MonarchDeviceList([], state: .failed, onRetry: {})\n}"
+    }
+  ],
+  "webEquivalent": "DeviceList",
+  "dependsOn": [
+    "relative-time",
+    "badge",
+    "confirm-dialog",
+    "button",
+    "card",
+    "empty-state",
+    "error-state",
+    "inline-notice"
+  ]
+}

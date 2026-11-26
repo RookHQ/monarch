@@ -1,0 +1,174 @@
+{
+  "id": "ai-task-progress",
+  "name": "MonarchAiTaskProgress",
+  "title": "AiTaskProgress",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchCard with ProgressView (.progressViewStyle(.monarchLinear)), MonarchBadge, MonarchAiChainOfSteps, Toggle with .toggleStyle(.monarchButton(.ghost, size: .sm)), MonarchButton, RelativeDateTimeFormatter in a TimelineView(.everyMinute)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A long-running assistant task in a card, with its status, a progress bar, when it started and how long is left, its steps, and controls to cancel, minimize or be notified.",
+  "whenToUse": "For agent work that takes minutes, such as summarising many documents or an export, so the person can follow it, leave it, or stop it.",
+  "whenNotToUse": "Not for a short wait inside a reply (use MonarchAiThinkingIndicator) and not for steps the person approves first (use MonarchAiPlan).",
+  "api": [
+    "init(_ title: String, status: MonarchAiTaskStatus, startedAt: Date, steps: [MonarchAiPlanStep] = [], progress: Double? = nil, eta: TimeInterval? = nil, isNotifying: Binding<Bool>? = nil, now: Date? = nil, labels: MonarchAiTaskProgressLabels = MonarchAiTaskProgressLabels(), onMinimize: (@MainActor () -> Void)? = nil, onCancel: (@MainActor () -> Void)? = nil)",
+    "enum MonarchAiTaskStatus: String { case running, paused, done, failed, cancelled }",
+    "struct MonarchAiTaskProgressLabels { init(status: ((MonarchAiTaskStatus) -> String)? = nil, progressLabel: ((String) -> String)? = nil, progressValue: ((Int) -> String)? = nil, started: ((String) -> String)? = nil, eta: ((TimeInterval) -> String)? = nil, cancel: String? = nil, minimize: String? = nil, notify: String? = nil, announce: ((String, String) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "What the task is, such as \"Summarising 40 documents\". Names the card."
+    },
+    {
+      "name": "status",
+      "type": "MonarchAiTaskStatus",
+      "default": "required",
+      "description": "running, paused, done, failed or cancelled. Changes are announced."
+    },
+    {
+      "name": "startedAt",
+      "type": "Date",
+      "default": "required",
+      "description": "When the task started, shown as \"Started 5 minutes ago\"."
+    },
+    {
+      "name": "steps",
+      "type": "[MonarchAiPlanStep]",
+      "default": "[]",
+      "description": "The steps, shown as a MonarchAiChainOfSteps. A task may have only a bar."
+    },
+    {
+      "name": "progress",
+      "type": "Double?",
+      "default": "nil",
+      "description": "Completion from 0 to 1. By default the share of finished (done, failed or skipped) steps; with no steps the bar is indeterminate while running."
+    },
+    {
+      "name": "eta",
+      "type": "TimeInterval?",
+      "default": "nil",
+      "description": "Estimated seconds left, shown while running."
+    },
+    {
+      "name": "isNotifying",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Whether \"Notify me when done\" is on. The toggle is shown while running or paused when given."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for the start text, for previews, tests and identical renders. The current minute, updated every minute, when nil."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiTaskProgressLabels",
+      "default": "MonarchAiTaskProgressLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "onMinimize",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows a Minimize icon button, for example to dock the task in a tray."
+    },
+    {
+      "name": "onCancel",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows a Cancel button while the task runs or is paused."
+    }
+  ],
+  "states": [
+    {
+      "name": "running",
+      "description": "Info badge with a circular-arrows icon; the bar fills, or is indeterminate without progress; the time left is shown; Notify and Cancel are offered."
+    },
+    {
+      "name": "paused",
+      "description": "Warning badge with a pause icon; no time left; Notify and Cancel are still offered."
+    },
+    {
+      "name": "done",
+      "description": "Success badge with a check; the bar is full; no controls but Minimize."
+    },
+    {
+      "name": "failed",
+      "description": "Danger badge with an octagon; the failure is announced with high priority."
+    },
+    {
+      "name": "cancelled",
+      "description": "Neutral badge with a slashed circle; no controls but Minimize."
+    }
+  ],
+  "appearance": "A Monarch card: the title in the subheading style and default text role, the meta line in the muted text role, the Monarch linear progress bar, and the status as a subtle Monarch badge in its tone. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web colours the bar by status (accent while running); the Monarch linear progress style has one accent fill, so on iOS the status is carried by the badge. MonarchTone has no accent case, so the running badge uses the info tone. The web's etaMs is eta in seconds; startedAt is a Date, not an ISO string or epoch. The web's children slot and stepsProps are not offered: put extra content after the card, and pass ready steps. The web announces through live regions; iOS posts accessibility announcements, with high priority for a failure.",
+  "accessibility": [
+    "The card is a container named by the title; the title has the header trait.",
+    "The status is a badge with an icon and its name, never colour alone.",
+    "The progress bar is named \"<title> progress\" with \"40% complete\" as its value, or the status name when indeterminate.",
+    "A status change is announced as \"<title>: <status>\"; a failure is announced with high priority; the first status is not announced.",
+    "The steps announce their own starts and failures (MonarchAiChainOfSteps).",
+    "The minimize button is an icon button named \"Minimize\"; the notify control is a standard Toggle in the Monarch toggle-button style, so it reads its on or off state.",
+    "Every control has a 44-point touch target; the controls stack when they do not fit."
+  ],
+  "edgeCases": [
+    "Progress outside 0 to 1 is limited; NaN is ignored.",
+    "Without now, the start text updates every minute.",
+    "Estimates under a minute read \"Less than a minute left\"; an hour or more reads in hours to one decimal.",
+    "Long titles wrap at every text size."
+  ],
+  "tests": [
+    "MonarchAiTaskProgressTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Running with steps",
+      "fixture": "ai-task-progress",
+      "webExample": "Running with steps",
+      "template": "MonarchAiTaskProgress(\n    {{title}},\n    status: {{status|case}},\n    startedAt: {{startedAt|date}},\n    steps: [\n        MonarchAiPlanStep(id: {{steps.0.id}}, label: {{steps.0.label}}, state: {{steps.0.state|case}}),\n        MonarchAiPlanStep(id: {{steps.1.id}}, label: {{steps.1.label}}, state: {{steps.1.state|case}}),\n        MonarchAiPlanStep(id: {{steps.2.id}}, label: {{steps.2.label}}),\n        MonarchAiPlanStep(id: {{steps.3.id}}, label: {{steps.3.label}}),\n    ],\n    eta: {{etaMs}} / 1000,\n    isNotifying: $notify,\n    now: {{now|date}},\n    onCancel: {}\n)",
+      "setupTemplate": "@State private var notify = false",
+      "setup": "@State private var notify = false",
+      "code": "MonarchAiTaskProgress(\n    \"Summarising 12 documents\",\n    status: .running,\n    startedAt: Date(timeIntervalSince1970: 1_767_268_620),\n    steps: [\n        MonarchAiPlanStep(id: \"0\", label: \"Collect the documents\", state: .done),\n        MonarchAiPlanStep(id: \"1\", label: \"Summarise each document\", state: .active),\n        MonarchAiPlanStep(id: \"2\", label: \"Write the overview\"),\n        MonarchAiPlanStep(id: \"3\", label: \"Check the figures\"),\n    ],\n    eta: 300_000 / 1000,\n    isNotifying: $notify,\n    now: Date(timeIntervalSince1970: 1_767_268_800),\n    onCancel: {}\n)"
+    },
+    {
+      "title": "A finished task with only a bar",
+      "setup": "private let started = Date(timeIntervalSinceReferenceDate: 800_000_000)",
+      "code": "MonarchAiTaskProgress(\"Indexing the workspace\", status: .done, startedAt: started, now: started.addingTimeInterval(600))"
+    }
+  ],
+  "webEquivalent": "AiTaskProgress",
+  "dependsOn": [
+    "progress-bar",
+    "ai-chain-of-steps",
+    "button",
+    "card",
+    "badge",
+    "toggle-button",
+    "relative-time"
+  ],
+  "icons": {
+    "notify": "BellGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "steps.2.state",
+        "steps.3.state"
+      ],
+      "reason": "The web step state pending is the native case todo (the default of MonarchAiPlanStep), written without the argument",
+      "convention": "naming: MonarchAiPlanStepState.todo is the web pending state, same meaning"
+    }
+  ]
+}

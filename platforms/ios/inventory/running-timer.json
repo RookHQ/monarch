@@ -1,0 +1,192 @@
+{
+  "id": "running-timer",
+  "name": "MonarchRunningTimer",
+  "title": "RunningTimer",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "TimelineView with a custom per-second TimelineSchedule, Text with monospacedDigit, MonarchButton, Menu, alert(_:isPresented:actions:message:), sheet with DatePicker(in:displayedComponents:)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A running stopwatch for time tracking: a panel with a large clock, Start, Stop, \"I stopped earlier\" and a confirmed Discard, or a compact chip for a toolbar.",
+  "whenToUse": "In a time-tracking screen (panel), and in a toolbar or header so the running timer stays visible while the user works elsewhere (indicator).",
+  "whenNotToUse": "Not for a countdown to a deadline; use MonarchSlaIndicator. Not for a static duration; use Text with Duration formatting. Not for showing the timer outside the app; that is a Live Activity in the product.",
+  "api": [
+    "init(startedAt: Date?, label: String? = nil, variant: MonarchRunningTimerVariant = .panel, warnAfter: TimeInterval? = 12 * 3600, isStartDisabled: Bool = false, isPending: Bool = false, showsWhenStopped: Bool = false, now: Date? = nil, labels: MonarchRunningTimerLabels = MonarchRunningTimerLabels(), onStart: (@MainActor () async throws -> Void)? = nil, onStop: (@MainActor () async throws -> Void)? = nil, onStopAt: (@MainActor (Date) async throws -> Void)? = nil, onDiscard: (@MainActor () async throws -> Void)? = nil, onOpen: (@MainActor () -> Void)? = nil, @ViewBuilder fields: () -> Fields)",
+    "init(startedAt: Date?, label: String? = nil, variant: MonarchRunningTimerVariant = .panel, warnAfter: TimeInterval? = 12 * 3600, isStartDisabled: Bool = false, isPending: Bool = false, showsWhenStopped: Bool = false, now: Date? = nil, labels: MonarchRunningTimerLabels = MonarchRunningTimerLabels(), onStart: (@MainActor () async throws -> Void)? = nil, onStop: (@MainActor () async throws -> Void)? = nil, onStopAt: (@MainActor (Date) async throws -> Void)? = nil, onDiscard: (@MainActor () async throws -> Void)? = nil, onOpen: (@MainActor () -> Void)? = nil) where Fields == EmptyView",
+    "enum MonarchRunningTimerVariant { case panel, indicator }",
+    "struct MonarchRunningTimerLabels { init(start:stop:stopAndLog:moreActions:discard:discardTitle:discardMessage:discardConfirm:stoppedEarlier:stoppedEarlierTitle:stoppedEarlierMessage:stoppedAt:started:workDuration:save:cancel:stoppedAtFuture:stoppedAtTooEarly:failed:running:stopped:defaultLabel:longRunning:openHint:), every parameter optional; started, workDuration and longRunning are (@Sendable (String) -> String)? }"
+  ],
+  "options": [
+    {
+      "name": "startedAt",
+      "type": "Date?",
+      "default": "required",
+      "description": "When the running timer started; nil when no timer runs. The app changes it when an action succeeds."
+    },
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "nil",
+      "description": "What is being timed, such as an issue key. Shown under the panel's clock and in the indicator (\"Timer\" when nil). The indicator drops it when the chip does not fit."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchRunningTimerVariant",
+      "default": ".panel",
+      "description": "panel: a large clock with buttons and fields. indicator: a compact chip with a stop button and a menu."
+    },
+    {
+      "name": "warnAfter",
+      "type": "TimeInterval?",
+      "default": "12 * 3600",
+      "description": "Shows a warning once the timer has run this many seconds: a message on the panel, warning colours and a warning icon on the indicator. nil turns it off."
+    },
+    {
+      "name": "isStartDisabled",
+      "type": "Bool",
+      "default": "false",
+      "description": "Starting is not allowed yet, for example until a required project is chosen."
+    },
+    {
+      "name": "isPending",
+      "type": "Bool",
+      "default": "false",
+      "description": "An action runs outside the component: Start shows a spinner and the other buttons are disabled."
+    },
+    {
+      "name": "showsWhenStopped",
+      "type": "Bool",
+      "default": "false",
+      "description": "Keeps the indicator visible, at 0:00:00, while no timer runs. Otherwise the indicator draws nothing while stopped."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "A fixed reference time, which also stops the clock. For previews, snapshots and tests."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchRunningTimerLabels",
+      "default": "MonarchRunningTimerLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onStart",
+      "type": "(@MainActor () async throws -> Void)?",
+      "default": "nil",
+      "description": "Starts a timer. Adds Start to the stopped panel. The button shows a spinner until it returns; a thrown error is shown."
+    },
+    {
+      "name": "onStop",
+      "type": "(@MainActor () async throws -> Void)?",
+      "default": "nil",
+      "description": "Stops the timer and logs the time. Adds Stop to the panel and the stop button to the indicator."
+    },
+    {
+      "name": "onStopAt",
+      "type": "(@MainActor (Date) async throws -> Void)?",
+      "default": "nil",
+      "description": "Stops the timer at an earlier time. Adds \"I stopped earlier\", which opens a sheet with a date and time picker between the start and now."
+    },
+    {
+      "name": "onDiscard",
+      "type": "(@MainActor () async throws -> Void)?",
+      "default": "nil",
+      "description": "Throws the running time away. Adds Discard (an icon button on the panel, a menu item on the indicator), confirmed by an alert first."
+    },
+    {
+      "name": "onOpen",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Opens what is being timed. Makes the indicator's clock a button."
+    },
+    {
+      "name": "fields",
+      "type": "@ViewBuilder () -> Fields",
+      "default": "no fields",
+      "description": "Fields for the entry being timed, such as a project picker. Shown in the panel between the clock and the buttons."
+    }
+  ],
+  "states": [
+    {
+      "name": "stopped",
+      "description": "The panel shows 0:00:00 in the muted text colour and Start; the indicator is hidden unless showsWhenStopped."
+    },
+    {
+      "name": "running",
+      "description": "The clock ticks every second in the strong accent colour; the panel shows Stop, \"I stopped earlier\" and Discard; the indicator has the accent surface."
+    },
+    {
+      "name": "long running",
+      "description": "After warnAfter the panel shows a warning message with a triangle icon; the indicator takes the warning colours and the triangle icon."
+    },
+    {
+      "name": "busy",
+      "description": "The button of the action in progress shows a spinner and the others are disabled; isPending shows the same from outside."
+    },
+    {
+      "name": "failed",
+      "description": "A thrown error appears under the buttons (panel) or turns the indicator to the danger colours with an exclamation icon, and is announced."
+    },
+    {
+      "name": "start disabled",
+      "description": "Start is disabled until isStartDisabled is false."
+    }
+  ],
+  "appearance": "The panel is a surface card with the subtle border; the clock is the title type role with tabular digits, in the strong accent colour while running and the muted text colour while stopped. The indicator is a control-shaped chip: the accent subtle fill, border and strong text while running, the warning roles when long running, the danger roles after a failure and the surface fill with the default border while stopped. All colours are theme roles, so the dark and high-contrast themes need nothing else.",
+  "platformNotes": "The parity map named Text(timerInterval:). The timer uses TimelineView with a per-second schedule instead, so the clock reads 0:04:09 on every platform (Text(timerInterval:) writes 4:09 and gives no hook for the long-running warning or the spoken time). The web's datetime-local input is a DatePicker limited to the range between the start and now, so the web's \"required\" and \"invalid\" errors cannot happen; the future and too-early checks remain. The web's description hover text is not offered: iOS has no hover on touch. The web shows the clock in the monospaced family; here it uses tabular digits of the text face. The indicator drops the label when it does not fit (the web hides it below 30rem). Showing the timer outside the app (Live Activity, ongoing notification) stays in the product. Several closures are optional (onStart, onStop, onStopAt, onDiscard, onOpen). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onStart.",
+  "accessibility": [
+    "The clock is one element: its label is the timer's label and the time in words (\"ENG-142, 4 minutes, 9 seconds\"); its value is the state (\"Timer running\" or \"Timer stopped\") and a failure if there is one; it has the updatesFrequently trait.",
+    "Starting and stopping are announced; the ticking is not.",
+    "With onOpen the indicator's clock is a button with the hint \"Opens what is being timed.\".",
+    "The indicator's stop button is named \"Stop timer and log time\" and its menu button \"More timer actions\"; each has a 44-point touch target.",
+    "The panel's Discard is an icon button whose name is \"Discard without logging\".",
+    "Failures are shown as text with an icon and announced; the long-running warning is text with an icon, not colour alone.",
+    "The earlier-stop sheet has a heading, a standard DatePicker, and the length of work that will be saved as text."
+  ],
+  "edgeCases": [
+    "A start in the future shows 0:00:00.",
+    "Times of 100 hours and more widen the clock (100:00:00).",
+    "When startedAt becomes nil the discard confirmation and the earlier-stop sheet close.",
+    "The earlier-stop sheet suggests one hour after the start, or now if that is sooner; Save is disabled for a time less than a minute after the start.",
+    "The sheet cannot be dismissed while it saves.",
+    "With now set the clock does not tick."
+  ],
+  "tests": [
+    "MonarchRunningTimerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Panel with entry fields",
+      "fixture": "running-timer",
+      "webExample": "Panel with entry fields",
+      "template": "MonarchRunningTimer(\n    startedAt: startedAt,\n    label: note.isEmpty ? nil : note,\n    labels: MonarchRunningTimerLabels(start: {{startLabel}}),\n    onStart: { startedAt = .now },\n    onStop: { startedAt = nil },\n    onStopAt: { _ in startedAt = nil },\n    onDiscard: { startedAt = nil }\n) {\n    MonarchTextField({{fieldLabel}}, text: $note)\n}",
+      "setupTemplate": "@State private var startedAt: Date? = {{startedAt}}\n@State private var note = {{note}}",
+      "setup": "@State private var startedAt: Date? = nil\n@State private var note = \"\"",
+      "code": "MonarchRunningTimer(\n    startedAt: startedAt,\n    label: note.isEmpty ? nil : note,\n    labels: MonarchRunningTimerLabels(start: \"Start timer\"),\n    onStart: { startedAt = .now },\n    onStop: { startedAt = nil },\n    onStopAt: { _ in startedAt = nil },\n    onDiscard: { startedAt = nil }\n) {\n    MonarchTextField(\"What are you working on?\", text: $note)\n}"
+    },
+    {
+      "title": "An indicator in a toolbar",
+      "setup": "private let startedAt = Date.now.addingTimeInterval(-25 * 60)",
+      "code": "MonarchRunningTimer(\n    startedAt: startedAt,\n    label: \"Design review\",\n    variant: .indicator,\n    onStop: {},\n    onOpen: {}\n)"
+    },
+    {
+      "title": "Fields for the next entry",
+      "setup": "@State private var startedAt: Date?\n@State private var project = \"Atlas\"",
+      "code": "MonarchRunningTimer(\n    startedAt: startedAt,\n    isStartDisabled: project.isEmpty,\n    onStart: { startedAt = .now },\n    onStop: { startedAt = nil },\n    fields: {\n        Picker(\"Project\", selection: $project) {\n            Text(\"Atlas\").tag(\"Atlas\")\n            Text(\"Pulse\").tag(\"Pulse\")\n        }\n    }\n)"
+    }
+  ],
+  "webEquivalent": "RunningTimer",
+  "dependsOn": [
+    "button",
+    "confirm-dialog",
+    "dropdown-menu",
+    "icon"
+  ]
+}

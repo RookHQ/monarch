@@ -3,6 +3,7 @@ import { Button } from '@rookcom/monarch-react';
 import { PageFrame, PageSection } from '../../layout/page-frame.js';
 import { REPO_URL } from '../../layout/top-bar.js';
 import { CodeBlock } from '../../features/code/code-block.js';
+import nativeFacts from 'virtual:monarch-native-facts';
 import { facts, INSTALL_COMMAND } from '../../lib/facts.js';
 import { href } from '../../lib/router.js';
 
@@ -24,12 +25,16 @@ const PACKAGES = [
   ],
 ] as const;
 
+/** `0.1.0, unreleased` from a platform's changelog and manifest (plugins/native.ts). */
+const nativeState = (p: { version: string | null; unreleased: boolean }) =>
+  [p.version, p.unreleased ? 'unreleased' : null].filter(Boolean).join(', ') || 'in development';
+
 export function IntroductionPage() {
   return (
     <PageFrame
       eyebrow="Foundations"
       title="Introduction"
-      lead="Monarch is an open-source design system for startups, enterprise teams, independent designers and developers: anyone who wants their product to feel calm, clear and finished. It gives you design tokens, accessible React components and a conformance CLI that keeps every screen consistent as you grow, with no live service to depend on. It is free under the Apache License 2.0."
+      lead="Monarch is an open-source design system for startups, enterprise teams, independent designers and developers: anyone who wants their product to feel calm, clear and finished. It gives you design tokens, accessible React components and a conformance CLI that keeps every screen consistent as you grow, with no live service to depend on. It is open source under the Apache License 2.0."
       meta={
         <>
           <Button asChild variant="primary" size="sm">
@@ -67,6 +72,48 @@ export function IntroductionPage() {
           </table>
         </div>
         <CodeBlock code={INSTALL_COMMAND} label="Code: install" />
+      </PageSection>
+
+      <PageSection id="platforms" title="Platforms">
+        <p className="docs-text">
+          The packages above are the web implementation. Monarch for Android and Monarch for iOS
+          share its tokens, role names and component vocabulary, and render through each platform's
+          own controls. They are separate libraries with their own versions.
+        </p>
+        <div className="docs-table-scroll">
+          <table className="docs-table">
+            <thead>
+              <tr>
+                <th scope="col">Platform</th>
+                <th scope="col">Built with</th>
+                <th scope="col">Version</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <a href={href('/getting-started')}>Web</a>
+                </td>
+                <td>React, CSS variables</td>
+                <td>{facts.reactVersion}, on npm</td>
+              </tr>
+              <tr>
+                <td>
+                  <a href={href('/android')}>Android</a>
+                </td>
+                <td>Kotlin, Jetpack Compose, Material 3</td>
+                <td>{nativeState(nativeFacts.android)}</td>
+              </tr>
+              <tr>
+                <td>
+                  <a href={href('/ios')}>iOS</a>
+                </td>
+                <td>Swift, SwiftUI</td>
+                <td>{nativeState(nativeFacts.ios)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </PageSection>
 
       <PageSection id="in-numbers" title="In this release">

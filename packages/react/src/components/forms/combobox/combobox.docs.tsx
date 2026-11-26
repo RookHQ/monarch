@@ -7,14 +7,10 @@ import {
   type ComboboxOption,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './combobox.fixture.json';
 
-const timezones = [
-  { value: 'asia-kolkata', label: 'Asia/Kolkata' },
-  { value: 'europe-london', label: 'Europe/London' },
-  { value: 'america-new-york', label: 'America/New_York' },
-  { value: 'asia-tokyo', label: 'Asia/Tokyo' },
-  { value: 'utc', label: 'UTC', description: 'Coordinated Universal Time' },
-];
+const timezones = fixture.data.options;
 
 const reviewers: ComboboxOption[] = [
   { value: 'u1', label: 'Priya Raman', hint: 'Design', group: 'In this team' },
@@ -27,11 +23,16 @@ const reviewers: ComboboxOption[] = [
 const CITIES = ['Lisbon', 'London', 'Lyon', 'Lagos', 'Lima', 'Leeds', 'Lucknow', 'Ljubljana'];
 
 function TimezonePicker() {
-  const [value, setValue] = useState<string | null>('utc');
+  const [value, setValue] = useState<string | null>(fixture.data.value);
   return (
     <Field style={{ width: '100%', maxWidth: 300 }}>
-      <FieldLabel>Time zone</FieldLabel>
-      <Combobox options={timezones} value={value} onValueChange={setValue} placeholder="Search" />
+      <FieldLabel>{fixture.data.label}</FieldLabel>
+      <Combobox
+        options={timezones}
+        value={value}
+        onValueChange={setValue}
+        placeholder={fixture.data.placeholder}
+      />
     </Field>
   );
 }

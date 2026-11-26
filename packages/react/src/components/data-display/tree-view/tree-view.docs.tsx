@@ -1,51 +1,32 @@
 import { useState } from 'react';
 import { Badge, IconButton, TreeView, type TreeViewItem } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './tree-view.fixture.json';
 
-const UNITS: TreeViewItem[] = [
-  {
-    id: 'ops',
-    label: 'Operations',
-    description: 'Business unit · 42 people',
-    children: [
-      { id: 'finance', label: 'Finance', description: 'Department · 12 people', children: [] },
-      { id: 'legal', label: 'Legal', description: 'Department · 4 people' },
-      {
-        id: 'facilities',
-        label: 'Facilities',
-        description: 'Division · 26 people',
-        children: [
-          { id: 'workplace', label: 'Workplace', description: 'Department · 18 people' },
-          { id: 'security', label: 'Security', description: 'Department · 8 people' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'product',
-    label: 'Product',
-    description: 'Business unit · 64 people',
-    children: [
-      { id: 'design', label: 'Design', description: 'Department · 14 people' },
-      { id: 'eng', label: 'Engineering', description: 'Department · 50 people' },
-    ],
-  },
-];
+const data = fixture.data as unknown as {
+  label: string;
+  editLabel: string;
+  expanded: string[];
+  selected: string[];
+  items: TreeViewItem[];
+};
+const UNITS: TreeViewItem[] = data.items;
 
 function Departments() {
-  const [selected, setSelected] = useState<string[]>(['eng']);
+  const [selected, setSelected] = useState<string[]>(data.selected);
   return (
     <div style={{ display: 'grid', gap: 8 }}>
       <TreeView
-        label="Departments"
+        label={data.label}
         items={UNITS}
-        defaultExpanded={['ops', 'product']}
+        defaultExpanded={data.expanded}
         selected={selected}
         onSelectedChange={setSelected}
         renderActions={(item, { tabIndex }) => (
           <IconButton
             size="xs"
-            label={`Edit ${item.label}`}
+            label={`${data.editLabel} ${item.label}`}
             tabIndex={tabIndex}
             icon={<span aria-hidden>✎</span>}
             onClick={() => {}}

@@ -1,0 +1,153 @@
+{
+  "id": "merge-dialog",
+  "name": "MonarchMergeDialog",
+  "title": "MergeDialog",
+  "family": "data-grid",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column with androidx.compose.foundation.verticalScroll, MonarchRadioRow, MonarchConsequenceList, MonarchBanner, MonarchButton; presented in androidx.compose.ui.window.Dialog",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The content of a full-screen dialog that merges two or more duplicate records: pick the record to keep, then the value to keep for each field where they differ.",
+  "whenToUse": "When the app has found duplicate records (companies, contacts, leads) and the person decides which one survives and which values it keeps.",
+  "whenNotToUse": "To point out a possible duplicate before it is merged, use MonarchDuplicatePanel. To delete duplicates without keeping values, use a confirm dialog.",
+  "api": [
+    "@Composable fun MonarchMergeDialog(records: List<MonarchMergeRecord>, fields: List<MonarchMergeField>, onMerge: (MonarchMergeSelection) -> Unit, modifier: Modifier = Modifier, defaultPrimaryId: String? = null, consequences: List<MonarchConsequence> = emptyList(), blockers: List<String> = emptyList(), merging: Boolean = false, failed: Boolean = false, onCancel: (() -> Unit)? = null, labels: MonarchMergeDialogLabels = MonarchMergeDialogLabels())",
+    "class MonarchMergeRecord(id: String, title: String, description: String? = null, values: Map<String, String> = emptyMap())",
+    "class MonarchMergeField(id: String, label: String)",
+    "data class MonarchMergeSelection(primaryId: String, mergedIds: List<String>, fields: Map<String, String>)",
+    "class MonarchMergeDialogLabels(title: String? = null, description: String? = null, keep: String? = null, kept: String? = null, values: String? = null, same: String? = null, empty: String? = null, consequences: String? = null, cancel: String? = null, error: String? = null, from: ((record: String) -> String)? = null, confirm: ((count: Int) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "records",
+      "type": "List<MonarchMergeRecord>",
+      "default": "required",
+      "description": "The records to merge, two or more, with their field values already written for display."
+    },
+    {
+      "name": "fields",
+      "type": "List<MonarchMergeField>",
+      "default": "required",
+      "description": "The fields, in display order. Those that differ get a choice; those that match are listed once."
+    },
+    {
+      "name": "onMerge",
+      "type": "(MonarchMergeSelection) -> Unit",
+      "default": "required",
+      "description": "Called with the kept record, the merged records and, for each field, the record whose value is kept. The app runs the merge."
+    },
+    {
+      "name": "defaultPrimaryId",
+      "type": "String?",
+      "default": "null",
+      "description": "The record kept by default; the first record when null."
+    },
+    {
+      "name": "consequences",
+      "type": "List<MonarchConsequence>",
+      "default": "emptyList()",
+      "description": "What else happens, shown with MonarchConsequenceList under \"What happens\"."
+    },
+    {
+      "name": "blockers",
+      "type": "List<String>",
+      "default": "emptyList()",
+      "description": "Problems that stop the merge, shown in a warning MonarchBanner; the merge button is disabled."
+    },
+    {
+      "name": "merging",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The merge runs: the merge button shows progress and the choices and Cancel are disabled."
+    },
+    {
+      "name": "failed",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The last merge failed: a danger MonarchBanner shows labels.error (or the built-in message) and is announced; every choice stays."
+    },
+    {
+      "name": "onCancel",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Shows a Cancel button that calls it. The app closes the dialog."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchMergeDialogLabels",
+      "default": "MonarchMergeDialogLabels()",
+      "description": "Replacements for the built-in strings, including the failure message."
+    }
+  ],
+  "states": [
+    {
+      "name": "choosing",
+      "description": "The record choice with a Kept badge on the selected record, a choice per differing field (defaulting to the kept record's value, or the first other value when it is empty), and matching fields listed once."
+    },
+    {
+      "name": "blocked",
+      "description": "With blockers, or fewer than two records, the merge button is disabled; blockers are shown in a warning banner."
+    },
+    {
+      "name": "merging",
+      "description": "The merge button shows a progress indicator and is announced as Loading; the choices and Cancel are disabled."
+    },
+    {
+      "name": "failed",
+      "description": "A danger banner with the message under the choices, announced politely; the choices stay as they were."
+    }
+  ],
+  "appearance": "A heading and a muted description at the top, the choices in a scrolling column of MonarchRadioRows with subheadings, matching fields as muted names with default-text values, and the buttons at the bottom: Cancel as a ghost button and Merge as a primary button. Colors come from the parts' roles in every theme, including both high-contrast themes.",
+  "platformNotes": "The web MergeDialog is a modal with radio groups and a full-screen layout on phones that opens itself. On Android Monarch ships the content: the app presents it in a Material 3 Dialog with DialogProperties(usePlatformDefaultWidth = false) (the plan's full-screen dialog) or in a ModalBottomSheet, and closes it. The web onMerge returns a promise and the dialog waits on it; on Android the app sets merging while it runs and failed when it fails, and closes the dialog on success; iOS uses an async throwing closure instead. Values and consequences are strings and MonarchConsequence items instead of any node. The web size option has no meaning on a phone, and the web children slot is not offered. iOS uses the same name.",
+  "accessibility": [
+    "Each choice is a MonarchRadioRow in a selectable group, so TalkBack reads its label, its source and its selected state.",
+    "A value option is one element that reads its value and its source, such as \"hello@acme.com, from Acme Ltd\"; an empty value reads \"Empty\".",
+    "The title, the section headings and the field names are headings; the Kept badge is hidden because the selected state already says it.",
+    "A failure is announced through a polite live region on the danger banner; while merging the merge button is announced as Loading.",
+    "Every button and row has a 48dp touch target."
+  ],
+  "edgeCases": [
+    "A value that is blank after trimming counts as empty, and values equal after trimming count as matching.",
+    "Changing the kept record moves every field the person has not picked to the new record's value, or fills it from another record when it is empty.",
+    "With one record the dialog shows it and the merge button is disabled.",
+    "The merge button's count uses plurals in strings_mergedialog.xml; pass labels.confirm to write it differently.",
+    "The choices survive a configuration change; recompose with a new key to start again from the defaults."
+  ],
+  "tests": [
+    "MonarchMergeDialogTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Two clients",
+      "fixture": "merge-dialog",
+      "webExample": "Two clients",
+      "template": "MonarchButton(text = {{trigger}}, onClick = { open = true }, variant = MonarchButtonVariant.Secondary)\nif (open) {\n    Dialog(\n        onDismissRequest = { if (!merging) open = false },\n        properties = DialogProperties(usePlatformDefaultWidth = false),\n    ) {\n        // A centred dialog card with a margin round it, as on the web, not a full screen.\n        Surface(\n            modifier = Modifier\n                .padding(horizontal = MonarchTheme.spacing.space4, vertical = MonarchTheme.spacing.space6)\n                .fillMaxWidth()\n                .heightIn(max = 1000.dp),\n            shape = MonarchTheme.shapes.xl,\n            color = MonarchTheme.colors.bgSurface,\n        ) {\n            MonarchMergeDialog(\n                records = listOf(\n                    MonarchMergeRecord({{records.0.id}}, {{records.0.title}}, description = {{records.0.description}}, values = mapOf(\"name\" to {{records.0.values.name}}, \"email\" to {{records.0.values.email}}, \"phone\" to {{records.0.values.phone}}, \"website\" to {{records.0.values.website}}, \"city\" to {{records.0.values.city}})),\n                    MonarchMergeRecord({{records.1.id}}, {{records.1.title}}, description = {{records.1.description}}, values = mapOf(\"name\" to {{records.1.values.name}}, \"email\" to {{records.1.values.email}}, \"phone\" to {{records.1.values.phone}}, \"website\" to {{records.1.values.website}}, \"city\" to {{records.1.values.city}})),\n                ),\n                fields = listOf(\n                    MonarchMergeField({{fields.0.id}}, {{fields.0.label}}),\n                    MonarchMergeField({{fields.1.id}}, {{fields.1.label}}),\n                    MonarchMergeField({{fields.2.id}}, {{fields.2.label}}),\n                    MonarchMergeField({{fields.3.id}}, {{fields.3.label}}),\n                    MonarchMergeField({{fields.4.id}}, {{fields.4.label}}),\n                ),\n                onMerge = { selection ->\n                    kept = selection.primaryId\n                    merging = true\n                },\n                consequences = listOf(\n                    MonarchConsequence(MonarchConsequenceKind.Changed, {{consequences.0}}),\n                    MonarchConsequence(MonarchConsequenceKind.Changed, {{consequences.1}}),\n                ),\n                merging = merging,\n                onCancel = { open = false },\n            )\n        }\n    }\n}",
+      "setupTemplate": "var open by remember { mutableStateOf(true) }\nvar merging by remember { mutableStateOf(false) }\nvar kept by remember { mutableStateOf(\"\") }",
+      "imports": [
+        "androidx.compose.ui.window.Dialog",
+        "androidx.compose.ui.window.DialogProperties",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.foundation.layout.fillMaxWidth"
+      ],
+      "setup": "var open by remember { mutableStateOf(true) }\nvar merging by remember { mutableStateOf(false) }\nvar kept by remember { mutableStateOf(\"\") }",
+      "code": "MonarchButton(text = \"Merge duplicates\", onClick = { open = true }, variant = MonarchButtonVariant.Secondary)\nif (open) {\n    Dialog(\n        onDismissRequest = { if (!merging) open = false },\n        properties = DialogProperties(usePlatformDefaultWidth = false),\n    ) {\n        // A centred dialog card with a margin round it, as on the web, not a full screen.\n        Surface(\n            modifier = Modifier\n                .padding(horizontal = MonarchTheme.spacing.space4, vertical = MonarchTheme.spacing.space6)\n                .fillMaxWidth()\n                .heightIn(max = 1000.dp),\n            shape = MonarchTheme.shapes.xl,\n            color = MonarchTheme.colors.bgSurface,\n        ) {\n            MonarchMergeDialog(\n                records = listOf(\n                    MonarchMergeRecord(\"a\", \"Example Ltd\", description = \"Created 12 Feb 2025 · 3 projects\", values = mapOf(\"name\" to \"Example Ltd\", \"email\" to \"hello@example.com\", \"phone\" to \"\", \"website\" to \"example.com\", \"city\" to \"Leeds\")),\n                    MonarchMergeRecord(\"b\", \"Example Limited\", description = \"Created 4 Jun 2025 · 1 invoice\", values = mapOf(\"name\" to \"Example Limited\", \"email\" to \"hello@example.com\", \"phone\" to \"+44 20 0000 0000\", \"website\" to \"example.com\", \"city\" to \"York\")),\n                ),\n                fields = listOf(\n                    MonarchMergeField(\"name\", \"Name\"),\n                    MonarchMergeField(\"email\", \"Email\"),\n                    MonarchMergeField(\"phone\", \"Phone\"),\n                    MonarchMergeField(\"website\", \"Website\"),\n                    MonarchMergeField(\"city\", \"City\"),\n                ),\n                onMerge = { selection ->\n                    kept = selection.primaryId\n                    merging = true\n                },\n                consequences = listOf(\n                    MonarchConsequence(MonarchConsequenceKind.Changed, \"1 invoice moves to the kept record.\"),\n                    MonarchConsequence(MonarchConsequenceKind.Changed, \"The other record is archived, not deleted.\"),\n                ),\n                merging = merging,\n                onCancel = { open = false },\n            )\n        }\n    }\n}"
+    },
+    {
+      "title": "A blocked merge, shown inline",
+      "code": "MonarchMergeDialog(\n    records = listOf(\n        MonarchMergeRecord(\"a\", \"Ada Lovelace\", values = mapOf(\"email\" to \"ada@example.com\")),\n        MonarchMergeRecord(\"b\", \"A. Lovelace\", values = mapOf(\"email\" to \"ada@work.example\")),\n    ),\n    fields = listOf(MonarchMergeField(\"email\", \"Email\")),\n    onMerge = {},\n    blockers = listOf(\"A. Lovelace has an open contract.\"),\n    onCancel = {},\n)"
+    }
+  ],
+  "webEquivalent": "MergeDialog",
+  "dependsOn": [
+    "radio-group",
+    "sheet",
+    "button"
+  ]
+}

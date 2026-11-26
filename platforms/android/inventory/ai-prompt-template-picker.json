@@ -1,0 +1,147 @@
+{
+  "id": "ai-prompt-template-picker",
+  "name": "MonarchAiPromptTemplatePicker",
+  "title": "AiPromptTemplatePicker",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column with androidx.compose.foundation.verticalScroll, built from MonarchSearchBar, MonarchTag, MonarchCard, MonarchEmptyState, MonarchTextField and MonarchButton; presented by the app in MonarchBottomSheet",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Picks a saved prompt and fills in its blanks: a searchable list of templates, then a page with one field per {{blank}} and a live preview, and Use template hands the filled text to the app.",
+  "whenToUse": "From an AI composer, so people can start from a saved prompt (their own or the team's) and fill in the parts that change, then review it in the prompt field before sending.",
+  "whenNotToUse": "For a few suggested first questions use MonarchAiStarterPrompts. For follow-ups after an answer use MonarchAiFollowUpSuggestions. For document templates use MonarchTemplatePicker.",
+  "api": [
+    "@Composable fun MonarchAiPromptTemplatePicker(templates: List<MonarchAiPromptTemplate>, onUse: (text: String, template: MonarchAiPromptTemplate, values: Map<String, String>) -> Unit, modifier: Modifier = Modifier, categories: List<MonarchAiPromptTemplateCategory> = emptyList(), initialTemplateId: String? = null, labels: MonarchAiPromptTemplatePickerLabels = MonarchAiPromptTemplatePickerLabels(), onCancel: (() -> Unit)? = null)",
+    "data class MonarchAiPromptTemplate(id: String, title: String, body: String, description: String? = null, category: String? = null, keywords: List<String> = emptyList(), variables: List<MonarchAiPromptTemplateVariable>? = null) { val resolvedVariables: List<MonarchAiPromptTemplateVariable>; companion object { fun variableNames(body: String): List<String>; fun fill(body: String, values: Map<String, String>): String } }",
+    "data class MonarchAiPromptTemplateVariable(name: String, label: String, required: Boolean = false, placeholder: String? = null, helper: String? = null, multiline: Boolean = false, defaultValue: String? = null)",
+    "data class MonarchAiPromptTemplateCategory(id: String, label: String)",
+    "class MonarchAiPromptTemplatePickerLabels(title: String? = null, search: String? = null, allCategories: String? = null, template: String? = null, preview: String? = null, use: String? = null, cancel: String? = null, back: String? = null, optional: String? = null, missing: ((label: String) -> String)? = null, empty: String? = null, noResults: ((query: String) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "templates",
+      "type": "List<MonarchAiPromptTemplate>",
+      "default": "required",
+      "description": "The templates, each with a title, a body with {{blanks}}, and optional description, category, keywords and variables."
+    },
+    {
+      "name": "onUse",
+      "type": "(text: String, template: MonarchAiPromptTemplate, values: Map<String, String>) -> Unit",
+      "default": "required",
+      "description": "Receives the filled prompt, the template and the trimmed values. Put the text in the prompt field; do not send it without the person seeing it."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the picker. Give it a bounded height: it scrolls itself."
+    },
+    {
+      "name": "categories",
+      "type": "List<MonarchAiPromptTemplateCategory>",
+      "default": "emptyList()",
+      "description": "Adds category filters above the list."
+    },
+    {
+      "name": "initialTemplateId",
+      "type": "String?",
+      "default": "null",
+      "description": "Opens this template's page at first."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiPromptTemplatePickerLabels",
+      "default": "MonarchAiPromptTemplatePickerLabels()",
+      "description": "Replaces every built-in string."
+    },
+    {
+      "name": "onCancel",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Adds a Cancel button to the gallery, for example to hide the sheet."
+    }
+  ],
+  "states": [
+    {
+      "name": "gallery",
+      "description": "The heading, the search field, the category filters when categories are given, and a card per template."
+    },
+    {
+      "name": "empty",
+      "description": "A first-run empty state: \"No templates yet\"."
+    },
+    {
+      "name": "no results",
+      "description": "A filtered empty state with the query and a Clear filters button that clears the search and the category."
+    },
+    {
+      "name": "template without blanks",
+      "description": "The description, the template text under a Template heading, and Use template."
+    },
+    {
+      "name": "template with blanks",
+      "description": "One field per blank (multi-line where asked), a live preview with [Label] for empty blanks, and Use template."
+    },
+    {
+      "name": "missing value",
+      "description": "After Use template, each empty required field shows \"Enter …\" as its error until it is filled."
+    }
+  ],
+  "appearance": "The heading in the heading style; templates are MonarchCards with the title in strong body text and the description in muted caption text. Categories are selectable MonarchTags. The template text and the preview sit in blocks with the subtle background, the subtle border and the control corner radius, under muted label headings. Use template is a full-width primary button; Back and Cancel are ghost buttons.",
+  "platformNotes": "The web shows the gallery and a preview side by side, then a form step; Android, like iOS, shows the gallery and then a page per template, here as two pages of the same content with an \"All templates\" button instead of a navigation bar back button, so it belongs in a MonarchBottomSheet. Categories are selectable MonarchTags (filter chips), as on the web, instead of the iOS picker. iOS isRequired and isMultiline are required and multiline, and initialTemplateID is initialTemplateId, following Kotlin naming; the back label is Android only. Multi-line blanks use MonarchTextField with singleLine false. The first error is announced through an assertive live region, because it blocks the action; errors are written as text under the field by MonarchTextField, not shown by color alone. The picker scrolls itself, so it needs a bounded height and cannot sit inside another vertically scrolling container.",
+  "accessibility": [
+    "Each template is one button read as its title and description, at least 48dp high.",
+    "The gallery heading, the template title and the Template and Prompt preview headings are headings.",
+    "Each field is labelled with its label, and \", Optional\" when it may be empty; help and errors are read with the field.",
+    "When Use template finds an empty required field, the first error is announced through an assertive live region and every error is written under its field.",
+    "The template text and the preview can be selected."
+  ],
+  "edgeCases": [
+    "A blank used twice is one field and is filled everywhere.",
+    "A blank without a value stays as {{name}} in fill; an empty value removes it, so an empty optional blank disappears from the used prompt.",
+    "Without variables every blank is required and labelled from its name: customer_name becomes \"Customer name\".",
+    "Search ignores case and accents and looks at the title, description, body and keywords.",
+    "An initialTemplateId that matches no template opens the gallery."
+  ],
+  "tests": [
+    "MonarchAiPromptTemplatePickerTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Gallery, form and preview",
+      "fixture": "ai-prompt-template-picker",
+      "webExample": "Gallery, form and preview",
+      "template": "MonarchAiPromptTemplatePicker(\n    templates = listOf(\n            MonarchAiPromptTemplate(\n                id = {{templates.0.id}},\n                title = {{templates.0.title}},\n                body = {{templates.0.body}},\n                description = {{templates.0.description}},\n                category = {{templates.0.category}},\n                variables = listOf(\n                    MonarchAiPromptTemplateVariable({{templates.0.variables.0.name}}, {{templates.0.variables.0.label}}, required = {{templates.0.variables.0.required}}, placeholder = {{templates.0.variables.0.placeholder}}),\n                    MonarchAiPromptTemplateVariable({{templates.0.variables.1.name}}, {{templates.0.variables.1.label}}, required = {{templates.0.variables.1.required}}, placeholder = {{templates.0.variables.1.placeholder}}, multiline = {{templates.0.variables.1.multiline}}),\n                    MonarchAiPromptTemplateVariable({{templates.0.variables.2.name}}, {{templates.0.variables.2.label}}, helper = {{templates.0.variables.2.description}}, defaultValue = {{templates.0.variables.2.defaultValue}}),\n                ),\n            ),\n            MonarchAiPromptTemplate(id = {{templates.1.id}}, title = {{templates.1.title}}, body = {{templates.1.body}}, description = {{templates.1.description}}, category = {{templates.1.category}}),\n            MonarchAiPromptTemplate(id = {{templates.2.id}}, title = {{templates.2.title}}, body = {{templates.2.body}}, description = {{templates.2.description}}, category = {{templates.2.category}}),\n            MonarchAiPromptTemplate(id = {{templates.3.id}}, title = {{templates.3.title}}, body = {{templates.3.body}}, description = {{templates.3.description}}, category = {{templates.3.category}}),\n    ),\n    onUse = { _, _, _ -> },\n    categories = listOf(\n        MonarchAiPromptTemplateCategory({{categories.0.id}}, {{categories.0.label}}),\n        MonarchAiPromptTemplateCategory({{categories.1.id}}, {{categories.1.label}}),\n    ),\n)",
+      "code": "MonarchAiPromptTemplatePicker(\n    templates = listOf(\n            MonarchAiPromptTemplate(\n                id = \"reply\",\n                title = \"Customer reply\",\n                body = \"Write a reply to {{customer}} about {{topic}}. Keep it {{length}} and offer one next step.\",\n                description = \"Answer a customer question politely.\",\n                category = \"support\",\n                variables = listOf(\n                    MonarchAiPromptTemplateVariable(\"customer\", \"Customer name\", required = true, placeholder = \"Ana Lopez\"),\n                    MonarchAiPromptTemplateVariable(\"topic\", \"Topic\", required = true, placeholder = \"The order that arrived late\", multiline = true),\n                    MonarchAiPromptTemplateVariable(\"length\", \"Length\", helper = \"For example short or detailed.\", defaultValue = \"short\"),\n                ),\n            ),\n            MonarchAiPromptTemplate(id = \"summary\", title = \"Meeting summary\", body = \"Summarize {{meeting_notes}} as decisions, open questions and actions with owners.\", description = \"Turn notes into decisions and actions.\", category = \"internal\"),\n            MonarchAiPromptTemplate(id = \"brief\", title = \"Project brief\", body = \"Draft a one-page brief for {{project}} with goal, scope, risks and milestones.\", description = \"A one-page brief from a goal.\", category = \"internal\"),\n            MonarchAiPromptTemplate(id = \"recap\", title = \"Conversation recap\", body = \"Recap this conversation in three sentences.\", description = \"No blanks: used as is.\", category = \"internal\"),\n    ),\n    onUse = { _, _, _ -> },\n    categories = listOf(\n        MonarchAiPromptTemplateCategory(\"support\", \"Support\"),\n        MonarchAiPromptTemplateCategory(\"internal\", \"Internal\"),\n    ),\n)"
+    },
+    {
+      "title": "Templates with categories and described blanks",
+      "setup": "var prompt by remember { mutableStateOf(\"\") }",
+      "code": "MonarchAiPromptTemplatePicker(\n    templates = listOf(\n        MonarchAiPromptTemplate(\n            id = \"brief\",\n            title = \"Project brief\",\n            body = \"Draft a brief for {{project}}.{{notes}}\",\n            category = \"writing\",\n            variables = listOf(\n                MonarchAiPromptTemplateVariable(\"project\", label = \"Project\", required = true),\n                MonarchAiPromptTemplateVariable(\"notes\", label = \"Notes\", multiline = true),\n            ),\n        ),\n    ),\n    onUse = { text, _, _ -> prompt = text },\n    modifier = Modifier.heightIn(max = 480.dp),\n    categories = listOf(MonarchAiPromptTemplateCategory(\"writing\", \"Writing\")),\n)"
+    }
+  ],
+  "webEquivalent": "AiPromptTemplatePicker",
+  "dependsOn": [
+    "sheet",
+    "search-input",
+    "card",
+    "tag",
+    "text-field",
+    "empty-state",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "layout",
+      "platform": "android",
+      "reason": "The web example shows the search field and the three category filters on one line, and the templates three across. The phone window is 344dp wide: the search field and the filters sit on two lines, and the templates two across. The picker is the content of a sheet, so it keeps its heading (Prompt templates), which the web page shows as the title of its own section.",
+      "convention": "a toolbar wraps and a grid takes fewer columns on a compact window (Material adaptive layout)"
+    }
+  ]
+}

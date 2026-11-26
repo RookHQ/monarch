@@ -1,6 +1,8 @@
 import { useLoadMore } from '@rookcom/monarch-react';
 import { CursorList } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './cursor-list.fixture.json';
 
 interface Entry {
   id: string;
@@ -9,12 +11,19 @@ interface Entry {
   status: number;
 }
 
-const ALL: Entry[] = Array.from({ length: 23 }, (_, i) => ({
-  id: `req_${1000 + i}`,
-  method: i % 3 === 0 ? 'POST' : 'GET',
-  path: i % 2 ? '/v1/records' : `/v1/records/${100 + i}`,
-  status: i % 7 === 0 ? 404 : 200,
-}));
+const REQUESTS = fixture.data.requests as unknown as readonly Entry[];
+
+/** The fixture's first eight requests, then more of the same kind. */
+const ALL: Entry[] = Array.from(
+  { length: fixture.data.total },
+  (_, i) =>
+    REQUESTS[i] ?? {
+      id: `req_${1000 + i}`,
+      method: i % 3 === 0 ? 'POST' : 'GET',
+      path: i % 2 ? '/v1/records' : `/v1/records/${100 + i}`,
+      status: i % 7 === 0 ? 404 : 200,
+    },
+);
 
 function fetchEntries(cursor: number | undefined) {
   const start = cursor ?? 0;
@@ -30,30 +39,64 @@ function fetchEntries(cursor: number | undefined) {
   );
 }
 
+/** The first page, as the server renders it with the page: no loading state on arrival. */
+const FIRST_PAGE = { items: ALL.slice(0, 8), nextCursor: 8, total: ALL.length };
+
 function RequestLog() {
-  const log = useLoadMore<Entry, number>({ fetchPage: (cursor) => fetchEntries(cursor) });
+  const log = useLoadMore<Entry, number>({
+    fetchPage: (cursor) => fetchEntries(cursor),
+    initialPage: FIRST_PAGE,
+  });
   return (
     <CursorList
-      label="Recent requests"
+      label={fixture.data.label}
       ordered
       items={log.items}
       getKey={(e) => e.id}
-      noun={{ one: 'request', other: 'requests' }}
+      noun={fixture.data.noun}
       {...log.loadMoreProps}
       renderItem={(e) => (
         <a
           href={`#${e.id}`}
           style={{
             display: 'flex',
-            gap: 12,
-            padding: '10px 4px',
+            alignItems: 'baseline',
+            gap: 'var(--mn-space-3)',
+            padding: 'var(--mn-space-2-5) var(--mn-space-1)',
             color: 'inherit',
+            fontSize: 'var(--mn-text-sm)',
             textDecoration: 'none',
           }}
         >
-          <code>{e.method}</code>
-          <span style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>{e.path}</span>
-          <span>{e.status}</span>
+          <code
+            style={{
+              minWidth: '2.75rem',
+              color: 'var(--mn-color-text-muted)',
+              fontFamily: 'var(--mn-font-mono)',
+              fontSize: 'var(--mn-text-xs)',
+            }}
+          >
+            {e.method}
+          </code>
+          <span
+            style={{
+              flex: 1,
+              minWidth: 0,
+              fontFamily: 'var(--mn-font-mono)',
+              overflowWrap: 'anywhere',
+            }}
+          >
+            {e.path}
+          </span>
+          <span
+            style={{
+              color:
+                e.status >= 400 ? 'var(--mn-color-danger-strong)' : 'var(--mn-color-text-muted)',
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {e.status}
+          </span>
         </a>
       )}
     />
@@ -181,7 +224,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'With useLoadMore', stack: true, render: () => <RequestLog /> },
+        {
+          title: 'With useLoadMore and a server-rendered first page',
+          stack: true,
+          render: () => <RequestLog />,
+        },
         {
           title: 'Empty',
           render: () => (

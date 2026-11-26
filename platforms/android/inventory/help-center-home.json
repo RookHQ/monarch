@@ -1,0 +1,99 @@
+{
+  "name": null,
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "id": "help-center-home",
+  "title": "HelpCenterHome",
+  "family": "layout",
+  "wrapsNative": "androidx.compose.foundation.layout.Column with MonarchSectionHeader, MonarchSearchBar (androidx.compose.material3.DockedSearchBar), MonarchSearchResults (a androidx.compose.foundation.lazy.LazyColumn of grouped results) and MonarchLink",
+  "summary": "A recipe, not a component: the help home of an app on a phone, with a title, a search that filters the articles as you type, the articles grouped by category and a way to contact support.",
+  "whenToUse": "For the in-app help or support home where people look for an answer before they ask.",
+  "whenNotToUse": "For searching thousands of articles on a server, keep the layout but pass the server's groups to MonarchSearchResults. For a short list of questions, use the faq recipe or MonarchAccordion.",
+  "api": [
+    "MonarchSectionHeader(title = \"Help center\", description = …, size = MonarchSectionHeaderSize.Md)",
+    "MonarchSearchBar(query = query, onQueryChange = { query = it }, onSearch = {}, placeholder = \"Search articles\")",
+    "MonarchSearchResults(groups = articles grouped by category, onSelect = { result, _ -> open the article }, modifier = Modifier.weight(1f), query = query)",
+    "MonarchLink(text = \"Still need help? Contact support\", onClick = …, variant = MonarchLinkVariant.Standalone)"
+  ],
+  "options": [
+    {
+      "name": "articles",
+      "type": "List of id, title and category",
+      "default": "none",
+      "description": "The published articles; group them by category, with General for those without one."
+    },
+    {
+      "name": "query",
+      "type": "String",
+      "default": "\"\"",
+      "description": "The search text, kept with rememberSaveable. An empty query shows every article by category."
+    },
+    {
+      "name": "contact",
+      "type": "() -> Unit",
+      "default": "none",
+      "description": "Opens the contact form or chat when nothing fits."
+    }
+  ],
+  "states": [
+    {
+      "name": "browse",
+      "description": "An empty query lists every article under its category heading."
+    },
+    {
+      "name": "search",
+      "description": "Articles whose title or category contain every word of the query; MonarchSearchResults says how many matched."
+    },
+    {
+      "name": "no results",
+      "description": "MonarchSearchResults shows its empty state for the query; the contact link stays under it."
+    },
+    {
+      "name": "loading and error",
+      "description": "Pass loading or failed with onRetry to MonarchSearchResults while the articles load from the server."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component in the theme: the section header, the docked Material 3 search bar, grouped result rows and a standalone link. Light, dark and both high-contrast themes follow from them.",
+  "platformNotes": "The web ships HelpCenterHome as one pattern with columns, rows, cards and dense layouts, a page heading level, router links and an unavailable state. On a phone Android uses one list: the categories become group headings of MonarchSearchResults, which is a lazy list, so it takes the remaining height with weight(1f) rather than sitting in a scrolling column. Article links become onSelect; the app opens the article in its own screen. The web's accent-insensitive match is replaced by a plain lowercase match in the recipe; use java.text.Normalizer in the app if accents matter. For a site without a help center, show MonarchEmptyState with the contact link instead. iOS has no entry for this id yet.",
+  "accessibility": [
+    "The title is a heading from MonarchSectionHeader.",
+    "The search field has the search role and the keyboard's search action from Material 3.",
+    "Category headings are headings and each article is one button with a 48dp target, from MonarchSearchResults.",
+    "The result count is announced by MonarchSearchResults as the query changes.",
+    "The contact link is a link with a 48dp target."
+  ],
+  "edgeCases": [
+    "Never put MonarchSearchResults inside verticalScroll; give it the remaining height.",
+    "Articles without a category go under a General heading.",
+    "Long titles wrap in the result rows."
+  ],
+  "examples": [
+    {
+      "title": "Columns with a contact action",
+      "fixture": "help-center-home",
+      "webExample": "Columns with a contact action",
+      "template": "Column(\n    modifier = Modifier.fillMaxWidth(),\n    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n) {\n    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n        MonarchText(text = {{title}}, style = MonarchTextStyle.Title, heading = true)\n        MonarchText(text = {{description}}, color = MonarchTheme.colors.textMuted)\n    }\n    MonarchSearchBar(\n        query = query,\n        onQueryChange = { query = it },\n        onSearch = {},\n        modifier = Modifier.fillMaxWidth(),\n        placeholder = {{search}},\n    )\n    val words = query.lowercase().split(\" \").filter { it.isNotBlank() }\n    val matches = articles.filter { (_, title, category) ->\n        words.all { \"$title $category\".lowercase().contains(it) }\n    }\n    Column(\n        modifier = Modifier.fillMaxWidth(),\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n    ) {\n        matches.groupBy { it.third }.forEach { (category, list) ->\n            MonarchText(text = category, style = MonarchTextStyle.Subheading, heading = true)\n            list.forEach { (id, title, _) ->\n                Row(\n                    modifier = Modifier\n                        .fillMaxWidth()\n                        .heightIn(min = 40.dp)\n                        .clickable { /* Open the article id. */ },\n                    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n                    verticalAlignment = Alignment.CenterVertically,\n                ) {\n                    MonarchIcon(SampleIcons.Document, contentDescription = null, size = MonarchIconSize.Sm)\n                    MonarchText(text = title)\n                }\n            }\n        }\n    }\n    MonarchButton(\n        text = {{contact}},\n        onClick = { /* Open the contact form. */ },\n        variant = MonarchButtonVariant.Secondary,\n        size = MonarchButtonSize.Sm,\n    )\n}",
+      "setupTemplate": "var query by rememberSaveable { mutableStateOf(\"\") }\nval articles = listOf(\n    Triple({{articles.0.id}}, {{articles.0.title}}, {{articles.0.category}}),\n    Triple({{articles.1.id}}, {{articles.1.title}}, {{articles.1.category}}),\n    Triple({{articles.2.id}}, {{articles.2.title}}, {{articles.2.category}}),\n    Triple({{articles.3.id}}, {{articles.3.title}}, {{articles.3.category}}),\n    Triple({{articles.4.id}}, {{articles.4.title}}, {{articles.4.category}}),\n    Triple({{articles.5.id}}, {{articles.5.title}}, {{articles.5.category}}),\n)",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "var query by rememberSaveable { mutableStateOf(\"\") }\nval articles = listOf(\n    Triple(\"a1\", \"Reset your password\", \"Account\"),\n    Triple(\"a2\", \"Change the email on your account\", \"Account\"),\n    Triple(\"a3\", \"Turn on two-step sign-in\", \"Account\"),\n    Triple(\"a4\", \"Download an invoice\", \"Billing\"),\n    Triple(\"a5\", \"Update your payment card\", \"Billing\"),\n    Triple(\"a6\", \"Invite people to your team\", \"Teams\"),\n)",
+      "code": "Column(\n    modifier = Modifier.fillMaxWidth(),\n    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n) {\n    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n        MonarchText(text = \"Help center\", style = MonarchTextStyle.Title, heading = true)\n        MonarchText(text = \"Answers to common questions.\", color = MonarchTheme.colors.textMuted)\n    }\n    MonarchSearchBar(\n        query = query,\n        onQueryChange = { query = it },\n        onSearch = {},\n        modifier = Modifier.fillMaxWidth(),\n        placeholder = \"Search articles\",\n    )\n    val words = query.lowercase().split(\" \").filter { it.isNotBlank() }\n    val matches = articles.filter { (_, title, category) ->\n        words.all { \"$title $category\".lowercase().contains(it) }\n    }\n    Column(\n        modifier = Modifier.fillMaxWidth(),\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n    ) {\n        matches.groupBy { it.third }.forEach { (category, list) ->\n            MonarchText(text = category, style = MonarchTextStyle.Subheading, heading = true)\n            list.forEach { (id, title, _) ->\n                Row(\n                    modifier = Modifier\n                        .fillMaxWidth()\n                        .heightIn(min = 40.dp)\n                        .clickable { /* Open the article id. */ },\n                    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n                    verticalAlignment = Alignment.CenterVertically,\n                ) {\n                    MonarchIcon(SampleIcons.Document, contentDescription = null, size = MonarchIconSize.Sm)\n                    MonarchText(text = title)\n                }\n            }\n        }\n    }\n    MonarchButton(\n        text = \"Submit a request\",\n        onClick = { /* Open the contact form. */ },\n        variant = MonarchButtonVariant.Secondary,\n        size = MonarchButtonSize.Sm,\n    )\n}"
+    }
+  ],
+  "webEquivalent": "HelpCenterHome",
+  "dependsOn": [
+    "search-input",
+    "search-results",
+    "section-header",
+    "link"
+  ]
+}

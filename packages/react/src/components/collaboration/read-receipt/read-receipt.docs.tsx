@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { ReadReceipt, type ReadReceiptReader } from '@rookcom/monarch-react/collaboration';
-import type { ComponentDocs } from '../../../internal/component-docs.js';
+import {
+  ReadReceipt,
+  type ReadReceiptProps,
+  type ReadReceiptReader,
+} from '@rookcom/monarch-react/collaboration';
 
-const READERS: ReadReceiptReader[] = [
-  { id: 'u1', name: 'Ana Lopez' },
-  { id: 'u2', name: 'Ben Okafor' },
-  { id: 'u3', name: 'Chloé Martin' },
-  { id: 'u4', name: 'Dev Patel' },
-  { id: 'u5', name: 'Eve Stone' },
-];
+type ReadReceiptDisplay = NonNullable<ReadReceiptProps['display']>;
+import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './read-receipt.fixture.json';
+
+const READERS: ReadReceiptReader[] = fixture.data.readers;
 
 function ShowReadersDemo() {
   const [shown, setShown] = useState(false);
@@ -130,9 +132,13 @@ export default {
           stack: true,
           render: () => (
             <div style={{ display: 'grid', gap: '0.75rem', width: '100%' }}>
-              <ReadReceipt readers={READERS.slice(0, 1)} />
-              <ReadReceipt readers={READERS} display="count" />
-              <ReadReceipt readers={READERS} display="avatars" />
+              {fixture.data.displays.map(({ display, readerCount }) => (
+                <ReadReceipt
+                  key={display}
+                  readers={READERS.slice(0, readerCount)}
+                  display={display as ReadReceiptDisplay}
+                />
+              ))}
             </div>
           ),
         },

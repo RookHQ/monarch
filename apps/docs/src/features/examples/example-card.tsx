@@ -5,6 +5,7 @@ import { CodeIcon } from '../../ui/icons.js';
 import { CodeBlock } from '../code/code-block.js';
 import { PreviewBoundary } from './preview-boundary.js';
 import { useNearViewport } from './use-near-viewport.js';
+import { renderExample } from './render-example.js';
 
 /**
  * One live example: the preview on a canvas, then a "Show code" disclosure
@@ -47,7 +48,9 @@ export function ExampleCard({
           data-stack={example.stack || undefined}
           data-pending={near ? undefined : ''}
         >
-          {near ? <PreviewBoundary name={example.title}>{example.render()}</PreviewBoundary> : null}
+          {near ? (
+            <PreviewBoundary name={example.title}>{renderExample(example)}</PreviewBoundary>
+          ) : null}
         </div>
         <div className="docs-example__bar">
           <Button

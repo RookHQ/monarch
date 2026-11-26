@@ -1,0 +1,117 @@
+{
+  "id": "pagination",
+  "name": null,
+  "title": "Pagination",
+  "family": "navigation",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchButton and MonarchText in a Row; no Material component exists for numbered pages",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Numbered pages with previous and next, and a compact range such as 81-100 of 143, composed from MonarchButton and MonarchText. For feeds that scroll, MonarchLoadMore is the alternative.",
+  "whenToUse": "For any list that comes from a paged API where people jump between pages: invoices, members, search results. Show the numbered pages with the current one marked; use the compact range for a narrow toolbar.",
+  "whenNotToUse": "For a feed that people scroll through, load the next page at the end of the list with MonarchLoadMore instead. For a short list that fits in one response, show it all.",
+  "api": [
+    "LazyColumn { items(rows, key = { it.id }) { … }; item { MonarchLoadMore(…) } }",
+    "@Composable fun MonarchLoadMore(hasMore: Boolean, onLoadMore: () -> Unit, modifier: Modifier = Modifier, loading: Boolean = false, failed: Boolean = false, autoLoad: Boolean = false, showEnd: Boolean = true, loadedCount: Int? = null, totalCount: Int? = null, showCount: Boolean? = null, onRetry: (() -> Unit)? = null, labels: MonarchLoadMoreLabels = MonarchLoadMoreLabels())"
+  ],
+  "options": [
+    {
+      "name": "MonarchLoadMore.hasMore",
+      "type": "Boolean",
+      "default": "required",
+      "description": "Whether the server has another page; false shows \"That's everything\"."
+    },
+    {
+      "name": "MonarchLoadMore.onLoadMore",
+      "type": "() -> Unit",
+      "default": "required",
+      "description": "Ask the server for the next page (page n + 1, or the next cursor) and set loading."
+    },
+    {
+      "name": "MonarchLoadMore.loading",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The button shows its progress; the list keeps its place."
+    },
+    {
+      "name": "MonarchLoadMore.failed",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows \"Couldn't load more\" with Retry; loaded rows stay."
+    },
+    {
+      "name": "MonarchLoadMore.autoLoad",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Loads when the footer scrolls into view instead of waiting for a tap."
+    },
+    {
+      "name": "MonarchLoadMore.loadedCount / totalCount",
+      "type": "Int?",
+      "default": "null",
+      "description": "Shows \"Showing 20 of 60\"."
+    }
+  ],
+  "states": [
+    {
+      "name": "more to load",
+      "description": "\"Showing 20 of 60\" and a Load more button, or automatic loading with autoLoad."
+    },
+    {
+      "name": "loading",
+      "description": "The button shows its progress; the list stays where it is."
+    },
+    {
+      "name": "failed",
+      "description": "\"Couldn't load more\" with Retry; loaded items stay."
+    },
+    {
+      "name": "end",
+      "description": "\"That's everything\" once every page is loaded."
+    }
+  ],
+  "appearance": "The rows are the app's own (MonarchListRow or Monarch recipe rows); the footer is MonarchLoadMore with its secondary button and muted count, in every theme including both high-contrast themes.",
+  "platformNotes": "Matches the web Pagination: previous and next chevrons, page buttons with the current page selected, ellipses between ranges, and the compact range with previous and next. The recipe is built from MonarchButton (ghost, small) and MonarchText; the app asks the server for the chosen page. iOS uses the same recipe. MonarchLoadMore remains available for endless lists.",
+  "accessibility": [
+    "MonarchLoadMore's button is a standard button with a 48dp target; the count is read before it.",
+    "New rows, failures and the end of the list are announced by MonarchLoadMore through a polite live region.",
+    "Focus stays on the list; keyed rows keep their position when a page is added."
+  ],
+  "edgeCases": [
+    "Give the LazyColumn a bounded height when it sits inside another vertical scroll.",
+    "With autoLoad, a short first page that does not fill the screen loads the next page at once.",
+    "Keep loaded rows on failure; Retry repeats the same page."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Full and compact",
+      "fixture": "pagination",
+      "webExample": "Full and compact",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {\n    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {\n        MonarchButton(onClick = { page = maxOf(1, page - 1) }, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm) {\n            MonarchIcon(SampleIcons.ChevronLeft, \"Previous page\")\n        }\n        pageButton({{full.items.0}})\n        MonarchText(text = {{full.items.1}})\n        pageButton({{full.items.2}})\n        pageButton({{full.items.3}})\n        pageButton({{full.items.4}})\n        MonarchText(text = {{full.items.5}})\n        pageButton({{full.items.6}})\n        MonarchButton(onClick = { page = minOf({{full.pageCount}}, page + 1) }, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm) {\n            MonarchIcon(SampleIcons.ChevronRight, \"Next page\")\n        }\n    }\n    Row(\n        modifier = Modifier.semantics {\n            contentDescription = {{compact.label}}\n            stateDescription = \"Page $page of {{compact.pageCount}}\"\n        },\n        horizontalArrangement = Arrangement.spacedBy(4.dp),\n        verticalAlignment = Alignment.CenterVertically,\n    ) {\n        MonarchText(text = {{compact.range}})\n        MonarchButton(onClick = { page = maxOf(1, page - 1) }, enabled = page > 1, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm) {\n            MonarchIcon(SampleIcons.ChevronLeft, \"Previous page\")\n        }\n        MonarchButton(onClick = { page += 1 }, enabled = page * {{compact.pageSize}} < {{compact.totalItems}}, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm) {\n            MonarchIcon(SampleIcons.ChevronRight, \"Next page\")\n        }\n    }\n}",
+      "setupTemplate": "var page by remember { mutableIntStateOf({{page}}) }\nval pageButton: @Composable (String) -> Unit = { label ->\n    MonarchButton(\n        text = label,\n        onClick = { page = label.toIntOrNull() ?: page },\n        variant = if (page.toString() == label) MonarchButtonVariant.Secondary else MonarchButtonVariant.Ghost,\n        size = MonarchButtonSize.Sm,\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "androidx.compose.ui.semantics.contentDescription",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.semantics.stateDescription"
+      ],
+      "setup": "var page by remember { mutableIntStateOf(5) }\nval pageButton: @Composable (String) -> Unit = { label ->\n    MonarchButton(\n        text = label,\n        onClick = { page = label.toIntOrNull() ?: page },\n        variant = if (page.toString() == label) MonarchButtonVariant.Secondary else MonarchButtonVariant.Ghost,\n        size = MonarchButtonSize.Sm,\n    )\n}",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {\n    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {\n        MonarchButton(onClick = { page = maxOf(1, page - 1) }, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm) {\n            MonarchIcon(SampleIcons.ChevronLeft, \"Previous page\")\n        }\n        pageButton(\"1\")\n        MonarchText(text = \"…\")\n        pageButton(\"4\")\n        pageButton(\"5\")\n        pageButton(\"6\")\n        MonarchText(text = \"…\")\n        pageButton(\"20\")\n        MonarchButton(onClick = { page = minOf(20, page + 1) }, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm) {\n            MonarchIcon(SampleIcons.ChevronRight, \"Next page\")\n        }\n    }\n    Row(\n        modifier = Modifier.semantics {\n            contentDescription = \"Compact pagination\"\n            stateDescription = \"Page $page of 8\"\n        },\n        horizontalArrangement = Arrangement.spacedBy(4.dp),\n        verticalAlignment = Alignment.CenterVertically,\n    ) {\n        MonarchText(text = \"81–100 of 143\")\n        MonarchButton(onClick = { page = maxOf(1, page - 1) }, enabled = page > 1, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm) {\n            MonarchIcon(SampleIcons.ChevronLeft, \"Previous page\")\n        }\n        MonarchButton(onClick = { page += 1 }, enabled = page * 20 < 143, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm) {\n            MonarchIcon(SampleIcons.ChevronRight, \"Next page\")\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "Pagination",
+  "dependsOn": [
+    "load-more"
+  ],
+  "icons": {
+    "previous": "ChevronRightGlyph",
+    "next": "ChevronRightGlyph"
+  }
+}

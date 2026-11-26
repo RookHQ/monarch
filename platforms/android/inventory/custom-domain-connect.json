@@ -1,0 +1,111 @@
+{
+  "id": "custom-domain-connect",
+  "name": null,
+  "title": "CustomDomainConnect",
+  "family": "technical",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of MonarchTextField, MonarchButton, MonarchDomainProgress and MonarchDnsRecordTable; MonarchDialog to confirm removal",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: enter a custom domain, add the DNS records it needs with copy buttons, verify them, follow the progress to live, and remove the domain.",
+  "whenToUse": "In settings where a customer connects their own domain to a help center, a booking page or a website.",
+  "whenNotToUse": "To only show DNS records, use MonarchDnsRecordTable. To only show the progress of a domain, use MonarchDomainProgress.",
+  "api": [
+    "MonarchTextField(value = typed, onValueChange = { … }, label = \"Domain\", errorText = error, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri))",
+    "MonarchDomainProgress(host = domain, stage = MonarchDomainStage.Dns)",
+    "MonarchDnsRecordTable(records = listOf(MonarchDnsRecord(\"CNAME\", domain, \"domains.example.net\", MonarchDnsRecordPurpose.Routing, found = false)))",
+    "MonarchButton(text = \"Verify DNS\", onClick = { … }, loading = verifying)",
+    "AlertDialog(onDismissRequest = { … }, title = { Text(\"Remove $domain?\") }, confirmButton = { … }, dismissButton = { … })"
+  ],
+  "options": [
+    {
+      "name": "domain",
+      "type": "String?",
+      "default": "null",
+      "description": "The connected domain, from the app's state; null shows the entry step."
+    },
+    {
+      "name": "stage",
+      "type": "MonarchDomainStage",
+      "default": "MonarchDomainStage.Dns",
+      "description": "Where the domain is: DNS, ownership, certificate, page or live, from the app's server."
+    },
+    {
+      "name": "records",
+      "type": "List<MonarchDnsRecord>",
+      "default": "required",
+      "description": "The records to add, from the server, each with found once it is seen."
+    },
+    {
+      "name": "verifying",
+      "type": "Boolean",
+      "default": "false",
+      "description": "While a check runs, the verify button shows progress."
+    }
+  ],
+  "states": [
+    {
+      "name": "enter",
+      "description": "The domain field with its error and Connect domain."
+    },
+    {
+      "name": "records",
+      "description": "The domain as a heading with Remove domain, MonarchDomainProgress, the records to add and Verify DNS."
+    },
+    {
+      "name": "verifying",
+      "description": "Verify DNS shows progress; MonarchDomainProgress shows the stage."
+    },
+    {
+      "name": "live",
+      "description": "MonarchDomainProgress shows the domain as live; the app may hide the records."
+    },
+    {
+      "name": "remove",
+      "description": "A MonarchDialog confirms; the entry step comes back."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component: the text field, the domain progress steps, the record cards or table with copy buttons, and buttons, on the canvas. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web's CustomDomainConnect is one component with a Stepper, a form, a status line, a records table, a provider hint select and a confirm dialog. On Android it is a recipe from MonarchDomainProgress (the steps and the status), MonarchDnsRecordTable (cards on a phone, a table on wide screens) and MonarchTextField and MonarchButton, with a MonarchDialog to confirm removal. The web's provider hints are text the app shows under the records, for example in a MonarchCollapsible. The web's domain syntax checks are the app's validation before it calls its server. iOS has the same plan: a recipe.",
+  "accessibility": [
+    "The domain field has a visible label and its error is set as the field's error.",
+    "MonarchDomainProgress reads each step with its state; MonarchDnsRecordTable names each copy button with the record.",
+    "Remove is confirmed in a MonarchDialog, which TalkBack reads as a dialog."
+  ],
+  "edgeCases": [
+    "Normalise the typed domain (trim, lower case, no trailing dot) before sending it.",
+    "DNS can take hours: let people leave and come back; keep the records visible until the domain is live.",
+    "The server stays the authority on whether a record is found."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Full flow (simulated checks)",
+      "fixture": "custom-domain-connect",
+      "webExample": "Full flow (simulated checks)",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    MonarchStepper(\n        steps = steps,\n        current = if (domain == null) 0 else 1,\n        compact = MonarchStepperCompactMode.Automatic,\n    )\n    val current = domain\n    if (current == null) {\n        Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n            MonarchTextField(\n                modifier = Modifier.weight(1f),\n                value = typed,\n                onValueChange = {\n                    typed = it\n                    error = null\n                },\n                label = {{field.label}},\n                required = true,\n                placeholder = {{field.placeholder}},\n                helperText = {{field.description}},\n                errorText = error,\n                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),\n            )\n            MonarchButton(\n                modifier = Modifier.padding(top = MonarchTheme.spacing.space6),\n                text = {{connect}},\n                onClick = {\n                    val host = typed.trim().lowercase().removeSuffix(\".\")\n                    // Validate here, then ask the server to connect it; show its error in errorText.\n                    if (host.count { it == '.' } < 2) error = \"Enter a subdomain, such as help.example.com.\" else domain = host\n                },\n                variant = MonarchButtonVariant.Primary,\n            )\n        }\n    } else {\n        Row(verticalAlignment = Alignment.CenterVertically) {\n            MonarchText(text = current, modifier = Modifier.weight(1f), style = MonarchTextStyle.Heading)\n            MonarchButton(\n                text = \"Remove domain\",\n                onClick = { removing = true },\n                variant = MonarchButtonVariant.Ghost,\n                size = MonarchButtonSize.Sm,\n            )\n        }\n        MonarchDomainProgress(host = current, stage = if (found) MonarchDomainStage.Certificate else MonarchDomainStage.Dns)\n        MonarchText(text = \"Add these records where the DNS for your domain is managed.\")\n        MonarchDnsRecordTable(\n            records = listOf(\n                MonarchDnsRecord(\"CNAME\", current, \"domains.example.net\", MonarchDnsRecordPurpose.Routing, found = found),\n                MonarchDnsRecord(\"TXT\", \"_verify.$current\", \"verify=4f7k2m9q\", MonarchDnsRecordPurpose.Verification, found = found),\n            ),\n        )\n        MonarchButton(text = if (found) \"Check again\" else \"Verify DNS\", onClick = { found = true })\n    }\n}\nval current = domain\nif (removing && current != null) {\n    MonarchDialog(\n        onDismissRequest = { removing = false },\n        title = \"Remove $current?\",\n        description = \"The domain stops working here. You can connect it again later.\",\n        actions = {\n            MonarchButton(text = \"Cancel\", onClick = { removing = false }, variant = MonarchButtonVariant.Ghost)\n            MonarchButton(\n                text = \"Remove domain\",\n                onClick = {\n                    domain = null\n                    found = false\n                    removing = false\n                },\n                variant = MonarchButtonVariant.Danger,\n            )\n        },\n    )\n}",
+      "setupTemplate": "var domain by rememberSaveable { mutableStateOf<String?>(null) }\nvar typed by rememberSaveable { mutableStateOf(\"\") }\nvar error by remember { mutableStateOf<String?>(null) }\nvar found by rememberSaveable { mutableStateOf(false) }\nvar removing by remember { mutableStateOf(false) }\nval steps = listOf(\n    MonarchStepperStep(\"domain\", {{steps.0}}),\n    MonarchStepperStep(\"dns\", {{steps.1}}),\n    MonarchStepperStep(\"verify\", {{steps.2}}),\n    MonarchStepperStep(\"live\", {{steps.3}}),\n)",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Arrangement"
+      ],
+      "setup": "var domain by rememberSaveable { mutableStateOf<String?>(null) }\nvar typed by rememberSaveable { mutableStateOf(\"\") }\nvar error by remember { mutableStateOf<String?>(null) }\nvar found by rememberSaveable { mutableStateOf(false) }\nvar removing by remember { mutableStateOf(false) }\nval steps = listOf(\n    MonarchStepperStep(\"domain\", \"Domain\"),\n    MonarchStepperStep(\"dns\", \"DNS records\"),\n    MonarchStepperStep(\"verify\", \"Verify\"),\n    MonarchStepperStep(\"live\", \"Live\"),\n)",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    MonarchStepper(\n        steps = steps,\n        current = if (domain == null) 0 else 1,\n        compact = MonarchStepperCompactMode.Automatic,\n    )\n    val current = domain\n    if (current == null) {\n        Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n            MonarchTextField(\n                modifier = Modifier.weight(1f),\n                value = typed,\n                onValueChange = {\n                    typed = it\n                    error = null\n                },\n                label = \"Domain\",\n                required = true,\n                placeholder = \"help.example.com\",\n                helperText = \"The address visitors will type, such as help.example.com.\",\n                errorText = error,\n                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),\n            )\n            MonarchButton(\n                modifier = Modifier.padding(top = MonarchTheme.spacing.space6),\n                text = \"Connect domain\",\n                onClick = {\n                    val host = typed.trim().lowercase().removeSuffix(\".\")\n                    // Validate here, then ask the server to connect it; show its error in errorText.\n                    if (host.count { it == '.' } < 2) error = \"Enter a subdomain, such as help.example.com.\" else domain = host\n                },\n                variant = MonarchButtonVariant.Primary,\n            )\n        }\n    } else {\n        Row(verticalAlignment = Alignment.CenterVertically) {\n            MonarchText(text = current, modifier = Modifier.weight(1f), style = MonarchTextStyle.Heading)\n            MonarchButton(\n                text = \"Remove domain\",\n                onClick = { removing = true },\n                variant = MonarchButtonVariant.Ghost,\n                size = MonarchButtonSize.Sm,\n            )\n        }\n        MonarchDomainProgress(host = current, stage = if (found) MonarchDomainStage.Certificate else MonarchDomainStage.Dns)\n        MonarchText(text = \"Add these records where the DNS for your domain is managed.\")\n        MonarchDnsRecordTable(\n            records = listOf(\n                MonarchDnsRecord(\"CNAME\", current, \"domains.example.net\", MonarchDnsRecordPurpose.Routing, found = found),\n                MonarchDnsRecord(\"TXT\", \"_verify.$current\", \"verify=4f7k2m9q\", MonarchDnsRecordPurpose.Verification, found = found),\n            ),\n        )\n        MonarchButton(text = if (found) \"Check again\" else \"Verify DNS\", onClick = { found = true })\n    }\n}\nval current = domain\nif (removing && current != null) {\n    MonarchDialog(\n        onDismissRequest = { removing = false },\n        title = \"Remove $current?\",\n        description = \"The domain stops working here. You can connect it again later.\",\n        actions = {\n            MonarchButton(text = \"Cancel\", onClick = { removing = false }, variant = MonarchButtonVariant.Ghost)\n            MonarchButton(\n                text = \"Remove domain\",\n                onClick = {\n                    domain = null\n                    found = false\n                    removing = false\n                },\n                variant = MonarchButtonVariant.Danger,\n            )\n        },\n    )\n}"
+    }
+  ],
+  "webEquivalent": "CustomDomainConnect",
+  "dependsOn": [
+    "text-field",
+    "dns-record-table",
+    "domain-progress",
+    "button"
+  ]
+}

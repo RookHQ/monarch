@@ -1,0 +1,124 @@
+{
+  "id": "toast",
+  "name": "MonarchSnackbarHost",
+  "title": "Toast",
+  "family": "feedback",
+  "category": "B",
+  "coverage": "style",
+  "kind": "wrapper",
+  "wrapsNative": "androidx.compose.material3.SnackbarHost, androidx.compose.material3.Snackbar, androidx.compose.material3.SnackbarHostState",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Transient notifications as Material 3 snackbars: a themed host, snackbar content with a tone, and a function that shows one.",
+  "whenToUse": "For a brief confirmation of something the user just did, such as \"Ticket archived\", optionally with one action such as Undo.",
+  "whenNotToUse": "For a message that must stay until it is resolved, use MonarchBanner or MonarchCalloutBanner. For a decision, use AlertDialog. For an error the user must act on, do not rely on a snackbar alone.",
+  "api": [
+    "@Composable fun MonarchSnackbarHost(hostState: SnackbarHostState, modifier: Modifier = Modifier)",
+    "class MonarchSnackbarVisuals(override val message: String, val tone: MonarchTone = MonarchTone.Neutral, override val actionLabel: String? = null, override val withDismissAction: Boolean = false, override val duration: SnackbarDuration = …, val icon: ImageVector? = null) : SnackbarVisuals",
+    "suspend fun SnackbarHostState.showMonarchSnackbar(message: String, tone: MonarchTone = MonarchTone.Neutral, actionLabel: String? = null, withDismissAction: Boolean = false, duration: SnackbarDuration = …, icon: ImageVector? = null): SnackbarResult"
+  ],
+  "options": [
+    {
+      "name": "hostState",
+      "type": "SnackbarHostState",
+      "default": "required",
+      "description": "The Material 3 state that shows and queues snackbars."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the host."
+    },
+    {
+      "name": "message",
+      "type": "String",
+      "default": "required",
+      "description": "The message of a snackbar. Say the outcome in words."
+    },
+    {
+      "name": "tone",
+      "type": "MonarchTone",
+      "default": "MonarchTone.Neutral",
+      "description": "The tone of a snackbar: it colours the status mark at the start; the panel is the raised surface in every tone."
+    },
+    {
+      "name": "actionLabel",
+      "type": "String?",
+      "default": "null",
+      "description": "The label of the one action, for example \"Undo\"."
+    },
+    {
+      "name": "withDismissAction",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Whether a dismiss button is shown."
+    },
+    {
+      "name": "duration",
+      "type": "SnackbarDuration",
+      "default": "Long with an action or the danger tone, Short otherwise",
+      "description": "How long the snackbar stays. Indefinite keeps it until it is dismissed."
+    },
+    {
+      "name": "icon",
+      "type": "ImageVector?",
+      "default": "null",
+      "description": "An outlined icon at the start in the tone colour; null shows the status mark of the info, success, warning and danger tones."
+    }
+  ],
+  "states": [
+    {
+      "name": "shown",
+      "description": "Fades and scales in at the host, one at a time; later snackbars wait in a queue."
+    },
+    {
+      "name": "closed",
+      "description": "By its timer, the action, the dismiss button, a swipe, or SnackbarData.dismiss(). showMonarchSnackbar returns ActionPerformed or Dismissed."
+    }
+  ],
+  "appearance": "Every tone is the raised background with the default text, a subtle border (strong in high contrast), 12dp corners and one soft shadow in the light themes (none in the dark ones), up to 384dp wide. The tone colours only the status mark at the start (a ring with a check, an exclamation mark or an i, in the strong role of the tone), or the snackbar's own icon. The action is a small ghost MonarchButton; the close button is a MonarchIconButton.",
+  "platformNotes": "Planned as style: the Material 3 snackbar is the Android answer to a toast, so Monarch supplies the themed host, a SnackbarVisuals with a tone and a show function, and keeps Material 3 behavior. iOS builds MonarchToast with its own center and overlay. The host is placed by the app, normally in the snackbarHost slot of a Scaffold at the bottom; the web's top positions, offsets and hotkey are not offered. Material 3 shows one snackbar at a time, where the web stacks up to three. There is no title and description pair, only one message; the tone shows as a status mark or the snackbar's own icon. The tone is not spoken: write the outcome into the message. The web altText for the action and onDismiss callback are covered by the SnackbarResult returned by showMonarchSnackbar. Durations are the Material 3 Short (4 s) and Long (10 s); the web uses 5 s and 10 s.",
+  "accessibility": [
+    "Material 3 behavior: the snackbar is a polite live region, so TalkBack announces its message when it appears.",
+    "The action and the dismiss button are separate buttons with 48dp touch targets; the dismiss button is named by Material 3 (\"Dismiss\").",
+    "Material 3 lengthens the time on screen when an accessibility service asks for longer timeouts.",
+    "The tone is color only; the message must say the outcome.",
+    "The message wraps at the largest font size."
+  ],
+  "edgeCases": [
+    "A plain SnackbarVisuals shown through the host takes the neutral tone.",
+    "Snackbars queue: a second showMonarchSnackbar waits until the first one closes.",
+    "Inside a bottom sheet or a dialog, give that surface its own host; the Scaffold host is under it."
+  ],
+  "tests": [
+    "MonarchSnackbarHostTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Success with undo",
+      "fixture": "toast",
+      "webExample": "Success with undo",
+      "template": "LaunchedEffect(Unit) { archive() }\nScaffold(\n    modifier = Modifier.height(MonarchTheme.spacing.space24 * 3),\n    snackbarHost = { MonarchSnackbarHost(hostState = snackbars) },\n) { padding ->\n    MonarchButton(\n        text = {{trigger}},\n        onClick = archive,\n        modifier = Modifier.padding(padding),\n    )\n}",
+      "setupTemplate": "val snackbars = remember { SnackbarHostState() }\nval scope = rememberCoroutineScope()\nvar undone by remember { mutableIntStateOf(0) }\nval archive: () -> Unit = {\n    scope.launch {\n        val result = snackbars.showMonarchSnackbar(\n            message = {{toast.title}},\n            tone = {{toast.tone|tone}},\n            actionLabel = {{toast.action}},\n            description = {{toast.description}},\n            withDismissAction = true,\n        )\n        if (result == SnackbarResult.ActionPerformed) undone++\n    }\n}",
+      "imports": [
+        "kotlinx.coroutines.launch"
+      ],
+      "setup": "val snackbars = remember { SnackbarHostState() }\nval scope = rememberCoroutineScope()\nvar undone by remember { mutableIntStateOf(0) }\nval archive: () -> Unit = {\n    scope.launch {\n        val result = snackbars.showMonarchSnackbar(\n            message = \"Ticket archived\",\n            tone = MonarchTone.Success,\n            actionLabel = \"Undo\",\n            description = \"You can undo this.\",\n            withDismissAction = true,\n        )\n        if (result == SnackbarResult.ActionPerformed) undone++\n    }\n}",
+      "code": "LaunchedEffect(Unit) { archive() }\nScaffold(\n    modifier = Modifier.height(MonarchTheme.spacing.space24 * 3),\n    snackbarHost = { MonarchSnackbarHost(hostState = snackbars) },\n) { padding ->\n    MonarchButton(\n        text = \"Archive ticket\",\n        onClick = archive,\n        modifier = Modifier.padding(padding),\n    )\n}"
+    },
+    {
+      "title": "An error that stays until dismissed",
+      "code": "MonarchSnackbarHost(hostState = snackbars)\nLaunchedEffect(snackbars) {\n    snackbars.showMonarchSnackbar(\n        message = \"Could not sync. Check your connection.\",\n        tone = MonarchTone.Danger,\n        withDismissAction = true,\n        duration = SnackbarDuration.Indefinite,\n    )\n}",
+      "setup": "val snackbars = remember { SnackbarHostState() }"
+    }
+  ],
+  "webEquivalent": "Toast",
+  "dependsOn": [
+    "button"
+  ]
+}

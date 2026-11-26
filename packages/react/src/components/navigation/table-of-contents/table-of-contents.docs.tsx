@@ -1,15 +1,15 @@
 import { useRef } from 'react';
 import { Prose, TableOfContents } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './table-of-contents.fixture.json';
 
-const SECTIONS = [
-  { id: 'toc-demo-overview', title: 'Overview', level: 2 },
-  { id: 'toc-demo-setup', title: 'Setup', level: 2 },
-  { id: 'toc-demo-accounts', title: 'Accounts', level: 3 },
-  { id: 'toc-demo-permissions', title: 'Permissions', level: 3 },
-  { id: 'toc-demo-usage', title: 'Daily use', level: 2 },
-  { id: 'toc-demo-questions', title: 'Questions', level: 2 },
-];
+const SECTIONS = fixture.data.sections as unknown as readonly {
+  id: string;
+  title: string;
+  level: number;
+  body: readonly [string, string];
+}[];
 
 function Demo() {
   const scroller = useRef<HTMLDivElement>(null);
@@ -30,17 +30,14 @@ function Demo() {
             s.level === 2 ? (
               <div key={s.id}>
                 <h2 id={s.id}>{s.title}</h2>
-                <p>
-                  A paragraph about {s.title.toLowerCase()}. Scroll this area and the current
-                  section is highlighted in the list beside it.
-                </p>
-                <p>Another paragraph so each section takes up some room.</p>
+                <p>{s.body[0]}</p>
+                <p>{s.body[1]}</p>
               </div>
             ) : (
               <div key={s.id}>
                 <h3 id={s.id}>{s.title}</h3>
-                <p>Details about {s.title.toLowerCase()}.</p>
-                <p>More details, to make the section tall enough to scroll past.</p>
+                <p>{s.body[0]}</p>
+                <p>{s.body[1]}</p>
               </div>
             ),
           )}
@@ -51,7 +48,7 @@ function Demo() {
         scrollRoot={scroller}
         updateHash={false}
         // The docs page has its own "On this page" navigation; name this one apart.
-        messages={{ title: 'In this article' }}
+        messages={{ title: fixture.data.title }}
         style={{ flex: '0 0 180px' }}
       />
     </div>

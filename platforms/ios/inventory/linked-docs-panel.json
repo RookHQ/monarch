@@ -1,0 +1,197 @@
+{
+  "id": "linked-docs-panel",
+  "name": "MonarchLinkedDocsPanel",
+  "title": "LinkedDocsPanel",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchSectionCard with a Menu (buttonStyle(.monarch)) for Add, Picker with .pickerStyle(.menu) for the space filter, Button rows with MonarchFileTypeIcon; sheet(isPresented:) holding a NavigationStack with a List and searchable(text:prompt:) for the doc picker, and a NavigationStack with a Form and TextFields for the add link form",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The docs and links attached to a record: one row per doc or web link that opens it, with unlink, a space filter, a doc picker with search and New doc, and a form to add a link.",
+  "whenToUse": "On a record's detail screen (a ticket, a task, a campaign) to show and manage the specs, runbooks, notes and web pages attached to it.",
+  "whenNotToUse": "For uploaded files use MonarchFileList or MonarchUploadQueue. For document-to-document relations use MonarchDocumentRelations.",
+  "api": [
+    "init(_ items: [MonarchLinkedDocsPanelItem]?, isReadOnly: Bool = false, notice: String? = nil, errorMessage: String? = nil, isRetrying: Bool = false, docOptions: [MonarchLinkedDocsPanelOption] = [], isSpaceFilterShown: Bool = true, labels: MonarchLinkedDocsPanelLabels = MonarchLinkedDocsPanelLabels(), onRetry: (@MainActor () -> Void)? = nil, onLinkDoc: (@MainActor (String) async throws -> Void)? = nil, onDocQueryChange: (@MainActor (String) -> Void)? = nil, onCreateDoc: (@MainActor () -> Void)? = nil, onAddLink: (@MainActor (URL, String) async throws -> Void)? = nil, onUnlink: (@MainActor (MonarchLinkedDocsPanelItem) async throws -> Void)? = nil, onOpen: @escaping @MainActor (MonarchLinkedDocsPanelItem) -> Void)",
+    "struct MonarchLinkedDocsPanelItem { init(id: String, title: String, kind: MonarchLinkedDocsPanelKind = .doc, url: URL? = nil, docID: String? = nil, meta: String? = nil, status: String? = nil, spaceID: String? = nil, spaceName: String? = nil, fileName: String? = nil, isUnlinkable: Bool = true) }",
+    "enum MonarchLinkedDocsPanelKind { case doc, link }",
+    "struct MonarchLinkedDocsPanelOption { init(docID: String, label: String, description: String? = nil) }",
+    "struct MonarchLinkedDocsPanelLabels { init(title:, linkDoc:, addLink:, newDoc:, searchDocs:, noDocs:, empty:, emptyReadOnly:, loading:, add:, filterBySpace:, all:, noSpace:, hiddenByFilter:, showAll:, unlink:, unlinkFailed:, linkFailed:, urlLabel:, urlInvalid:, titleLabel:, confirmAdd:, cancel:) }"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "[MonarchLinkedDocsPanelItem]?",
+      "default": "required",
+      "description": "What is linked to the record, or nil while loading."
+    },
+    {
+      "name": "isReadOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Hides linking, adding and unlinking."
+    },
+    {
+      "name": "notice",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the list, such as a message that the person has no access to docs."
+    },
+    {
+      "name": "errorMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Something went wrong loading or changing links, shown above the list."
+    },
+    {
+      "name": "isRetrying",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows Try again busy."
+    },
+    {
+      "name": "docOptions",
+      "type": "[MonarchLinkedDocsPanelOption]",
+      "default": "[]",
+      "description": "The docs the picker offers. Docs already linked (by docID) are left out."
+    },
+    {
+      "name": "isSpaceFilterShown",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the space filter menu when the rows span more than one space."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchLinkedDocsPanelLabels",
+      "default": "MonarchLinkedDocsPanelLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows Try again with errorMessage."
+    },
+    {
+      "name": "onLinkDoc",
+      "type": "(@MainActor (String) async throws -> Void)?",
+      "default": "nil",
+      "description": "Links a doc, given its id. Shows Link doc in the Add menu; throwing shows \"That didn’t link. Try again.\"."
+    },
+    {
+      "name": "onDocQueryChange",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Called as the picker's search text changes, to search on the server and update docOptions. Without it the picker filters docOptions itself."
+    },
+    {
+      "name": "onCreateDoc",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows New doc at the top of the picker."
+    },
+    {
+      "name": "onAddLink",
+      "type": "(@MainActor (URL, String) async throws -> Void)?",
+      "default": "nil",
+      "description": "Adds a link, given its address and title (the host when no title is typed). Shows Add link in the Add menu; throwing keeps the form open with the failure."
+    },
+    {
+      "name": "onUnlink",
+      "type": "(@MainActor (MonarchLinkedDocsPanelItem) async throws -> Void)?",
+      "default": "nil",
+      "description": "Unlinks a row. Shows an unlink button on rows that allow it; throwing shows the failure."
+    },
+    {
+      "name": "onOpen",
+      "type": "@MainActor (MonarchLinkedDocsPanelItem) -> Void",
+      "default": "required",
+      "description": "Opens a row: the app pushes the doc or opens the link."
+    }
+  ],
+  "states": [
+    {
+      "name": "list",
+      "description": "One row per doc or link: the file type icon or a link symbol, the title, the secondary line and a status badge."
+    },
+    {
+      "name": "filtered",
+      "description": "The space menu shows one space; a caption says how many rows other spaces hold, with Show all."
+    },
+    {
+      "name": "unlinking",
+      "description": "The row's unlink button shows a spinner; other unlink buttons are disabled."
+    },
+    {
+      "name": "failed",
+      "description": "A danger inline notice with \"That didn’t unlink. Try again.\" or \"That didn’t link. Try again.\", announced."
+    },
+    {
+      "name": "loading",
+      "description": "items is nil: the section card's skeleton rows, read as Loading linked docs."
+    },
+    {
+      "name": "empty",
+      "description": "A muted sentence that invites linking, or \"Nothing linked yet.\" when read only."
+    },
+    {
+      "name": "notice",
+      "description": "An info inline notice in place of the list and the Add menu."
+    },
+    {
+      "name": "error",
+      "description": "MonarchInlineErrorRetry with onRetry, or a danger notice, above the list."
+    }
+  ],
+  "appearance": "A MonarchSectionCard with a secondary Add menu button. Rows have a small file type tile or a muted link symbol, the title in the strong body style, a caption in the muted text colour and a neutral MonarchBadge for the status. The pickers are system sheets with the system list, search field and form. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web panel opens a popover combobox to link a doc and an inline form to add a link; on iOS both are sheets: a NavigationStack with the system search field over a List, and a Form with Cancel and Add in the toolbar, the phone pattern for picking and entering data. The web's space filter chips become a menu Picker. The web's onSearchDocs promise becomes onDocQueryChange plus docOptions the app updates. Linking, adding and unlinking are async throwing handlers, so the panel keeps the busy and failed states itself; Android takes an unlinkingId from the app instead. The web's controlled filter and linkedDocIds are not offered: the filter is internal and linked docs are found by docID. Opening a row is the app's job (onOpen), since a native app pushes a doc screen or opens Safari.",
+  "accessibility": [
+    "The title has the header trait (from MonarchSectionCard).",
+    "Each row is a button whose label is the title and whose value is the secondary line and status, built by a tested pure function; the icon is decorative.",
+    "Unlink is a separate button with a 44-point target named \"Unlink <title>\"; while it runs it shows a spinner.",
+    "Link and unlink failures are shown in words and posted as announcements.",
+    "The Add menu is a system Menu; the doc picker and link form are system sheets with a search field, a form and a Cancel button.",
+    "An invalid web address is explained in words with an icon under the field and announced."
+  ],
+  "edgeCases": [
+    "Only http and https addresses with a host are accepted; javascript: and bare host names are rejected.",
+    "A link without a typed title is titled with its host, without www.",
+    "A filter for a space that no longer has rows shows every row.",
+    "The panel never removes or adds rows itself: the app updates items after each handler returns.",
+    "Only one unlink runs at a time."
+  ],
+  "tests": [
+    "MonarchLinkedDocsPanelTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Docs and links on a record",
+      "fixture": "linked-docs-panel",
+      "webExample": "Docs and links on a record",
+      "template": "MonarchLinkedDocsPanel(\n    items,\n    docOptions: [\n        MonarchLinkedDocsPanelOption(docID: {{docOptions.0.value}}, label: {{docOptions.0.label}}, description: {{docOptions.0.description}}),\n        MonarchLinkedDocsPanelOption(docID: {{docOptions.1.value}}, label: {{docOptions.1.label}}, description: {{docOptions.1.description}}),\n        MonarchLinkedDocsPanelOption(docID: {{docOptions.2.value}}, label: {{docOptions.2.label}}, description: {{docOptions.2.description}}),\n    ],\n    onLinkDoc: { docID in\n        items.append(MonarchLinkedDocsPanelItem(id: docID, title: docID, docID: docID))\n    },\n    onCreateDoc: {},\n    onAddLink: { url, title in\n        items.append(MonarchLinkedDocsPanelItem(id: url.absoluteString, title: title, kind: .link, url: url))\n    },\n    onUnlink: { item in\n        items.removeAll { $0.id == item.id }\n    },\n    onOpen: { opened = $0.title }\n)",
+      "setupTemplate": "@State private var items = [\n    MonarchLinkedDocsPanelItem(id: {{items.0.id}}, title: {{items.0.title}}, kind: {{items.0.kind|case}}, docID: {{items.0.docId}}, meta: {{items.0.meta}}, status: {{items.0.status}}, spaceID: {{items.0.space.id}}, spaceName: {{items.0.space.name}}),\n    MonarchLinkedDocsPanelItem(id: {{items.1.id}}, title: {{items.1.title}}, kind: {{items.1.kind|case}}, docID: {{items.1.docId}}, meta: {{items.1.meta}}, status: {{items.1.status}}, spaceID: {{items.1.space.id}}, spaceName: {{items.1.space.name}}),\n    MonarchLinkedDocsPanelItem(id: {{items.2.id}}, title: {{items.2.title}}, kind: {{items.2.kind|case}}, url: URL(string: {{items.2.url}})),\n]\n@State private var opened: String?",
+      "setup": "@State private var items = [\n    MonarchLinkedDocsPanelItem(id: \"l1\", title: \"Release runbook\", kind: .doc, docID: \"d1\", meta: \"Updated 2 hours ago\", status: \"Published\", spaceID: \"s-eng\", spaceName: \"Engineering\"),\n    MonarchLinkedDocsPanelItem(id: \"l2\", title: \"Launch brief\", kind: .doc, docID: \"d2\", meta: \"Updated yesterday\", status: \"Draft\", spaceID: \"s-mkt\", spaceName: \"Marketing\"),\n    MonarchLinkedDocsPanelItem(id: \"l3\", title: \"Design file\", kind: .link, url: URL(string: \"https://design.example.com/file/123\")),\n]\n@State private var opened: String?",
+      "code": "MonarchLinkedDocsPanel(\n    items,\n    docOptions: [\n        MonarchLinkedDocsPanelOption(docID: \"d1\", label: \"Release runbook\", description: \"Engineering\"),\n        MonarchLinkedDocsPanelOption(docID: \"d3\", label: \"Incident review template\", description: \"Engineering\"),\n        MonarchLinkedDocsPanelOption(docID: \"d4\", label: \"Pricing notes\", description: \"Sales\"),\n    ],\n    onLinkDoc: { docID in\n        items.append(MonarchLinkedDocsPanelItem(id: docID, title: docID, docID: docID))\n    },\n    onCreateDoc: {},\n    onAddLink: { url, title in\n        items.append(MonarchLinkedDocsPanelItem(id: url.absoluteString, title: title, kind: .link, url: url))\n    },\n    onUnlink: { item in\n        items.removeAll { $0.id == item.id }\n    },\n    onOpen: { opened = $0.title }\n)"
+    },
+    {
+      "title": "Loading and read only",
+      "code": "VStack {\n    MonarchLinkedDocsPanel(nil, onOpen: { _ in })\n    MonarchLinkedDocsPanel([], isReadOnly: true, onOpen: { _ in })\n}"
+    }
+  ],
+  "webEquivalent": "LinkedDocsPanel",
+  "dependsOn": [
+    "section-card",
+    "file-type-icon",
+    "dropdown-menu",
+    "search-input",
+    "sheet",
+    "inline-error-retry",
+    "inline-notice",
+    "badge"
+  ]
+}

@@ -1,8 +1,9 @@
 'use client';
 
-import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from 'react';
+import { forwardRef, Fragment, type ComponentPropsWithoutRef, type ElementRef } from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { cx } from '../../../internal/cx.js';
+import { stagedDismiss, useOverlayStage } from '../../../internal/overlay-stage.js';
 import { CheckGlyph, ChevronDownGlyph } from '../../../internal/icons.js';
 import { useFieldControl } from '../form-field/index.js';
 
@@ -61,20 +62,24 @@ export const SelectContent = forwardRef<
   { className, children, position = 'popper', sideOffset = 4, ...rest },
   ref,
 ) {
+  // In a docs preview stage the list is a picture in the page: in place, not modal.
+  const staged = useOverlayStage();
+  const Portal = staged ? Fragment : SelectPrimitive.Portal;
   return (
-    <SelectPrimitive.Portal>
+    <Portal>
       <SelectPrimitive.Content
         ref={ref}
         position={position}
         sideOffset={sideOffset}
         {...rest}
+        {...(staged ? stagedDismiss(staged, rest) : {})}
         className={cx('mn-menu', 'mn-select__content', className)}
       >
         <SelectPrimitive.Viewport className="mn-select__viewport">
           {children}
         </SelectPrimitive.Viewport>
       </SelectPrimitive.Content>
-    </SelectPrimitive.Portal>
+    </Portal>
   );
 });
 

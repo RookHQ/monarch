@@ -1,23 +1,25 @@
 import { useState } from 'react';
 import { Field, FieldDescription, FieldLabel, RangeSlider } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './range-slider.fixture.json';
 
 function PriceFilterDemo() {
-  const [range, setRange] = useState<[number, number]>([200, 800]);
-  const money = (v: number) => `$${v}`;
+  const [range, setRange] = useState<[number, number]>(fixture.data.value as [number, number]);
+  const money = (v: number) => `${fixture.data.valuePrefix}${v}`;
   return (
     <Field style={{ width: '100%', maxWidth: 360 }}>
-      <FieldLabel>Price</FieldLabel>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
       <RangeSlider
-        min={0}
-        max={1000}
-        step={50}
+        min={fixture.data.min}
+        max={fixture.data.max}
+        step={fixture.data.step}
         value={range}
         onValueChange={setRange}
         formatValue={money}
         showValue
       />
-      <FieldDescription>Results update when you let go.</FieldDescription>
+      <FieldDescription>{fixture.data.description}</FieldDescription>
     </Field>
   );
 }

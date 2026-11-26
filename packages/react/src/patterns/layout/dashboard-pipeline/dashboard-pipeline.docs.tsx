@@ -1,58 +1,78 @@
 import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
+import { BarChart, FunnelChart } from '@rookcom/monarch-react/charts';
 import { DashboardPipeline, PeriodSelector } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './dashboard-pipeline.fixture.json';
+import { DemoRows } from '../../../internal/docs-demo.js';
 
-const NOW = '2026-06-15T10:00:00Z';
+// A sales team’s pipeline on Monday 15 June 2026.
+const NOW = fixture.data.now;
+const [valueKpi, openKpi, winKpi, closingKpi] = fixture.data.kpis as [
+  { label: string; value: number; currency: string },
+  { label: string; value: number },
+  { label: string; value: number; change: { value: number; comparison: string } },
+  { label: string; value: number },
+];
 const sampleKpis = [
-  { id: 'k1', label: 'Sample figure A', value: 12 },
-  { id: 'k2', label: 'Sample figure B', value: 4 },
-  { id: 'k3', label: 'Sample figure C', value: 27 },
+  {
+    id: 'value',
+    label: valueKpi.label,
+    value: valueKpi.value,
+    format: 'currency' as const,
+    currency: valueKpi.currency,
+    notation: 'compact' as const,
+    locale: fixture.data.locale,
+  },
+  { id: 'open', label: openKpi.label, value: openKpi.value },
+  {
+    id: 'win-rate',
+    label: winKpi.label,
+    value: winKpi.value,
+    format: 'percent' as const,
+    change: winKpi.change,
+  },
+  { id: 'closing', label: closingKpi.label, value: closingKpi.value },
 ];
 const sampleInsights = [
   {
-    id: 'i1',
-    severity: 'info' as const,
-    origin: 'rule' as const,
-    title: 'Sample insight',
-    why: 'Insights explain why they are shown.',
+    id: fixture.data.insight.id,
+    severity: fixture.data.insight.severity as 'warning',
+    origin: fixture.data.insight.origin as 'rule',
+    title: fixture.data.insight.title,
+    why: fixture.data.insight.why,
+    action: { label: fixture.data.insight.action, onClick: () => {} },
   },
 ];
-const sampleRanking = [
-  { id: 'r1', name: 'Person A', value: 9 },
-  { id: 'r2', name: 'Person B', value: 6 },
-  { id: 'r3', name: 'Person C', value: 3 },
-];
-const sampleEvents = [
-  {
-    id: 'e1',
-    actor: { name: 'Person A' },
-    verb: 'updated',
-    object: 'Item 12',
-    time: '2026-06-15T09:40:00Z',
-  },
-  {
-    id: 'e2',
-    actor: { name: 'Person B' },
-    verb: 'created',
-    object: 'Item 13',
-    time: '2026-06-15T08:05:00Z',
-  },
-];
-const sampleTasks = [
-  { id: 't1', title: 'Review item 12' },
-  { id: 't2', title: 'Reply to a request', overdue: true },
-];
+const sampleRanking = fixture.data.leaders.entries;
+const sampleEvents = fixture.data.activity.map(({ id, actor, verb, object, time }) => ({
+  id,
+  actor: { name: actor },
+  verb,
+  object,
+  time,
+}));
+const sampleTasks = (fixture.data.agenda.tasks as { title: string; overdue?: boolean }[]).map(
+  ({ title, overdue }, index) => ({
+    id: `t${index + 1}`,
+    title,
+    ...(overdue !== undefined && { overdue }),
+  }),
+);
 
 function ArrangeDemo() {
   const [editing, setEditing] = useState(false);
   const [layout, setLayout] = useState<string[] | undefined>(undefined);
   return (
     <DashboardPipeline
-      title="Home"
-      description="Sample workspace"
-      period={<PeriodSelector defaultValue={{ preset: '7d' }} today="2026-06-15" size="sm" />}
+      title={fixture.data.title}
+      description={fixture.data.description}
+      period={
+        <PeriodSelector defaultValue={{ preset: '7d' }} today={fixture.data.today} size="sm" />
+      }
       kpis={sampleKpis}
+      kpiProps={{ minItemWidth: '9rem' }}
       insights={sampleInsights}
       actions={
         <Button
@@ -61,19 +81,41 @@ function ArrangeDemo() {
           onClick={() => setEditing((v) => !v)}
           aria-pressed={editing}
         >
-          {editing ? 'Done' : 'Arrange'}
+          {editing ? 'Done' : fixture.data.arrange}
         </Button>
       }
       editing={editing}
       layout={layout}
       onLayoutChange={(next: string[]) => setLayout(next)}
-      pipeline={<p style={{ margin: 0 }}>Items by stage</p>}
-      today={{ today: '2026-06-15', tasks: sampleTasks }}
-      followUps={<p style={{ margin: 0 }}>Replies waiting for an answer</p>}
-      upcoming={<p style={{ margin: 0 }}>Meetings and expected closes</p>}
-      performance={<p style={{ margin: 0 }}>Chart for the selected period</p>}
+      pipeline={
+        <FunnelChart
+          title={fixture.data.pipeline.title}
+          stages={fixture.data.pipeline.stages}
+          locale={fixture.data.locale}
+        />
+      }
+      today={{
+        today: fixture.data.today,
+        tasks: sampleTasks,
+        locale: fixture.data.locale,
+        timeZone: fixture.data.timeZone,
+      }}
+      followUps={<DemoRows rows={fixture.data.followUps} />}
+      upcoming={<DemoRows rows={fixture.data.upcoming} />}
+      performance={
+        <BarChart
+          title={fixture.data.performance.title}
+          description={fixture.data.performance.description}
+          data={fixture.data.performance.data}
+          categoryKey="month"
+          categoryLabel="Month"
+          series={[{ key: 'won', label: fixture.data.performance.title }]}
+          height={180}
+          locale={fixture.data.locale}
+        />
+      }
       leaders={sampleRanking}
-      leadersProps={{ valueLabel: 'Items' }}
+      leadersProps={{ valueLabel: fixture.data.leaders.valueLabel }}
       activity={sampleEvents}
       activityProps={{ now: NOW }}
     />
@@ -105,7 +147,7 @@ export default {
         'Composition, not configuration: every section is a slot or kit component (KPIRow, InsightStrip, Widget, Leaderboard, ActivityWidget, TodayPanel), so apps keep their data fetching.',
         'Every section is optional and fails on its own: a widget’s loading, empty and error states never block the page.',
         'People can rearrange sections (DashboardGrid arrange mode); the template never stores the layout itself.',
-        'Sample figures in docs are placeholders; the template never invents or computes metrics.',
+        'The figures in these examples are demo data; the template never invents or computes metrics.',
       ],
     },
     apiReference: {
@@ -214,7 +256,7 @@ export default {
     examples: {
       items: [
         {
-          title: 'All sections with sample data, arrangeable',
+          title: 'A sales pipeline, arrangeable',
           stack: true,
           render: () => <ArrangeDemo />,
         },

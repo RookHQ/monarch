@@ -7,8 +7,11 @@ import {
   FieldLabel,
   RadioGroup,
   RadioGroupItem,
+  type RadioGroupProps,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './radio-group.fixture.json';
 
 function ControlledFrequency() {
   const [value, setValue] = useState('weekly');
@@ -200,26 +203,9 @@ export default {
           title: 'Options with descriptions',
           render: () => (
             <RadioGroup
-              label="Workspace visibility"
-              defaultValue="members"
-              options={[
-                {
-                  value: 'members',
-                  label: 'Members only',
-                  description: 'Only people you invite can see this workspace.',
-                },
-                {
-                  value: 'organization',
-                  label: 'Whole organization',
-                  description: 'Anyone in your organization can find and join it.',
-                },
-                {
-                  value: 'public',
-                  label: 'Public link',
-                  description: 'Anyone with the link can view it.',
-                  disabled: true,
-                },
-              ]}
+              label={fixture.data.label}
+              defaultValue={fixture.data.selected}
+              options={fixture.data.options as unknown as RadioGroupProps['options']}
             />
           ),
         },

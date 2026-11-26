@@ -1,6 +1,8 @@
 import { Button, DangerZone, DangerZoneItem } from '@rookcom/monarch-react';
 import { LeaveWorkspaceFlow } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './leave-workspace-flow.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
@@ -126,15 +128,15 @@ export default {
           title: 'Leave from a danger zone',
           stack: true,
           render: () => (
-            <DangerZone>
+            <DangerZone heading={fixture.data.heading}>
               <DangerZoneItem
-                title="Leave this workspace"
-                description="You lose access to its projects and documents."
+                title={fixture.data.title}
+                description={fixture.data.description}
                 action={
                   <LeaveWorkspaceFlow
-                    trigger={<Button variant="danger">Leave workspace</Button>}
-                    workspaceName="Northfield"
-                    apps={['Projects', 'Docs', 'Calendar']}
+                    trigger={<Button variant="danger">{fixture.data.action}</Button>}
+                    workspaceName={fixture.data.workspaceName}
+                    apps={fixture.data.apps}
                     onLeave={() => wait(900)}
                   />
                 }

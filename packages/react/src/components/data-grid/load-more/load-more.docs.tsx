@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { LoadMore, useLoadMore, type LoadMorePage } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './load-more.fixture.json';
 
 type Entry = { id: number; title: string };
 
-const ALL: Entry[] = Array.from({ length: 9 }, (_, i) => ({
+const ALL: Entry[] = Array.from({ length: fixture.data.total }, (_, i) => ({
   id: i + 1,
-  title: `Audit entry ${i + 1}`,
+  title: fixture.data.entries[i] ?? `Audit entry ${i + 1}`,
 }));
 
 /** A fake cursor endpoint: pages of 3, a short delay, and one failure on the third page. */
@@ -39,12 +41,12 @@ function CursorListDemo() {
   });
   return (
     <div style={{ width: '100%' }}>
-      <ul aria-label="Audit log" style={{ margin: 0, paddingInlineStart: '1.25rem' }}>
+      <ul aria-label={fixture.data.label} style={{ margin: 0, paddingInlineStart: '1.25rem' }}>
         {list.items.map((e) => (
           <li key={e.id}>{e.title}</li>
         ))}
       </ul>
-      <LoadMore {...list.loadMoreProps} noun={{ one: 'entry', other: 'entries' }} />
+      <LoadMore {...list.loadMoreProps} noun={fixture.data.noun} />
     </div>
   );
 }

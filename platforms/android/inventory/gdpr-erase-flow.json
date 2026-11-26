@@ -1,0 +1,115 @@
+{
+  "id": "gdpr-erase-flow",
+  "name": null,
+  "title": "GdprEraseFlow",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet (confirmValueChange keeps it open while erasing) with a scrolling androidx.compose.foundation.layout.Column of MonarchConsequenceList, MonarchInlineNotice, MonarchCheckboxRow, MonarchTypeToConfirmInput, MonarchStepUpAuthDialog and MonarchButtons",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: an administrator erases one person's personal data after seeing what is erased and what is kept and why, acknowledging that it cannot be undone, typing the person's email and confirming who they are; the done step shows the audit reference.",
+  "whenToUse": "In an admin or support tool, to act on a person's right to erasure (GDPR article 17) for one data subject.",
+  "whenNotToUse": "For a person deleting their own account, use an account deletion flow with a grace period. For removing a member from a workspace without erasing their data, use the members screen's remove action.",
+  "api": [
+    "ModalBottomSheet(onDismissRequest = { if (!erasing) open = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { !erasing })) { … }",
+    "MonarchConsequenceList(items = …, heading = \"Will be erased\") and MonarchConsequenceList(items = listOf(MonarchConsequence(MonarchConsequenceKind.Kept, \"Invoices\", detail = \"Kept for 7 years to meet tax law\")), heading = \"Will be kept\")",
+    "MonarchCheckboxRow(checked = understood, onCheckedChange = { understood = it }, label = \"I understand the data is erased for good\")",
+    "MonarchTypeToConfirmInput(phrase = subject, value = typed, onValueChange = { typed = it }, label = \"Type $subject to confirm\")",
+    "MonarchStepUpAuthDialog(onVerify = …, description = \"Erasing someone’s data needs you to confirm it’s you.\", onCancel = …, onVerified = …, onVerifyingChange = { erasing = it })"
+  ],
+  "options": [
+    {
+      "name": "erased",
+      "type": "List<MonarchConsequence>",
+      "default": "required",
+      "description": "The kinds of personal data that are erased, with counts from the server. Pass loading = true to MonarchConsequenceList and keep the button disabled while they load."
+    },
+    {
+      "name": "retained",
+      "type": "List<MonarchConsequence>",
+      "default": "emptyList()",
+      "description": "Data that is kept, each with its reason as the detail, such as a legal retention period."
+    },
+    {
+      "name": "confirmPhrase",
+      "type": "String",
+      "default": "required",
+      "description": "What the administrator types, usually the subject's email."
+    },
+    {
+      "name": "erasing",
+      "type": "Boolean",
+      "default": "false",
+      "description": "While the request runs the sheet cannot be dismissed."
+    },
+    {
+      "name": "auditId",
+      "type": "String?",
+      "default": "null",
+      "description": "The audit log entry the server returns, shown on the done step."
+    }
+  ],
+  "states": [
+    {
+      "name": "review",
+      "description": "The title naming the person, the erased and kept lists, a warning notice, the acknowledgement checkbox, the email field and a disabled danger button until both are done."
+    },
+    {
+      "name": "verify",
+      "description": "MonarchStepUpAuthDialog asks the administrator to confirm who they are; Cancel goes back."
+    },
+    {
+      "name": "erasing",
+      "description": "The request runs; the sheet cannot be swiped or backed away."
+    },
+    {
+      "name": "done",
+      "description": "\"Personal data erased\" with the audit reference and Done."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component on the Material 3 sheet surface: two consequence lists with their removed and kept marks, a warning inline notice in the subtle warning fill, a checkbox row, the type-to-confirm field, full-width danger and ghost buttons, and the audit reference as body text. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web's GdprEraseFlow is one component on WizardDialog with review, confirm, step-up and done steps. On Android it is a recipe: a MonarchBottomSheet holds the steps as a when over the app's step state, because the two lists, the acknowledgement and the step-up content do not fit a MonarchDialog. The review and confirm steps of the web are one scrolling sheet here, with the button enabled only after the checkbox and the typed phrase. The web's loading and error props are MonarchConsequenceList's loading and an inline error with retry that the app shows. The web's messages and count formatting are written by the app. iOS has no plan entry for this flow yet.",
+  "accessibility": [
+    "The sheet's title uses the title style, which MonarchText marks as a heading.",
+    "Each list has a heading, and MonarchConsequenceList reads each line with its kind, so erased and kept do not depend on the mark.",
+    "The warning is a MonarchInlineNotice read with its tone; the acknowledgement is one checkbox element with its label.",
+    "MonarchTypeToConfirmInput announces when the typed email matches; the danger button is announced as disabled until both conditions are met.",
+    "The sheet cannot be dismissed while erasing."
+  ],
+  "edgeCases": [
+    "Check the acknowledgement, the phrase and the step-up on the server as well.",
+    "When the retained list is empty, leave out its heading.",
+    "Erasure in backups often happens later: say so in the warning when it does.",
+    "Keep the audit id with the request so support can find it."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Erase with retained records, step-up and audit reference",
+      "fixture": "gdpr-erase-flow",
+      "webExample": "Erase with retained records, step-up and audit reference",
+      "template": "MonarchButton(\n    text = {{trigger}},\n    onClick = {\n        step = \"review\"\n        understood = false\n        typed = \"\"\n        open = true\n    },\n    variant = MonarchButtonVariant.Danger,\n)\nif (open && step != \"verify\") {\n    // While the work runs, back or a tap outside does not close the dialog.\n    MonarchDialog(\n        onDismissRequest = { open = false },\n        title = if (step == \"done\") \"Personal data erased\" else \"Erase personal data\",\n        dismissible = !erasing,\n        actions = when (step) {\n            \"review\" -> {\n                {\n                    MonarchButton(text = \"Cancel\", onClick = { open = false }, size = MonarchButtonSize.Sm)\n                    MonarchButton(\n                        text = \"Continue\",\n                        onClick = { step = \"confirm\" },\n                        variant = MonarchButtonVariant.Danger,\n                        size = MonarchButtonSize.Sm,\n                    )\n                }\n            }\n            \"confirm\" -> {\n                {\n                    MonarchButton(text = \"Back\", onClick = { step = \"review\" }, size = MonarchButtonSize.Sm)\n                    MonarchButton(\n                        text = \"Erase data\",\n                        onClick = { step = \"verify\" },\n                        variant = MonarchButtonVariant.Danger,\n                        size = MonarchButtonSize.Sm,\n                        enabled = understood && MonarchTypeToConfirmInputDefaults.matches(typed, subject),\n                    )\n                }\n            }\n            else -> {\n                {\n                    MonarchButton(\n                        text = \"Done\",\n                        onClick = { open = false },\n                        variant = MonarchButtonVariant.Primary,\n                        size = MonarchButtonSize.Sm,\n                    )\n                }\n            }\n        },\n    ) {\n        Column(\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        ) {\n            when (step) {\n                \"review\" -> {\n                    MonarchText(text = \"Step 1 of 2\", style = MonarchTextStyle.Caption)\n                    MonarchProgress(progress = 0.5f, size = MonarchProgressSize.Sm)\n                    MonarchText(text = \"What happens\", style = MonarchTextStyle.Subheading, heading = true)\n                    MonarchText(\n                        text = \"This erases the personal data held about \" + {{subjectName}} + \".\",\n                        style = MonarchTextStyle.Caption,\n                    )\n                    MonarchConsequenceList(\n                        items = listOf(\n                            MonarchConsequence(MonarchConsequenceKind.Removed, {{erased.0.label}}),\n                            MonarchConsequence(MonarchConsequenceKind.Removed, {{erased.1.label}}, count = {{erased.1.count}}),\n                            MonarchConsequence(MonarchConsequenceKind.Removed, {{erased.2.label}}, count = {{erased.2.count}}),\n                            MonarchConsequence(MonarchConsequenceKind.Removed, {{erased.3.label}}),\n                        ),\n                        heading = \"Will be erased\",\n                    )\n                    MonarchConsequenceList(\n                        items = listOf(\n                            MonarchConsequence(MonarchConsequenceKind.Kept, {{retained.0.label}}, detail = {{retained.0.reason}}),\n                            MonarchConsequence(MonarchConsequenceKind.Kept, {{retained.1.label}}, detail = {{retained.1.detail}}),\n                        ),\n                        heading = \"Will be kept\",\n                    )\n                    MonarchInlineNotice(\n                        message = \"Erased data cannot be recovered, by you or by support.\",\n                        tone = MonarchTone.Danger,\n                        title = \"This cannot be undone\",\n                    )\n                }\n                \"confirm\" -> {\n                    MonarchText(text = \"Step 2 of 2\", style = MonarchTextStyle.Caption)\n                    MonarchProgress(progress = 1f, size = MonarchProgressSize.Sm)\n                    MonarchText(text = \"Confirm the erasure\", style = MonarchTextStyle.Subheading, heading = true)\n                    MonarchText(\n                        text = \"Erase the personal data of \" + {{subjectName}} + \" now.\",\n                        style = MonarchTextStyle.Caption,\n                    )\n                    MonarchCheckboxRow(\n                        checked = understood,\n                        onCheckedChange = { understood = it },\n                        label = \"I understand this cannot be undone\",\n                    )\n                    MonarchTypeToConfirmInput(\n                        phrase = subject,\n                        value = typed,\n                        onValueChange = { typed = it },\n                        label = \"Type $subject to confirm\",\n                    )\n                }\n                else -> {\n                    MonarchText(text = \"The personal data of \" + {{subjectName}} + \" has been erased.\")\n                    auditId?.let { MonarchText(text = \"Logged in the audit log. Reference: $it\") }\n                }\n            }\n        }\n    }\n}\nif (open && step == \"verify\") {\n    MonarchDialog(onDismissRequest = { step = \"confirm\" }, title = null, dismissible = !erasing) {\n        MonarchStepUpAuthDialog(\n            onVerify = { _ ->\n                // Send the credential to the server; throw if it is refused.\n            },\n            description = \"Erasing personal data needs you to confirm your identity.\",\n            onCancel = { step = \"confirm\" },\n            onVerified = {\n                erasing = true\n                scope.launch {\n                    // Erase on the server, which returns the audit log entry.\n                    auditId = {{auditId}}\n                    erasing = false\n                    step = \"done\"\n                }\n            },\n            onVerifyingChange = { erasing = it },\n        )\n    }\n}\n",
+      "setupTemplate": "val subject = {{confirmPhrase}}\nval scope = rememberCoroutineScope()\nvar open by rememberSaveable { mutableStateOf(true) }\nvar step by rememberSaveable { mutableStateOf(\"review\") } // review, verify, done\nvar understood by rememberSaveable { mutableStateOf(false) }\nvar typed by rememberSaveable { mutableStateOf(\"\") }\nvar erasing by remember { mutableStateOf(false) }\nvar auditId by rememberSaveable { mutableStateOf<String?>(null) }\n",
+      "imports": [
+        "kotlinx.coroutines.launch",
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "val subject = \"alex@example.com\"\nval scope = rememberCoroutineScope()\nvar open by rememberSaveable { mutableStateOf(true) }\nvar step by rememberSaveable { mutableStateOf(\"review\") } // review, verify, done\nvar understood by rememberSaveable { mutableStateOf(false) }\nvar typed by rememberSaveable { mutableStateOf(\"\") }\nvar erasing by remember { mutableStateOf(false) }\nvar auditId by rememberSaveable { mutableStateOf<String?>(null) }\n",
+      "code": "MonarchButton(\n    text = \"Erase personal data\",\n    onClick = {\n        step = \"review\"\n        understood = false\n        typed = \"\"\n        open = true\n    },\n    variant = MonarchButtonVariant.Danger,\n)\nif (open && step != \"verify\") {\n    // While the work runs, back or a tap outside does not close the dialog.\n    MonarchDialog(\n        onDismissRequest = { open = false },\n        title = if (step == \"done\") \"Personal data erased\" else \"Erase personal data\",\n        dismissible = !erasing,\n        actions = when (step) {\n            \"review\" -> {\n                {\n                    MonarchButton(text = \"Cancel\", onClick = { open = false }, size = MonarchButtonSize.Sm)\n                    MonarchButton(\n                        text = \"Continue\",\n                        onClick = { step = \"confirm\" },\n                        variant = MonarchButtonVariant.Danger,\n                        size = MonarchButtonSize.Sm,\n                    )\n                }\n            }\n            \"confirm\" -> {\n                {\n                    MonarchButton(text = \"Back\", onClick = { step = \"review\" }, size = MonarchButtonSize.Sm)\n                    MonarchButton(\n                        text = \"Erase data\",\n                        onClick = { step = \"verify\" },\n                        variant = MonarchButtonVariant.Danger,\n                        size = MonarchButtonSize.Sm,\n                        enabled = understood && MonarchTypeToConfirmInputDefaults.matches(typed, subject),\n                    )\n                }\n            }\n            else -> {\n                {\n                    MonarchButton(\n                        text = \"Done\",\n                        onClick = { open = false },\n                        variant = MonarchButtonVariant.Primary,\n                        size = MonarchButtonSize.Sm,\n                    )\n                }\n            }\n        },\n    ) {\n        Column(\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        ) {\n            when (step) {\n                \"review\" -> {\n                    MonarchText(text = \"Step 1 of 2\", style = MonarchTextStyle.Caption)\n                    MonarchProgress(progress = 0.5f, size = MonarchProgressSize.Sm)\n                    MonarchText(text = \"What happens\", style = MonarchTextStyle.Subheading, heading = true)\n                    MonarchText(\n                        text = \"This erases the personal data held about \" + \"Alex Kim\" + \".\",\n                        style = MonarchTextStyle.Caption,\n                    )\n                    MonarchConsequenceList(\n                        items = listOf(\n                            MonarchConsequence(MonarchConsequenceKind.Removed, \"Profile, name and contact details\"),\n                            MonarchConsequence(MonarchConsequenceKind.Removed, \"messages and comments\", count = 214),\n                            MonarchConsequence(MonarchConsequenceKind.Removed, \"uploaded files\", count = 37),\n                            MonarchConsequence(MonarchConsequenceKind.Removed, \"Sign-in history and device records\"),\n                        ),\n                        heading = \"Will be erased\",\n                    )\n                    MonarchConsequenceList(\n                        items = listOf(\n                            MonarchConsequence(MonarchConsequenceKind.Kept, \"Invoices and payment records\", detail = \"Kept for the retention period your policy sets, then deleted\"),\n                            MonarchConsequence(MonarchConsequenceKind.Kept, \"Audit log entries\", detail = \"With the name replaced by a reference\"),\n                        ),\n                        heading = \"Will be kept\",\n                    )\n                    MonarchInlineNotice(\n                        message = \"Erased data cannot be recovered, by you or by support.\",\n                        tone = MonarchTone.Danger,\n                        title = \"This cannot be undone\",\n                    )\n                }\n                \"confirm\" -> {\n                    MonarchText(text = \"Step 2 of 2\", style = MonarchTextStyle.Caption)\n                    MonarchProgress(progress = 1f, size = MonarchProgressSize.Sm)\n                    MonarchText(text = \"Confirm the erasure\", style = MonarchTextStyle.Subheading, heading = true)\n                    MonarchText(\n                        text = \"Erase the personal data of \" + \"Alex Kim\" + \" now.\",\n                        style = MonarchTextStyle.Caption,\n                    )\n                    MonarchCheckboxRow(\n                        checked = understood,\n                        onCheckedChange = { understood = it },\n                        label = \"I understand this cannot be undone\",\n                    )\n                    MonarchTypeToConfirmInput(\n                        phrase = subject,\n                        value = typed,\n                        onValueChange = { typed = it },\n                        label = \"Type $subject to confirm\",\n                    )\n                }\n                else -> {\n                    MonarchText(text = \"The personal data of \" + \"Alex Kim\" + \" has been erased.\")\n                    auditId?.let { MonarchText(text = \"Logged in the audit log. Reference: $it\") }\n                }\n            }\n        }\n    }\n}\nif (open && step == \"verify\") {\n    MonarchDialog(onDismissRequest = { step = \"confirm\" }, title = null, dismissible = !erasing) {\n        MonarchStepUpAuthDialog(\n            onVerify = { _ ->\n                // Send the credential to the server; throw if it is refused.\n            },\n            description = \"Erasing personal data needs you to confirm your identity.\",\n            onCancel = { step = \"confirm\" },\n            onVerified = {\n                erasing = true\n                scope.launch {\n                    // Erase on the server, which returns the audit log entry.\n                    auditId = \"evt_7Q2K9X\"\n                    erasing = false\n                    step = \"done\"\n                }\n            },\n            onVerifyingChange = { erasing = it },\n        )\n    }\n}\n"
+    }
+  ],
+  "webEquivalent": "GdprEraseFlow",
+  "dependsOn": [
+    "sheet",
+    "consequence-list",
+    "type-to-confirm-input",
+    "step-up-auth-dialog",
+    "checkbox"
+  ]
+}

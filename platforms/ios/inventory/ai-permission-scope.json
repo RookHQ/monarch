@@ -1,0 +1,111 @@
+{
+  "id": "ai-permission-scope",
+  "name": "MonarchAiPermissionScope",
+  "title": "AiPermissionScope",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "VStack of rows with MonarchFavicon; Picker with .pickerStyle(.segmented) per row when editable; ViewThatFits to stack a row when narrow",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "What an AI agent may see and change, app by app: each row names the app and the resources it covers and shows No access, Can read or Can read and edit, or a None / Read / Write control when editable.",
+  "whenToUse": "In agent settings or before an agent runs, to show or change what it may read or edit in each connected app.",
+  "whenNotToUse": "For one yes-or-no permission use a Toggle (see switch). For system permissions (camera, location) use the system prompt. For per-action approval use the tool-call approval in the conversation.",
+  "api": [
+    "MonarchAiPermissionScope.init(_ scopes: [MonarchAiPermissionScopeItem], labels: MonarchAiPermissionScopeLabels = MonarchAiPermissionScopeLabels(), onManage: (@MainActor () -> Void)? = nil)",
+    "MonarchAiPermissionScope.init(scopes: Binding<[MonarchAiPermissionScopeItem]>, labels: MonarchAiPermissionScopeLabels = MonarchAiPermissionScopeLabels(), onManage: (@MainActor () -> Void)? = nil)",
+    "MonarchAiPermissionScopeItem.init(_ app: String, resources: String? = nil, access: MonarchAiAccessLevel, iconURL: URL? = nil)",
+    "enum MonarchAiAccessLevel: Int, Comparable { case none, read, write }",
+    "func MonarchAiAccessLevel.includes(_ needed: MonarchAiAccessLevel) -> Bool",
+    "MonarchAiPermissionScopeLabels.init(label: String? = nil, access: (@Sendable (MonarchAiAccessLevel) -> String)? = nil, option: (@Sendable (MonarchAiAccessLevel) -> String)? = nil, control: (@Sendable (_ app: String) -> String)? = nil, manage: String? = nil, empty: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "scopes",
+      "type": "[MonarchAiPermissionScopeItem] or Binding<[MonarchAiPermissionScopeItem]>",
+      "default": "required",
+      "description": "One row per app, each with a unique app name, optional resources, the access level and an optional icon URL. An array gives a read-only list; a binding gives a segmented control per row that writes the access."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiPermissionScopeLabels",
+      "default": "MonarchAiPermissionScopeLabels()",
+      "description": "Replaces the list name, the level descriptions, the short option names, the control name, the manage title and the empty text."
+    },
+    {
+      "name": "onManage",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds a \"Manage permissions\" button in the Monarch link style."
+    }
+  ],
+  "states": [
+    {
+      "name": "read only",
+      "description": "Each row shows the level with a symbol: lock for No access (muted text), eye for Can read, pencil for Can read and edit."
+    },
+    {
+      "name": "editable",
+      "description": "Each row has a None / Read / Write segmented control."
+    },
+    {
+      "name": "narrow",
+      "description": "When the row does not fit on one line, the access or the control moves under the app name."
+    },
+    {
+      "name": "empty",
+      "description": "\"The AI has no access to any app.\" in muted text."
+    },
+    {
+      "name": "disabled",
+      "description": "With the standard disabled(_:) modifier the controls are dimmed by the system."
+    }
+  ],
+  "appearance": "Rows separated by subtle dividers; app names in the default text role and resources in muted text; a favicon or letter tile per app; the system segmented control when editable. The high-contrast themes resolve the same roles to stronger colours.",
+  "platformNotes": "The web's manageHref link becomes an onManage closure, since a native app opens its own settings screen. The web's onChange(scopes, changed) becomes a binding. iOS adds an optional app icon through MonarchFavicon. Android uses the same names.",
+  "accessibility": [
+    "The list is a container named \"What the AI can access\".",
+    "A read-only row is one element read as the app and its resources, with the access (\"Can read\") as its value.",
+    "Each level has its own symbol as well as its text, so it never depends on colour.",
+    "An editable row's control is the system segmented Picker named \"Access to <app>\".",
+    "The favicon is decorative and hidden.",
+    "Rows wrap and stack at large text sizes."
+  ],
+  "edgeCases": [
+    "App names must be unique: they are the rows' identity.",
+    "An empty resources string is not shown or read.",
+    "Long app names and resources wrap; the control moves under them."
+  ],
+  "tests": [
+    "MonarchAiPermissionScopeTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Read-only",
+      "fixture": "ai-permission-scope",
+      "webExample": "Read-only",
+      "template": "MonarchAiPermissionScope([\n    MonarchAiPermissionScopeItem({{scopes.0.app}}, resources: {{scopes.0.resources}}, access: {{scopes.0.access|case}}),\n    MonarchAiPermissionScopeItem({{scopes.1.app}}, resources: {{scopes.1.resources}}, access: {{scopes.1.access|case}}),\n    MonarchAiPermissionScopeItem({{scopes.2.app}}, access: {{scopes.2.access|case}}),\n    MonarchAiPermissionScopeItem({{scopes.3.app}}, access: {{scopes.3.access|case}}),\n])",
+      "code": "MonarchAiPermissionScope([\n    MonarchAiPermissionScopeItem(\"Calendar\", resources: \"Your events only\", access: .read),\n    MonarchAiPermissionScopeItem(\"Documents\", resources: \"Shared projects\", access: .write),\n    MonarchAiPermissionScopeItem(\"Contacts\", access: .read),\n    MonarchAiPermissionScopeItem(\"Billing\", access: .none),\n])"
+    },
+    {
+      "title": "Editable, with a manage button",
+      "setup": "@State private var scopes = [\n    MonarchAiPermissionScopeItem(\"Calendar\", access: .read),\n    MonarchAiPermissionScopeItem(\"Drive\", access: .write),\n]",
+      "code": "MonarchAiPermissionScope(scopes: $scopes, onManage: {})"
+    }
+  ],
+  "webEquivalent": "AiPermissionScope",
+  "dependsOn": [
+    "segmented-control",
+    "favicon",
+    "link"
+  ],
+  "icons": {
+    "access.read": "EyeGlyph",
+    "access.write": "PencilGlyph",
+    "access.none": "LockGlyph"
+  }
+}

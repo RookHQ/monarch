@@ -1,29 +1,32 @@
 import { useState } from 'react';
 import { UploadQueue, type UploadQueueItem } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './upload-queue.fixture.json';
 
 const MB = 1024 * 1024;
 
-const SAMPLE: UploadQueueItem[] = [
-  { id: '1', name: 'quarterly-report.pdf', size: 2.4 * MB, status: 'done' },
-  { id: '2', name: 'site-photo-01.jpg', size: 4.1 * MB, status: 'uploading', progress: 62 },
-  { id: '3', name: 'site-photo-02.jpg', size: 3.8 * MB, status: 'queued' },
-  {
-    id: '4',
-    name: 'floor-plan.dwg',
-    size: 18 * MB,
-    status: 'failed',
-    error: 'Upload interrupted. Check your connection and try again.',
-  },
-  {
-    id: '5',
-    name: 'archive.zip',
-    size: 120 * MB,
-    status: 'failed',
-    error: 'Larger than the 100 MB limit.',
-    retryable: false,
-  },
-];
+const data = fixture.data as unknown as {
+  items: {
+    id: string;
+    name: string;
+    size: number;
+    status: UploadQueueItem['status'];
+    progress?: number;
+    error?: string;
+    retryable?: boolean;
+  }[];
+};
+
+const SAMPLE: UploadQueueItem[] = data.items.map((i) => ({
+  id: i.id,
+  name: i.name,
+  size: i.size,
+  status: i.status,
+  ...(i.progress !== undefined && { progress: i.progress }),
+  ...(i.error !== undefined && { error: i.error }),
+  ...(i.retryable !== undefined && { retryable: i.retryable }),
+}));
 
 function QueueDemo() {
   const [items, setItems] = useState(SAMPLE);

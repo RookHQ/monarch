@@ -1,0 +1,79 @@
+{
+  "id": "split-inbox-layout",
+  "name": null,
+  "title": "SplitInboxLayout",
+  "family": "layout",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "NavigationSplitView(sidebar:detail:) with List(selection:) for the list and detail panes, and inspector(isPresented:content:) for the context pane; NavigationSplitView(sidebar:content:detail:) when the list has folders",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "An inbox is the system's split view: the list and the detail are NavigationSplitView columns, and the context pane is an inspector. On iPhone one pane shows at a time with back navigation. Monarch ships nothing.",
+  "whenToUse": "For a list of items opened one at a time with extra context, such as a support inbox, mail or a queue of approvals.",
+  "whenNotToUse": "For a list without a detail pane, use a List in a NavigationStack. For two panes only, see split-layout.",
+  "api": [
+    "NavigationSplitView(columnVisibility:sidebar:detail:)",
+    "NavigationSplitView(sidebar:content:detail:)",
+    "List(_:id:selection:rowContent:)",
+    ".inspector(isPresented: Binding<Bool>, content:)",
+    ".inspectorColumnWidth(min:ideal:max:)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "compact width",
+      "description": "One pane at a time: the list, then the detail with a back button; the inspector is a sheet."
+    },
+    {
+      "name": "regular width",
+      "description": "The list and the detail side by side; the inspector is a column at the trailing edge."
+    },
+    {
+      "name": "nothing selected",
+      "description": "The detail shows an empty state."
+    },
+    {
+      "name": "context hidden",
+      "description": "The toolbar button shows and hides the inspector."
+    }
+  ],
+  "appearance": "System columns, separators and selection; the selection takes the accent through the tint. Rows, the empty state and the context content are Monarch components.",
+  "platformNotes": "The parity map named a three-column NavigationSplitView. The web's three panes are list, detail and context; on iOS the context pane is an inspector, which the system shows as a trailing column on iPad and as a sheet on iPhone, while the three-column NavigationSplitView is for a folder sidebar before the list, shown in the second example. The web's breakpoints, pane toggles, resizing, focus management and list collapse are the system's: columnVisibility collapses the list, and inspectorColumnWidth sizes the context pane. Android uses the Material list-detail scaffold.",
+  "accessibility": [
+    "System behaviour: the list is a list with selection, columns are separate containers for VoiceOver, and the back button returns to the list on iPhone.",
+    "The inspector toggle is a toolbar button whose label says what it does.",
+    "Selection is shown by the system highlight and the selected trait, not colour alone."
+  ],
+  "edgeCases": [
+    "Keep the selection in state that survives size changes, so rotating an iPad does not lose the open item.",
+    "inspector needs iOS 17, the deployment target.",
+    "On iPhone the inspector is a sheet; give it presentationDetents if it is short."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Inbox with list, conversation and details",
+      "fixture": "split-inbox-layout",
+      "webExample": "Inbox with list, conversation and details",
+      "template": "HStack(spacing: 0) {\n    list\n        .frame(width: theme.spacing.space24 * 1.7)\n    Rectangle().fill(theme.colors.borderSubtle).frame(width: 1)\n    conversation\n        .frame(maxWidth: .infinity, alignment: .topLeading)\n}\n.clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))\n.overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(theme.colors.borderSubtle, lineWidth: 1))\n.frame(height: theme.spacing.space24 * 4.4)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\nprivate struct Conversation {\n    let subject: String\n    let from: String\n    let preview: String\n}\n\nprivate let conversations = [\n    Conversation(subject: {{conversations.0.subject}}, from: {{conversations.0.from}}, preview: {{conversations.0.preview}}),\n    Conversation(subject: {{conversations.1.subject}}, from: {{conversations.1.from}}, preview: {{conversations.1.preview}}),\n    Conversation(subject: {{conversations.2.subject}}, from: {{conversations.2.from}}, preview: {{conversations.2.preview}}),\n]\n@State private var selection = {{selected}}\n@State private var showsContext = false\n\nprivate var list: some View {\n    ScrollView {\n        VStack(alignment: .leading, spacing: theme.spacing.space1) {\n            ForEach(Array(conversations.enumerated()), id: \\.offset) { index, conversation in\n                Button { selection = index } label: {\n                    VStack(alignment: .leading, spacing: theme.spacing.space0_5) {\n                        Text(conversation.subject).monarchTextStyle(.label)\n                        Text(conversation.from + \" \\u{00B7} \" + conversation.preview)\n                            .monarchTextStyle(.caption)\n                            .foregroundStyle(theme.colors.textMuted)\n                    }\n                    .frame(maxWidth: .infinity, alignment: .leading)\n                    .padding(theme.spacing.space2)\n                    .background(\n                        selection == index ? theme.colors.accentSubtle : Color.clear,\n                        in: RoundedRectangle(cornerRadius: 8, style: .continuous)\n                    )\n                }\n                .buttonStyle(.plain)\n                .accessibilityAddTraits(selection == index ? .isSelected : [])\n            }\n        }\n        .padding(theme.spacing.space2)\n    }\n}\n\nprivate var conversation: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        HStack(alignment: .top, spacing: theme.spacing.space2) {\n            Text(conversations[selection].subject).monarchTextStyle(.subheading)\n            Spacer(minLength: 0)\n            Button { showsContext.toggle() } label: {\n                MonarchIcon(systemName: \"rectangle.split.3x1\", size: .sm)\n                    .foregroundStyle(theme.colors.textDefault)\n            }\n            .accessibilityLabel(showsContext ? \"Hide ticket details\" : \"Show ticket details\")\n            .frame(minWidth: 44, minHeight: 44, alignment: .topTrailing)\n        }\n        MonarchBadge({{status.label}}, tone: {{status.tone|tone}})\n        Text(\"From \" + conversations[selection].from)\n            .monarchTextStyle(.bodySmall)\n            .foregroundStyle(theme.colors.textMuted)\n        Text(conversations[selection].preview).monarchTextStyle(.bodySmall)\n        if showsContext {\n            VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                LabeledContent(\"Requester\", value: conversations[selection].from)\n                LabeledContent(\"Priority\", value: {{priority}})\n                LabeledContent(\"Assignee\", value: \"\\u{2014}\")\n            }\n            .labeledContentStyle(.monarch)\n        }\n        Spacer(minLength: 0)\n    }\n    .padding(theme.spacing.space3)\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\nprivate struct Conversation {\n    let subject: String\n    let from: String\n    let preview: String\n}\n\nprivate let conversations = [\n    Conversation(subject: \"Printer offline on floor 3\", from: \"Grace Hopper\", preview: \"It stopped after the update this morning.\"),\n    Conversation(subject: \"Invoice shows the wrong address\", from: \"Alan Turing\", preview: \"Our billing address changed in March.\"),\n    Conversation(subject: \"Reset two-factor\", from: \"Katherine Johnson\", preview: \"I replaced my phone and lost the codes.\"),\n]\n@State private var selection = 0\n@State private var showsContext = false\n\nprivate var list: some View {\n    ScrollView {\n        VStack(alignment: .leading, spacing: theme.spacing.space1) {\n            ForEach(Array(conversations.enumerated()), id: \\.offset) { index, conversation in\n                Button { selection = index } label: {\n                    VStack(alignment: .leading, spacing: theme.spacing.space0_5) {\n                        Text(conversation.subject).monarchTextStyle(.label)\n                        Text(conversation.from + \" \\u{00B7} \" + conversation.preview)\n                            .monarchTextStyle(.caption)\n                            .foregroundStyle(theme.colors.textMuted)\n                    }\n                    .frame(maxWidth: .infinity, alignment: .leading)\n                    .padding(theme.spacing.space2)\n                    .background(\n                        selection == index ? theme.colors.accentSubtle : Color.clear,\n                        in: RoundedRectangle(cornerRadius: 8, style: .continuous)\n                    )\n                }\n                .buttonStyle(.plain)\n                .accessibilityAddTraits(selection == index ? .isSelected : [])\n            }\n        }\n        .padding(theme.spacing.space2)\n    }\n}\n\nprivate var conversation: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        HStack(alignment: .top, spacing: theme.spacing.space2) {\n            Text(conversations[selection].subject).monarchTextStyle(.subheading)\n            Spacer(minLength: 0)\n            Button { showsContext.toggle() } label: {\n                MonarchIcon(systemName: \"rectangle.split.3x1\", size: .sm)\n                    .foregroundStyle(theme.colors.textDefault)\n            }\n            .accessibilityLabel(showsContext ? \"Hide ticket details\" : \"Show ticket details\")\n            .frame(minWidth: 44, minHeight: 44, alignment: .topTrailing)\n        }\n        MonarchBadge(\"Open\", tone: .info)\n        Text(\"From \" + conversations[selection].from)\n            .monarchTextStyle(.bodySmall)\n            .foregroundStyle(theme.colors.textMuted)\n        Text(conversations[selection].preview).monarchTextStyle(.bodySmall)\n        if showsContext {\n            VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                LabeledContent(\"Requester\", value: conversations[selection].from)\n                LabeledContent(\"Priority\", value: \"High\")\n                LabeledContent(\"Assignee\", value: \"\\u{2014}\")\n            }\n            .labeledContentStyle(.monarch)\n        }\n        Spacer(minLength: 0)\n    }\n    .padding(theme.spacing.space3)\n}",
+      "code": "HStack(spacing: 0) {\n    list\n        .frame(width: theme.spacing.space24 * 1.7)\n    Rectangle().fill(theme.colors.borderSubtle).frame(width: 1)\n    conversation\n        .frame(maxWidth: .infinity, alignment: .topLeading)\n}\n.clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))\n.overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(theme.colors.borderSubtle, lineWidth: 1))\n.frame(height: theme.spacing.space24 * 4.4)"
+    },
+    {
+      "title": "Folders, list and detail",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var folder: String? = \"Open\"\n@State private var thread: String?\nprivate let folders = [\"Open\", \"Pending\", \"Closed\"]",
+      "code": "NavigationSplitView(\n    sidebar: {\n        List(folders, id: \\.self, selection: $folder) { name in\n            Text(name).monarchTextStyle(.body)\n        }\n        .navigationTitle(\"Support\")\n    },\n    content: {\n        List([\"Refund request\", \"Invoice is wrong\"], id: \\.self, selection: $thread) { name in\n            Text(name).monarchTextStyle(.body)\n        }\n        .navigationTitle(folder ?? \"\")\n    },\n    detail: {\n        Text(thread ?? \"Choose a conversation\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(thread == nil ? theme.colors.textMuted : theme.colors.textDefault)\n    }\n)\n.frame(minHeight: theme.spacing.space24 * 3)"
+    }
+  ],
+  "webEquivalent": "SplitInboxLayout",
+  "dependsOn": [
+    "split-layout",
+    "empty-state"
+  ],
+  "parityExceptions": []
+}

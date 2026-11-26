@@ -1,0 +1,121 @@
+{
+  "name": null,
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "id": "identity-bar",
+  "title": "IdentityBar",
+  "family": "navigation",
+  "wrapsNative": "androidx.compose.material3.TopAppBar with MonarchNotificationsBell, MonarchIconButton and MonarchMenu (the account-menu recipe) in its actions, and MonarchSearchBar (androidx.compose.material3.DockedSearchBar) under it",
+  "summary": "A recipe, not a component: the top bar of a Rook app on a phone, with the product name as the title, notifications and the account menu as actions, and search under the bar.",
+  "whenToUse": "At the top of the main screens of a Rook app, as the content of the screen's top app bar.",
+  "whenNotToUse": "For a detail screen, use a TopAppBar with a back button and the record's actions (the record-header recipe). For the whole app frame with navigation, use the app-shell recipe.",
+  "api": [
+    "TopAppBar(title = { Text(product, Modifier.semantics { heading() }, maxLines = 1, overflow = TextOverflow.Ellipsis) }, actions = { … })",
+    "MonarchNotificationsBell(onClick = …, unreadCount = …) { MonarchIcon(…) }",
+    "MonarchIconButton(label = \"Account: …\", onClick = { accountOpen = true }) { MonarchAvatar(image = …, name = …, size = MonarchAvatarSize.Sm, decorative = true) }",
+    "MonarchMenu(expanded = accountOpen, onDismissRequest = …) { MonarchMenuItem(text = …, onClick = …) }",
+    "MonarchSearchBar(query = query, onQueryChange = …, onSearch = …, placeholder = \"Search …\")"
+  ],
+  "options": [
+    {
+      "name": "product",
+      "type": "String",
+      "default": "none",
+      "description": "The product name, always visible, as the title; a logo goes before it in the title Row and is decorative."
+    },
+    {
+      "name": "notifications",
+      "type": "@Composable",
+      "default": "none",
+      "description": "MonarchNotificationsBell with the unread count; the app opens its notifications screen or sheet."
+    },
+    {
+      "name": "account",
+      "type": "@Composable",
+      "default": "none",
+      "description": "An avatar MonarchIconButton with a MonarchMenu (or a MonarchBottomSheet on small screens), as in the account-menu recipe."
+    },
+    {
+      "name": "search",
+      "type": "@Composable",
+      "default": "none",
+      "description": "MonarchSearchBar under the bar, or a search MonarchIconButton that opens the command-palette recipe."
+    }
+  ],
+  "states": [
+    {
+      "name": "scrolled",
+      "description": "Pass TopAppBarDefaults.enterAlwaysScrollBehavior() to keep the bar in reach while the list scrolls, as the web's sticky option."
+    },
+    {
+      "name": "account menu open",
+      "description": "The MonarchMenu lists the signed-in address, Profile and preferences, Rook account and Sign out in the danger color."
+    },
+    {
+      "name": "unread notifications",
+      "description": "The bell shows the count and says it in words."
+    }
+  ],
+  "appearance": "The Material 3 top app bar in the Monarch theme, with the bell, the small avatar and the docked search bar. Sign out uses the danger strong text color. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships IdentityBar as a sticky header with product, start, search, notifications, actions and account slots. On Android the top app bar is the banner, so the recipe fills the bar's slots instead of drawing a bar: the product is the title, notifications and the account menu are actions, and search sits under the bar because a phone's bar has no room for a field. The web's start slot (breadcrumb or space switcher) becomes the title or a title MonarchMenu; extra actions beyond two go into an overflow menu. Rook account opens in the browser from the app. iOS fills the navigation bar the same way with searchable.",
+  "accessibility": [
+    "The product name is the title and a heading.",
+    "The bell is a button that says the unread count in words.",
+    "The avatar button is named Account: and the person's name; the avatar itself is decorative.",
+    "Menu items are MonarchMenuItems with 48dp targets; Sign out is in words, not color alone.",
+    "The search field has the search role from Material 3."
+  ],
+  "edgeCases": [
+    "A long product name is cut with an ellipsis in the bar.",
+    "Keep at most two icon actions in the bar; move the rest to an overflow MonarchMenu.",
+    "Without a signed-in person, replace the avatar with a Sign in button."
+  ],
+  "examples": [
+    {
+      "title": "Product, search, notifications and account",
+      "fixture": "identity-bar",
+      "webExample": "Product, search, notifications and account",
+      "template": "Column {\n    TopAppBar(\n        title = {\n            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                Box(\n                    modifier = Modifier.size(MonarchTheme.spacing.space8).background(MonarchTheme.colors.bgMuted, MonarchTheme.shapes.md),\n                    contentAlignment = Alignment.Center,\n                ) { MonarchText(text = \"R\", style = MonarchTextStyle.BodyStrong) }\n                Text(\n                    text = {{product}},\n                    modifier = Modifier.semantics { heading() },\n                    style = MonarchTheme.typography.bodyStrong,\n                    maxLines = 1,\n                    overflow = TextOverflow.Ellipsis,\n                )\n            }\n        },\n        actions = {\n            MonarchNotificationsBell(onClick = { /* Open notifications. */ }, unreadCount = 0) {\n                MonarchIcon(SampleIcons.Bell, contentDescription = null)\n            }\n            Box {\n                MonarchIconButton(label = \"Account: \" + {{account.name}}, onClick = { accountOpen = true }) {\n                    MonarchAvatar(image = null, name = {{account.name}}, size = MonarchAvatarSize.Sm, decorative = true)\n                }\n                MonarchMenu(expanded = accountOpen, onDismissRequest = { accountOpen = false }) {\n                    MonarchText(\n                        text = {{account.email}},\n                        modifier = Modifier.padding(\n                            horizontal = MonarchTheme.spacing.space3,\n                            vertical = MonarchTheme.spacing.space2,\n                        ),\n                        color = MonarchTheme.colors.textMuted,\n                    )\n                    MonarchMenuDivider()\n                    MonarchMenuItem(text = \"Profile and preferences\", onClick = { accountOpen = false })\n                    MonarchMenuItem(text = \"Rook account\", onClick = { accountOpen = false })\n                    MonarchMenuItem(text = \"Sign out\", onClick = { accountOpen = false }, destructive = true)\n                }\n            }\n        },\n    )\n    MonarchSearchBar(\n        query = query,\n        onQueryChange = { query = it },\n        onSearch = { /* Run the search. */ },\n        modifier = Modifier.fillMaxWidth().padding(horizontal = MonarchTheme.spacing.space4),\n        placeholder = {{search}},\n    )\n}",
+      "setupTemplate": "var query by rememberSaveable { mutableStateOf(\"\") }\nvar accountOpen by remember { mutableStateOf(false) }",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.background",
+        "androidx.compose.ui.Alignment"
+      ],
+      "setup": "var query by rememberSaveable { mutableStateOf(\"\") }\nvar accountOpen by remember { mutableStateOf(false) }",
+      "code": "Column {\n    TopAppBar(\n        title = {\n            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                Box(\n                    modifier = Modifier.size(MonarchTheme.spacing.space8).background(MonarchTheme.colors.bgMuted, MonarchTheme.shapes.md),\n                    contentAlignment = Alignment.Center,\n                ) { MonarchText(text = \"R\", style = MonarchTextStyle.BodyStrong) }\n                Text(\n                    text = \"Acme Desk\",\n                    modifier = Modifier.semantics { heading() },\n                    style = MonarchTheme.typography.bodyStrong,\n                    maxLines = 1,\n                    overflow = TextOverflow.Ellipsis,\n                )\n            }\n        },\n        actions = {\n            MonarchNotificationsBell(onClick = { /* Open notifications. */ }, unreadCount = 0) {\n                MonarchIcon(SampleIcons.Bell, contentDescription = null)\n            }\n            Box {\n                MonarchIconButton(label = \"Account: \" + \"Grace Hopper\", onClick = { accountOpen = true }) {\n                    MonarchAvatar(image = null, name = \"Grace Hopper\", size = MonarchAvatarSize.Sm, decorative = true)\n                }\n                MonarchMenu(expanded = accountOpen, onDismissRequest = { accountOpen = false }) {\n                    MonarchText(\n                        text = \"grace@example.com\",\n                        modifier = Modifier.padding(\n                            horizontal = MonarchTheme.spacing.space3,\n                            vertical = MonarchTheme.spacing.space2,\n                        ),\n                        color = MonarchTheme.colors.textMuted,\n                    )\n                    MonarchMenuDivider()\n                    MonarchMenuItem(text = \"Profile and preferences\", onClick = { accountOpen = false })\n                    MonarchMenuItem(text = \"Rook account\", onClick = { accountOpen = false })\n                    MonarchMenuItem(text = \"Sign out\", onClick = { accountOpen = false }, destructive = true)\n                }\n            }\n        },\n    )\n    MonarchSearchBar(\n        query = query,\n        onQueryChange = { query = it },\n        onSearch = { /* Run the search. */ },\n        modifier = Modifier.fillMaxWidth().padding(horizontal = MonarchTheme.spacing.space4),\n        placeholder = \"Search tickets\",\n    )\n}"
+    }
+  ],
+  "webEquivalent": "IdentityBar",
+  "dependsOn": [
+    "search-input",
+    "notifications-bell",
+    "account-menu"
+  ],
+  "icons": {
+    "notifications": "BellGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "android",
+      "paths": [
+        "notifications"
+      ],
+      "reason": "NATIVE GAP: MonarchNotificationsBell labels itself from its unread count and has no label parameter, so the web label \"Notifications\" is not shown.",
+      "convention": "none: recorded in native-gaps.json"
+    }
+  ]
+}

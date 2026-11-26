@@ -1,5 +1,7 @@
 import { SubscriptionsTable } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './subscriptions-table.fixture.json';
 
 const sample = [
   {
@@ -8,19 +10,19 @@ const sample = [
     href: '#support-plan',
     plan: 'Standard',
     quantity: 3,
-    customer: 'Example Co',
+    customer: 'Northwind Ltd',
     status: 'active',
     amount: 12000,
-    currency: 'USD',
+    currency: 'GBP',
     interval: 'month' as const,
-    monthly: { amount: 12000, currency: 'USD' },
+    monthly: { amount: 12000, currency: 'GBP' },
     renewalDate: '2027-01-15T00:00:00Z',
   },
   {
     id: 's2',
     name: 'Hosting',
     plan: 'Annual hosting',
-    customer: 'Sample Ltd',
+    customer: 'Harbor Labs',
     status: 'past_due',
     amount: 90000,
     currency: 'EUR',
@@ -35,10 +37,10 @@ const sample = [
     customer: 'Acme Studio',
     status: 'trial',
     amount: 45000,
-    currency: 'USD',
+    currency: 'GBP',
     interval: 'month' as const,
     intervalCount: 3,
-    monthly: { amount: 15000, currency: 'USD' },
+    monthly: { amount: 15000, currency: 'GBP' },
     cancelAt: '2027-02-01T00:00:00Z',
   },
 ];
@@ -136,7 +138,7 @@ export default {
     responsive: {
       items: [
         'Uses a container query on its own width, so it adapts inside narrow panels as well as on phones.',
-        'Below 48rem the monthly column is hidden; below 36rem the customer and renewal columns fold into a line under the name, so a 390px screen never scrolls sideways.',
+        'Below 48rem the monthly column is hidden; below 42rem (672px) the customer and renewal columns fold into a line under the name, so a 390px screen never scrolls sideways.',
         'Links grow to 44px tall on coarse pointers.',
       ],
     },
@@ -151,7 +153,17 @@ export default {
         {
           title: 'Across customers',
           render: () => (
-            <SubscriptionsTable subscriptions={sample} minorUnits locale="en-US" timeZone="UTC" />
+            <SubscriptionsTable
+              subscriptions={fixture.data.subscriptions.map((row, index) => ({
+                ...(row as unknown as (typeof sample)[number]),
+                id: `s${index + 1}`,
+                ...(index === 0 && { href: '#support-plan' }),
+                ...(index === 1 && { monthly: null }),
+              }))}
+              minorUnits
+              locale={fixture.data.locale}
+              timeZone={fixture.data.timeZone}
+            />
           ),
         },
         {
@@ -162,7 +174,7 @@ export default {
               showCustomer={false}
               showMonthly={false}
               minorUnits
-              locale="en-US"
+              locale="en-GB"
               timeZone="UTC"
               caption="Example Co subscriptions"
             />

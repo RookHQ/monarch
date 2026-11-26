@@ -1,0 +1,194 @@
+{
+  "id": "ai-memory-panel",
+  "name": "MonarchAiMemoryPanel",
+  "title": "AiMemoryPanel",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyColumn with MonarchSearchBar, androidx.compose.material3.TriStateCheckbox and Checkbox, MonarchAiMemoryChip rows, MonarchBulkActionBar and androidx.compose.material3.AlertDialog",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Everything the assistant remembers, grouped by the person, organization or project it is about, with search, edit, forget one, and select several to forget after a confirmation.",
+  "whenToUse": "On a settings or privacy screen where people review and correct what the assistant keeps about them and their work.",
+  "whenNotToUse": "For the memories a single reply used or saved, use MonarchAiMemoryChip in the message. For what the next prompt will see, use MonarchAiContextChips.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchAiMemoryPanel(memories: List<MonarchAiMemoryItem>, onEdit: (id: String, text: String) -> Unit, onForget: (id: String) -> Unit, onForgetMany: (ids: List<String>) -> Unit, modifier: Modifier = Modifier, locale: Locale? = null, timeZone: String? = null, state: LazyListState = rememberLazyListState(), contentPadding: PaddingValues = PaddingValues(), searchIcon: (@Composable () -> Unit)? = null, clearIcon: (@Composable () -> Unit)? = null, labels: MonarchAiMemoryPanelLabels = MonarchAiMemoryPanelLabels())",
+    "data class MonarchAiMemoryItem(id: String, text: String, entity: MonarchAiMemoryEntity, updatedAt: Long) { companion object { fun apply(memories: List<MonarchAiMemoryItem>, event: MonarchAiMemoryPart, now: Long, defaultEntityName: String = \"General\", entity: ((MonarchAiMemoryPart) -> MonarchAiMemoryEntity)? = null): List<MonarchAiMemoryItem> } }",
+    "data class MonarchAiMemoryEntity(kind: MonarchAiMemoryEntityKind, name: String)",
+    "enum class MonarchAiMemoryEntityKind { Person, Organization, Project, Other }",
+    "class MonarchAiMemoryPanelLabels(search: String? = null, selectAll: ((shown: Int) -> String)? = null, selectGroup: ((name: String) -> String)? = null, select: ((text: String) -> String)? = null, kind: ((kind: MonarchAiMemoryEntityKind) -> String)? = null, count: ((count: Int) -> String)? = null, updated: ((date: String) -> String)? = null, empty: String? = null, noMatches: ((query: String) -> String)? = null, matches: ((count: Int) -> String)? = null, forget: String? = null, confirmTitle: ((count: Int) -> String)? = null, confirmMessage: String? = null, cancel: String? = null, forgotten: ((count: Int) -> String)? = null, edited: String? = null, chip: MonarchAiMemoryChipLabels = MonarchAiMemoryChipLabels(), bulkBar: MonarchBulkActionBarLabels = MonarchBulkActionBarLabels())"
+  ],
+  "options": [
+    {
+      "name": "memories",
+      "type": "List<MonarchAiMemoryItem>",
+      "default": "required",
+      "description": "Everything remembered: id, text, the entity it is about and when it was last updated (epoch milliseconds). The app's state: change it in the callbacks. MonarchAiMemoryItem.apply keeps it in step with a conversation's memory events."
+    },
+    {
+      "name": "onEdit",
+      "type": "(id: String, text: String) -> Unit",
+      "default": "required",
+      "description": "Saves an edited memory with the trimmed new text, from the row's Edit dialog."
+    },
+    {
+      "name": "onForget",
+      "type": "(id: String) -> Unit",
+      "default": "required",
+      "description": "Forgets one memory straight away, from the row's Forget."
+    },
+    {
+      "name": "onForgetMany",
+      "type": "(ids: List<String>) -> Unit",
+      "default": "required",
+      "description": "Forgets the selected memories after the person confirms in the dialog."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the panel. Give it a bounded height: the list is lazy."
+    },
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "null",
+      "description": "The locale for search, the order of names and dates. null uses the first locale of the configuration."
+    },
+    {
+      "name": "timeZone",
+      "type": "String?",
+      "default": "null",
+      "description": "The time zone of the updated dates. An IANA id such as Europe/Berlin; null, or an id the device does not know, is the device's zone."
+    },
+    {
+      "name": "state",
+      "type": "LazyListState",
+      "default": "rememberLazyListState()",
+      "description": "The scroll state of the list."
+    },
+    {
+      "name": "contentPadding",
+      "type": "PaddingValues",
+      "default": "PaddingValues()",
+      "description": "The padding around the list content."
+    },
+    {
+      "name": "searchIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The search glyph at the start of the field. Monarch bundles no icons."
+    },
+    {
+      "name": "clearIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The glyph of the field's clear button; without it there is no clear button."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiMemoryPanelLabels",
+      "default": "MonarchAiMemoryPanelLabels()",
+      "description": "Replaces every built-in string, the row strings (chip) and the bulk bar strings."
+    }
+  ],
+  "states": [
+    {
+      "name": "listing",
+      "description": "The search field, the select-all row and one section per entity: people, then organizations, projects and other, each by name; newest memory first."
+    },
+    {
+      "name": "searching",
+      "description": "Only memories whose text or entity name contains the search are shown; the count is announced after 300 ms."
+    },
+    {
+      "name": "selecting",
+      "description": "Checked memories show MonarchBulkActionBar with the count and Forget; group and select-all checkboxes are indeterminate for a partial selection."
+    },
+    {
+      "name": "confirming",
+      "description": "An AlertDialog asks \"Forget 2 memories?\" with Forget (danger) and Cancel."
+    },
+    {
+      "name": "empty",
+      "description": "\"Nothing is remembered yet.\" without the search or select-all row."
+    },
+    {
+      "name": "no matches",
+      "description": "\"No memories match “…”.\""
+    }
+  ],
+  "appearance": "Group names in default semibold text with the kind and count in muted caption text; each memory is a MonarchAiMemoryChip row on the surface fill with its date in muted caption text. The bulk bar and the dialog use their own appearance. The same roles in light, dark and both high-contrast themes.",
+  "platformNotes": "A product pattern, experimental until a Rook app adopts it. On a phone the web's toolbar (search, select-all checkbox and a Forget selected button) becomes the search field and a select-all row at the top of the list, and the bulk action is MonarchBulkActionBar under the list, as Android selection screens do. Each row reuses MonarchAiMemoryChip's Row variant, so Edit and Forget are in the menu opened by tapping the memory (and are TalkBack actions) rather than separate buttons; the date is a line under the row because the chip has no meta slot. The web's AiMemoryItem.entity kind org is Organization here. The web's onForgetMany may return a promise that keeps the dialog pending; here the dialog closes on confirm and the app updates memories. The web moves focus to the next row after a forget; Android leaves focus to the system. The web's headingLevel is not offered (no heading levels in Android semantics). There is no iOS equivalent yet.",
+  "accessibility": [
+    "Group names are headings; each group checkbox is named \"Select all memories about {name}\" and is tri-state.",
+    "The select-all row is one tri-state checkbox element named by its text, \"Select all (3)\", with a 48dp height.",
+    "Each memory's checkbox is named \"Select memory: {text}\" with the text shortened to 48 characters, with a 48dp touch target.",
+    "Each memory row is a button whose menu offers Edit and Forget, also as TalkBack actions.",
+    "Search results, \"Memory updated\" and \"2 memories forgotten\" are announced from a polite live region that is always present; nothing is announced on first show.",
+    "Forgetting several always asks first in a dialog; the confirm button is the danger MonarchButton."
+  ],
+  "edgeCases": [
+    "Selected ids of memories that no longer exist are dropped from the count and from onForgetMany.",
+    "Memories with the same entity kind and name are one group.",
+    "A long memory wraps in its row; its checkbox name is shortened.",
+    "Search ignores case and spaces around the query."
+  ],
+  "tests": [
+    "MonarchAiMemoryPanelTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Memories",
+      "fixture": "ai-memory-panel",
+      "webExample": "Memories",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiMemoryPanel(\n    memories = memories,\n    onEdit = { id, text -> memories = memories.map { if (it.id == id) it.copy(text = text) else it } },\n    onForget = { id -> memories = memories.filterNot { it.id == id } },\n    onForgetMany = { ids -> memories = memories.filterNot { it.id in ids } },\n    labels = MonarchAiMemoryPanelLabels(forget = \"Forget selected\"),\n    editIcon = { MonarchIcon(SampleIcons.Pencil, contentDescription = null) },\n    forgetIcon = { MonarchIcon(SampleIcons.Close, contentDescription = null) },\n    locale = Locale.forLanguageTag({{locale}}),\n    timeZone = {{timeZone}},\n    searchIcon = { MonarchIcon(SampleIcons.Search, contentDescription = null) },\n)",
+      "setupTemplate": "var memories by remember {\n    mutableStateOf(\n        listOf(\n            MonarchAiMemoryItem(\n                {{memories.0.id}},\n                {{memories.0.text}},\n                MonarchAiMemoryEntity(MonarchAiMemoryEntityKind.{{memories.0.entity.kind|pascal}}, {{memories.0.entity.name}}),\n                {{memories.0.updatedAt|millis}},\n            ),\n            MonarchAiMemoryItem(\n                {{memories.1.id}},\n                {{memories.1.text}},\n                MonarchAiMemoryEntity(MonarchAiMemoryEntityKind.{{memories.1.entity.kind|pascal}}, {{memories.1.entity.name}}),\n                {{memories.1.updatedAt|millis}},\n            ),\n            MonarchAiMemoryItem(\n                {{memories.2.id}},\n                {{memories.2.text}},\n                MonarchAiMemoryEntity(MonarchAiMemoryEntityKind.Organization, {{memories.2.entity.name}}),\n                {{memories.2.updatedAt|millis}},\n            ),\n            MonarchAiMemoryItem(\n                {{memories.3.id}},\n                {{memories.3.text}},\n                MonarchAiMemoryEntity(MonarchAiMemoryEntityKind.{{memories.3.entity.kind|pascal}}, {{memories.3.entity.name}}),\n                {{memories.3.updatedAt|millis}},\n            ),\n        ),\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "java.util.Locale",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.components.intelligence.aimemorypanel.MonarchAiMemoryPanelLabels",
+        "com.rookhq.monarch.foundation.icon.MonarchIcon"
+      ],
+      "setup": "var memories by remember {\n    mutableStateOf(\n        listOf(\n            MonarchAiMemoryItem(\n                \"a1\",\n                \"Prefers summaries under 200 words\",\n                MonarchAiMemoryEntity(MonarchAiMemoryEntityKind.Person, \"Ada Lovelace\"),\n                1_790_848_800_000L,\n            ),\n            MonarchAiMemoryItem(\n                \"a2\",\n                \"Works in the Lisbon office\",\n                MonarchAiMemoryEntity(MonarchAiMemoryEntityKind.Person, \"Ada Lovelace\"),\n                1_791_194_400_000L,\n            ),\n            MonarchAiMemoryItem(\n                \"o1\",\n                \"Fiscal year starts in April\",\n                MonarchAiMemoryEntity(MonarchAiMemoryEntityKind.Organization, \"Northwind\"),\n                1_785_578_400_000L,\n            ),\n            MonarchAiMemoryItem(\n                \"p1\",\n                \"Launch review is every Thursday\",\n                MonarchAiMemoryEntity(MonarchAiMemoryEntityKind.Project, \"Atlas\"),\n                1_788_256_800_000L,\n            ),\n        ),\n    )\n}",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiMemoryPanel(\n    memories = memories,\n    onEdit = { id, text -> memories = memories.map { if (it.id == id) it.copy(text = text) else it } },\n    onForget = { id -> memories = memories.filterNot { it.id == id } },\n    onForgetMany = { ids -> memories = memories.filterNot { it.id in ids } },\n    labels = MonarchAiMemoryPanelLabels(forget = \"Forget selected\"),\n    editIcon = { MonarchIcon(SampleIcons.Pencil, contentDescription = null) },\n    forgetIcon = { MonarchIcon(SampleIcons.Close, contentDescription = null) },\n    locale = Locale.forLanguageTag(\"en-GB\"),\n    timeZone = \"Europe/London\",\n    searchIcon = { MonarchIcon(SampleIcons.Search, contentDescription = null) },\n)"
+    },
+    {
+      "title": "Keeping the list in step with a conversation",
+      "setup": "var memories by remember { mutableStateOf(emptyList<MonarchAiMemoryItem>()) }\nval event = MonarchAiMemoryPart(\"m3\", MonarchAiMemoryAction.Write, \"Works in Lisbon\", scope = \"You\")",
+      "code": "LaunchedEffect(event) { memories = MonarchAiMemoryItem.apply(memories, event, now = 1_793_750_400_000L) }\n@OptIn(ExperimentalMonarchApi::class)\nMonarchAiMemoryPanel(\n    memories = memories,\n    onEdit = { _, _ -> },\n    onForget = {},\n    onForgetMany = {},\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ]
+    }
+  ],
+  "webEquivalent": "AiMemoryPanel",
+  "dependsOn": [
+    "ai-memory-chip",
+    "search-input",
+    "bulk-action-bar",
+    "confirm-dialog"
+  ],
+  "icons": {
+    "search": "SearchGlyph",
+    "edit": "PencilGlyph",
+    "forget": "CloseGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "android",
+      "paths": [
+        "memories.2.entity.kind"
+      ],
+      "reason": "The web kind org is the enum case organization natively (naming only, same behaviour), so it is written literally.",
+      "convention": "enum naming: web org = native Organization"
+    }
+  ]
+}

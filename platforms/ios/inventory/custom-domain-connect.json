@@ -1,0 +1,93 @@
+{
+  "id": "custom-domain-connect",
+  "name": null,
+  "title": "CustomDomainConnect",
+  "family": "technical",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "VStack (or a Form) of MonarchTextField, MonarchDomainProgress, MonarchDnsRecordTable and MonarchButton, with confirmationDialog(_:isPresented:titleVisibility:actions:message:) for removal",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: connect a custom domain by entering it, copying the DNS records, verifying, and following its progress to live, with removal behind a confirmation.",
+  "whenToUse": "On the domain settings screen of a product that serves pages, booking sites or help centres on the customer's own domain.",
+  "whenNotToUse": "For showing only the state of a domain that is already set up, use MonarchDomainProgress alone; for DNS records with no connection flow, use MonarchDnsRecordTable.",
+  "api": [
+    "MonarchTextField.init(_ label: String, text: Binding<String>, prompt: String? = nil, helper: String? = nil, error: String? = nil, isSecure: Bool = false)",
+    "MonarchDomainProgress.init(_ host: String, stage: MonarchDomainStage, problems: [MonarchDomainProblem] = [], dnsFound: MonarchDomainDnsSnapshot? = nil, checkedAt: Date? = nil, now: Date? = nil, isRechecking: Bool = true, notify: MonarchDomainNotify? = nil, labels: MonarchDomainProgressLabels = MonarchDomainProgressLabels())",
+    "MonarchDnsRecordTable.init(_ records: [MonarchDnsRecord], zone: String? = nil, layout: MonarchDnsRecordTableLayout = .automatic, labels: MonarchDnsRecordTableLabels = MonarchDnsRecordTableLabels(), onCopy: (@MainActor (String) -> Void)? = nil)",
+    "MonarchButton.init(_ title: String, systemImage: String? = nil, trailingSystemImage: String? = nil, variant: MonarchButtonVariant = .secondary, size: MonarchButtonSize = .md, isLoading: Bool = false, loadingLabel: String? = nil, fullWidth: Bool = false, action: @escaping @MainActor () -> Void)",
+    "func confirmationDialog<A: View, M: View>(_ title: String, isPresented: Binding<Bool>, titleVisibility: Visibility = .automatic, @ViewBuilder actions: () -> A, @ViewBuilder message: () -> M) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "enter",
+      "description": "A Domain field with an example prompt and help; Connect domain is disabled until the text looks like a host, and a URL or a path shows the error under the field."
+    },
+    {
+      "name": "records",
+      "description": "After connecting: MonarchDomainProgress at the DNS step, the records as cards with copy buttons, Verify DNS and Remove domain."
+    },
+    {
+      "name": "verifying",
+      "description": "The app checks DNS and moves the stage (dns, ownership, certificate, page, live); records show Found or Waiting from isFound."
+    },
+    {
+      "name": "live",
+      "description": "MonarchDomainProgress shows every step done; Verify DNS is disabled."
+    },
+    {
+      "name": "remove",
+      "description": "A confirmation dialog with the domain in its title and a destructive Remove domain."
+    }
+  ],
+  "appearance": "Every part keeps its Monarch styling: the field and buttons as elsewhere, the progress steps with tone icons and words, the records as cards on the surface colour. The confirmation dialog is the system's.",
+  "platformNotes": "The web ships CustomDomainConnect as one pattern with domain normalisation (punycode, scheme and path stripping), a four-step stepper, a provider picker with product-written instructions, async onConnect, onVerify and onRemove, and its own messages. On iOS it is a recipe so the product keeps its own networking and copy: the app normalises the host (URLComponents can strip a pasted scheme and path), calls its API, and sets the stage and each record's isFound from its checks. MonarchDomainProgress replaces the web stepper and status badge. A provider picker is a Picker with .menu style above the records. Removal uses confirmationDialog, the iOS pattern for a destructive choice. Marked experimental because it is a product flow, not a primitive, until a Rook app adopts it.",
+  "accessibility": [
+    "The Domain field reads its label, value, help and error; the error has an icon and text.",
+    "The DNS records heading has the header trait; each record value and name is read with its copy button, as MonarchDnsRecordTable does.",
+    "MonarchDomainProgress reads each step with its state and announces when a step completes.",
+    "The disabled Connect domain and Verify DNS buttons are read as dimmed.",
+    "The removal dialog is the system dialog, with the destructive action announced as such."
+  ],
+  "edgeCases": [
+    "People paste full URLs: strip the scheme, path and port before validating, or show the error as the recipe does.",
+    "DNS changes can take hours: keep the records visible while the stage is dns, and recheck on a timer with MonarchDomainProgress.recheckInterval(for:).",
+    "Several domains on one screen: give each its own section and include the host in the removal title."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Full flow (simulated checks)",
+      "fixture": "custom-domain-connect",
+      "webExample": "Full flow (simulated checks)",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    MonarchStepper(steps, current: connected == nil ? 0 : 1, compact: .automatic)\n    if let host = connected {\n        MonarchDomainProgress(host, stage: stage, isRechecking: false)\n        Text(\"DNS records\")\n            .monarchTextStyle(.subheading)\n            .accessibilityAddTraits(.isHeader)\n        Text(\"Add these records where the DNS for your domain is managed.\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textMuted)\n        MonarchDnsRecordTable(\n            [\n                MonarchDnsRecord(type: \"CNAME\", name: host, value: \"pages.example.net\", purpose: .routing, isFound: stage != .dns),\n                MonarchDnsRecord(type: \"TXT\", name: \"_verify.\\(host)\", value: \"verify=4f1c9a2e7b\", purpose: .verification, isFound: stage != .dns),\n            ],\n            layout: .cards\n        )\n        MonarchButton(\"Verify DNS\", variant: .primary, fullWidth: true) {\n            stage = stage == .dns ? .certificate : .live\n        }\n        .disabled(stage == .live)\n        MonarchButton(\"Remove domain\", variant: .danger, fullWidth: true) { isConfirmingRemoval = true }\n            .confirmationDialog(\"Remove \\(host)?\", isPresented: $isConfirmingRemoval, titleVisibility: .visible) {\n                Button(\"Remove domain\", role: .destructive) {\n                    connected = nil\n                    stage = .dns\n                }\n            } message: {\n                Text(\"The domain stops working here. You can connect it again later.\")\n            }\n    } else {\n        HStack(alignment: .top, spacing: theme.spacing.space2) {\n            MonarchTextField(\n                {{field.label}},\n                text: $domain,\n                prompt: {{field.placeholder}},\n                helper: {{field.description}},\n                error: domainError,\n                isRequired: true\n            )\n            .autocorrectionDisabled()\n            MonarchButton({{connect}}, variant: .primary) {\n                guard !domain.isEmpty, domainError == nil else { return }\n                connected = domain.trimmingCharacters(in: .whitespaces).lowercased()\n            }\n            .padding(.top, theme.spacing.space6)\n        }\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var domain = \"\"\n@State private var connected: String?\n@State private var stage = MonarchDomainStage.dns\n@State private var isConfirmingRemoval = false\nprivate let steps = [\n    MonarchStepperStep(id: \"domain\", label: {{steps.0}}),\n    MonarchStepperStep(id: \"dns\", label: {{steps.1}}),\n    MonarchStepperStep(id: \"verify\", label: {{steps.2}}),\n    MonarchStepperStep(id: \"live\", label: {{steps.3}}),\n]\n\nprivate var domainError: String? {\n    let host = domain.trimmingCharacters(in: .whitespaces).lowercased()\n    guard !host.isEmpty else { return nil }\n    let isHost = host.contains(\".\") && !host.contains(\"/\") && !host.contains(\":\") && !host.contains(\" \")\n    return isHost ? nil : \"Enter a domain such as help.example.com, without https:// or a path.\"\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var domain = \"\"\n@State private var connected: String?\n@State private var stage = MonarchDomainStage.dns\n@State private var isConfirmingRemoval = false\nprivate let steps = [\n    MonarchStepperStep(id: \"domain\", label: \"Domain\"),\n    MonarchStepperStep(id: \"dns\", label: \"DNS records\"),\n    MonarchStepperStep(id: \"verify\", label: \"Verify\"),\n    MonarchStepperStep(id: \"live\", label: \"Live\"),\n]\n\nprivate var domainError: String? {\n    let host = domain.trimmingCharacters(in: .whitespaces).lowercased()\n    guard !host.isEmpty else { return nil }\n    let isHost = host.contains(\".\") && !host.contains(\"/\") && !host.contains(\":\") && !host.contains(\" \")\n    return isHost ? nil : \"Enter a domain such as help.example.com, without https:// or a path.\"\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    MonarchStepper(steps, current: connected == nil ? 0 : 1, compact: .automatic)\n    if let host = connected {\n        MonarchDomainProgress(host, stage: stage, isRechecking: false)\n        Text(\"DNS records\")\n            .monarchTextStyle(.subheading)\n            .accessibilityAddTraits(.isHeader)\n        Text(\"Add these records where the DNS for your domain is managed.\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textMuted)\n        MonarchDnsRecordTable(\n            [\n                MonarchDnsRecord(type: \"CNAME\", name: host, value: \"pages.example.net\", purpose: .routing, isFound: stage != .dns),\n                MonarchDnsRecord(type: \"TXT\", name: \"_verify.\\(host)\", value: \"verify=4f1c9a2e7b\", purpose: .verification, isFound: stage != .dns),\n            ],\n            layout: .cards\n        )\n        MonarchButton(\"Verify DNS\", variant: .primary, fullWidth: true) {\n            stage = stage == .dns ? .certificate : .live\n        }\n        .disabled(stage == .live)\n        MonarchButton(\"Remove domain\", variant: .danger, fullWidth: true) { isConfirmingRemoval = true }\n            .confirmationDialog(\"Remove \\(host)?\", isPresented: $isConfirmingRemoval, titleVisibility: .visible) {\n                Button(\"Remove domain\", role: .destructive) {\n                    connected = nil\n                    stage = .dns\n                }\n            } message: {\n                Text(\"The domain stops working here. You can connect it again later.\")\n            }\n    } else {\n        HStack(alignment: .top, spacing: theme.spacing.space2) {\n            MonarchTextField(\n                \"Domain\",\n                text: $domain,\n                prompt: \"help.example.com\",\n                helper: \"The address visitors will type, such as help.example.com.\",\n                error: domainError,\n                isRequired: true\n            )\n            .autocorrectionDisabled()\n            MonarchButton(\"Connect domain\", variant: .primary) {\n                guard !domain.isEmpty, domainError == nil else { return }\n                connected = domain.trimmingCharacters(in: .whitespaces).lowercased()\n            }\n            .padding(.top, theme.spacing.space6)\n        }\n    }\n}"
+    },
+    {
+      "title": "A connected domain",
+      "code": "MonarchDomainProgress(\"help.example.com\", stage: .live, isRechecking: false)"
+    }
+  ],
+  "webEquivalent": "CustomDomainConnect",
+  "dependsOn": [
+    "text-field",
+    "dns-record-table",
+    "domain-progress",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web draws the four steps as a row with each name beside its circle, which needs about 420 points; a phone column has 306, so each name sits under its circle (the stepper's stacked row) and the compact form takes over at larger text sizes.",
+      "convention": "HIG: a phone layout stacks a label under its control rather than shrinking it"
+    }
+  ]
+}

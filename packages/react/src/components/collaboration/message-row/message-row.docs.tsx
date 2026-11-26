@@ -3,13 +3,20 @@ import { Badge, IconButton } from '@rookcom/monarch-react';
 import { MessageRow, type MessageReaction } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { MoreIcon, PencilIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './message-row.fixture.json';
 
 const NOW = '2026-03-02T12:00:00Z';
+const [editLabel, moreLabel] = fixture.data.actions as [string, string];
+const [thumbs, party] = fixture.data.reactions as [
+  { emoji: string; label: string; count: number; reacted: boolean },
+  { emoji: string; label: string; count: number },
+];
 
 function ReactionsDemo() {
   const [reactions, setReactions] = useState<MessageReaction[]>([
-    { emoji: '👍', label: 'thumbs up', count: 3, reacted: true, title: 'You, Ben and Chloé' },
-    { emoji: '🎉', label: 'party popper', count: 1 },
+    { ...thumbs, title: 'You, Ben and Chloé' },
+    { ...party },
   ]);
   const toggle = (emoji: string) =>
     setReactions((list) =>
@@ -22,21 +29,21 @@ function ReactionsDemo() {
   return (
     <div style={{ width: '100%' }}>
       <MessageRow
-        author={{ name: 'Ana Lopez' }}
-        time="2026-03-02T11:52:00Z"
-        now={NOW}
+        author={{ name: fixture.data.author }}
+        time={fixture.data.time}
+        now={fixture.data.now}
         reactions={reactions}
         onReactionToggle={toggle}
-        replyCount={4}
+        replyCount={fixture.data.replyCount}
         onOpenThread={() => {}}
         actions={
           <>
-            <IconButton size="xs" label="Edit message" icon={<PencilIcon />} />
-            <IconButton size="xs" label="More actions" icon={<MoreIcon />} />
+            <IconButton size="xs" label={editLabel} icon={<PencilIcon />} />
+            <IconButton size="xs" label={moreLabel} icon={<MoreIcon />} />
           </>
         }
       >
-        <p>The release notes are ready for review. Comments by Thursday, please.</p>
+        <p>{fixture.data.body}</p>
       </MessageRow>
     </div>
   );

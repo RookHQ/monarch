@@ -46,7 +46,7 @@ without, such as the chart frame).
 | Status       | Meaning                                                                       | In the registry                    |
 | ------------ | ----------------------------------------------------------------------------- | ---------------------------------- |
 | `planned`    | In scope and assigned to a roadmap wave; not exported                         | `status: planned`, `wave` 1–9      |
-| `beta`       | Exported, gates passed, API may still change in a minor release               | reserved; no component is beta yet |
+| `beta`       | Exported, gates passed, API may still change in any release                   | reserved; no component is beta yet |
 | `stable`     | Exported; API changes follow [versioning](versioning.md)                      | `status: stable`                   |
 | `deprecated` | Still exported, listed in `registry/deprecations.json`, scheduled for removal | `status: deprecated`               |
 
@@ -91,13 +91,14 @@ in its roadmap wave.
 
 ## Versioning
 
-[versioning.md](versioning.md) is the policy. Pre-1.0, a patch carries
-fixes and additive features and never a breaking change; breaking changes
-ship only in a minor. Removing or renaming an export, prop, variant, public
-`mn-*` class, `data-*` attribute or public `--mn-*` variable is breaking and
-needs an ADR, a deprecation period and a migration note. The root and part
-`mn-*` class names listed in the manifest (`className`) are public and
-stable within a minor; internal modifier classes and `--_*` or undocumented
+[versioning.md](versioning.md) is the policy. Monarch stays in the `0.14.x`
+patch series: a patch carries fixes and additive features, and removes a
+deprecated API only after its window of 90 days and two patch releases.
+Removing or renaming an export, prop, variant, public `mn-*` class, `data-*`
+attribute or public `--mn-*` variable is breaking and needs an ADR, a
+deprecation period and a migration note. The root and part `mn-*` class
+names listed in the manifest (`className`) are public and follow the
+deprecation policy; internal modifier classes and `--_*` or undocumented
 variables are not. Breaking changes follow the
 [deprecation policy](DEPRECATION-POLICY.md). Apps pin exact versions and
 upgrade by PR.

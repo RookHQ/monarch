@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Field, FieldLabel, Textarea } from '@rookcom/monarch-react';
 import { SlashMenu, useSlashMenu, type SlashMenuItem } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
@@ -9,76 +9,32 @@ import {
   PencilIcon,
   UsersIcon,
 } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './slash-menu.fixture.json';
 
-const GROUPS = ['Text', 'Lists', 'Insert'];
+const GROUPS = fixture.data.groups;
 
 /** Built on demand: JSX at module scope would run when the docs index is read. */
-const makeItems = (): SlashMenuItem[] => [
-  {
-    id: 'heading',
-    label: 'Heading',
-    description: 'Large section title',
-    icon: <PencilIcon />,
-    group: 'Text',
-    keywords: ['title', 'h2'],
-  },
-  {
-    id: 'quote',
-    label: 'Quote',
-    description: 'Indented quotation',
-    icon: <PencilIcon />,
-    group: 'Text',
-  },
-  {
-    id: 'bullets',
-    label: 'Bulleted list',
-    description: 'A simple list',
-    icon: <ListIcon />,
-    group: 'Lists',
-  },
-  {
-    id: 'checklist',
-    label: 'Checklist',
-    description: 'Items to tick off',
-    icon: <ListIcon />,
-    group: 'Lists',
-    keywords: ['todo', 'task'],
-  },
-  {
-    id: 'mention',
-    label: 'Mention someone',
-    description: 'Notify a teammate',
-    icon: <UsersIcon />,
-    group: 'Insert',
-  },
-  {
-    id: 'date',
-    label: 'Date',
-    description: 'Insert today’s date',
-    icon: <CalendarIcon />,
-    group: 'Insert',
-  },
-  {
-    id: 'table',
-    label: 'Table',
-    description: 'Not available in replies',
-    icon: <GridIcon />,
-    group: 'Insert',
-    disabled: true,
-  },
-];
-
-const MARKDOWN: Record<string, string> = {
-  heading: '## ',
-  quote: '> ',
-  bullets: '- ',
-  checklist: '- [ ] ',
-  mention: '@',
+const makeItems = (): SlashMenuItem[] => {
+  const icons: Record<string, ReactNode> = {
+    heading: <PencilIcon />,
+    quote: <PencilIcon />,
+    bullets: <ListIcon />,
+    checklist: <ListIcon />,
+    mention: <UsersIcon />,
+    date: <CalendarIcon />,
+    table: <GridIcon />,
+  };
+  return fixture.data.items.map((item) => ({ ...item, icon: icons[item.id] }));
 };
+
+const MARKDOWN: Record<string, string> = fixture.data.markdown;
 
 function ComposerDemo() {
   const items = useMemo(makeItems, []);
-  const [value, setValue] = useState('');
+  // Starts with "/" typed and the menu shown; once the field has focus, the hook drives it.
+  const [value, setValue] = useState(fixture.data.field.value);
+  const [touched, setTouched] = useState(false);
   const slash = useSlashMenu({
     items,
     value,
@@ -89,10 +45,24 @@ function ComposerDemo() {
   });
   return (
     <div style={{ display: 'grid', gap: 'var(--mn-space-2)', width: '100%', maxWidth: '32rem' }}>
-      {slash.open ? <SlashMenu {...slash.menuProps} /> : null}
+      {slash.open ? (
+        <SlashMenu {...slash.menuProps} />
+      ) : !touched ? (
+        <SlashMenu
+          items={items}
+          groupOrder={GROUPS}
+          activeId="heading"
+          onSelect={() => {}}
+          style={{ maxHeight: 'none' }}
+        />
+      ) : null}
       <Field>
-        <FieldLabel>Message</FieldLabel>
-        <Textarea {...slash.textareaProps} placeholder="Type / to insert a block" />
+        <FieldLabel>{fixture.data.field.label}</FieldLabel>
+        <Textarea
+          {...slash.textareaProps}
+          onFocus={() => setTouched(true)}
+          placeholder={fixture.data.field.placeholder}
+        />
       </Field>
     </div>
   );

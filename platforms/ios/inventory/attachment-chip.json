@@ -1,0 +1,152 @@
+{
+  "id": "attachment-chip",
+  "name": "MonarchAttachmentChip",
+  "title": "AttachmentChip",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "HStack of MonarchFileTypeIcon, Text, ProgressView with .progressViewStyle(.monarchLinear) and Button, in a RoundedRectangle; Link once uploaded",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "One attached file: type icon, name, size, upload progress or failure, and retry and remove buttons.",
+  "whenToUse": "In a composer, a form or a reply, for each file the person attached, alone or in a MonarchFlowLayout.",
+  "whenNotToUse": "For many uploads with a total, use MonarchUploadQueue. For a file in a document or a list of files, use a row with MonarchFileTypeIcon.",
+  "api": [
+    "init(_ name: String, size: Int64? = nil, contentType: String? = nil, status: MonarchUploadStatus = .done, progress: Double? = nil, errorMessage: String? = nil, url: URL? = nil, labels: MonarchAttachmentChipLabels = MonarchAttachmentChipLabels(), onRetry: (@MainActor () -> Void)? = nil, onRemove: (@MainActor () -> Void)? = nil)",
+    "enum MonarchUploadStatus { case queued, uploading, done, failed, cancelled; var isActive: Bool }",
+    "struct MonarchAttachmentChipLabels { var remove, retry, uploading: (@Sendable (String) -> String)?; var queued, failed, cancelled: String? }"
+  ],
+  "options": [
+    {
+      "name": "name",
+      "type": "String",
+      "default": "required",
+      "description": "The file name; long names are shortened in the middle."
+    },
+    {
+      "name": "size",
+      "type": "Int64?",
+      "default": "nil",
+      "description": "The size in bytes, shown once uploaded in the locale's units."
+    },
+    {
+      "name": "contentType",
+      "type": "String?",
+      "default": "nil",
+      "description": "The MIME type; with the name it picks the type icon."
+    },
+    {
+      "name": "status",
+      "type": "MonarchUploadStatus",
+      "default": ".done",
+      "description": "queued, uploading, done, failed or cancelled."
+    },
+    {
+      "name": "progress",
+      "type": "Double?",
+      "default": "nil",
+      "description": "The uploaded part, 0 through 1, while uploading. nil shows a moving bar and no percentage."
+    },
+    {
+      "name": "errorMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Why the upload failed, shown in place of the size."
+    },
+    {
+      "name": "url",
+      "type": "URL?",
+      "default": "nil",
+      "description": "Opens the file once uploaded. Only http, https and mailto URLs are opened."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAttachmentChipLabels",
+      "default": "MonarchAttachmentChipLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds a retry button to a failed upload."
+    },
+    {
+      "name": "onRemove",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds a remove button."
+    }
+  ],
+  "states": [
+    {
+      "name": "done",
+      "description": "The size under the name; a link to the file when url is given."
+    },
+    {
+      "name": "queued",
+      "description": "\"Waiting\" under the name."
+    },
+    {
+      "name": "uploading",
+      "description": "The percentage under the name and a progress bar."
+    },
+    {
+      "name": "failed",
+      "description": "The error, or \"Upload failed\", in the danger colour, and a retry button with onRetry."
+    },
+    {
+      "name": "cancelled",
+      "description": "\"Cancelled\" and a muted name."
+    },
+    {
+      "name": "disabled",
+      "description": "With disabled(true) the buttons are disabled."
+    }
+  ],
+  "appearance": "A surface-coloured rounded rectangle with the default border, the file type icon in its family colour, the name in default text (link colour and underline when it opens), and details in muted caption text, or the danger colour on failure. The progress bar is the Monarch linear style.",
+  "platformNotes": "The web accepts any thumbnail as the icon; here the icon is always MonarchFileTypeIcon. The web marks the failure as an alert; here it is announced. The web's download attribute has no meaning on iOS; the link opens the URL. Progress is a fraction from 0 to 1, as in ProgressView, where the web takes 0 to 100. Android shares the name and the statuses. The parity map lists tag as a dependency; the chip has its own bordered surface with buttons, so MonarchTag is not used.",
+  "accessibility": [
+    "The name is one element whose value is the line under it: the size, the percentage or the failure.",
+    "Once uploaded with a URL, the name is a link.",
+    "The progress bar is a standard ProgressView named \"Uploading\" and the file name.",
+    "Retry and remove are separate buttons named with the file name (\"Remove Q3 report.pdf\"), with 44-point touch targets.",
+    "A change to failed is announced.",
+    "The type icon is decorative; the chip is at least 44 points high."
+  ],
+  "edgeCases": [
+    "A long name is shortened in the middle so the extension stays visible.",
+    "Progress outside 0 through 1 is limited; not-a-number counts as unknown.",
+    "Without a size the done state shows only the name."
+  ],
+  "tests": [
+    "MonarchAttachmentChipTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Removable chips",
+      "fixture": "attachment-chip",
+      "webExample": "Removable chips",
+      "template": "MonarchFlowLayout(spacing: 8) {\n    MonarchAttachmentChip({{files.0.name}}, size: {{files.0.size}}, onRemove: {})\n    MonarchAttachmentChip({{files.1.name}}, size: {{files.1.size}}, onRemove: {})\n    MonarchAttachmentChip({{files.2.name}}, size: {{files.2.size}}, onRemove: {})\n}",
+      "code": "MonarchFlowLayout(spacing: 8) {\n    MonarchAttachmentChip(\"meeting-notes.docx\", size: 48_200, onRemove: {})\n    MonarchAttachmentChip(\"floor-plan.png\", size: 1_240_000, onRemove: {})\n    MonarchAttachmentChip(\"quarterly-figures.xlsx\", size: 312_000, onRemove: {})\n}"
+    },
+    {
+      "title": "A failed upload",
+      "code": "MonarchAttachmentChip(\n    \"recording.mov\",\n    status: .failed,\n    errorMessage: \"Larger than 100 MB\",\n    onRetry: {},\n    onRemove: {}\n)"
+    }
+  ],
+  "webEquivalent": "AttachmentChip",
+  "dependsOn": [
+    "file-type-icon",
+    "progress-bar",
+    "button"
+  ],
+  "icons": {
+    "remove": "CloseGlyph",
+    "retry": "RetryGlyph"
+  }
+}

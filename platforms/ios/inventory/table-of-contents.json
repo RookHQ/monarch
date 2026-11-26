@@ -1,0 +1,129 @@
+{
+  "id": "table-of-contents",
+  "name": "MonarchTableOfContents",
+  "title": "TableOfContents",
+  "family": "navigation",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of Button entries; monarchTableOfContentsTarget sets id(_:) for ScrollViewReader.scrollTo and reports the heading with onGeometryChange; monarchTableOfContentsSpy reads them in a named coordinateSpace",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "In-page navigation built from the page's headings: a list of entries that marks the section being read and scrolls to the one chosen, with a scroll spy for the scroll view.",
+  "whenToUse": "On a long document, help article or settings page with several titled sections. On a phone show it in a sheet from a Contents button; on an iPad it can sit in a sidebar or an inspector.",
+  "whenNotToUse": "For moving between screens use a NavigationStack or a List of NavigationLinks. For two to five sections that fit on one screen, use MonarchTabs or let people scroll.",
+  "api": [
+    "MonarchTableOfContents.init(_ items: [MonarchTableOfContentsItem<ID>], selection: Binding<ID?>, title: String? = nil, showsTitle: Bool = true, currentLabel: String? = nil, action: @escaping @MainActor (ID) -> Void)",
+    "MonarchTableOfContentsItem.init(_ title: String, id: ID, level: Int = 2)",
+    "func monarchTableOfContentsTarget<ID: Hashable & Sendable>(_ id: ID) -> some View",
+    "func monarchTableOfContentsSpy<ID: Hashable>(selection: Binding<ID?>, offset: CGFloat = 0) -> some View"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "[MonarchTableOfContentsItem<ID>]",
+      "default": "required",
+      "description": "The entries in page order, each with a title, the id of its section and a heading level (2 by default)."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<ID?>",
+      "default": "required",
+      "description": "The section being read. Choosing an entry sets it; monarchTableOfContentsSpy keeps it in step with scrolling."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in title \"On this page\"."
+    },
+    {
+      "name": "showsTitle",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the title is shown. When hidden it still names the list for VoiceOver."
+    },
+    {
+      "name": "currentLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Current section\", read as the value of the current entry."
+    },
+    {
+      "name": "action",
+      "type": "@MainActor (ID) -> Void",
+      "default": "required",
+      "description": "Scrolls to the chosen section, usually ScrollViewProxy.scrollTo(id, anchor: .top), and closes the sheet."
+    },
+    {
+      "name": "offset (spy)",
+      "type": "CGFloat",
+      "default": "0",
+      "description": "The height of anything covering the top of the scroll view. A heading becomes current once it passes this line."
+    }
+  ],
+  "states": [
+    {
+      "name": "current",
+      "description": "The entry's text is in the default colour and a semibold weight, with an accent line beside it."
+    },
+    {
+      "name": "other",
+      "description": "Muted text with a subtle line beside it."
+    },
+    {
+      "name": "nested",
+      "description": "An entry with a deeper level than the one before is indented one step per level of nesting."
+    },
+    {
+      "name": "no current section",
+      "description": "With selection nil, no entry is marked, as before the first heading reaches the top."
+    },
+    {
+      "name": "disabled",
+      "description": "disabled(_:) on the list makes every entry use the disabled text colour and ignore taps."
+    }
+  ],
+  "appearance": "The title uses the default text colour; entries use the muted text colour and the current one the default text colour. The marker lines use the subtle border role, and the accent strong role for the current entry. All roles come from the theme in light, dark and both high-contrast themes.",
+  "platformNotes": "The web TableOfContents reads h2 and h3 elements from the DOM, spies with IntersectionObserver and writes #id to the URL. SwiftUI has no DOM, so the app passes the entries and marks each heading with monarchTableOfContentsTarget; the spy measures headings with onGeometryChange instead of IntersectionObserver, using the same rule (first heading in the top 40%, else the last scrolled past). There is no URL hash; the app can store the selection itself. The web's controlled activeId and onActiveChange are the selection binding. The web moves focus to the heading after scrolling; on iOS the app can do this with AccessibilityFocusState. Android builds the same component.",
+  "accessibility": [
+    "The list is a container named by its title (\"On this page\" by default), and the visible title has the header trait.",
+    "Each entry is a button with its title as the name; the current entry's value is \"Current section\".",
+    "The current entry is marked by an accent line and a heavier weight as well as by colour.",
+    "Entries wrap instead of truncating at large text sizes, and each has a touch target of at least 44 by 44 points.",
+    "The entry indent is a leading padding, so nesting follows the reading direction in right-to-left languages.",
+    "Scrolling to a section is the app's call to scrollTo; it does not move VoiceOver focus. Give headings the header trait so VoiceOver's headings rotor also reaches them."
+  ],
+  "edgeCases": [
+    "Ids must be unique; the list and the spy identify entries by id.",
+    "A heading in a lazy stack that has not been created yet is not measured, so the spy only knows headings that have appeared.",
+    "When every heading is below the zone (the top of the page), the selection keeps its previous value; set it to the first entry's id if a section should be marked from the start.",
+    "Levels may skip (2 then 4); the entry nests one step, as on the web."
+  ],
+  "tests": [
+    "MonarchTableOfContentsTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Scroll-spy over an article",
+      "fixture": "table-of-contents",
+      "webExample": "Scroll-spy over an article",
+      "template": "ScrollViewReader { proxy in\n    HStack(alignment: .top, spacing: MonarchTokens.Space.space4) {\n        ScrollView {\n            VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n                ForEach(sections) { section in\n                    Text(section.title)\n                        .monarchTextStyle(section.level == 2 ? .heading : .subheading)\n                        .accessibilityAddTraits(.isHeader)\n                        .monarchTableOfContentsTarget(section.id)\n                    ForEach(bodies[section.id] ?? [], id: \\.self) { paragraph in\n                        Text(paragraph).monarchTextStyle(.body)\n                    }\n                }\n            }\n        }\n        .monarchTableOfContentsSpy(selection: $current)\n        .frame(height: 320)\n        MonarchTableOfContents(sections, selection: $current, title: {{title}}) { id in\n            proxy.scrollTo(id, anchor: .top)\n        }\n        .frame(width: 150)\n    }\n}",
+      "setupTemplate": "@State private var current: String? = {{sections.0.id}}\nprivate let sections = [\n    MonarchTableOfContentsItem({{sections.0.title}}, id: {{sections.0.id}}, level: {{sections.0.level}}),\n    MonarchTableOfContentsItem({{sections.1.title}}, id: {{sections.1.id}}, level: {{sections.1.level}}),\n    MonarchTableOfContentsItem({{sections.2.title}}, id: {{sections.2.id}}, level: {{sections.2.level}}),\n    MonarchTableOfContentsItem({{sections.3.title}}, id: {{sections.3.id}}, level: {{sections.3.level}}),\n    MonarchTableOfContentsItem({{sections.4.title}}, id: {{sections.4.id}}, level: {{sections.4.level}}),\n    MonarchTableOfContentsItem({{sections.5.title}}, id: {{sections.5.id}}, level: {{sections.5.level}}),\n]\nprivate let bodies: [String: [String]] = [\n    {{sections.0.id}}: [{{sections.0.body.0}}, {{sections.0.body.1}}],\n    {{sections.1.id}}: [{{sections.1.body.0}}, {{sections.1.body.1}}],\n    {{sections.2.id}}: [{{sections.2.body.0}}, {{sections.2.body.1}}],\n    {{sections.3.id}}: [{{sections.3.body.0}}, {{sections.3.body.1}}],\n    {{sections.4.id}}: [{{sections.4.body.0}}, {{sections.4.body.1}}],\n    {{sections.5.id}}: [{{sections.5.body.0}}, {{sections.5.body.1}}],\n]",
+      "setup": "@State private var current: String? = \"toc-demo-overview\"\nprivate let sections = [\n    MonarchTableOfContentsItem(\"Overview\", id: \"toc-demo-overview\", level: 2),\n    MonarchTableOfContentsItem(\"Setup\", id: \"toc-demo-setup\", level: 2),\n    MonarchTableOfContentsItem(\"Accounts\", id: \"toc-demo-accounts\", level: 3),\n    MonarchTableOfContentsItem(\"Permissions\", id: \"toc-demo-permissions\", level: 3),\n    MonarchTableOfContentsItem(\"Daily use\", id: \"toc-demo-usage\", level: 2),\n    MonarchTableOfContentsItem(\"Questions\", id: \"toc-demo-questions\", level: 2),\n]\nprivate let bodies: [String: [String]] = [\n    \"toc-demo-overview\": [\"A paragraph about overview. Scroll this area and the current section is highlighted in the list beside it.\", \"Another paragraph so each section takes up some room.\"],\n    \"toc-demo-setup\": [\"A paragraph about setup. Scroll this area and the current section is highlighted in the list beside it.\", \"Another paragraph so each section takes up some room.\"],\n    \"toc-demo-accounts\": [\"Details about accounts.\", \"More details, to make the section tall enough to scroll past.\"],\n    \"toc-demo-permissions\": [\"Details about permissions.\", \"More details, to make the section tall enough to scroll past.\"],\n    \"toc-demo-usage\": [\"A paragraph about daily use. Scroll this area and the current section is highlighted in the list beside it.\", \"Another paragraph so each section takes up some room.\"],\n    \"toc-demo-questions\": [\"A paragraph about questions. Scroll this area and the current section is highlighted in the list beside it.\", \"Another paragraph so each section takes up some room.\"],\n]",
+      "code": "ScrollViewReader { proxy in\n    HStack(alignment: .top, spacing: MonarchTokens.Space.space4) {\n        ScrollView {\n            VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n                ForEach(sections) { section in\n                    Text(section.title)\n                        .monarchTextStyle(section.level == 2 ? .heading : .subheading)\n                        .accessibilityAddTraits(.isHeader)\n                        .monarchTableOfContentsTarget(section.id)\n                    ForEach(bodies[section.id] ?? [], id: \\.self) { paragraph in\n                        Text(paragraph).monarchTextStyle(.body)\n                    }\n                }\n            }\n        }\n        .monarchTableOfContentsSpy(selection: $current)\n        .frame(height: 320)\n        MonarchTableOfContents(sections, selection: $current, title: \"In this article\") { id in\n            proxy.scrollTo(id, anchor: .top)\n        }\n        .frame(width: 150)\n    }\n}"
+    },
+    {
+      "title": "The list alone, without a title",
+      "setup": "@State private var current: Int? = 2",
+      "code": "MonarchTableOfContents(\n    [\n        MonarchTableOfContentsItem(\"Overview\", id: 1),\n        MonarchTableOfContentsItem(\"Billing\", id: 2),\n    ],\n    selection: $current,\n    showsTitle: false\n) { id in\n    current = id\n}"
+    }
+  ],
+  "webEquivalent": "TableOfContents",
+  "dependsOn": [
+    "link"
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "id": "transfer-ownership-flow",
+  "name": null,
+  "title": "TransferOwnershipFlow",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:) with a NavigationStack(path:) and navigationDestination(for:) for the three steps, MonarchStepper at the top of each step, MonarchEntityPicker, two MonarchConsequenceLists, MonarchRolePicker and a danger MonarchButton, with interactiveDismissDisabled(_:) while transferring",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: hand a workspace to another member in three pushed steps (choose the new owner, see what changes for each side, confirm), then wait for them to accept.",
+  "whenToUse": "When the owner of a workspace or organisation gives ownership to another member, for example before leaving or deleting their account.",
+  "whenNotToUse": "For changing a member's role other than owner, use MonarchRolePicker in the member's row. For removing a member, use a confirmationDialog.",
+  "api": [
+    ".sheet(isPresented: $isOpen) { NavigationStack(path: $path) { pick.navigationDestination(for: Step.self) { … } }.interactiveDismissDisabled(isTransferring) }",
+    "MonarchStepper([MonarchStepperStep(id:label:), …], current: index)",
+    "MonarchEntityPicker(\"New owner\", selection: $owner, entities: [MonarchEntityPickerEntity(…, hint: \"Only admins can become the owner\", isDisabled: true)])",
+    "MonarchConsequenceList([MonarchConsequence(.changed, …)], heading: \"For you\")",
+    "MonarchRolePicker(\"Your role after the transfer\", selection: $yourRole, roles:, layout: .compact)",
+    "MonarchButton(\"Transfer ownership\", variant: .danger, isLoading: isTransferring, fullWidth: true)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "choose",
+      "description": "Step 1 of 3: the member picker, with members who cannot become the owner disabled and the reason as their hint; Continue is disabled until someone is chosen."
+    },
+    {
+      "name": "what changes",
+      "description": "Step 2 of 3: what changes for you and for the new owner, and your role after the transfer."
+    },
+    {
+      "name": "confirm",
+      "description": "Step 3 of 3: the danger button, which shows progress while the transfer starts; the sheet cannot be swiped away."
+    },
+    {
+      "name": "pending",
+      "description": "The sheet closes and a banner says the app is waiting for the new owner to accept."
+    }
+  ],
+  "appearance": "A system sheet with a navigation bar and the back button on later steps; Monarch's stepper, entity picker, consequence lists, role picker and danger button on the canvas background. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "The web TransferOwnershipFlow is one component on a WizardDialog with eligibleRoles, a requiresAcceptance mode, a cancel-transfer screen and default consequence messages. On iOS it is a recipe: each step is a screen pushed on a NavigationStack inside the sheet, so the system back button and swipe-back move between steps, and MonarchStepper shows where the person is. Eligibility, the consequences' wording and the pending or immediate result are the app's. Android composes the same recipe.",
+  "accessibility": [
+    "Each step's navigation title and the stepper's spoken progress (step 2 of 3) tell VoiceOver users where they are.",
+    "Members who cannot become the owner are disabled rows that read their reason.",
+    "MonarchConsequenceList reads each consequence with its kind, so nothing depends on the icon colour.",
+    "Announce the result with AccessibilityNotification.Announcement when the sheet closes."
+  ],
+  "edgeCases": [
+    "With no eligible member, show MonarchEmptyState on the first step with Invite someone instead of the picker.",
+    "Clear the chosen member and pop to the first step each time the sheet opens.",
+    "If the transfer fails, stay on the confirm step and show the error with MonarchInlineNotice.",
+    "Long member names wrap in the headings For <name>."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "From a danger zone",
+      "fixture": "transfer-ownership-flow",
+      "webExample": "From a danger zone",
+      "template": "MonarchSectionCard({{zone}}, tone: .danger) {\n    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n        Text({{item.title}}).monarchTextStyle(.bodyStrong)\n        Text({{item.description}})\n            .monarchTextStyle(.caption)\n            .foregroundStyle(theme.colors.textMuted)\n        MonarchButton({{item.action}}, variant: .secondary) { isOpen = true }\n    }\n}\n.sheet(isPresented: $isOpen) {\n    NavigationStack(path: $path) {\n        step(0)\n            .navigationTitle(\"Transfer ownership\")\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) { Button(\"Cancel\") { isOpen = false } }\n            }\n            .navigationDestination(for: Int.self) { index in step(index) }\n    }\n    .interactiveDismissDisabled(isTransferring)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = false\n@State private var path: [Int] = []\n@State private var owner: String?\n@State private var isTransferring = false\nprivate let steps = [\n    MonarchStepperStep(id: \"pick\", label: \"New owner\"),\n    MonarchStepperStep(id: \"review\", label: \"What changes\"),\n    MonarchStepperStep(id: \"confirm\", label: \"Confirm\"),\n]\nprivate let members = [\n    MonarchEntityPickerEntity(id: {{candidates.0.id}}, name: {{candidates.0.name}}, description: {{candidates.0.email}}),\n    MonarchEntityPickerEntity(id: {{candidates.1.id}}, name: {{candidates.1.name}}, description: {{candidates.1.email}}),\n    MonarchEntityPickerEntity(id: {{candidates.2.id}}, name: {{candidates.2.name}}, description: {{candidates.2.email}}, hint: \"Only admins can become the owner\", isDisabled: true),\n    MonarchEntityPickerEntity(id: {{candidates.3.id}}, name: {{candidates.3.name}}, description: {{candidates.3.email}}, hint: {{candidates.3.ineligibleReason}}, isDisabled: true),\n]\nprivate var ownerName: String { members.first { $0.id == owner }?.name ?? \"\" }\n\nprivate func step(_ index: Int) -> some View {\n    ScrollView {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            MonarchStepper(steps, current: index)\n            switch index {\n            case 0:\n                Text(\"Choose the new owner\")\n                    .monarchTextStyle(.heading)\n                    .accessibilityAddTraits(.isHeader)\n                Text(\"The new owner gets full control of the workspace, including billing.\")\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textMuted)\n                MonarchEntityPicker(\"New owner\", selection: $owner, entities: members, prompt: \"Choose a member\")\n                if owner == nil {\n                    Text(\"Choose a member to continue.\")\n                        .monarchTextStyle(.caption)\n                        .foregroundStyle(theme.colors.textMuted)\n                }\n                MonarchButton(\"Continue\", variant: .primary, fullWidth: true) { path.append(1) }\n                    .disabled(owner == nil)\n            case 1:\n                MonarchConsequenceList([MonarchConsequence(.changed, \"You become an admin\")], heading: \"For you\")\n                MonarchConsequenceList([MonarchConsequence(.changed, \"\\(ownerName) becomes the owner\")], heading: \"For \\(ownerName)\")\n                MonarchButton(\"Continue\", variant: .primary, fullWidth: true) { path.append(2) }\n            default:\n                MonarchButton(\"Transfer ownership\", variant: .danger, isLoading: isTransferring, fullWidth: true) {\n                    // Start the transfer on the server here, then close the sheet.\n                    isTransferring = true\n                }\n            }\n        }\n        .padding(theme.spacing.space4)\n    }\n}",
+      "previewPresented": [
+        "isOpen"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = false\n@State private var path: [Int] = []\n@State private var owner: String?\n@State private var isTransferring = false\nprivate let steps = [\n    MonarchStepperStep(id: \"pick\", label: \"New owner\"),\n    MonarchStepperStep(id: \"review\", label: \"What changes\"),\n    MonarchStepperStep(id: \"confirm\", label: \"Confirm\"),\n]\nprivate let members = [\n    MonarchEntityPickerEntity(id: \"m1\", name: \"Alex Morgan\", description: \"alex@example.com\"),\n    MonarchEntityPickerEntity(id: \"m2\", name: \"Priya Shah\", description: \"priya@example.com\"),\n    MonarchEntityPickerEntity(id: \"m3\", name: \"Jordan Lee\", description: \"jordan@example.com\", hint: \"Only admins can become the owner\", isDisabled: true),\n    MonarchEntityPickerEntity(id: \"m4\", name: \"Chris Novak\", description: \"chris@example.com\", hint: \"Invite not accepted yet\", isDisabled: true),\n]\nprivate var ownerName: String { members.first { $0.id == owner }?.name ?? \"\" }\n\nprivate func step(_ index: Int) -> some View {\n    ScrollView {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            MonarchStepper(steps, current: index)\n            switch index {\n            case 0:\n                Text(\"Choose the new owner\")\n                    .monarchTextStyle(.heading)\n                    .accessibilityAddTraits(.isHeader)\n                Text(\"The new owner gets full control of the workspace, including billing.\")\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textMuted)\n                MonarchEntityPicker(\"New owner\", selection: $owner, entities: members, prompt: \"Choose a member\")\n                if owner == nil {\n                    Text(\"Choose a member to continue.\")\n                        .monarchTextStyle(.caption)\n                        .foregroundStyle(theme.colors.textMuted)\n                }\n                MonarchButton(\"Continue\", variant: .primary, fullWidth: true) { path.append(1) }\n                    .disabled(owner == nil)\n            case 1:\n                MonarchConsequenceList([MonarchConsequence(.changed, \"You become an admin\")], heading: \"For you\")\n                MonarchConsequenceList([MonarchConsequence(.changed, \"\\(ownerName) becomes the owner\")], heading: \"For \\(ownerName)\")\n                MonarchButton(\"Continue\", variant: .primary, fullWidth: true) { path.append(2) }\n            default:\n                MonarchButton(\"Transfer ownership\", variant: .danger, isLoading: isTransferring, fullWidth: true) {\n                    // Start the transfer on the server here, then close the sheet.\n                    isTransferring = true\n                }\n            }\n        }\n        .padding(theme.spacing.space4)\n    }\n}",
+      "code": "MonarchSectionCard(\"Danger zone\", tone: .danger) {\n    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n        Text(\"Transfer ownership\").monarchTextStyle(.bodyStrong)\n        Text(\"Another member becomes the owner. You choose your role afterwards.\")\n            .monarchTextStyle(.caption)\n            .foregroundStyle(theme.colors.textMuted)\n        MonarchButton(\"Transfer ownership\", variant: .secondary) { isOpen = true }\n    }\n}\n.sheet(isPresented: $isOpen) {\n    NavigationStack(path: $path) {\n        step(0)\n            .navigationTitle(\"Transfer ownership\")\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) { Button(\"Cancel\") { isOpen = false } }\n            }\n            .navigationDestination(for: Int.self) { index in step(index) }\n    }\n    .interactiveDismissDisabled(isTransferring)\n}"
+    }
+  ],
+  "webEquivalent": "TransferOwnershipFlow",
+  "dependsOn": [
+    "sheet",
+    "entity-picker",
+    "consequence-list",
+    "stepper",
+    "role-picker",
+    "button",
+    "alert"
+  ]
+}

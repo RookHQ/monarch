@@ -1,0 +1,145 @@
+{
+  "id": "ai-undo-banner",
+  "name": "MonarchAiUndoBanner",
+  "title": "AiUndoBanner",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "HStack in a tinted RoundedRectangle with MonarchButton, Link with MonarchLinkStyle, DisclosureGroup with MonarchDisclosureGroupStyle, and task(id:) with Task.sleep for the time limit",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "An inline banner after the AI changed something on the person's behalf: what changed, before and after, an Undo and a link to the audit log, optionally for a limited time.",
+  "whenToUse": "On the screen the AI changed, right after it applied the change, so the person can review and revert it.",
+  "whenNotToUse": "Not for a change that is only proposed: show the proposal with accept and reject. For a short timed message that floats over the screen, use the undo toast recipe with MonarchToast.",
+  "api": [
+    "init(_ title: String, description: String? = nil, changes: [MonarchAiChange] = [], auditURL: URL? = nil, duration: Duration? = nil, labels: MonarchAiUndoBannerLabels = MonarchAiUndoBannerLabels(), onUndo: @escaping @MainActor () async throws -> Void, onExpire: (@MainActor () -> Void)? = nil, onDismiss: (@MainActor () -> Void)? = nil)",
+    "MonarchAiChange.init(_ label: String, before: String, after: String)",
+    "MonarchAiUndoBannerLabels.init(aiPrefix: String? = nil, undo: String? = nil, audit: String? = nil, dismiss: String? = nil, showChanges: (@Sendable (Int) -> String)? = nil, change: (@Sendable (String, String, String) -> String)? = nil, undone: String? = nil, undoFailed: String? = nil, expired: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "What the AI did, in the past tense: \"AI changed 3 fields\"."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "One line of detail."
+    },
+    {
+      "name": "changes",
+      "type": "[MonarchAiChange]",
+      "default": "[]",
+      "description": "The fields that changed, before and after. More than three collapse into a disclosure."
+    },
+    {
+      "name": "auditURL",
+      "type": "URL?",
+      "default": "nil",
+      "description": "The audit log entry. Only http and https are shown."
+    },
+    {
+      "name": "duration",
+      "type": "Duration?",
+      "default": "nil",
+      "description": "How long Undo stays available. nil keeps it."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiUndoBannerLabels",
+      "default": "MonarchAiUndoBannerLabels()",
+      "description": "Replacements for every built-in string, including the spoken form of a change."
+    },
+    {
+      "name": "onUndo",
+      "type": "@MainActor () async throws -> Void",
+      "default": "required",
+      "description": "Reverts the change. Throw to report a failure."
+    },
+    {
+      "name": "onExpire",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Runs once when duration runs out without an undo."
+    },
+    {
+      "name": "onDismiss",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows a dismiss button."
+    }
+  ],
+  "states": [
+    {
+      "name": "active",
+      "description": "AI subtle fill and AI border, with Undo."
+    },
+    {
+      "name": "undoing",
+      "description": "Undo shows a progress indicator; the time limit is paused."
+    },
+    {
+      "name": "undone",
+      "description": "Neutral fill and border; Changes undone is shown and announced; Undo goes away."
+    },
+    {
+      "name": "failed",
+      "description": "Couldn’t undo. Try again. in the danger strong role, announced; Undo stays."
+    },
+    {
+      "name": "expired",
+      "description": "Neutral fill; Undo is no longer available. is shown and announced; onExpire runs."
+    }
+  ],
+  "appearance": "The AI subtle fill and AI border with the bot glyph in the AI strong role while the change can be undone; the subtle background and subtle border afterwards. The title is strong body text, the description muted; each change is caption text with the field muted, the old value muted and struck through, an arrow and the new value in default text.",
+  "platformNotes": "The parity map names MonarchBanner, but the banner has one action and a tone icon, so this banner is drawn from the same layout with the AI roles, Undo, an audit link and dismiss. On the web the time limit pauses while the pointer is over the banner or focus is inside it; iOS has neither, so it pauses while the app is in the background and while the changes disclosure is open, and does not run at all with VoiceOver or Switch Control on. The web's useAiUndoToast hook is the undo toast recipe on iOS. MonarchTone has no accent or AI tone, so the AI colour roles are used directly.",
+  "accessibility": [
+    "The title is read as \"AI change: \" followed by the title.",
+    "Each change is one element read as \"Status changed from Open to Closed\"; the old value is struck through as well as muted, and the arrow is decorative.",
+    "Undo, the audit link and Dismiss are separate controls with 44-point touch targets.",
+    "Changes undone, the failure and the end of the time limit are shown as text and announced.",
+    "The time limit does not run while VoiceOver or Switch Control is on.",
+    "The bot glyph is decorative."
+  ],
+  "edgeCases": [
+    "A finished undo wins over the timer: an undo that completes as the time runs out stays undone.",
+    "The time left is kept while paused and resumes from there.",
+    "Unsafe audit links are dropped.",
+    "The undo state lives in the view; give the banner a new id for a new change."
+  ],
+  "tests": [
+    "MonarchAiUndoBannerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "After an AI change",
+      "fixture": "ai-undo-banner",
+      "webExample": "After an AI change",
+      "template": "MonarchAiUndoBanner(\n    {{title}},\n    changes: [\n        MonarchAiChange({{changes.0.label}}, before: {{changes.0.before}}, after: {{changes.0.after}}),\n        MonarchAiChange({{changes.1.label}}, before: {{changes.1.before}}, after: {{changes.1.after}}),\n        MonarchAiChange({{changes.2.label}}, before: {{changes.2.before}}, after: {{changes.2.after}}),\n    ],\n    auditURL: URL(string: \"https://app.example.com/audit/812\"),\n    onUndo: {}\n)",
+      "code": "MonarchAiUndoBanner(\n    \"AI changed 3 fields\",\n    changes: [\n        MonarchAiChange(\"Status\", before: \"Open\", after: \"In progress\"),\n        MonarchAiChange(\"Owner\", before: \"Unassigned\", after: \"Sam Lee\"),\n        MonarchAiChange(\"Priority\", before: \"Normal\", after: \"High\"),\n    ],\n    auditURL: URL(string: \"https://app.example.com/audit/812\"),\n    onUndo: {}\n)"
+    },
+    {
+      "title": "Undo for 30 seconds, dismissible",
+      "setup": "@State private var isShown = true",
+      "code": "if isShown {\n    MonarchAiUndoBanner(\n        \"AI archived 12 tickets\",\n        duration: .seconds(30),\n        onUndo: {},\n        onDismiss: { isShown = false }\n    )\n}"
+    }
+  ],
+  "webEquivalent": "AiUndoBanner",
+  "dependsOn": [
+    "alert",
+    "button",
+    "link",
+    "collapsible"
+  ],
+  "icons": {
+    "leading": "BotGlyph",
+    "undo": "RetryGlyph"
+  }
+}

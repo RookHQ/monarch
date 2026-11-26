@@ -1,0 +1,115 @@
+{
+  "id": "device-frame",
+  "name": "MonarchDeviceFrame",
+  "title": "DeviceFrame",
+  "family": "layout",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "RoundedRectangle and Capsule shapes, aspectRatio(_:contentMode:), ScrollView for interactive content",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A phone or tablet outline around a preview, named as one image or, when interactive, as a group whose content can be used.",
+  "whenToUse": "In a builder that shows how a link page, an email or a mobile layout will look on a device, next to the form that changes it.",
+  "whenNotToUse": "Not as decoration around real app content, and not to show the app's own screens on a phone, where the frame would be smaller than the device it is on.",
+  "api": [
+    "MonarchDeviceFrame.init(_ label: String, device: MonarchDeviceFrameDevice = .phone, screenSize: CGSize? = nil, statusBarTime: String? = nil, isInteractive: Bool = false, isFlat: Bool = false, @ViewBuilder content: () -> Content)",
+    "enum MonarchDeviceFrameDevice { case phone, tablet }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "What the frame shows, for example \"Preview of your link page on a phone\"."
+    },
+    {
+      "name": "device",
+      "type": "MonarchDeviceFrameDevice",
+      "default": ".phone",
+      "description": "phone: rounded, with a camera island. tablet: a wider bezel and no island."
+    },
+    {
+      "name": "screenSize",
+      "type": "CGSize?",
+      "default": "nil",
+      "description": "The width the frame never exceeds and the height that sets the aspect ratio. 390 by 844 for a phone and 820 by 1180 for a tablet by default."
+    },
+    {
+      "name": "statusBarTime",
+      "type": "String?",
+      "default": "nil",
+      "description": "Shows a decorative status bar with this time text."
+    },
+    {
+      "name": "isInteractive",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether people can scroll and use the content."
+    },
+    {
+      "name": "isFlat",
+      "type": "Bool",
+      "default": "false",
+      "description": "Leaves out the side buttons and the shadow, for dense layouts."
+    },
+    {
+      "name": "content",
+      "type": "() -> Content",
+      "default": "required",
+      "description": "The screen content, laid out in the screen area and clipped to it."
+    }
+  ],
+  "states": [
+    {
+      "name": "presentational",
+      "description": "The default. The content cannot be touched and the frame is read as one image."
+    },
+    {
+      "name": "interactive",
+      "description": "The content is in a vertical ScrollView without indicators and its elements are reachable."
+    },
+    {
+      "name": "flat",
+      "description": "No side buttons and no shadow."
+    }
+  ],
+  "appearance": "The bezel, island and side buttons use the inverse background role and the screen the surface role, so the frame is dark in the light themes and light in the dark themes. The shadow is the extra-large elevation.",
+  "platformNotes": "Dimensions follow the web: a 10-point bezel and 44-point corner for the phone, 14 and 28 for the tablet. The web sizes with separate width and height numbers; iOS takes one CGSize. The frame scales to the width it is given but its content is not scaled, as on the web. Low priority on a phone, where the frame is smaller than the device.",
+  "accessibility": [
+    "The island, the status bar and the side buttons are hidden from VoiceOver.",
+    "A frame that is not interactive is one element with the image trait and label as its name; its content does not take touches.",
+    "An interactive frame is a container named by label, and the elements of its content stay reachable.",
+    "The bezel and the status bar are a drawing of a device and do not grow with the accessibility text sizes; the content inside follows Dynamic Type.",
+    "The side buttons follow the layout direction: the three volume buttons are on the leading edge."
+  ],
+  "edgeCases": [
+    "Content taller than the screen is clipped unless isInteractive is true.",
+    "A screenSize with a side that is zero, negative or not finite is replaced by the device's size.",
+    "With unlimited width and height the frame takes the screen width and the matching height.",
+    "The top of the content sits under the island on a phone with no status bar; add top padding or pass statusBarTime."
+  ],
+  "tests": [
+    "MonarchDeviceFrameTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Phone preview with a status bar",
+      "fixture": "device-frame",
+      "webExample": "Phone preview with a status bar",
+      "template": "MonarchDeviceFrame(\n    {{label}},\n    screenSize: CGSize(width: {{width}}, height: {{height}}),\n    statusBarTime: {{statusBarTime}}\n) {\n    VStack(spacing: theme.spacing.space3) {\n        MonarchAvatar(image: nil, name: {{name}}, size: .lg)\n        Text({{name}}).monarchTextStyle(.bodyStrong)\n        Text({{tagline}})\n            .monarchTextStyle(.caption)\n            .foregroundStyle(theme.colors.textMuted)\n        MonarchButton({{links.0}}, variant: .secondary, fullWidth: true) {}\n        MonarchButton({{links.1}}, variant: .secondary, fullWidth: true) {}\n        MonarchButton({{links.2}}, variant: .secondary, fullWidth: true) {}\n    }\n    .multilineTextAlignment(.center)\n    .padding(.horizontal, theme.spacing.space4)\n    .padding(.vertical, theme.spacing.space6)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme",
+      "setup": "@Environment(\\.monarchTheme) private var theme",
+      "code": "MonarchDeviceFrame(\n    \"Preview of a link page on a phone\",\n    screenSize: CGSize(width: 280, height: 560),\n    statusBarTime: \"9:41\"\n) {\n    VStack(spacing: theme.spacing.space3) {\n        MonarchAvatar(image: nil, name: \"Northwind Studio\", size: .lg)\n        Text(\"Northwind Studio\").monarchTextStyle(.bodyStrong)\n        Text(\"Ceramics and workshops\")\n            .monarchTextStyle(.caption)\n            .foregroundStyle(theme.colors.textMuted)\n        MonarchButton(\"Shop\", variant: .secondary, fullWidth: true) {}\n        MonarchButton(\"Book a workshop\", variant: .secondary, fullWidth: true) {}\n        MonarchButton(\"Newsletter\", variant: .secondary, fullWidth: true) {}\n    }\n    .multilineTextAlignment(.center)\n    .padding(.horizontal, theme.spacing.space4)\n    .padding(.vertical, theme.spacing.space6)\n}"
+    },
+    {
+      "title": "A flat tablet frame with content that scrolls",
+      "code": "MonarchDeviceFrame(\"Live preview of the email\", device: .tablet, isInteractive: true, isFlat: true) {\n    Text(\"Welcome to the team\")\n        .monarchTextStyle(.title)\n        .padding()\n}"
+    }
+  ],
+  "webEquivalent": "DeviceFrame",
+  "dependsOn": []
+}

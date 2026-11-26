@@ -2,26 +2,10 @@ import { useEffect, useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiMultiAgentRoster, type AiRosterMember } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-multi-agent-roster.fixture.json';
 
-const team: AiRosterMember[] = [
-  {
-    agent: { id: 'lead', name: 'Coordinator', role: 'Plans the work' },
-    state: 'working',
-    task: 'Splitting the request into parts',
-  },
-  {
-    agent: { id: 'research', name: 'Research agent', role: 'Finds sources' },
-    state: 'waiting',
-    task: 'Needs read access to the shared drive',
-  },
-  {
-    agent: { id: 'analyst', name: 'Analysis agent', role: 'Checks the numbers' },
-    state: 'working',
-    task: 'Comparing quarterly figures',
-  },
-  { agent: { id: 'writer', name: 'Writing agent', role: 'Drafts the summary' }, state: 'idle' },
-  { agent: { id: 'review', name: 'Review agent', role: 'Checks tone' }, state: 'idle' },
-];
+const team = fixture.data.members as AiRosterMember[];
 
 const STAGES: AiRosterMember['state'][][] = [
   ['working', 'idle', 'idle'],

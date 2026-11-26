@@ -1,18 +1,10 @@
 import { DiffViewer } from '@rookcom/monarch-react/editor';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './diff-viewer.fixture.json';
 
-const BEFORE = `# Refund policy
-Refunds are available within 14 days.
-Contact support to start a refund.
-Refunds go back to the original payment method.
-Processing takes up to 10 days.`;
-
-const AFTER = `# Refund policy
-Refunds are available within 30 days.
-Contact support or use the billing page to start a refund.
-Refunds go back to the original payment method.
-Processing takes up to 5 business days.
-Partial refunds are possible for annual plans.`;
+const BEFORE = fixture.data.before.join('\n');
+const AFTER = fixture.data.after.join('\n');
 
 export default {
   id: 'diff-viewer',
@@ -135,8 +127,8 @@ export default {
               <DiffViewer
                 before={BEFORE}
                 after={AFTER}
-                beforeLabel="Version 3"
-                afterLabel="Version 4"
+                beforeLabel={fixture.data.beforeLabel}
+                afterLabel={fixture.data.afterLabel}
               />
             </div>
           ),

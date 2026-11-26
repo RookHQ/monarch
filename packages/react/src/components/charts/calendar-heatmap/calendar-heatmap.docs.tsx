@@ -1,16 +1,15 @@
 import { CalendarHeatmap } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './calendar-heatmap.fixture.json';
 
 // A deterministic half year of daily counts (no Date.now, so server and client agree).
 const DAY = 86_400_000;
-const start = Date.UTC(2026, 0, 1);
-const year = Array.from({ length: 181 }, (_, i) => {
-  const date = new Date(start + i * DAY).toISOString().slice(0, 10);
-  const weekday = new Date(start + i * DAY).getUTCDay();
-  const weekend = weekday === 0 || weekday === 6;
-  const value = weekend ? (i % 5 === 0 ? 1 : 0) : (i * 7 + weekday * 3) % 11;
-  return { date, value };
-});
+const start = Date.parse(fixture.data.from);
+const year = fixture.data.values.map((value, i) => ({
+  date: new Date(start + i * DAY).toISOString().slice(0, 10),
+  value,
+}));
 
 const month = [
   { date: '2026-03-02', value: 480, valueLabel: '8h' },
@@ -162,13 +161,13 @@ export default {
           stack: true,
           render: () => (
             <CalendarHeatmap
-              title="Contributions"
-              description="January to June 2026"
+              title={fixture.data.title}
+              description={fixture.data.description}
               days={year}
-              from="2026-01-01"
-              to="2026-06-30"
-              today="2026-06-30"
-              locale="en-US"
+              from={fixture.data.from.slice(0, 10)}
+              to={fixture.data.to.slice(0, 10)}
+              today={fixture.data.today.slice(0, 10)}
+              locale={fixture.data.locale}
               style={{ width: '100%', maxWidth: '44rem' }}
             />
           ),

@@ -1,13 +1,9 @@
 import { PageOutline } from '@rookcom/monarch-react/editor';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './page-outline.fixture.json';
 
-const HEADINGS = [
-  { id: 'overview', level: 2, text: 'Overview' },
-  { id: 'getting-started', level: 2, text: 'Getting started' },
-  { id: 'accounts', level: 3, text: 'Accounts' },
-  { id: 'permissions', level: 3, text: 'Permissions' },
-  { id: 'billing', level: 2, text: 'Billing' },
-];
+const HEADINGS = fixture.data.headings;
 
 export default {
   id: 'page-outline',
@@ -119,8 +115,8 @@ export default {
           render: () => (
             <PageOutline
               headings={HEADINGS}
-              activeId="accounts"
-              messages={{ title: 'In this document' }}
+              activeId={fixture.data.activeId}
+              messages={{ title: fixture.data.title }}
             />
           ),
         },

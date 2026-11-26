@@ -2,28 +2,18 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiOnboardingTour, type AiOnboardingTourStep } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-onboarding-tour.fixture.json';
 
-const STEPS: AiOnboardingTourStep[] = [
-  {
-    title: 'What the assistant can see',
-    body: 'The page you have open, the records you select and any files you attach. It does not see other workspaces.',
-  },
-  {
-    title: 'What it can do',
-    body: 'Summarise pages, draft text and answer questions about your records. It asks before it changes anything.',
-    target: '#docs-ai-tour-ask',
-  },
-  {
-    title: 'How to turn it off',
-    body: 'Use “Turn off AI” below at any time, or switch it off per app in workspace settings.',
-  },
-];
+const STEPS: AiOnboardingTourStep[] = fixture.data.steps.map((step, index) =>
+  index === 1 ? { ...step, target: '#docs-ai-tour-ask' } : step,
+);
 
 function InlineDemo() {
   const [state, setState] = useState<'open' | 'finished' | 'disabled'>('open');
   return (
     <div style={{ display: 'grid', gap: 'var(--mn-space-4)', width: '100%', maxWidth: '28rem' }}>
-      <Button id="docs-ai-tour-ask">Ask the assistant</Button>
+      <Button id="docs-ai-tour-ask">{fixture.data.askLabel}</Button>
       {state === 'open' ? (
         <AiOnboardingTour
           steps={STEPS}

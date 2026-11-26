@@ -1,0 +1,260 @@
+name: Native
+# Monarch for Android (platforms/android) and Monarch for iOS (platforms/ios).
+# Each platform runs its own complete gate, the same command an engineer runs
+# locally.
+#
+# Required checks (rulesets on uat and main). The workflow runs on every pull
+# request and push, with no `paths` filter, so a required check is never left
+# waiting. The first job decides which platforms a change touches; a platform
+# job that has nothing to check passes in seconds with a notice. These job names
+# are fixed and listed in docs/governance (required checks); renaming one breaks
+# the ruleset:
+#
+#   Native / tokens    native token files, brand vectors, root Package.swift, native version,
+#                      component counts
+#   Native / android   ./gradlew verifyMonarch
+#   Native / ios       Scripts/verify.sh (host, simulator, DocC, sample)
+#
+# A platform job fails, and so blocks the merge, when the change detection
+# itself fails; it never passes without knowing what changed.
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches: [main, uat]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-${{ github.ref }}
+  # Only pull requests cancel superseded runs, as in ci.yml.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  changes:
+    name: Native / changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      tokens: ${{ steps.detect.outputs.tokens }}
+      android: ${{ steps.detect.outputs.android }}
+      ios: ${{ steps.detect.outputs.ios }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with: { fetch-depth: 0 }
+      # Paths that affect each platform. Shared inputs (tokens, the component plan, the native
+      # scripts, the monarch-react version that the native version follows, this workflow) count
+      # for every platform. A manual run, a new branch or an unknown base checks everything.
+      - name: Detect what changed
+        id: detect
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          MERGE_GROUP_BASE: ${{ github.event.merge_group.base_sha }}
+        run: |
+          set -euo pipefail
+          case "$EVENT" in
+            pull_request) base="$PR_BASE" ;;
+            merge_group) base="$MERGE_GROUP_BASE" ;;
+            push) base="$PUSH_BEFORE" ;;
+            *) base="" ;;
+          esac
+          all=false
+          if [[ -z "$base" || "$base" =~ ^0+$ ]] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            all=true
+            echo "::notice::No usable base commit for this $EVENT run; every native job runs."
+            files=""
+          else
+            files="$(git diff --name-only "$base" HEAD)"
+          fi
+          shared='^(packages/tokens/|platforms/parity\.json$|platforms/README|scripts/native/|packages/react/package\.json$|\.github/workflows/native\.yml$)'
+          match() { [[ "$all" == true ]] && return 0; grep -qE "$1" <<<"$files"; }
+          tokens=false; android=false; ios=false
+          match "$shared|^platforms/|^Package\.swift$" && tokens=true
+          match "$shared|^platforms/android/" && android=true
+          match "$shared|^platforms/ios/|^Package\.swift$" && ios=true
+          {
+            echo "tokens=$tokens"
+            echo "android=$android"
+            echo "ios=$ios"
+          } >>"$GITHUB_OUTPUT"
+          echo "tokens=$tokens android=$android ios=$ios"
+          echo "$files" | grep -E '^(platforms/|packages/tokens/|scripts/native/|Package\.swift$)' | head -n 50 || true
+
+  native-tokens:
+    name: Native / tokens
+    needs: changes
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Change detection
+        env:
+          RESULT: ${{ needs.changes.result }}
+          RUN: ${{ needs.changes.outputs.tokens }}
+        run: |
+          if [[ "$RESULT" != success ]]; then
+            echo "::error::Change detection did not succeed ($RESULT); this check cannot pass."
+            exit 1
+          fi
+          [[ "$RUN" == true ]] || echo "::notice::No native token, manifest or version input changed; nothing to check."
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        if: needs.changes.outputs.tokens == 'true'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        if: needs.changes.outputs.tokens == 'true'
+        with: { node-version-file: .nvmrc, cache: npm }
+      - if: needs.changes.outputs.tokens == 'true'
+        run: npm ci
+      - name: Native token files are current
+        if: needs.changes.outputs.tokens == 'true'
+        run: npm run native:tokens:check
+      - name: Golden brand vectors are current
+        if: needs.changes.outputs.tokens == 'true'
+        run: npm run native:brand:check
+      - name: Root Package.swift matches platforms/ios/Package.swift
+        if: needs.changes.outputs.tokens == 'true'
+        run: npm run native:package:check
+      - name: Native version equals the monarch-react version
+        if: needs.changes.outputs.tokens == 'true'
+        run: npm run native:version:check
+      - name: Component counts in docs/architecture/NATIVE-COMPONENTS.md are current
+        if: needs.changes.outputs.tokens == 'true'
+        run: npm run native:components:check
+
+  android:
+    name: Native / android
+    needs: changes
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: platforms/android
+    steps:
+      - name: Change detection
+        working-directory: .
+        env:
+          RESULT: ${{ needs.changes.result }}
+          RUN: ${{ needs.changes.outputs.android }}
+        run: |
+          if [[ "$RESULT" != success ]]; then
+            echo "::error::Change detection did not succeed ($RESULT); this check cannot pass."
+            exit 1
+          fi
+          [[ "$RUN" == true ]] || echo "::notice::No Android input changed; verifyMonarch is not run."
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        if: needs.changes.outputs.android == 'true'
+      # The build declares a JDK 21 toolchain (`jdk` in gradle/libs.versions.toml) and does not
+      # download one. The Android SDK (platform android-37.0, build-tools 36.0.0) comes with the
+      # runner image at ANDROID_HOME.
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        if: needs.changes.outputs.android == 'true'
+        with:
+          distribution: temurin
+          java-version: '21'
+      # Caches the Gradle user home (dependencies, wrapper, build cache) and validates the
+      # checksum of gradle/wrapper/gradle-wrapper.jar.
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        if: needs.changes.outputs.android == 'true'
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/uat' }}
+      # Robolectric downloads its Android framework jars (android-all-instrumented) to the
+      # local Maven repository, outside the Gradle user home.
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        if: needs.changes.outputs.android == 'true'
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-${{ hashFiles('platforms/android/gradle/libs.versions.toml') }}
+          restore-keys: robolectric-
+      - name: Toolchain
+        if: needs.changes.outputs.android == 'true'
+        run: ./gradlew --version
+      # Inventory check, detekt, lint, unit and Compose UI tests (Robolectric), API check,
+      # debug and minified sample builds, publish to the local repository. Memory comes from
+      # platforms/android/gradle.properties (Gradle 3 GB, Kotlin daemon 4 GB; about 7 GB for a
+      # clean build), the same values as a local build; nothing here overrides them.
+      - name: Every Android gate
+        if: needs.changes.outputs.android == 'true'
+        run: ./gradlew verifyMonarch --stacktrace
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: failure() && needs.changes.outputs.android == 'true'
+        with:
+          name: android-reports
+          path: |
+            platforms/android/*/build/reports
+            platforms/android/*/build/test-results
+            platforms/android/build/reports
+          retention-days: 14
+
+  ios:
+    name: Native / ios
+    needs: changes
+    if: ${{ !cancelled() }}
+    # A job with nothing to check runs on Linux, so it costs no macOS minutes. The name stays the
+    # same either way.
+    runs-on: ${{ needs.changes.outputs.ios == 'true' && 'macos-26' || 'ubuntu-24.04' }}
+    timeout-minutes: 75
+    env:
+      # Xcode 26.6 is installed on the macos-26 arm64 image as /Applications/Xcode_26.6.app
+      # (actions/runner-images, image 20261102). It is the Xcode recorded in
+      # docs/architecture/NATIVE-COMPATIBILITY.md. If the image drops it, this job fails at the
+      # Toolchain step instead of silently testing with another Xcode. Selected for this job only,
+      # as Scripts/verify.sh expects; no system setting is changed.
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      MONARCH_IOS_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro,OS=latest
+      # XcodeGen generates the sample app project; the runner image does not include it. The
+      # release archive is pinned by version and SHA-256, so an upstream change cannot alter CI.
+      XCODEGEN_VERSION: 2.46.0
+      XCODEGEN_SHA256: 4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806
+    defaults:
+      run:
+        working-directory: platforms/ios
+    steps:
+      - name: Change detection
+        working-directory: .
+        env:
+          RESULT: ${{ needs.changes.result }}
+          RUN: ${{ needs.changes.outputs.ios }}
+        run: |
+          if [[ "$RESULT" != success ]]; then
+            echo "::error::Change detection did not succeed ($RESULT); this check cannot pass."
+            exit 1
+          fi
+          [[ "$RUN" == true ]] || echo "::notice::No iOS input changed; Scripts/verify.sh is not run."
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        if: needs.changes.outputs.ios == 'true'
+      - name: Toolchain
+        if: needs.changes.outputs.ios == 'true'
+        run: |
+          test -d "$DEVELOPER_DIR" || { echo "Xcode not found at $DEVELOPER_DIR" >&2; exit 1; }
+          xcodebuild -version
+          swift --version
+          xcrun simctl list runtimes
+      - name: XcodeGen ${{ env.XCODEGEN_VERSION }}
+        if: needs.changes.outputs.ios == 'true'
+        run: |
+          work="$RUNNER_TEMP/xcodegen"
+          mkdir -p "$work"
+          curl -fsSL -o "$work/xcodegen.zip" \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
+          echo "$XCODEGEN_SHA256  $work/xcodegen.zip" | shasum -a 256 -c -
+          unzip -q "$work/xcodegen.zip" -d "$work"
+          echo "$work/xcodegen/bin" >>"$GITHUB_PATH"
+          "$work/xcodegen/bin/xcodegen" --version
+      # The repository-root manifest (generated from platforms/ios/Package.swift) is what an app
+      # resolves by URL; it must load. No build: the targets are the ones verify.sh builds.
+      - name: Root Package.swift loads
+        if: needs.changes.outputs.ios == 'true'
+        working-directory: .
+        run: swift package describe --type json >/dev/null
+      # Inventory and generated files, lint, host build and tests, public API baseline,
+      # simulator build and tests, DocC, sample app build. Warnings are errors.
+      - name: Every iOS gate
+        if: needs.changes.outputs.ios == 'true'
+        run: Scripts/verify.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: failure() && needs.changes.outputs.ios == 'true'
+        with:
+          name: ios-logs
+          path: platforms/ios/.build/*.log
+          retention-days: 14

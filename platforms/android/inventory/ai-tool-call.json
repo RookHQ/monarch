@@ -1,0 +1,198 @@
+{
+  "id": "ai-tool-call",
+  "name": "MonarchAiToolCall",
+  "title": "AiToolCall",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.clickable header with expand and collapse semantics, androidx.compose.animation.AnimatedVisibility, MonarchStatusBadge for the state and MonarchAiCodeBlock for the input and output",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "One tool call of an assistant turn as a card that opens: what was done in plain words, the state as a word in a status badge, how long it took and, on demand, the exact input and output.",
+  "whenToUse": "For each tool-call part of an assistant message, when people should see what the assistant did; and in audit or debugging views where the raw arguments and results must be inspectable.",
+  "whenNotToUse": "Not while the call waits for a decision: show an approval with MonarchAiPermissionScope instead. Not to show the result as a thing, such as a created record, which is MonarchAiToolResultCard.",
+  "api": [
+    "@Composable public fun MonarchAiToolCall(part: MonarchAiToolCallPart, modifier: Modifier = Modifier, summary: String? = null, toolLabels: Map<String, String> = emptyMap(), expanded: Boolean? = null, onExpandedChange: ((Boolean) -> Unit)? = null, announcesChanges: Boolean = true, maxValueLength: Int = MonarchAiToolCallTokens.DEFAULT_MAX_VALUE_LENGTH, icon: (@Composable () -> Unit)? = null, stateIcon: (@Composable (MonarchAiToolCallState) -> Unit)? = null, toggleIcon: (@Composable () -> Unit)? = null, labels: MonarchAiToolCallLabels = MonarchAiToolCallLabels(), describeTool: ((MonarchAiToolCallPart) -> String?)? = null)",
+    "public class MonarchAiToolCallLabels(state: ((MonarchAiToolCallState) -> String?)? = null, formatDuration: ((millis: Long) -> String)? = null, input: String? = null, output: String? = null, error: String? = null, tool: String? = null, empty: String? = null, stateChanged: ((label: String, state: String) -> String)? = null, showMore: String? = null, truncated: ((shown: Int, total: Int) -> String)? = null, expanded: String? = null, collapsed: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "part",
+      "type": "MonarchAiToolCallPart",
+      "default": "required",
+      "description": "The call from the conversation model: name, input, state, output, error, start and end times, streamed input text."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the card."
+    },
+    {
+      "name": "summary",
+      "type": "String?",
+      "default": "null",
+      "description": "The one-line summary in words. Wins over describeTool."
+    },
+    {
+      "name": "toolLabels",
+      "type": "Map<String, String>",
+      "default": "emptyMap()",
+      "description": "Display names by tool name. Unlisted tools get a humanized name: search_documents is \"Search documents\"."
+    },
+    {
+      "name": "expanded",
+      "type": "Boolean?",
+      "default": "null",
+      "description": "Whether the details are open, when the app controls it. Kept inside, closed at first, when null."
+    },
+    {
+      "name": "onExpandedChange",
+      "type": "((Boolean) -> Unit)?",
+      "default": "null",
+      "description": "Called with the new state when the header is activated."
+    },
+    {
+      "name": "announcesChanges",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether a change of state is announced. Turn it off when the thread already announces it."
+    },
+    {
+      "name": "maxValueLength",
+      "type": "Int",
+      "default": "4000",
+      "description": "The longest input or output shown before Show all, in characters. 0 shows everything."
+    },
+    {
+      "name": "icon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "A decorative icon before the title in the AI tool color, such as a wrench. Monarch bundles no icons."
+    },
+    {
+      "name": "stateIcon",
+      "type": "(@Composable (MonarchAiToolCallState) -> Unit)?",
+      "default": "null",
+      "description": "A decorative icon inside the state badge for each state. The state is always a word too."
+    },
+    {
+      "name": "toggleIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "An icon at the start of the header, such as a chevron pointing to the end; it turns a quarter turn while open."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiToolCallLabels",
+      "default": "MonarchAiToolCallLabels()",
+      "description": "Replacements for the state names, the duration format, the headings, the empty and truncation notes, the announcement, Show all and the expanded and collapsed states."
+    },
+    {
+      "name": "describeTool",
+      "type": "((MonarchAiToolCallPart) -> String?)?",
+      "default": "null",
+      "description": "Builds the summary from the call. Return null to fall back to the tool's label."
+    }
+  ],
+  "states": [
+    {
+      "name": "pending approval",
+      "description": "Warning tone and \"Waiting for approval\"."
+    },
+    {
+      "name": "awaiting result",
+      "description": "Neutral tone and \"Waiting for result\"."
+    },
+    {
+      "name": "running",
+      "description": "Info tone and \"Running\". No duration until it ends."
+    },
+    {
+      "name": "succeeded",
+      "description": "Success tone, \"Done\" and the duration, such as 0.4s, 12s or 2m 05s."
+    },
+    {
+      "name": "failed",
+      "description": "Danger tone, \"Failed\", and the error under the card without opening it."
+    },
+    {
+      "name": "denied",
+      "description": "Neutral tone and \"Denied\"."
+    },
+    {
+      "name": "cancelled",
+      "description": "Neutral tone and \"Cancelled\"."
+    },
+    {
+      "name": "expanded",
+      "description": "\"Tool: <name>\", then the input and the output in MonarchAiCodeBlocks named Input and Output, or \"No details yet.\"."
+    },
+    {
+      "name": "truncated",
+      "description": "A value longer than maxValueLength is cut at a line end when one is near, with \"Showing 4,000 of 52,113 characters\" and a Show all button."
+    }
+  ],
+  "appearance": "A card on the subtle background with the subtle border and the medium radius; the icon uses the AI tool role, the state is a small MonarchStatusBadge in its tone, the duration and notes are muted caption text and the error is the strong danger role. Every color is a theme role, so it follows light, dark and both high-contrast themes.",
+  "platformNotes": "Same parameters as iOS where Compose allows: isExpanded as a Binding becomes expanded with onExpandedChange, and the SF Symbol name systemImage becomes the icon slot, because Monarch for Android bundles no icons; stateIcon and toggleIcon are slots for the same reason, so without them the state is only a word in a tinted badge. The web uses <details>/<summary> and iOS a DisclosureGroup; Material 3 has no disclosure, and MonarchCollapsible takes only a text label, so the header is built with the same expand and collapse semantics as MonarchCollapsible. The web shows a spinner while running; Android shows the word, as iOS does. Values are pretty-printed with two-space indentation in the order of the object's members, as on the web (iOS sorts the keys). Times are ISO 8601 strings from the conversation model. The composable is experimental: an AI pattern that waits for a Rook app to adopt it.",
+  "accessibility": [
+    "The header is one button read as the title, the state and the duration, with the state Expanded or Collapsed and the TalkBack expand and collapse actions.",
+    "The header is at least 48dp high; Show all is a MonarchButton with a 48dp target.",
+    "The state is always a word as well as a tone; the icon slots are decorative.",
+    "A change of state after the card appears is announced through a polite live region as \"<tool>: <state>\"; the first state is not announced, and announcesChanges turns announcements off.",
+    "The error line under a failed call is read as \"Error: message\".",
+    "The input and output are MonarchAiCodeBlocks named Input and Output, with a Copy button.",
+    "The title wraps and the state line moves under it at large font sizes."
+  ],
+  "edgeCases": [
+    "A call without input and output shows \"No details yet.\" when open.",
+    "While arguments stream, inputText stands in for a null or empty input.",
+    "A string that holds JSON is re-indented; text that only starts with a brace is shown as it is.",
+    "Times that cannot be read, or an end before the start, show no duration.",
+    "Show all is kept per block while the card is on screen; a new maxValueLength cuts again."
+  ],
+  "tests": [
+    "MonarchAiToolCallTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Humanized summary with details",
+      "fixture": "ai-tool-call",
+      "webExample": "Humanized summary with details",
+      "template": "MonarchAiToolCall(\n    part = MonarchAiToolCallPart(\n        id = {{id}},\n        name = {{name}},\n        input = MonarchAiJSON.Object(\n            mapOf(\n                \"query\" to MonarchAiJSON.Text({{input.query}}),\n                \"limit\" to MonarchAiJSON.Number({{input.limit|double}}),\n            ),\n        ),\n        state = MonarchAiToolCallState.{{state|pascal}},\n        output = MonarchAiJSON.Object(\n            mapOf(\n                \"results\" to MonarchAiJSON.Array(\n                    listOf(\n                        MonarchAiJSON.Object(\n                            mapOf(\n                                \"title\" to MonarchAiJSON.Text({{output.results.0.title}}),\n                                \"id\" to MonarchAiJSON.Text({{output.results.0.id}}),\n                            ),\n                        ),\n                    ),\n                ),\n                \"total\" to MonarchAiJSON.Number({{output.total|double}}),\n            ),\n        ),\n        startedAt = {{startedAt}},\n        endedAt = {{endedAt}},\n    ),\n    summary = {{summary}},\n    expanded = open,\n    onExpandedChange = { open = it },\n    icon = { MonarchIcon(SampleIcons.Wrench, contentDescription = null) },\n    stateIcon = { MonarchIcon(SampleIcons.Check, contentDescription = null) },\n    toggleIcon = { MonarchIcon(SampleIcons.ChevronRight, contentDescription = null) },\n)",
+      "setupTemplate": "var open by remember { mutableStateOf(true) }",
+      "imports": [
+        "com.rookhq.monarch.components.intelligence.aiconversation.*",
+        "com.rookhq.monarch.foundation.icon.MonarchIcon",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "var open by remember { mutableStateOf(true) }",
+      "code": "MonarchAiToolCall(\n    part = MonarchAiToolCallPart(\n        id = \"call-1\",\n        name = \"search_documents\",\n        input = MonarchAiJSON.Object(\n            mapOf(\n                \"query\" to MonarchAiJSON.Text(\"Q3 plan\"),\n                \"limit\" to MonarchAiJSON.Number(5.0),\n            ),\n        ),\n        state = MonarchAiToolCallState.Succeeded,\n        output = MonarchAiJSON.Object(\n            mapOf(\n                \"results\" to MonarchAiJSON.Array(\n                    listOf(\n                        MonarchAiJSON.Object(\n                            mapOf(\n                                \"title\" to MonarchAiJSON.Text(\"Q3 planning notes\"),\n                                \"id\" to MonarchAiJSON.Text(\"doc-18\"),\n                            ),\n                        ),\n                    ),\n                ),\n                \"total\" to MonarchAiJSON.Number(1.0),\n            ),\n        ),\n        startedAt = \"2026-03-02T10:00:00.000Z\",\n        endedAt = \"2026-03-02T10:00:01.400Z\",\n    ),\n    summary = \"Searched documents for “Q3 plan”\",\n    expanded = open,\n    onExpandedChange = { open = it },\n    icon = { MonarchIcon(SampleIcons.Wrench, contentDescription = null) },\n    stateIcon = { MonarchIcon(SampleIcons.Check, contentDescription = null) },\n    toggleIcon = { MonarchIcon(SampleIcons.ChevronRight, contentDescription = null) },\n)"
+    },
+    {
+      "title": "A failed call, open",
+      "setup": "var expanded by rememberSaveable { mutableStateOf(true) }",
+      "code": "MonarchAiToolCall(\n    part = MonarchAiToolCallPart(\n        id = \"call-2\",\n        name = \"send_email\",\n        input = MonarchAiJSON.Object(mapOf(\"to\" to MonarchAiJSON.Text(\"ada@example.com\"))),\n        state = MonarchAiToolCallState.Failed,\n        error = \"The mail server refused the message.\",\n    ),\n    toolLabels = mapOf(\"send_email\" to \"Send an email\"),\n    expanded = expanded,\n    onExpandedChange = { expanded = it },\n)",
+      "imports": [
+        "com.rookhq.monarch.components.intelligence.aiconversation.*"
+      ]
+    }
+  ],
+  "webEquivalent": "AiToolCall",
+  "dependsOn": [
+    "collapsible",
+    "status-badge",
+    "ai-code-block"
+  ],
+  "icons": {
+    "toggle": "ChevronRightGlyph",
+    "tool": "WrenchGlyph",
+    "state.succeeded": "CheckGlyph",
+    "copy": "CopyGlyph"
+  }
+}

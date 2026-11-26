@@ -1,5 +1,9 @@
 import { DescriptionItem, DescriptionList } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './description-list.fixture.json';
+
+const items = fixture.data.items as readonly { term: string; value: string; wide?: boolean }[];
 
 export default {
   id: 'description-list',
@@ -134,14 +138,16 @@ export default {
         {
           title: 'Record facts',
           render: () => (
-            <DescriptionList columns={2} style={{ width: '100%' }}>
-              <DescriptionItem term="Owner">Ada Lovelace</DescriptionItem>
-              <DescriptionItem term="Stage">Proposal</DescriptionItem>
-              <DescriptionItem term="Created">3 March</DescriptionItem>
-              <DescriptionItem term="Source">Inbound</DescriptionItem>
-              <DescriptionItem term="Notes" wide>
-                Follow up after the product review.
-              </DescriptionItem>
+            <DescriptionList columns={fixture.data.columns as 2} style={{ width: '100%' }}>
+              {items.map((item) => (
+                <DescriptionItem
+                  key={item.term}
+                  term={item.term}
+                  {...(item.wide && { wide: true })}
+                >
+                  {item.value}
+                </DescriptionItem>
+              ))}
             </DescriptionList>
           ),
         },

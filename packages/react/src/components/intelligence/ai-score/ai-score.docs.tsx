@@ -1,12 +1,9 @@
 import { AiScore } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-score.fixture.json';
 
-const factors = [
-  { label: 'Opened the last three emails', impact: 14, detail: 'All within the past week' },
-  { label: 'Visited the pricing page', impact: 9 },
-  { label: 'No meeting booked yet', impact: -11 },
-  { label: 'Company size', impact: 0, detail: 'Within the usual range' },
-];
+const factors = fixture.data.factors;
 
 export default {
   id: 'ai-score',
@@ -123,9 +120,9 @@ export default {
           stack: true,
           render: () => (
             <AiScore
-              value={72}
-              label="Lead score"
-              rationale="Engaged with recent emails and pricing, but no meeting is booked yet."
+              value={fixture.data.value}
+              label={fixture.data.label}
+              rationale={fixture.data.rationale}
               factors={factors}
             />
           ),

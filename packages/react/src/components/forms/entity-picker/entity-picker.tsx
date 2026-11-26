@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { StagePortal, stagedLayerProps, useOverlayStage } from '../../../internal/overlay-stage.js';
 import { cx } from '../../../internal/cx.js';
 import { ChevronDownGlyph } from '../../../internal/icons.js';
 import { useFieldContext, useFieldControl } from '../form-field/index.js';
@@ -268,6 +269,7 @@ export const EntityPicker = forwardRef<HTMLButtonElement, EntityPickerProps>(fun
     </button>
   );
 
+  const staged = useOverlayStage();
   return (
     <PopoverPrimitive.Root
       open={open}
@@ -279,7 +281,7 @@ export const EntityPicker = forwardRef<HTMLButtonElement, EntityPickerProps>(fun
       <PopoverPrimitive.Trigger asChild ref={ref}>
         {trigger ?? defaultTrigger}
       </PopoverPrimitive.Trigger>
-      <PopoverPrimitive.Portal>
+      <StagePortal portal={PopoverPrimitive.Portal}>
         <PopoverPrimitive.Content
           id={panelId}
           align={align}
@@ -287,6 +289,7 @@ export const EntityPicker = forwardRef<HTMLButtonElement, EntityPickerProps>(fun
           aria-label={dialogName}
           aria-labelledby={dialogName ? undefined : field?.labelId}
           className={cx('mn-menu', 'mn-entity-picker__content', contentClassName)}
+          {...stagedLayerProps(staged)}
         >
           <Combobox
             inline
@@ -332,7 +335,7 @@ export const EntityPicker = forwardRef<HTMLButtonElement, EntityPickerProps>(fun
             </div>
           ) : null}
         </PopoverPrimitive.Content>
-      </PopoverPrimitive.Portal>
+      </StagePortal>
     </PopoverPrimitive.Root>
   );
 });

@@ -1,23 +1,16 @@
 import { Button, ToastProvider } from '@rookcom/monarch-react';
 import { RemoveMemberFlow } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './remove-member-flow.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
-const member = { id: 'm3', name: 'Jordan Lee', email: 'jordan@example.com' };
+const member = { id: 'm3', ...fixture.data.member };
 
-const people = [
-  { id: 'me', name: 'Sam Rivera', email: 'sam@example.com' },
-  { id: 'm1', name: 'Alex Morgan', email: 'alex@example.com' },
-  { id: 'm2', name: 'Priya Shah', email: 'priya@example.com' },
-  member,
-];
+const people = fixture.data.people;
 
-const work = [
-  { id: 'issues', label: 'open issues', count: 12 },
-  { id: 'reviews', label: 'pending reviews', count: 3 },
-  { id: 'docs', label: 'draft documents', count: 5 },
-];
+const work = fixture.data.work;
 
 export default {
   id: 'remove-member-flow',
@@ -153,14 +146,16 @@ export default {
       items: [
         {
           title: 'Hand over open work, then remove, with Undo',
+          stage: { align: 'center' },
           render: () => (
             <ToastProvider>
               <RemoveMemberFlow
-                trigger={<Button variant="danger">Remove Jordan Lee</Button>}
+                trigger={<Button variant="danger">{fixture.data.trigger}</Button>}
+                defaultOpen
                 member={member}
                 openWork={work}
                 assignees={people}
-                currentUserId="me"
+                currentUserId={fixture.data.currentUserId}
                 onRemove={() => wait(900)}
                 onUndo={() => wait(500)}
               />

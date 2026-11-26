@@ -2,6 +2,7 @@
 
 import {
   Children,
+  Fragment,
   forwardRef,
   isValidElement,
   type ComponentPropsWithoutRef,
@@ -11,29 +12,42 @@ import {
 import * as Menu from '@radix-ui/react-dropdown-menu';
 import { cx } from '../../../internal/cx.js';
 import { warnOnce } from '../../../internal/dev-warn.js';
+import { stagedDismiss, useOverlayStage } from '../../../internal/overlay-stage.js';
 import { CheckGlyph, ChevronRightGlyph, DotGlyph } from '../../../internal/icons.js';
 
 /** Action menu. Arrow keys move, typeahead jumps, Escape closes and restores focus. */
-export const DropdownMenu = Menu.Root;
+export function DropdownMenu(props: Menu.DropdownMenuProps) {
+  // In a docs preview stage the menu is a picture in the page: never modal.
+  const staged = useOverlayStage();
+  return <Menu.Root {...props} {...(staged ? { modal: false } : {})} />;
+}
 export const DropdownMenuTrigger = Menu.Trigger;
 export const DropdownMenuGroup = Menu.Group;
 export const DropdownMenuRadioGroup = Menu.RadioGroup;
 export const DropdownMenuSub = Menu.Sub;
 
+const STAGED_NO_FOCUS = { onOpenAutoFocus: (event: Event) => event.preventDefault() };
+
 export const DropdownMenuContent = forwardRef<
   ElementRef<typeof Menu.Content>,
   ComponentPropsWithoutRef<typeof Menu.Content>
 >(function DropdownMenuContent({ className, sideOffset = 4, align = 'start', ...rest }, ref) {
+  const staged = useOverlayStage();
+  const Portal = staged ? Fragment : Menu.Portal;
   return (
-    <Menu.Portal>
+    <Portal>
       <Menu.Content
         ref={ref}
         sideOffset={sideOffset}
         align={align}
         {...rest}
+        {...(staged ? stagedDismiss(staged, rest) : {})}
+        // Radix types leave this handler out of the menu content, but pass it
+        // on: a staged menu (a docs picture) must not take focus when it mounts.
+        {...(staged ? (STAGED_NO_FOCUS as object) : {})}
         className={cx('mn-menu', className)}
       />
-    </Menu.Portal>
+    </Portal>
   );
 });
 
@@ -147,9 +161,11 @@ export const DropdownMenuSubContent = forwardRef<
   ElementRef<typeof Menu.SubContent>,
   ComponentPropsWithoutRef<typeof Menu.SubContent>
 >(function DropdownMenuSubContent({ className, ...rest }, ref) {
+  const staged = useOverlayStage();
+  const Portal = staged ? Fragment : Menu.Portal;
   return (
-    <Menu.Portal>
+    <Portal>
       <Menu.SubContent ref={ref} {...rest} className={cx('mn-menu', className)} />
-    </Menu.Portal>
+    </Portal>
   );
 });

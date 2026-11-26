@@ -1,0 +1,153 @@
+{
+  "id": "backlog-planner",
+  "name": "MonarchBacklogPlanner",
+  "title": "BacklogPlanner",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "List with Section(isExpanded:content:header:) per bucket, ForEach.onMove(perform:), draggable(_:) rows with DynamicViewContent.dropDestination(for:action:), a Menu with the other buckets and Move up and Move down, accessibilityActions, ProgressView with .progressViewStyle(.monarchLinear) for capacity, AccessibilityNotification.Announcement",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Plans work into buckets (iterations, sprints, releases and the backlog) with totals and capacity per bucket, and moves items by drag, a Move menu or VoiceOver actions.",
+  "whenToUse": "For sprint or release planning: moving prioritised items between the backlog and upcoming iterations while watching each iteration's capacity.",
+  "whenNotToUse": "For reordering one list use a List with onMove (the reorderable-list entry). For columns of work by status use a board. For a single item's details use MonarchIssueCard.",
+  "api": [
+    "init(buckets: Binding<[MonarchBacklogBucket<Item>]>, itemLabel: @escaping (Item) -> String, points: ((Item) -> Int?)? = nil, canMove: ((_ item: Item, _ toBucketID: String, _ fromBucketID: String) -> Bool)? = nil, collapsed: Binding<Set<String>>? = nil, isReadOnly: Bool = false, labels: MonarchBacklogPlannerLabels = MonarchBacklogPlannerLabels(), onMove: (@MainActor (MonarchBacklogMove<Item.ID>) -> Void)? = nil, onBucketAction: (@MainActor (_ bucketID: String) -> Void)? = nil, @ViewBuilder row: @escaping (Item) -> Row)",
+    "struct MonarchBacklogBucket<Item: Identifiable> { init(id: String, title: String, subtitle: String? = nil, badge: String? = nil, badgeTone: MonarchTone = .info, capacity: Int? = nil, actionTitle: String? = nil, items: [Item], emptyMessage: String? = nil) }",
+    "struct MonarchBacklogMove<ItemID: Hashable> { let itemID: ItemID; let fromBucketID: String; let fromIndex: Int; let toBucketID: String; let toIndex: Int }",
+    "struct MonarchBacklogPlannerLabels { var capacityLabel, rowUnestimated, notEstimated, moveTo, moveUp, moveDown, empty, expanded, collapsed: String?; var summary: (@Sendable (Int, Int?, Int) -> String)?; var capacity: (@Sendable (Int, Int) -> String)?; var overCapacity, rowPoints: (@Sendable (Int) -> String)?; var moveMenu, moveToBucket: (@Sendable (String) -> String)?; var moved: (@Sendable (String, String, Int, Int) -> String)? }"
+  ],
+  "options": [
+    {
+      "name": "buckets",
+      "type": "Binding<[MonarchBacklogBucket<Item>]>",
+      "default": "required",
+      "description": "The buckets top to bottom, each with a title, optional subtitle, badge and capacity, and its items in priority order. Updated at once on every move."
+    },
+    {
+      "name": "itemLabel",
+      "type": "(Item) -> String",
+      "default": "required",
+      "description": "A short plain name of an item, such as its key, for the move menu and announcements."
+    },
+    {
+      "name": "points",
+      "type": "((Item) -> Int?)?",
+      "default": "nil",
+      "description": "The points of an item, nil when it has no estimate. Turns on totals, row points and capacity."
+    },
+    {
+      "name": "canMove",
+      "type": "((Item, String, String) -> Bool)?",
+      "default": "nil",
+      "description": "Whether an item may go to a bucket (item, to, from). Refused buckets are disabled in the menu, skipped by Move up and Move down, and refuse drops."
+    },
+    {
+      "name": "collapsed",
+      "type": "Binding<Set<String>>?",
+      "default": "nil",
+      "description": "The ids of closed buckets, when the app keeps them. Kept inside otherwise."
+    },
+    {
+      "name": "isReadOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Turns off dragging, reordering and the move menu."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchBacklogPlannerLabels",
+      "default": "MonarchBacklogPlannerLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "onMove",
+      "type": "(@MainActor (MonarchBacklogMove<Item.ID>) -> Void)?",
+      "default": "nil",
+      "description": "Runs after each finished move with the item, the buckets and the places, to save it."
+    },
+    {
+      "name": "row",
+      "type": "@ViewBuilder (Item) -> Row",
+      "default": "required",
+      "description": "The content of an item's row, such as a title, a MonarchIssueCard or pickers."
+    }
+  ],
+  "states": [
+    {
+      "name": "default",
+      "description": "A section per bucket: a header with a disclosure chevron, the title, badge, subtitle and \"5 items · 13 points\", then the rows with their points and a Move menu."
+    },
+    {
+      "name": "capacity",
+      "description": "With a capacity and points, a linear meter labelled \"18 of 20 points\"."
+    },
+    {
+      "name": "over capacity",
+      "description": "A warning icon and \"Planned work is over capacity by 3 points.\" in the warning role; the meter stays full."
+    },
+    {
+      "name": "collapsed",
+      "description": "The bucket shows only its header, with a forward chevron."
+    },
+    {
+      "name": "empty bucket",
+      "description": "\"Nothing here yet.\" or the bucket's own message in muted text."
+    },
+    {
+      "name": "dragging",
+      "description": "The system drag preview of the row while it is dragged to a place in a bucket."
+    },
+    {
+      "name": "read only",
+      "description": "No drag, no reorder and no Move menu."
+    }
+  ],
+  "appearance": "The system list with Monarch type: headings in the default text role, counts, subtitles and row points in the muted role, the badge in the info tone, the capacity meter in the Monarch linear progress style and the over-capacity note in the warning strong role. All follow light, dark and both high-contrast themes.",
+  "platformNotes": "The web draws its own drag handles with a keyboard pick-up mode and an optimistic save that a rejected promise undoes. On iOS the system drag and drop, onMove and VoiceOver actions do that work: the binding updates at once and onMove reports the move; the app sets the buckets back if the save fails. Bucket badges and actions are a text badge only; put bucket actions in the app's toolbar or the row content. Headings are header buttons rather than a heading level. Android has no entry yet. Several closures are optional (points, canMove, onMove). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is points.",
+  "accessibility": [
+    "Each bucket heading is a button with the header trait, read with \"Expanded\" or \"Collapsed\" as its value and the hint \"Shows or hides the items.\"",
+    "Each row's Move menu is named \"Move ENG-101 to…\" and lists the other buckets, Move up and Move down; buckets that refuse the item are disabled.",
+    "The Move menu also carries Move up, Move down and \"Move to Sprint 15\" as VoiceOver actions.",
+    "Every move is announced: \"ENG-101 moved to Sprint 15, position 1 of 3.\"",
+    "Row points are read as \"5 points\" or \"Not estimated\" instead of the abbreviations.",
+    "Over capacity is text with an icon, not only a colour; the capacity meter reads its label and value."
+  ],
+  "edgeCases": [
+    "An empty bucket has no rows to drop between; use the Move menu or Move up and Move down to fill it.",
+    "Move up from the first item of a bucket goes to the end of the previous bucket that accepts it; Move down from the last goes to the start of the next.",
+    "Moving to a bucket from the menu puts the item at its end.",
+    "Drag payloads are item ids as text; ids must be unique across buckets.",
+    "Long bucket titles and rows wrap at the largest text sizes."
+  ],
+  "tests": [
+    "MonarchBacklogPlannerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Iterations and backlog",
+      "fixture": "backlog-planner",
+      "webExample": "Iterations and backlog",
+      "template": "MonarchBacklogPlanner(\n    buckets: $buckets,\n    itemLabel: { \"\\($0.key) \\($0.title)\" },\n    points: { $0.points },\n    onMove: { _ in },\n    onBucketAction: { _ in },\n    row: { issue in\n        HStack(spacing: 8) {\n            Text(issue.key).monarchTextStyle(.code)\n            Text(issue.title).monarchTextStyle(.body)\n        }\n    }\n)\n.frame(height: 1150)",
+      "setupTemplate": "private struct Issue: Identifiable {\n    let id: String\n    let key: String\n    let title: String\n    let points: Int?\n}\n\n@State private var buckets = [\n    MonarchBacklogBucket(\n        id: {{buckets.0.id}},\n        title: {{buckets.0.title}},\n        subtitle: {{buckets.0.subtitle}},\n        badge: {{buckets.0.badge.label}},\n        badgeTone: {{buckets.0.badge.tone|tone}},\n        capacity: {{buckets.0.capacity}},\n        items: [\n        Issue(id: {{buckets.0.items.0.id}}, key: {{buckets.0.items.0.key}}, title: {{buckets.0.items.0.title}}, points: {{buckets.0.items.0.points}}),\n        Issue(id: {{buckets.0.items.1.id}}, key: {{buckets.0.items.1.key}}, title: {{buckets.0.items.1.title}}, points: {{buckets.0.items.1.points}}),\n        Issue(id: {{buckets.0.items.2.id}}, key: {{buckets.0.items.2.key}}, title: {{buckets.0.items.2.title}}, points: {{buckets.0.items.2.points}}),\n        ]\n    ),\n    MonarchBacklogBucket(\n        id: {{buckets.1.id}},\n        title: {{buckets.1.title}},\n        subtitle: {{buckets.1.subtitle}},\n        capacity: {{buckets.1.capacity}},\n        actionTitle: {{buckets.1.action}},\n        items: [\n            Issue(id: {{buckets.1.items.0.id}}, key: {{buckets.1.items.0.key}}, title: {{buckets.1.items.0.title}}, points: {{buckets.1.items.0.points}}),\n        ]\n    ),\n    MonarchBacklogBucket(\n        id: {{buckets.2.id}},\n        title: {{buckets.2.title}},\n        items: [\n        Issue(id: {{buckets.2.items.0.id}}, key: {{buckets.2.items.0.key}}, title: {{buckets.2.items.0.title}}, points: {{buckets.2.items.0.points}}),\n        Issue(id: {{buckets.2.items.1.id}}, key: {{buckets.2.items.1.key}}, title: {{buckets.2.items.1.title}}, points: nil),\n        Issue(id: {{buckets.2.items.2.id}}, key: {{buckets.2.items.2.key}}, title: {{buckets.2.items.2.title}}, points: {{buckets.2.items.2.points}}),\n        ]\n    ),\n]",
+      "setup": "private struct Issue: Identifiable {\n    let id: String\n    let key: String\n    let title: String\n    let points: Int?\n}\n\n@State private var buckets = [\n    MonarchBacklogBucket(\n        id: \"it-14\",\n        title: \"Iteration 14\",\n        subtitle: \"12 – 23 Jan\",\n        badge: \"Active\",\n        badgeTone: .accent,\n        capacity: 13,\n        items: [\n        Issue(id: \"1\", key: \"WEB-21\", title: \"Fix the sign-in redirect\", points: 3),\n        Issue(id: \"2\", key: \"WEB-24\", title: \"Export reports as CSV\", points: 5),\n        Issue(id: \"3\", key: \"WEB-30\", title: \"Keyboard shortcuts help\", points: 2),\n        ]\n    ),\n    MonarchBacklogBucket(\n        id: \"it-15\",\n        title: \"Iteration 15\",\n        subtitle: \"26 Jan – 6 Feb\",\n        capacity: 13,\n        actionTitle: \"Start\",\n        items: [\n            Issue(id: \"4\", key: \"WEB-33\", title: \"Dark mode for charts\", points: 8),\n        ]\n    ),\n    MonarchBacklogBucket(\n        id: \"backlog\",\n        title: \"Backlog\",\n        items: [\n        Issue(id: \"5\", key: \"WEB-35\", title: \"Audit log filters\", points: 5),\n        Issue(id: \"6\", key: \"WEB-36\", title: \"Bulk archive\", points: nil),\n        Issue(id: \"7\", key: \"WEB-41\", title: \"Saved views\", points: 3),\n        ]\n    ),\n]",
+      "code": "MonarchBacklogPlanner(\n    buckets: $buckets,\n    itemLabel: { \"\\($0.key) \\($0.title)\" },\n    points: { $0.points },\n    onMove: { _ in },\n    onBucketAction: { _ in },\n    row: { issue in\n        HStack(spacing: 8) {\n            Text(issue.key).monarchTextStyle(.code)\n            Text(issue.title).monarchTextStyle(.body)\n        }\n    }\n)\n.frame(height: 1150)"
+    }
+  ],
+  "webEquivalent": "BacklogPlanner",
+  "dependsOn": [
+    "reorderable-list",
+    "issue-card",
+    "dropdown-menu",
+    "badge",
+    "progress-bar"
+  ],
+  "icons": {
+    "bucket.collapse": "ChevronRightGlyph",
+    "item.menu": "MoreGlyph"
+  }
+}

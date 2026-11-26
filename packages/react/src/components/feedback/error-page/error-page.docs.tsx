@@ -1,5 +1,7 @@
-import { Button, ErrorPage, Link } from '@rookcom/monarch-react';
+import { Button, ErrorPage, Link, type ErrorPageKind } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './error-page.fixture.json';
 
 export default {
   id: 'error-page',
@@ -129,17 +131,17 @@ export default {
           stack: true,
           render: () => (
             <ErrorPage
-              kind="not-found"
+              kind={fixture.data.kind as ErrorPageKind}
               fullScreen={false}
               headingLevel="h2"
-              title="Page not found"
-              description="The link may be broken, or the page may have moved."
+              title={fixture.data.title}
+              description={fixture.data.description}
               actions={
                 <>
                   <Button variant="primary" asChild>
-                    <a href="#/">Go to dashboard</a>
+                    <a href="#/">{fixture.data.primaryAction}</a>
                   </Button>
-                  <Button>Go back</Button>
+                  <Button>{fixture.data.secondaryAction}</Button>
                 </>
               }
             />

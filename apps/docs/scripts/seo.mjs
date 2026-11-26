@@ -35,8 +35,23 @@ export const SITE = {
 /** Escapes `<` so a JSON-LD block can never close its own script tag. */
 const json = (o) => JSON.stringify(o).replace(/</g, '\\u003c');
 
-/** The JSON-LD block of a page: identity, breadcrumbs and (below the home page) the article. */
-export function jsonLd({ route, title, description, url, siteUrl, crumbs, modified, notFound }) {
+/**
+ * The JSON-LD block of a page: identity, breadcrumbs and (below the home page)
+ * the article. A platform landing page (`landing`, from
+ * features/native/platform-landing-content.ts) also describes the platform
+ * library as source code that is part of Monarch, and its FAQ.
+ */
+export function jsonLd({
+  route,
+  title,
+  description,
+  url,
+  siteUrl,
+  crumbs,
+  modified,
+  notFound,
+  landing = null,
+}) {
   if (notFound) return '';
   const id = (frag) => `${siteUrl}#${frag}`;
   const org = {
@@ -85,6 +100,34 @@ export function jsonLd({ route, title, description, url, siteUrl, crumbs, modifi
       author: { '@id': id('maker') },
       publisher: { '@id': id('maker') },
       mainEntityOfPage: url,
+    });
+  }
+  if (landing) {
+    graph.push({
+      '@type': 'SoftwareSourceCode',
+      '@id': `${url}#software`,
+      name: landing.software.name,
+      description: landing.software.description,
+      codeRepository: SITE.repo,
+      url,
+      license: 'https://www.apache.org/licenses/LICENSE-2.0',
+      programmingLanguage: landing.software.programmingLanguage,
+      runtimePlatform: landing.software.runtimePlatform,
+      ...(landing.software.version ? { version: landing.software.version } : {}),
+      isPartOf: { '@id': id('software') },
+      author: { '@id': id('maker') },
+      publisher: { '@id': id('maker') },
+    });
+    graph.push({
+      '@type': 'FAQPage',
+      '@id': `${url}#faq`,
+      url,
+      inLanguage: 'en',
+      mainEntity: landing.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: f.answer },
+      })),
     });
   }
   if (crumbs.length > 1)

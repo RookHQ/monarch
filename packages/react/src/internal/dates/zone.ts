@@ -148,11 +148,13 @@ export function formatInstantTime(
   hourCycle?: HourCycle,
 ): string {
   const z = safeZone(zone);
-  const options: Intl.DateTimeFormatOptions = { timeZone: z, hour: 'numeric', minute: '2-digit' };
-  if (hourCycle) {
-    options.hourCycle = hourCycle === '12' ? 'h12' : 'h23';
-    if (hourCycle === '24') options.hour = '2-digit';
-  }
+  // A 24-hour clock pads the hour ("09:00"), from `hourCycle` or the locale.
+  const options: Intl.DateTimeFormatOptions = {
+    timeZone: z,
+    hour: hourCycle ? (hourCycle === '24' ? '2-digit' : 'numeric') : hourStyle(locale),
+    minute: '2-digit',
+  };
+  if (hourCycle) options.hourCycle = hourCycle === '12' ? 'h12' : 'h23';
   const f = formatter(
     `t|${locale ?? ''}|${z}|${hourCycle ?? ''}`,
     () => new Intl.DateTimeFormat(locale, options),
@@ -161,7 +163,7 @@ export function formatInstantTime(
 }
 
 /** 24-hour clocks pad the hour ("09:00"); 12-hour clocks do not ("9:00 AM"). */
-function hourStyle(locale?: string, hourCycle?: 'h12' | 'h23'): '2-digit' | 'numeric' {
+export function hourStyle(locale?: string, hourCycle?: 'h12' | 'h23'): '2-digit' | 'numeric' {
   const hc =
     hourCycle ??
     formatter(

@@ -5,6 +5,8 @@ import {
   type CustomDomainStatus,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './custom-domain-connect.fixture.json';
 
 const RECORDS: CustomDomainRecord[] = [
   {
@@ -29,7 +31,13 @@ function FlowDemo() {
   return (
     <CustomDomainConnect
       requireSubdomain
-      inputDescription="The address visitors will type, such as help.example.com."
+      inputDescription={fixture.data.field.description}
+      messages={{
+        steps: fixture.data.steps as [string, string, string, string],
+        domainLabel: fixture.data.field.label,
+        placeholder: fixture.data.field.placeholder,
+        connect: fixture.data.connect,
+      }}
       status={status}
       records={RECORDS.map((r, i) => (checks > 0 ? { ...r, found: i === 0 || checks > 1 } : r))}
       onConnect={wait}

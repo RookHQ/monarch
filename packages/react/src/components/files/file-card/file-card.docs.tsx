@@ -9,6 +9,10 @@ import {
 import { FileCard } from '@rookcom/monarch-react/data';
 import { MoreIcon } from '../../../internal/docs-demo.js';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './file-card.fixture.json';
+
+const MENU = fixture.data.menu as unknown as readonly [string, string, string];
 
 function CardActions({ name }: { name: string }) {
   return (
@@ -17,26 +21,26 @@ function CardActions({ name }: { name: string }) {
         <IconButton label={`More actions for ${name}`} icon={<MoreIcon />} size="sm" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem>Download</DropdownMenuItem>
-        <DropdownMenuItem>Rename</DropdownMenuItem>
-        <DropdownMenuItem tone="danger">Move to trash</DropdownMenuItem>
+        <DropdownMenuItem>{MENU[0]}</DropdownMenuItem>
+        <DropdownMenuItem>{MENU[1]}</DropdownMenuItem>
+        <DropdownMenuItem tone="danger">{MENU[2]}</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
 function SelectableCard() {
-  const [selected, setSelected] = useState(false);
+  const [selected, setSelected] = useState(fixture.data.selected);
   return (
     <div style={{ width: 220 }}>
       <FileCard
-        name="site-survey.pdf"
-        size={3_400_000}
+        name={fixture.data.name}
+        size={fixture.data.size}
         href="#"
         selectable
         selected={selected}
         onSelectedChange={setSelected}
-        actions={<CardActions name="site-survey.pdf" />}
+        actions={<CardActions name={fixture.data.name} />}
       />
     </div>
   );

@@ -1,22 +1,15 @@
 import { Heatmap } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './heatmap.fixture.json';
 
-const weekdays = [
-  { key: 'mon', label: 'Mon' },
-  { key: 'tue', label: 'Tue' },
-  { key: 'wed', label: 'Wed' },
-  { key: 'thu', label: 'Thu' },
-  { key: 'fri', label: 'Fri' },
-];
-const hours = Array.from({ length: 10 }, (_, i) => ({
-  key: String(8 + i),
-  label: `${8 + i}:00`,
-}));
+const weekdays = fixture.data.rows;
+const hours = fixture.data.columns;
 const activity = weekdays.flatMap((d, r) =>
   hours.map((h, c) => ({
     row: d.key,
     column: h.key,
-    value: Math.round(((Math.sin(r + c / 2) + 1.2) * (c > 1 && c < 8 ? 12 : 4)) % 30),
+    value: fixture.data.values[r]?.[c] ?? 0,
   })),
 );
 const teams = [
@@ -176,13 +169,13 @@ export default {
           stack: true,
           render: () => (
             <Heatmap
-              title="Sign-ins by hour"
-              description="Last four weeks"
+              title={fixture.data.title}
+              description={fixture.data.description}
               rows={weekdays}
               columns={hours}
               data={activity}
-              rowHeader="Day"
-              locale="en-US"
+              rowHeader={fixture.data.rowHeader}
+              locale={fixture.data.locale}
               style={{ width: '100%', maxWidth: '40rem' }}
             />
           ),

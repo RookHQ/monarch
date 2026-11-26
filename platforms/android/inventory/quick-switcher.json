@@ -1,0 +1,114 @@
+{
+  "id": "quick-switcher",
+  "name": null,
+  "title": "QuickSwitcher",
+  "family": "search",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet (skipPartiallyExpanded) holding MonarchSearchBar (androidx.compose.material3.DockedSearchBar) and MonarchSearchResults (a androidx.compose.foundation.lazy.LazyColumn), opened by a button and by androidx.compose.ui.input.key.onPreviewKeyEvent for Ctrl+K",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the CommandPalette recipe preset for jumping to places: type part of a name, tap the match, go there, with recent places first and a search-everywhere fallback.",
+  "whenToUse": "When people move between many named places (channels, projects, people, documents) and know their names.",
+  "whenNotToUse": "For running commands such as Create issue use the CommandPalette recipe; for filtering one list use MonarchSearchBar on that screen.",
+  "api": [
+    "MonarchBottomSheet(onDismissRequest = …) { … }",
+    "MonarchSearchBar(query = query, onQueryChange = { query = it }, onSearch = {}, placeholder = \"Jump to…\")",
+    "MonarchSearchResults(groups = recent while the query is empty, else matches by group plus a Search group, onSelect = { result, _ -> navigate and close }, modifier = Modifier.weight(1f), query = query)",
+    "Modifier.onPreviewKeyEvent { event -> event.type == KeyEventType.KeyDown && event.isCtrlPressed && event.key == Key.K }"
+  ],
+  "options": [
+    {
+      "name": "destinations",
+      "type": "List of id, label and group",
+      "default": "none",
+      "description": "The places to jump to, each under a group such as Channels, People or Documents; match the query against the label and any keywords."
+    },
+    {
+      "name": "recent",
+      "type": "List of destinations",
+      "default": "none",
+      "description": "Shown as the Recent group while the query is empty."
+    },
+    {
+      "name": "search everywhere",
+      "type": "MonarchSearchResultGroup",
+      "default": "optional",
+      "description": "A last group with \"Search for “query”\" that opens the full search screen."
+    },
+    {
+      "name": "open",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Whether the sheet is shown, kept with rememberSaveable."
+    },
+    {
+      "name": "query",
+      "type": "String",
+      "default": "\"\"",
+      "description": "The search text; cleared when the sheet closes."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "Only the trigger (a button, or a search MonarchIconButton in the top app bar)."
+    },
+    {
+      "name": "empty query",
+      "description": "The Recent group."
+    },
+    {
+      "name": "typing",
+      "description": "Matches grouped by kind, then Search for “query”."
+    },
+    {
+      "name": "no matches",
+      "description": "Only the search-everywhere fallback, or MonarchSearchResults' empty state without it."
+    }
+  ],
+  "appearance": "A Material 3 bottom sheet in the Monarch theme holding the docked search bar and grouped result rows with highlighted matches. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web QuickSwitcher is a thin CommandPalette preset in a centered dialog opened with Cmd+K, with arrow keys, Enter and links (href). On a phone it is the CommandPalette recipe's full-height sheet: touch replaces arrow keys, the app navigates in onSelect (components do not navigate), and Ctrl+K works on hardware keyboards only. The web's hotkey prop, custom filter function and footer have no counterpart; sources fetched as you type run in a LaunchedEffect keyed on the query, passing loading to MonarchSearchResults. iOS has no entry yet; its plan is also a recipe.",
+  "accessibility": [
+    "The trigger is a button with a 48dp target.",
+    "The sheet is a modal pane; back and the scrim close it.",
+    "Group headings are headings and each place is one button, from MonarchSearchResults, which also announces the result count.",
+    "Matched words are shown semibold on the match fill by MonarchSearchResults, so a match never rests on color alone."
+  ],
+  "edgeCases": [
+    "Never put MonarchSearchResults inside verticalScroll; give it the remaining height with weight(1f).",
+    "Clear the query when the sheet closes so the next opening starts with Recent.",
+    "Show the search-everywhere fallback only once something is typed."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Jump to a channel or person",
+      "fixture": "quick-switcher",
+      "webExample": "Jump to a channel or person",
+      "template": "Box(\n    modifier = Modifier.onPreviewKeyEvent { event ->\n        val shortcut = event.type == KeyEventType.KeyDown && event.isCtrlPressed && event.key == Key.K\n        if (shortcut) open = true\n        shortcut\n    },\n) {\n    MonarchButton(text = {{trigger}}, onClick = { open = true })\n}\nif (opened.isNotEmpty()) MonarchText(text = \"Opened: $opened\")\nif (open) {\n    MonarchDialog(\n        onDismissRequest = {\n            open = false\n            query = \"\"\n        },\n        title = null,\n        paneTitle = \"Jump to\",\n    ) {\n        Column(modifier = Modifier.fillMaxWidth()) {\n            MonarchSearchBar(\n                query = query,\n                onQueryChange = { query = it },\n                onSearch = {},\n                modifier = Modifier.fillMaxWidth(),\n                placeholder = {{trigger}},\n            )\n            val text = query.trim()\n            val groups = if (text.isEmpty()) {\n                // Recent places while nothing is typed, then every channel and person, as on the web.\n                listOf(MonarchSearchResultGroup(\"Recent\", \"recent\", recent.map { MonarchSearchResult(it.second, it.first, snippet = snippets[it.first], icon = { MonarchIcon(if (it.third == {{groups.1.label}}) SampleIcons.Users else SampleIcons.Inbox, contentDescription = null) }) })) +\n                    destinations.groupBy { it.third }\n                        .map { (group, list) ->\n                            MonarchSearchResultGroup(group, group, list.map { MonarchSearchResult(it.second, it.first, snippet = snippets[it.first], icon = { MonarchIcon(if (it.third == {{groups.1.label}}) SampleIcons.Users else SampleIcons.Inbox, contentDescription = null) }) })\n                        }\n            } else {\n                destinations.filter { it.second.contains(text, ignoreCase = true) }\n                    .groupBy { it.third }\n                    .map { (group, list) ->\n                        MonarchSearchResultGroup(group, group, list.map { MonarchSearchResult(it.second, it.first, snippet = snippets[it.first], icon = { MonarchIcon(if (it.third == {{groups.1.label}}) SampleIcons.Users else SampleIcons.Inbox, contentDescription = null) }) })\n                    } +\n                    // The search-everywhere fallback under the instant matches.\n                    MonarchSearchResultGroup(\"Search\", \"search\", listOf(MonarchSearchResult(\"Search for “$text”\", \"search\")))\n            }\n            MonarchSearchResults(\n                groups = groups,\n                onSelect = { result, _ ->\n                    opened = result.title\n                    open = false\n                    query = \"\"\n                },\n                modifier = Modifier.heightIn(max = 520.dp),\n                query = query,\n            )\n        }\n    }\n}",
+      "setupTemplate": "var open by rememberSaveable { mutableStateOf(true) }\nvar query by rememberSaveable { mutableStateOf(\"\") }\nvar opened by rememberSaveable { mutableStateOf(\"\") }\n// id, label, group\nval destinations = listOf(\n    Triple({{groups.0.items.0.id}}, {{groups.0.items.0.label}}, {{groups.0.label}}),\n    Triple({{groups.0.items.1.id}}, {{groups.0.items.1.label}}, {{groups.0.label}}),\n    Triple({{groups.0.items.2.id}}, {{groups.0.items.2.label}}, {{groups.0.label}}),\n    Triple({{groups.1.items.0.id}}, {{groups.1.items.0.label}}, {{groups.1.label}}),\n    Triple({{groups.1.items.1.id}}, {{groups.1.items.1.label}}, {{groups.1.label}}),\n)\nval snippets = mapOf({{groups.1.items.0.id}} to {{groups.1.items.0.description}}, {{groups.1.items.1.id}} to {{groups.1.items.1.description}})\nval recent = destinations.take(2)",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.ui.input.key.*",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.ui.unit.dp",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "var open by rememberSaveable { mutableStateOf(true) }\nvar query by rememberSaveable { mutableStateOf(\"\") }\nvar opened by rememberSaveable { mutableStateOf(\"\") }\n// id, label, group\nval destinations = listOf(\n    Triple(\"c-general\", \"#general\", \"Channels\"),\n    Triple(\"c-design\", \"#design-review\", \"Channels\"),\n    Triple(\"c-launch\", \"#launch-plan\", \"Channels\"),\n    Triple(\"p-ana\", \"Ana Silva\", \"People\"),\n    Triple(\"p-kofi\", \"Kofi Mensah\", \"People\"),\n)\nval snippets = mapOf(\"p-ana\" to \"ana@example.com\", \"p-kofi\" to \"kofi@example.com\")\nval recent = destinations.take(2)",
+      "code": "Box(\n    modifier = Modifier.onPreviewKeyEvent { event ->\n        val shortcut = event.type == KeyEventType.KeyDown && event.isCtrlPressed && event.key == Key.K\n        if (shortcut) open = true\n        shortcut\n    },\n) {\n    MonarchButton(text = \"Jump to…\", onClick = { open = true })\n}\nif (opened.isNotEmpty()) MonarchText(text = \"Opened: $opened\")\nif (open) {\n    MonarchDialog(\n        onDismissRequest = {\n            open = false\n            query = \"\"\n        },\n        title = null,\n        paneTitle = \"Jump to\",\n    ) {\n        Column(modifier = Modifier.fillMaxWidth()) {\n            MonarchSearchBar(\n                query = query,\n                onQueryChange = { query = it },\n                onSearch = {},\n                modifier = Modifier.fillMaxWidth(),\n                placeholder = \"Jump to…\",\n            )\n            val text = query.trim()\n            val groups = if (text.isEmpty()) {\n                // Recent places while nothing is typed, then every channel and person, as on the web.\n                listOf(MonarchSearchResultGroup(\"Recent\", \"recent\", recent.map { MonarchSearchResult(it.second, it.first, snippet = snippets[it.first], icon = { MonarchIcon(if (it.third == \"People\") SampleIcons.Users else SampleIcons.Inbox, contentDescription = null) }) })) +\n                    destinations.groupBy { it.third }\n                        .map { (group, list) ->\n                            MonarchSearchResultGroup(group, group, list.map { MonarchSearchResult(it.second, it.first, snippet = snippets[it.first], icon = { MonarchIcon(if (it.third == \"People\") SampleIcons.Users else SampleIcons.Inbox, contentDescription = null) }) })\n                        }\n            } else {\n                destinations.filter { it.second.contains(text, ignoreCase = true) }\n                    .groupBy { it.third }\n                    .map { (group, list) ->\n                        MonarchSearchResultGroup(group, group, list.map { MonarchSearchResult(it.second, it.first, snippet = snippets[it.first], icon = { MonarchIcon(if (it.third == \"People\") SampleIcons.Users else SampleIcons.Inbox, contentDescription = null) }) })\n                    } +\n                    // The search-everywhere fallback under the instant matches.\n                    MonarchSearchResultGroup(\"Search\", \"search\", listOf(MonarchSearchResult(\"Search for “$text”\", \"search\")))\n            }\n            MonarchSearchResults(\n                groups = groups,\n                onSelect = { result, _ ->\n                    opened = result.title\n                    open = false\n                    query = \"\"\n                },\n                modifier = Modifier.heightIn(max = 520.dp),\n                query = query,\n            )\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "QuickSwitcher",
+  "dependsOn": [
+    "command-palette",
+    "search-input",
+    "search-results",
+    "sheet"
+  ]
+}

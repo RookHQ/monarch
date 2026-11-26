@@ -1,0 +1,69 @@
+{
+  "id": "no-app-access",
+  "name": null,
+  "title": "NoAppAccess",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "VStack with MonarchEmptyState (lock symbol, Request access and Contact an admin actions, openURL for the mailto: link) and MonarchWorkspaceSwitcher under it",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the screen shown in place of an app the signed-in person has no access to, with Request access, Contact an admin and a workspace switcher.",
+  "whenToUse": "When someone opens an app, or a deep link into one, that their workspace has not given them access to.",
+  "whenNotToUse": "For a screen that is empty because there is no content yet, use MonarchEmptyState alone. For a missing permission on one action inside an app, disable the action and explain it in place.",
+  "api": [
+    "MonarchEmptyState(\"You don’t have access to Tickets\", message:, systemImage: \"lock\", actionTitle: isRequested ? nil : \"Request access\", secondaryActionTitle: \"Contact an admin\", action:, secondaryAction:)",
+    "MonarchWorkspaceSwitcher(selection: $workspace, workspaces: [MonarchWorkspaceOption(…)])",
+    "@Environment(\\.openURL) to open the admins' contact link"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "no access",
+      "description": "The lock symbol, the title naming the app, the explanation naming the workspace, Request access and Contact an admin."
+    },
+    {
+      "name": "requested",
+      "description": "Request access is removed and the message says the request was sent; the app keeps this state while its request is open."
+    },
+    {
+      "name": "switching",
+      "description": "The workspace switcher lets the person move to a workspace where they have access."
+    }
+  ],
+  "appearance": "MonarchEmptyState's centred layout with the muted symbol, heading and body text and its primary and secondary MonarchButtons, then the workspace switcher's button. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "The web NoAppAccess is a component with a request state machine, links rendered through the shell's link component, a full-screen mode and heading focus on mount. On iOS it is a recipe: the app's navigation shows this view in place of the app's root, the request is the app's own call, links open with openURL, and VoiceOver focus moves to a new screen by itself. Back to workspace is the system back button or the app's tab bar rather than a link. Android composes the same recipe.",
+  "accessibility": [
+    "MonarchEmptyState's title has the header trait and the lock symbol is decorative.",
+    "Request access and Contact an admin are separate buttons of at least 44 points.",
+    "Announce that the request was sent with AccessibilityNotification.Announcement, since the button goes away and focus does not move by itself.",
+    "The workspace switcher is a button labelled with the current workspace."
+  ],
+  "edgeCases": [
+    "If the request fails, keep Request access and show the failure with MonarchInlineErrorRetry under the empty state.",
+    "Without a workspace name, say \"Ask a workspace admin\" instead of naming the workspace.",
+    "Long app and workspace names wrap; the empty state is centred and scrolls inside the app's ScrollView."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Every action",
+      "fixture": "no-app-access",
+      "webExample": "Every action",
+      "template": "VStack(spacing: 16) {\n    Image(systemName: \"lock\")\n        .font(.system(size: 22))\n        .foregroundStyle(theme.colors.textMuted)\n        .frame(width: 56, height: 56)\n        .background(RoundedRectangle(cornerRadius: 16).fill(theme.colors.bgMuted))\n        .accessibilityHidden(true)\n    VStack(spacing: 8) {\n        Text(\"You don’t have access to {{appName|raw}}\")\n            .monarchTextStyle(.title)\n            .foregroundStyle(theme.colors.textDefault)\n        Text(\"Ask an admin of {{workspaceName|raw}} to give you access to {{appName|raw}}.\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textMuted)\n    }\n    .multilineTextAlignment(.center)\n    MonarchFlowLayout(spacing: 8, rowSpacing: 8, justification: .center) {\n        Button({{requestAccess}}) {}\n            .buttonStyle(.monarch(.primary))\n        Button({{back}}) {}\n            .buttonStyle(.monarch(.secondary))\n        Button({{switchWorkspace}}) {}\n            .buttonStyle(.monarch(.ghost))\n    }\n    Button({{contact}}) {}\n        .buttonStyle(.monarchLink(.inline))\n}\n.frame(maxWidth: .infinity)",
+      "code": "VStack(spacing: 16) {\n    Image(systemName: \"lock\")\n        .font(.system(size: 22))\n        .foregroundStyle(theme.colors.textMuted)\n        .frame(width: 56, height: 56)\n        .background(RoundedRectangle(cornerRadius: 16).fill(theme.colors.bgMuted))\n        .accessibilityHidden(true)\n    VStack(spacing: 8) {\n        Text(\"You don’t have access to Example Desk\")\n            .monarchTextStyle(.title)\n            .foregroundStyle(theme.colors.textDefault)\n        Text(\"Ask an admin of Acme to give you access to Example Desk.\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textMuted)\n    }\n    .multilineTextAlignment(.center)\n    MonarchFlowLayout(spacing: 8, rowSpacing: 8, justification: .center) {\n        Button(\"Request access\") {}\n            .buttonStyle(.monarch(.primary))\n        Button(\"Back to workspace\") {}\n            .buttonStyle(.monarch(.secondary))\n        Button(\"Switch workspace\") {}\n            .buttonStyle(.monarch(.ghost))\n    }\n    Button(\"Contact an admin\") {}\n        .buttonStyle(.monarchLink(.inline))\n}\n.frame(maxWidth: .infinity)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme",
+      "setup": "@Environment(\\.monarchTheme) private var theme"
+    }
+  ],
+  "webEquivalent": "NoAppAccess",
+  "dependsOn": [
+    "empty-state",
+    "button",
+    "workspace-switcher"
+  ]
+}

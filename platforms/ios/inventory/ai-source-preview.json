@@ -1,0 +1,122 @@
+{
+  "id": "ai-source-preview",
+  "name": "MonarchAiSourcePreview",
+  "title": "AiSourcePreview",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Sheet content: NavigationStack with a cancellationAction toolbar item, ScrollView with ScrollViewReader, Text with an AttributedString highlight, Link with MonarchButtonStyle, presentationDetents and presentationBackground",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The content of a sheet that shows the document, record or page an AI answer cited, with the quoted passage highlighted and scrolled into view, and a button that opens the original.",
+  "whenToUse": "When a person opens a citation or a row of MonarchAiSourceList and the app has the text of the source, to check the passage without leaving the conversation.",
+  "whenNotToUse": "When the app has no text for the source, open the address directly with a Link. For a generic document viewer, use the platform's Quick Look.",
+  "api": [
+    "init(_ source: MonarchAiSourcePart, quote: String? = nil, content: String? = nil, originalURL: URL? = nil, labels: MonarchAiSourcePreviewLabels = MonarchAiSourcePreviewLabels())",
+    "MonarchAiSourcePreviewLabels.init(quoted: String? = nil, openOriginal: String? = nil, noPreview: String? = nil, close: String? = nil, kind: (@Sendable (MonarchAiSourceKind) -> String)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "source",
+      "type": "MonarchAiSourcePart",
+      "default": "required",
+      "description": "The cited source from the conversation model: title, address, kind, product and favicon."
+    },
+    {
+      "name": "quote",
+      "type": "String?",
+      "default": "nil",
+      "description": "The cited passage. Highlighted where it first appears in content, ignoring case and spacing, and scrolled into view."
+    },
+    {
+      "name": "content",
+      "type": "String?",
+      "default": "nil",
+      "description": "The text of the source. Paragraphs are separated by blank lines."
+    },
+    {
+      "name": "originalURL",
+      "type": "URL?",
+      "default": "nil",
+      "description": "Where Open original goes. Defaults to the source's address. Shown only for http, https and mailto."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiSourcePreviewLabels",
+      "default": "MonarchAiSourcePreviewLabels()",
+      "description": "Replacements for the quote caption, Open original, the empty text, Close and kind names."
+    }
+  ],
+  "states": [
+    {
+      "name": "quote found",
+      "description": "The passage is highlighted in its paragraph and scrolled to the centre."
+    },
+    {
+      "name": "quote not found",
+      "description": "The quote is shown on its own under a Quoted passage caption, above the content."
+    },
+    {
+      "name": "quote only",
+      "description": "No content: only the quote block."
+    },
+    {
+      "name": "empty",
+      "description": "Neither content nor quote: No preview is available for this source."
+    },
+    {
+      "name": "no original",
+      "description": "Without a safe address there is no Open original button."
+    }
+  ],
+  "appearance": "The sheet uses the surface background. The title is a heading in default text; the meta line is muted. The highlighted passage has the AI subtle fill and an underline in the AI citation role; the quote block has a bar in the AI border role. Open original is a secondary button pinned to the bottom.",
+  "platformNotes": "The web component is a side sheet with open and onOpenChange; on iOS it is the content of a SwiftUI sheet, presented with sheet(item:), so the system owns presentation, the drag indicator and returning VoiceOver focus. It brings medium and large detents and its own Close button. The web accepts arbitrary nodes as content and scrolls to the first mark; on iOS content is plain text. Open original is a Link opened through openURL, not a new tab.",
+  "accessibility": [
+    "The source title has the header trait.",
+    "The highlighted passage has an underline as well as a fill, and its paragraph reads \"Quoted passage\" as its value.",
+    "The passage is scrolled into view when the sheet opens, without animation when Reduce Motion is on.",
+    "Close is a toolbar button in the cancellation position; the sheet can also be dragged down.",
+    "Open original is a link-backed button with a 44-point touch target, only for safe addresses.",
+    "The text can be selected."
+  ],
+  "edgeCases": [
+    "Only the first match of the quote is highlighted.",
+    "A quote that crosses a blank line is highlighted in each paragraph it covers.",
+    "Characters such as . or ( in the quote are matched literally.",
+    "A javascript: or relative address shows no Open original.",
+    "Very long content scrolls; the button stays above the home indicator in a safe-area inset."
+  ],
+  "tests": [
+    "MonarchAiSourcePreviewTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Document text with a quote",
+      "fixture": "ai-source-preview",
+      "webExample": "Document text with a quote",
+      "template": "MonarchButton({{trigger}}) { previewed = source }\n    .onAppear { previewed = source }\n    .sheet(item: $previewed) { source in\n        MonarchAiSourcePreview(\n            source,\n            quote: {{quote}},\n            content: {{content}}\n        )\n    }",
+      "setupTemplate": "@State private var previewed: MonarchAiSourcePart?\nprivate let source = MonarchAiSourcePart(id: {{source.id}}, title: {{source.title}}, url: {{source.url}}, kind: {{source.kind|case}}, product: {{source.product}})",
+      "previewAction": "previewed = source",
+      "previewScreen": true,
+      "setup": "@State private var previewed: MonarchAiSourcePart?\nprivate let source = MonarchAiSourcePart(id: \"s1\", title: \"Team handbook\", url: \"https://example.com/handbook\", kind: .doc, product: \"Docs\")",
+      "code": "MonarchButton(\"Preview source\") { previewed = source }\n    .onAppear { previewed = source }\n    .sheet(item: $previewed) { source in\n        MonarchAiSourcePreview(\n            source,\n            quote: \"Requests are answered within two working days.\",\n            content: \"Welcome to the team. This handbook explains how we work together.\\n\\nRequests are answered within two working days. Urgent issues go to the on-call queue, which answers within two hours.\\n\\nEvery request gets an owner. The owner keeps the requester up to date until it is closed.\"\n        )\n    }"
+    },
+    {
+      "title": "The preview itself, with a quote only",
+      "code": "MonarchAiSourcePreview(\n    MonarchAiSourcePart(id: \"s2\", title: \"Acme Ltd\", kind: .record, product: \"CRM\"),\n    quote: \"Renewal due in March.\"\n)"
+    }
+  ],
+  "webEquivalent": "AiSourcePreview",
+  "dependsOn": [
+    "sheet",
+    "link",
+    "button",
+    "favicon",
+    "ai-source-list",
+    "ai-conversation"
+  ]
+}

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { PasskeyManager, type Passkey } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './passkey-manager.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000);
@@ -16,11 +18,27 @@ const SAMPLE: Passkey[] = [
   { id: 'pk-2', name: 'Security key', createdAt: daysAgo(10) },
 ];
 
+const NOW = new Date(fixture.data.now);
+const PRIMARY: Passkey[] = (
+  fixture.data.passkeys as {
+    id: string;
+    name: string;
+    createdAt: string;
+    lastUsedAt?: string;
+    synced?: boolean;
+  }[]
+).map(({ createdAt, lastUsedAt, ...passkey }) => ({
+  ...passkey,
+  createdAt: new Date(createdAt),
+  ...(lastUsedAt !== undefined && { lastUsedAt: new Date(lastUsedAt) }),
+}));
+
 function Interactive() {
-  const [passkeys, setPasskeys] = useState(SAMPLE);
+  const [passkeys, setPasskeys] = useState(PRIMARY);
   return (
     <PasskeyManager
       passkeys={passkeys}
+      now={NOW}
       supported
       onAdd={async () => {
         // The product calls navigator.credentials.create() and its server here.

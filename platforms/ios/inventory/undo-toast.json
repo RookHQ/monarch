@@ -1,0 +1,67 @@
+{
+  "id": "undo-toast",
+  "name": null,
+  "title": "useUndoToast",
+  "family": "feedback",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchToastCenter.show with actionTitle \"Undo\", and a Task that commits the change when the undo window ends",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: \"Note deleted. Undo\" for a reversible change the app has already applied, with a toast that offers Undo and a commit that runs when the window closes.",
+  "whenToUse": "For low-stakes deletes and moves that are applied at once and can be put back: archive, delete a note, remove from a list.",
+  "whenNotToUse": "For changes that cannot be undone, ask first with a confirmationDialog or MonarchTypeToConfirmInput. For a change that is not destructive, a plain toast or nothing.",
+  "api": [
+    "MonarchToastCenter.show(_ title: String, message: String?, tone: MonarchTone, actionTitle: String?, duration: TimeInterval?, action: (() -> Void)?) -> UUID",
+    "Task { try? await Task.sleep(for:); guard !Task.isCancelled … }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "offered",
+      "description": "A neutral toast with the past-tense title and an Undo button, for 8 seconds (5 to 10 is the range the web uses)."
+    },
+    {
+      "name": "undone",
+      "description": "The action cancels the commit, puts the item back and shows a short success toast, \"Restored\"."
+    },
+    {
+      "name": "committed",
+      "description": "When the window ends without Undo, the deferred work (for example the server delete) runs."
+    }
+  ],
+  "appearance": "The standard MonarchToast in the neutral tone with an action button, then a success toast after undoing.",
+  "platformNotes": "The web useUndoToast is a hook that commits when the toast closes for any reason (timeout, dismiss, swipe, a newer toast pushing it out, the page hiding). MonarchToast has no callback when it closes, so the recipe commits on its own timer of the same length, scaled by the center's durationScale; dismissing the toast early does not commit early. A product that must commit when the app goes to the background should also commit from scenePhase. The plan for Android is a native snackbar; on iOS the recipe composes MonarchToast.",
+  "accessibility": [
+    "The toast is announced when it appears (MonarchToastCenter), with its title and message.",
+    "The Undo button is a standard button in the toast; give the person enough time with durationScale if they need it.",
+    "The success toast after undoing is announced too."
+  ],
+  "edgeCases": [
+    "Each delete gets its own commit task; undoing one does not affect the others.",
+    "Put the item back at its old index, limited to the current count, in case the list changed.",
+    "If the person deletes many items quickly, older toasts close when the center's limit is reached, but their commits still run on their own timers."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Delete with undo",
+      "fixture": "undo-toast",
+      "webExample": "Delete with undo",
+      "template": "VStack(alignment: .leading) {\n    ForEach(notes, id: \\.self) { note in\n        HStack {\n            Text(note)\n            Spacer()\n            MonarchButton(\"Delete \\(note)\", systemImage: \"trash\", variant: .ghost, isIconOnly: true) {\n                delete(note)\n            }\n        }\n    }\n}\n.frame(maxWidth: 360, minHeight: 200, alignment: .topLeading)\n.monarchToastHost(toasts)",
+      "setupTemplate": "@State private var toasts = MonarchToastCenter()\n@State private var notes = [{{notes.0}}, {{notes.1}}, {{notes.2}}]\n\nprivate func delete(_ note: String) {\n    guard let index = notes.firstIndex(of: note) else { return }\n    notes.remove(at: index)\n    let window: TimeInterval = 8\n    let commit = Task {\n        try? await Task.sleep(for: .seconds(window * toasts.durationScale))\n        guard !Task.isCancelled else { return }\n        // Delete on the server here.\n    }\n    toasts.show({{toast.title}}, message: note, actionTitle: {{toast.action}}, duration: window) {\n        commit.cancel()\n        notes.insert(note, at: min(index, notes.count))\n        toasts.show(\"Restored\", tone: .success, duration: 4)\n    }\n}",
+      "previewAction": "delete(notes[0])",
+      "setup": "@State private var toasts = MonarchToastCenter()\n@State private var notes = [\"Agenda for Monday\", \"Questions for the review\", \"Ideas for the next sprint\"]\n\nprivate func delete(_ note: String) {\n    guard let index = notes.firstIndex(of: note) else { return }\n    notes.remove(at: index)\n    let window: TimeInterval = 8\n    let commit = Task {\n        try? await Task.sleep(for: .seconds(window * toasts.durationScale))\n        guard !Task.isCancelled else { return }\n        // Delete on the server here.\n    }\n    toasts.show(\"Note deleted\", message: note, actionTitle: \"Undo\", duration: window) {\n        commit.cancel()\n        notes.insert(note, at: min(index, notes.count))\n        toasts.show(\"Restored\", tone: .success, duration: 4)\n    }\n}",
+      "code": "VStack(alignment: .leading) {\n    ForEach(notes, id: \\.self) { note in\n        HStack {\n            Text(note)\n            Spacer()\n            MonarchButton(\"Delete \\(note)\", systemImage: \"trash\", variant: .ghost, isIconOnly: true) {\n                delete(note)\n            }\n        }\n    }\n}\n.frame(maxWidth: 360, minHeight: 200, alignment: .topLeading)\n.monarchToastHost(toasts)"
+    }
+  ],
+  "webEquivalent": "useUndoToast",
+  "dependsOn": [
+    "toast",
+    "button"
+  ]
+}

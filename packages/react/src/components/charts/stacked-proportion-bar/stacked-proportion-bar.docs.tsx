@@ -1,5 +1,7 @@
 import { StackedProportionBar } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './stacked-proportion-bar.fixture.json';
 
 export default {
   id: 'stacked-proportion-bar',
@@ -125,15 +127,9 @@ export default {
           render: () => (
             <div style={{ width: '100%', maxWidth: '32rem' }}>
               <StackedProportionBar
-                label="Lead pipeline"
-                locale="en-US"
-                segments={[
-                  { key: 'new', label: 'New', value: 1240 },
-                  { key: 'enrolled', label: 'In a campaign', value: 610 },
-                  { key: 'replied', label: 'Replied', value: 182 },
-                  { key: 'converted', label: 'Converted', value: 41 },
-                  { key: 'unsubscribed', label: 'Unsubscribed', value: 6 },
-                ]}
+                label={fixture.data.label}
+                locale={fixture.data.locale}
+                segments={fixture.data.segments}
               />
             </div>
           ),

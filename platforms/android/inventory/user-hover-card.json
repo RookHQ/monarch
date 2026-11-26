@@ -1,0 +1,87 @@
+{
+  "id": "user-hover-card",
+  "name": null,
+  "title": "UserHoverCard",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.layout.Box with MonarchLink as the anchor and MonarchPopover (a Material 3 popup surface) holding MonarchAvatar, MonarchText, MonarchSkeleton while loading, and MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: tapping a person's name opens a small profile preview with their photo, name, handle, role, status and actions.",
+  "whenToUse": "Where people's names appear in content (assignees, comments, mentions) and a quick look at who they are saves opening the profile.",
+  "whenNotToUse": "Not for the full profile (open a profile screen). Not for your own status (use MonarchMyStatus).",
+  "api": [
+    "MonarchLink(text = name, onClick = { open = true }, actionLabel = \"show profile preview\")",
+    "MonarchPopover(expanded = open, onDismissRequest = { open = false }, label = \"Profile of …\") { … }",
+    "MonarchAvatar(image = photo, name = name, size = MonarchAvatarSize.Lg, status = presence, seed = userId)",
+    "MonarchSkeleton(shape = MonarchSkeletonShape.Text) while details load",
+    "MonarchButton(text = \"Message\", onClick = …, size = MonarchButtonSize.Sm)"
+  ],
+  "options": [
+    {
+      "name": "open",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Whether the preview is shown; set by the link and cleared by onDismissRequest or an action."
+    },
+    {
+      "name": "loading",
+      "type": "Boolean",
+      "default": "false",
+      "description": "True while the app fetches details that are not in the list already; those lines show as a skeleton."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "The name in the inline link style."
+    },
+    {
+      "name": "open",
+      "description": "A popover with the avatar and presence, the name, handle and role, the status and local time, and Message and View profile."
+    },
+    {
+      "name": "loading",
+      "description": "The details are a text skeleton read as \"Loading profile\"; the name and avatar, already known, show at once."
+    }
+  ],
+  "appearance": "The popover takes the raised surface with its shadow; the avatar uses its presence dot; the name is in the subheading style and the details in the muted caption style; actions are a small secondary and a small ghost button.",
+  "platformNotes": "The web's UserHoverCard opens when a pointer rests on a name or when it gets keyboard focus. Touch has no hover, so on Android a tap on the name opens the preview, as on iOS. MonarchPopover keeps it anchored to the name on a phone instead of turning it into a sheet. For a whole row, a long press with a menu is the Android pattern instead. The app owns the profile data and its loading; there is no Monarch type.",
+  "accessibility": [
+    "The name is a link whose TalkBack action is read as \"show profile preview\", with a 48dp touch target.",
+    "The popover is named \"Profile of Priya Raman\" and the name inside it has the heading role.",
+    "The presence is part of the avatar's spoken name, so it does not depend on the dot's color.",
+    "While loading, the skeleton is read as \"Loading profile\".",
+    "Message and View profile are buttons with 48dp touch targets; the popover closes on Back or a tap outside."
+  ],
+  "edgeCases": [
+    "A long name or role wraps inside the popover, which keeps its maximum width.",
+    "With no picture, the avatar shows initials on a color picked from the seed."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Name link with actions",
+      "fixture": "user-hover-card",
+      "webExample": "Name link with actions",
+      "template": "Row(\n    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n    verticalAlignment = Alignment.CenterVertically,\n) {\n    MonarchText(text = {{prefix}})\n    Box {\n        MonarchLink(\n            text = {{user.name}},\n            onClick = { open = true },\n            actionLabel = \"show profile preview\",\n        )\n        MonarchPopover(\n            expanded = open,\n            onDismissRequest = { open = false },\n            label = \"Profile of {{user.name|raw}}\",\n        ) {\n            Row(\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n                verticalAlignment = Alignment.CenterVertically,\n            ) {\n                MonarchAvatar(\n                    image = null,\n                    name = {{user.name}},\n                    size = MonarchAvatarSize.Lg,\n                    status = MonarchPresenceStatus.{{user.status|pascal}},\n                    seed = {{user.id}},\n                )\n                Column {\n                    MonarchText(text = {{user.name}}, style = MonarchTextStyle.Subheading, heading = true)\n                    MonarchText(text = \"{{user.handle|raw}} · {{user.title|raw}}\", style = MonarchTextStyle.Caption)\n                    MonarchText(text = {{user.statusText}}, style = MonarchTextStyle.Caption)\n                }\n            }\n            Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                MonarchButton(text = {{message}}, onClick = { open = false }, variant = MonarchButtonVariant.Primary, size = MonarchButtonSize.Sm)\n                MonarchButton(\n                    text = {{profile}},\n                    onClick = { open = false },\n                    variant = MonarchButtonVariant.Ghost,\n                    size = MonarchButtonSize.Sm,\n                )\n            }\n        }\n    }\n}",
+      "setupTemplate": "var open by remember { mutableStateOf(true) }",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "var open by remember { mutableStateOf(true) }",
+      "code": "Row(\n    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n    verticalAlignment = Alignment.CenterVertically,\n) {\n    MonarchText(text = \"Assigned to\")\n    Box {\n        MonarchLink(\n            text = \"Sam Rivera\",\n            onClick = { open = true },\n            actionLabel = \"show profile preview\",\n        )\n        MonarchPopover(\n            expanded = open,\n            onDismissRequest = { open = false },\n            label = \"Profile of Sam Rivera\",\n        ) {\n            Row(\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n                verticalAlignment = Alignment.CenterVertically,\n            ) {\n                MonarchAvatar(\n                    image = null,\n                    name = \"Sam Rivera\",\n                    size = MonarchAvatarSize.Lg,\n                    status = MonarchPresenceStatus.Online,\n                    seed = \"person-1\",\n                )\n                Column {\n                    MonarchText(text = \"Sam Rivera\", style = MonarchTextStyle.Subheading, heading = true)\n                    MonarchText(text = \"@sam · Design lead\", style = MonarchTextStyle.Caption)\n                    MonarchText(text = \"Working from the north office\", style = MonarchTextStyle.Caption)\n                }\n            }\n            Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                MonarchButton(text = \"Message\", onClick = { open = false }, variant = MonarchButtonVariant.Primary, size = MonarchButtonSize.Sm)\n                MonarchButton(\n                    text = \"View profile\",\n                    onClick = { open = false },\n                    variant = MonarchButtonVariant.Ghost,\n                    size = MonarchButtonSize.Sm,\n                )\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "UserHoverCard",
+  "dependsOn": [
+    "avatar",
+    "popover",
+    "button"
+  ]
+}

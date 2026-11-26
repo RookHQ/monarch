@@ -1,0 +1,173 @@
+{
+  "id": "ai-claim-sources",
+  "name": "MonarchAiClaimSources",
+  "title": "AiClaimSources",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of DisclosureGroup(isExpanded:content:label:) with .disclosureGroupStyle(.monarch), Picker with .pickerStyle(.segmented) for the filter, MonarchInlineNotice, MonarchBadge, MonarchButton, MonarchCopyButton and Environment(\\.openURL) for the source",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The claims of an AI answer with the passages that back or contradict them: a summary, a filter for the claims that need checking, and one expandable row per claim with its support level, a note, and each passage with its source, stance and actions.",
+  "whenToUse": "Under or beside an AI answer, so people can check each statement against the passages it rests on before they rely on it.",
+  "whenNotToUse": "For a plain list of the sources an answer used use MonarchAiSourceList; for one inline citation use MonarchAiCitation.",
+  "api": [
+    "init(_ claims: [MonarchAiClaim], sources: [MonarchAiClaimSource], filter: Binding<MonarchAiClaimSourcesFilter>? = nil, expandedIDs: Binding<Set<String>>? = nil, locale: Locale? = nil, calendar: Calendar? = nil, labels: MonarchAiClaimSourcesLabels = MonarchAiClaimSourcesLabels(), onOpenSource: (@MainActor (MonarchAiClaimSource, MonarchAiClaimEvidence) -> Void)? = nil, onFlag: (@MainActor (String) -> Void)? = nil, onVerify: (@MainActor (String) -> Void)? = nil, onCopyQuote: (@MainActor (MonarchAiClaimEvidence) -> Void)? = nil)",
+    "struct MonarchAiClaim { init(id: String, text: String, support: MonarchAiClaimSupport, evidence: [MonarchAiClaimEvidence] = []); var needsChecking: Bool }",
+    "struct MonarchAiClaimEvidence { init(id: String, sourceID: String, quote: String, location: String? = nil, stance: MonarchAiClaimEvidenceStance? = nil) }",
+    "struct MonarchAiClaimSource { init(id: String, title: String, url: String? = nil, kind: MonarchAiSourceKind? = nil, published: Date? = nil); init(_ part: MonarchAiSourcePart, published: Date? = nil) }",
+    "enum MonarchAiClaimSupport { case supported, partial, unsupported, conflicting, unchecked }",
+    "enum MonarchAiClaimEvidenceStance { case supports, contradicts }",
+    "enum MonarchAiClaimSourcesFilter { case all, needsChecking }",
+    "struct MonarchAiClaimCounts { static func of(_ claims: [MonarchAiClaim]) -> MonarchAiClaimCounts; func count(_ support: MonarchAiClaimSupport) -> Int; let total, needsChecking, supported, partial, unsupported, conflicting, unchecked: Int }",
+    "struct MonarchAiClaimSourcesLabels { init(heading:, summary:, filterLabel:, all:, needsChecking:, support:, note:, passages:, evidenceLabel:, stance:, unknownSource:, published:, kind:, openSource:, fromSource:, copyQuote:, copied:, copiedAnnouncement:, flag:, verify:, empty:, noneNeedChecking:, noEvidence:, showing:) }"
+  ],
+  "options": [
+    {
+      "name": "claims",
+      "type": "[MonarchAiClaim]",
+      "default": "required",
+      "description": "The claims of the answer, in the order the answer makes them."
+    },
+    {
+      "name": "sources",
+      "type": "[MonarchAiClaimSource]",
+      "default": "required",
+      "description": "The sources the passages point at. MonarchAiClaimSource(_:) takes an MonarchAiSourcePart as it is."
+    },
+    {
+      "name": "filter",
+      "type": "Binding<MonarchAiClaimSourcesFilter>?",
+      "default": "nil",
+      "description": "Which claims are shown: all, or the ones that need checking. Internal when nil."
+    },
+    {
+      "name": "expandedIDs",
+      "type": "Binding<Set<String>>?",
+      "default": "nil",
+      "description": "The ids of the open claims. Internal when nil, all closed at first."
+    },
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "nil",
+      "description": "The locale of dates and counts. Default: the environment's."
+    },
+    {
+      "name": "calendar",
+      "type": "Calendar?",
+      "default": "nil",
+      "description": "The calendar and time zone of publication dates. Default: the environment's."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiClaimSourcesLabels",
+      "default": "MonarchAiClaimSourcesLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onOpenSource",
+      "type": "(@MainActor (MonarchAiClaimSource, MonarchAiClaimEvidence) -> Void)?",
+      "default": "nil",
+      "description": "Opens a passage's source, for example at the passage. Without it a safe http, https or mailto address opens through openURL."
+    },
+    {
+      "name": "onFlag",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Reports a problem with a claim, given its id. Shows Report a problem in each open claim."
+    },
+    {
+      "name": "onVerify",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Checks an unchecked claim, given its id. Shows Check again in unchecked claims."
+    },
+    {
+      "name": "onCopyQuote",
+      "type": "(@MainActor (MonarchAiClaimEvidence) -> Void)?",
+      "default": "nil",
+      "description": "Runs after a passage is copied to the pasteboard."
+    }
+  ],
+  "states": [
+    {
+      "name": "collapsed",
+      "description": "Each claim shows its support icon, the claim and a caption with the support level and passage count in the level's colour."
+    },
+    {
+      "name": "expanded",
+      "description": "A note for a claim that is not fully supported, then each passage on a subtle surface with a quote bar, the source and its detail, a stance badge, Open source and Copy quote."
+    },
+    {
+      "name": "needs checking",
+      "description": "The filter shows only claims that are not supported; a sentence says when none need checking."
+    },
+    {
+      "name": "unknown source",
+      "description": "A passage whose source is missing reads Unknown source and has no Open source."
+    },
+    {
+      "name": "empty",
+      "description": "\"There are no claims to check.\""
+    }
+  ],
+  "appearance": "A heading in the subheading style with a muted caption summary, a segmented picker, and claims separated by dividers. Support levels use the strong success, warning and danger colours or the muted text colour, each with its own icon. Passages sit on the subtle background with a border-coloured bar before the italic quote. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web lays the claims out as a list of collapsible rows with a filter of two toggle buttons; iOS uses the standard DisclosureGroup in the Monarch style and a segmented Picker. The web's selectedClaimId and onSelectClaim, which highlight the claim in the answer text beside the list, are not offered: on a phone the answer and the claims are not side by side. The web's expandIcon and supportIcon slots are not offered; the icons are Monarch's. Copy uses MonarchCopyButton (the system pasteboard, a success haptic and an announcement), so the web's copyFailed strings have no use. Open source without a handler goes through the system openURL. Android builds the same component, also experimental.",
+  "accessibility": [
+    "The heading has the header trait and the summary follows it.",
+    "Each claim header is the DisclosureGroup's button: label the claim, value the support level and passage count (a tested pure function), plus Expanded or Collapsed from the Monarch style.",
+    "Every support level has its own icon and words, so partial and conflicting differ without colour.",
+    "Each passage is one element read as its stance, quote, source and detail; its buttons are separate and named after the source (\"Open source from Q3 report\").",
+    "Changing the filter posts \"Showing <n> of <total> claims\".",
+    "Buttons are MonarchButtons and MonarchCopyButton with 44-point targets."
+  ],
+  "edgeCases": [
+    "A claim with no passages shows only its note, or \"No passages were provided for this claim.\" when it is supported.",
+    "A source address that is not http, https or mailto (such as javascript:) is never opened.",
+    "Check again appears only on unchecked claims.",
+    "The summary lists only the levels that have claims."
+  ],
+  "tests": [
+    "MonarchAiClaimSourcesTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Claims with supporting and contradicting passages",
+      "fixture": "ai-claim-sources",
+      "webExample": "Claims with supporting and contradicting passages",
+      "template": "MonarchAiClaimSources(\n    [\n        MonarchAiClaim(\n            id: {{claims.0.id}},\n            text: {{claims.0.text}},\n            support: .{{claims.0.support|raw}},\n            evidence: [\n                MonarchAiClaimEvidence(id: {{claims.0.evidence.0.id}}, sourceID: {{claims.0.evidence.0.sourceId}}, quote: {{claims.0.evidence.0.quote}}, location: {{claims.0.evidence.0.location}}, stance: .{{claims.0.evidence.0.stance|raw}}),\n            ]\n        ),\n        MonarchAiClaim(\n            id: {{claims.1.id}},\n            text: {{claims.1.text}},\n            support: .{{claims.1.support|raw}},\n            evidence: [\n                MonarchAiClaimEvidence(id: {{claims.1.evidence.0.id}}, sourceID: {{claims.1.evidence.0.sourceId}}, quote: {{claims.1.evidence.0.quote}}, location: {{claims.1.evidence.0.location}}, stance: .{{claims.1.evidence.0.stance|raw}}),\n                MonarchAiClaimEvidence(id: {{claims.1.evidence.1.id}}, sourceID: {{claims.1.evidence.1.sourceId}}, quote: {{claims.1.evidence.1.quote}}, location: {{claims.1.evidence.1.location}}, stance: .{{claims.1.evidence.1.stance|raw}}),\n            ]\n        ),\n        MonarchAiClaim(\n            id: {{claims.2.id}},\n            text: {{claims.2.text}},\n            support: .{{claims.2.support|raw}},\n            evidence: [\n                MonarchAiClaimEvidence(id: {{claims.2.evidence.0.id}}, sourceID: {{claims.2.evidence.0.sourceId}}, quote: {{claims.2.evidence.0.quote}}, location: {{claims.2.evidence.0.location}}, stance: .{{claims.2.evidence.0.stance|raw}}),\n            ]\n        ),\n        MonarchAiClaim(\n            id: {{claims.3.id}},\n            text: {{claims.3.text}},\n            support: .{{claims.3.support|raw}}\n        ),\n        MonarchAiClaim(\n            id: {{claims.4.id}},\n            text: {{claims.4.text}},\n            support: .{{claims.4.support|raw}}\n        ),\n    ],\n    sources: [\n        MonarchAiClaimSource(id: {{sources.0.id}}, title: {{sources.0.title}}, url: {{sources.0.url}}, kind: .{{sources.0.kind|raw}}, published: {{sources.0.publishedAt|date}}),\n        MonarchAiClaimSource(id: {{sources.1.id}}, title: {{sources.1.title}}, url: {{sources.1.url}}, kind: .{{sources.1.kind|raw}}, published: {{sources.1.publishedAt|date}}),\n        MonarchAiClaimSource(id: {{sources.2.id}}, title: {{sources.2.title}}, kind: .{{sources.2.kind|raw}}),\n    ],\n    expandedIDs: $expanded,\n    locale: Locale(identifier: {{locale}})\n)",
+      "setupTemplate": "@State private var expanded: Set<String> = [{{expanded.0}}, {{expanded.1}}]",
+      "setup": "@State private var expanded: Set<String> = [\"c1\", \"c2\"]",
+      "code": "MonarchAiClaimSources(\n    [\n        MonarchAiClaim(\n            id: \"c1\",\n            text: \"Requests are answered within two working days.\",\n            support: .supported,\n            evidence: [\n                MonarchAiClaimEvidence(id: \"e1\", sourceID: \"s1\", quote: \"We answer every request within two working days.\", location: \"Page 4\", stance: .supports),\n            ]\n        ),\n        MonarchAiClaim(\n            id: \"c2\",\n            text: \"Urgent issues are handled within one hour.\",\n            support: .conflicting,\n            evidence: [\n                MonarchAiClaimEvidence(id: \"e2\", sourceID: \"s2\", quote: \"Urgent issues go to the on-call queue and are picked up within one hour.\", location: \"Section 2.1\", stance: .supports),\n                MonarchAiClaimEvidence(id: \"e3\", sourceID: \"s3\", quote: \"Marked urgent at 09:10. First reply at 15:42.\", location: \"Activity log\", stance: .contradicts),\n            ]\n        ),\n        MonarchAiClaim(\n            id: \"c3\",\n            text: \"Refunds are paid within five days to the original payment method.\",\n            support: .partial,\n            evidence: [\n                MonarchAiClaimEvidence(id: \"e4\", sourceID: \"s2\", quote: \"Refunds go back to the original payment method.\", location: \"Section 5\", stance: .supports),\n            ]\n        ),\n        MonarchAiClaim(\n            id: \"c4\",\n            text: \"Support is open at weekends.\",\n            support: .unsupported\n        ),\n        MonarchAiClaim(\n            id: \"c5\",\n            text: \"The office moved in May.\",\n            support: .unchecked\n        ),\n    ],\n    sources: [\n        MonarchAiClaimSource(id: \"s1\", title: \"Team handbook\", url: \"https://example.com/handbook\", kind: .doc, published: Date(timeIntervalSince1970: 1_772_496_000)),\n        MonarchAiClaimSource(id: \"s2\", title: \"Support policy\", url: \"https://example.com/support-policy\", kind: .web, published: Date(timeIntervalSince1970: 1_763_596_800)),\n        MonarchAiClaimSource(id: \"s3\", title: \"Ticket 1042\", kind: .record),\n    ],\n    expandedIDs: $expanded,\n    locale: Locale(identifier: \"en-GB\")\n)"
+    },
+    {
+      "title": "Only the claims that need checking",
+      "setup": "@State private var filter = MonarchAiClaimSourcesFilter.needsChecking",
+      "code": "MonarchAiClaimSources(\n    [\n        MonarchAiClaim(id: \"c1\", text: \"Revenue grew 12%.\", support: .supported),\n        MonarchAiClaim(id: \"c2\", text: \"The plan launches in March.\", support: .unchecked),\n    ],\n    sources: [],\n    filter: $filter\n)"
+    }
+  ],
+  "webEquivalent": "AiClaimSources",
+  "dependsOn": [
+    "collapsible",
+    "ai-citation",
+    "ai-source-list",
+    "badge",
+    "button",
+    "copy-button",
+    "inline-notice"
+  ],
+  "icons": {
+    "expand": "ChevronDownGlyph",
+    "support.supported": "SuccessGlyph",
+    "support.partial": "PartialGlyph",
+    "support.unsupported": "ErrorGlyph",
+    "support.conflicting": "WarningGlyph",
+    "support.unchecked": "HelpGlyph",
+    "copy": "CopyGlyph"
+  }
+}

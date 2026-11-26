@@ -1,0 +1,134 @@
+{
+  "id": "table-toolbar",
+  "name": "MonarchTableToolbar",
+  "title": "TableToolbar",
+  "family": "data-grid",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "ViewThatFits of an HStack (one line) or a VStack (two lines) holding the app's filter and control views, Text for the result count and MonarchBulkActionBar; search is the app's searchable(text:placement:prompt:)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The bar above a table or list: the filters, the result count and the app's controls (view switcher, column menu, actions); while rows are selected the filters give way to the bulk selection bar.",
+  "whenToUse": "Above a list or table that can be filtered, counted, switched between views or acted on in bulk, placed with safeAreaInset(edge: .top) or as the first view above the rows.",
+  "whenNotToUse": "Not for navigation-bar items alone (use .toolbar) and not for search alone (use searchable). For a selection bar without filters use MonarchBulkActionBar.",
+  "api": [
+    "init(resultCount: Int? = nil, selectedCount: Int = 0, totalCount: Int? = nil, bulkActions: [MonarchBulkAction] = [], labels: MonarchTableToolbarLabels = MonarchTableToolbarLabels(), onClearSelection: (@MainActor () -> Void)? = nil, @ViewBuilder filters: () -> Filters, @ViewBuilder controls: () -> Controls)",
+    "init(resultCount: Int? = nil, selectedCount: Int = 0, totalCount: Int? = nil, bulkActions: [MonarchBulkAction] = [], labels: MonarchTableToolbarLabels = MonarchTableToolbarLabels(), onClearSelection: (@MainActor () -> Void)? = nil, @ViewBuilder controls: () -> Controls) where Filters == EmptyView",
+    "struct MonarchTableToolbarLabels { init(toolbar: String? = nil, results: (@Sendable (Int) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "resultCount",
+      "type": "Int?",
+      "default": "nil",
+      "description": "Rows that match the search and filters, shown as \"N results\" and announced when it changes. nil hides the count."
+    },
+    {
+      "name": "selectedCount",
+      "type": "Int",
+      "default": "0",
+      "description": "Selected rows. While it is above zero (and onClearSelection is set) the bulk selection bar replaces the filters."
+    },
+    {
+      "name": "totalCount",
+      "type": "Int?",
+      "default": "nil",
+      "description": "Rows that could be selected, for \"3 of 120 selected\"."
+    },
+    {
+      "name": "bulkActions",
+      "type": "[MonarchBulkAction]",
+      "default": "[]",
+      "description": "Actions on the selected rows, shown in the bulk selection bar."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchTableToolbarLabels",
+      "default": "MonarchTableToolbarLabels()",
+      "description": "Replacements for the spoken name of the bar and the result count text."
+    },
+    {
+      "name": "onClearSelection",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Clears the selection. Without it there is no bulk selection bar."
+    },
+    {
+      "name": "filters",
+      "type": "@ViewBuilder () -> Filters",
+      "default": "EmptyView",
+      "description": "Filter controls, laid out in a row that scrolls sideways when it does not fit."
+    },
+    {
+      "name": "controls",
+      "type": "@ViewBuilder () -> Controls",
+      "default": "required",
+      "description": "Trailing controls: a segmented Picker as the view switcher, a Menu of Toggle items as the column menu, and actions."
+    }
+  ],
+  "states": [
+    {
+      "name": "wide",
+      "description": "Filters, then the count and the controls at the trailing edge, on one line."
+    },
+    {
+      "name": "narrow",
+      "description": "When one line does not fit, the filters (or the bulk bar) take the first line and the count and controls the second."
+    },
+    {
+      "name": "selecting",
+      "description": "With onClearSelection and a selection, MonarchBulkActionBar with the count, the bulk actions and Clear selection replaces the filters; the count and controls stay."
+    }
+  ],
+  "appearance": "The bar has no fill of its own and sits on the screen's background. The result count uses the muted text colour with tabular digits; the controls and the bulk bar keep their own Monarch styling in every theme.",
+  "platformNotes": "The web toolbar contains its own SearchInput. On iOS search belongs to the navigation bar: the app adds searchable(text:placement:prompt:) to the list, which the plan's \".searchable slot\" refers to, and the toolbar does not draw a field. The web builds the ViewSwitcher and ColumnMenu from props; on iOS both are native controls (a segmented Picker and a Menu of Toggle items, see view-switcher and column-menu) that the app passes in controls. The web has sm and md sizes; on iOS the controls keep their own sizes. The web keeps focus in the bulk area after Clear selection; on iOS focus follows the system. Android uses the same name and options.",
+  "accessibility": [
+    "The bar is a container named \"Table controls\" (labels.toolbar).",
+    "A change of the result count is announced, for example \"12 results\".",
+    "The bulk selection bar is MonarchBulkActionBar, which announces its own count and reads each action as a button.",
+    "The count text scales with Dynamic Type; the layout moves to two lines when one does not fit."
+  ],
+  "edgeCases": [
+    "A selection without onClearSelection keeps the filters, as on the web.",
+    "Filters wider than the screen scroll sideways instead of wrapping.",
+    "A result count of exactly one reads \"1 result\"; other counts are formatted for the locale (\"1,204 results\")."
+  ],
+  "tests": [
+    "MonarchTableToolbarTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "With DataTable and selection",
+      "fixture": "table-toolbar",
+      "webExample": "With DataTable and selection",
+      "template": "let shown = domains.filter { query.isEmpty || $0.name.contains(query.lowercased()) }\nVStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n    VStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n        VStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n            MonarchTableToolbar(resultCount: shown.count) {\n                HStack(spacing: MonarchTokens.Space.space2) {\n                    MonarchTextField(\"Search\", text: $query, prompt: \"Search...\", labelVisibility: .hidden) {\n                        MonarchIcon(systemName: \"magnifyingglass\", size: .sm).accessibilityHidden(true)\n                    } trailing: {\n                        EmptyView()\n                    }\n                    .frame(minWidth: MonarchTokens.Space.space24 * 2)\n                    MonarchButton({{filter}}, variant: .secondary, size: .sm) {}\n                }\n            } controls: {\n                MonarchSegmentedControl(\n                    {{columnsLabel}},\n                    selection: $view,\n                    items: [\n                        MonarchSegmentedItem({{viewLabels.0}}, value: {{views.0}}, systemImage: \"tablecells\"),\n                        MonarchSegmentedItem({{viewLabels.1}}, value: {{views.1}}, systemImage: \"rectangle.3.group\"),\n                    ],\n                    size: .sm,\n                    fillsWidth: false\n                )\n                MonarchButton({{columnsLabel}}, systemImage: \"rectangle.split.3x1\", variant: .secondary, size: .sm) {}\n                MonarchButton({{action}}, variant: .secondary, size: .sm) {}\n            }\n            MonarchDataTable(\n                {{caption}},\n                rows: shown,\n                columns: [\n                    MonarchDataTableColumn({{columns.0}}, isHideable: false) { $0.name },\n                    MonarchDataTableColumn({{columns.1}}) { $0.status },\n                    MonarchDataTableColumn({{columns.2}}) { $0.owner },\n                ],\n                selection: $selected,\n                layout: .list\n            )\n            .frame(height: 380)\n        }\n    }\n}",
+      "setupTemplate": "@State private var query = \"\"\n@State private var view = {{views.0}}\n@State private var selected: Set<String> = []\nprivate struct DomainRow: Identifiable {\n    let id: String\n    let name: String\n    let status: String\n    let owner: String\n}\nprivate let domains = [\n    DomainRow(id: \"1\", name: {{rows.0.name}}, status: {{rows.0.status}}, owner: {{rows.0.owner}}),\n    DomainRow(id: \"2\", name: {{rows.1.name}}, status: {{rows.1.status}}, owner: {{rows.1.owner}}),\n    DomainRow(id: \"3\", name: {{rows.2.name}}, status: {{rows.2.status}}, owner: {{rows.2.owner}}),\n]",
+      "setup": "@State private var query = \"\"\n@State private var view = \"table\"\n@State private var selected: Set<String> = []\nprivate struct DomainRow: Identifiable {\n    let id: String\n    let name: String\n    let status: String\n    let owner: String\n}\nprivate let domains = [\n    DomainRow(id: \"1\", name: \"example.com\", status: \"Active\", owner: \"Sam Lee\"),\n    DomainRow(id: \"2\", name: \"example.org\", status: \"Expiring\", owner: \"Ana Ruiz\"),\n    DomainRow(id: \"3\", name: \"example.net\", status: \"Active\", owner: \"Kai Moreau\"),\n]",
+      "code": "let shown = domains.filter { query.isEmpty || $0.name.contains(query.lowercased()) }\nVStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n    VStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n        VStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n            MonarchTableToolbar(resultCount: shown.count) {\n                HStack(spacing: MonarchTokens.Space.space2) {\n                    MonarchTextField(\"Search\", text: $query, prompt: \"Search...\", labelVisibility: .hidden) {\n                        MonarchIcon(systemName: \"magnifyingglass\", size: .sm).accessibilityHidden(true)\n                    } trailing: {\n                        EmptyView()\n                    }\n                    .frame(minWidth: MonarchTokens.Space.space24 * 2)\n                    MonarchButton(\"Status\", variant: .secondary, size: .sm) {}\n                }\n            } controls: {\n                MonarchSegmentedControl(\n                    \"Columns\",\n                    selection: $view,\n                    items: [\n                        MonarchSegmentedItem(\"Table\", value: \"table\", systemImage: \"tablecells\"),\n                        MonarchSegmentedItem(\"Board\", value: \"board\", systemImage: \"rectangle.3.group\"),\n                    ],\n                    size: .sm,\n                    fillsWidth: false\n                )\n                MonarchButton(\"Columns\", systemImage: \"rectangle.split.3x1\", variant: .secondary, size: .sm) {}\n                MonarchButton(\"New domain\", variant: .secondary, size: .sm) {}\n            }\n            MonarchDataTable(\n                \"Domains\",\n                rows: shown,\n                columns: [\n                    MonarchDataTableColumn(\"Name\", isHideable: false) { $0.name },\n                    MonarchDataTableColumn(\"Status\") { $0.status },\n                    MonarchDataTableColumn(\"Owner\") { $0.owner },\n                ],\n                selection: $selected,\n                layout: .list\n            )\n            .frame(height: 380)\n        }\n    }\n}"
+    },
+    {
+      "title": "Filters, and bulk actions while rows are selected",
+      "setup": "@State private var selection: Set<String> = [\"a\", \"b\"]\n@State private var onlyOpen = true",
+      "code": "MonarchTableToolbar(\n    resultCount: 12,\n    selectedCount: selection.count,\n    totalCount: 12,\n    bulkActions: [MonarchBulkAction(id: \"archive\", title: \"Archive\", systemImage: \"archivebox\") {}],\n    onClearSelection: { selection.removeAll() },\n    filters: { MonarchTag(\"Open only\", isSelected: $onlyOpen) },\n    controls: { MonarchButton(\"New\", systemImage: \"plus\", variant: .primary, size: .sm) {} }\n)"
+    }
+  ],
+  "webEquivalent": "TableToolbar",
+  "dependsOn": [
+    "search-input",
+    "view-switcher",
+    "column-menu",
+    "bulk-action-bar"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "phone-width",
+      "platform": "ios",
+      "reason": "The web preview is 686 px wide, so the results count, view switch and actions share one row and the four columns fit. A phone is 400 pt wide, so the count and the actions wrap and the table scrolls sideways; the data, tones and order are the same.",
+      "convention": "adaptive layout: a phone wraps a toolbar and scrolls a wide table (HIG: Layout)"
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "id": "log-drawer",
+  "name": null,
+  "title": "LogDrawer",
+  "family": "technical",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(item:) or sheet(isPresented:) with presentationDetents([.medium, .large]), a NavigationStack with a navigationTitle and a confirmationAction ToolbarItem, a ScrollView, and LabeledContent with .labeledContentStyle(.monarch)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the full record of one log entry (an API request, a webhook delivery, a job run) in a sheet, with method and path, status, request ID with copy, time, duration and the payload.",
+  "whenToUse": "When a row of a request log, a webhook delivery list or a job history is tapped and the app shows everything recorded about that entry.",
+  "whenNotToUse": "For the list of entries itself use List or MonarchDataTable. For a value that only needs copying use MonarchCopyField. On iPad with room for a detail column, show the same content in a NavigationSplitView detail instead of a sheet.",
+  "api": [
+    "List(entries) { … }.sheet(item: $selected) { entry in NavigationStack { ScrollView { VStack { LabeledContent(\"Operation\") { MonarchMethodBadge(…); Text(path) } LabeledContent(\"Status\") { MonarchStatusBadge(…) } HStack { LabeledContent(\"Request ID\") { Text(id) }; MonarchCopyButton(value: id, target: \"request ID\", isIconOnly: true) } MonarchCodeBlock(body, language: \"json\") }.labeledContentStyle(.monarch) }.navigationTitle(\"Request details\").toolbar { ToolbarItem(placement: .confirmationAction) { Button(\"Close\") { … } } } }.presentationDetents([.medium, .large]) }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "closed",
+      "description": "Only the list or button that opens the sheet."
+    },
+    {
+      "name": "open",
+      "description": "A sheet at medium height that can be pulled to large, titled \"Request details\", with Close in the confirmation slot."
+    },
+    {
+      "name": "loading",
+      "description": "While the entry loads, the sheet shows MonarchLoadingState with the detail variant and the label \"Loading details\"."
+    },
+    {
+      "name": "load error",
+      "description": "MonarchInlineErrorRetry with \"The details did not load.\" and Try again."
+    },
+    {
+      "name": "status tones",
+      "description": "The status badge uses success for 2xx, info for 3xx, warning for 4xx and danger for 5xx, with the code as its text."
+    }
+  ],
+  "appearance": "The system sheet and navigation bar. Terms and values use the Monarch labeled content style (muted term above the value), the method badge and status badge keep their tones, ids and paths use the code type role, and the payload is a MonarchCodeBlock. All adapt to light, dark and both high-contrast themes.",
+  "platformNotes": "The web ships LogDrawer as one component: a side sheet from the right that fills the screen on phones, with request, fields, loading, error, onRetry, locale, now and messages props. On iOS it is a recipe: a sheet with detents is the system's surface for a record's details, Close goes in the navigation bar, and each fact is a LabeledContent the app lists itself. The web's httpStatusTone helper is a small function in the recipe. There is no relative time with a tooltip; show Text(date, style: .relative) or a formatted date.",
+  "accessibility": [
+    "The sheet is modal for VoiceOver and the navigation title is read first.",
+    "Each fact is one element read as the term and the value, through the Monarch labeled content style.",
+    "The request ID copy button is a separate element named \"Copy request ID\" and announces the copy; keep it outside the LabeledContent so it is not merged into the fact.",
+    "The status is a word in a badge, not only a colour.",
+    "Close is in the standard place and is reached with the escape gesture (two-finger scrub)."
+  ],
+  "edgeCases": [
+    "Long paths and ids wrap in the code type role; the payload code block scrolls sideways inside itself or wraps with its toggle.",
+    "Leave out a fact the entry does not have instead of showing an empty value.",
+    "At the largest text sizes the content scrolls inside the sheet; pull the sheet to large."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "API request",
+      "fixture": "log-drawer",
+      "webExample": "API request",
+      "template": "MonarchButton({{trigger}}) { isPresented = true }\n    .sheet(isPresented: $isPresented) {\n        NavigationStack {\n            ScrollView {\n                VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                    Text({{description}})\n                        .monarchTextStyle(.body)\n                        .foregroundStyle(theme.colors.textMuted)\n                    LabeledContent(\"Operation\") {\n                        HStack(spacing: theme.spacing.space2) {\n                            MonarchMethodBadge({{request.method}})\n                            Text({{request.path}}).monarchTextStyle(.code)\n                        }\n                    }\n                    LabeledContent(\"Status\") {\n                        HStack(spacing: theme.spacing.space2) {\n                            MonarchStatusBadge(MonarchStatusDefinition(String({{request.status}}), tone: tone({{request.status}})), size: .sm)\n                            Text({{request.errorCode}}).monarchTextStyle(.code)\n                        }\n                    }\n                    LabeledContent(\"Request ID\") {\n                        HStack(spacing: theme.spacing.space1) {\n                            Text(verbatim: {{request.id}}).monarchTextStyle(.code)\n                            MonarchCopyButton(value: {{request.id}}, target: \"request ID\", variant: .ghost, isIconOnly: true)\n                        }\n                    }\n                    LabeledContent(\"Time\") {\n                        Text(RelativeDateTimeFormatter().localizedString(for: Date().addingTimeInterval(-{{request.minutesAgo|double}} * 60), relativeTo: Date()))\n                            // A dotted underline marks the time that shows the exact moment on the web.\n                            .underline(pattern: .dot)\n                    }\n                    LabeledContent(\"Duration\") {\n                        Text(\"\\({{request.durationMs}}) ms\")\n                    }\n                    LabeledContent({{fields.0.label}}) {\n                        Text({{fields.0.value}})\n                    }\n                    LabeledContent({{fields.1.label}}) {\n                        HStack(spacing: theme.spacing.space1) {\n                            Text(verbatim: {{fields.1.value}}).monarchTextStyle({{fields.1.mono}} ? .code : .body)\n                                .foregroundStyle(theme.colors.textDefault)\n                            MonarchCopyButton(value: {{fields.1.copyValue}}, target: {{fields.1.label}}, variant: .ghost, isIconOnly: true)\n                        }\n                    }\n                    LabeledContent({{fields.2.label}}) {\n                        Text({{fields.2.value}})\n                    }\n                }\n                .labeledContentStyle(.monarch)\n                .padding(theme.spacing.space4)\n            }\n            .navigationTitle({{title}})\n            #if os(iOS)\n            .navigationBarTitleDisplayMode(.inline)\n            #endif\n            .toolbar {\n                ToolbarItem(placement: .confirmationAction) {\n                    Button(\"Close\") { isPresented = false }\n                }\n            }\n        }\n        .presentationDetents([.medium, .large])\n    }",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isPresented = false\n\n/// The tone of an HTTP status: 2xx success, 3xx info, 4xx warning, 5xx danger.\nprivate func tone(_ status: Int) -> MonarchTone {\n    switch status {\n    case 500...: .danger\n    case 400..<500: .warning\n    case 300..<400: .info\n    case 200..<300: .success\n    default: .neutral\n    }\n}",
+      "previewPresented": [
+        "isPresented"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isPresented = false\n\n/// The tone of an HTTP status: 2xx success, 3xx info, 4xx warning, 5xx danger.\nprivate func tone(_ status: Int) -> MonarchTone {\n    switch status {\n    case 500...: .danger\n    case 400..<500: .warning\n    case 300..<400: .info\n    case 200..<300: .success\n    default: .neutral\n    }\n}",
+      "code": "MonarchButton(\"View request\") { isPresented = true }\n    .sheet(isPresented: $isPresented) {\n        NavigationStack {\n            ScrollView {\n                VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                    Text(\"Request and response bodies are not stored.\")\n                        .monarchTextStyle(.body)\n                        .foregroundStyle(theme.colors.textMuted)\n                    LabeledContent(\"Operation\") {\n                        HStack(spacing: theme.spacing.space2) {\n                            MonarchMethodBadge(\"POST\")\n                            Text(\"/v1/orders\").monarchTextStyle(.code)\n                        }\n                    }\n                    LabeledContent(\"Status\") {\n                        HStack(spacing: theme.spacing.space2) {\n                            MonarchStatusBadge(MonarchStatusDefinition(String(429), tone: tone(429)), size: .sm)\n                            Text(\"rate_limited\").monarchTextStyle(.code)\n                        }\n                    }\n                    LabeledContent(\"Request ID\") {\n                        HStack(spacing: theme.spacing.space1) {\n                            Text(verbatim: \"req_7f3a2c90d1\").monarchTextStyle(.code)\n                            MonarchCopyButton(value: \"req_7f3a2c90d1\", target: \"request ID\", variant: .ghost, isIconOnly: true)\n                        }\n                    }\n                    LabeledContent(\"Time\") {\n                        Text(RelativeDateTimeFormatter().localizedString(for: Date().addingTimeInterval(-4.0 * 60), relativeTo: Date()))\n                            // A dotted underline marks the time that shows the exact moment on the web.\n                            .underline(pattern: .dot)\n                    }\n                    LabeledContent(\"Duration\") {\n                        Text(\"\\(84) ms\")\n                    }\n                    LabeledContent(\"Credential\") {\n                        Text(\"Reporting job\")\n                    }\n                    LabeledContent(\"Origin\") {\n                        HStack(spacing: theme.spacing.space1) {\n                            Text(verbatim: \"https://shop.example.com\").monarchTextStyle(true ? .code : .body)\n                                .foregroundStyle(theme.colors.textDefault)\n                            MonarchCopyButton(value: \"https://shop.example.com\", target: \"Origin\", variant: .ghost, isIconOnly: true)\n                        }\n                    }\n                    LabeledContent(\"Units\") {\n                        Text(\"1 request\")\n                    }\n                }\n                .labeledContentStyle(.monarch)\n                .padding(theme.spacing.space4)\n            }\n            .navigationTitle(\"Request details\")\n            #if os(iOS)\n            .navigationBarTitleDisplayMode(.inline)\n            #endif\n            .toolbar {\n                ToolbarItem(placement: .confirmationAction) {\n                    Button(\"Close\") { isPresented = false }\n                }\n            }\n        }\n        .presentationDetents([.medium, .large])\n    }"
+    },
+    {
+      "title": "The sheet content",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isPresented = false\n\n/// The tone of an HTTP status: 2xx success, 3xx info, 4xx warning, 5xx danger.\nprivate func tone(_ status: Int) -> MonarchTone {\n    switch status {\n    case 500...: .danger\n    case 400..<500: .warning\n    case 300..<400: .info\n    case 200..<300: .success\n    default: .neutral\n    }\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    LabeledContent(\"Operation\") {\n        HStack(spacing: theme.spacing.space2) {\n            MonarchMethodBadge(\"POST\")\n            Text(\"/v1/orders\").monarchTextStyle(.code)\n        }\n    }\n    LabeledContent(\"Status\") {\n        HStack(spacing: theme.spacing.space2) {\n            MonarchStatusBadge(MonarchStatusDefinition(\"429\", tone: tone(429)), size: .sm)\n            Text(\"rate_limited\").monarchTextStyle(.code)\n        }\n    }\n    HStack(spacing: theme.spacing.space2) {\n        LabeledContent(\"Request ID\") {\n            Text(\"req_8f2kQ1\").monarchTextStyle(.code)\n        }\n        MonarchCopyButton(value: \"req_8f2kQ1\", target: \"request ID\", variant: .ghost, isIconOnly: true)\n    }\n    LabeledContent(\"Duration\") {\n        Text(\"182 ms\")\n    }\n    MonarchCodeBlock(\"{\\n  \\\"error\\\": \\\"rate_limited\\\"\\n}\", language: \"json\", title: \"Response body\")\n}\n.labeledContentStyle(.monarch)"
+    }
+  ],
+  "webEquivalent": "LogDrawer",
+  "dependsOn": [
+    "sheet",
+    "description-list",
+    "copy-button",
+    "code-block",
+    "method-badge",
+    "status-badge",
+    "loading-state",
+    "inline-error-retry"
+  ]
+}

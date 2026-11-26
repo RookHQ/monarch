@@ -1,0 +1,93 @@
+{
+  "id": "tabular-number",
+  "name": "MonarchTabularNumberStyle",
+  "title": "TabularNumber",
+  "family": "typography",
+  "category": "B",
+  "coverage": "style",
+  "kind": "modifier",
+  "wrapsNative": "Text with .monospacedDigit(), numbers formatted by a FormatStyle (.number, .percent, .currency(code:))",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Fixed-width digits for text, so that columns of figures line up and changing values do not jitter: a modifier for text that is already formatted, and a Text initialiser that formats a number or shows a dash when there is none.",
+  "whenToUse": "For figures in tables and lists, totals, counters and timers. Use Text(monarchTabular:format:) for a number that may be missing and monarchTabularNumber() for text that is already formatted or that counts by itself.",
+  "whenNotToUse": "Not for numbers inside a sentence, where proportional digits read better. For a number that is never missing, Text(value, format:) with monospacedDigit() is the same thing.",
+  "api": [
+    "struct MonarchTabularNumberStyle: ViewModifier { init() }",
+    "func monarchTabularNumber() -> some View",
+    "Text.init<F: FormatStyle>(monarchTabular value: F.FormatInput?, format: F, emptyText: String? = nil, emptyLabel: String? = nil) where F.FormatOutput == String"
+  ],
+  "options": [
+    {
+      "name": "value",
+      "type": "F.FormatInput?",
+      "default": "required",
+      "description": "The number, or nil when there is none. A floating-point number that is not finite counts as missing."
+    },
+    {
+      "name": "format",
+      "type": "F: FormatStyle",
+      "default": "required",
+      "description": "How the number is written: .number, .percent, .currency(code:) and their options. It uses the user's locale unless it names one."
+    },
+    {
+      "name": "emptyText",
+      "type": "String?",
+      "default": "nil",
+      "description": "Shown in place of a missing number. Built in: an em dash."
+    },
+    {
+      "name": "emptyLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Read by VoiceOver in place of a missing number. Built in: \"No value\"."
+    }
+  ],
+  "states": [
+    {
+      "name": "value",
+      "description": "The formatted number in fixed-width digits."
+    },
+    {
+      "name": "missing",
+      "description": "The value is nil or not finite: an em dash is shown and VoiceOver reads \"No value\"."
+    }
+  ],
+  "appearance": "Only the digit widths change. Size, weight and colour come from the type role and the foreground style applied to the text, in every theme. The dash for a missing value takes the colour of the text around it; the web draws it in the subtle text colour, which is foregroundStyle(theme.colors.textSubtle).",
+  "platformNotes": "The web TabularNumber formats with Intl.NumberFormat; iOS uses the FormatStyle passed in, so every option of the platform is available and nothing is re-implemented. The modifier is the system monospacedDigit() under a Monarch name. The web never breaks a line inside a number; on iOS a number that does not fit wraps, and lineLimit(1) or fixedSize() is the app's choice. Android covers this with a text style in MonarchTypography.",
+  "accessibility": [
+    "A formatted number is read by VoiceOver as its text.",
+    "A missing value is read as \"No value\" (or emptyLabel), not as a dash.",
+    "The text scales with Dynamic Type through the type role applied to it.",
+    "Number formatting follows the user's locale, including digits, grouping and decimal separators."
+  ],
+  "edgeCases": [
+    "NaN and infinity are shown as missing, like nil.",
+    "Only digits get one width. Separators, signs and currency symbols keep their own widths, so align columns to the trailing edge.",
+    "A custom font family without fixed-width digits is not changed by the style.",
+    "The Text initialiser returns a Text, so it can be placed inside other text by interpolation; the VoiceOver label of the dash then applies to that fragment."
+  ],
+  "tests": [
+    "MonarchTabularNumberStyleTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Aligned column",
+      "fixture": "tabular-number",
+      "webExample": "Aligned column",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n    HStack(spacing: MonarchTokens.Space.space6) {\n        Text({{rows.0.label}}).monarchTextStyle(.label)\n        Spacer(minLength: 0)\n        Text(monarchTabular: {{rows.0.value|double}}, format: .number.locale(Locale(identifier: {{locale}})))\n            .monarchTextStyle(.body)\n    }\n    HStack(spacing: MonarchTokens.Space.space6) {\n        Text({{rows.1.label}}).monarchTextStyle(.label)\n        Spacer(minLength: 0)\n        Text(monarchTabular: {{rows.1.value|double}}, format: .number.locale(Locale(identifier: {{locale}})))\n            .monarchTextStyle(.body)\n    }\n    HStack(spacing: MonarchTokens.Space.space6) {\n        Text({{rows.2.label}}).monarchTextStyle(.label)\n        Spacer(minLength: 0)\n        Text(monarchTabular: {{rows.2.value|double}}, format: .number.locale(Locale(identifier: {{locale}})))\n            .monarchTextStyle(.body)\n    }\n}",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n    HStack(spacing: MonarchTokens.Space.space6) {\n        Text(\"Requests\").monarchTextStyle(.label)\n        Spacer(minLength: 0)\n        Text(monarchTabular: 18_420.0, format: .number.locale(Locale(identifier: \"en-US\")))\n            .monarchTextStyle(.body)\n    }\n    HStack(spacing: MonarchTokens.Space.space6) {\n        Text(\"Errors\").monarchTextStyle(.label)\n        Spacer(minLength: 0)\n        Text(monarchTabular: 37.0, format: .number.locale(Locale(identifier: \"en-US\")))\n            .monarchTextStyle(.body)\n    }\n    HStack(spacing: MonarchTokens.Space.space6) {\n        Text(\"Median time (ms)\").monarchTextStyle(.label)\n        Spacer(minLength: 0)\n        Text(monarchTabular: 112.4, format: .number.locale(Locale(identifier: \"en-US\")))\n            .monarchTextStyle(.body)\n    }\n}"
+    },
+    {
+      "title": "Text that is already formatted",
+      "code": "Text(\"12:04\")\n    .monarchTextStyle(.title)\n    .monarchTabularNumber()"
+    }
+  ],
+  "webEquivalent": "TabularNumber",
+  "dependsOn": [
+    "text"
+  ]
+}

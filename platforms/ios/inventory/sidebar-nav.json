@@ -1,0 +1,74 @@
+{
+  "id": "sidebar-nav",
+  "name": null,
+  "title": "SidebarNav",
+  "family": "navigation",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "Buttons with Label-style rows on the canvas, a DisclosureGroup-style row with a chevron, MonarchBadge counts and MonarchDivider; NavigationSplitView with List(selection:) and listStyle(.sidebar) remains the choice when the app wants system sidebar behaviour",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The standard sidebar: a List with the sidebar style in the first column of a NavigationSplitView, with sections, nested groups, counts and the current page. Monarch ships nothing.",
+  "whenToUse": "For the navigation of an app with many destinations, or sections that group them, on an iPad. On a phone the same code becomes a list that pushes the selected screen.",
+  "whenNotToUse": "For three to five destinations on a phone use TabView (see bottom-tab-bar). For choosing among views of one screen use MonarchTabs.",
+  "api": [
+    "NavigationSplitView(sidebar: () -> Sidebar, detail: () -> Detail)",
+    "List(selection: Binding<SelectionValue?>, content: () -> Content)",
+    "Section(_ title: String, content: () -> Content)",
+    "DisclosureGroup(isExpanded: Binding<Bool>, content: () -> Content, label: () -> Label)",
+    "func listStyle(_ style: some ListStyle) -> some View",
+    "func badge(_ count: Int) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "current page",
+      "description": "The selected row has the system's selection background."
+    },
+    {
+      "name": "group open or closed",
+      "description": "A DisclosureGroup shows or hides its rows, with a chevron that turns."
+    },
+    {
+      "name": "sidebar hidden",
+      "description": "On an iPad the person can hide the sidebar with the system's toolbar button or a swipe; columnVisibility reads and sets it."
+    },
+    {
+      "name": "compact width",
+      "description": "The sidebar is the first screen of a stack and a row pushes its destination."
+    }
+  ],
+  "appearance": "The system draws the sidebar, its material, the section headers, the selection and the counts set with badge. Row icons take the tint, which monarchTheme sets to the theme's accent.",
+  "platformNotes": "The web SidebarNav renders sections of links with nested groups, count badges with a tone, a current page from the path, an icon-only collapsed mode with tooltips, and a header and footer. On iOS rows are selections, not links, and the current page is the List's selection. The collapsed icon-only rail does not exist on iOS; the sidebar is shown or hidden as a whole. badgeTone has no equivalent: the system badge is one colour. The header and footer are safeAreaInset on the List or toolbar items. Android uses a navigation drawer or rail.",
+  "accessibility": [
+    "System behaviour: section titles are headings, and the selected row is read as selected.",
+    "System behaviour: a DisclosureGroup is read as collapsed or expanded and toggles with a double tap.",
+    "System behaviour: a badge is read after the row's title.",
+    "System behaviour: with a hardware keyboard the arrow keys move the selection and open and close groups.",
+    "Use Label so each row has a title; the icon is decorative."
+  ],
+  "edgeCases": [
+    "The selection must be optional: at a compact width nothing is selected until a row is tapped.",
+    "A DisclosureGroup's own label is not selectable unless it has a tag.",
+    "Section headers in a sidebar are styled by the system; do not restyle them per app."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Sections, nested groups and badges",
+      "fixture": "sidebar-nav",
+      "webExample": "Sections, nested groups and badges",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space1) {\n    row({{main.0.label}}, systemImage: \"house\", tag: \"home\")\n    row({{main.1.label}}, systemImage: \"tray\", tag: \"inbox\", badge: {{main.1.badge}})\n    row({{main.2.label}}, systemImage: \"calendar\", tag: \"calendar\")\n    sectionLabel({{teamsLabel}})\n    group({{teams.0.label}}, isOpen: $isDesignOpen, items: [({{teams.0.items.0.label}}, {{teams.0.items.0.badge}}, {{teams.0.items.0.badgeTone|tone}}), ({{teams.0.items.1.label}}, {{teams.0.items.1.badge}}, {{teams.0.items.1.badgeTone|tone}})], tag: \"design\")\n    group({{teams.1.label}}, isOpen: $isResearchOpen, items: [({{teams.1.items.0.label}}, nil, .neutral), ({{teams.1.items.1.label}}, nil, .neutral)], tag: \"research\")\n    sectionLabel({{workspaceLabel}})\n    row({{settings.label}}, systemImage: \"gearshape\", tag: \"settings\")\n    MonarchDivider().padding(.top, theme.spacing.space8)\n    Button {} label: {\n        HStack(spacing: theme.spacing.space2) {\n            Image(systemName: \"sidebar.left\").frame(width: 20)\n            Text(\"Collapse sidebar\")\n        }\n        .monarchTextStyle(.label)\n        .foregroundStyle(theme.colors.textMuted)\n        .padding(.horizontal, theme.spacing.space2)\n        .frame(minHeight: 44)\n    }\n    .buttonStyle(.plain)\n}\n.padding(.horizontal)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var selection: String?\n@State private var isDesignOpen = false\n@State private var isResearchOpen = false\n\nprivate func row(_ title: String, systemImage: String, tag: String, badge: Int? = nil) -> some View {\n    Button {\n        selection = tag\n    } label: {\n        HStack(spacing: theme.spacing.space2) {\n            Image(systemName: systemImage).frame(width: 20)\n            Text(title)\n            Spacer(minLength: 0)\n            if let badge {\n                MonarchBadge(String(badge), tone: .accent, variant: .solid, size: .sm)\n            }\n        }\n        .monarchTextStyle(.label)\n        .foregroundStyle(selection == tag ? theme.colors.textDefault : theme.colors.textMuted)\n        .padding(.horizontal, theme.spacing.space2)\n        .frame(minHeight: 44)\n        .background(selection == tag ? theme.colors.accentSubtle : Color.clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))\n    }\n    .buttonStyle(.plain)\n    .accessibilityAddTraits(selection == tag ? .isSelected : [])\n}\n\nprivate func group(_ title: String, isOpen: Binding<Bool>, items: [(String, Int?, MonarchTone)], tag: String) -> some View {\n    VStack(spacing: 0) {\n        Button {\n            isOpen.wrappedValue.toggle()\n        } label: {\n            HStack(spacing: theme.spacing.space2) {\n                Image(systemName: \"person.2\").frame(width: 20)\n                Text(title)\n                Spacer(minLength: 0)\n                Image(systemName: isOpen.wrappedValue ? \"chevron.down\" : \"chevron.right\")\n                    .foregroundStyle(theme.colors.textMuted)\n            }\n            .monarchTextStyle(.label)\n            .foregroundStyle(theme.colors.textMuted)\n            .padding(.horizontal, theme.spacing.space2)\n            .frame(minHeight: 44)\n        }\n        .buttonStyle(.plain)\n        .accessibilityValue(isOpen.wrappedValue ? \"Expanded\" : \"Collapsed\")\n        if isOpen.wrappedValue {\n            ForEach(items, id: \\.0) { item in\n                HStack {\n                    Text(item.0)\n                    Spacer(minLength: 0)\n                    if let count = item.1 {\n                        MonarchBadge(String(count), tone: item.2, size: .sm)\n                    }\n                }\n                .monarchTextStyle(.label)\n                .foregroundStyle(theme.colors.textMuted)\n                .padding(.leading, theme.spacing.space8)\n                .padding(.trailing, theme.spacing.space2)\n                .frame(minHeight: 44)\n            }\n        }\n    }\n}\n\nprivate func sectionLabel(_ title: String) -> some View {\n    Text(title.uppercased())\n        .monarchTextStyle(.caption)\n        .foregroundStyle(theme.colors.textMuted)\n        .padding(.horizontal, theme.spacing.space2)\n        .padding(.top, theme.spacing.space3)\n        .accessibilityAddTraits(.isHeader)\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var selection: String?\n@State private var isDesignOpen = false\n@State private var isResearchOpen = false\n\nprivate func row(_ title: String, systemImage: String, tag: String, badge: Int? = nil) -> some View {\n    Button {\n        selection = tag\n    } label: {\n        HStack(spacing: theme.spacing.space2) {\n            Image(systemName: systemImage).frame(width: 20)\n            Text(title)\n            Spacer(minLength: 0)\n            if let badge {\n                MonarchBadge(String(badge), tone: .accent, variant: .solid, size: .sm)\n            }\n        }\n        .monarchTextStyle(.label)\n        .foregroundStyle(selection == tag ? theme.colors.textDefault : theme.colors.textMuted)\n        .padding(.horizontal, theme.spacing.space2)\n        .frame(minHeight: 44)\n        .background(selection == tag ? theme.colors.accentSubtle : Color.clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))\n    }\n    .buttonStyle(.plain)\n    .accessibilityAddTraits(selection == tag ? .isSelected : [])\n}\n\nprivate func group(_ title: String, isOpen: Binding<Bool>, items: [(String, Int?, MonarchTone)], tag: String) -> some View {\n    VStack(spacing: 0) {\n        Button {\n            isOpen.wrappedValue.toggle()\n        } label: {\n            HStack(spacing: theme.spacing.space2) {\n                Image(systemName: \"person.2\").frame(width: 20)\n                Text(title)\n                Spacer(minLength: 0)\n                Image(systemName: isOpen.wrappedValue ? \"chevron.down\" : \"chevron.right\")\n                    .foregroundStyle(theme.colors.textMuted)\n            }\n            .monarchTextStyle(.label)\n            .foregroundStyle(theme.colors.textMuted)\n            .padding(.horizontal, theme.spacing.space2)\n            .frame(minHeight: 44)\n        }\n        .buttonStyle(.plain)\n        .accessibilityValue(isOpen.wrappedValue ? \"Expanded\" : \"Collapsed\")\n        if isOpen.wrappedValue {\n            ForEach(items, id: \\.0) { item in\n                HStack {\n                    Text(item.0)\n                    Spacer(minLength: 0)\n                    if let count = item.1 {\n                        MonarchBadge(String(count), tone: item.2, size: .sm)\n                    }\n                }\n                .monarchTextStyle(.label)\n                .foregroundStyle(theme.colors.textMuted)\n                .padding(.leading, theme.spacing.space8)\n                .padding(.trailing, theme.spacing.space2)\n                .frame(minHeight: 44)\n            }\n        }\n    }\n}\n\nprivate func sectionLabel(_ title: String) -> some View {\n    Text(title.uppercased())\n        .monarchTextStyle(.caption)\n        .foregroundStyle(theme.colors.textMuted)\n        .padding(.horizontal, theme.spacing.space2)\n        .padding(.top, theme.spacing.space3)\n        .accessibilityAddTraits(.isHeader)\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space1) {\n    row(\"Home\", systemImage: \"house\", tag: \"home\")\n    row(\"Inbox\", systemImage: \"tray\", tag: \"inbox\", badge: 4)\n    row(\"Calendar\", systemImage: \"calendar\", tag: \"calendar\")\n    sectionLabel(\"Teams\")\n    group(\"Design\", isOpen: $isDesignOpen, items: [(\"Issues\", 12, .neutral), (\"Backlog\", 48, .neutral)], tag: \"design\")\n    group(\"Research\", isOpen: $isResearchOpen, items: [(\"Issues\", nil, .neutral), (\"Notes\", nil, .neutral)], tag: \"research\")\n    sectionLabel(\"Workspace\")\n    row(\"Settings\", systemImage: \"gearshape\", tag: \"settings\")\n    MonarchDivider().padding(.top, theme.spacing.space8)\n    Button {} label: {\n        HStack(spacing: theme.spacing.space2) {\n            Image(systemName: \"sidebar.left\").frame(width: 20)\n            Text(\"Collapse sidebar\")\n        }\n        .monarchTextStyle(.label)\n        .foregroundStyle(theme.colors.textMuted)\n        .padding(.horizontal, theme.spacing.space2)\n        .frame(minHeight: 44)\n    }\n    .buttonStyle(.plain)\n}\n.padding(.horizontal)"
+    }
+  ],
+  "webEquivalent": "SidebarNav",
+  "dependsOn": [],
+  "parityExceptions": []
+}

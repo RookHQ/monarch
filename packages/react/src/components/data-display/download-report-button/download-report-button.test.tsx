@@ -17,6 +17,24 @@ function deferred() {
 }
 
 describe('DownloadReportButton', () => {
+  it('opens its format menu from the controlled open prop', async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <DownloadReportButton
+        formats={[
+          { id: 'csv', label: 'CSV' },
+          { id: 'pdf', label: 'PDF' },
+        ]}
+        onDownload={() => undefined}
+        open
+        onOpenChange={onOpenChange}
+      />,
+    );
+    expect(await screen.findByRole('menuitem', { name: /PDF/ })).toBeTruthy();
+    await userEvent.keyboard('{Escape}');
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
   it('downloads the single format, stays busy until done and announces it; forwards props and ref', async () => {
     const ref = createRef<HTMLDivElement>();
     const d = deferred();

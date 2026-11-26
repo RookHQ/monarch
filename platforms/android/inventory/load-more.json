@@ -1,0 +1,153 @@
+{
+  "id": "load-more",
+  "name": "MonarchLoadMore",
+  "title": "LoadMore",
+  "family": "data-grid",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column, androidx.compose.material3.Text, MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The footer of a paginated list: a Load more button with loading, failure and retry, the end of the list, a count and polite announcements.",
+  "whenToUse": "As the last item of a LazyColumn whose data comes in pages from a cursor or an offset: tickets, activity, search results.",
+  "whenNotToUse": "For a list that fits in one response, show it whole. For numbered pages people jump between, use a pager with page numbers.",
+  "api": [
+    "@Composable fun MonarchLoadMore(hasMore: Boolean, onLoadMore: () -> Unit, modifier: Modifier = Modifier, loading: Boolean = false, failed: Boolean = false, autoLoad: Boolean = false, showEnd: Boolean = true, loadedCount: Int? = null, totalCount: Int? = null, showCount: Boolean? = null, onRetry: (() -> Unit)? = null, labels: MonarchLoadMoreLabels = MonarchLoadMoreLabels())",
+    "class MonarchLoadMoreLabels(loadMore: String? = null, loading: String? = null, failed: String? = null, retry: String? = null, end: String? = null, count: ((loaded: Int, total: Int?) -> String)? = null, loaded: ((added: Int) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "hasMore",
+      "type": "Boolean",
+      "default": "required",
+      "description": "Whether there is another page. false shows the end line."
+    },
+    {
+      "name": "onLoadMore",
+      "type": "() -> Unit",
+      "default": "required",
+      "description": "Loads the next page. Not called while loading."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the footer."
+    },
+    {
+      "name": "loading",
+      "type": "Boolean",
+      "default": "false",
+      "description": "A page is being fetched; the button shows progress and ignores taps."
+    },
+    {
+      "name": "failed",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The last fetch failed; the failure is shown, the button becomes Retry and auto-loading pauses."
+    },
+    {
+      "name": "autoLoad",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Loads the next page when the footer is composed, which in a lazy list means when it scrolls into view. The button stays."
+    },
+    {
+      "name": "showEnd",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows and announces \"That's everything\" at the end."
+    },
+    {
+      "name": "loadedCount",
+      "type": "Int?",
+      "default": "null",
+      "description": "The items on screen. Shown in the count; an increase is announced."
+    },
+    {
+      "name": "totalCount",
+      "type": "Int?",
+      "default": "null",
+      "description": "The total, when the server knows it."
+    },
+    {
+      "name": "showCount",
+      "type": "Boolean?",
+      "default": "null",
+      "description": "Shows the count. null shows it when loadedCount is given."
+    },
+    {
+      "name": "onRetry",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Called by Retry. null calls onLoadMore."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchLoadMoreLabels",
+      "default": "MonarchLoadMoreLabels()",
+      "description": "Replacements for the strings and plurals monarch_loadmore_*, including the count and the announcement."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "The count and a small Load more button."
+    },
+    {
+      "name": "loading",
+      "description": "The button shows progress, ignores taps and has the state \"Loading\"."
+    },
+    {
+      "name": "failed",
+      "description": "\"Couldn't load more.\" in danger text and a Retry button."
+    },
+    {
+      "name": "end",
+      "description": "\"That's everything\" in muted text, or nothing with showEnd = false."
+    }
+  ],
+  "appearance": "A centered column with vertical padding: the count and the end line in muted caption text, the failure in the strong danger color, and a small secondary MonarchButton. The same roles in every theme, including both high-contrast themes.",
+  "platformNotes": "The web also ships a useLoadMore hook that keeps the cursor and the pages; on Android the app's view model keeps them (or Paging's LazyPagingItems) and the footer only shows where loading stands. Auto-loading starts when the footer is composed instead of an IntersectionObserver, so there is no root margin: put the footer in the lazy list, where it is composed when it nears the screen. The web noun option is replaced by plurals in strings_loadmore.xml and the count and loaded labels. The web moves focus to the end line when the button disappears; Android leaves TalkBack focus to the system, and the end is announced. The failure is a line of text above the button instead of a MonarchInlineErrorRetry, so the one button keeps its place for Load more and Retry. iOS shares the name and the options.",
+  "accessibility": [
+    "The button is a MonarchButton with a 48dp touch target; while loading it ignores taps and has the state \"Loading\".",
+    "A growing loadedCount is announced through a polite live region: \"20 more items loaded.\"",
+    "A new failure and the end of the list are announced through the same live region; nothing is announced on the first composition.",
+    "The failure and the end are written as text, not only coloured.",
+    "Long messages wrap at the largest font size."
+  ],
+  "edgeCases": [
+    "With autoLoad outside a lazy list every page loads at once, because the footer is always composed.",
+    "Auto-loading stays paused while failed is true; Retry or clearing failed resumes it.",
+    "A count that goes down, for example after a reset, is not announced."
+  ],
+  "tests": [
+    "MonarchLoadMoreTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "With useLoadMore",
+      "fixture": "load-more",
+      "webExample": "With useLoadMore",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {\n    Column(modifier = Modifier.semantics { contentDescription = {{label}} }) {\n        entries.forEach { MonarchText(text = it) }\n    }\n    MonarchLoadMore(\n        hasMore = true,\n        onLoadMore = {},\n        loadedCount = entries.size,\n        totalCount = {{total}},\n        labels = MonarchLoadMoreLabels(\n            count = { loaded, total -> \"Showing $loaded of ${total ?: loaded} \" + if (total == 1) {{noun.one}} else {{noun.other}} },\n        ),\n    )\n}",
+      "setupTemplate": "val entries = listOf({{entries.0}}, {{entries.1}}, {{entries.2}})",
+      "setup": "val entries = listOf(\"Audit entry 1\", \"Audit entry 2\", \"Audit entry 3\")",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {\n    Column(modifier = Modifier.semantics { contentDescription = \"Audit log\" }) {\n        entries.forEach { MonarchText(text = it) }\n    }\n    MonarchLoadMore(\n        hasMore = true,\n        onLoadMore = {},\n        loadedCount = entries.size,\n        totalCount = 9,\n        labels = MonarchLoadMoreLabels(\n            count = { loaded, total -> \"Showing $loaded of ${total ?: loaded} \" + if (total == 1) \"entry\" else \"entries\" },\n        ),\n    )\n}"
+    },
+    {
+      "title": "After a failure",
+      "code": "MonarchLoadMore(hasMore = true, onLoadMore = {}, failed = true)"
+    }
+  ],
+  "webEquivalent": "LoadMore",
+  "dependsOn": [
+    "button",
+    "spinner",
+    "inline-error-retry"
+  ]
+}

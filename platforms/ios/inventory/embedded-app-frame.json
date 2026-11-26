@@ -1,0 +1,120 @@
+{
+  "id": "embedded-app-frame",
+  "name": "MonarchEmbeddedAppFrame",
+  "title": "EmbeddedAppFrame",
+  "family": "technical",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "A bordered container with a content closure; ProgressView while loading; Link and MonarchButton for the failure actions",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A screen of another app shown inside this one, in a bordered frame that says when it is loading and when it did not open, with Try again and a link to open the page directly.",
+  "whenToUse": "When one app shows a settings or detail screen that belongs to another app (App Settings), built natively with the other app's data or in a web view the app manages.",
+  "whenNotToUse": "To open another app, use a Link or openURL. For web content from a third party, use MonarchEmbedBlock. For a card of your own content, use MonarchCard.",
+  "api": [
+    "init(_ title: String, state: MonarchEmbeddedAppFrameState = .ready, openURL: URL? = nil, height: CGFloat? = nil, labels: MonarchEmbeddedAppFrameLabels = MonarchEmbeddedAppFrameLabels(), onRetry: (@MainActor () -> Void)? = nil, @ViewBuilder content: () -> Content)",
+    "enum MonarchEmbeddedAppFrameState { case loading, ready, failed }",
+    "MonarchEmbeddedAppFrameLabels.init(loading: String? = nil, errorTitle: String? = nil, errorDescription: String? = nil, retry: String? = nil, open: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The name of the embedded screen, such as \"Example Desk: Email notifications\"; the frame's spoken name."
+    },
+    {
+      "name": "state",
+      "type": "MonarchEmbeddedAppFrameState",
+      "default": ".ready",
+      "description": "Loading, ready or failed; the app sets it."
+    },
+    {
+      "name": "openURL",
+      "type": "URL?",
+      "default": "nil",
+      "description": "The page, opened by \"Open page\" in the failure message."
+    },
+    {
+      "name": "height",
+      "type": "CGFloat?",
+      "default": "nil",
+      "description": "A fixed height; without it the frame is as tall as its content."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchEmbeddedAppFrameLabels",
+      "default": "MonarchEmbeddedAppFrameLabels()",
+      "description": "Replacements for the built-in strings, such as open: \"Open in Example Desk\"."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Loads the screen again; without it Try again is not shown."
+    },
+    {
+      "name": "content",
+      "type": "@ViewBuilder () -> Content",
+      "default": "required",
+      "description": "The embedded screen, padded inside the frame."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The content, padded, on the surface colour."
+    },
+    {
+      "name": "loading",
+      "description": "A spinner and \"Loading…\" centred in the frame."
+    },
+    {
+      "name": "failed",
+      "description": "A warning symbol, \"This page didn’t open\", the explanation, Try again and Open page."
+    }
+  ],
+  "appearance": "The frame uses the surface colour with the subtle border and the container corner. The failure symbol uses the warning's strong colour; the explanation and the loading text the muted text colour. Colours come from theme roles in every theme.",
+  "platformNotes": "The web EmbeddedAppFrame loads another Rook app's page in a sandboxed iframe, checks its origin, waits for a ready message, sizes itself from resize messages and times out into the failure message. The contract is a browser one, so on iOS the frame draws no web content itself: the app shows the screen natively or in its own web view and sets the state. \"Open in a new tab\" becomes \"Open page\", which opens the page with the system. Android does not ship this component.",
+  "accessibility": [
+    "The frame is a container named by title; its value is \"Loading…\" or \"This page didn’t open\" in those states.",
+    "The spinner is hidden from VoiceOver; the text says what is happening.",
+    "The failure title has the header trait; Try again is a button and Open page a link."
+  ],
+  "edgeCases": [
+    "With a fixed height, content taller than the frame is clipped; let the frame size itself for settings forms.",
+    "Without onRetry and openURL the failure message has no actions."
+  ],
+  "tests": [
+    "MonarchEmbeddedAppFrameTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "An embedded settings page (ready, auto-height)",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var assigned = true\n@State private var summary = false\n@State private var mentions = true",
+      "code": "MonarchEmbeddedAppFrame(\n    \"Example Desk: Email notifications\",\n    openURL: URL(string: \"https://desk.example.com/settings/email\")\n) {\n    VStack(alignment: .leading, spacing: 8) {\n        Text(\"Email notifications\").monarchTextStyle(.bodyStrong)\n        Text(\"Choose which updates reach your inbox.\")\n            .monarchTextStyle(.bodySmall)\n            .foregroundStyle(theme.colors.textMuted)\n        Toggle(\"New tickets assigned to me\", isOn: $assigned).toggleStyle(.monarchCheckbox)\n        Toggle(\"Daily summary\", isOn: $summary).toggleStyle(.monarchCheckbox)\n        Toggle(\"Mentions\", isOn: $mentions).toggleStyle(.monarchCheckbox)\n    }\n}"
+    },
+    {
+      "title": "A page that never answers",
+      "setup": "@State private var state = MonarchEmbeddedAppFrameState.failed",
+      "code": "MonarchEmbeddedAppFrame(\n    \"Example Desk: Billing\",\n    state: state,\n    openURL: URL(string: \"https://desk.example.com/billing\"),\n    labels: MonarchEmbeddedAppFrameLabels(open: \"Open in Example Desk\"),\n    onRetry: { state = .loading }\n) {\n    Text(\"Billing\")\n}"
+    }
+  ],
+  "webEquivalent": "EmbeddedAppFrame",
+  "dependsOn": [
+    "button",
+    "checkbox"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "no-fixture",
+      "platform": "ios",
+      "reason": "No shared scenario fixture exists for this component yet.",
+      "convention": "The iOS example uses the data and copy of the web primary example."
+    }
+  ]
+}

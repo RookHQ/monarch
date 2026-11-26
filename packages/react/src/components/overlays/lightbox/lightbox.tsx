@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Fragment,
   useCallback,
   useRef,
   useState,
@@ -21,6 +22,7 @@ import {
 import { isSafeImageSrc } from '../../../internal/sanitize.js';
 import { useControllable } from '../../../internal/use-controllable.js';
 import { useDirection } from '../../../internal/direction.js';
+import { stagedDismiss, useOverlayStage } from '../../../internal/overlay-stage.js';
 
 /** One image or video in a Lightbox. */
 export interface LightboxItem {
@@ -137,6 +139,7 @@ export function Lightbox({
   className,
 }: LightboxProps) {
   const readDir = useDirection();
+  const staged = useOverlayStage();
   const messages = { ...DEFAULT_MESSAGES, ...messagesProp };
   const [open, setOpen] = useControllable(openProp, defaultOpen, onOpenChange);
   const [rawIndex, setIndex] = useControllable(indexProp, defaultIndex, onIndexChange);
@@ -258,13 +261,24 @@ export function Lightbox({
     );
   }
 
+  const Portal = staged ? Fragment : DialogPrimitive.Portal;
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={handleOpenChange}>
+    <DialogPrimitive.Root
+      open={open}
+      onOpenChange={handleOpenChange}
+      {...(staged ? { modal: false } : {})}
+    >
       {trigger ? <DialogPrimitive.Trigger asChild>{trigger}</DialogPrimitive.Trigger> : null}
-      <DialogPrimitive.Portal>
+      <Portal>
         <DialogPrimitive.Overlay className="mn-overlay" />
         <DialogPrimitive.Content
           ref={contentRef}
+          {...(staged
+            ? {
+                ...stagedDismiss(staged, {}),
+                onOpenAutoFocus: (event: Event) => event.preventDefault(),
+              }
+            : {})}
           className={cx('mn-lightbox', className)}
           onKeyDown={handleKeyDown}
           data-zoomed={zoom > 1 || undefined}
@@ -369,7 +383,7 @@ export function Lightbox({
           ) : null}
           {item?.caption ? <div className="mn-lightbox__caption">{item.caption}</div> : null}
         </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
+      </Portal>
     </DialogPrimitive.Root>
   );
 }

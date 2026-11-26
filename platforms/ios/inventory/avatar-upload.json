@@ -1,0 +1,149 @@
+{
+  "id": "avatar-upload",
+  "name": "MonarchAvatarUpload",
+  "title": "AvatarUpload",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "PhotosPicker(selection:matching: .images) with .buttonStyle(.monarch), a crop editor in sheet(item:) built from Image(decorative: CGImage), DragGesture, MagnifyGesture, Slider, accessibilityAdjustableAction and onKeyPress; Core Graphics and Image I/O crop and encode the result",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Picks a profile or workspace picture with the system photo picker and crops it to a circle or a square, with drag to move and pinch or a slider to zoom, before handing over a square PNG or JPEG.",
+  "whenToUse": "On a profile or workspace settings screen where people set or change their picture.",
+  "whenNotToUse": "Not for attaching files in general (use PhotosPicker or fileImporter with MonarchUploadQueue) and not for only showing a picture (use MonarchAvatar).",
+  "api": [
+    "init(name: String, image: Image?, shape: MonarchAvatarShape = .circle, maxFileSize: Int? = nil, outputSize: Int = 512, outputFormat: MonarchAvatarUploadFormat = .png, labels: MonarchAvatarUploadLabels = MonarchAvatarUploadLabels(), onRemove: (@MainActor () -> Void)? = nil, onSave: @escaping @MainActor (MonarchAvatarUploadResult) async throws -> Void)",
+    "init(name: String, url: URL?, shape: MonarchAvatarShape = .circle, maxFileSize: Int? = nil, outputSize: Int = 512, outputFormat: MonarchAvatarUploadFormat = .png, labels: MonarchAvatarUploadLabels = MonarchAvatarUploadLabels(), onRemove: (@MainActor () -> Void)? = nil, onSave: @escaping @MainActor (MonarchAvatarUploadResult) async throws -> Void)",
+    "enum MonarchAvatarUploadFormat { case png; case jpeg(quality: Double) }",
+    "struct MonarchAvatarUploadResult { var data: Data; var format: MonarchAvatarUploadFormat; var pixelSize: Int; var crop: MonarchAvatarCrop; var original: Data }",
+    "MonarchAvatarCrop.init(x: CGFloat, y: CGFloat, size: CGFloat)",
+    "struct MonarchAvatarUploadLabels { init(upload: String? = nil, change: String? = nil, remove: String? = nil, editorTitle: String? = nil, cropArea: String? = nil, cropHint: String? = nil, zoom: String? = nil, zoomValue: (@Sendable (Int) -> String)? = nil, moveLeft: String? = nil, moveRight: String? = nil, moveUp: String? = nil, moveDown: String? = nil, reset: String? = nil, save: String? = nil, cancel: String? = nil, saveFailed: String? = nil, unreadable: String? = nil, tooLarge: (@Sendable (String) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "name",
+      "type": "String",
+      "default": "required",
+      "description": "The person's or workspace's name, for the initials fallback and what VoiceOver reads for the avatar."
+    },
+    {
+      "name": "image / url",
+      "type": "Image? / URL?",
+      "default": "required",
+      "description": "The current picture, as an image the app loaded or an address loaded with AsyncImage; nil for none."
+    },
+    {
+      "name": "shape",
+      "type": "MonarchAvatarShape",
+      "default": ".circle",
+      "description": "circle for people, square for workspaces and organisations; also the crop mask."
+    },
+    {
+      "name": "maxFileSize",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The largest picked file accepted, in bytes; larger files show \"Choose a photo smaller than 5 MB.\""
+    },
+    {
+      "name": "outputSize",
+      "type": "Int",
+      "default": "512",
+      "description": "The width and height of the saved picture in pixels."
+    },
+    {
+      "name": "outputFormat",
+      "type": "MonarchAvatarUploadFormat",
+      "default": ".png",
+      "description": "png, or jpeg with a quality from 0 to 1."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAvatarUploadLabels",
+      "default": "MonarchAvatarUploadLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onRemove",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Removes the picture. Without it, or without a picture, there is no remove button."
+    },
+    {
+      "name": "onSave",
+      "type": "@MainActor (MonarchAvatarUploadResult) async throws -> Void",
+      "default": "required",
+      "description": "Receives the encoded square picture, its size, the crop in the picked picture's pixels and the original file. While it runs Save shows progress; when it throws the editor stays open with an error."
+    }
+  ],
+  "states": [
+    {
+      "name": "no picture",
+      "description": "The avatar shows initials; the picker button reads \"Upload photo\"."
+    },
+    {
+      "name": "picture",
+      "description": "The avatar shows the picture; the picker button reads \"Change photo\" and Remove photo appears when onRemove is set."
+    },
+    {
+      "name": "editing",
+      "description": "A sheet with the picture in a square crop area, the cut-away part dimmed outside a circle or rounded square with a ring, a hint, the zoom slider, Save photo and Cancel."
+    },
+    {
+      "name": "saving",
+      "description": "Save shows progress, Cancel and the slider are disabled, gestures and keys do nothing and the sheet cannot be swiped away."
+    },
+    {
+      "name": "error",
+      "description": "A refused file (too large, not a picture) shows an error under the buttons; a failed save shows an error in the editor. Both have an icon and are announced."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true) every button is disabled."
+    }
+  ],
+  "appearance": "The current picture is MonarchAvatar at the large size. In the editor the crop area has the muted fill behind the picture, the cut-away part is covered by the inverse background colour at a fixed fraction, and the kept area has a ring in the surface colour. Errors use the strong danger colour with an icon.",
+  "platformNotes": "The picker is the system PhotosPicker, which needs no photo library permission; the web uses a file input with accept and size checks. The crop editor opens in a sheet instead of in place. The web draws the result with a canvas and offers WebP; on iOS Core Graphics renders it and Image I/O encodes PNG or JPEG (iOS cannot write WebP). Picked pictures are turned upright from their orientation data and decoded at no more than 2,048 pixels on the long side, so the crop is in the pixels of that upright picture. The editor area keeps left-to-right coordinates in right-to-left layouts because a photo is not mirrored. Disabled state comes from .disabled() rather than a parameter. Android uses the same name and options.",
+  "accessibility": [
+    "The avatar is read by name (MonarchAvatar); the picker, remove, save and cancel controls are standard buttons with 44-point touch targets.",
+    "The editor's title is a header.",
+    "The crop area is one element named \"Photo position\" with the zoom as its value (\"150%\") and the hint as its hint; swiping up or down zooms (adjustable action), and the actions rotor offers Move left, Move right, Move up, Move down and Reset position.",
+    "With a hardware keyboard the crop area takes focus: arrow keys move (four times as far with Shift), + and − zoom, Home resets, Return saves and Escape cancels.",
+    "The zoom slider is labelled \"Zoom\" and reads the zoom in percent.",
+    "Errors are announced and drawn with an icon and text, not colour alone."
+  ],
+  "edgeCases": [
+    "A file that cannot be decoded as a picture, or that the picker cannot load, shows \"This file can't be used as a photo.\"",
+    "A file exactly at maxFileSize is accepted.",
+    "The picture always covers the crop area: zoom stays between 100% and 400% and the picture cannot be moved past its edges.",
+    "Saving is ignored while a save is running, so a second tap or Return does not save twice.",
+    "The picture shown after saving is the app's: pass the new image or URL when onSave has stored it."
+  ],
+  "tests": [
+    "MonarchAvatarUploadTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Profile photo",
+      "fixture": "avatar-upload",
+      "webExample": "Profile photo",
+      "template": "MonarchAvatarUpload(\n    name: {{name}},\n    image: picture,\n    shape: {{shape|case}},\n    maxFileSize: {{maxSize}},\n    onRemove: { picture = nil },\n    onSave: { result in\n        // Upload result.data, then show the stored picture.\n        _ = result.data\n        picture = Image(systemName: \"person.crop.circle.fill\")\n    }\n)",
+      "setupTemplate": "@State private var picture: Image?",
+      "setup": "@State private var picture: Image?",
+      "code": "MonarchAvatarUpload(\n    name: \"Alex Morgan\",\n    image: picture,\n    shape: .circle,\n    maxFileSize: 5_242_880,\n    onRemove: { picture = nil },\n    onSave: { result in\n        // Upload result.data, then show the stored picture.\n        _ = result.data\n        picture = Image(systemName: \"person.crop.circle.fill\")\n    }\n)"
+    },
+    {
+      "title": "A workspace logo as a JPEG",
+      "code": "MonarchAvatarUpload(\n    name: \"Rook Labs\",\n    url: nil,\n    shape: .square,\n    outputSize: 256,\n    outputFormat: .jpeg(quality: 0.85)\n) { result in\n    _ = result.crop\n}"
+    }
+  ],
+  "webEquivalent": "AvatarUpload",
+  "dependsOn": [
+    "avatar",
+    "button",
+    "sheet"
+  ]
+}

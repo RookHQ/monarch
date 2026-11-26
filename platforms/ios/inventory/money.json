@@ -1,0 +1,170 @@
+{
+  "id": "money",
+  "name": "MonarchMoney",
+  "title": "Money",
+  "family": "billing",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Text with Decimal.FormatStyle.Currency (presentation, sign(strategy:), notation(.compactName), precision) and .monospacedDigit()",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "An amount of money in one currency, written by the system's currency format in fixed-width digits, with an empty state and a spoken full value for compact amounts.",
+  "whenToUse": "Prices, invoice lines, balances, payroll figures and renewal costs, including amounts stored as integer minor units next to an ISO 4217 code.",
+  "whenNotToUse": "For entering an amount, use a TextField with a currency format. Do not add amounts in different currencies; list them per currency. For a number that is not money, use Text(monarchTabular:format:).",
+  "api": [
+    "init(_ amount: Decimal?, currencyCode: String, notation: MonarchMoneyNotation = .standard, signDisplay: MonarchMoneySignDisplay = .automatic, currencyDisplay: MonarchMoneyCurrencyDisplay = .symbol, usesAccountingSign: Bool = false, fractionDigits: ClosedRange<Int>? = nil, locale: Locale? = nil, textStyle: MonarchTextStyle = .body, tonesNegative: Bool = false, emptyText: String? = nil, emptyLabel: String? = nil)",
+    "init(minorUnits: Int?, currencyCode: String, notation: MonarchMoneyNotation = .standard, signDisplay: MonarchMoneySignDisplay = .automatic, currencyDisplay: MonarchMoneyCurrencyDisplay = .symbol, usesAccountingSign: Bool = false, fractionDigits: ClosedRange<Int>? = nil, locale: Locale? = nil, textStyle: MonarchTextStyle = .body, tonesNegative: Bool = false, emptyText: String? = nil, emptyLabel: String? = nil)",
+    "static func formatted(_ amount: Decimal, currencyCode: String, notation: MonarchMoneyNotation = .standard, signDisplay: MonarchMoneySignDisplay = .automatic, currencyDisplay: MonarchMoneyCurrencyDisplay = .symbol, usesAccountingSign: Bool = false, fractionDigits: ClosedRange<Int>? = nil, locale: Locale = .autoupdatingCurrent) -> String",
+    "enum MonarchMoneyNotation { case standard, compact }",
+    "enum MonarchMoneySignDisplay { case automatic, always, exceptZero, never }",
+    "enum MonarchMoneyCurrencyDisplay { case symbol, narrowSymbol, code, name }"
+  ],
+  "options": [
+    {
+      "name": "amount",
+      "type": "Decimal?",
+      "default": "required",
+      "description": "The amount in major units (19.99 for $19.99), or nil when there is none."
+    },
+    {
+      "name": "minorUnits",
+      "type": "Int?",
+      "default": "required",
+      "description": "With the second initialiser: the amount in minor units (cents, paise). 1999 with USD is $19.99; the conversion is exact."
+    },
+    {
+      "name": "currencyCode",
+      "type": "String",
+      "default": "required",
+      "description": "The ISO 4217 code, such as USD, EUR or INR."
+    },
+    {
+      "name": "notation",
+      "type": "MonarchMoneyNotation",
+      "default": ".standard",
+      "description": "standard writes every digit; compact writes $1.3M and VoiceOver reads the full amount."
+    },
+    {
+      "name": "signDisplay",
+      "type": "MonarchMoneySignDisplay",
+      "default": ".automatic",
+      "description": "automatic, always (also +$0.00), exceptZero (+$42.00 for gains) or never."
+    },
+    {
+      "name": "currencyDisplay",
+      "type": "MonarchMoneyCurrencyDisplay",
+      "default": ".symbol",
+      "description": "symbol, narrowSymbol ($), code (USD) or name (US dollars)."
+    },
+    {
+      "name": "usesAccountingSign",
+      "type": "Bool",
+      "default": "false",
+      "description": "Writes negatives in parentheses where the locale does: ($42.00)."
+    },
+    {
+      "name": "fractionDigits",
+      "type": "ClosedRange<Int>?",
+      "default": "nil",
+      "description": "The least and most digits after the decimal separator. Default: the currency's own (USD 2, JPY 0, KWD 3)."
+    },
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "nil",
+      "description": "The locale to write in. Default: the environment's locale."
+    },
+    {
+      "name": "textStyle",
+      "type": "MonarchTextStyle",
+      "default": ".body",
+      "description": "The type role."
+    },
+    {
+      "name": "tonesNegative",
+      "type": "Bool",
+      "default": "false",
+      "description": "Colours a negative amount with the danger text colour. The sign or parentheses always carry the meaning."
+    },
+    {
+      "name": "emptyText",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"—\" shown for a missing amount."
+    },
+    {
+      "name": "emptyLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"No amount\" that VoiceOver reads for a missing amount."
+    }
+  ],
+  "states": [
+    {
+      "name": "standard",
+      "description": "The amount in the inherited text colour with tabular digits."
+    },
+    {
+      "name": "negative",
+      "description": "A minus sign, or parentheses with usesAccountingSign; with tonesNegative the text uses the danger text colour."
+    },
+    {
+      "name": "compact",
+      "description": "The short form is shown; VoiceOver reads the full amount."
+    },
+    {
+      "name": "empty",
+      "description": "A nil amount shows an em dash in the muted text colour, read as \"No amount\"."
+    }
+  ],
+  "appearance": "Text in the chosen type role with fixed-width digits, in the inherited foreground. Toned negatives use the danger strong text colour and missing amounts the muted text colour, in light, dark and both high-contrast themes.",
+  "platformNotes": "Formatting is Foundation's Decimal.FormatStyle.Currency, so the output can differ in small ways from the web's Intl.NumberFormat (for example the compact form in some locales). The web takes numbers, bigints or decimal strings; iOS takes Decimal or Int minor units. The web hover title for compact amounts has no touch equivalent; VoiceOver reads the full amount. Android ships MonarchMoney with the same options.",
+  "accessibility": [
+    "A compact amount is read as the full amount through accessibilityLabel.",
+    "A missing amount shows \"—\" and is read as \"No amount\" (both replaceable).",
+    "Negative amounts keep their sign or parentheses, so colour is never the only cue.",
+    "The text scales with Dynamic Type through its type role."
+  ],
+  "edgeCases": [
+    "Minor units are converted with the currency's own digits from the system (USD 2, JPY 0, KWD 3); unknown codes use 2.",
+    "Large minor-unit amounts up to Int.max convert exactly through Decimal.",
+    "fractionDigits 0...0 rounds the amount for display only.",
+    "A long amount in a large type role at the largest text size can wrap at a space in the currency name; it is not truncated.",
+    "The currency is never converted; the code only selects the symbol and the digits."
+  ],
+  "tests": [
+    "MonarchMoneyTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Locales and minor units",
+      "fixture": "money",
+      "webExample": "Locales and minor units",
+      "template": "VStack(alignment: .leading, spacing: 8) {\n    MonarchMoney(minorUnits: {{items.0.amount}}, currencyCode: {{items.0.currency}}, locale: Locale(identifier: {{items.0.locale}}))\n    MonarchMoney(minorUnits: {{items.1.amount}}, currencyCode: {{items.1.currency}}, locale: Locale(identifier: {{items.1.locale}}))\n    MonarchMoney(minorUnits: {{items.2.amount}}, currencyCode: {{items.2.currency}}, locale: Locale(identifier: {{items.2.locale}}))\n    MonarchMoney(minorUnits: {{items.3.amount}}, currencyCode: {{items.3.currency}}, locale: Locale(identifier: {{items.3.locale}}))\n}",
+      "code": "VStack(alignment: .leading, spacing: 8) {\n    MonarchMoney(minorUnits: 129_900, currencyCode: \"USD\", locale: Locale(identifier: \"en-US\"))\n    MonarchMoney(minorUnits: 129_900, currencyCode: \"EUR\", locale: Locale(identifier: \"de-DE\"))\n    MonarchMoney(minorUnits: 12_990_000, currencyCode: \"INR\", locale: Locale(identifier: \"en-IN\"))\n    MonarchMoney(minorUnits: 4500, currencyCode: \"JPY\", locale: Locale(identifier: \"ja-JP\"))\n}"
+    },
+    {
+      "title": "Compact, gains and losses",
+      "code": "VStack(alignment: .trailing) {\n    MonarchMoney(1_250_000, currencyCode: \"EUR\", notation: .compact, textStyle: .title)\n    MonarchMoney(42, currencyCode: \"USD\", signDisplay: .exceptZero)\n    MonarchMoney(-42, currencyCode: \"USD\", usesAccountingSign: true, tonesNegative: true)\n    MonarchMoney(nil, currencyCode: \"USD\")\n}"
+    }
+  ],
+  "webEquivalent": "Money",
+  "dependsOn": [
+    "tabular-number"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "rows.3"
+      ],
+      "reason": "The system currency format writes the yen in Japanese as the half-width yen sign (¥4,500); the web and Android write the full-width sign.",
+      "convention": "Apple Foundation currency format: the locale data is the system's"
+    }
+  ]
+}

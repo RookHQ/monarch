@@ -1,0 +1,134 @@
+{
+  "id": "bulk-action-bar",
+  "name": "MonarchBulkActionBar",
+  "title": "BulkActionBar",
+  "family": "data-grid",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "ViewThatFits of an HStack (wide) or a VStack with MonarchFlowLayout (narrow) of Text, MonarchButton and a Menu with .menuStyle(.button); placed by the app in safeAreaInset(edge: .bottom) over a List(selection:)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The bar shown while items are selected: the count, the actions for the selection with a More menu for the rest, and Clear selection, with the count announced.",
+  "whenToUse": "Under a List or table with multiple selection when several actions apply to everything selected and the count should be visible and announced.",
+  "whenNotToUse": "For actions on one row, use swipeActions and a Menu on the row (see row-actions-menu). For screen actions unrelated to a selection, use the navigation bar's toolbar. For a single action on the selection in an edit-mode list, a ToolbarItem(placement: .bottomBar) is enough.",
+  "api": [
+    "init(count: Int, totalCount: Int? = nil, actions: [MonarchBulkAction] = [], maxVisibleActions: Int = 3, isBusy: Bool = false, busyActionID: String? = nil, labels: MonarchBulkActionBarLabels = MonarchBulkActionBarLabels(), onClear: @escaping @MainActor () -> Void, @ViewBuilder accessories: () -> Accessories)",
+    "init(count: Int, totalCount: Int? = nil, actions: [MonarchBulkAction] = [], maxVisibleActions: Int = 3, isBusy: Bool = false, busyActionID: String? = nil, labels: MonarchBulkActionBarLabels = MonarchBulkActionBarLabels(), onClear: @escaping @MainActor () -> Void) where Accessories == EmptyView",
+    "struct MonarchBulkAction: Identifiable { init(id: String, title: String, systemImage: String? = nil, isDestructive: Bool = false, isDisabled: Bool = false, action: @escaping @MainActor () -> Void) }",
+    "struct MonarchBulkActionBarLabels { var selected: (@Sendable (Int, Int?) -> String)?; var cleared, clear, more, bar: String? }"
+  ],
+  "options": [
+    {
+      "name": "count",
+      "type": "Int",
+      "default": "required",
+      "description": "The number of selected items. The bar is shown while it is above zero and takes no room at zero."
+    },
+    {
+      "name": "totalCount",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The number of items that could be selected, for \"3 of 120 selected\"."
+    },
+    {
+      "name": "actions",
+      "type": "[MonarchBulkAction]",
+      "default": "[]",
+      "description": "The actions. A destructive one uses the danger button variant and the destructive menu role."
+    },
+    {
+      "name": "maxVisibleActions",
+      "type": "Int",
+      "default": "3",
+      "description": "How many actions are buttons; the rest go into a More menu."
+    },
+    {
+      "name": "isBusy",
+      "type": "Bool",
+      "default": "false",
+      "description": "Blocks every action while the app runs one."
+    },
+    {
+      "name": "busyActionID",
+      "type": "String?",
+      "default": "nil",
+      "description": "The running action shows a progress indicator; the others and the More menu are disabled."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchBulkActionBarLabels",
+      "default": "MonarchBulkActionBarLabels()",
+      "description": "Replacements for the count, the clear and More titles, the cleared announcement and the bar's spoken name."
+    },
+    {
+      "name": "onClear",
+      "type": "@MainActor () -> Void",
+      "default": "required",
+      "description": "Empties the selection."
+    },
+    {
+      "name": "accessories",
+      "type": "@ViewBuilder () -> Accessories",
+      "default": "none (the shorter initialiser)",
+      "description": "Extra controls after the actions, such as a Picker for a property."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "Nothing is selected: nothing is drawn and the bar takes no room."
+    },
+    {
+      "name": "open",
+      "description": "The count, the action buttons, More and Clear selection on a raised surface."
+    },
+    {
+      "name": "busy",
+      "description": "With busyActionID the action shows progress and the others are disabled; with isBusy everything is disabled."
+    },
+    {
+      "name": "narrow",
+      "description": "When one line does not fit, the count and Clear take the first line and the actions wrap below."
+    }
+  ],
+  "appearance": "A raised surface (the surface background role, the medium elevation and the subtle border role) with a 12-point corner. The count is label-size semibold text in the default text role. Actions are small secondary MonarchButtons, destructive ones the danger variant; Clear selection is a ghost button.",
+  "platformNotes": "The parity map named .toolbar(placement: .bottomBar) with EditMode. A bottom toolbar holds only a few plain items, cannot show the count with the actions and a More menu in Monarch styling, and does not exist on macOS, so the bar is a view the app places with safeAreaInset(edge: .bottom) under a List(selection:) in EditMode, or inline above a table. The web toolbar has one tab stop with arrow keys; on iOS each control is its own element for VoiceOver and the system keyboard focus. The web can wait on a promise returned by an action; on iOS the app sets busyActionID or isBusy. Confirmation of destructive actions stays in the app (confirmationDialog). Android uses the same name and options.",
+  "accessibility": [
+    "The bar is a container named \"Bulk actions\"; the count is read first, then each action, More and Clear selection.",
+    "Every change of the count is announced (\"2 of 4 selected\"), including when the bar first appears, and \"Selection cleared\" when it closes.",
+    "Icons are decorative; every action has a visible title.",
+    "Buttons keep 44-point touch targets; a running action keeps its button enabled and reads its progress through MonarchButton."
+  ],
+  "edgeCases": [
+    "maxVisibleActions of 0 puts every action in the More menu; a negative value counts as 0.",
+    "An action that empties the selection closes the bar and announces \"Selection cleared\".",
+    "The count text uses the English plural-free form \"3 selected\"; pass labels.selected for languages that need plural forms."
+  ],
+  "tests": [
+    "MonarchBulkActionBarTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "With DataTable selection",
+      "fixture": "bulk-action-bar",
+      "webExample": "With DataTable selection",
+      "template": "VStack(spacing: 8) {\n    MonarchBulkActionBar(\n        count: selection.count,\n        totalCount: members.count,\n        actions: [\n            MonarchBulkAction(id: {{actions.0.id}}, title: {{actions.0.label}}) {},\n            MonarchBulkAction(id: {{actions.1.id}}, title: {{actions.1.label}}) {},\n            MonarchBulkAction(id: {{actions.2.id}}, title: {{actions.2.label}}) {},\n            MonarchBulkAction(id: {{actions.3.id}}, title: {{actions.3.label}}, isDestructive: {{actions.3.destructive}}) {},\n        ]\n    ) {\n        selection.removeAll()\n    }\n    MonarchDataTable(\n        {{caption}},\n        rows: members,\n        columns: [\n            MonarchDataTableColumn({{columns.0}}, isHideable: false, value: { $0.name }),\n            MonarchDataTableColumn({{columns.1}}, isHideable: false, value: { $0.team }),\n            MonarchDataTableColumn({{columns.2}}, isHideable: false, value: { $0.role }),\n        ],\n        selection: $selection,\n        layout: .list,\n        rowLabel: { $0.name }\n    )\n    Text(\"Pick an action.\")\n        .monarchTextStyle(.caption)\n}\n.frame(height: 700)",
+      "setupTemplate": "struct Member: Identifiable, Sendable {\n    let id: String\n    let name: String\n    let team: String\n    let role: String\n}\n\nprivate let members = [\n    Member(id: {{members.0.id}}, name: {{members.0.name}}, team: {{members.0.team}}, role: {{members.0.role}}),\n    Member(id: {{members.1.id}}, name: {{members.1.name}}, team: {{members.1.team}}, role: {{members.1.role}}),\n    Member(id: {{members.2.id}}, name: {{members.2.name}}, team: {{members.2.team}}, role: {{members.2.role}}),\n    Member(id: {{members.3.id}}, name: {{members.3.name}}, team: {{members.3.team}}, role: {{members.3.role}}),\n]\n@State private var selection: Set<String> = [{{selected.0}}, {{selected.1}}]",
+      "setup": "struct Member: Identifiable, Sendable {\n    let id: String\n    let name: String\n    let team: String\n    let role: String\n}\n\nprivate let members = [\n    Member(id: \"m1\", name: \"Ana Silva\", team: \"Support\", role: \"Agent\"),\n    Member(id: \"m2\", name: \"Ben Okafor\", team: \"Support\", role: \"Lead\"),\n    Member(id: \"m3\", name: \"Chen Wei\", team: \"Billing\", role: \"Agent\"),\n    Member(id: \"m4\", name: \"Dev Patel\", team: \"Sales\", role: \"Manager\"),\n]\n@State private var selection: Set<String> = [\"m1\", \"m3\"]",
+      "code": "VStack(spacing: 8) {\n    MonarchBulkActionBar(\n        count: selection.count,\n        totalCount: members.count,\n        actions: [\n            MonarchBulkAction(id: \"team\", title: \"Move to team\") {},\n            MonarchBulkAction(id: \"role\", title: \"Change role\") {},\n            MonarchBulkAction(id: \"export\", title: \"Export\") {},\n            MonarchBulkAction(id: \"remove\", title: \"Remove\", isDestructive: true) {},\n        ]\n    ) {\n        selection.removeAll()\n    }\n    MonarchDataTable(\n        \"Members\",\n        rows: members,\n        columns: [\n            MonarchDataTableColumn(\"Name\", isHideable: false, value: { $0.name }),\n            MonarchDataTableColumn(\"Team\", isHideable: false, value: { $0.team }),\n            MonarchDataTableColumn(\"Role\", isHideable: false, value: { $0.role }),\n        ],\n        selection: $selection,\n        layout: .list,\n        rowLabel: { $0.name }\n    )\n    Text(\"Pick an action.\")\n        .monarchTextStyle(.caption)\n}\n.frame(height: 700)"
+    },
+    {
+      "title": "An action running, with an overflow menu",
+      "code": "MonarchBulkActionBar(\n    count: 3,\n    totalCount: 120,\n    actions: [\n        MonarchBulkAction(id: \"archive\", title: \"Archive\") {},\n        MonarchBulkAction(id: \"tag\", title: \"Add tag\") {},\n        MonarchBulkAction(id: \"export\", title: \"Export\") {},\n        MonarchBulkAction(id: \"delete\", title: \"Delete\", isDestructive: true) {},\n    ],\n    busyActionID: \"archive\"\n) {}"
+    }
+  ],
+  "webEquivalent": "BulkActionBar",
+  "dependsOn": [
+    "button",
+    "dropdown-menu"
+  ]
+}

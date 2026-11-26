@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Button, EmptyState, SplitLayout } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './split-layout.fixture.json';
 
 function Inbox() {
   const [open, setOpen] = useState<string | null>(null);
@@ -13,7 +15,7 @@ function Inbox() {
         onBack={() => setOpen(null)}
         list={
           <div style={{ display: 'grid', gap: '0.5rem', padding: '0.5rem' }}>
-            {['Billing question', 'Password reset'].map((t) => (
+            {fixture.data.items.map((t) => (
               <Button key={t} variant="ghost" onClick={() => setOpen(t)}>
                 {t}
               </Button>
@@ -24,7 +26,10 @@ function Inbox() {
           open ? (
             <p style={{ padding: '1rem' }}>{open}</p>
           ) : (
-            <EmptyState title="No conversation selected" description="Pick one from the list." />
+            <EmptyState
+              title={fixture.data.empty.title}
+              description={fixture.data.empty.description}
+            />
           )
         }
       />

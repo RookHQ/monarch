@@ -1,0 +1,167 @@
+{
+  "id": "ai-chat-page",
+  "name": null,
+  "title": "AiChatPage",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold with MonarchAiConversationList in the list pane and a Column of MonarchAiConversationHeader, MonarchAiThread and MonarchAiPromptInput in the detail pane",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the full chat screen of an assistant app, with the conversation history beside the open conversation on wide windows and as its own screen on phones.",
+  "whenToUse": "An app whose main screen is a chat with an assistant and a history of conversations.",
+  "whenNotToUse": "An assistant beside other screens: use MonarchAiAssistantPanel. A single conversation without history: compose MonarchAiThread over MonarchAiPromptInput.",
+  "api": [
+    "NavigableListDetailPaneScaffold(navigator = rememberListDetailPaneScaffoldNavigator<String>(), listPane = { AnimatedPane { MonarchAiConversationList(conversations, onSelect = { active = it; conversation.reset(stored); navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, it) }, activeId = active, onNew = …) } }, detailPane = { AnimatedPane { Column { … } } })",
+    "MonarchAiConversationHeader(title, agent = conversation.agent, onRename = …, navigationIcon = back to the history while one pane shows)",
+    "MonarchAiThread(messages, Modifier.weight(1f), status, error, onStop = conversation::stop, empty = { MonarchAiWelcome(…) { MonarchAiStarterPrompts(…) } })",
+    "MonarchAiPromptInput(label = \"Message the assistant\", state = prompt, onSubmit = { check(conversation.send(it)) }, busy = …, onStop = conversation::stop, footer = { MonarchAiDisclaimer() })",
+    "MonarchAiArtifactCanvas(artifact, open, onDismissRequest) for an artifact a reply produced: a sheet on phones, the scaffold's extraPane on wide windows"
+  ],
+  "options": [
+    {
+      "name": "conversation",
+      "type": "MonarchAiConversation",
+      "default": "required",
+      "description": "The open conversation. Switching history entries calls reset with the stored messages of the chosen one, as the web's onSelectConversation does."
+    },
+    {
+      "name": "conversations",
+      "type": "List<MonarchAiConversationSummary>",
+      "default": "required",
+      "description": "The history, shown by MonarchAiConversationList with search, pinning, rename and delete."
+    },
+    {
+      "name": "active",
+      "type": "String",
+      "default": "required",
+      "description": "The open conversation's id, marked current in the list and passed to the navigator as the detail key."
+    },
+    {
+      "name": "onNew",
+      "type": "() -> Unit",
+      "default": "none",
+      "description": "Adds New conversation at the top of the list; the recipe adds an untitled entry, resets the conversation and opens it."
+    },
+    {
+      "name": "title",
+      "type": "String",
+      "default": "the active entry's title",
+      "description": "Shown by MonarchAiConversationHeader, which renames in place with onRename."
+    },
+    {
+      "name": "empty",
+      "type": "@Composable () -> Unit",
+      "default": "MonarchAiWelcome with MonarchAiStarterPrompts",
+      "description": "The thread's empty content while the conversation has no messages."
+    },
+    {
+      "name": "toolbar / footer",
+      "type": "@Composable () -> Unit",
+      "default": "MonarchAiDisclaimer as the footer",
+      "description": "MonarchAiPromptInput's toolbar (a model picker) and footer."
+    },
+    {
+      "name": "artifact",
+      "type": "MonarchAiCanvasArtifact?",
+      "default": "null",
+      "description": "An artifact to show in MonarchAiArtifactCanvas: a full-height sheet on phones (its Auto placement), the scaffold's extraPane on wide windows."
+    }
+  ],
+  "states": [
+    {
+      "name": "two panes",
+      "description": "On a wide window the history and the conversation show side by side."
+    },
+    {
+      "name": "one pane",
+      "description": "On a phone the history is a screen; choosing or starting a conversation opens it, and the system back gesture or the header's back button returns to the history."
+    },
+    {
+      "name": "empty",
+      "description": "The thread shows MonarchAiWelcome with starters; choosing one sends it."
+    },
+    {
+      "name": "running",
+      "description": "Send becomes Stop; the thread shows thinking, streams the reply and announces it."
+    },
+    {
+      "name": "error / offline",
+      "description": "MonarchAiThread shows and announces the error or the offline notice."
+    }
+  ],
+  "appearance": "Every part is an existing component: the Material 3 list-detail scaffold, MonarchAiConversationList, MonarchAiConversationHeader, MonarchAiThread, MonarchAiPromptInput and MonarchAiDisclaimer in the Monarch theme. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships AiChatPage as one component: a history rail beside the chat from 768px, the history in a start-edge sheet below it, and the artifact canvas as a third column. On Android it is a recipe on the list-detail pattern: NavigableListDetailPaneScaffold shows the history and the chat side by side on a wide window and as two screens on a phone, with the system back gesture and predictive back, instead of a drawer-like sheet. The navigator starts on the history, as Android list-detail screens do; an app that opens straight into the last chat passes initialDestinationHistory with the list and the detail entries. The artifact canvas is MonarchAiArtifactCanvas, a sheet on phones and the scaffold's extraPane on wide windows. The web's messageProps wiring (regenerate, feedback, branches, tool approval) is the default MonarchAiMessage of MonarchAiThread plus the app's own calls on MonarchAiConversation. The web focuses the prompt after New conversation; this recipe does not move focus, so the keyboard does not open by itself. iOS has not covered this entry yet.",
+  "accessibility": [
+    "MonarchAiConversationList is named \"Conversation history\" by its label and marks the open conversation as selected.",
+    "The conversation title is a heading in MonarchAiConversationHeader; the back button to the history is named \"Conversation history\".",
+    "MonarchAiThread announces replies, errors and the offline notice through polite live regions.",
+    "MonarchAiPromptInput is named \"Message the assistant\"; Send becomes Stop while a reply runs.",
+    "The scaffold's panes follow the system back gesture on phones."
+  ],
+  "edgeCases": [
+    "The history list and the thread are lazy lists: give the scaffold a bounded height and never put it in a vertically scrolling parent.",
+    "A new conversation has an empty title until the app names it; MonarchAiConversationList and MonarchAiConversationHeader show their untitled text.",
+    "Deleting the open conversation: pick another active id or start a new one, and reset the conversation.",
+    "A send that the conversation refuses (while a tool call waits for approval) throws in onSubmit, so the prompt input gives the text back."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Chat page with history and canvas",
+      "fixture": "ai-chat-page",
+      "webExample": "Chat page with history and canvas",
+      "template": "@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMonarchApi::class)\nNavigableListDetailPaneScaffold(\n    navigator = navigator,\n    modifier = Modifier.height(MonarchTheme.spacing.space24 * 7),\n    listPane = {\n        AnimatedPane {\n            MonarchAiConversationList(\n                conversations = conversations,\n                onSelect = ::open,\n                activeId = active,\n                nowMillis = 1_794_664_800_000L,\n                labels = MonarchAiConversationListLabels(search = \"Search\"),\n                onNew = {\n                    val id = \"c${conversations.size + 1}\"\n                    conversations = listOf(MonarchAiConversationSummary(id, \"\", 1_794_664_800_000L)) + conversations\n                    open(id)\n                },\n                onRename = { id, title ->\n                    conversations = conversations.map { if (it.id == id) it.copy(title = title) else it }\n                },\n                onDelete = { id -> conversations = conversations.filterNot { it.id == id } },\n            )\n        }\n    },\n    detailPane = {\n        AnimatedPane {\n            val onePane = navigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Hidden\n            Column(modifier = Modifier.fillMaxSize()) {\n                MonarchAiConversationHeader(\n                    title = conversations.firstOrNull { it.id == active }?.title.orEmpty(),\n                    agent = agent,\n                    onRename = { title ->\n                        conversations = conversations.map { if (it.id == active) it.copy(title = title) else it }\n                    },\n                    navigationIcon = if (onePane) {\n                        {\n                            MonarchIconButton(\n                                label = \"Conversation history\",\n                                onClick = { scope.launch { navigator.navigateBack() } },\n                            ) {\n                                MonarchIcon(SampleIcons.ArrowBack, contentDescription = null)\n                            }\n                        }\n                    } else {\n                        null\n                    },\n                    actions = {\n                        MonarchButton(\n                            text = \"Show artifact\",\n                            onClick = {},\n                            variant = MonarchButtonVariant.Secondary,\n                            size = MonarchButtonSize.Sm,\n                        )\n                    },\n                )\n                MonarchAiThread(\n                    messages = messages,\n                    modifier = Modifier.weight(1f).padding(horizontal = MonarchTheme.spacing.space4),\n                    status = status,\n                    error = error,\n                    onStop = conversation::stop,\n                    empty = {\n                        MonarchAiWelcome(\n                            title = {{welcome.title}},\n                            agent = agent,\n                            description = {{welcome.description}},\n                            icon = { MonarchIcon(SampleIcons.Bot, contentDescription = null) },\n                        ) {\n                            MonarchAiStarterPrompts(\n                                prompts = listOf(\n                                    MonarchAiStarterPrompt({{starters.0.id}}, {{starters.0.title}}, {{starters.0.prompt}}),\n                                    MonarchAiStarterPrompt({{starters.1.id}}, {{starters.1.title}}, {{starters.1.prompt}}),\n                                ),\n                                onSelect = { conversation.send(it.prompt) },\n                                layout = MonarchAiStarterPromptsLayout.List,\n                            )\n                        }\n                    },\n                )\n                MonarchAiPromptInput(\n                    label = \"Message the assistant\",\n                    state = prompt,\n                    onSubmit = { text -> check(conversation.send(text)) { \"Not sent\" } },\n                    modifier = Modifier.padding(MonarchTheme.spacing.space4),\n                    busy = status == MonarchAiConversationStatus.Submitted ||\n                        status == MonarchAiConversationStatus.Streaming,\n                    onStop = conversation::stop,\n                    footer = { MonarchAiDisclaimer() },\n                )\n            }\n        }\n    },\n)",
+      "setupTemplate": "val transport = remember {\n    object : MonarchAiTransport {\n        override fun stream(request: MonarchAiTransportRequest): Flow<MonarchAiStreamEvent> = flowOf(\n            MonarchAiStreamEvent.TextDelta(\"You asked: \" + request.messages.lastOrNull()?.text.orEmpty()),\n            MonarchAiStreamEvent.Done(),\n        )\n    }\n}\n// One conversation object for the open chat; the app loads stored messages into it with reset.\nval conversation = rememberMonarchAiConversation(transport)\nval messages by conversation.messages.collectAsState()\nval status by conversation.status.collectAsState()\nval error by conversation.error.collectAsState()\nval agent by conversation.agent.collectAsState()\nvar conversations by remember {\n    mutableStateOf(\n        listOf(\n            MonarchAiConversationSummary({{conversations.0.id}}, {{conversations.0.title}}, updatedAtMillis = 1_794_660_000_000L),\n            MonarchAiConversationSummary({{conversations.1.id}}, {{conversations.1.title}}, updatedAtMillis = 1_794_490_000_000L, pinned = {{conversations.1.pinned}}),\n            MonarchAiConversationSummary({{conversations.2.id}}, {{conversations.2.title}}, updatedAtMillis = 1_792_936_800_000L),\n        ),\n    )\n}\nvar active by rememberSaveable { mutableStateOf({{activeId}}) }\nval prompt = rememberTextFieldState()\n@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nval navigator = rememberListDetailPaneScaffoldNavigator<String>(\n    initialDestinationHistory = listOf(ThreePaneScaffoldDestinationItem(ListDetailPaneScaffoldRole.Detail, active)),\n)\nval scope = rememberCoroutineScope()\n@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nfun open(id: String) {\n    active = id\n    conversation.reset(/* The app's stored messages of id. */)\n    scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, id) }\n}",
+      "imports": [
+        "androidx.compose.foundation.text.input.rememberTextFieldState",
+        "androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi",
+        "androidx.compose.material3.adaptive.layout.*",
+        "androidx.compose.material3.adaptive.navigation.*",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "kotlinx.coroutines.flow.Flow",
+        "kotlinx.coroutines.flow.flowOf",
+        "kotlinx.coroutines.launch"
+      ],
+      "setup": "val transport = remember {\n    object : MonarchAiTransport {\n        override fun stream(request: MonarchAiTransportRequest): Flow<MonarchAiStreamEvent> = flowOf(\n            MonarchAiStreamEvent.TextDelta(\"You asked: \" + request.messages.lastOrNull()?.text.orEmpty()),\n            MonarchAiStreamEvent.Done(),\n        )\n    }\n}\n// One conversation object for the open chat; the app loads stored messages into it with reset.\nval conversation = rememberMonarchAiConversation(transport)\nval messages by conversation.messages.collectAsState()\nval status by conversation.status.collectAsState()\nval error by conversation.error.collectAsState()\nval agent by conversation.agent.collectAsState()\nvar conversations by remember {\n    mutableStateOf(\n        listOf(\n            MonarchAiConversationSummary(\"c1\", \"Weekly summary\", updatedAtMillis = 1_794_660_000_000L),\n            MonarchAiConversationSummary(\"c2\", \"Release checklist\", updatedAtMillis = 1_794_490_000_000L, pinned = true),\n            MonarchAiConversationSummary(\"c3\", \"Interview questions\", updatedAtMillis = 1_792_936_800_000L),\n        ),\n    )\n}\nvar active by rememberSaveable { mutableStateOf(\"c1\") }\nval prompt = rememberTextFieldState()\n@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nval navigator = rememberListDetailPaneScaffoldNavigator<String>(\n    initialDestinationHistory = listOf(ThreePaneScaffoldDestinationItem(ListDetailPaneScaffoldRole.Detail, active)),\n)\nval scope = rememberCoroutineScope()\n@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nfun open(id: String) {\n    active = id\n    conversation.reset(/* The app's stored messages of id. */)\n    scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, id) }\n}",
+      "code": "@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalMonarchApi::class)\nNavigableListDetailPaneScaffold(\n    navigator = navigator,\n    modifier = Modifier.height(MonarchTheme.spacing.space24 * 7),\n    listPane = {\n        AnimatedPane {\n            MonarchAiConversationList(\n                conversations = conversations,\n                onSelect = ::open,\n                activeId = active,\n                nowMillis = 1_794_664_800_000L,\n                labels = MonarchAiConversationListLabels(search = \"Search\"),\n                onNew = {\n                    val id = \"c${conversations.size + 1}\"\n                    conversations = listOf(MonarchAiConversationSummary(id, \"\", 1_794_664_800_000L)) + conversations\n                    open(id)\n                },\n                onRename = { id, title ->\n                    conversations = conversations.map { if (it.id == id) it.copy(title = title) else it }\n                },\n                onDelete = { id -> conversations = conversations.filterNot { it.id == id } },\n            )\n        }\n    },\n    detailPane = {\n        AnimatedPane {\n            val onePane = navigator.scaffoldValue[ListDetailPaneScaffoldRole.List] == PaneAdaptedValue.Hidden\n            Column(modifier = Modifier.fillMaxSize()) {\n                MonarchAiConversationHeader(\n                    title = conversations.firstOrNull { it.id == active }?.title.orEmpty(),\n                    agent = agent,\n                    onRename = { title ->\n                        conversations = conversations.map { if (it.id == active) it.copy(title = title) else it }\n                    },\n                    navigationIcon = if (onePane) {\n                        {\n                            MonarchIconButton(\n                                label = \"Conversation history\",\n                                onClick = { scope.launch { navigator.navigateBack() } },\n                            ) {\n                                MonarchIcon(SampleIcons.ArrowBack, contentDescription = null)\n                            }\n                        }\n                    } else {\n                        null\n                    },\n                    actions = {\n                        MonarchButton(\n                            text = \"Show artifact\",\n                            onClick = {},\n                            variant = MonarchButtonVariant.Secondary,\n                            size = MonarchButtonSize.Sm,\n                        )\n                    },\n                )\n                MonarchAiThread(\n                    messages = messages,\n                    modifier = Modifier.weight(1f).padding(horizontal = MonarchTheme.spacing.space4),\n                    status = status,\n                    error = error,\n                    onStop = conversation::stop,\n                    empty = {\n                        MonarchAiWelcome(\n                            title = \"What can I help with?\",\n                            agent = agent,\n                            description = \"Ask about your workspace, or start from a suggestion.\",\n                            icon = { MonarchIcon(SampleIcons.Bot, contentDescription = null) },\n                        ) {\n                            MonarchAiStarterPrompts(\n                                prompts = listOf(\n                                    MonarchAiStarterPrompt(\"s1\", \"Summarise my week\", \"Summarise my week\"),\n                                    MonarchAiStarterPrompt(\"s2\", \"Draft a status update\", \"Draft a status update\"),\n                                ),\n                                onSelect = { conversation.send(it.prompt) },\n                                layout = MonarchAiStarterPromptsLayout.List,\n                            )\n                        }\n                    },\n                )\n                MonarchAiPromptInput(\n                    label = \"Message the assistant\",\n                    state = prompt,\n                    onSubmit = { text -> check(conversation.send(text)) { \"Not sent\" } },\n                    modifier = Modifier.padding(MonarchTheme.spacing.space4),\n                    busy = status == MonarchAiConversationStatus.Submitted ||\n                        status == MonarchAiConversationStatus.Streaming,\n                    onStop = conversation::stop,\n                    footer = { MonarchAiDisclaimer() },\n                )\n            }\n        }\n    },\n)"
+    }
+  ],
+  "webEquivalent": "AiChatPage",
+  "dependsOn": [
+    "ai-thread",
+    "ai-prompt-input",
+    "ai-conversation-list",
+    "ai-conversation-header",
+    "ai-welcome",
+    "ai-conversation"
+  ],
+  "icons": {
+    "newConversation": "PlusGlyph",
+    "search": "SearchGlyph",
+    "pinned": "StarGlyph",
+    "more": "MoreGlyph",
+    "rename": "PencilGlyph",
+    "welcome": "BotGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-text",
+      "platform": "android",
+      "reason": "The web page shows the conversation list beside the chat. On a phone the list and the chat are two screens of a list-detail pattern: the example opens the chat, and the list is the screen behind its back button. The docs preview is recorded in an 840dp tablet window, where both panes show side by side, as on the web; the exception applies to a compact phone window only.",
+      "convention": "list-detail navigates between panes on a compact window (Material adaptive)",
+      "paths": [
+        "New conversation",
+        "Pinned",
+        "Release checklist",
+        "Older",
+        "Interview questions"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "id": "ai-settings-section",
+  "name": null,
+  "title": "AiSettingsSection",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "Form with Section(content:header:footer:), Toggle rows, Picker rows, MonarchSecretField for the provider key, and toolbar ToolbarItem(placement: .cancellationAction) and .confirmationAction for Discard and Save; MonarchSectionCard with the buttons in its footer on a scrolling page",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: workspace AI settings (AI on or off per app, data sharing, conversation retention and a bring-your-own provider key) as Form sections kept as a draft until Save.",
+  "whenToUse": "On a workspace settings screen where admins decide where AI is available and how it handles data.",
+  "whenNotToUse": "For switches that save one by one as they change, use MonarchSwitchSettingsList. For a spending limit use MonarchAiSpendCap; for the model choice, MonarchAiModelPicker.",
+  "api": [
+    "Form { Section { Toggle(appName, isOn: …) } header: { Text(\"Use AI in\") } }",
+    "Section { Toggle(\"Share data to improve AI\", isOn: …); Picker(\"Conversation history\", selection: …) { … } } header: { Text(\"Data\") } footer: { Text(…) }",
+    "Section { Picker(\"AI provider\", selection: …) { … }; MonarchSecretField(\"<Provider> API key\", text: …, helper: …, isSet: keyIsSaved) } header: { Text(\"Provider\") }",
+    ".toolbar { ToolbarItem(placement: .cancellationAction) { Button(\"Discard\") }; ToolbarItem(placement: .confirmationAction) { Button(\"Save\") } }",
+    "MonarchSectionCard(\"AI\", description: …) { rows } actions: { EmptyView() } footer: { MonarchButton(\"Discard\") ; MonarchButton(\"Save changes\", variant: .primary) }"
+  ],
+  "options": [
+    {
+      "name": "apps",
+      "type": "list of app ids and names (app state)",
+      "default": "none",
+      "description": "One Toggle per app under a Use AI in header; leave the section out when there are no apps."
+    },
+    {
+      "name": "isDirty",
+      "type": "Bool (app state)",
+      "default": "false",
+      "description": "The draft differs from the saved settings, or a new key was typed: Discard and Save are enabled."
+    },
+    {
+      "name": "isSaving",
+      "type": "Bool (app state)",
+      "default": "false",
+      "description": "Disable the form and show a ProgressView in place of Save while the app saves."
+    },
+    {
+      "name": "read only",
+      "type": "disabled(true) and a footer",
+      "default": "false",
+      "description": "Every row disabled, the reason in the first section's footer, and no Save or Discard."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The saved settings, Discard and Save disabled."
+    },
+    {
+      "name": "dirty",
+      "description": "Discard and Save enabled in the toolbar."
+    },
+    {
+      "name": "provider chosen",
+      "description": "A MonarchSecretField for the provider's key; a saved key shows as set and is never sent back to the screen."
+    },
+    {
+      "name": "saving",
+      "description": "The form is disabled while the app saves."
+    },
+    {
+      "name": "read only",
+      "description": "Rows disabled and the reason shown in a footer."
+    },
+    {
+      "name": "save failed",
+      "description": "Keep the draft and show the error in an alert or a MonarchInlineErrorRetry above the form."
+    }
+  ],
+  "appearance": "The system grouped form: section headers and footers in the system's secondary styles, toggles and pickers tinted with the accent fill, the secret field in Monarch's field style. The card form uses the MonarchSectionCard surface and Monarch buttons. Both follow light, dark and both high-contrast themes.",
+  "platformNotes": "The web ships AiSettingsSection as one component with a value, a draft and onSave. As for settings-section, iOS makes it a recipe on Form sections: the Form gives the titled groups, headers, footers, Dynamic Type and VoiceOver order of iOS settings, and the app keeps the draft and the saved value. Save and Discard are toolbar buttons, the iOS pattern for editing screens, instead of the web's footer; the card form with the footer is offered for a scrolling page. The web lists apps with SwitchSettingsList, which saves each switch as it changes; this recipe uses plain Toggle rows so the apps stay in the same draft as the other rows (Android does the same with MonarchSwitchRow). The web's NativeSelect is a Picker; its SecretField with isSet is MonarchSecretField with isSet. The web's bot icon in the heading is left out: a Form header is text. Experimental, as a product composite, until a Rook app adopts it.",
+  "accessibility": [
+    "Section headers are read as headings in a Form, and footers after their rows.",
+    "Each app is a system Toggle with its name as the label and its state as the value.",
+    "Pickers are system pickers, read with their label and selected value.",
+    "The provider key is a MonarchSecretField: hidden by default with a Show button, and a saved key read as set.",
+    "Discard and Save are toolbar buttons with text labels, read as dimmed while disabled."
+  ],
+  "edgeCases": [
+    "Apps missing from the saved settings count as off.",
+    "Changing the provider clears a typed key; leaving the key blank keeps the saved one.",
+    "Send the key only when one was typed, and never show a saved key.",
+    "Leaving the screen with unsaved changes should ask first: pair it with the unsaved-changes-guard recipe."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Workspace AI settings",
+      "fixture": "ai-settings-section",
+      "webExample": "Workspace AI settings",
+      "template": "MonarchSectionCard(\n    {{messages.title}},\n    description: {{messages.description}},\n    systemImage: \"cpu\"\n) {\n    VStack(alignment: .leading, spacing: 16) {\n        Text({{messages.appsTitle}})\n            .monarchTextStyle(.label)\n        Text({{messages.appsDescription}})\n            .monarchTextStyle(.caption)\n        VStack(alignment: .leading) {\n            Toggle({{apps.0.label}}, isOn: binding(for: {{apps.0.id}}))\n            Text({{apps.0.description}})\n                .monarchTextStyle(.caption)\n        }\n        VStack(alignment: .leading) {\n            Toggle({{apps.1.label}}, isOn: binding(for: {{apps.1.id}}))\n            Text({{apps.1.description}})\n                .monarchTextStyle(.caption)\n        }\n        Toggle({{apps.2.label}}, isOn: binding(for: {{apps.2.id}}))\n        VStack(alignment: .leading) {\n            Toggle({{messages.dataSharing}}, isOn: $sharing)\n            Text({{messages.dataSharingDescription}})\n                .monarchTextStyle(.caption)\n        }\n        VStack(alignment: .leading) {\n            Toggle({{messages.memory}}, isOn: $memory)\n            Text({{messages.memoryDescription}})\n                .monarchTextStyle(.caption)\n        }\n        MonarchSelectField(\n            {{messages.retention}},\n            selection: $retention,\n            options: [\n                MonarchSelectOption({{retentionOptions.0.label}}, value: {{retentionOptions.0.value}}),\n                MonarchSelectOption({{retentionOptions.1.label}}, value: {{retentionOptions.1.value}}),\n                MonarchSelectOption({{retentionOptions.2.label}}, value: {{retentionOptions.2.value}}),\n                MonarchSelectOption({{retentionOptions.3.label}}, value: {{retentionOptions.3.value}}),\n            ],\n            helper: {{messages.retentionDescription}}\n        )\n        MonarchSelectField(\n            {{messages.provider}},\n            selection: $provider,\n            options: [\n                MonarchSelectOption({{messages.providerDefault}}, value: {{value.provider}}),\n                MonarchSelectOption({{providers.0.label}}, value: {{providers.0.id}}),\n                MonarchSelectOption({{providers.1.label}}, value: {{providers.1.id}}),\n            ],\n            helper: {{messages.providerDescription}}\n        )\n    }\n} footer: {\n    HStack {\n        Spacer()\n        MonarchButton({{messages.discard}}) {\n            apps = savedApps\n            sharing = savedSharing\n            memory = savedMemory\n            retention = savedRetention\n            provider = savedProvider\n        }\n        .disabled(!isDirty)\n        MonarchButton({{messages.save}}, variant: .primary) {\n            // The app saves the draft here.\n            savedApps = apps\n            savedSharing = sharing\n            savedMemory = memory\n            savedRetention = retention\n            savedProvider = provider\n        }\n        .disabled(!isDirty)\n    }\n}",
+      "setupTemplate": "@State private var apps: [String: Bool] = [\n    {{apps.0.id}}: {{value.apps.docs}},\n    {{apps.1.id}}: {{value.apps.mail}},\n    {{apps.2.id}}: {{value.apps.calendar}},\n]\n@State private var savedApps: [String: Bool] = [\n    {{apps.0.id}}: {{value.apps.docs}},\n    {{apps.1.id}}: {{value.apps.mail}},\n    {{apps.2.id}}: {{value.apps.calendar}},\n]\n@State private var sharing = {{value.dataSharing}}\n@State private var savedSharing = {{value.dataSharing}}\n@State private var memory = {{value.memory}}\n@State private var savedMemory = {{value.memory}}\n@State private var retention = {{value.retention}}\n@State private var savedRetention = {{value.retention}}\n@State private var provider = {{value.provider}}\n@State private var savedProvider = {{value.provider}}\n\nprivate var isDirty: Bool {\n    apps != savedApps || sharing != savedSharing || memory != savedMemory\n        || retention != savedRetention || provider != savedProvider\n}\n\nprivate func binding(for app: String) -> Binding<Bool> {\n    Binding(\n        get: { apps[app] ?? false },\n        set: { apps[app] = $0 }\n    )\n}",
+      "setup": "@State private var apps: [String: Bool] = [\n    \"docs\": true,\n    \"mail\": false,\n    \"calendar\": true,\n]\n@State private var savedApps: [String: Bool] = [\n    \"docs\": true,\n    \"mail\": false,\n    \"calendar\": true,\n]\n@State private var sharing = false\n@State private var savedSharing = false\n@State private var memory = true\n@State private var savedMemory = true\n@State private var retention = \"90d\"\n@State private var savedRetention = \"90d\"\n@State private var provider = \"\"\n@State private var savedProvider = \"\"\n\nprivate var isDirty: Bool {\n    apps != savedApps || sharing != savedSharing || memory != savedMemory\n        || retention != savedRetention || provider != savedProvider\n}\n\nprivate func binding(for app: String) -> Binding<Bool> {\n    Binding(\n        get: { apps[app] ?? false },\n        set: { apps[app] = $0 }\n    )\n}",
+      "code": "MonarchSectionCard(\n    \"AI\",\n    description: \"Choose where AI is available in this workspace and how it handles your data.\",\n    systemImage: \"cpu\"\n) {\n    VStack(alignment: .leading, spacing: 16) {\n        Text(\"Use AI in\")\n            .monarchTextStyle(.label)\n        Text(\"Turn AI features on or off for each app.\")\n            .monarchTextStyle(.caption)\n        VStack(alignment: .leading) {\n            Toggle(\"Documents\", isOn: binding(for: \"docs\"))\n            Text(\"Summaries, drafts and answers about pages.\")\n                .monarchTextStyle(.caption)\n        }\n        VStack(alignment: .leading) {\n            Toggle(\"Mail\", isOn: binding(for: \"mail\"))\n            Text(\"Reply suggestions and thread summaries.\")\n                .monarchTextStyle(.caption)\n        }\n        Toggle(\"Calendar\", isOn: binding(for: \"calendar\"))\n        VStack(alignment: .leading) {\n            Toggle(\"Share data to improve AI\", isOn: $sharing)\n            Text(\"Allow prompts and responses to be used to improve AI quality. Off keeps them private to this workspace.\")\n                .monarchTextStyle(.caption)\n        }\n        VStack(alignment: .leading) {\n            Toggle(\"Memory\", isOn: $memory)\n            Text(\"Let AI remember facts and preferences across conversations.\")\n                .monarchTextStyle(.caption)\n        }\n        MonarchSelectField(\n            \"Conversation history\",\n            selection: $retention,\n            options: [\n                MonarchSelectOption(\"30 days\", value: \"30d\"),\n                MonarchSelectOption(\"90 days\", value: \"90d\"),\n                MonarchSelectOption(\"1 year\", value: \"1y\"),\n                MonarchSelectOption(\"Until deleted\", value: \"forever\"),\n            ],\n            helper: \"How long AI conversations are kept before they are deleted.\"\n        )\n        MonarchSelectField(\n            \"AI provider\",\n            selection: $provider,\n            options: [\n                MonarchSelectOption(\"Built-in\", value: \"\"),\n                MonarchSelectOption(\"Provider A\", value: \"provider-a\"),\n                MonarchSelectOption(\"Provider B\", value: \"provider-b\"),\n            ],\n            helper: \"Use the built-in provider or bring your own key.\"\n        )\n    }\n} footer: {\n    HStack {\n        Spacer()\n        MonarchButton(\"Discard\") {\n            apps = savedApps\n            sharing = savedSharing\n            memory = savedMemory\n            retention = savedRetention\n            provider = savedProvider\n        }\n        .disabled(!isDirty)\n        MonarchButton(\"Save changes\", variant: .primary) {\n            // The app saves the draft here.\n            savedApps = apps\n            savedSharing = sharing\n            savedMemory = memory\n            savedRetention = retention\n            savedProvider = provider\n        }\n        .disabled(!isDirty)\n    }\n}"
+    },
+    {
+      "title": "Read only, on a scrolling page",
+      "code": "MonarchSectionCard(\"AI\", description: \"Only workspace admins can change these settings.\") {\n    Toggle(\"CRM\", isOn: .constant(true))\n        .monarchTextStyle(.body)\n    Toggle(\"Share data to improve AI\", isOn: .constant(false))\n        .monarchTextStyle(.body)\n}\n.disabled(true)"
+    }
+  ],
+  "webEquivalent": "AiSettingsSection",
+  "dependsOn": [
+    "settings-section",
+    "secret-field",
+    "select",
+    "switch",
+    "section-card",
+    "switch-settings-list"
+  ],
+  "icons": {
+    "header": "BotGlyph"
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "id": "ai-knowledge-scope",
+  "name": "MonarchAiKnowledgeScope",
+  "title": "AiKnowledgeScope",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Toggle and Toggle(sources:isOn:) with .toggleStyle(.monarchCheckbox) in an indented VStack tree; Button for each group's disclosure",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A tree of spaces, documents and apps with checkboxes, where a person picks what grounds the assistant's answers.",
+  "whenToUse": "Before or during a conversation, to let a person choose which spaces, documents and connected apps the assistant may search.",
+  "whenNotToUse": "Not for what the assistant may do with a connector (use MonarchAiPermissionScope) and not for choosing one source (use a Picker).",
+  "api": [
+    "init(_ sources: [MonarchAiKnowledgeSource], selection: Binding<[String]>, startsExpanded: Set<String> = [], showsSummary: Bool = true, labels: MonarchAiKnowledgeScopeLabels = MonarchAiKnowledgeScopeLabels())",
+    "struct MonarchAiKnowledgeSource { init(id: String, label: String, kind: MonarchAiKnowledgeSourceKind, description: String? = nil, children: [MonarchAiKnowledgeSource] = []) }",
+    "enum MonarchAiKnowledgeSourceKind: String { case space, document = \"doc\", app }",
+    "struct MonarchAiKnowledgeScopeLabels { init(label: String? = nil, kind: ((MonarchAiKnowledgeSourceKind) -> String)? = nil, itemLabel: ((String, String) -> String)? = nil, summary: ((Int) -> String)? = nil, empty: String? = nil, expand: ((String) -> String)? = nil, collapse: ((String) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "sources",
+      "type": "[MonarchAiKnowledgeSource]",
+      "default": "required",
+      "description": "The sources as a tree: each has an id, a label, a kind (space, document, app), an optional description and optional children."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<[String]>",
+      "default": "required",
+      "description": "The ids of the selected sources. A group's id stands for everything in it. Written after every change with every fully selected source, groups included, in tree order; ids not in the tree are kept at the end."
+    },
+    {
+      "name": "startsExpanded",
+      "type": "Set<String>",
+      "default": "[]",
+      "description": "The ids of the groups that start open."
+    },
+    {
+      "name": "showsSummary",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether \"3 sources selected\" is shown under the tree. A fully selected group counts as one."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiKnowledgeScopeLabels",
+      "default": "MonarchAiKnowledgeScopeLabels()",
+      "description": "Replacements for the built-in strings."
+    }
+  ],
+  "states": [
+    {
+      "name": "unchecked",
+      "description": "Empty checkbox. Checking it selects the source and everything in it."
+    },
+    {
+      "name": "checked",
+      "description": "Filled checkbox with a check mark. Checking it again clears the source and everything in it."
+    },
+    {
+      "name": "mixed",
+      "description": "A group with some of its contents selected: filled checkbox with a dash. Checking it clears the group."
+    },
+    {
+      "name": "expanded",
+      "description": "A group's chevron points down and its contents follow, indented one level."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true) the checkboxes take the disabled roles and cannot be changed; groups can still be opened."
+    },
+    {
+      "name": "empty",
+      "description": "No sources: a small MonarchEmptyState reading \"No sources available\"."
+    }
+  ],
+  "appearance": "Each row is a Monarch checkbox with the label in the default text role and the description and kind in the muted text role; the chevron uses the subtle text role. Levels are indented by a spacing token. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web builds an ARIA tree with a roving focus and arrow keys; iOS uses standard toggles in a column, so VoiceOver, Switch Control and a hardware keyboard move through them like any controls, and a group's disclosure is a separate button. Level, set size and position are not spoken on iOS. The web's Space and Enter shortcuts are the toggle's own activation. The web announces the summary politely; iOS shows it as text and lets each checkbox speak its new value. The web's controlled expanded and onExpandedChange are not offered; startsExpanded sets the first state. disabled is SwiftUI's .disabled(_:).",
+  "accessibility": [
+    "The tree is a container named \"Knowledge sources\".",
+    "Each source is a checkbox (a standard Toggle through the Monarch checkbox style) named \"Handbook, Space\", whose value is on, off or mixed; the description is its hint.",
+    "A partly selected group is a standard mixed toggle, so its state is spoken, not only drawn as a dash.",
+    "Each group has a disclosure button named \"Show contents of Handbook\" or \"Hide contents of Handbook\".",
+    "Every checkbox and disclosure button has a 44-point touch target; labels and descriptions wrap at every text size.",
+    "The chevron uses forward and down symbols, so it points the right way in right-to-left layouts."
+  ],
+  "edgeCases": [
+    "Checking a group selects every descendant; checking the last unchecked child of a group selects the group.",
+    "Selecting a group's id alone checks everything under it.",
+    "Ids in the selection that are not in the tree are kept, at the end.",
+    "A group whose parent is closed stays hidden even if it is in startsExpanded.",
+    "An empty tree shows the empty state and no summary."
+  ],
+  "tests": [
+    "MonarchAiKnowledgeScopeTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Choose sources",
+      "fixture": "ai-knowledge-scope",
+      "webExample": "Choose sources",
+      "template": "MonarchAiKnowledgeScope(\n    [\n        MonarchAiKnowledgeSource(\n            id: {{sources.0.id}},\n            label: {{sources.0.label}},\n            kind: MonarchAiKnowledgeSourceKind(rawValue: {{sources.0.kind}})!,\n            description: {{sources.0.description}},\n            children: [\n                MonarchAiKnowledgeSource(\n                    id: {{sources.0.children.0.id}},\n                    label: {{sources.0.children.0.label}},\n                    kind: MonarchAiKnowledgeSourceKind(rawValue: {{sources.0.children.0.kind}})!\n                ),\n                MonarchAiKnowledgeSource(\n                    id: {{sources.0.children.1.id}},\n                    label: {{sources.0.children.1.label}},\n                    kind: MonarchAiKnowledgeSourceKind(rawValue: {{sources.0.children.1.kind}})!\n                ),\n                MonarchAiKnowledgeSource(\n                    id: {{sources.0.children.2.id}},\n                    label: {{sources.0.children.2.label}},\n                    kind: MonarchAiKnowledgeSourceKind(rawValue: {{sources.0.children.2.kind}})!\n                ),\n            ]\n        ),\n        MonarchAiKnowledgeSource(\n            id: {{sources.1.id}},\n            label: {{sources.1.label}},\n            kind: MonarchAiKnowledgeSourceKind(rawValue: {{sources.1.kind}})!,\n            children: [\n                MonarchAiKnowledgeSource(\n                    id: {{sources.1.children.0.id}},\n                    label: {{sources.1.children.0.label}},\n                    kind: MonarchAiKnowledgeSourceKind(rawValue: {{sources.1.children.0.kind}})!\n                ),\n                MonarchAiKnowledgeSource(\n                    id: {{sources.1.children.1.id}},\n                    label: {{sources.1.children.1.label}},\n                    kind: MonarchAiKnowledgeSourceKind(rawValue: {{sources.1.children.1.kind}})!\n                ),\n            ]\n        ),\n        MonarchAiKnowledgeSource(\n            id: {{sources.2.id}},\n            label: {{sources.2.label}},\n            kind: MonarchAiKnowledgeSourceKind(rawValue: {{sources.2.kind}})!,\n            description: {{sources.2.description}}\n        ),\n    ],\n    selection: $selection,\n    startsExpanded: [{{expanded.0}}]\n)",
+      "setupTemplate": "@State private var selection = [{{selection.0}}, {{selection.1}}]",
+      "setup": "@State private var selection = [\"policies\", \"calendar\"]",
+      "code": "MonarchAiKnowledgeScope(\n    [\n        MonarchAiKnowledgeSource(\n            id: \"handbook\",\n            label: \"Team handbook\",\n            kind: MonarchAiKnowledgeSourceKind(rawValue: \"space\")!,\n            description: \"3 documents\",\n            children: [\n                MonarchAiKnowledgeSource(\n                    id: \"policies\",\n                    label: \"Policies\",\n                    kind: MonarchAiKnowledgeSourceKind(rawValue: \"doc\")!\n                ),\n                MonarchAiKnowledgeSource(\n                    id: \"onboarding\",\n                    label: \"Onboarding guide\",\n                    kind: MonarchAiKnowledgeSourceKind(rawValue: \"doc\")!\n                ),\n                MonarchAiKnowledgeSource(\n                    id: \"travel\",\n                    label: \"Travel guidelines\",\n                    kind: MonarchAiKnowledgeSourceKind(rawValue: \"doc\")!\n                ),\n            ]\n        ),\n        MonarchAiKnowledgeSource(\n            id: \"projects\",\n            label: \"Projects\",\n            kind: MonarchAiKnowledgeSourceKind(rawValue: \"space\")!,\n            children: [\n                MonarchAiKnowledgeSource(\n                    id: \"roadmap\",\n                    label: \"Roadmap\",\n                    kind: MonarchAiKnowledgeSourceKind(rawValue: \"doc\")!\n                ),\n                MonarchAiKnowledgeSource(\n                    id: \"launch-notes\",\n                    label: \"Launch notes\",\n                    kind: MonarchAiKnowledgeSourceKind(rawValue: \"doc\")!\n                ),\n            ]\n        ),\n        MonarchAiKnowledgeSource(\n            id: \"calendar\",\n            label: \"Calendar\",\n            kind: MonarchAiKnowledgeSourceKind(rawValue: \"app\")!,\n            description: \"Events you can see\"\n        ),\n    ],\n    selection: $selection,\n    startsExpanded: [\"handbook\"]\n)"
+    }
+  ],
+  "webEquivalent": "AiKnowledgeScope",
+  "dependsOn": [
+    "tree-view",
+    "checkbox",
+    "empty-state"
+  ],
+  "icons": {
+    "expand.open": "ChevronDownGlyph",
+    "expand.closed": "ChevronRightGlyph",
+    "state.checked": "CheckGlyph",
+    "state.partial": "DashGlyph"
+  }
+}

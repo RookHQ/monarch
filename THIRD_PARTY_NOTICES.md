@@ -92,7 +92,9 @@ from [Lucide](https://lucide.dev), which is licensed under the ISC License:
 > OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 > PERFORMANCE OF THIS SOFTWARE.
 
-Monarch itself ships no icon set; applications bring their own.
+Monarch itself ships no icon set; applications bring their own. Monarch for
+Android bundles a few Material Symbols glyphs for its own components (see
+[Native platform dependencies](#native-platform-dependencies)).
 
 ## Fonts
 
@@ -203,14 +205,30 @@ FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
 ```
 
+The native libraries use the system typeface by default and bundle no font.
+Two **optional** artifacts ship Poppins (regular 400, medium 500 and semibold
+600, `ttf`, version 4.004) for apps that choose it: `monarch-fonts-poppins`
+for Android (`platforms/android/monarch-fonts-poppins`) and
+`MonarchFontsPoppins` for iOS (`platforms/ios/Sources/MonarchFontsPoppins`).
+The fonts are unmodified. Each artifact carries the licence text above next to
+the font files (`OFL.txt`; on Android also as the raw resource
+`monarch_poppins_ofl`). The Open Font License allows bundling and
+redistributing the fonts with software, requires that the copyright notice and
+licence travel with them, and forbids selling the fonts on their own; Monarch
+does not sell them. The rule against Apple system fonts (San Francisco, New
+York) is about Apple's licence and does not apply to Poppins.
+
 ## Data
 
-Monarch ships two small data sets.
+Monarch ships two small data sets, on the web and in the native libraries,
+and relies on reference codes and platform data for the rest.
 
 ### World map outlines
 
 `WorldMap` (`packages/react/src/components/geo/world-map/world-map.data.ts`)
-contains a simplified outline of the world's countries, generated from
+and its native counterparts (`MonarchWorldMapGeometrySource.swift` in
+Monarch for iOS, `WorldMapGeometrySource.kt` in Monarch for Android) contain a
+simplified outline of the world's countries, generated from
 [Natural Earth](https://www.naturalearthdata.com) 1:110m admin-0 countries,
 with centroids from the 1:50m set. Natural Earth data is in the public domain
 ([terms of use](https://www.naturalearthdata.com/about/terms-of-use/)). The
@@ -236,10 +254,12 @@ THIS SOFTWARE.
 ### Emoji names
 
 The built-in emoji index of `EmojiPicker`
-(`packages/react/src/components/collaboration/emoji-picker/emoji-picker.data.ts`)
-uses the English short names of the Unicode Common Locale Data Repository
-(CLDR) for about 500 emoji. The search keywords are Monarch's own. CLDR data
-is provided under the Unicode License v3:
+(`packages/react/src/components/collaboration/emoji-picker/emoji-picker.data.ts`),
+ported to Monarch for iOS (`MonarchEmojiPickerData.swift`), uses the English
+short names of the Unicode Common Locale Data Repository (CLDR) for about 500
+emoji. The search keywords are Monarch's own. Monarch for Android uses the
+platform's emoji support and ships no emoji data. CLDR data is provided under
+the Unicode License v3:
 
 ```text
 UNICODE LICENSE V3
@@ -282,6 +302,50 @@ not be used in advertising or otherwise to promote the sale, use or other
 dealings in these Data Files or Software without prior written
 authorization of the copyright holder.
 ```
+
+### Codes and platform data
+
+- Country, currency and language codes (ISO 3166-1, ISO 4217, BCP 47) and
+  international calling codes (ITU-T E.164) appear in the web components and
+  were copied into the native libraries as lists of codes. They are
+  reference facts, not licensed content.
+- Country, currency and language **names** on Android and iOS come from the
+  operating system at run time (`Locale` in Foundation, `java.util.Locale` and
+  `android.icu` on Android). Monarch's native libraries do not ship them.
+
+## Native platform dependencies
+
+- **Monarch for iOS** has no third-party dependency. It builds against Apple's
+  SDKs (SwiftUI, Foundation), which are provided by Apple under the Xcode and
+  Apple SDKs Agreement and are not redistributed by Monarch. It refers to SF
+  Symbols by name and bundles no symbol or Apple font files. The optional
+  `MonarchFontsPoppins` product ships Poppins (see Fonts).
+- **Monarch for Android** depends on AndroidX libraries published by Google
+  under the Apache License 2.0: Jetpack Compose (`ui`, `foundation`),
+  Material 3 (`material3`, the adaptive layout artifacts) and
+  `activity-compose`. They are resolved by the app's build from Google's Maven
+  repository and are not copied into Monarch.
+- The Android examples, tests and sample app use the Material icons of
+  `androidx.compose.material:material-icons-extended`, published by Google
+  under the Apache License 2.0 (the Material Symbols are under the same
+  license). They are a test and sample dependency only: the library does
+  not depend on them. The unpublished module `monarch-sample-icons` wraps
+  them for the examples.
+- **Material Symbols** (Outlined, weight 400, 24 dp): the Monarch for Android
+  library bundles the few glyphs its components draw by default, the ones the
+  web components draw themselves (tone icons, edit, chevrons, close, lock,
+  check, dash). They are listed in `platforms/icons.json` (`bundled: true`),
+  vendored as SVG in `platforms/android/glyphs/material-symbols-outlined/`
+  and compiled into `internal/MonarchGlyphs.kt` by
+  `scripts/native/glyphs.mjs`. Material Symbols are Copyright Google LLC and
+  licensed under the Apache License, Version 2.0
+  (<https://github.com/google/material-design-icons/blob/master/LICENSE>),
+  the same license as Monarch.
+- The optional font artifacts are described under [Fonts](#fonts).
+
+The terms that apply to apps built with these SDKs are summarised, with links
+to the official texts, in
+[NATIVE-PLATFORMS](docs/architecture/NATIVE-PLATFORMS.md#platform-terms).
 
 ## Development-only dependencies
 

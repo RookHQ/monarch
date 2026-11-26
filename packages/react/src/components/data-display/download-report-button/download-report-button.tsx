@@ -88,6 +88,10 @@ export interface DownloadReportButtonProps extends Omit<
   size?: 'sm' | 'md' | undefined;
   /** Disables the button, e.g. while the report has no rows. */
   disabled?: boolean | undefined;
+  /** With several formats: whether the format menu is open (controlled). */
+  open?: boolean | undefined;
+  /** With several formats: called when the format menu opens or closes. */
+  onOpenChange?: ((open: boolean) => void) | undefined;
   /** Strings, for localisation. */
   messages?: Partial<DownloadReportButtonMessages> | undefined;
 }
@@ -116,6 +120,8 @@ export const DownloadReportButton = forwardRef<HTMLDivElement, DownloadReportBut
       variant = 'secondary',
       size = 'sm',
       disabled = false,
+      open,
+      onOpenChange,
       messages: messagesProp,
       className,
       ...rest
@@ -189,7 +195,10 @@ export const DownloadReportButton = forwardRef<HTMLDivElement, DownloadReportBut
             {messages.single(single.label)}
           </Button>
         ) : (
-          <DropdownMenu>
+          <DropdownMenu
+            {...(open !== undefined ? { open } : {})}
+            {...(onOpenChange ? { onOpenChange } : {})}
+          >
             <DropdownMenuTrigger asChild>
               <Button
                 {...buttonProps}

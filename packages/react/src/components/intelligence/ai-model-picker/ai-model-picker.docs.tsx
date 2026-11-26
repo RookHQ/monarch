@@ -1,55 +1,15 @@
 import { useState } from 'react';
 import { AiModelPicker, type AiModelOption } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-model-picker.fixture.json';
 
-const models: AiModelOption[] = [
-  {
-    id: 'standard',
-    provider: 'Workspace models',
-    name: 'Standard',
-    description: 'Everyday questions and drafts',
-    capabilities: ['tools', 'web'],
-    contextTokens: 128000,
-    speed: 'fast',
-    costTier: 1,
-  },
-  {
-    id: 'advanced',
-    provider: 'Workspace models',
-    name: 'Advanced',
-    description: 'Long documents and careful analysis',
-    capabilities: ['vision', 'tools', 'reasoning', 'web'],
-    contextTokens: 200000,
-    speed: 'slow',
-    costTier: 3,
-  },
-  {
-    id: 'own-large',
-    provider: 'Your provider',
-    name: 'Large (your key)',
-    capabilities: ['vision', 'tools'],
-    contextTokens: 1000000,
-    speed: 'balanced',
-    costTier: 2,
-    requiresKey: true,
-    keyConfigured: false,
-  },
-  {
-    id: 'own-small',
-    provider: 'Your provider',
-    name: 'Small (your key)',
-    capabilities: ['tools'],
-    contextTokens: 32000,
-    speed: 'fast',
-    costTier: 1,
-    requiresKey: true,
-    keyConfigured: true,
-  },
-];
+const models = fixture.data.models as AiModelOption[];
 
 function Demo() {
-  const [value, setValue] = useState('standard');
+  const [value, setValue] = useState(fixture.data.selected);
   const [note, setNote] = useState('');
+  const [open, setOpen] = useState(true);
   return (
     <div style={{ display: 'grid', gap: 8, justifyItems: 'start' }}>
       <AiModelPicker
@@ -60,6 +20,8 @@ function Demo() {
           setNote('');
         }}
         onConfigureKey={(model) => setNote(`Open key settings for ${model.name}`)}
+        open={open}
+        onOpenChange={setOpen}
       />
       {note ? <p style={{ margin: 0 }}>{note}</p> : null}
     </div>
@@ -185,7 +147,7 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Models with bring-your-own keys', render: () => <Demo /> },
+        { title: 'Models with bring-your-own keys', stage: true, render: () => <Demo /> },
         {
           title: 'Small, in a prompt toolbar',
           render: () => (

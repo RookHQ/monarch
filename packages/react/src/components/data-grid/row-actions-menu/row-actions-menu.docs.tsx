@@ -1,7 +1,41 @@
+import { useState, type ComponentProps } from 'react';
 import { RowActionsMenu } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './row-actions-menu.fixture.json';
 
 const noop = () => {};
+
+function ReportRow() {
+  const [open, setOpen] = useState(true);
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '0.375rem 0.75rem',
+        width: '100%',
+        paddingInlineStart: '0.75rem',
+      }}
+    >
+      <span>{fixture.data.rowLabel}</span>
+      <RowActionsMenu
+        rowLabel={fixture.data.rowLabel}
+        open={open}
+        onOpenChange={setOpen}
+        actions={
+          fixture.data.actions.map((action) => ({
+            id: action.label.toLowerCase(),
+            onSelect: noop,
+            ...action,
+          })) as ComponentProps<typeof RowActionsMenu>['actions']
+        }
+      />
+    </div>
+  );
+}
 
 export default {
   id: 'row-actions-menu',
@@ -104,26 +138,8 @@ export default {
       items: [
         {
           title: 'With a confirmed delete',
-          render: () => (
-            <RowActionsMenu
-              rowLabel="Report 12"
-              actions={[
-                { id: 'open', label: 'Open', onSelect: noop },
-                { id: 'rename', label: 'Rename', shortcut: 'F2', onSelect: noop },
-                {
-                  id: 'delete',
-                  label: 'Delete',
-                  tone: 'danger',
-                  onSelect: noop,
-                  confirm: {
-                    title: 'Delete Report 12?',
-                    description: 'The report and its history are removed.',
-                    confirmLabel: 'Delete report',
-                  },
-                },
-              ]}
-            />
-          ),
+          stage: { align: 'end' },
+          render: () => <ReportRow />,
         },
       ],
     },

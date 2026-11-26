@@ -66,7 +66,9 @@ for (const s of strayFiles())
 
 // ---------------------------------------------------------------- 1 + 2: layout
 const ALLOWED = (id: string) =>
-  new RegExp(`^${id}(\\.[a-z0-9-]+)?\\.(tsx|ts|css)$|^${id}\\.(test|docs)\\.tsx?$|^index\\.ts$`);
+  new RegExp(
+    `^${id}(\\.[a-z0-9-]+)?\\.(tsx|ts|css)$|^${id}\\.(test|docs)\\.tsx?$|^${id}\\.fixture\\.json$|^index\\.ts$`,
+  );
 for (const f of folders) {
   const where = `src/${f.rel}`;
   const reg = byId.get(f.id);

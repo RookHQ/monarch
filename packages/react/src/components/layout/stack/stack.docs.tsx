@@ -1,5 +1,7 @@
 import { Badge, Button, Card, CardContent, Stack } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './stack.fixture.json';
 
 const box = {
   padding: 12,
@@ -110,9 +112,11 @@ export default {
           stack: true,
           render: () => (
             <Stack style={{ width: '100%', maxWidth: 360 }}>
-              <div style={box}>Profile</div>
-              <div style={box}>Notifications</div>
-              <div style={box}>Security</div>
+              {fixture.data.boxes.map((text) => (
+                <div key={text} style={box}>
+                  {text}
+                </div>
+              ))}
             </Stack>
           ),
         },

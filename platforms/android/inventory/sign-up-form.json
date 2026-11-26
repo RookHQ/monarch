@@ -1,0 +1,125 @@
+{
+  "id": "sign-up-form",
+  "name": null,
+  "title": "SignUpForm",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.layout.Column with MonarchTextField (autofill content types PersonFullName, NewUsername and EmailAddress), MonarchPasswordInput (new-password purpose), MonarchPasswordStrengthMeter, MonarchTermsAcceptance, MonarchInlineNotice, MonarchButton and MonarchLink",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: create an account with a name, an email and a new password, with the password rules, terms to accept, field errors and a link to sign in.",
+  "whenToUse": "For the sign-up screen of an app that has its own accounts.",
+  "whenNotToUse": "When the app signs people up only with Rook ID, show MonarchSignInWithRookButton. To sign in, use the SignInForm recipe; to join from an invitation with a known email, show the email as text instead of a field.",
+  "api": [
+    "MonarchTextField(value = name, onValueChange = …, modifier = Modifier.semantics { contentType = ContentType.PersonFullName }, label = \"Full name\", errorText = nameError)",
+    "MonarchTextField(value = email, onValueChange = …, modifier = Modifier.semantics { contentType = ContentType.NewUsername + ContentType.EmailAddress }, label = \"Email\", errorText = emailError, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, autoCorrectEnabled = false))",
+    "MonarchPasswordInput(value = password, onValueChange = …, label = \"Password\", errorText = passwordError, purpose = MonarchPasswordInputPurpose.New)",
+    "MonarchPasswordStrengthMeter(password = password, rules = rules)",
+    "MonarchTermsAcceptance(accepted = accepted, onAcceptedChange = …, documents = documents, showRequiredError = tried)",
+    "MonarchButton(text = \"Create account\", onClick = createAccount, modifier = Modifier.fillMaxWidth(), variant = MonarchButtonVariant.Primary, loading = creating)"
+  ],
+  "options": [
+    {
+      "name": "nameError",
+      "type": "String?",
+      "default": "null",
+      "description": "An empty name, shown on the field after the first attempt."
+    },
+    {
+      "name": "emailError",
+      "type": "String?",
+      "default": "null",
+      "description": "An empty or malformed email, or the server's \"already in use\" answer, shown on the field."
+    },
+    {
+      "name": "passwordError",
+      "type": "String?",
+      "default": "null",
+      "description": "A password that misses a rule of MonarchPasswordRule.defaults(), shown on the field; the meter lists which rule."
+    },
+    {
+      "name": "formError",
+      "type": "String?",
+      "default": "null",
+      "description": "Any other failure, in a danger MonarchInlineNotice above the fields."
+    },
+    {
+      "name": "creating",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Passed to Create account's loading while the request runs."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The title, the name, email and password fields, the strength meter with its rules, the terms checkbox, Create account and the link to sign in."
+    },
+    {
+      "name": "field errors",
+      "description": "An empty name, an empty or malformed email, a password that misses a rule and unaccepted terms each show their error before anything is sent."
+    },
+    {
+      "name": "creating",
+      "description": "Create account shows its progress indicator and reads \"Loading\"."
+    },
+    {
+      "name": "email taken",
+      "description": "The server's answer goes on the email field; any other failure goes in a danger MonarchInlineNotice above the fields."
+    },
+    {
+      "name": "invitation",
+      "description": "Prefill the email from an invitation and show it as text instead of a field."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component: outlined fields with their errors, the strength meter's segments and rule list, the terms checkbox row, a full-width primary button and a standalone link. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web's SignUpForm is one component with onSubmit, its own messages and an optional confirm-password field. On Android, as on iOS, it is a recipe, because the request and navigation belong to the app. There is no confirm field: the password's reveal button shows typos, and the new-password purpose of MonarchPasswordInput lets autofill services and Google Password Manager suggest a strong password and save it. The email field's NewUsername and EmailAddress content types, and PersonFullName on the name, tell autofill what to offer. Optional single sign-on goes above the fields with MonarchSignInWithRookButton and an \"or\" divider, as in the SignInForm recipe.",
+  "accessibility": [
+    "The title has the heading semantics.",
+    "Field errors come from MonarchTextField and MonarchPasswordInput, which show them in words and mark the fields as in error.",
+    "The strength meter reads the strength and each rule as met or not met, in words.",
+    "The terms checkbox is one element with the checkbox role; its required error is a visible message.",
+    "Create account is a MonarchButton with a 48dp target and a loading state; the sign-in link is a MonarchLink."
+  ],
+  "edgeCases": [
+    "Trim spaces around the email and the name but never change the password.",
+    "Never save the password in the instance state; keep it in remember, not rememberSaveable.",
+    "Show errors only after the first attempt, then update them as the person types.",
+    "Send the accepted document versions and the date from MonarchTermsAcceptanceDetails with the request."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "With terms (try an @example.org address)",
+      "fixture": "sign-up-form",
+      "webExample": "With terms (try an @example.org address)",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    formError?.let { MonarchInlineNotice(message = it, tone = MonarchTone.Danger) }\n    MonarchTextField(\n        value = name,\n        onValueChange = { name = it },\n        modifier = Modifier.semantics { contentType = ContentType.PersonFullName },\n        label = \"Full name\",\n        required = true,\n        errorText = nameError,\n        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),\n    )\n    MonarchTextField(\n        value = email,\n        onValueChange = { email = it },\n        modifier = Modifier.semantics { contentType = ContentType.NewUsername + ContentType.EmailAddress },\n        label = \"Email\",\n        required = true,\n        errorText = emailError,\n        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, autoCorrectEnabled = false),\n    )\n    MonarchPasswordInput(\n        value = password,\n        onValueChange = { password = it },\n        label = \"Password\",\n        required = true,\n        errorText = passwordError,\n        purpose = MonarchPasswordInputPurpose.New,\n    )\n    MonarchPasswordStrengthMeter(password = password, rules = rules)\n    MonarchTermsAcceptance(\n        accepted = accepted,\n        onAcceptedChange = { value, details ->\n            accepted = value\n            // Send details.versions and details.dateMillis with the request.\n        },\n        documents = documents,\n        showRequiredError = tried,\n    )\n    MonarchButton(\n        text = \"Create account\",\n        onClick = createAccount,\n        modifier = Modifier.fillMaxWidth(),\n        variant = MonarchButtonVariant.Primary,\n        loading = creating,\n    )\n    Row(\n        modifier = Modifier.align(Alignment.CenterHorizontally),\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n        verticalAlignment = Alignment.CenterVertically,\n    ) {\n        MonarchText(text = \"Already have an account?\")\n        MonarchLink(\n            text = \"Sign in\",\n            onClick = { /* Open sign-in. */ },\n            variant = MonarchLinkVariant.Standalone,\n        )\n    }\n}",
+      "setupTemplate": "val scope = rememberCoroutineScope()\nval rules = MonarchPasswordRule.defaults()\nval documents = listOf(\n    MonarchTermsDocument({{terms.0.label}}, \"https://example.com/terms\", version = {{terms.0.version}}),\n    MonarchTermsDocument({{terms.1.label}}, \"https://example.com/privacy\", version = {{terms.1.version}}),\n)\nvar name by rememberSaveable { mutableStateOf(\"\") }\nvar email by rememberSaveable { mutableStateOf({{email}}) }\nvar password by remember { mutableStateOf(\"\") }\nvar accepted by rememberSaveable { mutableStateOf(false) }\nvar tried by rememberSaveable { mutableStateOf(false) }\nvar emailTaken by remember { mutableStateOf<String?>(null) }\nvar formError by remember { mutableStateOf<String?>(null) }\nvar creating by remember { mutableStateOf(false) }\nval nameError = \"Enter your name.\".takeIf { tried && name.isBlank() }\nval emailError = emailTaken ?: \"Enter an email address like name@example.com.\"\n    .takeIf { tried && (\"@\" !in email.trim() || \".\" !in email.trim()) }\nval passwordError = \"Choose a password that meets every rule.\".takeIf { tried && !rules.all { it.test(password) } }\nval createAccount = {\n    tried = true\n    val valid = name.isNotBlank() && \"@\" in email.trim() && \".\" in email.trim() && rules.all { it.test(password) }\n    if (valid && accepted) {\n        creating = true\n        scope.launch {\n            // The app's request. An email in use sets emailTaken; any other failure sets formError.\n            creating = false\n        }\n    }\n}",
+      "imports": [
+        "kotlinx.coroutines.launch",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.ui.autofill.ContentType",
+        "androidx.compose.ui.text.input.KeyboardType",
+        "androidx.compose.ui.text.input.KeyboardCapitalization",
+        "androidx.compose.ui.Alignment"
+      ],
+      "setup": "val scope = rememberCoroutineScope()\nval rules = MonarchPasswordRule.defaults()\nval documents = listOf(\n    MonarchTermsDocument(\"Terms of Service\", \"https://example.com/terms\", version = \"2026-01\"),\n    MonarchTermsDocument(\"Privacy Policy\", \"https://example.com/privacy\", version = \"2026-01\"),\n)\nvar name by rememberSaveable { mutableStateOf(\"\") }\nvar email by rememberSaveable { mutableStateOf(\"\") }\nvar password by remember { mutableStateOf(\"\") }\nvar accepted by rememberSaveable { mutableStateOf(false) }\nvar tried by rememberSaveable { mutableStateOf(false) }\nvar emailTaken by remember { mutableStateOf<String?>(null) }\nvar formError by remember { mutableStateOf<String?>(null) }\nvar creating by remember { mutableStateOf(false) }\nval nameError = \"Enter your name.\".takeIf { tried && name.isBlank() }\nval emailError = emailTaken ?: \"Enter an email address like name@example.com.\"\n    .takeIf { tried && (\"@\" !in email.trim() || \".\" !in email.trim()) }\nval passwordError = \"Choose a password that meets every rule.\".takeIf { tried && !rules.all { it.test(password) } }\nval createAccount = {\n    tried = true\n    val valid = name.isNotBlank() && \"@\" in email.trim() && \".\" in email.trim() && rules.all { it.test(password) }\n    if (valid && accepted) {\n        creating = true\n        scope.launch {\n            // The app's request. An email in use sets emailTaken; any other failure sets formError.\n            creating = false\n        }\n    }\n}",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    formError?.let { MonarchInlineNotice(message = it, tone = MonarchTone.Danger) }\n    MonarchTextField(\n        value = name,\n        onValueChange = { name = it },\n        modifier = Modifier.semantics { contentType = ContentType.PersonFullName },\n        label = \"Full name\",\n        required = true,\n        errorText = nameError,\n        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),\n    )\n    MonarchTextField(\n        value = email,\n        onValueChange = { email = it },\n        modifier = Modifier.semantics { contentType = ContentType.NewUsername + ContentType.EmailAddress },\n        label = \"Email\",\n        required = true,\n        errorText = emailError,\n        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, autoCorrectEnabled = false),\n    )\n    MonarchPasswordInput(\n        value = password,\n        onValueChange = { password = it },\n        label = \"Password\",\n        required = true,\n        errorText = passwordError,\n        purpose = MonarchPasswordInputPurpose.New,\n    )\n    MonarchPasswordStrengthMeter(password = password, rules = rules)\n    MonarchTermsAcceptance(\n        accepted = accepted,\n        onAcceptedChange = { value, details ->\n            accepted = value\n            // Send details.versions and details.dateMillis with the request.\n        },\n        documents = documents,\n        showRequiredError = tried,\n    )\n    MonarchButton(\n        text = \"Create account\",\n        onClick = createAccount,\n        modifier = Modifier.fillMaxWidth(),\n        variant = MonarchButtonVariant.Primary,\n        loading = creating,\n    )\n    Row(\n        modifier = Modifier.align(Alignment.CenterHorizontally),\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n        verticalAlignment = Alignment.CenterVertically,\n    ) {\n        MonarchText(text = \"Already have an account?\")\n        MonarchLink(\n            text = \"Sign in\",\n            onClick = { /* Open sign-in. */ },\n            variant = MonarchLinkVariant.Standalone,\n        )\n    }\n}"
+    }
+  ],
+  "webEquivalent": "SignUpForm",
+  "dependsOn": [
+    "text-field",
+    "password-input",
+    "password-strength-meter",
+    "terms-acceptance",
+    "button",
+    "inline-notice",
+    "link"
+  ]
+}

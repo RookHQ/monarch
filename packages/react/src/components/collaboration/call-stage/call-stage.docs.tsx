@@ -7,20 +7,16 @@ import {
   type CallViewMode,
 } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './call-stage.fixture.json';
 
-const STARTED = Date.now() - 4 * 60_000;
+const STARTED = Date.now() - fixture.data.elapsedSeconds * 1000;
 
-const me: CallParticipant = { id: 'me', name: 'Sam Lee', self: true };
-const robin: CallParticipant = { id: 'robin', name: 'Robin Park', speaking: true, quality: 'good' };
-const team: CallParticipant[] = [
-  me,
-  robin,
-  { id: 'alex', name: 'Alex Chen', micOff: true, quality: 'fair' },
-  { id: 'jordan', name: 'Jordan Diaz', handRaised: true, quality: 'good' },
-];
+const team = fixture.data.participants as unknown as CallParticipant[];
+const [me, robin] = team as [CallParticipant, CallParticipant];
 
 function Meeting() {
-  const [micOn, setMicOn] = useState(true);
+  const [micOn, setMicOn] = useState(fixture.data.micOn);
   const [mode, setMode] = useState<CallViewMode>('auto');
   const [pinnedId, setPinnedId] = useState<string | null>(null);
   const [surface, setSurface] = useState<CallSurface>('stage');
@@ -33,13 +29,13 @@ function Meeting() {
       }}
     >
       <CallStage
-        title="Weekly planning"
+        title={fixture.data.title}
         startedAt={STARTED}
         participants={people}
         mode={mode}
         pinnedId={pinnedId}
         onPinnedIdChange={setPinnedId}
-        activeSpeakerId="robin"
+        activeSpeakerId={fixture.data.activeSpeakerId}
         surface={surface}
         onSurfaceChange={(next) => setSurface(next === 'mini' ? 'docked' : next)}
         controls={

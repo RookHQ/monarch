@@ -1,0 +1,232 @@
+{
+  "id": "ai-spend-cap",
+  "name": "MonarchAiSpendCap",
+  "title": "AiSpendCap",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack card with ProgressView(value:total:) in a private tone-aware ProgressViewStyle, and an inline form of MonarchCurrencyInput, Picker with .pickerStyle(.menu), MonarchRadioCardGroup and confirmationDialog",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A spending limit for AI usage: what has been spent against the limit this period, whether that is fine, close or reached, and a form to change the limit, when to warn and what happens at the limit.",
+  "whenToUse": "In workspace or account settings where an admin sets how much AI may spend per day, week or month, and where people check how much is left.",
+  "whenNotToUse": "Not for token or credit usage without money, which is MonarchAiUsageMeter. Not for plan quotas of a subscription, which is MonarchUsageMeter.",
+  "api": [
+    "init(spent: Int, limit: Int?, currencyCode: String, period: MonarchAiSpendCapPeriod, unit: MonarchAiSpendCapUnit = .minor, warnAt: Double = 0.8, behavior: MonarchAiSpendCapBehavior = .pause, resetsAt: Date? = nil, breakdown: [MonarchAiSpendCapBreakdownItem] = [], maxLimit: Int? = nil, warnAtOptions: [Double] = [0.5, 0.75, 0.8, 0.9], isEditing: Binding<Bool>? = nil, canEdit: Bool = true, isSaving: Bool = false, labels: MonarchAiSpendCapLabels = MonarchAiSpendCapLabels(), onSave: (@MainActor (MonarchAiSpendCapSettings) -> Void)? = nil, onRequestIncrease: (@MainActor () -> Void)? = nil)",
+    "MonarchAiSpendCapSettings.init(limit: Int?, warnAt: Double, behavior: MonarchAiSpendCapBehavior)",
+    "MonarchAiSpendCapBreakdownItem.init(id: String, label: String, spent: Int)",
+    "enum MonarchAiSpendCapPeriod: String { case day, week, month }",
+    "enum MonarchAiSpendCapBehavior: String { case pause, notify }",
+    "enum MonarchAiSpendCapState: String { case ok, warning, reached, noLimit }",
+    "enum MonarchAiSpendCapUnit: String { case minor, micros }",
+    "MonarchAiSpendCapLabels.init(title:period:state:spentOfLimit:spentNoLimit:meterLabel:remaining:over:warnsAt:behaviorSummary:resets:breakdownLabel:edit:setLimit:pausedTitle:pausedBody:raiseLimit:requestIncrease:readOnly:amountLabel:amountHint:errorRequired:errorPositive:errorMax:belowSpent:warnAtLabel:warnAtOption:behaviorLabel:behaviorOption:behaviorDescription:save:saveAnyway:cancel:removeLimit:removeConfirmTitle:removeConfirmBody:removeCancel:announce:)"
+  ],
+  "options": [
+    {
+      "name": "spent",
+      "type": "Int",
+      "default": "required",
+      "description": "Spent so far this period, as an integer in unit. Negative values count as zero."
+    },
+    {
+      "name": "limit",
+      "type": "Int?",
+      "default": "required",
+      "description": "The limit as an integer in unit, or nil when none is set."
+    },
+    {
+      "name": "currencyCode",
+      "type": "String",
+      "default": "required",
+      "description": "The ISO 4217 code of every amount."
+    },
+    {
+      "name": "period",
+      "type": "MonarchAiSpendCapPeriod",
+      "default": "required",
+      "description": "The window the limit applies to: day, week or month."
+    },
+    {
+      "name": "unit",
+      "type": "MonarchAiSpendCapUnit",
+      "default": ".minor",
+      "description": "What the integers count: the currency's minor unit, or micros (millionths of the major unit)."
+    },
+    {
+      "name": "warnAt",
+      "type": "Double",
+      "default": "0.8",
+      "description": "The share of the limit at which the state becomes warning."
+    },
+    {
+      "name": "behavior",
+      "type": "MonarchAiSpendCapBehavior",
+      "default": ".pause",
+      "description": "What happens at the limit: pause and ask, or keep going and tell."
+    },
+    {
+      "name": "resetsAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the period starts again; shown with the day and month, and the time for a daily limit, in the environment's time zone."
+    },
+    {
+      "name": "breakdown",
+      "type": "[MonarchAiSpendCapBreakdownItem]",
+      "default": "[]",
+      "description": "Spending per agent or feature, shown as a list under the bar."
+    },
+    {
+      "name": "maxLimit",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The highest limit this person may set."
+    },
+    {
+      "name": "warnAtOptions",
+      "type": "[Double]",
+      "default": "[0.5, 0.75, 0.8, 0.9]",
+      "description": "The warn-at choices; the current value is always offered, values outside 0 to 1 are left out."
+    },
+    {
+      "name": "isEditing",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Whether the form is open. Kept inside, closed at first, when nil."
+    },
+    {
+      "name": "canEdit",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether this person may change the limit. false shows a read-only note and no form."
+    },
+    {
+      "name": "isSaving",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows Save as busy and disables the form while the app saves."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiSpendCapLabels",
+      "default": "MonarchAiSpendCapLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onSave",
+      "type": "(@MainActor (MonarchAiSpendCapSettings) -> Void)?",
+      "default": "nil",
+      "description": "Runs with the new settings on Save, or with a nil limit once removal is confirmed. Nothing is applied by the component."
+    },
+    {
+      "name": "onRequestIncrease",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "For people who cannot edit: adds \"Request a higher limit\"."
+    }
+  ],
+  "states": [
+    {
+      "name": "ok",
+      "description": "\"Within limit\" with a check, an accent bar."
+    },
+    {
+      "name": "warning",
+      "description": "\"Close to the limit\" with a triangle, a warning bar."
+    },
+    {
+      "name": "reached",
+      "description": "\"Limit reached\" with an octagon, a full danger bar; with pause, a danger notice says AI is paused and offers Raise limit or Request a higher limit."
+    },
+    {
+      "name": "no limit",
+      "description": "\"No limit set\", no bar, and Set a limit instead of Edit limit."
+    },
+    {
+      "name": "editing",
+      "description": "The amount field, the warn-at menu, the behaviour choice, Save, Cancel and Remove limit."
+    },
+    {
+      "name": "below spent",
+      "description": "A limit below what is spent shows a warning notice and Save becomes Save anyway; saving the same amount again confirms."
+    },
+    {
+      "name": "invalid",
+      "description": "An empty, zero, negative or too-high amount shows an error under the field."
+    },
+    {
+      "name": "saving",
+      "description": "Save shows its loading state and the form is disabled."
+    },
+    {
+      "name": "read only",
+      "description": "A lock and \"Only a workspace admin can change this limit.\", with Request a higher limit when given."
+    }
+  ],
+  "appearance": "A card on the surface background with the subtle border; the state is a small status badge in its tone, the amount line is strong default text, the bar's track is the muted background and its fill the accent, warning or danger solid role, facts are muted text. Every colour is a theme role, so it follows light, dark and both high-contrast themes.",
+  "platformNotes": "The web builds the form with a native select and a radio group and confirms removal inline; on iOS the warn-at choice is a menu Picker, the behaviour is MonarchRadioCardGroup and removal is a system confirmationDialog. The amount field is MonarchCurrencyInput, which accepts only numbers, so the web's \"not an amount\" error does not arise. The web's children slot for extra content is left out; place content beside the card. The bar uses a private tone-aware ProgressViewStyle because MonarchProgressViewStyle has a single fill colour. Times use the environment's locale and time zone instead of locale and timeZone props.",
+  "accessibility": [
+    "The card is a container named by its title; the title has the header trait.",
+    "The state is a word and an icon in a status badge, never colour alone.",
+    "The bar is a ProgressView named \"Spent against the limit\" with the amount line as its value.",
+    "A change of state after the card appears is announced once, such as \"AI spending limit: Limit reached. £50.00 of £50.00 this month\".",
+    "Errors are read by MonarchCurrencyInput with the field; the below-spent warning is announced when it appears.",
+    "Removing the limit asks in a confirmation dialog with a destructive Remove limit and Keep limit.",
+    "Every button is a MonarchButton with a 44-point target."
+  ],
+  "edgeCases": [
+    "A limit of zero is always reached and draws no bar.",
+    "Spending over the limit reads \"£2.10 over the limit\"; the bar stays full.",
+    "Amounts in micros are rounded to the currency's digits when shown and when typed.",
+    "Currencies without minor units, such as JPY, show whole amounts.",
+    "Long breakdown labels wrap."
+  ],
+  "tests": [
+    "MonarchAiSpendCapTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Edit, save and remove",
+      "fixture": "ai-spend-cap",
+      "webExample": "Edit, save and remove",
+      "template": "MonarchAiSpendCap(\n    spent: {{spent}},\n    limit: settings.limit,\n    currencyCode: {{currency}},\n    period: {{period|case}},\n    warnAt: settings.warnAt,\n    behavior: settings.behavior,\n    resetsAt: {{resetsAt|date}},\n    breakdown: [\n        MonarchAiSpendCapBreakdownItem(id: {{breakdown.0.id}}, label: {{breakdown.0.label}}, spent: {{breakdown.0.spent}}),\n        MonarchAiSpendCapBreakdownItem(id: {{breakdown.1.id}}, label: {{breakdown.1.label}}, spent: {{breakdown.1.spent}}),\n        MonarchAiSpendCapBreakdownItem(id: {{breakdown.2.id}}, label: {{breakdown.2.label}}, spent: {{breakdown.2.spent}}),\n    ],\n    maxLimit: {{maxLimit}}\n) { newSettings in\n    settings = newSettings\n}\n.environment(\\.locale, Locale(identifier: {{locale}}))\n.environment(\\.timeZone, TimeZone(identifier: {{timeZone}}) ?? .gmt)",
+      "setupTemplate": "@State private var settings = MonarchAiSpendCapSettings(limit: {{settings.limit}}, warnAt: {{settings.warnAt|double}}, behavior: {{settings.behaviour|case}})",
+      "code": "MonarchAiSpendCap(\n    spent: 4200,\n    limit: settings.limit,\n    currencyCode: \"GBP\",\n    period: .month,\n    warnAt: settings.warnAt,\n    behavior: settings.behavior,\n    resetsAt: Date(timeIntervalSince1970: 1_796_083_200),\n    breakdown: [\n        MonarchAiSpendCapBreakdownItem(id: \"research\", label: \"Research agent\", spent: 2310),\n        MonarchAiSpendCapBreakdownItem(id: \"summaries\", label: \"Meeting summaries\", spent: 1245),\n        MonarchAiSpendCapBreakdownItem(id: \"drafting\", label: \"Email drafting\", spent: 645),\n    ],\n    maxLimit: 50_000\n) { newSettings in\n    settings = newSettings\n}\n.environment(\\.locale, Locale(identifier: \"en-GB\"))\n.environment(\\.timeZone, TimeZone(identifier: \"UTC\") ?? .gmt)",
+      "setup": "@State private var settings = MonarchAiSpendCapSettings(limit: 5000, warnAt: 0.8, behavior: .pause)"
+    },
+    {
+      "title": "Read only, at the limit",
+      "code": "MonarchAiSpendCap(\n    spent: 5_000,\n    limit: 5_000,\n    currencyCode: \"USD\",\n    period: .day,\n    canEdit: false,\n    onRequestIncrease: {}\n)"
+    }
+  ],
+  "webEquivalent": "AiSpendCap",
+  "dependsOn": [
+    "currency-input",
+    "progress-bar",
+    "money",
+    "status-badge",
+    "inline-notice",
+    "radio-card-group",
+    "button"
+  ],
+  "toneMap": {
+    "STATE_TONE": {
+      "ok": "neutral",
+      "warning": "warning",
+      "reached": "danger",
+      "no-limit": "neutral"
+    }
+  },
+  "icons": {
+    "state.ok": "SuccessGlyph",
+    "state.warning": "WarningGlyph",
+    "state.reached": "ErrorGlyph",
+    "state.no-limit": "InfoGlyph",
+    "edit": "PencilGlyph",
+    "readOnly": "LockGlyph"
+  }
+}

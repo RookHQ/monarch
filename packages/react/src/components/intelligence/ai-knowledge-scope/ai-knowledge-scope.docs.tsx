@@ -1,40 +1,20 @@
 import { useState } from 'react';
 import { AiKnowledgeScope, type AiKnowledgeSource } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-knowledge-scope.fixture.json';
 
-const SOURCES: AiKnowledgeSource[] = [
-  {
-    id: 'handbook',
-    label: 'Team handbook',
-    kind: 'space',
-    description: '3 documents',
-    children: [
-      { id: 'policies', label: 'Policies', kind: 'doc' },
-      { id: 'onboarding', label: 'Onboarding guide', kind: 'doc' },
-      { id: 'travel', label: 'Travel guidelines', kind: 'doc' },
-    ],
-  },
-  {
-    id: 'projects',
-    label: 'Projects',
-    kind: 'space',
-    children: [
-      { id: 'roadmap', label: 'Roadmap', kind: 'doc' },
-      { id: 'launch-notes', label: 'Launch notes', kind: 'doc' },
-    ],
-  },
-  { id: 'calendar', label: 'Calendar', kind: 'app', description: 'Events you can see' },
-];
+const SOURCES = fixture.data.sources as unknown as AiKnowledgeSource[];
 
 function ScopeDemo() {
-  const [value, setValue] = useState<string[]>(['policies', 'calendar']);
+  const [value, setValue] = useState<string[]>(fixture.data.selection);
   return (
     <div style={{ maxWidth: '24rem', width: '100%' }}>
       <AiKnowledgeScope
         sources={SOURCES}
         value={value}
         onChange={setValue}
-        defaultExpanded={['handbook']}
+        defaultExpanded={fixture.data.expanded}
       />
     </div>
   );

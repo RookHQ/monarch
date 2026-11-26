@@ -1,0 +1,106 @@
+{
+  "id": "record-page",
+  "name": null,
+  "title": "RecordPage",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.layout.Column with androidx.compose.material3.TopAppBar, MonarchTabs and Tab, one scrolling section per tab, MonarchDescriptionList for the details and MonarchActivityTimeline (a lazy list) for the activity",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a record's detail screen on a phone, with the name and actions in the top app bar, a status, section tabs, and the side column and the activity moved into their own tabs.",
+  "whenToUse": "For the detail screen of a record (a deal, a contact, a ticket) reached from a list.",
+  "whenNotToUse": "For the list and the record side by side on a tablet or a foldable, put this screen in the detail pane of NavigableListDetailPaneScaffold (split-layout). For the header alone, use the record-header recipe.",
+  "api": [
+    "TopAppBar(title = { Text(name, maxLines = 1, overflow = TextOverflow.Ellipsis) }, navigationIcon = …, actions = { … })",
+    "MonarchTabs(selectedIndex = currentTab, onSelectedIndexChange = { currentTab = it }) { sections.forEach { tab(it) } }",
+    "Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) { main column of the tab }",
+    "MonarchDescriptionList(items = listOf(MonarchDescriptionItem(term, value), …))",
+    "MonarchActivityTimeline(events = …, modifier = Modifier.weight(1f), contentPadding = …)"
+  ],
+  "options": [
+    {
+      "name": "tabs",
+      "type": "List<String>",
+      "default": "none",
+      "description": "The sections of the record; add a Details tab for the web's side column and an Activity tab for the activity."
+    },
+    {
+      "name": "tab",
+      "type": "Int",
+      "default": "0",
+      "description": "The selected section, kept with rememberSaveable so it survives rotation."
+    },
+    {
+      "name": "actions",
+      "type": "@Composable RowScope.() -> Unit",
+      "default": "none",
+      "description": "The record's actions in the top app bar; put the rest in an overflow MonarchMenu."
+    }
+  ],
+  "states": [
+    {
+      "name": "section",
+      "description": "The selected tab's content fills the space under the tabs and scrolls on its own."
+    },
+    {
+      "name": "details",
+      "description": "The web's side column: MonarchDescriptionList with the record's facts, in its own tab."
+    },
+    {
+      "name": "activity",
+      "description": "MonarchActivityTimeline, a lazy list, fills the rest of the screen and scrolls on its own."
+    },
+    {
+      "name": "wide",
+      "description": "On an expanded window, show the details beside the main column with split-layout instead of a tab."
+    }
+  ],
+  "appearance": "Every part is an existing Material 3 or Monarch component: the top app bar and tabs in the Monarch theme, a status badge, a description list and the activity timeline. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships RecordPage as one component: a RecordHeader with tabs, the main column, an aside that moves under the main column below a breakpoint, and an activity section. On a phone Android follows the native pattern instead of copying the web layout: the name and actions go to the TopAppBar (as in the record-header recipe), the side column becomes a Details tab, and the activity is its own tab, because MonarchActivityTimeline is a lazy list that must not sit inside a vertically scrolling parent. iOS keeps the side column under the main column with ViewThatFits and the activity as a tab; it also mentions a Details tab as the other phone choice. On wide windows use NavigableSupportingPaneScaffold or the split-layout entry rather than a breakpoint. The web's asideWidth and activityPlacement props are choices in the recipe's own code.",
+  "accessibility": [
+    "The record's name is the top app bar title; actions are buttons with 48dp targets.",
+    "Tabs have the tab role and the selected state, from Material 3.",
+    "The status is a word in a MonarchStatusBadge, not color alone.",
+    "Each section scrolls on its own, so TalkBack scrolls the content under the fixed header and tabs."
+  ],
+  "edgeCases": [
+    "A long record name is cut with an ellipsis in the app bar; show it in full in the Overview section.",
+    "Many sections: MonarchTabs scrolls the tabs.",
+    "Never put MonarchActivityTimeline inside verticalScroll; give it the remaining height with weight(1f)."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Record with tabs, details and activity",
+      "fixture": "record-page",
+      "webExample": "Record with tabs, details and activity",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    Row(\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        verticalAlignment = Alignment.Top,\n    ) {\n        Column(\n            modifier = Modifier.weight(1f),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n        ) {\n            Row(\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n                verticalAlignment = Alignment.CenterVertically,\n            ) {\n                MonarchText(\n                    text = {{title}},\n                    style = MonarchTextStyle.Title,\n                    modifier = Modifier.semantics { heading() },\n                )\n                MonarchStatusBadge(definition = MonarchStatusDefinition(label = {{status.label}}, tone = {{status.tone|tone}}))\n            }\n            MonarchText(text = {{subtitle}}, style = MonarchTextStyle.Caption)\n        }\n        MonarchButton(\n            text = {{action}},\n            onClick = {},\n            variant = MonarchButtonVariant.Secondary,\n            size = MonarchButtonSize.Sm,\n        )\n    }\n    MonarchKeyValue(\n        items = listOf(\n            MonarchKeyValueItem({{facts.0.term}}, {{facts.0.value}}),\n            MonarchKeyValueItem({{facts.1.term}}, {{facts.1.value}}),\n        ),\n    )\n    MonarchTabs(selectedIndex = currentTab, onSelectedIndexChange = { currentTab = it }) {\n        tab({{tabs.0.label}})\n        tab({{tabs.1.label}}, count = {{tabs.1.count}}.toString())\n        tab({{tabs.2.label}})\n    }\n    when (tabValues[currentTab]) {\n        tabValues[0] -> MonarchText(text = {{tabs.0.content}})\n        tabValues[1] -> MonarchText(text = {{tabs.1.content}})\n        else -> MonarchText(text = {{tabs.2.content}})\n    }\n    MonarchText(text = {{aside}})\n    MonarchText(\n        text = \"Activity\",\n        style = MonarchTextStyle.Heading,\n        modifier = Modifier.semantics { heading() },\n    )\n    MonarchText(text = {{activity}})\n}",
+      "setupTemplate": "var currentTab by rememberSaveable { mutableIntStateOf(0) }\nval tabValues = listOf({{tabs.0.value}}, {{tabs.1.value}}, {{tabs.2.value}})",
+      "imports": [
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.ui.semantics.heading",
+        "androidx.compose.ui.semantics.semantics"
+      ],
+      "setup": "var currentTab by rememberSaveable { mutableIntStateOf(0) }\nval tabValues = listOf(\"overview\", \"notes\", \"files\")",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    Row(\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        verticalAlignment = Alignment.Top,\n    ) {\n        Column(\n            modifier = Modifier.weight(1f),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n        ) {\n            Row(\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n                verticalAlignment = Alignment.CenterVertically,\n            ) {\n                MonarchText(\n                    text = \"Sample record\",\n                    style = MonarchTextStyle.Title,\n                    modifier = Modifier.semantics { heading() },\n                )\n                MonarchStatusBadge(definition = MonarchStatusDefinition(label = \"Active\", tone = MonarchTone.Success))\n            }\n            MonarchText(text = \"REC-0001\", style = MonarchTextStyle.Caption)\n        }\n        MonarchButton(\n            text = \"Edit\",\n            onClick = {},\n            variant = MonarchButtonVariant.Secondary,\n            size = MonarchButtonSize.Sm,\n        )\n    }\n    MonarchKeyValue(\n        items = listOf(\n            MonarchKeyValueItem(\"Owner\", \"Person A\"),\n            MonarchKeyValueItem(\"Created\", \"1 June 2026\"),\n        ),\n    )\n    MonarchTabs(selectedIndex = currentTab, onSelectedIndexChange = { currentTab = it }) {\n        tab(\"Overview\")\n        tab(\"Notes\", count = 2.toString())\n        tab(\"Files\")\n    }\n    when (tabValues[currentTab]) {\n        tabValues[0] -> MonarchText(text = \"Overview content for the sample record.\")\n        tabValues[1] -> MonarchText(text = \"Two sample notes.\")\n        else -> MonarchText(text = \"No files yet.\")\n    }\n    MonarchText(text = \"Properties and related records go here.\")\n    MonarchText(\n        text = \"Activity\",\n        style = MonarchTextStyle.Heading,\n        modifier = Modifier.semantics { heading() },\n    )\n    MonarchText(text = \"Sample activity entries go here.\")\n}"
+    }
+  ],
+  "webEquivalent": "RecordPage",
+  "dependsOn": [
+    "record-header",
+    "tabs",
+    "description-list",
+    "activity-timeline",
+    "split-layout",
+    "status-badge"
+  ],
+  "icons": {
+    "status.success": "SuccessGlyph"
+  }
+}

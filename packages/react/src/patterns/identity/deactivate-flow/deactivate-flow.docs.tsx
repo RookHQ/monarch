@@ -1,22 +1,25 @@
-import { useState } from 'react';
+import { useState, type ComponentProps } from 'react';
 import { Button, DangerZone, DangerZoneItem } from '@rookcom/monarch-react';
 import { DeactivateFlow } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './deactivate-flow.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
 function PausePartnership() {
   return (
     <DeactivateFlow
-      trigger={<Button variant="warning">Deactivate</Button>}
-      subject="this partnership"
-      reactivateFrom="Settings › Partners"
-      consequences={[
-        { kind: 'changed', label: 'New referrals are not tracked' },
-        { kind: 'changed', label: 'The partner cannot sign in to the portal' },
-        { kind: 'kept', label: 'Past referrals and payouts stay in reports' },
-      ]}
-      reason
+      trigger={<Button variant="warning">{fixture.data.trigger}</Button>}
+      defaultOpen
+      subject={fixture.data.subject}
+      reactivateFrom={fixture.data.reactivateFrom}
+      consequences={
+        fixture.data.consequences as NonNullable<
+          ComponentProps<typeof DeactivateFlow>['consequences']
+        >
+      }
+      reason={fixture.data.reason}
       onDeactivate={() => wait(900)}
     />
   );
@@ -175,7 +178,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Deactivate with consequences and a reason', render: () => <PausePartnership /> },
+        {
+          title: 'Deactivate with consequences and a reason',
+          stage: { align: 'center' },
+          render: () => <PausePartnership />,
+        },
         { title: 'Launched from a danger zone, both modes', render: () => <FromDangerZone /> },
       ],
     },

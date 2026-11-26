@@ -1,41 +1,12 @@
 import { Button } from '@rookcom/monarch-react';
 import { MergeDialog, type MergeRecord } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './merge-dialog.fixture.json';
 
-const RECORDS: MergeRecord[] = [
-  {
-    id: 'a',
-    title: 'Example Ltd',
-    description: 'Created 12 Feb 2025 · 3 projects',
-    values: {
-      name: 'Example Ltd',
-      email: 'hello@example.com',
-      phone: '',
-      website: 'example.com',
-      city: 'Leeds',
-    },
-  },
-  {
-    id: 'b',
-    title: 'Example Limited',
-    description: 'Created 4 Jun 2025 · 1 invoice',
-    values: {
-      name: 'Example Limited',
-      email: 'hello@example.com',
-      phone: '+44 20 0000 0000',
-      website: 'example.com',
-      city: 'York',
-    },
-  },
-];
+const RECORDS: MergeRecord[] = fixture.data.records;
 
-const FIELDS = [
-  { id: 'name', label: 'Name' },
-  { id: 'email', label: 'Email' },
-  { id: 'phone', label: 'Phone' },
-  { id: 'website', label: 'Website' },
-  { id: 'city', label: 'City' },
-];
+const FIELDS = fixture.data.fields;
 
 export default {
   id: 'merge-dialog',
@@ -159,15 +130,14 @@ export default {
       items: [
         {
           title: 'Two clients',
+          stage: { align: 'center' },
           render: () => (
             <MergeDialog
-              trigger={<Button variant="secondary">Merge duplicates</Button>}
+              trigger={<Button variant="secondary">{fixture.data.trigger}</Button>}
+              defaultOpen
               records={RECORDS}
               fields={FIELDS}
-              consequences={[
-                '1 invoice moves to the kept record.',
-                'The other record is archived, not deleted.',
-              ]}
+              consequences={fixture.data.consequences}
               onMerge={() => new Promise((resolve) => setTimeout(resolve, 800))}
             />
           ),

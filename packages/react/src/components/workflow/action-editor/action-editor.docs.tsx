@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- the fixture is a fixed JSON literal; the indices below exist. */
 import { useState } from 'react';
 import {
   ActionEditor,
@@ -6,110 +7,114 @@ import {
   type RuleAction,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './action-editor.fixture.json';
 
-const TEAMS = [
-  { value: 'support', label: 'Support' },
-  { value: 'billing', label: 'Billing' },
-];
+const {
+  teams: TEAMS,
+  people: PEOPLE,
+  recipients: RECIPIENTS,
+  priorities: PRIORITIES,
+  types: T,
+  labels: L,
+} = fixture.data;
 
 const TYPES: ActionTypeDefinition[] = [
   {
-    value: 'set_team',
-    label: 'Set team',
-    group: 'Routing',
-    params: [{ key: 'teamId', label: 'Team', type: 'select', options: TEAMS, required: true }],
+    value: T[0]!.value,
+    label: T[0]!.label,
+    group: T[0]!.group,
+    params: [{ key: 'teamId', label: L.team, type: 'select', options: TEAMS, required: true }],
   },
   {
-    value: 'assign_round_robin',
-    label: 'Assign in turn',
-    group: 'Routing',
-    description: 'The next available person in the team, in turn.',
+    value: T[1]!.value,
+    label: T[1]!.label,
+    group: T[1]!.group,
+    description: L.roundRobinDescription,
     params: [
       {
         key: 'teamId',
-        label: 'Team',
+        label: L.team,
         type: 'select',
         options: TEAMS,
-        emptyLabel: 'The current team',
+        emptyLabel: L.currentTeam,
       },
     ],
   },
   {
-    value: 'set_priority',
-    label: 'Set priority',
-    group: 'Fields',
+    value: T[2]!.value,
+    label: T[2]!.label,
+    group: T[2]!.group,
     params: [
       {
         key: 'priority',
-        label: 'Priority',
+        label: L.priority,
         type: 'select',
         required: true,
-        options: [
-          { value: 'low', label: 'Low' },
-          { value: 'high', label: 'High' },
-        ],
+        options: PRIORITIES,
       },
     ],
   },
   {
-    value: 'add_tags',
-    label: 'Add tags',
-    group: 'Fields',
+    value: T[3]!.value,
+    label: T[3]!.label,
+    group: T[3]!.group,
     defaults: { tags: [] },
     params: [
       {
         key: 'tags',
-        label: 'Tags',
+        label: L.tags,
         type: 'tags',
         required: true,
-        placeholder: 'Type a tag and press Enter',
+        placeholder: L.tagsPrompt,
       },
     ],
   },
   {
-    value: 'notify',
-    label: 'Notify people',
-    group: 'Messages',
-    defaults: { to: 'assignee', message: '' },
+    value: T[4]!.value,
+    label: T[4]!.label,
+    group: T[4]!.group,
+    defaults: { to: RECIPIENTS[0]!.value, message: '' },
     params: [
       {
         key: 'to',
-        label: 'Notify',
+        label: L.notify,
         type: 'select',
         required: true,
-        options: [
-          { value: 'assignee', label: 'Assignee' },
-          { value: 'team', label: 'Everyone in the team' },
-          { value: 'person', label: 'A specific person' },
-        ],
+        options: RECIPIENTS,
       },
       {
         key: 'personId',
-        label: 'Person',
+        label: L.person,
         type: 'select',
         required: true,
-        options: [
-          { value: 'p1', label: 'Jo Park' },
-          { value: 'p2', label: 'Ana Ruiz' },
-        ],
-        visibleWhen: (p: ActionParams) => p.to === 'person',
+        options: PEOPLE,
+        visibleWhen: (p: ActionParams) => p.to === RECIPIENTS[2]!.value,
       },
-      { key: 'message', label: 'Message', type: 'textarea', required: true },
+      { key: 'message', label: L.message, type: 'textarea', required: true },
     ],
   },
   {
-    value: 'external_issue',
-    label: 'Create an issue in another app',
-    group: 'Messages',
+    value: T[5]!.value,
+    label: T[5]!.label,
+    group: T[5]!.group,
     disabled: true,
-    disabledReason: 'The connection is not set up.',
+    disabledReason: L.disabledReason,
   },
 ];
 
 function ActionsDemo() {
   const [actions, setActions] = useState<RuleAction[]>([
-    { id: '1', type: 'set_team', params: { teamId: 'billing' } },
-    { id: '2', type: 'notify', params: { to: 'person', message: '' } },
+    {
+      id: fixture.data.actions[0]!.id,
+      type: fixture.data.actions[0]!.type,
+      params: { teamId: fixture.data.actions[0]!.teamId },
+    },
+    {
+      id: fixture.data.actions[1]!.id,
+      type: fixture.data.actions[1]!.type,
+      params: { to: fixture.data.actions[1]!.to, message: fixture.data.actions[1]!.message },
+    },
   ]);
   return (
     <ActionEditor

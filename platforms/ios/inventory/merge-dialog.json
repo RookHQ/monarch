@@ -1,0 +1,139 @@
+{
+  "id": "merge-dialog",
+  "name": "MonarchMergeDialog",
+  "title": "MergeDialog",
+  "family": "data-grid",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "NavigationStack with a grouped Form: one Picker with .pickerStyle(.inline) for the record to keep and one per differing field, LabeledContent for matching fields, cancellationAction and confirmationAction toolbar items; presented by the app with sheet(isPresented:) and interactiveDismissDisabled while merging",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The content of a sheet that merges two or more duplicate records: pick the record to keep, then the value to keep for each field where they differ.",
+  "whenToUse": "When duplicate records (contacts, companies, tickets) are combined and the person decides which record survives and which values it keeps.",
+  "whenNotToUse": "To show possible duplicates before merging, use MonarchDuplicatePanel. To delete duplicates without keeping values, use a confirmationDialog. To edit one record, use a form.",
+  "api": [
+    "init(records: [MonarchMergeRecord], fields: [MonarchMergeField], defaultPrimaryID: String? = nil, consequences: [MonarchConsequence] = [], blockers: [String] = [], labels: MonarchMergeDialogLabels = MonarchMergeDialogLabels(), onCancel: (@MainActor () -> Void)? = nil, onMerge: @escaping @MainActor (MonarchMergeSelection) async throws -> Void)",
+    "struct MonarchMergeRecord: Identifiable { init(id: String, title: String, description: String? = nil, values: [String: String]) }",
+    "struct MonarchMergeField: Identifiable { init(id: String, label: String) }",
+    "struct MonarchMergeSelection { let primaryID: String; let mergedIDs: [String]; let fields: [String: String] }",
+    "struct MonarchMergeDialogLabels { var title, description, keep, kept, values, same, empty, consequences, cancel, error: String?; var from: (@Sendable (String) -> String)?; var confirm: (@Sendable (Int) -> String)? }"
+  ],
+  "options": [
+    {
+      "name": "records",
+      "type": "[MonarchMergeRecord]",
+      "default": "required",
+      "description": "The records to merge, two or more, with their field values already written for display."
+    },
+    {
+      "name": "fields",
+      "type": "[MonarchMergeField]",
+      "default": "required",
+      "description": "The fields, in display order. Those that differ get a choice; those that match are listed once."
+    },
+    {
+      "name": "defaultPrimaryID",
+      "type": "String?",
+      "default": "nil",
+      "description": "The record kept by default; the first record when nil."
+    },
+    {
+      "name": "consequences",
+      "type": "[MonarchConsequence]",
+      "default": "[]",
+      "description": "What else happens, shown with MonarchConsequenceList under \"What happens\"."
+    },
+    {
+      "name": "blockers",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Problems that stop the merge, shown in a warning MonarchBanner; the merge button is disabled."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchMergeDialogLabels",
+      "default": "MonarchMergeDialogLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "onCancel",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Runs when Cancel is pressed; the dialog then dismisses itself."
+    },
+    {
+      "name": "onMerge",
+      "type": "@MainActor (MonarchMergeSelection) async throws -> Void",
+      "default": "required",
+      "description": "Performs the merge. While it runs the dialog is busy; returning dismisses it; throwing shows the error's description (or the built-in message) and keeps every choice."
+    }
+  ],
+  "states": [
+    {
+      "name": "choosing",
+      "description": "The record choice with a Kept badge on the selected record, a choice per differing field (defaulting to the kept record's value, or the first other value when it is empty), and matching fields listed once."
+    },
+    {
+      "name": "blocked",
+      "description": "With blockers, or fewer than two records, the merge button is disabled and the blockers are shown as a warning."
+    },
+    {
+      "name": "merging",
+      "description": "The merge button becomes a progress indicator, the form and Cancel are disabled and the sheet cannot be swiped away."
+    },
+    {
+      "name": "failed",
+      "description": "A danger MonarchBanner with the message under the form; it is announced and the choices stay as they were."
+    }
+  ],
+  "appearance": "A grouped form on the canvas background role with rows on the surface role. Titles use the default text role, descriptions, sources and matching values the muted role, empty values the subtle role. The Kept badge is a subtle success MonarchBadge. The toolbar buttons and the checkmarks of the pickers are drawn by the system with the app's tint.",
+  "platformNotes": "The web MergeDialog is a modal dialog with radio groups and a full-screen layout on phones; on iOS it is sheet content with the standard Form, inline Pickers and toolbar placements, so the app presents it with sheet(isPresented:). The web values and consequences can be any node; on iOS values are strings and consequences are MonarchConsequence items. The web onMerge returns a promise; here it is an async throwing closure. The web size option has no meaning in a sheet; use presentationDetents. The web children slot (extra content) is not offered. Android uses the same name and options.",
+  "accessibility": [
+    "Each choice is a standard inline Picker, so VoiceOver reads every option and its selected state.",
+    "A value option is one element that reads its value and its source, such as \"hello@acme.com, from Acme Ltd\"; an empty value reads \"Empty\".",
+    "Section headings have the header trait; the Kept badge is hidden because the selected state already says it.",
+    "A failure is announced. While merging the progress indicator is named with the merge button's title.",
+    "Cancel and Merge are toolbar buttons with the system's touch targets and keyboard shortcuts (Escape and Return)."
+  ],
+  "edgeCases": [
+    "A value that is blank after trimming counts as empty, and values equal after trimming count as matching.",
+    "Changing the kept record moves every field the person has not picked to the new record's value, or fills it from another record when it is empty.",
+    "With one record the dialog shows it and the merge button is disabled.",
+    "The count in the merge button uses the English plural form; pass labels.confirm for other languages."
+  ],
+  "tests": [
+    "MonarchMergeDialogTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Two clients",
+      "fixture": "merge-dialog",
+      "webExample": "Two clients",
+      "template": "MonarchButton({{trigger}}, variant: .secondary) { isMerging = true }\n    .sheet(isPresented: $isMerging) {\n        MonarchMergeDialog(\n            records: [\n                MonarchMergeRecord(id: {{records.0.id}}, title: {{records.0.title}}, description: {{records.0.description}}, values: [\"name\": {{records.0.values.name}}, \"email\": {{records.0.values.email}}, \"phone\": {{records.0.values.phone}}, \"website\": {{records.0.values.website}}, \"city\": {{records.0.values.city}}]),\n                MonarchMergeRecord(id: {{records.1.id}}, title: {{records.1.title}}, description: {{records.1.description}}, values: [\"name\": {{records.1.values.name}}, \"email\": {{records.1.values.email}}, \"phone\": {{records.1.values.phone}}, \"website\": {{records.1.values.website}}, \"city\": {{records.1.values.city}}]),\n            ],\n            fields: [\n                MonarchMergeField(id: {{fields.0.id}}, label: {{fields.0.label}}),\n                MonarchMergeField(id: {{fields.1.id}}, label: {{fields.1.label}}),\n                MonarchMergeField(id: {{fields.2.id}}, label: {{fields.2.label}}),\n                MonarchMergeField(id: {{fields.3.id}}, label: {{fields.3.label}}),\n                MonarchMergeField(id: {{fields.4.id}}, label: {{fields.4.label}}),\n            ],\n            consequences: [\n                MonarchConsequence(.changed, {{consequences.0}}),\n                MonarchConsequence(.changed, {{consequences.1}}),\n            ]\n        ) { selection in\n            kept = selection.primaryID\n        }\n    }",
+      "setupTemplate": "@State private var isMerging = false\n@State private var kept = \"\"",
+      "previewPresented": [
+        "isMerging"
+      ],
+      "setup": "@State private var isMerging = false\n@State private var kept = \"\"",
+      "code": "MonarchButton(\"Merge duplicates\", variant: .secondary) { isMerging = true }\n    .sheet(isPresented: $isMerging) {\n        MonarchMergeDialog(\n            records: [\n                MonarchMergeRecord(id: \"a\", title: \"Example Ltd\", description: \"Created 12 Feb 2025 · 3 projects\", values: [\"name\": \"Example Ltd\", \"email\": \"hello@example.com\", \"phone\": \"\", \"website\": \"example.com\", \"city\": \"Leeds\"]),\n                MonarchMergeRecord(id: \"b\", title: \"Example Limited\", description: \"Created 4 Jun 2025 · 1 invoice\", values: [\"name\": \"Example Limited\", \"email\": \"hello@example.com\", \"phone\": \"+44 20 0000 0000\", \"website\": \"example.com\", \"city\": \"York\"]),\n            ],\n            fields: [\n                MonarchMergeField(id: \"name\", label: \"Name\"),\n                MonarchMergeField(id: \"email\", label: \"Email\"),\n                MonarchMergeField(id: \"phone\", label: \"Phone\"),\n                MonarchMergeField(id: \"website\", label: \"Website\"),\n                MonarchMergeField(id: \"city\", label: \"City\"),\n            ],\n            consequences: [\n                MonarchConsequence(.changed, \"1 invoice moves to the kept record.\"),\n                MonarchConsequence(.changed, \"The other record is archived, not deleted.\"),\n            ]\n        ) { selection in\n            kept = selection.primaryID\n        }\n    }"
+    },
+    {
+      "title": "A blocked merge, shown inline",
+      "code": "MonarchMergeDialog(\n    records: [\n        MonarchMergeRecord(id: \"a\", title: \"Ada Lovelace\", values: [\"email\": \"ada@example.com\"]),\n        MonarchMergeRecord(id: \"b\", title: \"A. Lovelace\", values: [\"email\": \"ada@work.example\"]),\n    ],\n    fields: [MonarchMergeField(id: \"email\", label: \"Email\")],\n    blockers: [\"A. Lovelace has an open contract.\"],\n    onCancel: {},\n    onMerge: { _ in }\n)\n.frame(height: MonarchTokens.Space.space24 * 5)"
+    }
+  ],
+  "webEquivalent": "MergeDialog",
+  "dependsOn": [
+    "radio-group",
+    "sheet",
+    "button",
+    "badge",
+    "alert",
+    "consequence-list"
+  ],
+  "parityExceptions": []
+}

@@ -1,0 +1,173 @@
+{
+  "id": "saved-views",
+  "name": "MonarchSavedViews",
+  "title": "SavedViews",
+  "family": "search",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Menu with buttonStyle(.monarch()), Section per group of Toggle items, action Buttons, alert(_:isPresented:presenting:actions:message:) with a TextField for naming and with a destructive Button for deleting",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A menu button that switches between named views of a list (filters, sort and columns), with an Edited marker and actions to save, save as new, discard, rename, set the default and delete.",
+  "whenToUse": "Above a list, table or board where people keep named combinations of filters and sort, and come back to them.",
+  "whenNotToUse": "For a few fixed filters use MonarchTabs or a segmented Picker; for one filter use a Menu with a Picker (see dropdown-menu). For switching between list and grid layouts see view-switcher.",
+  "api": [
+    "MonarchSavedViews.init(_ views: [MonarchSavedView], selection: Binding<String?>, isModified: Bool = false, size: MonarchButtonSize = .md, maxNameLength: Int = 80, labels: MonarchSavedViewsLabels = MonarchSavedViewsLabels(), onSaveNew: (@MainActor (String) -> Void)? = nil, onSaveChanges: (@MainActor (String) -> Void)? = nil, onDiscardChanges: (@MainActor () -> Void)? = nil, onRename: (@MainActor (String, String) -> Void)? = nil, onDelete: (@MainActor (String) -> Void)? = nil, onSetDefault: (@MainActor (String) -> Void)? = nil)",
+    "MonarchSavedView.init(_ name: String, id: String, count: Int? = nil, isShared: Bool = false, isDefault: Bool = false, isReadOnly: Bool = false, group: String? = nil)",
+    "MonarchSavedViewsLabels.init(view:noView:modified:shared:isDefault:views:saveChanges:saveAsNew:discardChanges:rename:setDefault:delete:saveTitle:renameTitle:name:save:cancel:nameRequired:nameTaken:deleteTitle:deleteMessage:deleteConfirm:), every parameter optional"
+  ],
+  "options": [
+    {
+      "name": "views",
+      "type": "[MonarchSavedView]",
+      "default": "required",
+      "description": "The views in menu order, each with a name, an id and optionally a count, isShared, isDefault, isReadOnly and a group."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<String?>",
+      "default": "required",
+      "description": "The id of the selected view, or nil for none (the button then reads \"All items\")."
+    },
+    {
+      "name": "isModified",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether the current filters differ from the selected view. Shows an Edited badge and offers to save or discard."
+    },
+    {
+      "name": "size",
+      "type": "MonarchButtonSize",
+      "default": ".md",
+      "description": "The size of the menu button. The web's xs is sm; the touch target is 44 points at every size."
+    },
+    {
+      "name": "maxNameLength",
+      "type": "Int",
+      "default": "80",
+      "description": "The longest name the naming field accepts."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSavedViewsLabels",
+      "default": "MonarchSavedViewsLabels()",
+      "description": "Replacements for every built-in string, including the menu items, the alert titles, the validation messages and the delete confirmation."
+    },
+    {
+      "name": "onSaveNew",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Stores the current state under the new, trimmed name and selects it. Offers Save as new view…."
+    },
+    {
+      "name": "onSaveChanges",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Saves the current state into the selected view. Offered when modified and not read-only."
+    },
+    {
+      "name": "onDiscardChanges",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Reapplies the selected view. Offered when modified."
+    },
+    {
+      "name": "onRename",
+      "type": "(@MainActor (String, String) -> Void)?",
+      "default": "nil",
+      "description": "Renames the view with the id to the new name. Offered for a selected view that is not read-only."
+    },
+    {
+      "name": "onDelete",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Deletes the view with the id after the person confirms. Offered for a selected view that is not read-only."
+    },
+    {
+      "name": "onSetDefault",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Makes the view with the id open by default. Offered for a selected view that is not already the default."
+    }
+  ],
+  "states": [
+    {
+      "name": "selected",
+      "description": "The button shows the view's name with a chevron; in the menu the view's toggle is on."
+    },
+    {
+      "name": "edited",
+      "description": "A warning badge reading \"Edited\" after the name, and Save changes and Discard changes in the menu."
+    },
+    {
+      "name": "none selected",
+      "description": "The button reads \"All items\"."
+    },
+    {
+      "name": "read-only",
+      "description": "Save changes, Rename and Delete are not offered."
+    },
+    {
+      "name": "naming",
+      "description": "An alert with a Name field; Save stays disabled while the name is empty or used by another view (ignoring case and spaces)."
+    },
+    {
+      "name": "deleting",
+      "description": "An alert titled \"Delete “Open deals”?\" with a destructive Delete view and Cancel."
+    },
+    {
+      "name": "disabled",
+      "description": "disabled(_:) on the menu gives the button its disabled colours and it does not open."
+    }
+  ],
+  "appearance": "The button is a secondary Monarch button; the Edited marker is a warning badge. The menu and alerts are the system's, drawn in every theme; destructive items are the system's red.",
+  "platformNotes": "The web SavedViews keeps the naming and delete dialogs open while a returned promise is pending and shows a save failure inside them. System alerts close when a button is tapped, so the callbacks are synchronous: the app saves afterwards and reports a failure itself (for example with MonarchToast). The validation message is the alert's message; the system may not refresh it while the alert is open, but Save is disabled whenever the name is not valid. The web's visually hidden \"View:\" prefix is the button's accessibility label \"View\". Android builds the same component with the same name. Several closures are optional (onSaveNew, onSaveChanges, onDiscardChanges, onRename, onDelete, onSetDefault). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onSaveNew.",
+  "accessibility": [
+    "The menu button is named \"View\" and its value is the selected view's name followed by \"Edited\" when modified.",
+    "Edited is a word in a badge, not only a colour.",
+    "In the menu each view is a Toggle, so VoiceOver reads whether it is selected; its count, Shared and Default view are read as its second line.",
+    "Groups are menu sections with their heading.",
+    "The naming and delete steps are system alerts with a cancel button; the escape gesture cancels.",
+    "The button has a touch target of at least 44 by 44 points and its text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Only actions with a callback are offered; with no callbacks the menu only switches views.",
+    "Names are trimmed before they are passed to onSaveNew and onRename, and cut to maxNameLength while typing.",
+    "Renaming a view to its own name, in another case, is allowed.",
+    "A long view name stays on one line in the button; give the button room or keep names short."
+  ],
+  "tests": [
+    "MonarchSavedViewsTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Views with filters, save and discard",
+      "fixture": "saved-views",
+      "webExample": "Views with filters, save and discard",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    MonarchSavedViews(\n        views,\n        selection: $selection,\n        isModified: {{modified}},\n        size: .sm,\n        onSaveNew: { _ in },\n        onSaveChanges: { _ in },\n        onDiscardChanges: {},\n        onRename: { _, _ in },\n        onDelete: { _ in },\n        onSetDefault: { _ in }\n    )\n    HStack(spacing: theme.spacing.space1) {\n        Text(\"{{chip.name|raw}}:\").foregroundStyle(theme.colors.textMuted)\n        Text(\"{{chip.value|raw}}\").foregroundStyle(theme.colors.textDefault).fontWeight(.semibold)\n        Button {} label: { MonarchIcon(systemName: \"xmark\", size: .sm) }\n            .buttonStyle(.plain)\n            .foregroundStyle(theme.colors.textMuted)\n            .accessibilityLabel(\"Remove filter\")\n    }\n    .monarchTextStyle(.label)\n    .padding(.horizontal, theme.spacing.space3)\n    .padding(.vertical, theme.spacing.space1)\n    .background(Capsule().fill(theme.colors.bgSurface))\n    .overlay(Capsule().stroke(theme.colors.borderDefault))\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var selection: String? = {{selected}}\nprivate let views = [\n    MonarchSavedView({{views.0.name}}, id: {{views.0.id}}, count: {{views.0.count}}, isReadOnly: {{views.0.readOnly}}, group: {{views.0.group}}),\n    MonarchSavedView({{views.1.name}}, id: {{views.1.id}}, count: {{views.1.count}}, isReadOnly: {{views.1.readOnly}}, group: {{views.1.group}}),\n    MonarchSavedView({{views.2.name}}, id: {{views.2.id}}, count: {{views.2.count}}, isDefault: {{views.2.isDefault}}, group: {{views.2.group}}),\n    MonarchSavedView({{views.3.name}}, id: {{views.3.id}}, count: {{views.3.count}}, isShared: {{views.3.shared}}, group: {{views.3.group}}),\n]",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var selection: String? = \"mine\"\nprivate let views = [\n    MonarchSavedView(\"All tickets\", id: \"all\", count: 64, isReadOnly: true, group: \"Built-in\"),\n    MonarchSavedView(\"Open\", id: \"open\", count: 18, isReadOnly: true, group: \"Built-in\"),\n    MonarchSavedView(\"My open tickets\", id: \"mine\", count: 7, isDefault: true, group: \"My views\"),\n    MonarchSavedView(\"Team backlog\", id: \"team\", count: 23, isShared: true, group: \"My views\"),\n]",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    MonarchSavedViews(\n        views,\n        selection: $selection,\n        isModified: true,\n        size: .sm,\n        onSaveNew: { _ in },\n        onSaveChanges: { _ in },\n        onDiscardChanges: {},\n        onRename: { _, _ in },\n        onDelete: { _ in },\n        onSetDefault: { _ in }\n    )\n    HStack(spacing: theme.spacing.space1) {\n        Text(\"Status:\").foregroundStyle(theme.colors.textMuted)\n        Text(\"Open\").foregroundStyle(theme.colors.textDefault).fontWeight(.semibold)\n        Button {} label: { MonarchIcon(systemName: \"xmark\", size: .sm) }\n            .buttonStyle(.plain)\n            .foregroundStyle(theme.colors.textMuted)\n            .accessibilityLabel(\"Remove filter\")\n    }\n    .monarchTextStyle(.label)\n    .padding(.horizontal, theme.spacing.space3)\n    .padding(.vertical, theme.spacing.space1)\n    .background(Capsule().fill(theme.colors.bgSurface))\n    .overlay(Capsule().stroke(theme.colors.borderDefault))\n}"
+    },
+    {
+      "title": "Switching only, small",
+      "setup": "@State private var selection: String?",
+      "code": "MonarchSavedViews(\n    [MonarchSavedView(\"Mine\", id: \"mine\"), MonarchSavedView(\"Team\", id: \"team\", isShared: true)],\n    selection: $selection,\n    size: .sm\n)"
+    }
+  ],
+  "webEquivalent": "SavedViews",
+  "dependsOn": [
+    "dropdown-menu",
+    "prompt-dialog",
+    "confirm-dialog",
+    "badge"
+  ],
+  "icons": {
+    "menu": "ChevronDownGlyph",
+    "chip.remove": "CloseGlyph"
+  }
+}

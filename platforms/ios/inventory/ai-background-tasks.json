@@ -1,0 +1,173 @@
+{
+  "id": "ai-background-tasks",
+  "name": "MonarchAiBackgroundTasks",
+  "title": "AiBackgroundTasks",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "List with Section per group (.insetGrouped on iOS), swipeActions, TimelineView(.periodic) for the clock, ProgressView with .monarchLinear; presented by the app with .sheet and presentationDetents",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A tray of work that AI agents do in the background, grouped into Needs you, Running and Finished, with status, step, progress, elapsed or end time and actions, plus a button that shows the counts and opens it.",
+  "whenToUse": "When agents run long tasks that the person starts and leaves: show the button in the toolbar and the tray in a sheet, so the work stays visible after the conversation is closed.",
+  "whenNotToUse": "For one task in the conversation itself, use MonarchAiTaskProgress. For work that must be followed outside the app, post a local notification or start a Live Activity from onStatusChange; the tray only reports while the app is open.",
+  "api": [
+    "MonarchAiBackgroundTasks.init(tasks: [MonarchAiBackgroundTask], now: Date? = nil, labels: MonarchAiBackgroundTasksLabels = MonarchAiBackgroundTasksLabels(), onOpen: (@MainActor (MonarchAiBackgroundTask) -> Void)? = nil, onCancel: (@MainActor (MonarchAiBackgroundTask) -> Void)? = nil, onRetry: (@MainActor (MonarchAiBackgroundTask) -> Void)? = nil, onRespond: (@MainActor (MonarchAiBackgroundTask) -> Void)? = nil, onDismiss: (@MainActor (MonarchAiBackgroundTask) -> Void)? = nil, onClearFinished: (@MainActor ([MonarchAiBackgroundTask]) -> Void)? = nil, onStatusChange: (@MainActor (MonarchAiBackgroundTask) -> Void)? = nil)",
+    "MonarchAiBackgroundTasksButton.init(tasks: [MonarchAiBackgroundTask], labels: MonarchAiBackgroundTasksLabels = MonarchAiBackgroundTasksLabels(), action: @escaping @MainActor () -> Void)",
+    "struct MonarchAiBackgroundTask: Identifiable, Hashable { init(_ title: String, id: String, status: MonarchAiBackgroundTaskStatus, agent: String? = nil, progress: Double? = nil, isIndeterminate: Bool = false, step: String? = nil, startedAt: Date? = nil, endedAt: Date? = nil, result: String? = nil, error: String? = nil) }",
+    "enum MonarchAiBackgroundTaskStatus: String { case queued, running, needsInput, succeeded, failed, cancelled; var isFinished: Bool }",
+    "struct MonarchAiBackgroundTasksLabels { init(title:, runningCount:, queuedCount:, needsInputCount:, needsInputGroup:, runningGroup:, finishedGroup:, groupHeading:, status:, elapsed:, ended:, progressLabel:, open:, cancel:, retry:, respond:, dismiss:, clearFinished:, actionLabel:, empty:, announce:)  // every parameter optional, nil by default"
+  ],
+  "options": [
+    {
+      "name": "tasks",
+      "type": "[MonarchAiBackgroundTask]",
+      "default": "required",
+      "description": "Every background task, in any order; the tray groups and sorts them."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for elapsed and end times. Without it the clock is read: every second while a task runs, every minute with Reduce Motion."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiBackgroundTasksLabels",
+      "default": "MonarchAiBackgroundTasksLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onOpen",
+      "type": "(@MainActor (MonarchAiBackgroundTask) -> Void)?",
+      "default": "nil",
+      "description": "Shows Open on every task."
+    },
+    {
+      "name": "onCancel",
+      "type": "(@MainActor (MonarchAiBackgroundTask) -> Void)?",
+      "default": "nil",
+      "description": "Shows Cancel, and a Cancel swipe action, on queued, running and waiting tasks."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor (MonarchAiBackgroundTask) -> Void)?",
+      "default": "nil",
+      "description": "Shows Retry on failed tasks."
+    },
+    {
+      "name": "onRespond",
+      "type": "(@MainActor (MonarchAiBackgroundTask) -> Void)?",
+      "default": "nil",
+      "description": "Shows Respond on tasks that need input."
+    },
+    {
+      "name": "onDismiss",
+      "type": "(@MainActor (MonarchAiBackgroundTask) -> Void)?",
+      "default": "nil",
+      "description": "Shows a Dismiss icon button, and a Dismiss swipe action, on finished tasks."
+    },
+    {
+      "name": "onClearFinished",
+      "type": "(@MainActor ([MonarchAiBackgroundTask]) -> Void)?",
+      "default": "nil",
+      "description": "Shows Clear finished in the Finished heading; receives the finished tasks."
+    },
+    {
+      "name": "onStatusChange",
+      "type": "(@MainActor (MonarchAiBackgroundTask) -> Void)?",
+      "default": "nil",
+      "description": "Runs once when a task succeeds, fails or starts needing input, for example to post a local notification."
+    },
+    {
+      "name": "action (button)",
+      "type": "@MainActor () -> Void",
+      "default": "required",
+      "description": "MonarchAiBackgroundTasksButton: opens the tray, usually in a sheet."
+    }
+  ],
+  "states": [
+    {
+      "name": "needs you",
+      "description": "Tasks waiting on the person come first under Needs you, with a bell icon in the warning colour and Respond as the primary action."
+    },
+    {
+      "name": "running",
+      "description": "A spinner, the step, a linear bar (indeterminate when the amount is unknown) and Running for 3 min 12 sec."
+    },
+    {
+      "name": "queued",
+      "description": "A clock icon, listed after running tasks; a bar only when the amount is known."
+    },
+    {
+      "name": "succeeded",
+      "description": "A check in the success colour, the result line and Ended 5 minutes ago."
+    },
+    {
+      "name": "failed",
+      "description": "An octagon in the danger colour, the error in the danger colour, Retry."
+    },
+    {
+      "name": "cancelled",
+      "description": "A minus icon in the muted colour; no detail."
+    },
+    {
+      "name": "empty",
+      "description": "MonarchEmptyState with No background tasks."
+    },
+    {
+      "name": "button",
+      "description": "A small secondary button with a bot (cpu) icon, the title, a count of running (or queued) tasks and a warning count of tasks that need the person."
+    }
+  ],
+  "appearance": "A system grouped list in the theme: titles in the default text colour, status lines and steps muted, icons in the success, danger, warning or accent strong roles, bars in the accent. Buttons are Monarch small buttons: primary for Respond, secondary for Retry and Open, ghost for Cancel. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web shows the tray in a popover from a trigger button, or inline in a sidebar. On iPhone a popover is the wrong surface for a long list, so the tray is a List that the app presents in a sheet with detents (or pushes); the trigger is a separate MonarchAiBackgroundTasksButton. Dismiss and Cancel are also swipe actions. The web's notify hook and useAiRunNotifications become onStatusChange, where the app posts a UserNotifications request or updates a Live Activity; Monarch posts no notifications itself. headingLevel, align and the controlled open state have no meaning here; the sheet's isPresented is the app's. The web's accent tone for the running count is the info tone, because MonarchTone has no accent. Android has no tray yet. Marked experimental as a domain composite until a Rook app adopts it.",
+  "accessibility": [
+    "Section headings have the header trait and include the count, for example \"Running (2)\".",
+    "Each row's title, status line and detail are one element; actions are separate buttons named with the task, such as \"Open: Weekly report\".",
+    "The Dismiss icon button has a spoken name and a 44-point touch target; Cancel and Dismiss are also swipe actions, which VoiceOver offers as actions.",
+    "A task that succeeds, fails or starts needing input is announced once (\"Weekly report: Done\"); progress and step changes are not announced.",
+    "Status is an icon and a word, never colour alone; the spinner of a running task is hidden from VoiceOver because the status word is read.",
+    "The progress bar is named \"<title> progress\" and reads its percentage.",
+    "The button is one element read as \"Background tasks, 2 running, 1 needs you\"."
+  ],
+  "edgeCases": [
+    "Tasks without a start or end time sort last in their section; ties keep the given order.",
+    "Progress outside 0 to 1 is clamped; isIndeterminate forces the animated bar.",
+    "A task that first appears already failed or done is not announced.",
+    "Action buttons wrap under each other when they do not fit, at the largest text sizes.",
+    "Without now, a running task's elapsed time ticks every second; with Reduce Motion it updates once a minute."
+  ],
+  "tests": [
+    "MonarchAiBackgroundTasksTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Trigger and popover",
+      "fixture": "ai-background-tasks",
+      "webExample": "Trigger and popover",
+      "template": "VStack(alignment: .leading, spacing: 8) {\n    MonarchAiBackgroundTasksButton(tasks: tasks) {}\n    MonarchAiBackgroundTasks(tasks: tasks, now: now, onOpen: { _ in }, onCancel: { _ in }, onRetry: { _ in }, onRespond: { _ in }, onDismiss: { _ in }, onClearFinished: { _ in })\n        .monarchAiPopoverCard()\n}",
+      "setupTemplate": "private let now = {{now|date}}\nprivate var tasks: [MonarchAiBackgroundTask] {\n    [\n        MonarchAiBackgroundTask({{tasks.0.title}}, id: {{tasks.0.id}}, status: {{tasks.0.status|case}}, agent: {{tasks.0.agent}}, step: {{tasks.0.step}}, startedAt: {{tasks.0.startedAt|date}}),\n        MonarchAiBackgroundTask({{tasks.1.title}}, id: {{tasks.1.id}}, status: {{tasks.1.status|case}}, agent: {{tasks.1.agent}}, progress: {{tasks.1.progress|double}}, step: {{tasks.1.step}}, startedAt: {{tasks.1.startedAt|date}}),\n        MonarchAiBackgroundTask({{tasks.2.title}}, id: {{tasks.2.id}}, status: {{tasks.2.status|case}}, startedAt: {{tasks.2.startedAt|date}}),\n        MonarchAiBackgroundTask({{tasks.3.title}}, id: {{tasks.3.id}}, status: {{tasks.3.status|case}}),\n        MonarchAiBackgroundTask({{tasks.4.title}}, id: {{tasks.4.id}}, status: {{tasks.4.status|case}}, agent: {{tasks.4.agent}}, startedAt: {{tasks.4.startedAt|date}}, endedAt: {{tasks.4.endedAt|date}}, result: {{tasks.4.result}}),\n        MonarchAiBackgroundTask({{tasks.5.title}}, id: {{tasks.5.id}}, status: {{tasks.5.status|case}}, startedAt: {{tasks.5.startedAt|date}}, endedAt: {{tasks.5.endedAt|date}}, error: {{tasks.5.error}}),\n    ]\n}",
+      "setup": "private let now = Date(timeIntervalSince1970: 1_767_268_800)\nprivate var tasks: [MonarchAiBackgroundTask] {\n    [\n        MonarchAiBackgroundTask(\"Book the venue\", id: \"venue\", status: .needsInput, agent: \"Planning agent\", step: \"Two dates are free. Which one do you prefer?\", startedAt: Date(timeIntervalSince1970: 1_767_268_200)),\n        MonarchAiBackgroundTask(\"Summarise 40 contracts\", id: \"contracts\", status: .running, agent: \"Research agent\", progress: 0.4, step: \"Reading contract 16 of 40\", startedAt: Date(timeIntervalSince1970: 1_767_268_608)),\n        MonarchAiBackgroundTask(\"Index the workspace\", id: \"index\", status: .running, startedAt: Date(timeIntervalSince1970: 1_767_268_760)),\n        MonarchAiBackgroundTask(\"Translate the summary\", id: \"translate\", status: .queued),\n        MonarchAiBackgroundTask(\"Draft the release notes\", id: \"notes\", status: .succeeded, agent: \"Writing agent\", startedAt: Date(timeIntervalSince1970: 1_767_267_600), endedAt: Date(timeIntervalSince1970: 1_767_268_500), result: \"Draft ready, 420 words.\"),\n        MonarchAiBackgroundTask(\"Import the spreadsheet\", id: \"import\", status: .failed, startedAt: Date(timeIntervalSince1970: 1_767_267_000), endedAt: Date(timeIntervalSince1970: 1_767_267_060), error: \"The file could not be read.\"),\n    ]\n}",
+      "code": "VStack(alignment: .leading, spacing: 8) {\n    MonarchAiBackgroundTasksButton(tasks: tasks) {}\n    MonarchAiBackgroundTasks(tasks: tasks, now: now, onOpen: { _ in }, onCancel: { _ in }, onRetry: { _ in }, onRespond: { _ in }, onDismiss: { _ in }, onClearFinished: { _ in })\n        .monarchAiPopoverCard()\n}"
+    },
+    {
+      "title": "The tray as a screen",
+      "setup": "private let now = Date(timeIntervalSince1970: 1_794_650_000)",
+      "code": "MonarchAiBackgroundTasks(\n    tasks: [\n        MonarchAiBackgroundTask(\"Clean up the CRM\", id: \"crm\", status: .failed, endedAt: now.addingTimeInterval(-300), error: \"The CRM did not answer in time.\"),\n        MonarchAiBackgroundTask(\"Weekly report\", id: \"report\", status: .succeeded, endedAt: now.addingTimeInterval(-3_600), result: \"Report saved to Documents.\")\n    ],\n    now: now,\n    onRetry: { _ in },\n    onDismiss: { _ in },\n    onClearFinished: { _ in }\n)\n.frame(height: 400)"
+    }
+  ],
+  "webEquivalent": "AiBackgroundTasks",
+  "dependsOn": [
+    "badge",
+    "sheet",
+    "button",
+    "progress-bar",
+    "empty-state",
+    "icon"
+  ]
+}

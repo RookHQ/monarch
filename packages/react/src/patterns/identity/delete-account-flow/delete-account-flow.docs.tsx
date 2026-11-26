@@ -1,40 +1,47 @@
-import { useState } from 'react';
+import { useState, type ComponentProps } from 'react';
 import { Button, DangerZone, DangerZoneItem } from '@rookcom/monarch-react';
 import { DeleteAccountFlow, type OwnedWorkspace } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './delete-account-flow.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
-const reasons = [
-  { value: 'not-needed', label: 'I no longer need it' },
-  { value: 'other-tool', label: 'I use another tool' },
-  { value: 'too-complex', label: 'It is too complicated' },
-  { value: 'other', label: 'Something else' },
-];
+type FlowProps = ComponentProps<typeof DeleteAccountFlow>;
+
+const reasons = fixture.data.reasons;
 
 function FromDangerZone() {
+  const [open, setOpen] = useState(true);
   return (
-    <DangerZone description="Deleting your account cannot be undone.">
-      <DangerZoneItem
-        title="Delete your account"
-        description="Removes your profile and your access to every workspace."
-        action={
-          <DeleteAccountFlow
-            trigger={<Button variant="danger">Delete account</Button>}
-            confirmPhrase="sam@example.com"
-            consequences={[
-              { kind: 'removed', label: 'Your profile and sign-in methods' },
-              { kind: 'changed', label: 'You leave 3 workspaces' },
-              { kind: 'kept', label: 'Content you created stays in its workspace' },
-            ]}
-            onExport={() => wait(800)}
-            reasons={reasons}
-            stepUp={{ methods: ['passkey', 'password'], onVerify: () => wait(600) }}
-            onDelete={() => wait(1200)}
-          />
+    <>
+      <DangerZone heading={fixture.data.zone.title} description={fixture.data.zone.description}>
+        <DangerZoneItem
+          title={fixture.data.item.title}
+          description={fixture.data.item.description}
+          action={
+            <Button variant="danger" onClick={() => setOpen(true)}>
+              {fixture.data.item.action}
+            </Button>
+          }
+        />
+      </DangerZone>
+      <DeleteAccountFlow
+        open={open}
+        onOpenChange={setOpen}
+        confirmPhrase={fixture.data.email}
+        consequences={fixture.data.consequences as NonNullable<FlowProps['consequences']>}
+        onExport={() => wait(800)}
+        reasons={reasons}
+        stepUp={
+          {
+            methods: fixture.data.stepUp.methods,
+            onVerify: () => wait(600),
+          } as NonNullable<FlowProps['stepUp']>
         }
+        onDelete={() => wait(1200)}
       />
-    </DangerZone>
+    </>
   );
 }
 
@@ -202,6 +209,7 @@ export default {
       items: [
         {
           title: 'From a danger zone, with export, reason and step-up',
+          stage: { align: 'center' },
           render: () => <FromDangerZone />,
         },
         { title: 'Blocked by owned workspaces', render: () => <OwnsWorkspaces /> },

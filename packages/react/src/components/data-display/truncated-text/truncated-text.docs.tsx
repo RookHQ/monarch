@@ -1,8 +1,9 @@
 import { TruncatedText } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './truncated-text.fixture.json';
 
-const NOTES =
-  'Quarterly planning notes covering hiring for the support team, the roadmap for the next two releases, the migration of the reporting service to the new storage layer and the open questions we still need answers to before the review.';
+const NOTES = fixture.data.text;
 
 export default {
   id: 'truncated-text',
@@ -123,7 +124,7 @@ export default {
         {
           title: 'Three lines with Show more',
           stack: true,
-          render: () => <TruncatedText>{NOTES}</TruncatedText>,
+          render: () => <TruncatedText lines={fixture.data.lines}>{NOTES}</TruncatedText>,
         },
         {
           title: 'One line with a tooltip',

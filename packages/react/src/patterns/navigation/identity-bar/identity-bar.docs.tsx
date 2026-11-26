@@ -2,10 +2,12 @@ import { IconButton, SearchInput } from '@rookcom/monarch-react';
 import { IdentityBar, ThemeToggle } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { AppMark, BellIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './identity-bar.fixture.json';
 
 const account = {
-  name: 'Grace Hopper',
-  email: 'grace@example.com',
+  name: fixture.data.account.name,
+  email: fixture.data.account.email,
   profileHref: '#profile',
   accountHref: 'https://id.example.com',
   onSignOut: () => {},
@@ -108,9 +110,11 @@ export default {
             <IdentityBar
               style={{ width: '100%' }}
               sticky={false}
-              product={{ name: 'Acme Desk', href: '#home', logo: <AppMark /> }}
-              search={<SearchInput aria-label="Search tickets" placeholder="Search tickets" />}
-              notifications={<IconButton label="Notifications" icon={<BellIcon />} />}
+              product={{ name: fixture.data.product, href: '#home', logo: <AppMark /> }}
+              search={
+                <SearchInput aria-label={fixture.data.search} placeholder={fixture.data.search} />
+              }
+              notifications={<IconButton label={fixture.data.notifications} icon={<BellIcon />} />}
               account={account}
             />
           ),

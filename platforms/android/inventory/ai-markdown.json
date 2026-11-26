@@ -1,0 +1,145 @@
+{
+  "id": "ai-markdown",
+  "name": "MonarchAiMarkdown",
+  "title": "AiMarkdown",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.material3.Text with AnnotatedString and androidx.compose.ui.text.LinkAnnotation.Url for inline content; androidx.compose.foundation.layout.Column, Row and a custom androidx.compose.ui.layout.Layout for blocks and tables; androidx.compose.material3.Checkbox for task items; MonarchCodeBlock for code",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Renders GitHub-flavoured Markdown written by a model (headings, emphasis, links, lists, task lists, quotations, code, tables, rules and footnotes) as Compose text and layouts, never as HTML.",
+  "whenToUse": "For the text of an assistant answer or any other model output that arrives as Markdown, including while it streams.",
+  "whenNotToUse": "For content the app writes itself, use MonarchProse with its blocks. For a single code sample, use MonarchCodeBlock. For a table of data the app owns, use a data table component.",
+  "api": [
+    "@Composable fun MonarchAiMarkdown(text: String, modifier: Modifier = Modifier, streaming: Boolean = false, showLinkHosts: Boolean = true, onOpenLink: ((url: String) -> Unit)? = null, image: (@Composable (url: String, alt: String) -> Unit)? = null, codeBlock: (@Composable (language: String, code: String, complete: Boolean) -> Unit)? = null, labels: MonarchAiMarkdownLabels = MonarchAiMarkdownLabels())",
+    "class MonarchAiMarkdownLabels(table: String? = null, footnotes: String? = null, task: String? = null, linkHost: ((host: String) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "text",
+      "type": "String",
+      "default": "required",
+      "description": "The Markdown source, treated as untrusted. While it grows, only the last block is parsed again."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the column."
+    },
+    {
+      "name": "streaming",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The text is still arriving: an unclosed code block is incomplete, so MonarchCodeBlock hides its copy button and codeBlock receives complete = false."
+    },
+    {
+      "name": "showLinkHosts",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the host after a link whose text does not name it, such as \"paypal.com (evil.test)\"."
+    },
+    {
+      "name": "onOpenLink",
+      "type": "((url: String) -> Unit)?",
+      "default": "null",
+      "description": "Opens links in the app instead of through the platform UriHandler. When given, relative links are links too."
+    },
+    {
+      "name": "image",
+      "type": "(@Composable (url: String, alt: String) -> Unit)?",
+      "default": "null",
+      "description": "Renders a paragraph that is only an image with an http or https source and alt text. Monarch loads no images; without it the alt text is shown."
+    },
+    {
+      "name": "codeBlock",
+      "type": "(@Composable (language: String, code: String, complete: Boolean) -> Unit)?",
+      "default": "null",
+      "description": "Renders every code block instead of MonarchCodeBlock, for example a diagram for mermaid or typeset maths for math."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiMarkdownLabels",
+      "default": "MonarchAiMarkdownLabels()",
+      "description": "Replaces \"Table\", \"Footnotes\", \"Task\" and the \"(host)\" text after links."
+    }
+  ],
+  "states": [
+    {
+      "name": "complete",
+      "description": "Every block is rendered; footnotes are numbered by first reference and listed at the end under \"Footnotes\"."
+    },
+    {
+      "name": "streaming",
+      "description": "The last block is parsed again on every update; an unclosed code block renders as code without its copy button."
+    },
+    {
+      "name": "empty",
+      "description": "An empty text renders nothing."
+    }
+  ],
+  "appearance": "Small body text with relaxed leading in the default text color; headings are semibold at the large, base or small size for #, ## and ### and below. Links use the link color and are always underlined. Inline code uses the code face on the muted fill. Quotations have a bar in the default border color and muted text; list markers and struck-through text are muted. Tables have a subtle border, a subtle header fill and subtle row lines. The same roles in light, dark and both high-contrast themes.",
+  "platformNotes": "The parser is a port of the web parser (same block and inline rules, same incremental re-parse while streaming) and is internal: Android takes the text and keeps the parse state itself instead of exposing parseMarkdownBlocks and a blocks prop. Heading levels do not exist in Android semantics, so headingLevelOffset is not offered and the visual size follows the Markdown level as on the web. Links open through LinkAnnotation.Url (the platform UriHandler) or onOpenLink; there is no new-tab option. Protocol-relative links are never links, and relative links are links only when onOpenLink handles them, because a native app has no base URL. Images are off unless the app passes image, as the web's allowImages; the web's allowImageHosts and resolveImageUrl belong in the app's slot, and only a paragraph that is a single image is handed to it. Inline maths shows as inline code (the web's renderMath has no inline slot here); display maths reaches codeBlock with language math. Footnote references are superscript numbers and footnotes are listed at the end with a heading; there are no in-page anchors or back links on Android. The web's trailing slot (the streaming caret) is not offered. Tables scroll sideways inside their own border, and columns are capped at 240dp and wrap. There is no iOS equivalent yet.",
+  "accessibility": [
+    "Each block is its own TalkBack element; headings have heading semantics.",
+    "Links are LinkAnnotation links that TalkBack lists and opens; they are always underlined, so they do not depend on color.",
+    "Unsafe links (javascript:, data:, other schemes, //host) keep their text but are not links.",
+    "Task items expose a checkbox role named \"Task\" with their checked state, and cannot be changed.",
+    "Ordered list numbers are read; bullets are decoration and hidden.",
+    "A table's scroll area is named \"Table\", and the grid gives TalkBack its row and column counts and each cell's position.",
+    "Rules are hidden from TalkBack."
+  ],
+  "edgeCases": [
+    "Raw HTML such as <script> or <b> is shown as text.",
+    "A link whose text names a different site shows the real host after it, such as \"paypal.com (evil.test)\".",
+    "An unclosed code fence renders the rest of the text as code until the fence closes.",
+    "A footnote reference without a definition stays as \"[^label]\"; a definition that is never referenced is not listed.",
+    "A single $ is never maths, so prices stay text.",
+    "Long words and URLs wrap; wide tables and code scroll sideways in their own area."
+  ],
+  "tests": [
+    "MonarchAiMarkdownTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "A full answer",
+      "fixture": "ai-markdown",
+      "webExample": "A full answer",
+      "template": "MonarchAiMarkdown(text = {{text}})",
+      "code": "MonarchAiMarkdown(text = \"# Release checklist\\n\\nHere is what is left before the **Friday** release, based on the open tasks[^1].\\n\\n1. Finish the migration review\\n   - [x] Schema changes approved\\n   - [ ] Backfill tested on a copy\\n2. Update the *changelog* and the ~~old~~ new screenshots\\n3. Tell support (see [the handover notes](https://example.com/notes))\\n\\n> Releases after 16:00 need a second reviewer.\\n\\n| Task | Owner | Days left |\\n| :-- | :-- | --: |\\n| Migration review | Sam | 2 |\\n| Changelog | Alex | 1 |\\n\\n```bash\\nnpm run release -- --dry-run\\n```\\n\\n[^1]: Tasks tagged `release` in the sample project.\")"
+    },
+    {
+      "title": "Streaming, with links opened by the app",
+      "setup": "val answer = \"Here is the query:\\n\\n```sql\\nselect * from invoices\"\nvar opened by remember { mutableStateOf<String?>(null) }",
+      "code": "MonarchAiMarkdown(\n    text = answer,\n    streaming = true,\n    onOpenLink = { url -> opened = url },\n)"
+    },
+    {
+      "title": "Diagrams and maths through the code slot",
+      "code": "MonarchAiMarkdown(\n    text = \"```mermaid\\ngraph TD; A-->B\\n```\",\n    codeBlock = { language, code, complete ->\n        if (language == \"mermaid\") {\n            MonarchText(text = \"Diagram: $code\")\n        } else {\n            MonarchCodeBlock(code = code, language = language.ifEmpty { null }, copyable = complete)\n        }\n    },\n)"
+    }
+  ],
+  "webEquivalent": "AiMarkdown",
+  "dependsOn": [
+    "prose",
+    "code-block",
+    "link",
+    "checkbox"
+  ],
+  "icons": {
+    "codeBlock.copy": "CopyGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "layout",
+      "platform": "android",
+      "reason": "The web ends the footnote with a return arrow that scrolls back to the reference in the text. The answer is not a scroll target on Android, so the note has no return arrow. The Wrap lines and Copy controls of the code block keep a 48dp touch target, so they are taller and wider than the web's 24px buttons.",
+      "convention": "Material touch target of 48dp; no in-page anchors in a native list"
+    }
+  ]
+}
