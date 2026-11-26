@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Lightbox, type LightboxItem } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 // The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
@@ -10,7 +10,6 @@ const PHOTOS = fixture.data.photos.map((photo, i) => ({ ...photo, fill: FILLS[i]
 
 /** Demo images: solid SVGs served as `blob:` URLs, which Lightbox accepts. */
 function sampleItems(): LightboxItem[] {
-  if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') return [];
   return PHOTOS.map(({ fill, ...item }) => ({
     ...item,
     width: 640,
@@ -29,7 +28,15 @@ function sampleItems(): LightboxItem[] {
 function Gallery() {
   const [open, setOpen] = useState(true);
   const [index, setIndex] = useState(0);
-  const [items] = useState(sampleItems);
+  // Made in the browser after mount: a `blob:` URL made while prerendering belongs to the
+  // build machine, and browsers refuse to load it.
+  const [items, setItems] = useState<LightboxItem[]>([]);
+  useEffect(() => {
+    if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') return;
+    const made = sampleItems();
+    setItems(made);
+    return () => made.forEach((item) => URL.revokeObjectURL(item.src));
+  }, []);
   return (
     <>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -169,7 +176,7 @@ export default {
         'Each image has its `alt`; a video gets it as `aria-label`.',
         'The position and current alt text are announced politely on every step.',
         'Icon buttons have names from `messages` and their shortcuts in `aria-keyshortcuts`.',
-        'The zoom level is visible text; the reset button is named "Reset zoom".',
+        'The zoom level is visible text; the reset button is named "Reset zoom" followed by that level, so its name holds what it shows.',
       ],
     },
     responsive: {
