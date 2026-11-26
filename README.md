@@ -16,6 +16,8 @@ screen and stays consistent as it grows.
 - **Everything a product needs.** Forms, overlays, navigation, charts, data
   tables, scheduling, collaboration, a rich-text editor and marketing blocks.
 - **Safe to render anywhere.** Server-render safe components on React 18 and 19.
+- **Web, iOS and Android.** Every component has a SwiftUI and a Jetpack Compose
+  version that shares the tokens, data and copy, and behaves like the platform.
 - **Stays consistent.** A conformance CLI and an ESLint plugin flag raw
   colours, off-grid spacing and local copies of components, with safe fixes
   and SARIF output for code review.
@@ -27,11 +29,13 @@ Made by [Rook](https://rookhq.com), open to everyone under the
 without restriction beyond the license; the Rook and Monarch names and logos are trademarks (see
 [License and trademarks](#license-and-trademarks)).
 
-| Package                                                | What it is                                                                                              | Needs         |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ------------- |
-| [`@rookcom/monarch-tokens`](packages/tokens)           | CSS variables, 4 themes, per-product accents with guaranteed contrast, Tailwind 3 preset, `tokens.json` | nothing       |
-| [`@rookcom/monarch-react`](packages/react)             | Accessible components and patterns (React 18/19, SSR-safe) and `styles.css`                             | tokens, React |
-| [`@rookcom/monarch-conformance`](packages/conformance) | `monarch` CLI: conformance checks with fixes and SARIF, an ESLint plugin, starter apps, an MCP server   | Node only     |
+| Package                                                           | What it is                                                                                              | Needs                |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------- |
+| [`@rookcom/monarch-tokens`](packages/tokens)                      | CSS variables, 4 themes, per-product accents with guaranteed contrast, Tailwind 3 preset, `tokens.json` | nothing              |
+| [`@rookcom/monarch-react`](packages/react)                        | Accessible components and patterns (React 18/19, SSR-safe) and `styles.css`                             | tokens, React        |
+| [`@rookcom/monarch-conformance`](packages/conformance)            | `monarch` CLI: conformance checks with fixes and SARIF, an ESLint plugin, starter apps, an MCP server   | Node only            |
+| [`MonarchUI`, `MonarchTokens`](platforms/ios) (Swift package)     | SwiftUI components and tokens for iPhone and iPad                                                       | iOS 17               |
+| [`com.rookhq.monarch:monarch-compose`](platforms/android) (Maven) | Jetpack Compose components and tokens for phones and tablets                                            | Android 7.0 (API 24) |
 
 ## Start a new app
 
@@ -82,8 +86,8 @@ the platform:
 | Android  | [`platforms/android`](platforms/android/README.md) | Jetpack Compose: `com.rookhq.monarch:monarch-compose`               |
 | iOS      | [`platforms/ios`](platforms/ios/README.md)         | SwiftUI: the Swift package products `MonarchUI` and `MonarchTokens` |
 
-Both cover the 515 web components (built, styled, adopted from the platform,
-composed, or documented as web only) and are not released yet. Their version
+Both cover all 515 web components (built, styled, adopted from the platform or
+composed) and are not released yet. Their version
 is the `@rookcom/monarch-react` version: Maven `0.14.N`, and a plain `0.14.N`
 git tag for Swift Package Manager, which reads the generated root
 `Package.swift`. The architecture is in
