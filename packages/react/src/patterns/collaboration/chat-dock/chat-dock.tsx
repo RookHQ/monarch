@@ -321,6 +321,7 @@ export const ChatDock = forwardRef<HTMLDivElement, ChatDockProps>(function ChatD
   }, [frameKey, getBridge]);
 
   const inCall = layout === 'call' || layout === 'fullscreen';
+  const allowAttr = allowValue(allow);
   const shown = status !== 'unavailable' && (!hidden || inCall);
   const panelVisible = shown && open && mounted;
 
@@ -410,8 +411,9 @@ export const ChatDock = forwardRef<HTMLDivElement, ChatDockProps>(function ChatD
             src={src}
             title={messages.label}
             sandbox={sandboxValue(sandbox)}
-            allow={allowValue(allow)}
-            allowFullScreen
+            // With an `allow` list, it alone decides fullscreen (browsers ignore `allowfullscreen`
+            // and warn); `allowfullscreen` only applies when there is no list.
+            {...(allowAttr ? { allow: allowAttr } : { allowFullScreen: true })}
             referrerPolicy="strict-origin-when-cross-origin"
             tabIndex={panelVisible ? undefined : -1}
           />
