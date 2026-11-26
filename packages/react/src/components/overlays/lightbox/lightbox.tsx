@@ -60,7 +60,7 @@ export interface LightboxMessages {
   zoomIn: string;
   /** Default "Zoom out". */
   zoomOut: string;
-  /** Accessible name of the button that shows the zoom level and resets it. Default "Reset zoom". */
+  /** Accessible name of the button that shows the zoom level and resets it, followed by the level ("Reset zoom, 150%"). Default "Reset zoom". */
   resetZoom: string;
   /** Default "Close". */
   close: string;
@@ -313,7 +313,8 @@ export function Lightbox({
                   <button
                     type="button"
                     className="mn-lightbox__button mn-lightbox__zoom-level"
-                    aria-label={messages.resetZoom}
+                    // The name holds the level it shows, so speech input can say what is on screen.
+                    aria-label={`${messages.resetZoom}, ${Math.round(zoom * 100)}%`}
                     aria-keyshortcuts="0"
                     aria-disabled={zoom === 1 || undefined}
                     onClick={() => setZoom(1)}
