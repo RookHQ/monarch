@@ -365,8 +365,9 @@ struct MonarchSubscriptionsTableTests {
         }
 
         // Before, a regular size class always drew the table: at 390 points
-        // its six columns wrapped to 1 369 points against 400 for the blocks.
-        @Test("A regular size class without room for the columns stacks the rows")
+        // its six columns wrapped to 1 369 points. Without room it now uses the
+        // compact three-column table, the same as a compact size class.
+        @Test("A regular size class without room for the columns uses the compact table")
         @MainActor
         func narrowRegularStacks() {
             let stacked = Host.layout(MonarchSubscriptionsTable(rows))

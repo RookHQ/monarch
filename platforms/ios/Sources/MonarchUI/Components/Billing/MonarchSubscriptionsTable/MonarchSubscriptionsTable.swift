@@ -112,10 +112,12 @@ public struct MonarchSubscriptionsTable: View {
                     // A regular size class does not promise room for six
                     // columns (an iPad in split view, a narrow container).
                     // Squeezed, the cells wrap a few letters per line, so the
-                    // table is used only when its columns fit at their ideal width.
+                    // full table is used only when its columns fit at their ideal
+                    // width; otherwise it is the same three-column table as at
+                    // compact width.
                     ViewThatFits(in: .horizontal) {
                         table(texts: texts)
-                        stacked(texts: texts)
+                        compactTable(texts: texts)
                     }
                 }
             }
