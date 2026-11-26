@@ -218,7 +218,10 @@ test('component page: Web, iOS and Android tabs', async ({ page }) => {
   await page.goto(`${pageUrl('/components/button')}#ios`);
   await expect(page.getByRole('tab', { name: 'iOS' })).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('#panel-ios')).toBeVisible();
-  await expect(page.getByRole('heading', { level: 2, name: 'iOS' })).toBeInViewport();
+  // The sidebar has an iOS heading too (the iOS guides): the one in the page is meant.
+  await expect(
+    page.getByRole('main').getByRole('heading', { level: 2, name: 'iOS' }),
+  ).toBeInViewport();
 });
 
 test('keyboard: skip link, nav and page title', async ({ page, browserName }) => {
@@ -277,26 +280,39 @@ test('toast offsets move the region in from the bottom and end edges', async ({ 
   await page.goto(pageUrl('/components/toast'));
   await waitForFonts(page);
   await mountPreviews(page);
+  // The first example is staged (its toast shows in place), so the window edges are
+  // measured on the other examples' providers.
   const edges = (label: string) =>
     page.evaluate((name) => {
       const region = document.querySelector(`[role="region"][aria-label^="${name}"]`);
+      if (region?.closest('[data-mn-overlay-stage]')) throw new Error(`${name} is staged`);
       const ol = region?.querySelector('.mn-toast-viewport');
       if (!ol) throw new Error(`No toast viewport named ${name}`);
       const r = ol.getBoundingClientRect();
       const root = document.documentElement;
-      return { bottom: root.clientHeight - r.bottom, end: root.clientWidth - r.right };
+      return {
+        top: r.top,
+        bottom: root.clientHeight - r.bottom,
+        end: root.clientWidth - r.right,
+      };
     }, label);
-  // Default provider: flush with the window edges (its padding is inside the box).
-  expect(await edges('Notifications')).toEqual({ bottom: 0, end: 0 });
+  // No offset (top right): flush with the window edges (its padding is inside the box).
+  expect(await edges('Timing example notifications')).toMatchObject({ top: 0, end: 0 });
   // The `offset` prop: blockEnd 4rem, inlineEnd 1rem.
-  expect(await edges('Docked panel example notifications')).toEqual({ bottom: 64, end: 16 });
+  expect(await edges('Docked panel example notifications')).toMatchObject({
+    bottom: 64,
+    end: 16,
+  });
   // A host stylesheet sets the same public variables on an ancestor.
   await page.addStyleTag({
-    content: ':root { --mn-toast-offset-block-end: 68px; --mn-toast-offset-inline-end: 420px; }',
+    content: ':root { --mn-toast-offset-block-start: 68px; --mn-toast-offset-inline-end: 420px; }',
   });
-  expect(await edges('Notifications')).toEqual({ bottom: 68, end: 420 });
+  expect(await edges('Timing example notifications')).toMatchObject({ top: 68, end: 420 });
   // A value given to `offset` wins over the inherited variable.
-  expect(await edges('Docked panel example notifications')).toEqual({ bottom: 64, end: 16 });
+  expect(await edges('Docked panel example notifications')).toMatchObject({
+    bottom: 64,
+    end: 16,
+  });
 });
 
 for (const theme of ['light', 'dark'] as const) {
