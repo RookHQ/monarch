@@ -23,6 +23,7 @@ function fakeSave(values: typeof SAVED) {
 /**
  * `edited` opens with the name already changed, so the bar shows its dirty
  * state; that demo has no leave guard, which would otherwise hold this page.
+ * Each bar is a named region, so the two demos on one page get their own names.
  */
 function SettingsDemo({ edited = false }: { edited?: boolean }) {
   const [saved, setSaved] = useState(SAVED);
@@ -54,6 +55,7 @@ function SettingsDemo({ edited = false }: { edited?: boolean }) {
         sticky={false}
         onSave={save}
         onDiscard={() => setValues(saved)}
+        messages={{ label: edited ? 'Profile form actions' : 'Settings form actions' }}
       />
     </div>
   );
