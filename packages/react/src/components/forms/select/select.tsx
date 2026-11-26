@@ -1,11 +1,38 @@
 'use client';
 
-import { forwardRef, Fragment, type ComponentPropsWithoutRef, type ElementRef } from 'react';
+import {
+  createContext,
+  forwardRef,
+  Fragment,
+  useCallback,
+  useContext,
+  useState,
+  type ComponentPropsWithoutRef,
+  type CSSProperties,
+  type ElementRef,
+  type Ref,
+} from 'react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { cx } from '../../../internal/cx.js';
-import { stagedDismiss, useOverlayStage } from '../../../internal/overlay-stage.js';
+import { useOverlayStage } from '../../../internal/overlay-stage.js';
 import { CheckGlyph, ChevronDownGlyph } from '../../../internal/icons.js';
 import { useFieldControl } from '../form-field/index.js';
+
+export type SelectProps = ComponentPropsWithoutRef<typeof SelectPrimitive.Root>;
+
+/**
+ * An open Select in a docs overlay stage. Radix Select is always modal when
+ * open (it hides the rest of the page from assistive technology, traps focus
+ * and locks scrolling), so a stage shows a picture of the open list instead:
+ * the same markup and styles, in the flow, with the page left alone. The first
+ * time the trigger is used the picture gives way to the real list.
+ */
+interface SelectPicture {
+  value: string | undefined;
+  triggerWidth: number | undefined;
+  setTriggerWidth: (width: number) => void;
+}
+const SelectPictureContext = createContext<SelectPicture | null>(null);
 
 /**
  * Single-value select built on Radix Select: typeahead, arrow-key navigation,
@@ -18,7 +45,45 @@ import { useFieldControl } from '../form-field/index.js';
  *     </SelectContent>
  *   </Select>
  */
-export const Select = SelectPrimitive.Root;
+export function Select({ open, defaultOpen, onOpenChange, ...props }: SelectProps) {
+  // `staged` never changes for a mounted Select, so each branch keeps its own tree.
+  const staged = useOverlayStage();
+  const [pictured, setPictured] = useState(staged && Boolean(open ?? defaultOpen));
+  const [ownOpen, setOwnOpen] = useState(false);
+  const [ownValue, setOwnValue] = useState(props.defaultValue);
+  const [triggerWidth, setTriggerWidth] = useState<number>();
+  if (!staged) {
+    return (
+      <SelectPrimitive.Root
+        {...props}
+        {...(open !== undefined ? { open } : {})}
+        {...(defaultOpen !== undefined ? { defaultOpen } : {})}
+        {...(onOpenChange ? { onOpenChange } : {})}
+      />
+    );
+  }
+  const value = props.value ?? ownValue;
+  return (
+    <SelectPictureContext.Provider
+      value={pictured ? { value, triggerWidth, setTriggerWidth } : null}
+    >
+      <SelectPrimitive.Root
+        {...props}
+        value={value ?? ''}
+        onValueChange={(next) => {
+          setOwnValue(next);
+          props.onValueChange?.(next);
+        }}
+        open={pictured ? false : (open ?? ownOpen)}
+        onOpenChange={(next) => {
+          setPictured(false);
+          setOwnOpen(next);
+          onOpenChange?.(next);
+        }}
+      />
+    </SelectPictureContext.Provider>
+  );
+}
 export const SelectGroup = SelectPrimitive.Group;
 export const SelectValue = SelectPrimitive.Value;
 
@@ -40,9 +105,18 @@ export const SelectTrigger = forwardRef<
     'aria-required'?: true;
     'aria-invalid'?: true;
   };
+  const picture = useContext(SelectPictureContext);
+  const setTriggerWidth = picture?.setTriggerWidth;
+  const measure = useCallback(
+    (node: HTMLButtonElement | null) => {
+      setRef(ref, node);
+      if (node && setTriggerWidth) setTriggerWidth(node.offsetWidth);
+    },
+    [ref, setTriggerWidth],
+  );
   return (
     <SelectPrimitive.Trigger
-      ref={ref}
+      ref={measure}
       {...props}
       data-size={size}
       className={cx('mn-input', 'mn-select', className)}
@@ -62,9 +136,38 @@ export const SelectContent = forwardRef<
   { className, children, position = 'popper', sideOffset = 4, ...rest },
   ref,
 ) {
-  // In a docs preview stage the list is a picture in the page: in place, not modal.
+  // In a docs preview stage the list renders in place; while the Select is a
+  // picture (see Select) the list is drawn without Radix, which is always modal.
   const staged = useOverlayStage();
+  const picture = useContext(SelectPictureContext);
   const Portal = staged ? Fragment : SelectPrimitive.Portal;
+  if (picture) {
+    const style = {
+      ...rest.style,
+      ...(picture.triggerWidth
+        ? { '--radix-select-trigger-width': `${picture.triggerWidth}px` }
+        : {}),
+    } as CSSProperties;
+    return (
+      <>
+        {/* Closed, Radix keeps the items off the page so the trigger shows the value. */}
+        <SelectPrimitive.Content>{children}</SelectPrimitive.Content>
+        <div
+          className={cx('mn-menu', 'mn-select__content', className)}
+          data-state="open"
+          data-side="bottom"
+          data-mn-select-picture=""
+          style={style}
+        >
+          <div className="mn-select__viewport">
+            <SelectItemPictureContext.Provider value={picture.value ?? null}>
+              {children}
+            </SelectItemPictureContext.Provider>
+          </div>
+        </div>
+      </>
+    );
+  }
   return (
     <Portal>
       <SelectPrimitive.Content
@@ -72,7 +175,6 @@ export const SelectContent = forwardRef<
         position={position}
         sideOffset={sideOffset}
         {...rest}
-        {...(staged ? stagedDismiss(staged, rest) : {})}
         className={cx('mn-menu', 'mn-select__content', className)}
       >
         <SelectPrimitive.Viewport className="mn-select__viewport">
@@ -83,10 +185,33 @@ export const SelectContent = forwardRef<
   );
 });
 
+/** The selected value, inside the picture of an open list (see Select). */
+const SelectItemPictureContext = createContext<string | null | undefined>(undefined);
+
 export const SelectItem = forwardRef<
   ElementRef<typeof SelectPrimitive.Item>,
   ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(function SelectItem({ className, children, ...rest }, ref) {
+  const pictured = useContext(SelectItemPictureContext);
+  if (pictured !== undefined) {
+    const checked = pictured === rest.value;
+    return (
+      <div
+        ref={ref}
+        className={cx('mn-menu__item', className)}
+        data-state={checked ? 'checked' : 'unchecked'}
+        {...(checked ? { 'data-highlighted': '' } : {})}
+        {...(rest.disabled ? { 'data-disabled': '' } : {})}
+      >
+        <span>{children}</span>
+        {checked ? (
+          <span className="mn-menu__indicator" aria-hidden="true">
+            <CheckGlyph />
+          </span>
+        ) : null}
+      </div>
+    );
+  }
   return (
     <SelectPrimitive.Item ref={ref} {...rest} className={cx('mn-menu__item', className)}>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
@@ -116,3 +241,8 @@ export const SelectSeparator = forwardRef<
     />
   );
 });
+
+function setRef<T>(ref: Ref<T> | undefined, value: T | null) {
+  if (typeof ref === 'function') ref(value);
+  else if (ref) (ref as { current: T | null }).current = value;
+}

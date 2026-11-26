@@ -28,7 +28,7 @@ export default {
     apiReference: {
       source: 'typescript',
       notes: [
-        '`Select`, `SelectGroup` and `SelectValue` are the Radix primitives re-exported unchanged.',
+        '`Select` takes the Radix Select root props unchanged (`SelectProps`); `SelectGroup` and `SelectValue` are the Radix primitives re-exported unchanged.',
         '`SelectTrigger`, `SelectContent`, `SelectItem`, `SelectLabel` and `SelectSeparator` forward their refs to the Radix parts.',
         '`SelectContent` renders in a portal with `position="popper"` and `sideOffset={4}` by default.',
       ],
