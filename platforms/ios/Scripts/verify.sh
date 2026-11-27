@@ -303,6 +303,29 @@ shutdown_new_simulators() {
     done
 }
 
+# Boots the test destination and waits until it has finished booting. Started cold by
+# xcodebuild, a simulator on a hosted runner can take longer to boot than the test runner
+# waits ("The test runner timed out while preparing to run tests"). Skipped when the
+# destination is not a named simulator; xcodebuild then boots it as before.
+boot_destination() {
+    local name udid
+    name="$(sed -n 's/.*name=\([^,]*\).*/\1/p' <<<"$destination")"
+    [[ -n "$name" ]] || return 0
+    udid="$(xcrun simctl list devices available -j | python3 -c '
+import json, sys
+name = sys.argv[1]
+runtimes = json.load(sys.stdin)["devices"]
+for runtime in sorted((r for r in runtimes if ".iOS-" in r), key=lambda r: [int(x) for x in r.rsplit("iOS-", 1)[1].split("-")], reverse=True):
+    for device in runtimes[runtime]:
+        if device["name"] == name:
+            print(device["udid"])
+            raise SystemExit
+' "$name")"
+    [[ -n "$udid" ]] || return 0
+    step "Booting $name ($udid)"
+    xcrun simctl bootstatus "$udid" -b
+}
+
 build_sample() {
     step "Sample app build for the iOS Simulator"
     xcodegen_bin="$(command -v xcodegen || true)"
@@ -326,6 +349,7 @@ fi
 
 # The screenshot tests on the simulator. Needs shut_down_simulators_on_exit.
 run_snapshots() {
+    boot_destination
     if [[ ! -d Tests/MonarchUISnapshotTests ]]; then
         echo "verify: Tests/MonarchUISnapshotTests does not exist yet" >&2
         exit 1
@@ -420,6 +444,8 @@ fi
 shut_down_simulators_on_exit
 
 simulator_compile
+
+boot_destination
 
 step "Package tests on: $destination"
 run_xcodebuild .build/verify-test.log test -scheme Monarch-Package \
