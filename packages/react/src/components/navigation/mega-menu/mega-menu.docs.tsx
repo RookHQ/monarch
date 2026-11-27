@@ -80,7 +80,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'The top navigation of a marketing or public site whose sections have many destinations: each entry opens a panel of grouped links with descriptions and an optional featured card. It replaces the hand-built bento Navbar copied into every Rook app, with keyboard, screen-reader and touch support. Needed by: App, Atlas, Base, Calendar, Chat, Developers, Dossier, Dots, Friends, GTM, Intellect, People, Pulse, Ranker, Recruit, Signal, Stride, Tickets (public sites).',
+        'The top navigation of a marketing or public site whose sections have many destinations: each entry opens a panel of grouped links with descriptions and an optional featured card. It replaces the hand-built bento Navbar copied into every Rook app, with keyboard, screen-reader and touch support. Needed by: App, Atlas, Base, Calendar, Chat, Developers, Dossier, Dots, GTM, Intellect, Partner, People, Pulse, Ranker, Recruit, Signal, Stride, Tickets (public sites).',
       useWhen: [
         'A public or marketing header with several sections of 3–10 links each.',
         'Links benefit from a one-line description or icon.',

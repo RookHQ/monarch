@@ -91,7 +91,7 @@ export const BUNDLED_PRODUCTS: readonly BundledProduct[] = [
   { id: 'chat', name: 'Rook Chat', accent: '239 84% 67%' },
   { id: 'dossier', name: 'Rook Dossier', accent: '175 84% 32%' },
   { id: 'dots', name: 'Rook Dots', accent: '354 70% 52%' },
-  { id: 'friends', name: 'Rook Friends', accent: '0 0% 0%' },
+  { id: 'friends', name: 'Rook Partner', accent: '0 0% 0%' },
   { id: 'gtm', name: 'Rook GTM', accent: '25 95% 53%' },
   { id: 'id', name: 'Rook ID & Workspace', accent: '354 70% 52%' },
   { id: 'intellect', name: 'Rook Intellect', accent: '175 77% 26%' },

@@ -29,7 +29,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'People who already have a workspace create another from the workspace switcher without leaving the page. CreateWorkspaceDialog puts WorkspaceOnboardingForm in a dialog with Cancel, keeps it open while the workspace is created and closes it when that succeeds. Needed by: App, Atlas, Base, Calendar, Chat, Developers, Dossier, Dots, Friends, GTM, Intellect, People, Pulse, Ranker, Recruit, Signal, Stride and Tickets (workspace switcher).',
+        'People who already have a workspace create another from the workspace switcher without leaving the page. CreateWorkspaceDialog puts WorkspaceOnboardingForm in a dialog with Cancel, keeps it open while the workspace is created and closes it when that succeeds. Needed by: App, Atlas, Base, Calendar, Chat, Developers, Dossier, Dots, GTM, Intellect, Partner, People, Pulse, Ranker, Recruit, Signal, Stride and Tickets (workspace switcher).',
       useWhen: ['"Create workspace" from a workspace switcher or account menu.'],
       avoidWhen: [
         'The first workspace during onboarding: put WorkspaceOnboardingForm on the page.',

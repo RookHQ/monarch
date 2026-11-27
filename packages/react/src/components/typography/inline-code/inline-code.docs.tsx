@@ -8,7 +8,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'Marks a function name, path, command or value inside a sentence with a native `<code>` in the monospace font. Replaces the hand-styled `<code className="rounded bg-muted px-1 …">` found across the apps. Needed by: Rook Developers (API docs), Rook Tickets, Rook Recruit, Rook GTM, Rook Pulse, Rook People, Rook Friends, Rook Chat.',
+        'Marks a function name, path, command or value inside a sentence with a native `<code>` in the monospace font. Replaces the hand-styled `<code className="rounded bg-muted px-1 …">` found across the apps. Needed by: Rook Developers (API docs), Rook Tickets, Rook Recruit, Rook GTM, Rook Pulse, Rook People, Rook Partner, Rook Chat.',
       useWhen: [
         'A short piece of code, an identifier or a literal value appears inside a sentence or a table cell.',
         'Telling people exactly what to type: a command, a key name in a config, a template variable.',
