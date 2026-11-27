@@ -24,6 +24,9 @@
 #                                         compares write the actual and diff images to
 #                                         .build/snapshot-failures and print their paths. Never
 #                                         record on the host: its fonts differ.
+#   Scripts/verify.sh --tests             every gate except the documentation and sample builds (CI
+#                                         runs those in a parallel job with --docs).
+#   Scripts/verify.sh --docs              regenerate, then the documentation (DocC) and sample builds.
 #   Scripts/verify.sh --sample            regenerate, then build the catalogue app for the simulator
 #                                         (no simulator is booted). The only mode besides the full
 #                                         one that compiles Sample/.
@@ -53,6 +56,8 @@ case "${1:-}" in
     --host-only) mode=host ;;
     --local) mode=local ;;
     --sample) mode=sample ;;
+    --tests) mode=tests ;;
+    --docs) mode=docs ;;
     --snapshots)
         mode=snapshots
         snapshot_ids="${2:-}"
@@ -344,6 +349,27 @@ build_sample() {
         -derivedDataPath .build/xcode-sample CODE_SIGNING_ALLOWED=NO SWIFT_TREAT_WARNINGS_AS_ERRORS=YES
 }
 
+build_docs() {
+    step "Documentation (DocC)"
+    run_xcodebuild .build/verify-docs.log docbuild -scheme MonarchUI \
+        -destination 'generic/platform=iOS Simulator' -derivedDataPath "$derived" \
+        CODE_SIGNING_ALLOWED=NO
+    if grep "warning:" .build/verify-docs.log | grep -qv appintentsmetadataprocessor; then
+        grep "warning:" .build/verify-docs.log | grep -v appintentsmetadataprocessor | head -n 20
+        echo "verify: the documentation build has warnings" >&2
+        exit 1
+    fi
+}
+
+if [[ "$mode" == docs ]]; then
+    step "Generated files (rewritten)"
+    Scripts/generate.py
+    build_docs
+    build_sample
+    printf '\nverify: the documentation and the sample build\n'
+    exit 0
+fi
+
 if [[ "$mode" == sample ]]; then
     step "Generated files (rewritten)"
     Scripts/generate.py
@@ -462,16 +488,12 @@ if [[ -d Tests/MonarchUISnapshotTests ]]; then
     run_snapshots
 fi
 
-step "Documentation (DocC)"
-run_xcodebuild .build/verify-docs.log docbuild -scheme MonarchUI \
-    -destination 'generic/platform=iOS Simulator' -derivedDataPath "$derived" \
-    CODE_SIGNING_ALLOWED=NO
-if grep "warning:" .build/verify-docs.log | grep -qv appintentsmetadataprocessor; then
-    grep "warning:" .build/verify-docs.log | grep -v appintentsmetadataprocessor | head -n 20
-    echo "verify: the documentation build has warnings" >&2
-    exit 1
+if [[ "$mode" == tests ]]; then
+    printf '\nverify: all gates passed except the documentation and sample builds (--docs)\n'
+    exit 0
 fi
 
+build_docs
 build_sample
 
 printf '\nverify: all gates passed\n'
