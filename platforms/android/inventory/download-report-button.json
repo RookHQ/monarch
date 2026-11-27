@@ -1,0 +1,157 @@
+{
+  "id": "download-report-button",
+  "name": "MonarchDownloadReportButton",
+  "title": "DownloadReportButton",
+  "family": "data-display",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchButton (androidx.compose.material3.Button) for one format, or with androidx.compose.material3.DropdownMenu for several; androidx.activity.result.contract.ActivityResultContracts.CreateDocument through androidx.activity.compose.rememberLauncherForActivityResult for the system save dialog; MonarchProgress and MonarchInlineErrorRetry",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Downloads a report in one or several formats, with progress while the file is prepared, a note when it is prepared in the background, the system save dialog for a ready file, and Try again on failure.",
+  "whenToUse": "Next to a table, a chart or a list whose data people take elsewhere: an export of invoices, a usage report.",
+  "whenNotToUse": "Not for sharing a link or a small text: use the Android Sharesheet (see share-button). Not for opening a file in another app: start an ACTION_VIEW intent.",
+  "api": [
+    "@Composable fun MonarchDownloadReportButton(onDownload: suspend (MonarchDownloadReportFormat) -> MonarchDownloadReportResult, modifier: Modifier = Modifier, formats: List<MonarchDownloadReportFormat> = listOf(MonarchDownloadReportFormat.Csv), progress: Float? = null, variant: MonarchButtonVariant = MonarchButtonVariant.Secondary, size: MonarchButtonSize = MonarchButtonSize.Sm, enabled: Boolean = true, icon: (@Composable () -> Unit)? = null, menuIcon: (@Composable () -> Unit)? = null, labels: MonarchDownloadReportButtonLabels = MonarchDownloadReportButtonLabels(), errorMessage: ((Throwable, MonarchDownloadReportFormat) -> String)? = null)",
+    "data class MonarchDownloadReportFormat(val label: String, val id: String, val description: String? = null, val mimeType: String = \"application/octet-stream\") { companion object { val Csv: MonarchDownloadReportFormat } }",
+    "sealed class MonarchDownloadReportResult { data object Downloaded; data class Queued(val message: String? = null); class File(val fileName: String, val write: suspend (OutputStream) -> Unit) }",
+    "class MonarchDownloadReportButtonLabels(label: String? = null, single: ((format: String) -> String)? = null, preparing: ((format: String) -> String)? = null, downloaded: ((format: String) -> String)? = null, queued: String? = null, error: ((format: String) -> String)? = null, progress: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "onDownload",
+      "type": "suspend (MonarchDownloadReportFormat) -> MonarchDownloadReportResult",
+      "default": "required",
+      "description": "Prepares the file. Return File(fileName) { stream -> … } to open the system save dialog, Downloaded when the app saved or shared it, Queued(message) when it is prepared in the background; throw on failure."
+    },
+    {
+      "name": "formats",
+      "type": "List<MonarchDownloadReportFormat>",
+      "default": "listOf(MonarchDownloadReportFormat.Csv)",
+      "description": "The formats offered. One shows a plain button \"Download CSV\"; several open a menu from \"Download\" with each format's label and description."
+    },
+    {
+      "name": "progress",
+      "type": "Float?",
+      "default": "null",
+      "description": "How far the preparation is, 0 to 1, drawn as a MonarchProgress bar under the button while it runs. Clamped; a value that is not finite is not drawn."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchButtonVariant",
+      "default": "MonarchButtonVariant.Secondary",
+      "description": "The button's visual weight."
+    },
+    {
+      "name": "size",
+      "type": "MonarchButtonSize",
+      "default": "MonarchButtonSize.Sm",
+      "description": "The button's height; the touch target is 48dp at every size."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the button can be used."
+    },
+    {
+      "name": "icon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "A download icon before the text; Monarch bundles no icons."
+    },
+    {
+      "name": "menuIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "A chevron after the text when there are several formats."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchDownloadReportButtonLabels",
+      "default": "MonarchDownloadReportButtonLabels()",
+      "description": "Replacements for every built-in string (monarch_downloadreportbutton_*)."
+    },
+    {
+      "name": "errorMessage",
+      "type": "((Throwable, MonarchDownloadReportFormat) -> String)?",
+      "default": "null",
+      "description": "Turns a thrown exception into the text shown. Default: \"The CSV download failed.\""
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "A button; with several formats it opens a menu."
+    },
+    {
+      "name": "preparing",
+      "description": "The button shows progress, reports \"Preparing CSV…\" as its state and does not start a second download; the bar shows when progress is given."
+    },
+    {
+      "name": "saving",
+      "description": "The system save dialog is open for the prepared file; then the file is written on a background thread."
+    },
+    {
+      "name": "saved",
+      "description": "Back to idle; \"CSV downloaded\" is announced."
+    },
+    {
+      "name": "queued",
+      "description": "A muted note under the button says the file is prepared in the background; it is announced."
+    },
+    {
+      "name": "failed",
+      "description": "A MonarchInlineErrorRetry with Try again, which repeats the same format; the message is announced."
+    },
+    {
+      "name": "disabled",
+      "description": "The button's disabled colors; nothing starts."
+    }
+  ],
+  "appearance": "The MonarchButton colors of the variant, the MonarchProgress bar in the accent role, the queued note in the muted text role, and the danger tone of MonarchInlineErrorRetry. The save dialog is the system's. High-contrast themes resolve the same roles to stronger colors.",
+  "platformNotes": "On the web onDownload saves the file through the browser. On Android a file needs a place to go, so returning File opens the system save dialog (ACTION_CREATE_DOCUMENT through ActivityResultContracts.CreateDocument with the format's MIME type), and Monarch writes the bytes the app gives to the chosen document; an app that shares instead returns Downloaded. A cancelled save dialog returns to idle without a message. The web passes the format id to onDownload; Android passes the whole format, as iOS does. Android's File carries a writer instead of iOS's file URL, so the app does not need a temporary file. The menu shows each format's description under its label.",
+  "accessibility": [
+    "The button is a MonarchButton with a 48dp touch target; icons are decorative.",
+    "While the file is prepared the button's state description is \"Preparing CSV…\".",
+    "Preparing, saved and queued are announced through a polite live region that is always present.",
+    "The progress bar is named \"Download progress\" and reports its value.",
+    "A failure is MonarchInlineErrorRetry: text and a Try again button in a polite live region, not color alone."
+  ],
+  "edgeCases": [
+    "Only one download runs at a time; activating the button again while it is busy does nothing, and the menu does not open.",
+    "A progress value outside 0 to 1 is clamped; a value that is not finite is not drawn.",
+    "The save dialog needs an ActivityResultRegistryOwner (any ComponentActivity provides one).",
+    "If the app's process is recreated while the save dialog is open, the prepared file is lost and the button returns to idle.",
+    "The real save dialog was not run on a device; the save path was tested with a test activity result registry and a registered output stream."
+  ],
+  "tests": [
+    "MonarchDownloadReportButtonTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Several formats with progress",
+      "fixture": "download-report-button",
+      "webExample": "Several formats with progress",
+      "template": "MonarchDownloadReportButton(\n    onDownload = { MonarchDownloadReportResult.Downloaded },\n    formats = listOf(\n        MonarchDownloadReportFormat({{formats.0.label}}, {{formats.0.id}}, description = {{formats.0.description}}),\n        MonarchDownloadReportFormat({{formats.1.label}}, {{formats.1.id}}),\n        MonarchDownloadReportFormat({{formats.2.label}}, {{formats.2.id}}, description = {{formats.2.description}}),\n    ),\n    progress = progress,\n    labels = MonarchDownloadReportButtonLabels(label = {{button}}),\n    initiallyOpen = true,\n)",
+      "setupTemplate": "var progress by remember { mutableStateOf<Float?>({{progress}}) }",
+      "setup": "var progress by remember { mutableStateOf<Float?>(null) }",
+      "code": "MonarchDownloadReportButton(\n    onDownload = { MonarchDownloadReportResult.Downloaded },\n    formats = listOf(\n        MonarchDownloadReportFormat(\"CSV\", \"csv\", description = \"Opens in any spreadsheet\"),\n        MonarchDownloadReportFormat(\"Excel\", \"xlsx\"),\n        MonarchDownloadReportFormat(\"PDF\", \"pdf\", description = \"For printing and sharing\"),\n    ),\n    progress = progress,\n    labels = MonarchDownloadReportButtonLabels(label = \"Download\"),\n    initiallyOpen = true,\n)"
+    },
+    {
+      "title": "Several formats, one sent later",
+      "code": "MonarchDownloadReportButton(\n    onDownload = { format ->\n        if (format.id == \"email\") {\n            MonarchDownloadReportResult.Queued()\n        } else {\n            MonarchDownloadReportResult.Downloaded\n        }\n    },\n    formats = listOf(\n        MonarchDownloadReportFormat.Csv,\n        MonarchDownloadReportFormat(\"PDF\", \"pdf\", description = \"For printing\", mimeType = \"application/pdf\"),\n        MonarchDownloadReportFormat(\"By email\", \"email\", description = \"Sent when it is ready\"),\n    ),\n    variant = MonarchButtonVariant.Primary,\n)"
+    }
+  ],
+  "webEquivalent": "DownloadReportButton",
+  "dependsOn": [
+    "button",
+    "dropdown-menu",
+    "progress-bar"
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "id": "docs-panel",
+  "name": null,
+  "title": "DocsPanel",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchLinkedDocsPanel, which draws its own MonarchSectionCard; DisclosureGroup with .disclosureGroupStyle(.monarch) and .task to load on open; on iPhone a NavigationLink row in a List that pushes a screen with the panel",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the record-page block for linked docs and links, as MonarchLinkedDocsPanel in a record screen, behind a Docs disclosure that loads only when opened, or as a Docs row that opens its own screen on iPhone.",
+  "whenToUse": "On a record's detail screen, to show and manage the docs and links attached to the record; behind a disclosure or a row in long screens so docs load only when someone opens them.",
+  "whenNotToUse": "For files uploaded to the record, use the file list components. To pick one doc, use a Picker or MonarchCombobox.",
+  "api": [
+    "MonarchLinkedDocsPanel(items, onLinkDoc: …, onAddLink: …, onUnlink: …, onOpen: …)",
+    "DisclosureGroup(\"Docs, 2 linked\") { MonarchLinkedDocsPanel(items, onOpen: …).task { /* load */ } }.disclosureGroupStyle(.monarch)",
+    "List { NavigationLink { MonarchLinkedDocsPanel(…) } label: { LabeledContent(\"Docs\", value: \"2\") } }"
+  ],
+  "options": [
+    {
+      "name": "frame",
+      "type": "card",
+      "default": "card",
+      "description": "MonarchLinkedDocsPanel already draws a section card; the web's divider and none frames have no separate form."
+    },
+    {
+      "name": "collapsible",
+      "type": "DisclosureGroup",
+      "default": "off",
+      "description": "Wrap the panel in a DisclosureGroup with the Monarch style; its content is built only while expanded, so load the items in .task there."
+    },
+    {
+      "name": "row",
+      "type": "NavigationLink",
+      "default": "off",
+      "description": "On iPhone, a Docs row with the count that pushes a screen holding the panel: the usual pattern for a section of a record."
+    },
+    {
+      "name": "count",
+      "type": "Int?",
+      "default": "nil",
+      "description": "When the app already knows how many docs are linked, put it in the disclosure label or the row's value."
+    }
+  ],
+  "states": [
+    {
+      "name": "open",
+      "description": "The panel with its items, actions and space filter, from MonarchLinkedDocsPanel."
+    },
+    {
+      "name": "closed",
+      "description": "Only the Docs disclosure or row; nothing is loaded."
+    },
+    {
+      "name": "loading",
+      "description": "items is nil: the panel's loading state while the app fetches."
+    },
+    {
+      "name": "read only",
+      "description": "isReadOnly: true shows the items without link, add or unlink actions."
+    }
+  ],
+  "appearance": "MonarchLinkedDocsPanel's section card; the Monarch disclosure header when collapsible; the system list row with a chevron for the row form. Light, dark and both high-contrast themes follow from those parts.",
+  "platformNotes": "The web ships DocsPanel with a frame prop (card, divider, none) and a collapsible mode with its own disclosure button and strings. On iOS MonarchLinkedDocsPanel is already the card and DisclosureGroup is the disclosure, so DocsPanel is a recipe, as on Android. The toggle text and count are the disclosure's label, and loading on open is a .task inside the disclosure's content, which SwiftUI builds only while expanded. On iPhone a record's sections are usually rows that push their own screen, so the recipe also shows a NavigationLink row. The web's doc icon is left out of the label. Experimental, like MonarchLinkedDocsPanel, until a Rook app adopts it.",
+  "accessibility": [
+    "The disclosure is one button read with Expanded or Collapsed, from DisclosureGroup and the Monarch style.",
+    "The count is part of the disclosure's label or the row's value, so it is read with it.",
+    "The row is a NavigationLink, read as a button that opens a screen.",
+    "Inside, the panel's title is a heading and its actions are Monarch buttons with 44-point targets, from MonarchLinkedDocsPanel."
+  ],
+  "edgeCases": [
+    "Closing the disclosure removes the panel: keep the items in the record's state, above it.",
+    "Without a known count, label the disclosure or row Docs only.",
+    "Items that fail to load: pass errorMessage and onRetry to the panel."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "On a record page",
+      "fixture": "docs-panel",
+      "webExample": "On a record page",
+      "template": "MonarchLinkedDocsPanel(\n    items,\n    onAddLink: { _, _ in },\n    onUnlink: { item in items?.removeAll { $0.id == item.id } },\n    onOpen: { _ in }\n)\n.accessibilityLabel({{heading}})\n.task {\n    items = [\n        MonarchLinkedDocsPanelItem(\n            id: {{items.0.id}},\n            title: {{items.0.title}},\n            kind: .{{items.0.kind|raw}},\n            url: URL(string: {{items.0.href}}),\n            docID: {{items.0.docId}},\n            meta: {{items.0.meta}},\n            status: {{items.0.status}},\n            spaceID: {{items.0.space.id}},\n            spaceName: {{items.0.space.name}}\n        ),\n        MonarchLinkedDocsPanelItem(\n            id: {{items.1.id}},\n            title: {{items.1.title}},\n            kind: .{{items.1.kind|raw}},\n            url: URL(string: {{items.1.href}})\n        ),\n    ]\n}",
+      "setupTemplate": "@State private var items: [MonarchLinkedDocsPanelItem]?",
+      "setup": "@State private var items: [MonarchLinkedDocsPanelItem]?",
+      "code": "MonarchLinkedDocsPanel(\n    items,\n    onAddLink: { _, _ in },\n    onUnlink: { item in items?.removeAll { $0.id == item.id } },\n    onOpen: { _ in }\n)\n.accessibilityLabel(\"Docs\")\n.task {\n    items = [\n        MonarchLinkedDocsPanelItem(\n            id: \"l1\",\n            title: \"Release runbook\",\n            kind: .doc,\n            url: URL(string: \"#doc-release-runbook\"),\n            docID: \"d1\",\n            meta: \"Updated 2 hours ago\",\n            status: \"Published\",\n            spaceID: \"s-eng\",\n            spaceName: \"Engineering\"\n        ),\n        MonarchLinkedDocsPanelItem(\n            id: \"l2\",\n            title: \"Design file\",\n            kind: .link,\n            url: URL(string: \"https://design.example.com/file/123\")\n        ),\n    ]\n}"
+    },
+    {
+      "title": "Docs as a row of a record on iPhone",
+      "setup": "@Environment(\\.monarchTheme) private var theme",
+      "code": "NavigationStack {\n    List {\n        NavigationLink {\n            ScrollView {\n                MonarchLinkedDocsPanel(\n                    [MonarchLinkedDocsPanelItem(id: \"l1\", title: \"Customer contract\", docID: \"d7\", meta: \"Legal\")],\n                    isReadOnly: true,\n                    onOpen: { _ in }\n                )\n                .padding(theme.spacing.space4)\n            }\n            .navigationTitle(\"Docs\")\n        } label: {\n            LabeledContent(\"Docs\", value: \"1\")\n        }\n    }\n}\n.frame(minHeight: theme.spacing.space24 * 2)"
+    },
+    {
+      "title": "Docs in a record column",
+      "code": "MonarchLinkedDocsPanel(\n    [MonarchLinkedDocsPanelItem(id: \"l1\", title: \"Customer contract\", docID: \"d7\", meta: \"Legal\")],\n    isReadOnly: true,\n    onOpen: { _ in }\n)"
+    }
+  ],
+  "webEquivalent": "DocsPanel",
+  "dependsOn": [
+    "linked-docs-panel",
+    "section-card",
+    "collapsible"
+  ]
+}

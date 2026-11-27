@@ -2,6 +2,15 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { CallQualityBars, CallTile } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './call-tile.fixture.json';
+
+const [selfTile, speakingTile, handTile, trouble] = fixture.data.tiles as unknown as readonly [
+  { name: string; self: boolean; micOff: boolean },
+  { name: string; speaking: boolean; quality: 'good' },
+  { name: string; handRaised: boolean; quality: 'fair' },
+  { name: string; status: string; statusTone: 'warning'; quality: 'poor' },
+];
 
 const box = { width: '100%', maxWidth: 280, height: 160 };
 
@@ -165,20 +174,28 @@ export default {
               }}
             >
               <div style={{ height: 130 }}>
-                <CallTile name="Sam Lee" self micOff />
-              </div>
-              <div style={{ height: 130 }}>
-                <CallTile name="Robin Park" speaking quality="good" />
-              </div>
-              <div style={{ height: 130 }}>
-                <CallTile name="Alex Chen" handRaised quality="fair" />
+                <CallTile name={selfTile.name} self={selfTile.self} micOff={selfTile.micOff} />
               </div>
               <div style={{ height: 130 }}>
                 <CallTile
-                  name="Jordan Diaz"
-                  status="Reconnecting…"
-                  statusTone="warning"
-                  quality="poor"
+                  name={speakingTile.name}
+                  speaking={speakingTile.speaking}
+                  quality={speakingTile.quality}
+                />
+              </div>
+              <div style={{ height: 130 }}>
+                <CallTile
+                  name={handTile.name}
+                  handRaised={handTile.handRaised}
+                  quality={handTile.quality}
+                />
+              </div>
+              <div style={{ height: 130 }}>
+                <CallTile
+                  name={trouble.name}
+                  status={trouble.status}
+                  statusTone={trouble.statusTone}
+                  quality={trouble.quality}
                 />
               </div>
             </div>

@@ -106,4 +106,16 @@ describe('HTML to Markdown', () => {
     );
     expect(md).toBe('- **Role**: button\n- **Accessible name**: The `label`\n');
   });
+
+  it('keeps every tab panel and leaves out the tabs', () => {
+    const md = mainToMarkdown(
+      '<main id="main"><div class="docs-native-slot"><div role="tablist"><button role="tab">Web</button><button role="tab">iOS</button></div>' +
+        '<div role="tabpanel" id="panel-ios" hidden><h2>iOS</h2><p>On iOS.</p></div></div>' +
+        '<div role="tabpanel" id="panel-web"><h2>Examples</h2><p>On the web.</p></div>' +
+        '<div hidden><p>Not content.</p></div></main>',
+      'https://monarchui.dev/',
+    );
+    // The web panel first, as the page shows it, then the platform panels.
+    expect(md).toBe('## Examples\n\nOn the web.\n\n## iOS\n\nOn iOS.\n');
+  });
 });

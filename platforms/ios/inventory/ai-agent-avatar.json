@@ -1,0 +1,127 @@
+{
+  "id": "ai-agent-avatar",
+  "name": "MonarchAiAgentAvatar",
+  "title": "AiAgentAvatar",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchAvatar with the square shape, a RoundedRectangle strokeBorder ring (AngularGradient turned by TimelineView(.animation) while working) and a Circle badge with an SF Symbol",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The picture of an AI agent: a rounded square with a bot badge, so it is never taken for a person's round avatar, and a ring that shows whether the agent is working, waiting for someone or stopped with an error.",
+  "whenToUse": "Wherever an agent appears as an actor: beside its messages, in a list of agents, on a task it owns.",
+  "whenNotToUse": "Not for people, workspaces or apps (use MonarchAvatar). Not to show that a single answer is AI-generated (use MonarchAiGeneratedBadge).",
+  "api": [
+    "init(_ agent: MonarchAiAgentRef, state: MonarchAiAgentState = .idle, size: MonarchAvatarSize = .md, showsState: Bool = false, isDecorative: Bool = false, labels: MonarchAiAgentAvatarLabels = MonarchAiAgentAvatarLabels())",
+    "init(_ agent: MonarchAiAgentRef, image: Image?, state: MonarchAiAgentState = .idle, size: MonarchAvatarSize = .md, showsState: Bool = false, isDecorative: Bool = false, labels: MonarchAiAgentAvatarLabels = MonarchAiAgentAvatarLabels())",
+    "enum MonarchAiAgentState: String { case idle, working, waiting, error }",
+    "struct MonarchAiAgentAvatarLabels { init(kind: String? = nil, state: (@Sendable (MonarchAiAgentState) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "agent",
+      "type": "MonarchAiAgentRef",
+      "default": "required",
+      "description": "The agent from the conversation model: name names the avatar, codename feeds the initials, avatar is the picture's http or https address (other schemes are ignored), id picks the fallback colour."
+    },
+    {
+      "name": "image",
+      "type": "Image?",
+      "default": "required (second initialiser)",
+      "description": "A picture the app already has, instead of loading agent.avatar. nil shows the initials."
+    },
+    {
+      "name": "state",
+      "type": "MonarchAiAgentState",
+      "default": ".idle",
+      "description": "What the agent is doing: idle, working, waiting (needs a person) or error."
+    },
+    {
+      "name": "size",
+      "type": "MonarchAvatarSize",
+      "default": ".md",
+      "description": "The picture's side before Dynamic Type: sm 24, md 32, lg 40 points, as MonarchAvatar."
+    },
+    {
+      "name": "showsState",
+      "type": "Bool",
+      "default": "false",
+      "description": "Writes the state beside the picture."
+    },
+    {
+      "name": "isDecorative",
+      "type": "Bool",
+      "default": "false",
+      "description": "Hides the avatar from VoiceOver when the agent's name is written beside it; a state other than idle is still read."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiAgentAvatarLabels",
+      "default": "MonarchAiAgentAvatarLabels()",
+      "description": "Replacements for the built-in kind (\"AI agent\") and state names."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "No ring; the AI badge."
+    },
+    {
+      "name": "working",
+      "description": "A ring in the AI strong and AI subtle colours that turns once every 1.6 seconds; a still AI strong ring with Reduce Motion."
+    },
+    {
+      "name": "waiting",
+      "description": "A dashed ring in the warning strong colour."
+    },
+    {
+      "name": "error",
+      "description": "A ring in the danger strong colour and a danger badge."
+    },
+    {
+      "name": "no picture",
+      "description": "Initials of the codename, else the name, on a colour picked from the agent id; a chip symbol when there are no letters or digits."
+    }
+  ],
+  "appearance": "A rounded square picture with a small round badge at the bottom trailing corner, filled with the AI solid colour (danger solid on error) and ringed with the surface colour. Rings use the AI, warning and danger strong roles. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "Sizes are MonarchAvatar's three touch sizes; the web's xs, xl and numeric sizes are not offered. The web draws a bot glyph; SF Symbols has no robot before iOS 18, so the badge uses the cpu symbol. The web hides a failed image with an error handler; on iOS MonarchAvatar shows the initials while loading and on failure. The two initialisers follow MonarchAvatar's image convention, except that the URL comes from the agent's avatar field rather than a url parameter. Android has the same states.",
+  "accessibility": [
+    "The avatar is one element with the image trait, read as \"Research agent, AI agent\" plus the state when it is not idle, such as \", Working\".",
+    "The state is always in words, so it never depends on the ring's colour, dash or motion.",
+    "With isDecorative the avatar is hidden, except that a state other than idle is read on its own.",
+    "The visible state text is not read a second time.",
+    "With Reduce Motion the working ring stands still.",
+    "The picture, the ring and the badge scale with Dynamic Type."
+  ],
+  "edgeCases": [
+    "A name of emoji or symbols only shows the chip symbol.",
+    "An avatar address that is not http or https is ignored.",
+    "A long state text wraps beside the picture."
+  ],
+  "tests": [
+    "MonarchAiAgentAvatarTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Sizes",
+      "fixture": "ai-agent-avatar",
+      "webExample": "Sizes",
+      "template": "HStack(spacing: theme.spacing.space4) {\n    MonarchAiAgentAvatar(MonarchAiAgentRef(id: {{agent.id}}, name: {{agent.name}}, role: {{agent.role}}), size: .{{sizes.0|raw}})\n    MonarchAiAgentAvatar(MonarchAiAgentRef(id: {{agent.id}}, name: {{agent.name}}, role: {{agent.role}}), size: .{{sizes.1|raw}})\n    MonarchAiAgentAvatar(MonarchAiAgentRef(id: {{agent.id}}, name: {{agent.name}}, role: {{agent.role}}), size: .{{sizes.2|raw}})\n    MonarchAiAgentAvatar(MonarchAiAgentRef(id: {{agent.id}}, name: {{agent.name}}, role: {{agent.role}}), size: .{{sizes.3|raw}})\n    MonarchAiAgentAvatar(MonarchAiAgentRef(id: {{agent.id}}, name: {{agent.name}}, role: {{agent.role}}), size: .{{sizes.4|raw}})\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme",
+      "setup": "@Environment(\\.monarchTheme) private var theme",
+      "code": "HStack(spacing: theme.spacing.space4) {\n    MonarchAiAgentAvatar(MonarchAiAgentRef(id: \"research\", name: \"Research agent\", role: \"Finds and checks sources\"), size: .xs)\n    MonarchAiAgentAvatar(MonarchAiAgentRef(id: \"research\", name: \"Research agent\", role: \"Finds and checks sources\"), size: .sm)\n    MonarchAiAgentAvatar(MonarchAiAgentRef(id: \"research\", name: \"Research agent\", role: \"Finds and checks sources\"), size: .md)\n    MonarchAiAgentAvatar(MonarchAiAgentRef(id: \"research\", name: \"Research agent\", role: \"Finds and checks sources\"), size: .lg)\n    MonarchAiAgentAvatar(MonarchAiAgentRef(id: \"research\", name: \"Research agent\", role: \"Finds and checks sources\"), size: .xl)\n}"
+    }
+  ],
+  "webEquivalent": "AiAgentAvatar",
+  "dependsOn": [
+    "avatar",
+    "ai-conversation"
+  ],
+  "icons": {
+    "badge": "BotGlyph"
+  }
+}

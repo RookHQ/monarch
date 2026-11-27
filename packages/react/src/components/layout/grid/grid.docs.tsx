@@ -7,14 +7,10 @@ import {
   Grid,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './grid.fixture.json';
 
-const PROJECTS = [
-  'Website refresh',
-  'Quarterly review',
-  'Mobile release',
-  'Support playbook',
-  'Hiring plan',
-];
+const PROJECTS = fixture.data.projects;
 
 const tile = {
   padding: 12,
@@ -121,15 +117,20 @@ export default {
           title: 'Cards by minimum width',
           stack: true,
           render: () => (
-            <Grid as="ul" minItemWidth="12rem" aria-label="Projects" style={{ width: '100%' }}>
+            <Grid
+              as="ul"
+              minItemWidth={`${fixture.data.minItemWidth}rem`}
+              aria-label="Projects"
+              style={{ width: '100%' }}
+            >
               {PROJECTS.map((p) => (
                 <li key={p}>
                   <Card>
                     <CardHeader>
                       <CardTitle>{p}</CardTitle>
-                      <CardDescription>Updated this week</CardDescription>
+                      <CardDescription>{fixture.data.description}</CardDescription>
                     </CardHeader>
-                    <CardContent>3 open tasks</CardContent>
+                    <CardContent>{fixture.data.body}</CardContent>
                   </Card>
                 </li>
               ))}

@@ -1,0 +1,78 @@
+{
+  "id": "popconfirm",
+  "name": null,
+  "title": "Popconfirm",
+  "family": "overlays",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchPopover (androidx.compose.ui.window.Popup) anchored to a MonarchButton in a androidx.compose.foundation.layout.Box, with MonarchText and a Cancel and a Danger MonarchButton in a androidx.compose.foundation.layout.Row",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a small confirmation anchored to the button that asked, with a question, a line of consequence, Cancel and a danger action that shows its progress.",
+  "whenToUse": "For a light, reversible-in-practice action next to its button, such as removing a filter or a tag, where a full dialog would interrupt too much.",
+  "whenNotToUse": "For destructive actions that cannot be undone, use AlertDialog (see confirm-dialog). For an action that can be undone, run it at once and offer Undo in a snackbar.",
+  "api": [
+    "@Composable fun MonarchPopover(expanded: Boolean, onDismissRequest: () -> Unit, label: String, modifier: Modifier = Modifier, side: MonarchPopoverSide = MonarchPopoverSide.Bottom, content: @Composable ColumnScope.() -> Unit)",
+    "@Composable fun MonarchButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, variant: MonarchButtonVariant = MonarchButtonVariant.Secondary, size: MonarchButtonSize = MonarchButtonSize.Md, enabled: Boolean = true, loading: Boolean = false, …)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "asking",
+      "description": "The popover under the button with the question, the consequence, Cancel and the danger action."
+    },
+    {
+      "name": "pending",
+      "description": "The danger action shows its progress indicator and reads \"Loading\"; Cancel is disabled and a tap outside does not close it."
+    },
+    {
+      "name": "failed",
+      "description": "Show the failure as a MonarchInlineNotice in the popover and keep it open."
+    }
+  ],
+  "appearance": "MonarchPopover's raised surface with the default border and shadow; the question in the subheading style, the consequence in the muted text color, a small ghost Cancel and a small danger action. The same roles in light, dark and both high-contrast themes.",
+  "platformNotes": "The web Popconfirm is a component with a title, a description, confirm and cancel labels, a danger tone, a pending state while onConfirm runs, an error line and initial focus. On Android it is a recipe on MonarchPopover: the app holds the pending state and passes loading to the button. The plan's anchored popover keeps the question next to its button on every screen size; iOS uses the system confirmation dialog, which becomes a bottom sheet on a phone. initialFocus has no equivalent: TalkBack starts at the popover's label.",
+  "accessibility": [
+    "MonarchPopover is named by its label (the question) and TalkBack moves into it when it opens; back closes it.",
+    "The question is a heading inside the popover.",
+    "The danger action is named by its text (\"Remove\"), so it does not depend on its color.",
+    "Both buttons have 48dp touch targets; the danger action reads \"Loading\" while pending."
+  ],
+  "edgeCases": [
+    "Ignore onDismissRequest while the action runs, so a tap outside does not hide the progress.",
+    "Near the bottom of the screen, use MonarchPopoverSide.Top."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Remove a filter",
+      "fixture": "popconfirm",
+      "webExample": "Remove a filter",
+      "template": "Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    filters.forEach { filter ->\n        Box {\n            MonarchButton(text = filter, onClick = { open = filter }, size = MonarchButtonSize.Sm)\n            MonarchPopover(\n                expanded = open == filter,\n                onDismissRequest = { open = null },\n                label = {{title}},\n            ) {\n                MonarchText(text = {{title}}, style = MonarchTextStyle.Subheading, heading = true)\n                MonarchText(text = {{description}}, color = MonarchTheme.colors.textMuted)\n                Row(\n                    modifier = Modifier.fillMaxWidth(),\n                    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2, Alignment.End),\n                ) {\n                    MonarchButton(\n                        text = \"Cancel\",\n                        onClick = { open = null },\n                        variant = MonarchButtonVariant.Secondary,\n                        size = MonarchButtonSize.Sm,\n                    )\n                    MonarchButton(\n                        text = {{confirmLabel}},\n                        onClick = {\n                            filters = filters - filter\n                            open = null\n                        },\n                        variant = MonarchButtonVariant.Danger,\n                        size = MonarchButtonSize.Sm,\n                    )\n                }\n            }\n        }\n    }\n}",
+      "setupTemplate": "var filters by remember { mutableStateOf(listOf({{filters.0}}, {{filters.1}})) }\nvar open by remember { mutableStateOf<String?>({{filters.0}}) }",
+      "imports": [
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Row",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.IntrinsicSize",
+        "androidx.compose.foundation.layout.width"
+      ],
+      "setup": "var filters by remember { mutableStateOf(listOf(\"Status: Open\", \"Owner: Me\")) }\nvar open by remember { mutableStateOf<String?>(\"Status: Open\") }",
+      "code": "Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    filters.forEach { filter ->\n        Box {\n            MonarchButton(text = filter, onClick = { open = filter }, size = MonarchButtonSize.Sm)\n            MonarchPopover(\n                expanded = open == filter,\n                onDismissRequest = { open = null },\n                label = \"Remove this filter?\",\n            ) {\n                MonarchText(text = \"Remove this filter?\", style = MonarchTextStyle.Subheading, heading = true)\n                MonarchText(text = \"The list shows matching items again.\", color = MonarchTheme.colors.textMuted)\n                Row(\n                    modifier = Modifier.fillMaxWidth(),\n                    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2, Alignment.End),\n                ) {\n                    MonarchButton(\n                        text = \"Cancel\",\n                        onClick = { open = null },\n                        variant = MonarchButtonVariant.Secondary,\n                        size = MonarchButtonSize.Sm,\n                    )\n                    MonarchButton(\n                        text = \"Remove\",\n                        onClick = {\n                            filters = filters - filter\n                            open = null\n                        },\n                        variant = MonarchButtonVariant.Danger,\n                        size = MonarchButtonSize.Sm,\n                    )\n                }\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "Popconfirm",
+  "dependsOn": [
+    "popover",
+    "button",
+    "text"
+  ]
+}

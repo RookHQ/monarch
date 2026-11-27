@@ -2,6 +2,17 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { Widget } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './widget.fixture.json';
+
+const data = fixture.data as unknown as {
+  title: string;
+  period: string;
+  body: string;
+  updatedAt: string;
+  now: string;
+  menu: { label: string; destructive?: boolean; separatorBefore?: boolean }[];
+};
 
 function StatesDemo() {
   const [state, setState] = useState<'ready' | 'loading' | 'error' | 'empty'>('ready');
@@ -167,24 +178,20 @@ export default {
           render: () => (
             <Widget
               style={{ maxWidth: '28rem' }}
-              title="Team load"
-              period="Open now"
+              title={data.title}
+              period={data.period}
               viewAllHref="#reports"
-              menu={[
-                { id: 'refresh', label: 'Refresh', onSelect: () => {} },
-                { id: 'export', label: 'Export CSV', onSelect: () => {} },
-                {
-                  id: 'remove',
-                  label: 'Remove from dashboard',
-                  onSelect: () => {},
-                  tone: 'danger',
-                  separatorBefore: true,
-                },
-              ]}
-              updatedAt="2026-11-07T09:58:00Z"
-              now="2026-11-07T10:00:00Z"
+              menu={data.menu.map((m) => ({
+                id: m.label,
+                label: m.label,
+                onSelect: () => {},
+                ...(m.destructive && { tone: 'danger' as const }),
+                ...(m.separatorBefore !== undefined && { separatorBefore: m.separatorBefore }),
+              }))}
+              updatedAt={data.updatedAt}
+              now={data.now}
             >
-              <p style={{ margin: 0 }}>12 open tickets across 4 people.</p>
+              <p style={{ margin: 0 }}>{data.body}</p>
             </Widget>
           ),
         },

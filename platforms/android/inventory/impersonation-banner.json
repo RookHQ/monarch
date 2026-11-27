@@ -1,0 +1,136 @@
+{
+  "id": "impersonation-banner",
+  "name": "MonarchImpersonationBanner",
+  "title": "ImpersonationBanner",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Row on the inverse surface with androidx.compose.material3.Text, android.text.format.DateUtils.getRelativeTimeSpanString and MonarchButton; placed in the topBar slot of androidx.compose.material3.Scaffold",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A persistent bar in inverse colors shown while acting as another person, with who, since when, why, and one way out: Stop.",
+  "whenToUse": "While a support or admin person is signed in as, or viewing as, another person, and anything they do happens in that person's account.",
+  "whenNotToUse": "For a read-only preview with no real actions, a MonarchCalloutBanner is enough. For ordinary notices such as a trial ending, use MonarchCalloutBanner with the page placement.",
+  "api": [
+    "@Composable fun MonarchImpersonationBanner(name: String, onStop: suspend () -> Unit, modifier: Modifier = Modifier, detail: String? = null, reason: String? = null, startedAtMillis: Long? = null, stopping: Boolean? = null, icon: (@Composable () -> Unit)? = null, labels: MonarchImpersonationBannerLabels = MonarchImpersonationBannerLabels())",
+    "class MonarchImpersonationBannerLabels(viewingAs: ((name: String) -> String)? = null, started: String? = null, reason: String? = null, stop: String? = null, stopLabel: ((name: String) -> String)? = null, stopError: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "name",
+      "type": "String",
+      "default": "required",
+      "description": "The person being viewed as, in bold in the main line."
+    },
+    {
+      "name": "onStop",
+      "type": "suspend () -> Unit",
+      "default": "required",
+      "description": "Ends the session. Stop is busy while it runs and ignores taps; throwing shows the stop error in the banner."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the banner."
+    },
+    {
+      "name": "detail",
+      "type": "String?",
+      "default": "null",
+      "description": "A second identifier, such as their email, in brackets after the name in the muted inverse color."
+    },
+    {
+      "name": "reason",
+      "type": "String?",
+      "default": "null",
+      "description": "Why the session started, such as a ticket number, after \"Reason:\"."
+    },
+    {
+      "name": "startedAtMillis",
+      "type": "Long?",
+      "default": "null",
+      "description": "When the session started, in epoch milliseconds (UTC), shown as \"Started 5 minutes ago\" and refreshed every minute."
+    },
+    {
+      "name": "stopping",
+      "type": "Boolean?",
+      "default": "null",
+      "description": "The busy state of Stop when the app tracks the stop itself; tracked from onStop when null."
+    },
+    {
+      "name": "icon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "An icon at the start in the solid warning color, hidden from TalkBack. Monarch bundles no icons."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchImpersonationBannerLabels",
+      "default": "MonarchImpersonationBannerLabels()",
+      "description": "Replacements for the main line, \"Started\", \"Reason:\", \"Stop\", its TalkBack name and the stop error."
+    }
+  ],
+  "states": [
+    {
+      "name": "active",
+      "description": "The main line, the start and reason line, and Stop."
+    },
+    {
+      "name": "stopping",
+      "description": "Stop shows its progress indicator, reads \"Loading\" and ignores taps."
+    },
+    {
+      "name": "error",
+      "description": "\"Couldn’t stop. Try again.\" under the text in the danger strong inverse color, announced; the banner stays."
+    },
+    {
+      "name": "large text",
+      "description": "From font scale 1.5 Stop moves under the text and fills the width."
+    }
+  ],
+  "appearance": "The inverse background with inverse text, the muted inverse text for the detail and the meta line, and a 4dp edge and icon in the solid warning color, so it looks unlike every other banner in light, dark and both high-contrast themes. Stop is a small secondary MonarchButton. Errors use the danger strong inverse role.",
+  "platformNotes": "The web's sticky prop and iOS's safeAreaInset placement become the topBar slot of a Scaffold on Android, after the TopAppBar. The web's now and locale props are not needed: the relative time uses the system clock and DateUtils. onStop is a suspend function run in the banner's coroutine scope, as iOS runs an async closure. A failed stop always shows the stop error from labels: Android exception messages are not written for people, so the thrown message is not shown. A replacement main line from labels is shown without bold, as on iOS. The parity map names MonarchBanner and lists callout-banner; the banner is drawn on its own instead, because its inverse colors, warning edge and missing dismiss button are what set it apart, as on the web and iOS. Monarch bundles no icons, so the eye icon is a slot.",
+  "accessibility": [
+    "The icon is decorative; the main line and the start and reason line are one TalkBack element.",
+    "The main line is announced once through a polite live region when the banner appears.",
+    "Stop is named \"Stop viewing as\" and the name, has a 48dp touch target and reads \"Loading\" while stopping.",
+    "A failed stop is shown as text and announced through the same polite live region.",
+    "There is no dismiss button: the only way out is to stop."
+  ],
+  "edgeCases": [
+    "Long names, details and reasons wrap.",
+    "The app removes the banner when the session ends; a successful onStop does not hide it by itself.",
+    "With stopping set, taps while it is true are ignored even if onStop has returned.",
+    "A stop cancelled because the banner left the screen is not shown as a failure."
+  ],
+  "tests": [
+    "MonarchImpersonationBannerTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Viewing as a person",
+      "fixture": "impersonation-banner",
+      "webExample": "Viewing as a person",
+      "template": "MonarchImpersonationBanner(\n    name = {{name}},\n    onStop = { delay(800) },\n    detail = {{detail}},\n    reason = {{reason}},\n    startedAtMillis = System.currentTimeMillis() - {{startedMinutesAgo}} * 60_000L,\n)",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "kotlinx.coroutines.delay"
+      ],
+      "code": "MonarchImpersonationBanner(\n    name = \"Sam Rivera\",\n    onStop = { delay(800) },\n    detail = \"sam@example.com\",\n    reason = \"Case 4821\",\n    startedAtMillis = System.currentTimeMillis() - 12 * 60_000L,\n)"
+    }
+  ],
+  "webEquivalent": "ImpersonationBanner",
+  "dependsOn": [
+    "callout-banner",
+    "button"
+  ],
+  "icons": {
+    "eye": "EyeGlyph"
+  }
+}

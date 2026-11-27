@@ -1,8 +1,10 @@
 import { Avatar } from '@rookcom/monarch-react';
 import { AiAgentAvatar } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-agent-avatar.fixture.json';
 
-const research = { id: 'research', name: 'Research agent', role: 'Finds and checks sources' };
+const research = fixture.data.agent;
 const writer = { id: 'writer', name: 'Writing agent', codename: 'Quill' };
 
 export default {
@@ -116,11 +118,9 @@ export default {
           title: 'Sizes',
           render: () => (
             <>
-              <AiAgentAvatar agent={research} size="xs" />
-              <AiAgentAvatar agent={research} size="sm" />
-              <AiAgentAvatar agent={research} />
-              <AiAgentAvatar agent={research} size="lg" />
-              <AiAgentAvatar agent={research} size="xl" />
+              {fixture.data.sizes.map((size) => (
+                <AiAgentAvatar key={size} agent={research} size={size as 'xs'} />
+              ))}
             </>
           ),
         },

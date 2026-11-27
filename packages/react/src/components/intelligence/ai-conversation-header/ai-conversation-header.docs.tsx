@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Button,
+  type ButtonProps,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -8,30 +9,52 @@ import {
 } from '@rookcom/monarch-react';
 import { AiConversationHeader } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-conversation-header.fixture.json';
+
+type ButtonVariant = NonNullable<ButtonProps['variant']>;
+type ButtonSize = NonNullable<ButtonProps['size']>;
+const { share, more } = fixture.data as unknown as {
+  share: { label: string; variant: ButtonVariant; size: ButtonSize };
+  more: {
+    label: string;
+    variant: ButtonVariant;
+    size: ButtonSize;
+    items: { label: string }[];
+  };
+};
 
 const AGENT = { name: 'Assistant', role: 'Workspace assistant' };
 
 function RenameDemo() {
-  const [title, setTitle] = useState('Quarterly plan review');
+  const [title, setTitle] = useState(fixture.data.title);
   return (
     <div style={{ width: '100%', maxWidth: '40rem' }}>
       <AiConversationHeader
         title={title}
         onRename={setTitle}
-        agent={AGENT}
-        model="Balanced model"
+        agent={{ ...AGENT, name: fixture.data.agent }}
+        model={fixture.data.model}
         actions={
           <>
-            <Button size="sm">Share</Button>
+            <Button variant={share.variant} size={share.size}>
+              {share.label}
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="ghost">
-                  More
+                <Button variant={more.variant} size={more.size}>
+                  {more.label}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem>Export</DropdownMenuItem>
-                <DropdownMenuItem tone="danger">Delete conversation</DropdownMenuItem>
+                {more.items.map((item, index) => (
+                  <DropdownMenuItem
+                    key={item.label}
+                    {...(index === 1 ? { tone: 'danger' as const } : {})}
+                  >
+                    {item.label}
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
           </>

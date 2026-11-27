@@ -1,0 +1,128 @@
+{
+  "id": "slash-menu",
+  "name": "MonarchSlashMenu",
+  "title": "SlashMenu",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyColumn of MonarchListRow rows under heading texts, in a full-width strip the app places above the text field and the keyboard; androidx.compose.ui.text.input.TextFieldValue for the caret",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The / menu of a composer or document editor: a grouped list of blocks to insert, filtered by what is typed after the slash, in a strip above the text field and the keyboard, with helpers that find the command being typed and replace it.",
+  "whenToUse": "In a notes, document or message composer where people insert headings, lists and other blocks by typing a slash at the start of a line.",
+  "whenNotToUse": "For @mentions, use MonarchMentionPicker. For a fixed set of formatting actions, use MonarchEditorToolbar. For actions on a selection, use a MonarchMenu.",
+  "api": [
+    "@Composable public fun MonarchSlashMenu(query: MonarchSlashMenuQuery?, items: List<MonarchSlashMenuItem>, onSelect: (MonarchSlashMenuItem) -> Unit, modifier: Modifier = Modifier, groupOrder: List<String> = emptyList(), labels: MonarchSlashMenuLabels = MonarchSlashMenuLabels())",
+    "public class MonarchSlashMenuItem(id: String, label: String, description: String? = null, icon: Painter? = null, group: String? = null, keywords: List<String> = emptyList(), enabled: Boolean = true)",
+    "public class MonarchSlashMenuQuery(trigger: Char, text: String, start: Int, end: Int) { fun replacing(text: String, replacement: String = \"\"): String; fun replacing(value: TextFieldValue, replacement: String = \"\"): TextFieldValue; companion object { const val DEFAULT_MAX_LENGTH: Int = 24; fun find(text: String, caret: Int = text.length, trigger: Char = '/', position: MonarchSlashMenuTriggerPosition = MonarchSlashMenuTriggerPosition.LineStart, maxLength: Int = DEFAULT_MAX_LENGTH): MonarchSlashMenuQuery?; fun find(value: TextFieldValue, trigger: Char = '/', position: MonarchSlashMenuTriggerPosition = MonarchSlashMenuTriggerPosition.LineStart, maxLength: Int = DEFAULT_MAX_LENGTH): MonarchSlashMenuQuery? } }",
+    "public enum class MonarchSlashMenuTriggerPosition { LineStart, WordStart }",
+    "public class MonarchSlashMenuLabels(label: String? = null, empty: ((String) -> String)? = null, count: ((Int) -> String)? = null)",
+    "public object MonarchSlashMenuDefaults { fun filter(items: List<MonarchSlashMenuItem>, query: String): List<MonarchSlashMenuItem>; fun group(items: List<MonarchSlashMenuItem>, groupOrder: List<String> = emptyList()): List<Pair<String?, List<MonarchSlashMenuItem>>> }"
+  ],
+  "options": [
+    {
+      "name": "query",
+      "type": "MonarchSlashMenuQuery?",
+      "default": "required",
+      "description": "The command being typed, from MonarchSlashMenuQuery.find. Nothing is drawn while it is null."
+    },
+    {
+      "name": "items",
+      "type": "List<MonarchSlashMenuItem>",
+      "default": "required",
+      "description": "Every entry the menu offers. The menu filters them by the query with MonarchSlashMenuDefaults.filter."
+    },
+    {
+      "name": "onSelect",
+      "type": "(MonarchSlashMenuItem) -> Unit",
+      "default": "required",
+      "description": "Called with the chosen entry. Replace the command with query.replacing(value, replacement); the next find returns null, which closes the menu."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the strip. Place it directly above the text field."
+    },
+    {
+      "name": "groupOrder",
+      "type": "List<String>",
+      "default": "emptyList()",
+      "description": "Group headings in display order. Groups not listed follow in the order they first appear."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSlashMenuLabels",
+      "default": "MonarchSlashMenuLabels()",
+      "description": "Replacements for the list's name, the empty text and the count announcement."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "No query: nothing is drawn."
+    },
+    {
+      "name": "results",
+      "description": "The matching entries under their group headings; more than about four rows scroll."
+    },
+    {
+      "name": "disabled entry",
+      "description": "Icon and text in the disabled text color; the row cannot be chosen."
+    },
+    {
+      "name": "nothing matches",
+      "description": "One line, \"Nothing matches “/xyz”\", in the muted text color."
+    }
+  ],
+  "appearance": "A strip on the surface color with a subtle top border. Group headings are captions in the muted text color; each row has an optional muted icon, the label in the default text color and the description in the muted text color. Disabled rows use the disabled text color. The roles follow light, dark and both high-contrast themes.",
+  "platformNotes": "The web SlashMenu is a popover beside the caret, with the highlight moved by arrow keys while focus stays in the field (aria-activedescendant), and hooks that wire it to a textarea or a rich-text editor. Compose gives no caret rectangle, so on Android, as on iOS, the menu is a full-width strip that the app places directly above the text field (and so above the keyboard), the same placement as MonarchMentionPicker, and an entry is chosen by tapping it; there is no highlighted row and no arrow-key handling. The web hooks become MonarchSlashMenuQuery.find and replacing, which read and set the caret through TextFieldValue; the web's filterSlashMenuItems and groupSlashMenuItems are MonarchSlashMenuDefaults.filter and group with the same ranking and order. The menu filters the items itself, where the web takes them already filtered. iOS names a static filter on the menu and an isDisabled flag; Kotlin has no static members on a function, so filter lives on MonarchSlashMenuDefaults, and the flag is enabled, as in Material 3. The icon is a Painter from the app, because Monarch bundles no icons (iOS takes an SF Symbol name). The web's openMenu (a toolbar button that types the slash) is the app inserting \"/\" into its TextFieldValue.",
+  "accessibility": [
+    "Each entry is a button whose name is its label and description; a disabled entry is marked disabled and cannot be activated.",
+    "The strip is a group named \"Insert block\" and a polite live region whose state is the number of options or \"Nothing matches “/xyz”\", so the change is announced while focus stays in the text field.",
+    "Group headings are headings.",
+    "Icons are decorative.",
+    "Rows are at least 48dp high (MonarchListRow) and grow with the font size setting; long descriptions wrap."
+  ],
+  "edgeCases": [
+    "A slash inside a line (1/2, a path) never opens the menu with the default LineStart position; use WordStart to allow it after white space.",
+    "A space, punctuation or more than 24 characters after the slash closes the menu, so typing on continues normally.",
+    "While a range of text is selected, find on a TextFieldValue returns null.",
+    "A query's range belongs to the text it was found in; replacing in a shorter text leaves it unchanged.",
+    "Entry ids must be unique: they are the list keys."
+  ],
+  "tests": [
+    "MonarchSlashMenuTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Composer with a block menu",
+      "fixture": "slash-menu",
+      "webExample": "Composer with a block menu",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    // Directly above the field, so it sits above the keyboard with the field's imePadding.\n    MonarchSlashMenu(\n        query = query,\n        items = commands,\n        onSelect = { item ->\n            if (query != null) value = query.replacing(value, markdown[item.id].orEmpty())\n        },\n        groupOrder = listOf({{groups.0}}, {{groups.1}}, {{groups.2}}),\n    )\n    MonarchTextField(\n        value = value,\n        onValueChange = { value = it },\n        modifier = Modifier.fillMaxWidth(),\n        label = {{field.label}},\n        placeholder = {{field.placeholder}},\n        singleLine = false,\n    )\n}",
+      "setupTemplate": "var value by remember { mutableStateOf(TextFieldValue({{field.value}}, selection = TextRange(1))) }\nval markdown = mapOf({{items.0.id}} to {{markdown.heading}}, {{items.1.id}} to {{markdown.quote}}, {{items.2.id}} to {{markdown.bullets}}, {{items.3.id}} to {{markdown.checklist}}, {{items.4.id}} to {{markdown.mention}})\nval commands = listOf(\n    MonarchSlashMenuItem(id = {{items.0.id}}, label = {{items.0.label}}, description = {{items.0.description}}, icon = rememberVectorPainter(SampleIcons.Pencil), group = {{items.0.group}}, keywords = listOf({{items.0.keywords.0}}, {{items.0.keywords.1}})),\n    MonarchSlashMenuItem(id = {{items.1.id}}, label = {{items.1.label}}, description = {{items.1.description}}, icon = rememberVectorPainter(SampleIcons.Pencil), group = {{items.1.group}}),\n    MonarchSlashMenuItem(id = {{items.2.id}}, label = {{items.2.label}}, description = {{items.2.description}}, icon = rememberVectorPainter(SampleIcons.ListSimple), group = {{items.2.group}}),\n    MonarchSlashMenuItem(id = {{items.3.id}}, label = {{items.3.label}}, description = {{items.3.description}}, icon = rememberVectorPainter(SampleIcons.Checklist), group = {{items.3.group}}, keywords = listOf({{items.3.keywords.0}}, {{items.3.keywords.1}})),\n    MonarchSlashMenuItem(id = {{items.4.id}}, label = {{items.4.label}}, description = {{items.4.description}}, icon = rememberVectorPainter(SampleIcons.Users), group = {{items.4.group}}),\n    MonarchSlashMenuItem(id = {{items.5.id}}, label = {{items.5.label}}, description = {{items.5.description}}, icon = rememberVectorPainter(SampleIcons.Calendar), group = {{items.5.group}}),\n    MonarchSlashMenuItem(id = {{items.6.id}}, label = {{items.6.label}}, description = {{items.6.description}}, icon = rememberVectorPainter(SampleIcons.Grid), group = {{items.6.group}}, enabled = !{{items.6.disabled}}),\n)\nval query = MonarchSlashMenuQuery.find(value)",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "androidx.compose.ui.graphics.vector.rememberVectorPainter"
+      ],
+      "setup": "var value by remember { mutableStateOf(TextFieldValue(\"/\", selection = TextRange(1))) }\nval markdown = mapOf(\"heading\" to \"## \", \"quote\" to \"> \", \"bullets\" to \"- \", \"checklist\" to \"- [ ] \", \"mention\" to \"@\")\nval commands = listOf(\n    MonarchSlashMenuItem(id = \"heading\", label = \"Heading\", description = \"Large section title\", icon = rememberVectorPainter(SampleIcons.Pencil), group = \"Text\", keywords = listOf(\"title\", \"h2\")),\n    MonarchSlashMenuItem(id = \"quote\", label = \"Quote\", description = \"Indented quotation\", icon = rememberVectorPainter(SampleIcons.Pencil), group = \"Text\"),\n    MonarchSlashMenuItem(id = \"bullets\", label = \"Bulleted list\", description = \"A simple list\", icon = rememberVectorPainter(SampleIcons.ListSimple), group = \"Lists\"),\n    MonarchSlashMenuItem(id = \"checklist\", label = \"Checklist\", description = \"Items to tick off\", icon = rememberVectorPainter(SampleIcons.Checklist), group = \"Lists\", keywords = listOf(\"todo\", \"task\")),\n    MonarchSlashMenuItem(id = \"mention\", label = \"Mention someone\", description = \"Notify a teammate\", icon = rememberVectorPainter(SampleIcons.Users), group = \"Insert\"),\n    MonarchSlashMenuItem(id = \"date\", label = \"Date\", description = \"Insert today’s date\", icon = rememberVectorPainter(SampleIcons.Calendar), group = \"Insert\"),\n    MonarchSlashMenuItem(id = \"table\", label = \"Table\", description = \"Not available in replies\", icon = rememberVectorPainter(SampleIcons.Grid), group = \"Insert\", enabled = !true),\n)\nval query = MonarchSlashMenuQuery.find(value)",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    // Directly above the field, so it sits above the keyboard with the field's imePadding.\n    MonarchSlashMenu(\n        query = query,\n        items = commands,\n        onSelect = { item ->\n            if (query != null) value = query.replacing(value, markdown[item.id].orEmpty())\n        },\n        groupOrder = listOf(\"Text\", \"Lists\", \"Insert\"),\n    )\n    MonarchTextField(\n        value = value,\n        onValueChange = { value = it },\n        modifier = Modifier.fillMaxWidth(),\n        label = \"Message\",\n        placeholder = \"Type / to insert a block\",\n        singleLine = false,\n    )\n}"
+    },
+    {
+      "title": "Filtered, with nothing matching",
+      "code": "Column {\n    MonarchSlashMenu(\n        query = MonarchSlashMenuQuery.find(\"/li\"),\n        items = listOf(\n            MonarchSlashMenuItem(\n                id = \"bullets\",\n                label = \"Bulleted list\",\n                icon = rememberVectorPainter(SampleIcons.BulletList),\n            ),\n            MonarchSlashMenuItem(id = \"table\", label = \"Table\", description = \"Not available in replies\", enabled = false),\n        ),\n        onSelect = {},\n    )\n    MonarchSlashMenu(query = MonarchSlashMenuQuery.find(\"/zzz\"), items = emptyList(), onSelect = {})\n}",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ]
+    }
+  ],
+  "webEquivalent": "SlashMenu",
+  "dependsOn": [
+    "mention-picker"
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "id": "assignee-picker",
+  "name": "MonarchAssigneePicker",
+  "title": "AssigneePicker",
+  "family": "identity",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchEntityPicker (a .sheet with a List and .searchable) preset for people, with a MonarchButton for Assign to me under the field",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A field for assigning one person or several, with avatars, the signed-in person first as (you), an Unassigned row and an Assign to me shortcut.",
+  "whenToUse": "To set who owns or works on a task, ticket, deal or document, from the workspace's members or a server search.",
+  "whenNotToUse": "For records other than people, use MonarchEntityPicker. For a role or a permission, use MonarchRolePicker. For inviting people who are not members yet, use the invite-members-dialog recipe.",
+  "api": [
+    "init(_ label: String, selection: Binding<String?>, people: [MonarchAssigneePerson], selectedPeople: [MonarchAssigneePerson] = [], currentUserID: String? = nil, helper: String? = nil, error: String? = nil, isRequired: Bool = false, isLoading: Bool = false, allowsUnassigned: Bool = true, showsAssignToMe: Bool = true, minSearchLength: Int = 0, debounce: Duration = .milliseconds(250), labels: MonarchAssigneePickerLabels = MonarchAssigneePickerLabels(), search: (@Sendable (String) async throws -> [MonarchAssigneePerson])? = nil)",
+    "init(_ label: String, selection: Binding<[String]>, people: [MonarchAssigneePerson], selectedPeople: [MonarchAssigneePerson] = [], currentUserID: String? = nil, helper: String? = nil, error: String? = nil, isRequired: Bool = false, isLoading: Bool = false, showsAssignToMe: Bool = true, minSearchLength: Int = 0, debounce: Duration = .milliseconds(250), labels: MonarchAssigneePickerLabels = MonarchAssigneePickerLabels(), search: (@Sendable (String) async throws -> [MonarchAssigneePerson])? = nil)",
+    "struct MonarchAssigneePerson: Identifiable, Sendable { init(id: String, name: String, email: String? = nil, hint: String? = nil, image: Image?, isDisabled: Bool = false, group: String? = nil, status: MonarchPresenceStatus? = nil); init(id: String, name: String, email: String? = nil, hint: String? = nil, url: URL? = nil, isDisabled: Bool = false, group: String? = nil, status: MonarchPresenceStatus? = nil) }",
+    "struct MonarchAssigneePickerLabels: Sendable { init(unassigned: String? = nil, you: (@Sendable (String) -> String)? = nil, assignToMe: String? = nil, assigned: String? = nil, search: String? = nil, picker: MonarchEntityPickerLabels = MonarchEntityPickerLabels()) }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The visible label, already localised. It names the field and the sheet."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<String?> or Binding<[String]>",
+      "default": "required",
+      "description": "The assigned person's id, or nil for nobody; or the ids of several assignees in the order they were assigned."
+    },
+    {
+      "name": "people",
+      "type": "[MonarchAssigneePerson]",
+      "default": "required",
+      "description": "The people to choose from. With search, shown until the first search runs."
+    },
+    {
+      "name": "selectedPeople",
+      "type": "[MonarchAssigneePerson]",
+      "default": "[]",
+      "description": "People for assigned ids that may not be in people, so the field shows their names and avatars."
+    },
+    {
+      "name": "currentUserID",
+      "type": "String?",
+      "default": "nil",
+      "description": "The signed-in person: listed first with (you) after the name, and the target of Assign to me."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Help text under the field."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "An error message, shown with an icon and announced."
+    },
+    {
+      "name": "isRequired",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows a mark after the label and adds Required to the hint."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows Loading... in the sheet while people is empty."
+    },
+    {
+      "name": "allowsUnassigned",
+      "type": "Bool",
+      "default": "true",
+      "description": "One assignee only: adds the Unassigned first row that clears the assignee, and shows Unassigned in the empty field."
+    },
+    {
+      "name": "showsAssignToMe",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows Assign to me under the field while the signed-in person is not assigned."
+    },
+    {
+      "name": "minSearchLength",
+      "type": "Int",
+      "default": "0",
+      "description": "The shortest text search runs for."
+    },
+    {
+      "name": "debounce",
+      "type": "Duration",
+      "default": ".milliseconds(250)",
+      "description": "How long to wait after typing before search runs."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAssigneePickerLabels",
+      "default": "MonarchAssigneePickerLabels()",
+      "description": "Replaces Unassigned, the (you) suffix, Assign to me, the Assigned to you announcement, the Assign to... placeholder and the entity picker's strings."
+    },
+    {
+      "name": "search",
+      "type": "(@Sendable (String) async throws -> [MonarchAssigneePerson])?",
+      "default": "nil",
+      "description": "Looks up people on the app's server as the text is typed; a newer text cancels the older search. Throw to show an error with Try again."
+    }
+  ],
+  "states": [
+    {
+      "name": "unassigned",
+      "description": "The field shows Unassigned in the muted text role and Assign to me is offered when there is a signed-in person."
+    },
+    {
+      "name": "assigned",
+      "description": "The field shows the person's avatar and name; with the signed-in person, (you) follows the name and Assign to me is hidden."
+    },
+    {
+      "name": "several",
+      "description": "The field shows the first avatar and \"Ana Silva +1\"; the sheet stays open until Done."
+    },
+    {
+      "name": "loading",
+      "description": "The sheet shows Loading... while the list is empty, and a progress indicator while a search runs."
+    },
+    {
+      "name": "error",
+      "description": "The field border and message use the danger colour, with an icon; the error is announced."
+    },
+    {
+      "name": "disabled",
+      "description": "The field uses the disabled roles and Assign to me is hidden."
+    }
+  ],
+  "appearance": "The field and sheet are MonarchEntityPicker's: the input background and border, the avatars' generated colours and the accent check mark on assigned rows. Assign to me is a small ghost MonarchButton. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "The web AssigneePicker puts Assign to me in the popover's footer; iOS shows it under the field, so the signed-in person can assign themselves without opening the sheet. The web groups people under headings and shows presence dots on the avatars; MonarchEntityPicker has no groups or presence, so the current user is simply listed first and presence can go in hint (\"Away\"). Several assignees show \"Ana Silva +2\" (the entity picker's summary) instead of an avatar stack with \"3 people\". The web's currentUserId and allowUnassigned are currentUserID and allowsUnassigned, following Swift naming. Android plans the same component.",
+  "accessibility": [
+    "The field is the entity picker's button, labelled with the label, valued with every assigned name or None, and with the error, help and Required in its hint.",
+    "Avatars are decorative because the name is written beside them.",
+    "In the sheet each person is a button read with the name, email and hint; assigned people have the selected trait and a check mark, not colour alone.",
+    "Assign to me is a separate button at least 44 points high; after it is used, Assigned to you is announced because the button goes away."
+  ],
+  "edgeCases": [
+    "An assigned id that is not in people shows its name only when the person is in selectedPeople; otherwise the raw id is shown.",
+    "Disabled people stay in the list but cannot be chosen.",
+    "Without currentUserID nobody is marked (you) and Assign to me is not shown.",
+    "Long labels and names wrap at every text size."
+  ],
+  "tests": [
+    "MonarchAssigneePickerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Assignee with you and Unassigned",
+      "fixture": "assignee-picker",
+      "webExample": "Assignee with you and Unassigned",
+      "template": "MonarchAssigneePicker({{label}}, selection: $assignee, people: members, currentUserID: {{currentUserId}})",
+      "setupTemplate": "@State private var assignee: String? = {{value}}\nprivate let members = [\n    MonarchAssigneePerson(id: {{people.0.id}}, name: {{people.0.name}}, email: {{people.0.email}}, hint: {{people.0.hint}}, group: {{people.0.group}}),\n    MonarchAssigneePerson(id: {{people.1.id}}, name: {{people.1.name}}, email: {{people.1.email}}, group: {{people.1.group}}, status: {{people.1.status|case}}),\n    MonarchAssigneePerson(id: {{people.2.id}}, name: {{people.2.name}}, email: {{people.2.email}}, group: {{people.2.group}}),\n    MonarchAssigneePerson(id: {{people.3.id}}, name: {{people.3.name}}, email: {{people.3.email}}, group: {{people.3.group}}, status: {{people.3.status|case}}),\n    MonarchAssigneePerson(id: {{people.4.id}}, name: {{people.4.name}}, email: {{people.4.email}}, group: {{people.4.group}}),\n]",
+      "setup": "@State private var assignee: String? = \"m2\"\nprivate let members = [\n    MonarchAssigneePerson(id: \"m1\", name: \"Priya Raman\", email: \"priya@example.com\", hint: \"4 open\", group: \"In this team\"),\n    MonarchAssigneePerson(id: \"m2\", name: \"Jonas Weber\", email: \"jonas@example.com\", group: \"In this team\", status: .online),\n    MonarchAssigneePerson(id: \"m3\", name: \"Amara Okafor\", email: \"amara@example.com\", group: \"Everyone else\"),\n    MonarchAssigneePerson(id: \"m4\", name: \"Lucas Martin\", email: \"lucas@example.com\", group: \"Everyone else\", status: .away),\n    MonarchAssigneePerson(id: \"m5\", name: \"Mei Chen\", email: \"mei@example.com\", group: \"Everyone else\"),\n]",
+      "code": "MonarchAssigneePicker(\"Assignee\", selection: $assignee, people: members, currentUserID: \"m3\")",
+      "previewTap": true
+    },
+    {
+      "title": "Several reviewers from a server search",
+      "setup": "@State private var reviewers: [String] = []",
+      "code": "MonarchAssigneePicker(\n    \"Reviewers\",\n    selection: $reviewers,\n    people: [],\n    currentUserID: \"sam\",\n    minSearchLength: 2,\n    search: { query in\n        // Ask the app's directory here.\n        [MonarchAssigneePerson(id: \"lee\", name: \"Lee Moreau\")].filter { $0.name.localizedCaseInsensitiveContains(query) }\n    }\n)"
+    }
+  ],
+  "webEquivalent": "AssigneePicker",
+  "dependsOn": [
+    "entity-picker",
+    "avatar",
+    "button"
+  ]
+}

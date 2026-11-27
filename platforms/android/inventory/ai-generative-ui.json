@@ -1,0 +1,125 @@
+{
+  "id": "ai-generative-ui",
+  "name": "MonarchAiGenerativeUi",
+  "title": "AiGenerativeUi",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "A name-to-composable registry (MonarchAiUiRegistry) with a decoder per component into its own typed model; MonarchInlineNotice for refused parts; MonarchProgress (androidx.compose.material3.CircularProgressIndicator) while props stream",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Renders a component the model asked for in a ui part of the conversation, but only when its name is in the app's allow-listed registry, with the props treated as untrusted data.",
+  "whenToUse": "When an assistant may answer with an interactive card (a booking slot, a chart, a form) that the app has built and allowed in advance.",
+  "whenNotToUse": "For text, citations, tool calls and other standard parts use MonarchAiConversation's own rendering. Never use it to show markup or code produced by a model.",
+  "api": [
+    "@Composable fun MonarchAiGenerativeUi(part: MonarchAiUiPart, registry: MonarchAiUiRegistry, modifier: Modifier = Modifier, labels: MonarchAiGenerativeUiLabels = MonarchAiGenerativeUiLabels(), onReject: ((MonarchAiUiRejection, MonarchAiUiPart) -> Unit)? = null, onAction: ((MonarchAiUiAction) -> Unit)? = null)",
+    "class MonarchAiUiRegistry { val names: List<String>; operator fun contains(name: String): Boolean; fun <P : Any> register(name: String, decode: (MonarchAiJSON) -> P?, description: String? = null, streaming: MonarchAiUiStreaming = MonarchAiUiStreaming.Progressive, validate: ((P) -> Boolean)? = null, content: @Composable (props: P, emit: MonarchAiUiEmit) -> Unit); fun manifest(): String }",
+    "class MonarchAiUiEmit(handler: ((type: String, payload: MonarchAiJSON?) -> Unit)? = null) { val connected: Boolean; operator fun invoke(type: String, payload: MonarchAiJSON? = null) }",
+    "data class MonarchAiUiAction(type: String, payload: MonarchAiJSON? = null, component: String, partId: String? = null, toolCallId: String? = null)",
+    "enum class MonarchAiUiRejection { UnknownComponent, InvalidProps }",
+    "enum class MonarchAiUiStreaming { Progressive, OnComplete }",
+    "data class MonarchAiGenerativeUiLabels(unknown: String? = null, invalid: String? = null, loading: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "part",
+      "type": "MonarchAiUiPart",
+      "default": "required",
+      "description": "The ui part of the message: the component name, the props (or, while streaming, JSON text still arriving), the part id and the tool call it answers."
+    },
+    {
+      "name": "registry",
+      "type": "MonarchAiUiRegistry",
+      "default": "required",
+      "description": "The allow-list. Only names registered here render. Build it once, in remember or outside composition."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the result."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiGenerativeUiLabels",
+      "default": "MonarchAiGenerativeUiLabels()",
+      "description": "Replaces the notices for an unknown component and for invalid props, and the TalkBack name of the progress indicator, \"Loading\"."
+    },
+    {
+      "name": "onReject",
+      "type": "((MonarchAiUiRejection, MonarchAiUiPart) -> Unit)?",
+      "default": "null",
+      "description": "Called once per refused part, with the reason, for logging."
+    },
+    {
+      "name": "onAction",
+      "type": "((MonarchAiUiAction) -> Unit)?",
+      "default": "null",
+      "description": "Receives actions the component sends through its MonarchAiUiEmit, with the payload sanitised and the component, part id and tool call id filled in. Without it the channel is not connected."
+    }
+  ],
+  "states": [
+    {
+      "name": "rendered",
+      "description": "The registered component, drawn from its decoded props."
+    },
+    {
+      "name": "pending",
+      "description": "While props stream and do not decode yet, or for a component registered with OnComplete, a circular progress indicator at least 48dp high, named \"Loading\"."
+    },
+    {
+      "name": "unknown component",
+      "description": "A neutral notice: \"This part of the answer can’t be shown here.\""
+    },
+    {
+      "name": "invalid props",
+      "description": "A neutral notice: \"This part of the answer had data that couldn’t be shown.\""
+    }
+  ],
+  "appearance": "The rendered component brings its own appearance. The notice is a neutral MonarchInlineNotice with the muted fill; the progress indicator is the Material 3 circular indicator in the accent color. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "Same allow-list model, notices, streaming policies, sanitising limits and action channel as the web and iOS. Kotlin has no reflection-free Decodable, so each component registers a decoder function from MonarchAiJSON to its own typed model; returning null or throwing refuses the props. Compose cannot catch a composable that fails while composing, so there is no render error case: MonarchAiUiRejection has UnknownComponent and InvalidProps, and a decoder or validator that throws counts as invalid props. Blocked prop names of the web (style, className, on… handlers) have no meaning on Android and are not filtered. The manifest lists names and descriptions without a schema summary. Streaming props are read with a partial JSON reader built on the conversation model's MonarchAiJSON, as on iOS.",
+  "accessibility": [
+    "The rendered component brings its own accessibility.",
+    "The notice is static text; the neutral tone adds no spoken tone name.",
+    "The progress indicator while props stream is named \"Loading\", replaceable with labels.loading.",
+    "Model output is never rendered as markup, so nothing unexpected becomes focusable.",
+    "The notice text wraps at large font sizes."
+  ],
+  "edgeCases": [
+    "A streaming part is never refused for its props, because they may still become valid; once complete, props given as text instead of data are refused.",
+    "Registering a name twice replaces the earlier component and keeps its place in names and the manifest; an empty name is ignored.",
+    "Strings longer than 20,000 characters are cut, arrays and objects keep 500 members, nesting stops at 8 levels, numbers that are not finite are dropped, and links that are not http, https, mailto or relative are dropped.",
+    "A refusal is reported to onReject once per part, not on every recomposition.",
+    "The registry is not observable: register everything before the part is shown."
+  ],
+  "tests": [
+    "MonarchAiGenerativeUiTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Allow-listed component",
+      "fixture": "ai-generative-ui",
+      "webExample": "Allow-listed component",
+      "template": "MonarchAiGenerativeUi(\n    part = MonarchAiUiPart(\n        {{component}},\n        MonarchAiJSON.Object(\n            mapOf(\n                \"label\" to MonarchAiJSON.Text({{props.label}}),\n                \"value\" to MonarchAiJSON.Text({{props.value}}),\n                \"change\" to MonarchAiJSON.Text({{props.change}}),\n            ),\n        ),\n    ),\n    registry = registry,\n)",
+      "setupTemplate": "val registry = remember {\n    MonarchAiUiRegistry().apply {\n        register(\n            {{component}},\n            { json ->\n                val label = json[\"label\"]?.stringValue\n                val value = json[\"value\"]?.stringValue\n                if (label != null && value != null) Triple(label, value, json[\"change\"]?.stringValue) else null\n            },\n        ) { metric, _ ->\n            MonarchCard {\n                MonarchText(text = metric.first, style = MonarchTextStyle.BodyStrong)\n                MonarchText(text = metric.second, style = MonarchTextStyle.Heading)\n                metric.third?.let { MonarchBadge(text = it, tone = MonarchTone.Success) }\n            }\n        }\n    }\n}",
+      "setup": "val registry = remember {\n    MonarchAiUiRegistry().apply {\n        register(\n            \"MetricCard\",\n            { json ->\n                val label = json[\"label\"]?.stringValue\n                val value = json[\"value\"]?.stringValue\n                if (label != null && value != null) Triple(label, value, json[\"change\"]?.stringValue) else null\n            },\n        ) { metric, _ ->\n            MonarchCard {\n                MonarchText(text = metric.first, style = MonarchTextStyle.BodyStrong)\n                MonarchText(text = metric.second, style = MonarchTextStyle.Heading)\n                metric.third?.let { MonarchBadge(text = it, tone = MonarchTone.Success) }\n            }\n        }\n    }\n}",
+      "code": "MonarchAiGenerativeUi(\n    part = MonarchAiUiPart(\n        \"MetricCard\",\n        MonarchAiJSON.Object(\n            mapOf(\n                \"label\" to MonarchAiJSON.Text(\"Active projects\"),\n                \"value\" to MonarchAiJSON.Text(\"42\"),\n                \"change\" to MonarchAiJSON.Text(\"+6 this month\"),\n            ),\n        ),\n    ),\n    registry = registry,\n)"
+    },
+    {
+      "title": "A name that is not allowed",
+      "setup": "var refused by remember { mutableStateOf(\"\") }",
+      "code": "MonarchAiGenerativeUi(\n    part = MonarchAiUiPart(\"WebView\", MonarchAiJSON.Object(emptyMap())),\n    registry = MonarchAiUiRegistry(),\n    onReject = { reason, _ -> refused = reason.name },\n)"
+    }
+  ],
+  "webEquivalent": "AiGenerativeUi",
+  "dependsOn": [
+    "inline-notice",
+    "progress-circle",
+    "ai-conversation"
+  ]
+}

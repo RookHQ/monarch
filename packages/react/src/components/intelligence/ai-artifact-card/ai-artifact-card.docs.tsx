@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { AiArtifactCard, type AiArtifactPart } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-artifact-card.fixture.json';
 
-const PARTS: AiArtifactPart[] = [
-  { type: 'artifact', id: 'a1', kind: 'document', title: 'Q3 summary', version: 3 },
-  { type: 'artifact', id: 'a2', kind: 'code', title: 'parse-invoice.ts', version: 1 },
-  { type: 'artifact', id: 'a3', kind: 'html', title: 'Event landing page', version: 2 },
-];
+const PARTS: AiArtifactPart[] = fixture.data.parts.map((p, i) => ({
+  type: 'artifact' as const,
+  id: `a${i + 1}`,
+  kind: p.kind as AiArtifactPart['kind'],
+  title: p.title,
+  version: p.version,
+}));
 
 function ActiveDemo() {
   const [active, setActive] = useState<string | null>('a1');

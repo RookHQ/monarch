@@ -4,38 +4,20 @@ import {
   type ConsentRecord,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './consent-history.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
-const records: ConsentRecord[] = [
-  {
-    id: 'c-3',
-    regime: 'opt-in',
-    policyVersion: '2026-04',
-    categories: { necessary: true, preferences: true, analytics: true, marketing: false },
-    method: 'custom',
-    gpc: false,
-    at: '2026-04-18T08:42:00.000Z',
-  },
-  {
-    id: 'c-2',
-    regime: 'opt-in',
-    policyVersion: '2026-01',
-    categories: { necessary: true, preferences: true, analytics: true, marketing: true },
-    method: 'accept-all',
-    gpc: false,
-    at: '2026-02-03T16:10:00.000Z',
-  },
-  {
-    id: 'c-1',
-    regime: 'opt-in',
-    policyVersion: '2026-01',
-    categories: { necessary: true, preferences: false, analytics: false, marketing: false },
-    method: 'reject-all',
-    gpc: false,
-    at: '2026-01-12T10:05:00.000Z',
-  },
-];
+const records: ConsentRecord[] = fixture.data.records.map((r) => ({
+  id: r.id,
+  regime: r.regime as ConsentRecord['regime'],
+  policyVersion: r.policyVersion,
+  categories: r.categories,
+  method: r.method as ConsentRecord['method'],
+  gpc: r.gpc,
+  at: r.at,
+}));
 
 const optOutRecords: ConsentRecord[] = [
   {
@@ -184,9 +166,10 @@ export default {
             <ConsentHistory
               records={records}
               categories={DEFAULT_CONSENT_CATEGORIES}
-              description="Every choice you made about cookies and similar storage."
-              locale="en-GB"
-              timeZone="UTC"
+              title={fixture.data.title}
+              description={fixture.data.description}
+              locale={fixture.data.locale}
+              timeZone={fixture.data.timeZone}
             />
           ),
         },

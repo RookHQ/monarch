@@ -1,0 +1,144 @@
+{
+  "id": "ai-chat-page",
+  "name": null,
+  "title": "AiChatPage",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "NavigationSplitView(preferredCompactColumn:) with MonarchAiConversationList in the sidebar and, in the detail, MonarchAiThread with MonarchAiPromptInput in .safeAreaInset(edge: .bottom) and MonarchAiConversationHeader in ToolbarItem(placement: .principal); on iPhone the split view collapses to a navigation stack",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the full chat screen of an assistant app, with the conversation history in a sidebar beside the open conversation on iPad and as the previous screen of a navigation stack on iPhone.",
+  "whenToUse": "An app whose main screen is a chat with an assistant and a history of conversations.",
+  "whenNotToUse": "An assistant beside other screens: use MonarchAiAssistantPanel. A single conversation without history: put MonarchAiPromptInput in the bottom safe area inset of MonarchAiThread.",
+  "api": [
+    "NavigationSplitView(preferredCompactColumn: $column) { MonarchAiConversationList(conversations, activeID:, onNew:, onRename:, onPin:, onDelete:, onSelect: { open($0) }).navigationTitle(\"History\") } detail: { … }",
+    "open(id): activeID = id; conversation.reset(stored messages of id); column = .detail",
+    "MonarchAiThread(conversation.messages, status:, error:, isOffline:, queuedCount:, isSlow:, onStop:, empty: { MonarchAiWelcome(\"How can I help?\") { MonarchAiStarterPrompts(starters, layout: .list) { conversation.send($0.prompt) } } })",
+    ".safeAreaInset(edge: .bottom) { MonarchAiPromptInput(\"Message the assistant\", text: $prompt, isBusy:, onStop:, footer: { MonarchAiDisclaimer() }) { guard conversation.send($0) else { throw … } } }",
+    ".toolbar { ToolbarItem(placement: .principal) { MonarchAiConversationHeader(title, agent: conversation.agent, onRename:) } }",
+    ".inspector(isPresented:) or .sheet { MonarchAiArtifactCanvas(artifact, onClose:) } for an artifact a reply produced"
+  ],
+  "options": [
+    {
+      "name": "conversation",
+      "type": "MonarchAiConversation",
+      "default": "required",
+      "description": "The open conversation. Switching history entries calls reset with the stored messages of the chosen one, as the web's onSelectConversation does."
+    },
+    {
+      "name": "conversations",
+      "type": "[MonarchAiConversationSummary]",
+      "default": "required",
+      "description": "The history, shown by MonarchAiConversationList with search, pinning, rename and delete."
+    },
+    {
+      "name": "activeID",
+      "type": "String?",
+      "default": "required",
+      "description": "The open conversation's id, marked selected in the list."
+    },
+    {
+      "name": "column",
+      "type": "NavigationSplitViewColumn",
+      "default": ".sidebar",
+      "description": "The column shown on iPhone. The page opens on the history, as on Android and the web; opening a conversation sets it to detail and the back button returns to the sidebar."
+    },
+    {
+      "name": "onNew",
+      "type": "() -> Void",
+      "default": "none",
+      "description": "Adds New conversation at the top of the list; the recipe adds an untitled entry, resets the conversation and opens it."
+    },
+    {
+      "name": "title",
+      "type": "String",
+      "default": "the active entry's title",
+      "description": "Shown by MonarchAiConversationHeader in the navigation bar, which renames through its title menu."
+    },
+    {
+      "name": "empty",
+      "type": "@ViewBuilder () -> some View",
+      "default": "MonarchAiWelcome with MonarchAiStarterPrompts",
+      "description": "The thread's empty content while the conversation has no messages, in a ScrollView so it fits at every text size."
+    },
+    {
+      "name": "toolbar / footer",
+      "type": "@ViewBuilder () -> some View",
+      "default": "MonarchAiDisclaimer as the footer",
+      "description": "MonarchAiPromptInput's toolbar (a model picker) and footer."
+    }
+  ],
+  "states": [
+    {
+      "name": "two columns",
+      "description": "On iPad the history sidebar and the conversation show side by side; the system sidebar button hides and shows the history."
+    },
+    {
+      "name": "one column",
+      "description": "On iPhone the split view collapses to a stack: the conversation shows with a back button to the history, and choosing or starting a conversation opens it. The system back swipe returns to the history."
+    },
+    {
+      "name": "empty",
+      "description": "The thread shows MonarchAiWelcome with starters; choosing one sends it."
+    },
+    {
+      "name": "running",
+      "description": "Send becomes Stop; the thread shows thinking, streams the reply and announces it; the starters are disabled."
+    },
+    {
+      "name": "error / offline",
+      "description": "MonarchAiThread shows and announces the error or the offline notice."
+    }
+  ],
+  "appearance": "Every part is an existing component or system container: the system split view and navigation bar, MonarchAiConversationList, MonarchAiConversationHeader, MonarchAiThread, MonarchAiPromptInput and MonarchAiDisclaimer in the Monarch theme. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships AiChatPage as one component: a history rail beside the chat from 768px, the history in a start-edge sheet below it, and the artifact canvas as a third column. On iOS it is a recipe on NavigationSplitView: a sidebar and a detail on iPad, collapsed to a navigation stack with the system back button and back swipe on iPhone, instead of a drawer-like sheet. Android uses NavigableListDetailPaneScaffold and starts on the history; this recipe does the same (preferredCompactColumn .sidebar, decision D6), and opening a conversation shows it with a back button to the history. MonarchAiConversationList reports taps through onSelect rather than a List selection, so the recipe sets preferredCompactColumn to push the conversation on iPhone. The conversation title is MonarchAiConversationHeader in the principal toolbar item (the system title menu with Rename), not a row above the thread. The artifact canvas is MonarchAiArtifactCanvas in an .inspector on iPad or a sheet on iPhone, not a third column. The web's messageProps wiring (regenerate, feedback, branches, tool approval) is the default MonarchAiMessage of MonarchAiThread plus the app's own calls on MonarchAiConversation. The web focuses the prompt after New conversation; this recipe does not move focus, so the keyboard does not open by itself.",
+  "accessibility": [
+    "MonarchAiConversationList is named \"Conversation history\" and marks the open conversation with the selected trait.",
+    "The conversation title is a header in MonarchAiConversationHeader, with the assistant as its value; the system back button returns to the history on iPhone.",
+    "MonarchAiThread announces replies, errors and the offline notice.",
+    "MonarchAiPromptInput is named \"Message the assistant\"; Send becomes Stop while a reply runs, and Escape and the Magic Tap stop it.",
+    "The split view follows the system back gesture and sidebar button."
+  ],
+  "edgeCases": [
+    "The history list and the thread scroll themselves: give the split view the screen, never a vertically scrolling parent.",
+    "A new conversation has an empty title until the app names it; MonarchAiConversationList and MonarchAiConversationHeader show their untitled text.",
+    "Deleting the open conversation: pick another active id or start a new one, and reset the conversation.",
+    "A send that the conversation refuses (while a tool call waits for approval) throws in onSubmit, so the prompt input gives the text back."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Chat page with history and canvas",
+      "fixture": "ai-chat-page",
+      "webExample": "Chat page with history and canvas",
+      "template": "// The history and the chat side by side, as the web draws them. On a phone, use NavigationSplitView so the\n// history is the column behind the back button.\nHStack(spacing: 0) {\n    NavigationStack {\n    MonarchAiConversationList(\n        conversations,\n        activeID: activeID,\n        now: now,\n        onNew: {\n            let id = \"c\\(conversations.count + 1)\"\n            conversations.insert(MonarchAiConversationSummary(id: id, title: \"\", updatedAt: now), at: 0)\n            open(id)\n        },\n        onRename: { id, title in rename(id, to: title) },\n        onPin: { id, isPinned in\n            if let index = conversations.firstIndex(where: { $0.id == id }) { conversations[index].isPinned = isPinned }\n        },\n        onDelete: { id in conversations.removeAll { $0.id == id } },\n        onSelect: { id in open(id) }\n    )\n    #if os(iOS)\n    .navigationBarTitleDisplayMode(.inline)\n    #endif\n    }\n    .frame(width: 214)\n    MonarchDivider()\n    VStack(spacing: 0) {\n        ViewThatFits(in: .horizontal) {\n        HStack(spacing: theme.spacing.space2) {\n            MonarchAiConversationHeader(\n                title,\n                agent: conversation.agent,\n                onRename: { newTitle in\n                    if let activeID { rename(activeID, to: newTitle) }\n                }\n            )\n            Spacer(minLength: 0)\n            MonarchButton(\"Show artifact\", variant: .secondary, size: .sm) {}\n        }\n        VStack(alignment: .leading, spacing: theme.spacing.space1) {\n            MonarchAiConversationHeader(\n                title,\n                agent: conversation.agent,\n                onRename: { newTitle in\n                    if let activeID { rename(activeID, to: newTitle) }\n                }\n            )\n            MonarchButton(\"Show artifact\", variant: .secondary, size: .sm) {}\n        }\n        }\n        .padding(.horizontal, theme.spacing.space3)\n        .padding(.vertical, theme.spacing.space2)\n        MonarchDivider()\n        MonarchAiThread(\n            conversation.messages,\n            status: conversation.status,\n            error: conversation.error,\n            isOffline: !conversation.isOnline,\n            queuedCount: conversation.queued.count,\n            isSlow: conversation.isSlow,\n            onStop: { conversation.stop() },\n            empty: {\n                ScrollView {\n                    MonarchAiWelcome({{welcome.title}}, agent: conversation.agent, description: {{welcome.description}}) {\n                        MonarchAiStarterPrompts(starters, layout: .list) { starter in\n                            conversation.send(starter.prompt)\n                        }\n                        .disabled(conversation.isBusy || !conversation.canSend)\n                    }\n                    .padding(theme.spacing.space3)\n                }\n            }\n        )\n        .safeAreaInset(edge: .bottom) {\n            MonarchAiPromptInput(\n                \"Message the assistant\",\n                text: $prompt,\n                isBusy: conversation.isBusy,\n                onStop: { conversation.stop() },\n                triggerMenu: { EmptyView() },\n                toolbar: { EmptyView() },\n                footer: { MonarchAiDisclaimer() },\n                onSubmit: { text in\n                    guard conversation.send(text) else { throw NotSent() }\n                }\n            )\n            .padding(theme.spacing.space3)\n        }\n    }\n}\n.overlay(RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous).stroke(theme.colors.borderSubtle))\n.clipShape(RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous))\n.dynamicTypeSize(.xSmall)\n.frame(height: 640)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n\nprivate struct EchoTransport: MonarchAiTransport {\n    func stream(_ request: MonarchAiTransportRequest) -> MonarchAiEventStream {\n        MonarchAiEventStream { continuation in\n            continuation.yield(.textDelta(\"You asked: \" + (request.messages.last?.text ?? \"\")))\n            continuation.yield(.done())\n            continuation.finish()\n        }\n    }\n}\n\n/// A send the conversation refused, so the prompt input gives the text back.\nprivate struct NotSent: Error {}\n\nprivate let now = Date(timeIntervalSince1970: 1_794_664_800)\nprivate let starters = [\n    MonarchAiStarterPrompt(id: {{starters.0.id}}, title: {{starters.0.title}}, prompt: {{starters.0.prompt}}),\n    MonarchAiStarterPrompt(id: {{starters.1.id}}, title: {{starters.1.title}}, prompt: {{starters.1.prompt}}),\n]\n\n// One conversation object for the open chat; the app loads stored messages into it with reset.\n@State private var conversation = MonarchAiConversation(transport: EchoTransport())\n@State private var conversations = [\n    MonarchAiConversationSummary(id: {{conversations.0.id}}, title: {{conversations.0.title}}, updatedAt: Date(timeIntervalSince1970: 1_794_660_000)),\n    MonarchAiConversationSummary(\n        id: {{conversations.1.id}},\n        title: {{conversations.1.title}},\n        updatedAt: Date(timeIntervalSince1970: 1_794_490_000),\n        isPinned: {{conversations.1.pinned}}\n    ),\n    MonarchAiConversationSummary(id: {{conversations.2.id}}, title: {{conversations.2.title}}, updatedAt: Date(timeIntervalSince1970: 1_792_936_800)),\n]\n@State private var activeID: String? = {{activeId}}\n@State private var prompt = \"\"\n\nprivate var title: String { conversations.first { $0.id == activeID }?.title ?? \"\" }\n\nprivate func open(_ id: String) {\n    activeID = id\n    conversation.reset()  // Pass the app's stored messages of id.\n}\n\nprivate func rename(_ id: String, to title: String) {\n    if let index = conversations.firstIndex(where: { $0.id == id }) { conversations[index].title = title }\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n\nprivate struct EchoTransport: MonarchAiTransport {\n    func stream(_ request: MonarchAiTransportRequest) -> MonarchAiEventStream {\n        MonarchAiEventStream { continuation in\n            continuation.yield(.textDelta(\"You asked: \" + (request.messages.last?.text ?? \"\")))\n            continuation.yield(.done())\n            continuation.finish()\n        }\n    }\n}\n\n/// A send the conversation refused, so the prompt input gives the text back.\nprivate struct NotSent: Error {}\n\nprivate let now = Date(timeIntervalSince1970: 1_794_664_800)\nprivate let starters = [\n    MonarchAiStarterPrompt(id: \"s1\", title: \"Summarise my week\", prompt: \"Summarise my week\"),\n    MonarchAiStarterPrompt(id: \"s2\", title: \"Draft a status update\", prompt: \"Draft a status update\"),\n]\n\n// One conversation object for the open chat; the app loads stored messages into it with reset.\n@State private var conversation = MonarchAiConversation(transport: EchoTransport())\n@State private var conversations = [\n    MonarchAiConversationSummary(id: \"c1\", title: \"Weekly summary\", updatedAt: Date(timeIntervalSince1970: 1_794_660_000)),\n    MonarchAiConversationSummary(\n        id: \"c2\",\n        title: \"Release checklist\",\n        updatedAt: Date(timeIntervalSince1970: 1_794_490_000),\n        isPinned: true\n    ),\n    MonarchAiConversationSummary(id: \"c3\", title: \"Interview questions\", updatedAt: Date(timeIntervalSince1970: 1_792_936_800)),\n]\n@State private var activeID: String? = \"c1\"\n@State private var prompt = \"\"\n\nprivate var title: String { conversations.first { $0.id == activeID }?.title ?? \"\" }\n\nprivate func open(_ id: String) {\n    activeID = id\n    conversation.reset()  // Pass the app's stored messages of id.\n}\n\nprivate func rename(_ id: String, to title: String) {\n    if let index = conversations.firstIndex(where: { $0.id == id }) { conversations[index].title = title }\n}",
+      "code": "// The history and the chat side by side, as the web draws them. On a phone, use NavigationSplitView so the\n// history is the column behind the back button.\nHStack(spacing: 0) {\n    NavigationStack {\n    MonarchAiConversationList(\n        conversations,\n        activeID: activeID,\n        now: now,\n        onNew: {\n            let id = \"c\\(conversations.count + 1)\"\n            conversations.insert(MonarchAiConversationSummary(id: id, title: \"\", updatedAt: now), at: 0)\n            open(id)\n        },\n        onRename: { id, title in rename(id, to: title) },\n        onPin: { id, isPinned in\n            if let index = conversations.firstIndex(where: { $0.id == id }) { conversations[index].isPinned = isPinned }\n        },\n        onDelete: { id in conversations.removeAll { $0.id == id } },\n        onSelect: { id in open(id) }\n    )\n    #if os(iOS)\n    .navigationBarTitleDisplayMode(.inline)\n    #endif\n    }\n    .frame(width: 214)\n    MonarchDivider()\n    VStack(spacing: 0) {\n        ViewThatFits(in: .horizontal) {\n        HStack(spacing: theme.spacing.space2) {\n            MonarchAiConversationHeader(\n                title,\n                agent: conversation.agent,\n                onRename: { newTitle in\n                    if let activeID { rename(activeID, to: newTitle) }\n                }\n            )\n            Spacer(minLength: 0)\n            MonarchButton(\"Show artifact\", variant: .secondary, size: .sm) {}\n        }\n        VStack(alignment: .leading, spacing: theme.spacing.space1) {\n            MonarchAiConversationHeader(\n                title,\n                agent: conversation.agent,\n                onRename: { newTitle in\n                    if let activeID { rename(activeID, to: newTitle) }\n                }\n            )\n            MonarchButton(\"Show artifact\", variant: .secondary, size: .sm) {}\n        }\n        }\n        .padding(.horizontal, theme.spacing.space3)\n        .padding(.vertical, theme.spacing.space2)\n        MonarchDivider()\n        MonarchAiThread(\n            conversation.messages,\n            status: conversation.status,\n            error: conversation.error,\n            isOffline: !conversation.isOnline,\n            queuedCount: conversation.queued.count,\n            isSlow: conversation.isSlow,\n            onStop: { conversation.stop() },\n            empty: {\n                ScrollView {\n                    MonarchAiWelcome(\"What can I help with?\", agent: conversation.agent, description: \"Ask about your workspace, or start from a suggestion.\") {\n                        MonarchAiStarterPrompts(starters, layout: .list) { starter in\n                            conversation.send(starter.prompt)\n                        }\n                        .disabled(conversation.isBusy || !conversation.canSend)\n                    }\n                    .padding(theme.spacing.space3)\n                }\n            }\n        )\n        .safeAreaInset(edge: .bottom) {\n            MonarchAiPromptInput(\n                \"Message the assistant\",\n                text: $prompt,\n                isBusy: conversation.isBusy,\n                onStop: { conversation.stop() },\n                triggerMenu: { EmptyView() },\n                toolbar: { EmptyView() },\n                footer: { MonarchAiDisclaimer() },\n                onSubmit: { text in\n                    guard conversation.send(text) else { throw NotSent() }\n                }\n            )\n            .padding(theme.spacing.space3)\n        }\n    }\n}\n.overlay(RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous).stroke(theme.colors.borderSubtle))\n.clipShape(RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous))\n.dynamicTypeSize(.xSmall)\n.frame(height: 640)"
+    }
+  ],
+  "webEquivalent": "AiChatPage",
+  "dependsOn": [
+    "ai-thread",
+    "ai-prompt-input",
+    "ai-conversation-list",
+    "ai-conversation-header",
+    "ai-welcome",
+    "ai-conversation",
+    "ai-starter-prompts",
+    "ai-disclaimer"
+  ],
+  "icons": {
+    "newConversation": "PlusGlyph",
+    "search": "SearchGlyph",
+    "pinned": "StarGlyph",
+    "more": "MoreGlyph",
+    "rename": "PencilGlyph",
+    "welcome": "BotGlyph"
+  }
+}

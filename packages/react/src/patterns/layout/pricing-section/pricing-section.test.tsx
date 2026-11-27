@@ -1,5 +1,7 @@
 import { createRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToString } from 'react-dom/server';
@@ -139,5 +141,18 @@ describe('PricingSection', () => {
     );
     expect(html).toContain('mn-pricing-section');
     expect(html).toContain('₹A');
+  });
+
+  it('lays out its plan columns by its own width, not the window', () => {
+    // In a 620px docs column on a wide window, window breakpoints gave three cramped
+    // columns, and the Enterprise price broke mid-word ("Conta ct us").
+    const css = readFileSync(join(dirname(__filename), 'pricing-section.css'), 'utf8');
+    expect(css).toMatch(/\.mn-pricing-section \{[^}]*container: mn-pricing-section \/ inline-size/);
+    expect(css).not.toMatch(/@media \(min-width/);
+    const card = readFileSync(
+      join(dirname(__filename), '../../../components/billing/plan-card/plan-card.css'),
+      'utf8',
+    );
+    expect(card).toMatch(/\.mn-plan-card__price \{[^}]*overflow-wrap: break-word/);
   });
 });

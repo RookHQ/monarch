@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, IconButton, ToastProvider, useUndoToast } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { TrashIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './undo-toast.fixture.json';
 
-const NOTES = ['Agenda for Monday', 'Questions for the review', 'Ideas for the next sprint'];
+const NOTES = fixture.data.notes;
 
 function NoteList() {
   const [notes, setNotes] = useState(NOTES);
@@ -15,7 +17,7 @@ function NoteList() {
     // Act at once: the note disappears before anything is asked.
     setNotes((list) => list.filter((n) => n !== note));
     const outcome = await undoable({
-      title: 'Note deleted',
+      title: fixture.data.toast.title,
       description: note,
       onUndo: () =>
         setNotes((list) => {
@@ -28,6 +30,14 @@ function NoteList() {
     });
     if (outcome === 'undone') setLog(`“${note}” was restored.`);
   };
+
+  // The preview starts just after the first note was deleted.
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    void remove(NOTES[0] ?? '');
+  });
 
   return (
     <div style={{ display: 'grid', gap: 8, maxWidth: 360 }}>
@@ -226,6 +236,7 @@ export default {
       items: [
         {
           title: 'Delete with undo',
+          stage: true,
           render: () => (
             // Docs page only: each example has its own provider. Apps mount exactly one.
             <ToastProvider label="Undo example notifications">

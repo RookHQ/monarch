@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { AutosaveIndicator, Field, FieldLabel, Input, useAutosave } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './autosave-indicator.fixture.json';
 
 /** A stand-in for a network save: waits a moment, fails when the text contains "fail". */
 function fakeSave(value: string) {
@@ -13,12 +15,20 @@ function fakeSave(value: string) {
 }
 
 function AutosaveDemo() {
-  const [title, setTitle] = useState('Weekly notes');
-  const autosave = useAutosave({ value: title, onSave: fakeSave, delay: 800, retries: 0 });
+  const [title, setTitle] = useState(fixture.data.value);
+  // The title was saved as the page opened.
+  const [openedAt] = useState(() => new Date());
+  const autosave = useAutosave({
+    value: title,
+    onSave: fakeSave,
+    delay: 800,
+    retries: 0,
+    initialSavedAt: openedAt,
+  });
   return (
     <>
       <Field>
-        <FieldLabel>Title</FieldLabel>
+        <FieldLabel>{fixture.data.label}</FieldLabel>
         <Input
           value={title}
           onChange={(event) => setTitle(event.target.value)}

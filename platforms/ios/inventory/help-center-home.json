@@ -1,0 +1,95 @@
+{
+  "id": "help-center-home",
+  "name": null,
+  "title": "HelpCenterHome",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "NavigationStack with a List of Sections (one per category) of NavigationLinks, .searchable(text:prompt:) for the search field, .navigationDestination for the article; MonarchSearchResults while searching",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the home screen of in-app help, a searchable list of published articles grouped by category, search results while typing, and a contact row at the end.",
+  "whenToUse": "As the first screen of an app's help, pushed from Settings or presented in a sheet from a Help button, when the app ships a list of articles.",
+  "whenNotToUse": "For one help topic next to a control, use MonarchInfoTooltip or a footer in the Form section. For a full knowledge base on the web, link to it with Link instead of rebuilding it in the app.",
+  "api": [
+    "NavigationStack { List { Section(category) { NavigationLink(title, value: id) } … Section { MonarchSectionHeader(_:description:); Link(_:destination:).buttonStyle(.monarchLink(.standalone, isExternal: true)) } } .searchable(text: $query, prompt: \"Search articles\") .navigationTitle(\"Help center\") .navigationDestination(for: String.self) { … } }",
+    "MonarchSearchResults(groups: [MonarchSearchResultGroup(nil, id:, results:)], query: query, onSelect: { result, group in … })",
+    "MonarchLoadingState(_:variant:rows:), MonarchErrorState(_:message:kind:onRetry:), MonarchEmptyState(_:message:systemImage:size:) for the loading, error and empty states"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "browsing",
+      "description": "Categories as grouped list sections in first-seen order; each article is a navigation row with a disclosure chevron."
+    },
+    {
+      "name": "searching",
+      "description": "With text in the search field the list is replaced by MonarchSearchResults: matching articles with their category as the path and the query highlighted, and a result count."
+    },
+    {
+      "name": "no results",
+      "description": "MonarchSearchResults shows its empty state naming the query."
+    },
+    {
+      "name": "loading",
+      "description": "MonarchLoadingState with list skeleton rows, while the app loads the articles."
+    },
+    {
+      "name": "error",
+      "description": "MonarchErrorState with Try again when loading failed."
+    },
+    {
+      "name": "empty",
+      "description": "MonarchEmptyState when nothing has been published."
+    },
+    {
+      "name": "contact",
+      "description": "A last section with MonarchSectionHeader and a standalone link to support."
+    }
+  ],
+  "appearance": "A system grouped list and navigation bar with the large title, a system search field in the navigation bar, Monarch text styles in the rows, and MonarchSearchResults, the section header and the link in their own theme roles in light, dark and both high-contrast themes.",
+  "platformNotes": "The web HelpCenterHome is one component with columns, rows, cards and dense layouts, a page heading, an inline SearchInput, router links and a footer. On a phone the expected pattern is a navigation stack: a grouped list of categories, the system search field from .searchable, and a pushed article screen, so Monarch ships no type and the four web layouts become the one list. The web's filterHelpArticles (every word, ignoring case and accents) is localizedStandardContains on each word; groupHelpArticles is grouping by category in first-seen order, articles without one under General. The web's unavailable state is the app not showing the help entry at all. The footer is a Section footer. Android composes the same with its own list and SearchBar.",
+  "accessibility": [
+    "The navigation title is the screen's heading; category section headers have the header trait from the system List.",
+    "Each article row is a navigation link read as a button with its title.",
+    "The search field is the system field, with its prompt as its label; MonarchSearchResults announces the result count when it changes.",
+    "The contact link is named by its text and marked external by MonarchLinkStyle.",
+    "Rows and links keep 44-point touch targets and scale with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Search matches every typed word in the title or category, ignoring case and diacritics; an empty query shows the categories again.",
+    "Articles without a category go under a General section, named by the app.",
+    "A long list keeps search in the navigation bar; set .searchable(placement: .navigationBarDrawer(displayMode: .always)) to keep the field visible.",
+    "When the help is presented in a sheet, add a Done toolbar button that dismisses it."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Columns with a contact action",
+      "fixture": "help-center-home",
+      "webExample": "Columns with a contact action",
+      "template": "NavigationStack {\n    Group {\n        if query.isEmpty {\n            List {\n                Text({{description}})\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textMuted)\n                    .listRowBackground(Color.clear)\n                ForEach(categories, id: \\.self) { category in\n                    Section(category) {\n                        ForEach(articles.filter { $0.category == category }, id: \\.id) { article in\n                            NavigationLink(value: article.id) {\n                                Label {\n                                    Text(article.title)\n                                } icon: {\n                                    Image(systemName: \"doc.text\").foregroundStyle(theme.colors.textMuted)\n                                }\n                                .monarchTextStyle(.body)\n                            }\n                        }\n                    }\n                }\n                Section {\n                    if let url = URL(string: \"https://example.com/support\") {\n                        Link({{contact}}, destination: url)\n                            .buttonStyle(.monarch(.secondary))\n                    }\n                }\n            }\n        } else {\n            MonarchSearchResults(\n                groups: [MonarchSearchResultGroup(nil, id: \"articles\", results: matches)],\n                query: query,\n                onSelect: { _, _ in }\n            )\n        }\n    }\n    .monarchCanvas()\n    .monarchSearchable(text: $query, prompt: {{search}})\n    .navigationTitle({{title}})\n    #if os(iOS)\n    .navigationBarTitleDisplayMode(.large)\n    #endif\n    .navigationDestination(for: String.self) { id in\n        Text(articles.first { $0.id == id }?.title ?? \"\")\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var query = \"\"\nprivate let articles: [(id: String, title: String, category: String)] = [\n    ({{articles.0.id}}, {{articles.0.title}}, {{articles.0.category}}),\n    ({{articles.1.id}}, {{articles.1.title}}, {{articles.1.category}}),\n    ({{articles.2.id}}, {{articles.2.title}}, {{articles.2.category}}),\n    ({{articles.3.id}}, {{articles.3.title}}, {{articles.3.category}}),\n    ({{articles.4.id}}, {{articles.4.title}}, {{articles.4.category}}),\n    ({{articles.5.id}}, {{articles.5.title}}, {{articles.5.category}}),\n]\nprivate var matches: [MonarchSearchResult] {\n    articles\n        .filter { article in\n            query.split(separator: \" \").allSatisfy { \"\\(article.title) \\(article.category)\".localizedStandardContains($0) }\n        }\n        .map { MonarchSearchResult($0.title, id: $0.id, path: [$0.category]) }\n}\nprivate var categories: [String] {\n    articles.map(\\.category).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var query = \"\"\nprivate let articles: [(id: String, title: String, category: String)] = [\n    (\"a1\", \"Reset your password\", \"Account\"),\n    (\"a2\", \"Change the email on your account\", \"Account\"),\n    (\"a3\", \"Turn on two-step sign-in\", \"Account\"),\n    (\"a4\", \"Download an invoice\", \"Billing\"),\n    (\"a5\", \"Update your payment card\", \"Billing\"),\n    (\"a6\", \"Invite people to your team\", \"Teams\"),\n]\nprivate var matches: [MonarchSearchResult] {\n    articles\n        .filter { article in\n            query.split(separator: \" \").allSatisfy { \"\\(article.title) \\(article.category)\".localizedStandardContains($0) }\n        }\n        .map { MonarchSearchResult($0.title, id: $0.id, path: [$0.category]) }\n}\nprivate var categories: [String] {\n    articles.map(\\.category).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }\n}",
+      "code": "NavigationStack {\n    Group {\n        if query.isEmpty {\n            List {\n                Text(\"Answers to common questions.\")\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textMuted)\n                    .listRowBackground(Color.clear)\n                ForEach(categories, id: \\.self) { category in\n                    Section(category) {\n                        ForEach(articles.filter { $0.category == category }, id: \\.id) { article in\n                            NavigationLink(value: article.id) {\n                                Label {\n                                    Text(article.title)\n                                } icon: {\n                                    Image(systemName: \"doc.text\").foregroundStyle(theme.colors.textMuted)\n                                }\n                                .monarchTextStyle(.body)\n                            }\n                        }\n                    }\n                }\n                Section {\n                    if let url = URL(string: \"https://example.com/support\") {\n                        Link(\"Submit a request\", destination: url)\n                            .buttonStyle(.monarch(.secondary))\n                    }\n                }\n            }\n        } else {\n            MonarchSearchResults(\n                groups: [MonarchSearchResultGroup(nil, id: \"articles\", results: matches)],\n                query: query,\n                onSelect: { _, _ in }\n            )\n        }\n    }\n    .monarchCanvas()\n    .monarchSearchable(text: $query, prompt: \"Search articles\")\n    .navigationTitle(\"Help center\")\n    #if os(iOS)\n    .navigationBarTitleDisplayMode(.large)\n    #endif\n    .navigationDestination(for: String.self) { id in\n        Text(articles.first { $0.id == id }?.title ?? \"\")\n    }\n}"
+    },
+    {
+      "title": "Loading, error and empty states",
+      "code": "VStack(spacing: 24) {\n    MonarchLoadingState(\"Loading articles\", variant: .list, rows: 3)\n    MonarchErrorState(\"Couldn’t load the help center\", message: \"Check your connection and try again.\", kind: .offline, onRetry: {})\n    MonarchEmptyState(\"No articles yet\", message: \"Articles appear here once they are published.\", systemImage: \"book.closed\", size: .sm)\n}"
+    }
+  ],
+  "webEquivalent": "HelpCenterHome",
+  "dependsOn": [
+    "search-input",
+    "search-results",
+    "section-header",
+    "link",
+    "loading-state",
+    "error-state",
+    "empty-state"
+  ]
+}

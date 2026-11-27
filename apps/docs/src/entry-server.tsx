@@ -12,6 +12,8 @@ import { prerenderToNodeStream } from 'react-dom/static';
 import { details } from 'virtual:monarch-docs-details';
 import { App } from './app/app.js';
 import { NAV } from './app/navigation.js';
+import { NATIVE_NAV_DETAILS } from './app/native-nav-details.js';
+import { landingStructuredData } from './features/native/platform-landing-content.js';
 import { ROUTES, resolveRoute, usesDetails } from './app/routes.js';
 import { ROUTE_ALIASES, docsPages, loadDocs, pageById } from './lib/docs.js';
 import { facts } from './lib/facts.js';
@@ -28,12 +30,16 @@ export interface RenderedRoute {
   description: string | null;
   /** Build-manifest keys of the modules the page renders, for preload links. */
   modules: string[];
+  /** A platform landing page's library and FAQ, for its structured data (scripts/seo.mjs). */
+  landing: ReturnType<typeof landingStructuredData>;
 }
 
 function describe(path: string): string | null {
   if (path.startsWith('/components/')) return details[path.slice(12)]?.summary ?? null;
   for (const group of NAV)
-    for (const item of group.items) if (item.path === path) return item.description ?? null;
+    for (const item of group.items)
+      if (item.path === path)
+        return item.description ?? NATIVE_NAV_DETAILS[path]?.description ?? null;
   return null;
 }
 
@@ -52,10 +58,13 @@ export async function render(path: string): Promise<RenderedRoute> {
     html: Buffer.concat(chunks).toString('utf8'),
     title: route.title,
     description: describe(path),
+    landing: landingStructuredData(path),
     modules: [
       ...route.files.map((f) => `src/${f.replace(/^\.\.\//, '')}`),
       // Build-manifest key of the page details chunk (src/lib/docs.ts `loadDetails`).
       ...(usesDetails(route) ? ['virtual:monarch-docs-details'] : []),
+      // The docs file only: the component's Android and iOS documentation is in
+      // the HTML, but its code and data load after the page (component-page.tsx).
       ...(meta ? [`../../packages/react/src/${meta.folder}/${meta.id}.docs.tsx`] : []),
     ],
   };
@@ -82,7 +91,7 @@ export const SITE_DATA = {
     items: g.items.map((i) => ({
       path: i.path,
       label: i.label,
-      description: i.description ?? null,
+      description: i.description ?? NATIVE_NAV_DETAILS[i.path]?.description ?? null,
     })),
   })),
   components: docsPages.map((p) => ({

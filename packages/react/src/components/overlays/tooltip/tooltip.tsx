@@ -1,8 +1,9 @@
 'use client';
 
-import type { ReactElement, ReactNode } from 'react';
+import { Fragment, type ReactElement, type ReactNode } from 'react';
 import { useControllable } from '../../../internal/use-controllable.js';
 import { useDirectionContext } from '../../../internal/direction.js';
+import { useOverlayStage } from '../../../internal/overlay-stage.js';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 
 /** Mount once near the root. Shares the open delay across tooltips. */
@@ -50,17 +51,22 @@ export function Tooltip({
   const [open, setOpen] = useControllable(openProp, defaultOpen, onOpenChange);
   // The bubble is portalled to <body>, outside the element that carries `dir`.
   const dir = useDirectionContext();
+  const staged = useOverlayStage();
+  const Portal = staged ? Fragment : TooltipPrimitive.Portal;
   // Radix always receives `open`, so toggling `disabled` never flips it between
   // controlled and uncontrolled.
   return (
     <TooltipPrimitive.Root
       open={!disabled && open}
       onOpenChange={(next) => {
+        // A staged tooltip (a docs picture) stays as it was rendered: hover,
+        // focus and page scroll would otherwise close it.
+        if (staged) return;
         if (!(disabled && next)) setOpen(next);
       }}
     >
       <TooltipPrimitive.Trigger asChild>{children}</TooltipPrimitive.Trigger>
-      <TooltipPrimitive.Portal>
+      <Portal>
         <TooltipPrimitive.Content
           side={side}
           align={align}
@@ -70,7 +76,7 @@ export function Tooltip({
         >
           {content}
         </TooltipPrimitive.Content>
-      </TooltipPrimitive.Portal>
+      </Portal>
     </TooltipPrimitive.Root>
   );
 }

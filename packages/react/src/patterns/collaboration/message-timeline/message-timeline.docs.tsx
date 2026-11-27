@@ -6,36 +6,32 @@ import {
   type MessageTimelineItem,
 } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+import fixture from './message-timeline.fixture.json';
 
-const NOW = Date.parse('2026-03-02T12:00:00Z');
-const PEOPLE: Record<string, string> = {
-  ana: 'Ana Lopez',
-  ben: 'Ben Okafor',
-  chloe: 'Chloé Martin',
-};
-const LINES = [
-  'Morning! Is the launch checklist up to date?',
-  'Mostly. Legal sign-off is still open.',
-  'I’ll chase it after standup.',
-  'Thanks. The press kit is in the shared folder.',
-  'Looks good. One typo on page two.',
-  'Fixed, and the screenshots are refreshed.',
-  'Great. Shall we freeze copy at 3pm?',
-  'Works for me.',
-];
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+const FIXTURE_MESSAGES = fixture.data.messages as readonly {
+  id: string;
+  time: string;
+  authorId: string;
+  author: string;
+  text: string;
+}[];
+const NOW = Date.parse(fixture.data.now);
+const PEOPLE: Record<string, string> = Object.fromEntries(
+  FIXTURE_MESSAGES.map((m) => [m.authorId, m.author]),
+);
+const LINES = FIXTURE_MESSAGES.map((m) => m.text);
 
 type Demo = MessageTimelineItem & { text: string };
 
-/** Minutes before `endAt` for each message: pairs close together group, the first ones fall on the previous day. */
-const OFFSETS = [960, 957, 300, 240, 238, 120, 30, 28];
+/** Minutes before `endAt` for each older message. */
 const OLDER_OFFSETS = [60, 58, 20, 18];
 
-function history(count: number, endAt = NOW - 30 * 60_000): Demo[] {
-  const authors = ['ana', 'ana', 'ben', 'chloe', 'chloe', 'ana', 'ben', 'ben'];
-  const offsets = count === OFFSETS.length ? OFFSETS : OLDER_OFFSETS;
+function history(count: number, endAt: number): Demo[] {
+  const authors = ['ana', 'ana', 'ben', 'chloe'];
   return Array.from({ length: count }, (_, i) => ({
     id: `m${endAt}-${i}`,
-    time: endAt - (offsets[i] ?? 0) * 60_000,
+    time: endAt - (OLDER_OFFSETS[i] ?? 0) * 60_000,
     authorId: authors[i % authors.length] ?? 'ana',
     text: LINES[i % LINES.length] ?? '',
   }));
@@ -48,14 +44,22 @@ const renderMessage = (m: Demo, ctx: { grouped: boolean }) => (
     now={NOW}
     grouped={ctx.grouped}
     timeDisplay="clock"
-    timeZone="UTC"
+    locale="en-GB"
+    timeZone={fixture.data.timeZone}
   >
     {m.text}
   </MessageRow>
 );
 
 function LiveDemo() {
-  const [items, setItems] = useState<Demo[]>(() => history(8));
+  const [items, setItems] = useState<Demo[]>(() =>
+    FIXTURE_MESSAGES.map((m) => ({
+      id: m.id,
+      time: Date.parse(m.time),
+      authorId: m.authorId,
+      text: m.text,
+    })),
+  );
   const [older, setOlder] = useState(2);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const loadOlder = useCallback(() => {
@@ -82,7 +86,7 @@ function LiveDemo() {
     <div style={{ width: '100%', display: 'grid', gap: 8 }}>
       <div
         style={{
-          height: 340,
+          height: 480,
           border: '1px solid var(--mn-color-border-subtle)',
           borderRadius: 'var(--mn-radius-lg)',
           overflow: 'hidden',
@@ -91,19 +95,21 @@ function LiveDemo() {
         <MessageTimeline
           items={items}
           renderItem={renderMessage}
-          firstUnreadId={items[items.length - 2]?.id ?? null}
-          hasOlder={older > 0}
+          firstUnreadId={fixture.data.firstUnreadId}
+          hasOlder={fixture.data.hasOlder && older > 0}
           loadingOlder={loadingOlder}
           onLoadOlder={loadOlder}
+          loadOlderThreshold={40}
           header={<p style={{ margin: 0, fontSize: 13 }}>This is the start of #launch.</p>}
-          status="Ben Okafor is typing…"
+          status={`${fixture.data.typing} is typing…`}
           now={NOW}
-          timeZone="UTC"
+          locale="en-GB"
+          timeZone={fixture.data.timeZone}
         />
       </div>
       <div>
         <Button size="sm" onClick={send}>
-          Add a message
+          {fixture.data.addLabel}
         </Button>
       </div>
     </div>

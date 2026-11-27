@@ -1,0 +1,214 @@
+{
+  "id": "team-calendar",
+  "name": "MonarchTeamCalendar",
+  "title": "TeamCalendar",
+  "family": "scheduling",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "ScrollView(.vertical) holding a fixed people column and one ScrollView(.horizontal) for the days of every row, with ScrollViewReader to open at the day before today; the header pinned with visualEffect; bars are Buttons drawn with UnevenRoundedRectangle; details in a popover with presentationCompactAdaptation(.popover); MonarchAvatar, MonarchEmptyState, MonarchBanner, MonarchLoadingState; Date.FormatStyle and Date.IntervalFormatStyle",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Who is away when: people down the leading side, the days of a month or a custom range across, absences as bars that span their days, half days as half bars, pending entries faded, weekends and holidays shaded and today ringed.",
+  "whenToUse": "For a team's leave or availability overview, where a manager scans who is out on which day and taps an absence to open it or an empty day to add one. Put a MonarchCalendarToolbar above it to move between months.",
+  "whenNotToUse": "For one person's events day by day use MonarchAgendaList. For choosing a date use MonarchMiniMonth or DatePicker. For meetings with times use an agenda or a time grid; this grid has whole and half days only.",
+  "api": [
+    "MonarchTeamCalendar.init(members: [MonarchTeamCalendarMember], entries: [MonarchTeamCalendarEntry], month: Date? = nil, from: Date? = nil, to: Date? = nil, holidays: [MonarchTeamCalendarHoliday] = [], weekendDays: Set<Int>? = nil, today: Date = Date(), calendar: Calendar = .current, isLoading: Bool = false, errorMessage: String? = nil, showsLegend: Bool = true, labels: MonarchTeamCalendarLabels = MonarchTeamCalendarLabels(), onEntryTap: (@MainActor (MonarchTeamCalendarEntry, MonarchTeamCalendarMember) -> Void)? = nil, onCellTap: (@MainActor (MonarchTeamCalendarMember, Date) -> Void)? = nil)",
+    "MonarchTeamCalendarMember.init(_ name: String, id: String, url: URL? = nil, description: String? = nil)",
+    "MonarchTeamCalendarMember.init(_ name: String, id: String, image: Image?, description: String? = nil)",
+    "MonarchTeamCalendarEntry.init(_ label: String, id: String, memberID: String, start: Date, end: Date? = nil, color: Color? = nil, portion: MonarchTeamCalendarPortion = .full, portions: [Date: MonarchTeamCalendarPortion] = [:], isPending: Bool = false)",
+    "MonarchTeamCalendarHoliday.init(_ name: String, date: Date)",
+    "enum MonarchTeamCalendarPortion { case full, firstHalf, secondHalf }",
+    "MonarchTeamCalendarLabels.init(person: String? = nil, grid: (@Sendable (String) -> String)? = nil, today: String? = nil, holiday: (@Sendable (String) -> String)? = nil, range: (@Sendable (String, String) -> String)? = nil, firstHalf: String? = nil, secondHalf: String? = nil, pending: String? = nil, emptyTitle: String? = nil, emptyMessage: String? = nil, legend: String? = nil, loading: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "members",
+      "type": "[MonarchTeamCalendarMember]",
+      "default": "required",
+      "description": "The rows in display order, each with an id, a name, an optional photo (Image or URL) and an optional second line."
+    },
+    {
+      "name": "entries",
+      "type": "[MonarchTeamCalendarEntry]",
+      "default": "required",
+      "description": "The absences, each with a member id, a first and last day, a label, a colour, a portion, per-day portions and isPending. Days outside the range are left out; entries of unknown members are ignored."
+    },
+    {
+      "name": "month",
+      "type": "Date?",
+      "default": "nil",
+      "description": "Any day of the month shown. nil is the month of today. Ignored when from and to are both set."
+    },
+    {
+      "name": "from",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The first day of a custom range, used with to."
+    },
+    {
+      "name": "to",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The last day of a custom range, inclusive. A day before from gives one day; at most 366 days are shown."
+    },
+    {
+      "name": "holidays",
+      "type": "[MonarchTeamCalendarHoliday]",
+      "default": "[]",
+      "description": "Non-working days for everyone: shaded, named in what VoiceOver reads for the day, and shown in a popover when the day's header is tapped."
+    },
+    {
+      "name": "weekendDays",
+      "type": "Set<Int>?",
+      "default": "nil",
+      "description": "The shaded days of the week as Calendar weekday numbers, 1 for Sunday to 7 for Saturday. nil uses the calendar's own weekend (Calendar.isDateInWeekend)."
+    },
+    {
+      "name": "today",
+      "type": "Date",
+      "default": "Date()",
+      "description": "Today's date: ringed in the header, read as Today, and where the days start scrolled to. Pass a fixed date in tests and previews."
+    },
+    {
+      "name": "calendar",
+      "type": "Calendar",
+      "default": ".current",
+      "description": "The calendar and time zone days are read and named in. The locale for names comes from the environment."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows MonarchLoadingState with placeholder rows, named \"Loading team calendar\", instead of the grid."
+    },
+    {
+      "name": "errorMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Shows this message in a danger MonarchBanner instead of the grid, and announces it."
+    },
+    {
+      "name": "showsLegend",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the line under the grid that explains shading, half bars and faded bars."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchTeamCalendarLabels",
+      "default": "MonarchTeamCalendarLabels()",
+      "description": "Replacements for \"Person\", the grid name, \"Today\", the holiday and range phrases, \"first half\", \"second half\", \"pending\", the empty state, the legend and the loading name."
+    },
+    {
+      "name": "onEntryTap",
+      "type": "(@MainActor (MonarchTeamCalendarEntry, MonarchTeamCalendarMember) -> Void)?",
+      "default": "nil",
+      "description": "Called when a bar is tapped. Without it a tap on a bar shows its label, person and days in a popover."
+    },
+    {
+      "name": "onCellTap",
+      "type": "(@MainActor (MonarchTeamCalendarMember, Date) -> Void)?",
+      "default": "nil",
+      "description": "Called with the member and the start of the day when an empty day is tapped, for example to add time away. Without it empty days take no taps and are not VoiceOver elements."
+    }
+  ],
+  "states": [
+    {
+      "name": "bars",
+      "description": "Consecutive whole days of one entry are one bar with the label inside, a solid leading stripe in the entry colour and a light tint of it; a bar cut by the range has no rounded corner and no stripe on that side."
+    },
+    {
+      "name": "half day",
+      "description": "A half bar at the leading side (first half) or the trailing side (second half) of the day, without a label; the whole day is still the touch target."
+    },
+    {
+      "name": "pending",
+      "description": "A faded bar, and \"pending\" in what VoiceOver reads."
+    },
+    {
+      "name": "weekend and holiday",
+      "description": "The day's column is shaded in the muted fill; a holiday's header is a button that shows its name in a popover, and the name is read with the day."
+    },
+    {
+      "name": "today",
+      "description": "The day number is bold in the strong accent inside an accent ring, \"Today\" is read with it, and the days start scrolled to the day before today."
+    },
+    {
+      "name": "loading",
+      "description": "MonarchLoadingState with placeholder rows instead of the grid."
+    },
+    {
+      "name": "error",
+      "description": "A danger MonarchBanner with the message instead of the grid."
+    },
+    {
+      "name": "empty",
+      "description": "MonarchEmptyState \"Nobody to show\" when there are no members."
+    }
+  ],
+  "appearance": "The grid sits on the surface colour inside a default border with large corners; rows are separated by subtle lines, and the header and the people column by default ones. Weekend and holiday columns use the muted fill. Bars lay the entry colour (the solid accent by default) over the surface colour with a solid stripe at the start; labels keep the default text colour, and day letters and descriptions the muted text colour. Dark and high-contrast themes use their own surface, text, border and accent roles.",
+  "platformNotes": "The web TeamCalendar is a table of square day cells with the label in a hover title and a roving tab stop moved with arrow, Home, End and Page keys. On iOS the people column stays fixed, the day header stays pinned while rows scroll, and the days are fitted beside the people column as on the web (14 days of November on a phone); only a range too long for the smallest readable day width scrolls sideways in one horizontal ScrollView, opening at the day before today. Consecutive days of an entry are one spanning bar, one VoiceOver element and one target, so onEntryTap passes the entry and member but not the day (the web passes the day too). The hover title and Android's long-press tooltip become a tap: without onEntryTap a bar is a button that shows its details in a popover, and a holiday's header shows its name the same way; iOS has no touch tooltip (see tooltip). Pending entries are faded, as on the web. Days are Date values read in the calendar's time zone, as in MonarchAgendaList, instead of ISO strings (web) or UTC milliseconds (Android); weekendDays use Calendar weekday numbers, the same numbers as Android's Calendar constants, and default to the calendar's weekend instead of a fixed Saturday and Sunday. errorMessage is a String, not a node. Android's empty slot is not offered: an app that needs its own empty state checks members.isEmpty. The accent tone is used through the accent roles directly, because MonarchTone has no accent case. Hardware keyboard navigation uses the system focus between buttons, not the web's key map. Marked experimental as a domain composite until a Rook app adopts it. Several closures are optional (onEntryTap, onCellTap). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onEntryTap.",
+  "accessibility": [
+    "The people column's header is one heading element named for the grid, \"Team calendar, November 2026\" (or the custom range).",
+    "Each person is one heading element, \"Alex Kim, Design\", so the headings rotor moves from person to person.",
+    "Each day header is one element read as its full date, with \"Today\" before today's and \"Holiday: name\" after a holiday's; a holiday's header is a button that shows the name.",
+    "Each bar is one button read as \"Annual leave, Alex Kim, Monday, November 2 to Thursday, November 5\", with \"first half\" or \"second half\" for a half day and \"pending\" for a pending entry.",
+    "With onCellTap each empty day is a button read as \"Sam Lee, Wednesday, November 4\"; without it empty days are not elements.",
+    "Days are at least 44 points wide and rows at least 44 points tall, and both scale with Dynamic Type, so bars, half-day bars and empty days have 44-point targets.",
+    "Half days, pending entries, today and holidays are drawn with shape (half bar, outline, ring, shading) and said in words, not shown by colour alone.",
+    "Names and descriptions wrap at the largest text sizes and the row grows to fit; the people column takes at most 40 percent of the width.",
+    "The error message is posted as a VoiceOver announcement when it appears; the loading placeholder is named \"Loading team calendar\".",
+    "VoiceOver reads the people column first, then the day headers, then the bars row by row; every bar names its person, so it is understood out of row order.",
+    "Right to left, the people column is on the right, earlier days are further right, and half bars and rounded corners are mirrored."
+  ],
+  "edgeCases": [
+    "Give the calendar a height, as for a List; inside another vertical scroll view it needs .frame(height:).",
+    "One entry per person per day: when two entries cover the same day, the later one in entries is shown, as on the web.",
+    "An end before the start is treated as the start; an entry for an unknown member id is ignored.",
+    "A one-day or half-day bar has no visible label; it is read by VoiceOver and shown in the popover (or the app's screen after onEntryTap).",
+    "Very long labels are cut with an ellipsis inside their bar; the full label is read and shown in the popover.",
+    "A custom range is capped at 366 days. Every day is a view, so very long ranges with many members cost more to lay out.",
+    "today defaults to now; pass a fixed date for previews and tests.",
+    "Bar colours are the app's: the fill is a tint of the colour over the surface and the label keeps the default text colour, so any colour stays readable."
+  ],
+  "tests": [
+    "MonarchTeamCalendarTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Month with a toolbar",
+      "fixture": "team-calendar",
+      "webExample": "Month with a toolbar",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n    MonarchCalendarToolbar(\n        {{title}},\n        view: $view,\n        views: [.month],\n        labels: MonarchCalendarToolbarLabels(today: {{todayLabel}}),\n        onToday: {},\n        onPrevious: {},\n        onNext: {}\n    )\n    MonarchTeamCalendar(\n        members: [\n            MonarchTeamCalendarMember({{members.0.name}}, id: {{members.0.id}}, description: {{members.0.description}}),\n            MonarchTeamCalendarMember({{members.1.name}}, id: {{members.1.id}}, description: {{members.1.description}}),\n            MonarchTeamCalendarMember({{members.2.name}}, id: {{members.2.id}}, description: {{members.2.description}}),\n            MonarchTeamCalendarMember({{members.3.name}}, id: {{members.3.id}}, description: {{members.3.description}}),\n        ],\n        entries: [\n            MonarchTeamCalendarEntry({{entries.0.label}}, id: \"1\", memberID: {{entries.0.memberId}}, start: {{entries.0.start|date}}, end: {{entries.0.end|date}}, color: hex({{entries.0.color}})),\n            MonarchTeamCalendarEntry({{entries.1.label}}, id: \"2\", memberID: {{entries.1.memberId}}, start: {{entries.1.start|date}}, color: hex({{entries.1.color}}), portion: {{entries.1.portion|case}}),\n            MonarchTeamCalendarEntry({{entries.2.label}}, id: \"3\", memberID: {{entries.2.memberId}}, start: {{entries.2.start|date}}, end: {{entries.2.end|date}}, color: hex({{entries.2.color}}), isPending: {{entries.2.pending}}),\n            MonarchTeamCalendarEntry({{entries.3.label}}, id: \"4\", memberID: {{entries.3.memberId}}, start: {{entries.3.start|date}}, end: {{entries.3.end|date}}),\n        ],\n        month: {{month|date}},\n        holidays: [MonarchTeamCalendarHoliday({{holidays.0.name}}, date: {{holidays.0.date|date}})],\n        today: {{today|date}},\n        calendar: calendar\n    )\n    .environment(\\.locale, Locale(identifier: {{locale}}))\n}",
+      "setupTemplate": "@State private var view = MonarchCalendarToolbarView.month\nprivate var calendar: Calendar {\n    var calendar = Calendar(identifier: .gregorian)\n    calendar.timeZone = TimeZone(identifier: \"UTC\") ?? .gmt\n    calendar.firstWeekday = 2\n    return calendar\n}\nprivate func hex(_ value: String) -> Color {\n    let number = UInt32(value.drop(while: { $0 == \"#\" }), radix: 16) ?? 0\n    return Color(\n        red: Double((number >> 16) & 0xFF) / 255,\n        green: Double((number >> 8) & 0xFF) / 255,\n        blue: Double(number & 0xFF) / 255\n    )\n}",
+      "setup": "@State private var view = MonarchCalendarToolbarView.month\nprivate var calendar: Calendar {\n    var calendar = Calendar(identifier: .gregorian)\n    calendar.timeZone = TimeZone(identifier: \"UTC\") ?? .gmt\n    calendar.firstWeekday = 2\n    return calendar\n}\nprivate func hex(_ value: String) -> Color {\n    let number = UInt32(value.drop(while: { $0 == \"#\" }), radix: 16) ?? 0\n    return Color(\n        red: Double((number >> 16) & 0xFF) / 255,\n        green: Double((number >> 8) & 0xFF) / 255,\n        blue: Double(number & 0xFF) / 255\n    )\n}",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n    MonarchCalendarToolbar(\n        \"November 2026\",\n        view: $view,\n        views: [.month],\n        labels: MonarchCalendarToolbarLabels(today: \"Today\"),\n        onToday: {},\n        onPrevious: {},\n        onNext: {}\n    )\n    MonarchTeamCalendar(\n        members: [\n            MonarchTeamCalendarMember(\"Alex Kim\", id: \"a\", description: \"Design\"),\n            MonarchTeamCalendarMember(\"Sam Lee\", id: \"b\", description: \"Engineering\"),\n            MonarchTeamCalendarMember(\"Priya Nair\", id: \"c\", description: \"Engineering\"),\n            MonarchTeamCalendarMember(\"Jordan Park\", id: \"d\", description: \"Support\"),\n        ],\n        entries: [\n            MonarchTeamCalendarEntry(\"Annual leave\", id: \"1\", memberID: \"a\", start: Date(timeIntervalSince1970: 1_794_182_400), end: Date(timeIntervalSince1970: 1_794_528_000), color: hex(\"#2f7d6d\")),\n            MonarchTeamCalendarEntry(\"Sick leave\", id: \"2\", memberID: \"b\", start: Date(timeIntervalSince1970: 1_793_750_400), color: hex(\"#b54a3a\"), portion: .firstHalf),\n            MonarchTeamCalendarEntry(\"Annual leave\", id: \"3\", memberID: \"c\", start: Date(timeIntervalSince1970: 1_794_960_000), end: Date(timeIntervalSince1970: 1_795_132_800), color: hex(\"#2f7d6d\"), isPending: true),\n            MonarchTeamCalendarEntry(\"Away\", id: \"4\", memberID: \"d\", start: Date(timeIntervalSince1970: 1_795_564_800), end: Date(timeIntervalSince1970: 1_795_651_200)),\n        ],\n        month: Date(timeIntervalSince1970: 1_793_491_200),\n        holidays: [MonarchTeamCalendarHoliday(\"Company holiday\", date: Date(timeIntervalSince1970: 1_794_355_200))],\n        today: Date(timeIntervalSince1970: 1_793_750_400),\n        calendar: calendar\n    )\n    .environment(\\.locale, Locale(identifier: \"en-GB\"))\n}"
+    },
+    {
+      "title": "A two-week range, read only",
+      "setup": "@Environment(\\.monarchTheme) private var theme\nprivate let start = Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 2)) ?? Date()",
+      "code": "MonarchTeamCalendar(\n    members: [MonarchTeamCalendarMember(\"Priya Nair\", id: \"a\")],\n    entries: [\n        MonarchTeamCalendarEntry(\n            \"Conference\",\n            id: \"1\",\n            memberID: \"a\",\n            start: start.addingTimeInterval(3 * 86_400),\n            end: start.addingTimeInterval(5 * 86_400)\n        )\n    ],\n    from: start,\n    to: start.addingTimeInterval(13 * 86_400),\n    today: start,\n    showsLegend: false\n)\n.frame(height: theme.spacing.space24 * 2)"
+    }
+  ],
+  "webEquivalent": "TeamCalendar",
+  "dependsOn": [
+    "avatar",
+    "calendar-toolbar",
+    "tooltip",
+    "empty-state",
+    "alert",
+    "loading-state"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "today-marker",
+      "platform": "ios",
+      "reason": "The web header sets the weekday letter under the day number and marks today with a red letter. The phone adds a ring around today's number so it is also visible without colour at 400 pt; members, entries and bars are the same.",
+      "convention": "HIG: Calendars, today marker at small sizes"
+    }
+  ]
+}

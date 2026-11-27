@@ -1,0 +1,221 @@
+{
+  "id": "virtual-message-list",
+  "name": "MonarchVirtualMessageList",
+  "title": "VirtualMessageList",
+  "family": "collaboration",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "ScrollView with LazyVStack and .defaultScrollAnchor(.bottom), ScrollViewReader.scrollTo for Jump to latest and deep links, MonarchLoadMore with autoLoads at the top",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A conversation's messages pinned to the newest at the bottom, with day separators, a New messages divider, grouping of consecutive messages, Load older at the top and Jump to latest.",
+  "whenToUse": "The message area of a chat channel, a direct conversation, a thread or a support conversation, with MonarchMessageRow rows and a MonarchMessageComposer under it.",
+  "whenNotToUse": "For a top-to-bottom feed that grows downwards use a List with MonarchLoadMore (see virtual-list). For one discussion anchored to an item use MonarchCommentThread. For a log of system lines use MonarchLogViewer.",
+  "api": [
+    "init(_ items: [Item], firstUnreadID: Item.ID? = nil, highlightedID: Item.ID? = nil, scrollToID: Item.ID? = nil, hasOlder: Bool = false, isLoadingOlder: Bool = false, isOlderFailed: Bool = false, isLoading: Bool = false, errorMessage: String? = nil, groupWindow: TimeInterval = 300, now: Date? = nil, stickToBottom: Bool = true, showsJumpToLatest: Bool = true, labels: MonarchVirtualMessageListLabels = MonarchVirtualMessageListLabels(), onLoadOlder: (@MainActor () -> Void)? = nil, onRetry: (@MainActor () -> Void)? = nil, onAtBottomChange: (@MainActor (Bool) -> Void)? = nil, @ViewBuilder header: () -> Header, @ViewBuilder footer: () -> Footer, @ViewBuilder row: @escaping (Item, MonarchVirtualMessageListContext<Item>) -> Row)",
+    "init(_ items: [Item], …, onAtBottomChange: (@MainActor (Bool) -> Void)? = nil, @ViewBuilder row: @escaping (Item, MonarchVirtualMessageListContext<Item>) -> Row) where Header == EmptyView, Footer == EmptyView",
+    "protocol MonarchVirtualMessageListItem: Identifiable { var time: Date { get }; var authorID: String? { get } }  // authorID defaults to nil",
+    "struct MonarchVirtualMessageListContext<Item> { let isGrouped: Bool; let index: Int; let previous: Item?; let isHighlighted: Bool }",
+    "struct MonarchVirtualMessageListLabels: Sendable { init(list:newMessages:today:yesterday:jumpToLatest:unseen:arrived:loadOlder:loadingOlder:olderFailed:loading:), every parameter optional }"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "[Item]",
+      "default": "required",
+      "description": "The messages, oldest first, of a type that conforms to MonarchVirtualMessageListItem."
+    },
+    {
+      "name": "firstUnreadID",
+      "type": "Item.ID?",
+      "default": "nil",
+      "description": "Puts a New messages divider above this message; it also breaks a group."
+    },
+    {
+      "name": "highlightedID",
+      "type": "Item.ID?",
+      "default": "nil",
+      "description": "Passed to the row as context.isHighlighted, for MonarchMessageRow's isHighlighted."
+    },
+    {
+      "name": "scrollToID",
+      "type": "Item.ID?",
+      "default": "nil",
+      "description": "Scrolls this message to the middle once it is in items, for links to a message."
+    },
+    {
+      "name": "hasOlder",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether older history exists. While true the header is not shown and the load row is."
+    },
+    {
+      "name": "isLoadingOlder",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the load row as busy."
+    },
+    {
+      "name": "isOlderFailed",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the failure with a retry and pauses auto-loading."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows redacted placeholder rows while items is empty."
+    },
+    {
+      "name": "errorMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Shows MonarchErrorState with this title while items is empty."
+    },
+    {
+      "name": "groupWindow",
+      "type": "TimeInterval",
+      "default": "300",
+      "description": "Seconds within which consecutive messages by one author are grouped."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "Fixes \"now\" for Today and Yesterday. The clock by default."
+    },
+    {
+      "name": "stickToBottom",
+      "type": "Bool",
+      "default": "true",
+      "description": "Follows new messages while the reader is at the newest one."
+    },
+    {
+      "name": "showsJumpToLatest",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the Jump button while scrolled up."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchVirtualMessageListLabels",
+      "default": "MonarchVirtualMessageListLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onLoadOlder",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Loads the previous page when the top comes into view or the button is pressed; prepend the result to items."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds a retry to the first-load failure."
+    },
+    {
+      "name": "onAtBottomChange",
+      "type": "(@MainActor (Bool) -> Void)?",
+      "default": "nil",
+      "description": "Called when the reader reaches or leaves the newest message, for example to mark the conversation read."
+    },
+    {
+      "name": "header",
+      "type": "@ViewBuilder () -> Header",
+      "default": "EmptyView",
+      "description": "Above the first message once all history is loaded, such as the conversation intro; shown alone while empty."
+    },
+    {
+      "name": "footer",
+      "type": "@ViewBuilder () -> Footer",
+      "default": "EmptyView",
+      "description": "Under the last message, such as MonarchTypingIndicator or a read receipt."
+    },
+    {
+      "name": "row",
+      "type": "@ViewBuilder (Item, MonarchVirtualMessageListContext<Item>) -> Row",
+      "default": "required",
+      "description": "Builds one message's row, usually MonarchMessageRow with isGrouped: context.isGrouped."
+    }
+  ],
+  "states": [
+    {
+      "name": "at the newest message",
+      "description": "New messages scroll into view as they arrive (with the theme's motion, or at once under Reduce Motion) and are announced."
+    },
+    {
+      "name": "scrolled up",
+      "description": "A secondary Jump to latest button shows at the bottom trailing corner; new messages keep the view still and the button reads \"3 new messages\"."
+    },
+    {
+      "name": "older history",
+      "description": "MonarchLoadMore at the top loads older messages when it comes into view, shows Loading older messages… and, on failure, a retry."
+    },
+    {
+      "name": "all history loaded",
+      "description": "The header is shown above the first message."
+    },
+    {
+      "name": "first load",
+      "description": "Redacted placeholder message rows, read as Loading messages."
+    },
+    {
+      "name": "first load failed",
+      "description": "MonarchErrorState with the message and a retry."
+    },
+    {
+      "name": "empty",
+      "description": "Only the header."
+    }
+  ],
+  "appearance": "Rows are the app's (usually MonarchMessageRow). Day separators are caption text in the muted text colour between subtle border lines; the New messages divider uses the accent strong colour for text and the accent border colour for its lines, because Monarch has no accent tone. The Jump button is a small secondary MonarchButton.",
+  "platformNotes": "The web list virtualises with measured row heights, an overscan and an imperative handle (scrollToBottom, scrollToItem); on iOS LazyVStack builds only nearby rows and defaultScrollAnchor(.bottom) keeps the view still when older messages are prepended, so there is no estimated height, overscan or initial render count, and scrolling to a message uses scrollToID. The web announces arrivals through a live region; iOS posts an announcement. The web refreshes Today and Yesterday on a timer; iOS recomputes them when the list redraws, or pass now. The web takes locale and time zone props; iOS reads locale and calendar (with its time zone) from the environment. Android has no message list yet.",
+  "accessibility": [
+    "The list is a container named Messages.",
+    "Day separators and the New messages divider are headers, so the VoiceOver headings rotor moves between days.",
+    "Arriving messages are announced as \"2 new messages\"; scrolling older messages into view is silent.",
+    "The Jump button is a standard button of at least 44 points whose title includes the unseen count.",
+    "Placeholder rows are one element read as Loading messages.",
+    "Scrolling to the newest message is not animated when Reduce Motion is on."
+  ],
+  "edgeCases": [
+    "A message with no authorID, or sent before the previous one, never groups.",
+    "Replacing items with a different conversation is not counted as arrivals.",
+    "An unknown firstUnreadID shows no divider; an unknown scrollToID does nothing until that message is loaded.",
+    "If the whole list fits on screen, the top load row is visible and keeps loading pages until hasOlder is false.",
+    "Whether the reader is at the bottom is decided by the bottom marker being built by the lazy stack, so it turns true slightly before the very end."
+  ],
+  "tests": [
+    "MonarchVirtualMessageListTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "2,000-message history",
+      "fixture": "virtual-message-list",
+      "webExample": "2,000-message history",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n    HStack(spacing: MonarchTokens.Space.space2) {\n        MonarchButton({{receive}}, variant: .secondary, size: .sm) {\n            messages.append(Self.message(messages.count + {{history.from}}))\n        }\n        MonarchButton({{goTo.label}}, variant: .ghost, size: .sm) { scrollTo = {{goTo.id}} }\n    }\n    MonarchVirtualMessageList(\n        messages,\n        firstUnreadID: {{firstUnreadId}},\n        scrollToID: scrollTo,\n        hasOlder: true,\n        now: Self.now,\n        onLoadOlder: {},\n        row: { message, context in\n            MonarchMessageRow(\n                MonarchMessageRowAuthor(message.authorID ?? \"\"),\n                time: message.time,\n                now: Self.now,\n                isGrouped: context.isGrouped\n            ) {\n                Text(message.text)\n            }\n        }\n    )\n    .frame(height: 720)\n}\n.environment(\\.locale, Locale(identifier: {{locale}}))",
+      "setupTemplate": "struct ChatMessage: MonarchVirtualMessageListItem {\n    let id: String\n    let time: Date\n    let authorID: String?\n    let text: String\n}\nprivate static let now = Date(timeIntervalSinceReferenceDate: 800_000_000)\nprivate static let people = [{{people.0}}, {{people.1}}, {{people.2}}]\nprivate static let lines = [{{lines.0}}, {{lines.1}}, {{lines.2}}, {{lines.3}}, {{lines.4}}, {{lines.5}}]\nprivate static func message(_ n: Int) -> ChatMessage {\n    ChatMessage(\n        id: \"msg-\\(n)\",\n        time: now.addingTimeInterval(TimeInterval(n - ({{history.from}} + {{history.count}})) * 420),\n        authorID: people[(n / 3) % people.count],\n        text: \"\\(lines[n % lines.count]) (#\\(n + 1))\"\n    )\n}\n@State private var messages = ({{history.from}}..<({{history.from}} + {{history.count}})).map { Self.message($0) }\n@State private var scrollTo: String?",
+      "setup": "struct ChatMessage: MonarchVirtualMessageListItem {\n    let id: String\n    let time: Date\n    let authorID: String?\n    let text: String\n}\nprivate static let now = Date(timeIntervalSinceReferenceDate: 800_000_000)\nprivate static let people = [\"Alex Morgan\", \"Sam Lee\", \"Riley Chen\"]\nprivate static let lines = [\"Morning! Is the release still on for Thursday?\", \"Yes, the checklist is nearly done.\", \"I will update the notes after lunch.\", \"Can someone review the new onboarding copy?\", \"Looks good to me.\", \"Shipping the fix now.\"]\nprivate static func message(_ n: Int) -> ChatMessage {\n    ChatMessage(\n        id: \"msg-\\(n)\",\n        time: now.addingTimeInterval(TimeInterval(n - (1500 + 500)) * 420),\n        authorID: people[(n / 3) % people.count],\n        text: \"\\(lines[n % lines.count]) (#\\(n + 1))\"\n    )\n}\n@State private var messages = (1500..<(1500 + 500)).map { Self.message($0) }\n@State private var scrollTo: String?",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n    HStack(spacing: MonarchTokens.Space.space2) {\n        MonarchButton(\"Receive a message\", variant: .secondary, size: .sm) {\n            messages.append(Self.message(messages.count + 1500))\n        }\n        MonarchButton(\"Go to message 1601\", variant: .ghost, size: .sm) { scrollTo = \"msg-1600\" }\n    }\n    MonarchVirtualMessageList(\n        messages,\n        firstUnreadID: \"msg-1995\",\n        scrollToID: scrollTo,\n        hasOlder: true,\n        now: Self.now,\n        onLoadOlder: {},\n        row: { message, context in\n            MonarchMessageRow(\n                MonarchMessageRowAuthor(message.authorID ?? \"\"),\n                time: message.time,\n                now: Self.now,\n                isGrouped: context.isGrouped\n            ) {\n                Text(message.text)\n            }\n        }\n    )\n    .frame(height: 720)\n}\n.environment(\\.locale, Locale(identifier: \"en-GB\"))"
+    },
+    {
+      "title": "An empty conversation shows its header",
+      "setup": "struct ChatMessage: MonarchVirtualMessageListItem {\n    let id: Int\n    let time: Date\n    let authorID: String?\n    let text: String\n}\nprivate let now = Date(timeIntervalSinceReferenceDate: 800_000_000)\n@State private var messages: [ChatMessage] = (0..<12).map { (index: Int) -> ChatMessage in\n    ChatMessage(\n        id: index,\n        time: Date(timeIntervalSinceReferenceDate: 800_000_000).addingTimeInterval(TimeInterval((index - 12) * 120)),\n        authorID: index % 3 == 0 ? \"ben\" : \"ana\",\n        text: \"Message \\(index)\"\n    )\n}",
+      "code": "MonarchVirtualMessageList(\n    [ChatMessage](),\n    header: { Text(\"This is the start of your conversation with Ben.\").padding() },\n    footer: { EmptyView() },\n    row: { message, _ in Text(message.text) }\n)\n.frame(height: 240)"
+    }
+  ],
+  "webEquivalent": "VirtualMessageList",
+  "dependsOn": [
+    "message-row",
+    "load-more",
+    "button",
+    "error-state",
+    "skeleton"
+  ]
+}

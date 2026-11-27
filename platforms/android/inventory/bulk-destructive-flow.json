@@ -1,0 +1,81 @@
+{
+  "id": "bulk-destructive-flow",
+  "name": null,
+  "title": "BulkDestructiveFlow",
+  "family": "data-grid",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet with androidx.compose.material3.rememberModalBottomSheetState",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: \"Delete 37 leads\" confirms a bulk deletion with a sample and its consequences, asks for the count to be typed, runs it with a progress bar while the sheet is locked, then reports the items that failed.",
+  "whenToUse": "When a bulk action deletes or changes many records at once and cannot be undone: delete selected leads, remove members, purge files.",
+  "whenNotToUse": "For one item, use a confirm dialog. For an action that can be undone, run it at once and offer Undo in a snackbar. For a reversible archive, use MonarchBulkActionBar alone.",
+  "api": [
+    "@Composable fun MonarchBottomSheet(onDismissRequest: () -> Unit, modifier: Modifier = Modifier, title: String? = null, description: String? = null, dismissible: Boolean = true, showHandle: Boolean = true, fullyExpanded: Boolean = true, fullWidthContent: Boolean = false, content: @Composable MonarchBottomSheetScope.() -> Unit)",
+    "@Composable fun MonarchConsequenceList(items: List<MonarchConsequence>, modifier: Modifier = Modifier, …, heading: String? = null, …)",
+    "@Composable fun MonarchTypeToConfirmInput(phrase: String, value: String, onValueChange: (String) -> Unit, modifier: Modifier = Modifier, label: String? = null, …)",
+    "fun MonarchTypeToConfirmInputDefaults.matches(text: String, phrase: String): Boolean",
+    "@Composable fun MonarchProgress(modifier: Modifier = Modifier, progress: Float? = null, variant: MonarchProgressVariant = MonarchProgressVariant.Linear, label: String? = null)",
+    "@Composable fun MonarchBanner(message: String, modifier: Modifier = Modifier, tone: MonarchTone = MonarchTone.Info, title: String? = null, …, announcement: MonarchBannerAnnouncement = MonarchBannerAnnouncement.None)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "confirm",
+      "description": "The title with the count, a sample of three names and \"+34 more\", the consequences, a field asking for the count, and a danger button disabled until the count matches."
+    },
+    {
+      "name": "running",
+      "description": "A linear MonarchProgress with \"12 of 37 deleted\"; the sheet cannot be swiped or dismissed."
+    },
+    {
+      "name": "done",
+      "description": "A success banner when every item was deleted, announced politely."
+    },
+    {
+      "name": "partial",
+      "description": "A warning banner with \"36 of 37 leads deleted\" and the items that failed; the app can offer a retry for those items."
+    }
+  ],
+  "appearance": "A Material 3 bottom sheet in the colors Monarch maps to the scheme, holding Monarch parts: a heading, body text, MonarchConsequenceList, MonarchTypeToConfirmInput, a danger MonarchButton, a linear MonarchProgress and a success or warning MonarchBanner. The same roles in every theme, including both high-contrast themes.",
+  "platformNotes": "The web BulkDestructiveFlow is a component built on WizardDialog with plural rules, a typeCountAbove threshold, an optional step-up authentication and a retry step. On Android it composes existing parts in a MonarchBottomSheet, so the app decides the threshold for typing the count, writes plural forms with plurals resources, and runs re-authentication (for example BiometricPrompt, which needs androidx.biometric in the app) before the deletion. The web's progress callback is the app's own loop updating a counter. The sheet is locked with dismissible = false while it runs. iOS uses the same recipe with a sheet.",
+  "accessibility": [
+    "The title is a heading; MonarchConsequenceList reads each consequence with its kind.",
+    "MonarchTypeToConfirmInput announces when the typed count matches, and the delete button stays disabled until it does.",
+    "MonarchProgress exposes its range and value, so TalkBack can follow \"12 of 37 deleted\".",
+    "The result banner is a polite live region, so the result is announced when the run ends without moving focus."
+  ],
+  "edgeCases": [
+    "Lock the sheet with dismissible = false while the deletion runs, so it cannot be dismissed half way.",
+    "Keep the failed items selected after Done so the person can retry or inspect them.",
+    "If nothing could be deleted (the request failed), show the error in the confirm phase and keep the typed count."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Many items: type the count, then watch it run",
+      "fixture": "bulk-destructive-flow",
+      "webExample": "Many items: type the count, then watch it run",
+      "template": "if (open) {\n    // While the contacts are deleted, a swipe, back or a tap outside does not close the sheet.\n    MonarchBottomSheet(onDismissRequest = { open = false }, dismissible = !running) {\n        Column(\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            when {\n                finished -> {\n                    MonarchBanner(\n                        title = \"${count - failed.size} of $count $noun deleted\",\n                        message = if (failed.isEmpty()) \"Every contact was deleted.\" else \"Not deleted: ${failed.joinToString()}\",\n                        tone = if (failed.isEmpty()) MonarchTone.Success else MonarchTone.Warning,\n                        announcement = MonarchBannerAnnouncement.Polite,\n                    )\n                    MonarchButton(\n                        text = \"Done\",\n                        onClick = { open = false },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Primary,\n                    )\n                }\n                running -> MonarchProgress(progress = done / count.toFloat(), label = \"$done of $count deleted\")\n                else -> {\n                    MonarchText(text = {{trigger}}, style = MonarchTextStyle.Heading)\n                    MonarchText(text = \"Check before you delete\", style = MonarchTextStyle.Subheading)\n                    MonarchText(text = \"This cannot be undone.\", color = MonarchTheme.colors.textMuted)\n                    MonarchText(text = \"Selected\", style = MonarchTextStyle.Caption)\n                    sample.forEach { MonarchText(text = it, style = MonarchTextStyle.BodyStrong) }\n                    MonarchText(text = \"+${count - sample.size} more\", color = MonarchTheme.colors.textMuted)\n                    MonarchConsequenceList(\n                        items = listOf(\n                            MonarchConsequence(MonarchConsequenceKind.{{consequences.0.kind|pascal}}, {{consequences.0.label}}, count = {{consequences.0.count}}),\n                            MonarchConsequence(MonarchConsequenceKind.{{consequences.1.kind|pascal}}, {{consequences.1.label}}),\n                        ),\n                    )\n                    MonarchTypeToConfirmInput(\n                        phrase = \"$count\",\n                        value = typed,\n                        onValueChange = { typed = it },\n                        label = \"Type $count to confirm\",\n                    )\n                    MonarchButton(\n                        text = {{trigger}},\n                        onClick = { running = true },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Danger,\n                        enabled = MonarchTypeToConfirmInputDefaults.matches(typed, \"$count\"),\n                    )\n                    MonarchButton(\n                        text = \"Cancel\",\n                        onClick = { open = false },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Ghost,\n                    )\n                }\n            }\n        }\n    }\n}",
+      "setupTemplate": "val count = {{count}}\nval noun = if (count == 1) {{noun.one}} else {{noun.other}}\nval sample = listOf({{sample.0}}, {{sample.1}}, {{sample.2}})\nvar open by remember { mutableStateOf(true) }\nvar typed by remember { mutableStateOf(\"\") }\nvar running by remember { mutableStateOf(false) }\nvar finished by remember { mutableStateOf(false) }\nvar done by remember { mutableIntStateOf(0) }\nvar failed by remember { mutableStateOf(listOf<String>()) }\nLaunchedEffect(running) {\n    if (running) {\n        repeat(count) {\n            // Delete on the server here and collect the ones that fail.\n            done++\n        }\n        running = false\n        finished = true\n    }\n}",
+      "setup": "val count = 37\nval noun = if (count == 1) \"contact\" else \"contacts\"\nval sample = listOf(\"Ada Park\", \"Ben Ortiz\", \"Cleo Ngata\")\nvar open by remember { mutableStateOf(true) }\nvar typed by remember { mutableStateOf(\"\") }\nvar running by remember { mutableStateOf(false) }\nvar finished by remember { mutableStateOf(false) }\nvar done by remember { mutableIntStateOf(0) }\nvar failed by remember { mutableStateOf(listOf<String>()) }\nLaunchedEffect(running) {\n    if (running) {\n        repeat(count) {\n            // Delete on the server here and collect the ones that fail.\n            done++\n        }\n        running = false\n        finished = true\n    }\n}",
+      "code": "if (open) {\n    // While the contacts are deleted, a swipe, back or a tap outside does not close the sheet.\n    MonarchBottomSheet(onDismissRequest = { open = false }, dismissible = !running) {\n        Column(\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            when {\n                finished -> {\n                    MonarchBanner(\n                        title = \"${count - failed.size} of $count $noun deleted\",\n                        message = if (failed.isEmpty()) \"Every contact was deleted.\" else \"Not deleted: ${failed.joinToString()}\",\n                        tone = if (failed.isEmpty()) MonarchTone.Success else MonarchTone.Warning,\n                        announcement = MonarchBannerAnnouncement.Polite,\n                    )\n                    MonarchButton(\n                        text = \"Done\",\n                        onClick = { open = false },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Primary,\n                    )\n                }\n                running -> MonarchProgress(progress = done / count.toFloat(), label = \"$done of $count deleted\")\n                else -> {\n                    MonarchText(text = \"Delete 37 contacts\", style = MonarchTextStyle.Heading)\n                    MonarchText(text = \"Check before you delete\", style = MonarchTextStyle.Subheading)\n                    MonarchText(text = \"This cannot be undone.\", color = MonarchTheme.colors.textMuted)\n                    MonarchText(text = \"Selected\", style = MonarchTextStyle.Caption)\n                    sample.forEach { MonarchText(text = it, style = MonarchTextStyle.BodyStrong) }\n                    MonarchText(text = \"+${count - sample.size} more\", color = MonarchTheme.colors.textMuted)\n                    MonarchConsequenceList(\n                        items = listOf(\n                            MonarchConsequence(MonarchConsequenceKind.Removed, \"notes and activity on these contacts\", count = 214),\n                            MonarchConsequence(MonarchConsequenceKind.Kept, \"Companies they belong to stay\"),\n                        ),\n                    )\n                    MonarchTypeToConfirmInput(\n                        phrase = \"$count\",\n                        value = typed,\n                        onValueChange = { typed = it },\n                        label = \"Type $count to confirm\",\n                    )\n                    MonarchButton(\n                        text = \"Delete 37 contacts\",\n                        onClick = { running = true },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Danger,\n                        enabled = MonarchTypeToConfirmInputDefaults.matches(typed, \"$count\"),\n                    )\n                    MonarchButton(\n                        text = \"Cancel\",\n                        onClick = { open = false },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Ghost,\n                    )\n                }\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "BulkDestructiveFlow",
+  "dependsOn": [
+    "confirm-dialog",
+    "consequence-list",
+    "progress-bar",
+    "type-to-confirm-input",
+    "alert",
+    "sheet",
+    "button"
+  ]
+}

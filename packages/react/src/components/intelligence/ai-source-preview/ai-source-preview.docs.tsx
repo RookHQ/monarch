@@ -2,33 +2,22 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiSourcePreview, type AiSourcePart } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-source-preview.fixture.json';
 
-const handbook: AiSourcePart = {
-  type: 'source',
-  id: 's1',
-  title: 'Team handbook',
-  url: 'https://example.com/handbook',
-  kind: 'doc',
-  product: 'Docs',
-};
-
-const text = [
-  'Welcome to the team. This handbook explains how we work together.',
-  'Requests are answered within two working days. Urgent issues go to the on-call queue, which answers within two hours.',
-  'Every request gets an owner. The owner keeps the requester up to date until it is closed.',
-].join('\n\n');
+const handbook = fixture.data.source as AiSourcePart;
 
 function TextDemo() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   return (
     <>
       <Button variant="secondary" onClick={() => setOpen(true)}>
-        Preview source
+        {fixture.data.trigger}
       </Button>
       <AiSourcePreview
         source={handbook}
-        quote="Requests are answered within two working days."
-        content={text}
+        quote={fixture.data.quote}
+        content={fixture.data.content}
         open={open}
         onOpenChange={setOpen}
       />
@@ -178,7 +167,7 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Document text with a quote', render: () => <TextDemo /> },
+        { title: 'Document text with a quote', stage: true, render: () => <TextDemo /> },
         { title: 'Record with its own mark', render: () => <RecordDemo /> },
       ],
     },

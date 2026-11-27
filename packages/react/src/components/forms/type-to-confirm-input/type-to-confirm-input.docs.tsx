@@ -1,14 +1,11 @@
 import { useState } from 'react';
 import { Button, TypeToConfirmInput } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './type-to-confirm-input.fixture.json';
 
 function Basic() {
-  return (
-    <TypeToConfirmInput
-      phrase="acme-site"
-      description="The site, its pages and its form entries are deleted."
-    />
-  );
+  return <TypeToConfirmInput phrase={fixture.data.phrase} description={fixture.data.description} />;
 }
 
 function AfterSubmit() {

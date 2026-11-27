@@ -1,29 +1,10 @@
 import { useState } from 'react';
 import { AiStarterPrompts, type AiStarterPrompt } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-starter-prompts.fixture.json';
 
-const PROMPTS: AiStarterPrompt[] = [
-  {
-    id: 'summary',
-    title: 'Summarise a document',
-    prompt: 'Summarise the open document in five bullet points.',
-  },
-  {
-    id: 'reply',
-    title: 'Draft a reply',
-    prompt: 'Draft a short, friendly reply to the latest message.',
-  },
-  {
-    id: 'plan',
-    title: 'Plan the week',
-    prompt: 'Turn my open tasks into a plan for this week.',
-  },
-  {
-    id: 'explain',
-    title: 'Explain a chart',
-    prompt: 'Explain what the chart on this page shows and what stands out.',
-  },
-];
+const PROMPTS: AiStarterPrompt[] = fixture.data.prompts;
 
 function Demo({ layout }: { layout: 'grid' | 'list' }) {
   const [chosen, setChosen] = useState('');
@@ -121,7 +102,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Grid', stack: true, render: () => <Demo layout="grid" /> },
+        {
+          title: 'Grid',
+          stack: true,
+          render: () => <Demo layout={fixture.data.layout as 'grid' | 'list'} />,
+        },
         { title: 'List', stack: true, render: () => <Demo layout="list" /> },
         {
           title: 'Titles only, disabled',

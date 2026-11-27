@@ -1,0 +1,165 @@
+{
+  "id": "security-alert-card",
+  "name": "MonarchSecurityAlertCard",
+  "title": "SecurityAlertCard",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchCard with a VStack of alert rows, Link and Button actions, TimelineView(.everyMinute) and RelativeDateTimeFormatter for times",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Recent security alerts for an account, each with a severity badge, a relative time, an unread mark and optional follow-up, mark-as-read and dismiss actions, plus loading, empty and error states.",
+  "whenToUse": "On an account security or settings screen, to show recent sign-ins, password changes and blocked attempts.",
+  "whenNotToUse": "Not for the full activity log (use a List) and not for one urgent problem at the top of a screen (use MonarchBanner).",
+  "api": [
+    "init(_ alerts: [MonarchSecurityAlert], title: String? = nil, description: String? = nil, state: MonarchSecurityAlertCardState = .ready, isRetrying: Bool = false, now: Date? = nil, labels: MonarchSecurityAlertCardLabels = MonarchSecurityAlertCardLabels(), onAction: (@MainActor (MonarchSecurityAlert) -> Void)? = nil, onMarkRead: (@MainActor (String) -> Void)? = nil, onMarkAllRead: (@MainActor () -> Void)? = nil, onDismiss: (@MainActor (String) -> Void)? = nil, onRetry: (@MainActor () -> Void)? = nil)",
+    "struct MonarchSecurityAlert { init(id: String, title: String, description: String? = nil, severity: MonarchSecurityAlertSeverity = .info, date: Date? = nil, isRead: Bool = false, actionTitle: String? = nil, actionURL: URL? = nil) }",
+    "enum MonarchSecurityAlertSeverity: String { case info, low, medium, high, critical }",
+    "enum MonarchSecurityAlertCardState { case ready, loading, failed }",
+    "struct MonarchSecurityAlertCardLabels { init(title:description:listLabel:severity:unread:unreadCount:markRead:markAllRead:dismiss:dismissed:loading:emptyTitle:emptyDescription:errorTitle:), every parameter optional }"
+  ],
+  "options": [
+    {
+      "name": "alerts",
+      "type": "[MonarchSecurityAlert]",
+      "default": "required",
+      "description": "The alerts, newest first."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in title \"Security alerts\"."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in line under the title."
+    },
+    {
+      "name": "state",
+      "type": "MonarchSecurityAlertCardState",
+      "default": ".ready",
+      "description": "ready, loading or failed. A ready, empty list shows the empty state."
+    },
+    {
+      "name": "isRetrying",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether a retry is in progress, in the failed state."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for relative times. Without it they follow the clock and update every minute."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSecurityAlertCardLabels",
+      "default": "MonarchSecurityAlertCardLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Retries loading; shows \"Try again\" in the failed state."
+    },
+    {
+      "name": "onAction",
+      "type": "(@MainActor (MonarchSecurityAlert) -> Void)?",
+      "default": "nil",
+      "description": "Runs the follow-up of an alert that has an action title and no safe link."
+    },
+    {
+      "name": "onMarkRead",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Marks one alert read. Shows \"Mark as read\" on unread alerts."
+    },
+    {
+      "name": "onMarkAllRead",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Marks every alert read. Shows \"Mark all as read\" while any are unread."
+    },
+    {
+      "name": "onDismiss",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Dismisses an alert; remove it from alerts. Shows a dismiss button on every alert."
+    }
+  ],
+  "states": [
+    {
+      "name": "unread",
+      "description": "Bold title, an accent dot, an unread count badge in the header, and \"Unread\" read by VoiceOver."
+    },
+    {
+      "name": "loading",
+      "description": "A ProgressView with \"Loading alerts\"."
+    },
+    {
+      "name": "empty",
+      "description": "A small MonarchEmptyState: \"No security alerts\"."
+    },
+    {
+      "name": "failed",
+      "description": "A small MonarchErrorState with a retry when onRetry is given; isRetrying shows its progress."
+    }
+  ],
+  "appearance": "A MonarchCard. Severity icons use the strong role of the tone (info, warning or danger; muted text for low); badges use the tone with critical drawn solid. The unread mark uses the accent solid role. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web takes a ReactNode description, a heading level and a header link; on iOS the description is a String, the title is a header trait, and a header link can be placed beside the card. Action links are URLs opened with Link only for http, https and mailto; relative links are not opened (pass onAction instead). Dates are Date values rather than strings or numbers. The web moves keyboard focus after a dismissal; iOS moves VoiceOver focus to the next alert. The web's accent tone for the unread mark is drawn with the accent role directly, because MonarchTone has no accent case. Several closures are optional (onAction, onMarkRead, onMarkAllRead, onDismiss, onRetry). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onAction.",
+  "accessibility": [
+    "The card title is a header.",
+    "Each alert is one element: label the title, value \"Unread\" (when unread), the severity name, the time and the description, so severity and unread state never depend on colour or the icon.",
+    "Follow-up, mark-as-read and dismiss are separate buttons with 44-point touch targets.",
+    "The dismiss button is named \"Dismiss\" and the alert title.",
+    "After a dismissal VoiceOver announces \"Dismissed\" and the title and moves to the next alert, or the previous one.",
+    "Loading, empty and error states are read by the shared components."
+  ],
+  "edgeCases": [
+    "Long titles and descriptions wrap; the badge and time wrap onto a new row at large text sizes.",
+    "An alert with an unsafe action link and no onAction shows no follow-up.",
+    "An alert without a date shows no time."
+  ],
+  "tests": [
+    "MonarchSecurityAlertCardTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Mark read and dismiss",
+      "fixture": "security-alert-card",
+      "webExample": "Mark read and dismiss",
+      "template": "MonarchSecurityAlertCard(\n    alerts,\n    onAction: { _ in },\n    onMarkRead: { id in\n        if let index = alerts.firstIndex(where: { $0.id == id }) { alerts[index].isRead = true }\n    },\n    onMarkAllRead: {\n        for index in alerts.indices { alerts[index].isRead = true }\n    },\n    onDismiss: { id in alerts.removeAll { $0.id == id } }\n)",
+      "setupTemplate": "@State private var alerts = [\n    MonarchSecurityAlert(id: {{alerts.0.id}}, title: {{alerts.0.title}}, description: {{alerts.0.description}}, severity: {{alerts.0.severity|case}}, date: Date(timeIntervalSinceNow: -{{alerts.0.hoursAgo}} * 3600), actionTitle: {{alerts.0.action}}),\n    MonarchSecurityAlert(id: {{alerts.1.id}}, title: {{alerts.1.title}}, severity: {{alerts.1.severity|case}}, date: Date(timeIntervalSinceNow: -{{alerts.1.hoursAgo}} * 3600)),\n    MonarchSecurityAlert(id: {{alerts.2.id}}, title: {{alerts.2.title}}, severity: {{alerts.2.severity|case}}, date: Date(timeIntervalSinceNow: -{{alerts.2.hoursAgo}} * 3600), isRead: {{alerts.2.read}}),\n]",
+      "setup": "@State private var alerts = [\n    MonarchSecurityAlert(id: \"a-1\", title: \"New sign-in from Firefox on Linux\", description: \"Lisbon, Portugal. If this was not you, sign that session out.\", severity: .high, date: Date(timeIntervalSinceNow: -1 * 3600), actionTitle: \"Review sessions\"),\n    MonarchSecurityAlert(id: \"a-2\", title: \"Two-step verification turned on\", severity: .info, date: Date(timeIntervalSinceNow: -26 * 3600)),\n    MonarchSecurityAlert(id: \"a-3\", title: \"Password changed\", severity: .medium, date: Date(timeIntervalSinceNow: -144 * 3600), isRead: true),\n]",
+      "code": "MonarchSecurityAlertCard(\n    alerts,\n    onAction: { _ in },\n    onMarkRead: { id in\n        if let index = alerts.firstIndex(where: { $0.id == id }) { alerts[index].isRead = true }\n    },\n    onMarkAllRead: {\n        for index in alerts.indices { alerts[index].isRead = true }\n    },\n    onDismiss: { id in alerts.removeAll { $0.id == id } }\n)"
+    },
+    {
+      "title": "Loading failed",
+      "code": "MonarchSecurityAlertCard([], state: .failed, onRetry: {})"
+    }
+  ],
+  "webEquivalent": "SecurityAlertCard",
+  "dependsOn": [
+    "card",
+    "badge",
+    "relative-time",
+    "empty-state",
+    "error-state"
+  ],
+  "icons": {
+    "header": "BellGlyph",
+    "severity.high": "ErrorGlyph",
+    "severity.info": "InfoGlyph",
+    "severity.medium": "WarningGlyph",
+    "dismiss": "CloseGlyph"
+  }
+}

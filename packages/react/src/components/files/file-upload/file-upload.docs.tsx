@@ -6,6 +6,8 @@ import {
   type UploadQueueItem,
 } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './file-upload.fixture.json';
 
 const MB = 1024 * 1024;
 
@@ -39,11 +41,11 @@ function UploadWithQueue() {
   return (
     <div style={{ display: 'grid', gap: 12, width: '100%', maxWidth: 480 }}>
       <FileUpload
-        accept="image/*,application/pdf"
-        maxSize={10 * MB}
-        maxFiles={5}
+        accept={fixture.data.accept.join(',')}
+        maxSize={fixture.data.maxSize}
+        maxFiles={fixture.data.maxFiles}
         currentCount={items.filter((i) => i.status !== 'cancelled').length}
-        hint="Images or PDF, up to 10 MB each, 5 files max"
+        hint={fixture.data.hint}
         paste
         onFiles={(accepted) => {
           const added = accepted.map((f) => ({

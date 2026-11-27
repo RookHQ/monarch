@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { AttachmentChip } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './attachment-chip.fixture.json';
 
 function RemovableChips() {
-  const [files, setFiles] = useState([
-    { id: '1', name: 'meeting-notes.docx', size: 48_200 },
-    { id: '2', name: 'floor-plan.png', size: 1_240_000 },
-    { id: '3', name: 'quarterly-figures.xlsx', size: 312_000 },
-  ]);
+  const [files, setFiles] = useState(
+    fixture.data.files.map((file, i) => ({ id: String(i + 1), ...file })),
+  );
   return (
     <ul
       style={{

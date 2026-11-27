@@ -1,15 +1,13 @@
 import { useState } from 'react';
 import { AiMessageBranch } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-message-branch.fixture.json';
 
-const VERSIONS = [
-  'The quarterly plan has three goals: hire two engineers, ship the reporting module and cut support response time in half.',
-  'In short: grow the team by two, launch reporting, and halve support response time.',
-  'Three goals this quarter. 1) Two engineering hires. 2) Reporting module launch. 3) Support response time down 50%.',
-];
+const VERSIONS = fixture.data.versions;
 
 function Demo() {
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(fixture.data.index);
   return (
     <div style={{ display: 'grid', gap: 'var(--mn-space-2)', maxWidth: '32rem' }}>
       <p style={{ margin: 0 }}>{VERSIONS[index]}</p>

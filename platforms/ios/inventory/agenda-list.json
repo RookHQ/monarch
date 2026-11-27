@@ -1,0 +1,141 @@
+{
+  "id": "agenda-list",
+  "name": "MonarchAgendaList",
+  "title": "AgendaList",
+  "family": "scheduling",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "List with listStyle(.plain) and a Section per day (pinned headers), MonarchEventChip(variant: .bar) rows, MonarchEmptyState when empty",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Events grouped by day in a plain list: a heading per day with a count and a Today marker, all-day events first, multi-day events on each day they touch, and an empty state.",
+  "whenToUse": "For a list of upcoming events or bookings by day: the agenda view of a calendar, a person's schedule, the next week's appointments.",
+  "whenNotToUse": "For a month grid use MonarchMiniMonth; for a single event use MonarchEventChip. Do not put the agenda inside another ScrollView: it is a List and scrolls itself.",
+  "api": [
+    "MonarchAgendaList.init(_ events: [MonarchAgendaEvent], from: Date? = nil, days: Int? = nil, today: Date? = Date(), showsEmptyDays: Bool = false, calendar: Calendar = .current, labels: MonarchAgendaListLabels = MonarchAgendaListLabels(), dayNotes: [Date: [String]] = [:], onSelect: (@MainActor (MonarchAgendaEvent) -> Void)? = nil)",
+    "MonarchAgendaEvent.init(_ title: String, id: String, start: Date, end: Date? = nil, isAllDay: Bool = false, detail: String? = nil, color: Color? = nil, status: MonarchEventChipStatus = .confirmed)",
+    "MonarchAgendaListLabels.init(today: String? = nil, allDay: String? = nil, count: (@Sendable (Int) -> String)? = nil, emptyTitle: String? = nil, until: (@Sendable (String) -> String)? = nil, range: (@Sendable (String, String) -> String)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "events",
+      "type": "[MonarchAgendaEvent]",
+      "default": "required",
+      "description": "The events in any order. A timed event's end is exclusive; an all-day event's end is any time on its last day."
+    },
+    {
+      "name": "from",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The first day listed. By default the first day with an event. Events that started earlier and still run appear on it."
+    },
+    {
+      "name": "days",
+      "type": "Int?",
+      "default": "nil",
+      "description": "How many days from from to cover. By default through the last event."
+    },
+    {
+      "name": "today",
+      "type": "Date?",
+      "default": "Date()",
+      "description": "The day marked Today, or nil for no marker."
+    },
+    {
+      "name": "showsEmptyDays",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether days in the range without events are listed."
+    },
+    {
+      "name": "calendar",
+      "type": "Calendar",
+      "default": ".current",
+      "description": "The calendar and time zone events are grouped and formatted in. The web's timeZone."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAgendaListLabels",
+      "default": "MonarchAgendaListLabels()",
+      "description": "Replacements for \"Today\", \"All day\", the count, \"Nothing scheduled\" and the spoken \"until\" and \"to\"."
+    },
+    {
+      "name": "dayNotes",
+      "type": "[Date: [String]]",
+      "default": "[:]",
+      "description": "Informational lines shown first in a day, such as time off or a holiday, keyed by any time on that day. A day with notes is listed even without events."
+    },
+    {
+      "name": "onSelect",
+      "type": "(@MainActor (MonarchAgendaEvent) -> Void)?",
+      "default": "nil",
+      "description": "Opens an event. Without it the events are labels, not buttons."
+    }
+  ],
+  "states": [
+    {
+      "name": "days",
+      "description": "Each day has a pinned heading with the date, the Today badge when it is today, and the count; rows are bar event chips."
+    },
+    {
+      "name": "multi-day",
+      "description": "A timed event shows its start and end on its first day, \"All day\" on days it covers whole, and \"– 02:00\" on its last day."
+    },
+    {
+      "name": "notes",
+      "description": "Muted lines with an info icon before the day's events."
+    },
+    {
+      "name": "empty",
+      "description": "MonarchEmptyState with \"Nothing scheduled\" and a calendar symbol."
+    },
+    {
+      "name": "event status",
+      "description": "Tentative, cancelled and declined events use the event chip's hollow, struck-through and muted forms, and say their status."
+    }
+  ],
+  "appearance": "Day dates use the default text colour in a semibold label style, counts and notes the muted text colour, and the Today marker is an info badge. Rows are MonarchEventChip bars in the event's colour or the theme's accent. List rows have no separators or background of their own; the pinned headers use the system list header background. Light, dark and both high-contrast themes come from the roles.",
+  "platformNotes": "The web AgendaList reads ISO days in an IANA time zone, takes a renderEvent wrapper and moves focus between events with the arrow keys. On iOS events use Date and the given Calendar, the list's rows are the system's for VoiceOver and keyboard navigation, and a wrapper is not needed because the app handles onSelect (or adds swipe actions in its own List). The web's headingLevel has no meaning in SwiftUI; headings have the header trait. The web's hourCycle and locale are the environment's locale. The web's empty slot is not offered; the built-in empty state takes labels.emptyTitle. The web's accent Today marker is the info tone, because MonarchTone has no accent. Android builds the same component.",
+  "accessibility": [
+    "Each day heading is one element with the header trait, read as \"Wednesday 4 November, Today, 3 events\", so the headings rotor moves from day to day.",
+    "Each event is a MonarchEventChip read as one element: title, spoken time (\"9:30 to 10:15\", \"until 02:00\" or \"All day\"), status and detail.",
+    "With onSelect each event is a button with a touch target of at least 44 points.",
+    "Today is a word in a badge, not only a colour; statuses are spoken by the event chip.",
+    "Text scales with Dynamic Type; rows grow instead of truncating."
+  ],
+  "edgeCases": [
+    "An event that ends exactly at midnight does not appear on the next day.",
+    "An end before the start is treated as no end.",
+    "Ids must be unique; one event appears on several days with the same id, inside different sections.",
+    "Give the agenda a height (it fills its container), for example as a screen's content or with frame(height:).",
+    "Formatting and grouping use calendar.timeZone, so pass the calendar of the place the events happen when it differs from the device.",
+    "dayNotes is a dictionary rather than a closure so that a trailing closure after the events is always onSelect."
+  ],
+  "tests": [
+    "MonarchAgendaListTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Agenda",
+      "fixture": "agenda-list",
+      "webExample": "Agenda",
+      "template": "MonarchAgendaList(\n    [\n        MonarchAgendaEvent({{events.0.title}}, id: {{events.0.id}}, start: {{events.0.start|date}}, isAllDay: {{events.0.allDay}}, color: Color(red: {{events.0.color.r}} / 255.0, green: {{events.0.color.g}} / 255.0, blue: {{events.0.color.b}} / 255.0)),\n        MonarchAgendaEvent({{events.1.title}}, id: {{events.1.id}}, start: {{events.1.start|date}}, end: {{events.1.end|date}}, color: Color(red: {{events.1.color.r}} / 255.0, green: {{events.1.color.g}} / 255.0, blue: {{events.1.color.b}} / 255.0)),\n        MonarchAgendaEvent({{events.2.title}}, id: {{events.2.id}}, start: {{events.2.start|date}}, end: {{events.2.end|date}}, detail: {{events.2.detail}}, color: Color(red: {{events.2.color.r}} / 255.0, green: {{events.2.color.g}} / 255.0, blue: {{events.2.color.b}} / 255.0)),\n        MonarchAgendaEvent({{events.3.title}}, id: {{events.3.id}}, start: {{events.3.start|date}}, end: {{events.3.end|date}}, detail: {{events.3.detail}}, color: Color(red: {{events.3.color.r}} / 255.0, green: {{events.3.color.g}} / 255.0, blue: {{events.3.color.b}} / 255.0), status: {{events.3.status|case}}),\n        MonarchAgendaEvent({{events.4.title}}, id: {{events.4.id}}, start: {{events.4.start|date}}, end: {{events.4.end|date}}, color: Color(red: {{events.4.color.r}} / 255.0, green: {{events.4.color.g}} / 255.0, blue: {{events.4.color.b}} / 255.0), status: {{events.4.status|case}}),\n    ],\n    today: {{today|date}},\n    calendar: {\n        var calendar = Calendar(identifier: .gregorian)\n        calendar.timeZone = TimeZone(identifier: {{timeZone}}) ?? .gmt\n        calendar.locale = Locale(identifier: {{locale}})\n        return calendar\n    }(),\n    dayNotes: [{{dayNotes.0.day|date}}: [{{dayNotes.0.notes.0}}]]\n)\n.frame(height: 700)",
+      "code": "MonarchAgendaList(\n    [\n        MonarchAgendaEvent(\"Team offsite\", id: \"e1\", start: Date(timeIntervalSince1970: 1_793_750_400), isAllDay: true, color: Color(red: 22 / 255.0, green: 163 / 255.0, blue: 74 / 255.0)),\n        MonarchAgendaEvent(\"Stand-up\", id: \"e2\", start: Date(timeIntervalSince1970: 1_793_782_800), end: Date(timeIntervalSince1970: 1_793_783_700), color: Color(red: 15 / 255.0, green: 118 / 255.0, blue: 110 / 255.0)),\n        MonarchAgendaEvent(\"Design review\", id: \"e3\", start: Date(timeIntervalSince1970: 1_793_790_000), end: Date(timeIntervalSince1970: 1_793_793_600), detail: \"Room 4\", color: Color(red: 124 / 255.0, green: 58 / 255.0, blue: 237 / 255.0)),\n        MonarchAgendaEvent(\"Vendor call\", id: \"e4\", start: Date(timeIntervalSince1970: 1_793_887_200), end: Date(timeIntervalSince1970: 1_793_889_000), detail: \"Video call\", color: Color(red: 37 / 255.0, green: 99 / 255.0, blue: 235 / 255.0), status: .tentative),\n        MonarchAgendaEvent(\"Retrospective\", id: \"e5\", start: Date(timeIntervalSince1970: 1_793_980_800), end: Date(timeIntervalSince1970: 1_793_984_400), color: Color(red: 194 / 255.0, green: 65 / 255.0, blue: 12 / 255.0), status: .cancelled),\n    ],\n    today: Date(timeIntervalSince1970: 1_793_750_400),\n    calendar: {\n        var calendar = Calendar(identifier: .gregorian)\n        calendar.timeZone = TimeZone(identifier: \"UTC\") ?? .gmt\n        calendar.locale = Locale(identifier: \"en-GB\")\n        return calendar\n    }(),\n    dayNotes: [Date(timeIntervalSince1970: 1_793_836_800): [\"Time off · Priya\"]]\n)\n.frame(height: 700)"
+    },
+    {
+      "title": "A fixed range with empty days and notes",
+      "setup": "@Environment(\\.monarchTheme) private var theme\nprivate let start = Calendar.current.startOfDay(for: Date())",
+      "code": "MonarchAgendaList(\n    [MonarchAgendaEvent(\"Supplier call\", id: \"call\", start: start.addingTimeInterval(126_000))],\n    from: start,\n    days: 3,\n    showsEmptyDays: true,\n    dayNotes: [start: [\"Grace is on holiday\"]]\n)\n.frame(height: theme.spacing.space24 * 3)"
+    }
+  ],
+  "webEquivalent": "AgendaList",
+  "dependsOn": [
+    "event-chip",
+    "empty-state",
+    "badge"
+  ]
+}

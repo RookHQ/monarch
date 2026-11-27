@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToString } from 'react-dom/server';
@@ -234,5 +236,14 @@ describe('FormBuilder', () => {
   it('renders on the server', () => {
     const html = renderToString(<FormBuilder value={START} onChange={() => {}} />);
     expect(html).toContain('mn-form-builder');
+  });
+
+  it('lays out its columns by its own width, not the window', () => {
+    // In a 620px column on a wide window, window breakpoints gave three columns and a
+    // field list a few pixels wide (labels one letter per line).
+    const css = readFileSync(join(dirname(__filename), 'form-builder.css'), 'utf8');
+    expect(css).toMatch(/\.mn-form-builder \{[^}]*container-type: inline-size/);
+    expect(css).not.toMatch(/@media \(min-width/);
+    expect(css).toContain('@container (min-width: 72rem)');
   });
 });

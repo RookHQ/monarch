@@ -1,0 +1,99 @@
+{
+  "id": "delete-account-flow",
+  "name": null,
+  "title": "DeleteAccountFlow",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:) with a NavigationStack(path:) and navigationDestination(for:) for the steps; MonarchConsequenceList and a warning MonarchBanner for owned workspaces, MonarchDataExportRequest, a menu Picker and a vertical TextField in MonarchFormFields, MonarchTypeToConfirmInput and a danger MonarchButton, and a nested sheet with MonarchStepUpAuthDialog",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: delete the account from inside the app, through review (blocked while the person owns workspaces alone), an optional data export, an optional reason, typing the email to confirm and re-authentication.",
+  "whenToUse": "In account settings of any app that lets people sign up. App Store Review Guideline 5.1.1(v) requires that an app offering account creation also lets people start deleting their account inside the app.",
+  "whenNotToUse": "For leaving one workspace, use the leave-workspace-flow recipe. For deleting a workspace, use the delete-workspace-flow recipe. For erasing personal data on request without deleting the account, use the gdpr-erase-flow recipe.",
+  "api": [
+    ".sheet(isPresented: $isOpen) { NavigationStack(path: $path) { review.navigationDestination(for: Step.self) { … } } }",
+    "MonarchBanner(\"Transfer or delete the workspaces you own first\", message:, tone: .warning, actionTitle:, action:)",
+    "MonarchConsequenceList([MonarchConsequence(.removed, …), …], heading: \"What happens\")",
+    "MonarchDataExportRequest(status:, scope:, onRequest:)",
+    "MonarchFormField(\"Why are you leaving?\") { Picker(…).pickerStyle(.menu) }",
+    "MonarchTypeToConfirmInput(phrase: email, text: $typed); MonarchButton(\"Delete account\", variant: .danger).disabled(!MonarchTypeToConfirmInput.matches(typed, phrase: email))",
+    ".sheet(isPresented: $isVerifying) { MonarchStepUpAuthDialog(description:, methods:, onVerified:, onVerify:) }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "blocked",
+      "description": "The review step lists the workspaces the person owns alone in a warning banner with an action to transfer them; Continue is disabled until none are left."
+    },
+    {
+      "name": "review",
+      "description": "What deleting the account does, as a consequence list, and Continue."
+    },
+    {
+      "name": "export",
+      "description": "An optional step with MonarchDataExportRequest, so the person can take their data first."
+    },
+    {
+      "name": "reason",
+      "description": "An optional menu of reasons and a comment field."
+    },
+    {
+      "name": "confirm",
+      "description": "The danger button stays disabled until the account email is typed exactly."
+    },
+    {
+      "name": "verifying",
+      "description": "MonarchStepUpAuthDialog in a nested sheet; the deletion runs only after it succeeds."
+    },
+    {
+      "name": "deleted",
+      "description": "The sheet closes and the app signs the person out, showing a farewell."
+    }
+  ],
+  "appearance": "A system sheet with a navigation bar and the back button on later steps; Monarch's banner, consequence list, export request, form fields, type-to-confirm input and danger button on the canvas background. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "The web DeleteAccountFlow is one component on a WizardDialog that adds the export and reason steps when onExport and reasons are given, and runs a StepUpRequirement. On iOS it is a recipe: each step is a pushed screen in a NavigationStack inside the sheet with the system back gesture, the export step is MonarchDataExportRequest, the reason is a menu Picker, and re-authentication is MonarchStepUpAuthDialog in a nested sheet (it can use Face ID or Touch ID through the device-owner method). App Store rules require this flow to be reachable inside an iOS app that offers sign-up; the app may finish deletion on its server or website but must start it in the app. Android composes the same recipe.",
+  "accessibility": [
+    "Each step has a navigation title; the review heading has the header trait.",
+    "The blocking banner reads its title, message and action; the disabled Continue is read as dimmed.",
+    "MonarchTypeToConfirmInput announces when the typed email matches; the delete button stays disabled until it does.",
+    "MonarchStepUpAuthDialog announces failures and moves focus to its field."
+  ],
+  "edgeCases": [
+    "Matching the typed email is exact apart from surrounding spaces, as MonarchTypeToConfirmInput.matches does.",
+    "Leave out the export or reason step by not pushing it.",
+    "If the deletion fails after verification, keep the sheet open on the confirm step and show the error with MonarchInlineNotice.",
+    "Accounts in a grace period: say when the deletion takes effect on the deleted screen; that wording is the app's."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "From a danger zone, with export, reason and step-up",
+      "fixture": "delete-account-flow",
+      "webExample": "From a danger zone, with export, reason and step-up",
+      "experimental": true,
+      "template": "MonarchSectionCard({{zone.title}}, description: {{zone.description}}, tone: .danger) {\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        Text({{item.title}}).monarchTextStyle(.bodyStrong)\n        Text({{item.description}}).monarchTextStyle(.caption)\n        MonarchButton({{item.action}}, variant: .danger) { isOpen = true }\n    }\n}\n.sheet(isPresented: $isOpen) {\n    NavigationStack(path: $path) {\n        review\n            .navigationTitle({{item.action}})\n            #if os(iOS)\n            .navigationBarTitleDisplayMode(.inline)\n            #endif\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) { Button(\"Cancel\") { isOpen = false } }\n            }\n            .navigationDestination(for: String.self) { name in destination(name) }\n    }\n    .sheet(isPresented: $isVerifying) {\n        MonarchStepUpAuthDialog(\n            description: \"Deleting your account needs you to confirm your identity.\",\n            methods: [{{stepUp.methods.0|case}}, {{stepUp.methods.1|case}}],\n            onVerified: {\n                // Delete the account on the server here, then sign out.\n                isOpen = false\n            },\n            onVerify: { _ in\n                // Send the credential to the server; throw if it is refused.\n            }\n        )\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = false\n@State private var path: [String] = []\n@State private var typed = \"\"\n@State private var reason = \"\"\n@State private var isVerifying = false\nprivate let email = {{email}}\n\nprivate var review: some View {\n    ScrollView {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                Text(\"Step 1 of 4\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                HStack(spacing: theme.spacing.space1) {\n                    ForEach(0..<4, id: \\.self) { index in\n                        Capsule()\n                            .fill(index == 0 ? theme.colors.accentSolid : theme.colors.bgMuted)\n                            .frame(height: 4)\n                    }\n                }\n                .accessibilityHidden(true)\n            }\n            Text({{review.title}}).monarchTextStyle(.title)\n            Text({{review.description}})\n            MonarchConsequenceList(\n                [\n                    MonarchConsequence({{consequences.0.kind|case}}, {{consequences.0.label}}),\n                    MonarchConsequence({{consequences.1.kind|case}}, {{consequences.1.label}}),\n                    MonarchConsequence({{consequences.2.kind|case}}, {{consequences.2.label}}),\n                ],\n                isGrouped: true\n            )\n            MonarchButton(\"Continue\", variant: .primary, fullWidth: true) { path.append(\"export\") }\n        }\n        .padding(theme.spacing.space4)\n    }\n}\n\nprivate var exportStep: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space4) {\n        MonarchDataExportRequest()\n        MonarchButton(\"Continue\", variant: .primary, fullWidth: true) { path.append(\"reason\") }\n    }\n    .padding(theme.spacing.space4)\n}\n\nprivate var reasonStep: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space4) {\n        MonarchFormField(\"Why are you leaving?\") {\n            Picker(\"Why are you leaving?\", selection: $reason) {\n                Text({{reasons.0.label}}).tag({{reasons.0.value}})\n                Text({{reasons.1.label}}).tag({{reasons.1.value}})\n                Text({{reasons.2.label}}).tag({{reasons.2.value}})\n                Text({{reasons.3.label}}).tag({{reasons.3.value}})\n            }\n            .pickerStyle(.menu)\n        }\n        MonarchButton(\"Continue\", variant: .primary, fullWidth: true) { path.append(\"confirm\") }\n    }\n    .padding(theme.spacing.space4)\n}\n\nprivate var confirm: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space4) {\n        Text(\"Your account is deleted permanently. This cannot be undone.\").monarchTextStyle(.body)\n        MonarchTypeToConfirmInput(phrase: email, text: $typed, label: \"Type \" + email + \" to confirm\")\n        MonarchButton(\"Delete account\", variant: .danger, fullWidth: true) { isVerifying = true }\n            .disabled(!MonarchTypeToConfirmInput.matches(typed, phrase: email))\n    }\n    .padding(theme.spacing.space4)\n}\n\n@ViewBuilder private func destination(_ name: String) -> some View {\n    switch name {\n    case \"export\": exportStep\n    case \"reason\": reasonStep\n    default: confirm\n    }\n}",
+      "previewPresented": [
+        "isOpen"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = false\n@State private var path: [String] = []\n@State private var typed = \"\"\n@State private var reason = \"\"\n@State private var isVerifying = false\nprivate let email = \"sam@example.com\"\n\nprivate var review: some View {\n    ScrollView {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                Text(\"Step 1 of 4\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                HStack(spacing: theme.spacing.space1) {\n                    ForEach(0..<4, id: \\.self) { index in\n                        Capsule()\n                            .fill(index == 0 ? theme.colors.accentSolid : theme.colors.bgMuted)\n                            .frame(height: 4)\n                    }\n                }\n                .accessibilityHidden(true)\n            }\n            Text(\"Before you delete your account\").monarchTextStyle(.title)\n            Text(\"Your account and your access to every workspace will be removed. This cannot be undone.\")\n            MonarchConsequenceList(\n                [\n                    MonarchConsequence(.removed, \"Your profile and sign-in methods\"),\n                    MonarchConsequence(.changed, \"You leave 3 workspaces\"),\n                    MonarchConsequence(.kept, \"Content you created stays in its workspace\"),\n                ],\n                isGrouped: true\n            )\n            MonarchButton(\"Continue\", variant: .primary, fullWidth: true) { path.append(\"export\") }\n        }\n        .padding(theme.spacing.space4)\n    }\n}\n\nprivate var exportStep: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space4) {\n        MonarchDataExportRequest()\n        MonarchButton(\"Continue\", variant: .primary, fullWidth: true) { path.append(\"reason\") }\n    }\n    .padding(theme.spacing.space4)\n}\n\nprivate var reasonStep: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space4) {\n        MonarchFormField(\"Why are you leaving?\") {\n            Picker(\"Why are you leaving?\", selection: $reason) {\n                Text(\"I no longer need it\").tag(\"not-needed\")\n                Text(\"I use another tool\").tag(\"other-tool\")\n                Text(\"It is too complicated\").tag(\"too-complex\")\n                Text(\"Something else\").tag(\"other\")\n            }\n            .pickerStyle(.menu)\n        }\n        MonarchButton(\"Continue\", variant: .primary, fullWidth: true) { path.append(\"confirm\") }\n    }\n    .padding(theme.spacing.space4)\n}\n\nprivate var confirm: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space4) {\n        Text(\"Your account is deleted permanently. This cannot be undone.\").monarchTextStyle(.body)\n        MonarchTypeToConfirmInput(phrase: email, text: $typed, label: \"Type \" + email + \" to confirm\")\n        MonarchButton(\"Delete account\", variant: .danger, fullWidth: true) { isVerifying = true }\n            .disabled(!MonarchTypeToConfirmInput.matches(typed, phrase: email))\n    }\n    .padding(theme.spacing.space4)\n}\n\n@ViewBuilder private func destination(_ name: String) -> some View {\n    switch name {\n    case \"export\": exportStep\n    case \"reason\": reasonStep\n    default: confirm\n    }\n}",
+      "code": "MonarchSectionCard(\"Danger zone\", description: \"Deleting your account cannot be undone.\", tone: .danger) {\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        Text(\"Delete your account\").monarchTextStyle(.bodyStrong)\n        Text(\"Removes your profile and your access to every workspace.\").monarchTextStyle(.caption)\n        MonarchButton(\"Delete account\", variant: .danger) { isOpen = true }\n    }\n}\n.sheet(isPresented: $isOpen) {\n    NavigationStack(path: $path) {\n        review\n            .navigationTitle(\"Delete account\")\n            #if os(iOS)\n            .navigationBarTitleDisplayMode(.inline)\n            #endif\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) { Button(\"Cancel\") { isOpen = false } }\n            }\n            .navigationDestination(for: String.self) { name in destination(name) }\n    }\n    .sheet(isPresented: $isVerifying) {\n        MonarchStepUpAuthDialog(\n            description: \"Deleting your account needs you to confirm your identity.\",\n            methods: [.passkey, .password],\n            onVerified: {\n                // Delete the account on the server here, then sign out.\n                isOpen = false\n            },\n            onVerify: { _ in\n                // Send the credential to the server; throw if it is refused.\n            }\n        )\n    }\n}"
+    }
+  ],
+  "webEquivalent": "DeleteAccountFlow",
+  "dependsOn": [
+    "sheet",
+    "consequence-list",
+    "type-to-confirm-input",
+    "step-up-auth-dialog",
+    "data-export-request",
+    "button",
+    "alert",
+    "form-field"
+  ]
+}

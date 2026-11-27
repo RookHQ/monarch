@@ -1,43 +1,49 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- the fixture is a fixed JSON literal; the indices below exist. */
 import { AiAgentRunTimeline, type AiRunEvent } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-agent-run-timeline.fixture.json';
 
 const T = Date.UTC(2026, 0, 1, 12, 0, 0);
 
+const E = fixture.data.events;
+const at = (iso: string) => Date.parse(iso);
+
 const RUN: AiRunEvent[] = [
   {
-    id: '1',
+    id: E[0]!.id,
     kind: 'model',
-    name: 'Plan the answer',
-    startedAt: T,
-    endedAt: T + 1400,
-    inputTokens: 1850,
-    outputTokens: 240,
-    costMicros: 3100,
+    name: E[0]!.name,
+    startedAt: at(E[0]!.startedAt),
+    endedAt: at(E[0]!.endedAt!),
+    inputTokens: E[0]!.inputTokens,
+    outputTokens: E[0]!.outputTokens,
+    costMicros: E[0]!.costMicros,
   },
   {
-    id: '2',
+    id: E[1]!.id,
     kind: 'tool',
-    name: 'search_records',
-    startedAt: T + 1400,
-    endedAt: T + 2600,
-    detail: 'query: "renewals this quarter" · 14 results',
+    name: E[1]!.name,
+    startedAt: at(E[1]!.startedAt),
+    endedAt: at(E[1]!.endedAt!),
+    detail: E[1]!.detail,
   },
   {
-    id: '3',
+    id: E[2]!.id,
     kind: 'handoff',
-    name: 'To the analysis agent',
-    startedAt: T + 2600,
-    endedAt: T + 2700,
+    name: E[2]!.name,
+    startedAt: at(E[2]!.startedAt),
+    endedAt: at(E[2]!.endedAt!),
   },
   {
-    id: '4',
+    id: E[3]!.id,
     kind: 'model',
-    name: 'Write the summary',
-    startedAt: T + 2700,
-    endedAt: T + 6100,
-    inputTokens: 4200,
-    outputTokens: 910,
-    costMicros: 9800,
+    name: E[3]!.name,
+    startedAt: at(E[3]!.startedAt),
+    endedAt: at(E[3]!.endedAt!),
+    inputTokens: E[3]!.inputTokens,
+    outputTokens: E[3]!.outputTokens,
+    costMicros: E[3]!.costMicros,
   },
 ];
 
@@ -171,7 +177,13 @@ export default {
         {
           title: 'A finished run',
           stack: true,
-          render: () => <AiAgentRunTimeline events={RUN} currency="EUR" locale="en-GB" />,
+          render: () => (
+            <AiAgentRunTimeline
+              events={RUN}
+              currency={fixture.data.currency}
+              locale={fixture.data.locale}
+            />
+          ),
         },
         {
           title: 'Table view',

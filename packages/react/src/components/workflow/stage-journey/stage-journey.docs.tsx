@@ -8,37 +8,13 @@ import {
   type StageHistoryEntry,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './stage-journey.fixture.json';
 
-const NOW = Date.UTC(2026, 0, 12, 10, 0);
+const NOW = Date.parse(fixture.data.now);
 const DAY = 86_400_000;
 
-const STAGES: JourneyStage[] = [
-  {
-    id: 'draft',
-    label: 'Draft',
-    group: 'Prepare',
-    description: 'The application is being written.',
-  },
-  {
-    id: 'review',
-    label: 'Review',
-    group: 'Prepare',
-    description: 'A second person checks the draft.',
-  },
-  {
-    id: 'filed',
-    label: 'Filed',
-    group: 'Prosecute',
-    description: 'Submitted; waiting for the office to respond.',
-  },
-  {
-    id: 'examined',
-    label: 'Examined',
-    group: 'Prosecute',
-    description: 'The office has issued its report.',
-  },
-  { id: 'granted', label: 'Granted', group: 'Maintain', description: 'Protection is in force.' },
-];
+const STAGES = fixture.data.stages as JourneyStage[];
 
 const NEXT: Record<string, JourneyTransition[]> = {
   draft: [{ id: 'review', label: 'Review' }],
@@ -46,11 +22,7 @@ const NEXT: Record<string, JourneyTransition[]> = {
     { id: 'filed', label: 'Filed', needsInput: true },
     { id: 'draft', label: 'Draft', kind: 'back' },
   ],
-  filed: [
-    { id: 'examined', label: 'Examined' },
-    { id: 'withdrawn', label: 'Withdrawn', kind: 'exit' },
-    { id: 'review', label: 'Review', kind: 'back' },
-  ],
+  filed: fixture.data.transitions as JourneyTransition[],
   examined: [
     { id: 'granted', label: 'Granted' },
     { id: 'filed', label: 'Filed', kind: 'back' },
@@ -80,15 +52,15 @@ const HISTORY: StageHistoryEntry[] = [
 ];
 
 function JourneyDemo() {
-  const [current, setCurrent] = useState('filed');
+  const [current, setCurrent] = useState(fixture.data.currentId);
   return (
     <StageJourney
       stages={STAGES}
       current={current}
       terminal={current === 'granted' ? 'success' : undefined}
-      enteredAt={NOW - 3 * DAY}
+      enteredAt={NOW - fixture.data.enteredDaysAgo * DAY}
       now={NOW}
-      currentMeta={<Badge tone="info">Prosecute</Badge>}
+      currentMeta={<Badge tone="info">{fixture.data.currentMeta}</Badge>}
       transitions={NEXT[current] ?? []}
       onTransition={(t) => {
         if (t.id === 'withdrawn')

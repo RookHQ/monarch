@@ -24,6 +24,7 @@ import type {
   Example,
 } from '../../../../packages/react/src/internal/component-docs.js';
 import type { ExtractedExample } from '../../plugins/extract-examples.js';
+import type { NativeComponentDocs } from '../../plugins/native.js';
 import type { ExportDoc } from './manifest.js';
 
 export type { ComponentDocs, DocsPageDetails, Example, ExtractedExample, RegistryRef };
@@ -117,12 +118,16 @@ export interface LoadedDocs {
   source: readonly ExtractedExample[];
   /** Manifest entries for the page's exports, in export order. */
   api: readonly ExportDoc[];
+  /** Imports the component's Android and iOS documentation (a chunk of its own). */
+  loadNative: () => Promise<{ default: NativeComponentDocs }>;
 }
 
 export interface DocsModule {
   default: ComponentDocs;
   exampleSource: ExtractedExample[];
   apiEntries: ExportDoc[];
+  /** Added by plugins/native.ts. */
+  loadNative: () => Promise<{ default: NativeComponentDocs }>;
 }
 
 /**
@@ -200,7 +205,12 @@ export function loadDocs(id: string): Promise<LoadedDocs> {
             throw new Error(
               `${id}: ${count} examples but ${m.exampleSource.length} extracted sources (plugins/extract-examples.ts)`,
             );
-          return { docs: m.default, source: m.exampleSource, api: m.apiEntries };
+          return {
+            docs: m.default,
+            source: m.exampleSource,
+            api: m.apiEntries,
+            loadNative: m.loadNative,
+          };
         }),
     );
     cache.set(id, p);

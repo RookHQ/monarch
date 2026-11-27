@@ -1,92 +1,94 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- the fixture is a fixed JSON literal; the indices below exist. */
 import { useState } from 'react';
 import { Badge, Link, TabsFilter } from '@rookcom/monarch-react';
 import { ActivityTimeline, type ActivityEvent } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './activity-timeline.fixture.json';
 import { PencilIcon, PlusIcon } from '../../../internal/docs-demo.js';
 
-const NOW = '2026-03-02T12:00:00Z';
+const NOW = fixture.data.now;
+const EVENTS = fixture.data.events;
+const LINKED = 'Pricing page refresh';
 /** Built lazily: docs files cannot create JSX at module scope. */
 const sampleEvents = (): (ActivityEvent & { type: 'change' | 'comment' })[] => [
   {
     id: 'e1',
     type: 'change',
-    actor: { name: 'Ana Lopez' },
-    verb: 'moved',
+    actor: { name: EVENTS[0]!.actor },
+    verb: EVENTS[0]!.verb,
     object: (
       <>
-        <Link href="#/components/activity-timeline">Pricing page refresh</Link> to In review
+        <Link href="#/components/activity-timeline">{LINKED}</Link>
+        {EVENTS[0]!.object!.slice(LINKED.length)}
       </>
     ),
-    time: '2026-03-02T11:20:00Z',
+    time: EVENTS[0]!.time,
     tone: 'info',
     details: (
       <dl style={{ margin: 0, display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2px 12px' }}>
-        <dt>Status</dt>
-        <dd style={{ margin: 0 }}>In progress → In review</dd>
-        <dt>Reviewer</dt>
-        <dd style={{ margin: 0 }}>None → Ben Okafor</dd>
+        <dt>{EVENTS[0]!.details![0]!.label}</dt>
+        <dd style={{ margin: 0 }}>{EVENTS[0]!.details![0]!.value}</dd>
+        <dt>{EVENTS[0]!.details![1]!.label}</dt>
+        <dd style={{ margin: 0 }}>{EVENTS[0]!.details![1]!.value}</dd>
       </dl>
     ),
   },
   {
     id: 'e2',
     type: 'comment',
-    actor: { name: 'Ben Okafor' },
-    verb: 'commented',
-    time: '2026-03-02T10:05:00Z',
+    actor: { name: EVENTS[1]!.actor },
+    verb: EVENTS[1]!.verb,
+    time: EVENTS[1]!.time,
     icon: <PencilIcon />,
-    body: 'Copy looks good. Can we swap the hero image for the lighter one?',
+    body: EVENTS[1]!.body,
   },
   {
     id: 'e3',
     type: 'change',
-    actor: { name: 'Auto-assign rule', kind: 'automation' },
-    verb: 'assigned',
-    object: 'Chloé Martin',
-    time: '2026-03-02T08:30:00Z',
+    actor: { name: EVENTS[2]!.actor, kind: 'automation' },
+    verb: EVENTS[2]!.verb,
+    object: EVENTS[2]!.object,
+    time: EVENTS[2]!.time,
     meta: (
       <Badge size="sm" tone="neutral">
-        Rule: Round robin
+        {EVENTS[2]!.tag}
       </Badge>
     ),
   },
   {
     id: 'e4',
     type: 'change',
-    actor: { name: 'Dev Patel' },
-    verb: 'created this task',
-    time: '2026-03-01T16:45:00Z',
+    actor: { name: EVENTS[3]!.actor },
+    verb: EVENTS[3]!.verb,
+    time: EVENTS[3]!.time,
     icon: <PlusIcon />,
     tone: 'success',
   },
 ];
 
 function FilteredDemo() {
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState(fixture.data.filters[0]!.value);
   const events =
     filter === 'all' ? sampleEvents() : sampleEvents().filter((e) => e.type === filter);
   return (
     <div style={{ width: '100%', maxWidth: 560 }}>
       <ActivityTimeline
         events={events}
-        defaultExpandedIds={['e1']}
+        defaultExpandedIds={fixture.data.expanded}
         filters={
           <TabsFilter
             aria-label="Show"
             variant="pill"
             value={filter}
             onValueChange={setFilter}
-            options={[
-              { value: 'all', label: 'All' },
-              { value: 'comment', label: 'Comments' },
-              { value: 'change', label: 'Changes' },
-            ]}
+            options={fixture.data.filters}
           />
         }
         hasMore
         onLoadMore={() => {}}
         now={NOW}
-        timeZone="UTC"
+        timeZone={fixture.data.timeZone}
       />
     </div>
   );

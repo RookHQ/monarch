@@ -1,0 +1,116 @@
+{
+  "id": "dashboard-personal-work",
+  "name": null,
+  "title": "DashboardPersonalWork",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchDashboardGrid (androidx.compose.foundation.lazy.grid.LazyVerticalGrid) of MonarchSectionCard and MonarchWidget sections with MonarchCheckboxRow, MonarchBadge, MonarchProgress and MonarchActivityTimeline",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The home screen of a person's own work (\"My work\"): today's tasks, what is assigned to them, their progress and recent activity, as sections of a MonarchDashboardGrid.",
+  "whenToUse": "As the home screen of a work product (tasks, tickets, projects) that answers \"what do I need to do?\" for the signed-in person.",
+  "whenNotToUse": "For a team's or a portfolio's figures use the DashboardPortfolio recipe or a KPI row with charts; for one list of tasks use a list screen.",
+  "api": [
+    "MonarchDashboardGrid(items = sections, key = { it }, itemLabel = { it }, modifier = Modifier.fillMaxSize()) { section -> when (section) { \"today\" -> MonarchSectionCard(title = \"Today\", meta = date) { MonarchCheckboxRow(…); MonarchBadge(text = \"Overdue\", tone = MonarchTone.Danger) }; \"assigned\" -> MonarchWidget(title = \"Assigned to you\", onViewAll = …) { … }; \"progress\" -> MonarchWidget(title = \"Progress\") { MonarchProgress(progress = …, label = …) }; else -> MonarchWidget(title = \"Recent activity\", onViewAll = …) { MonarchActivityTimeline(events, modifier = Modifier.heightIn(max = …), groupByDay = false, density = MonarchActivityTimelineDensity.Compact) } } }"
+  ],
+  "options": [
+    {
+      "name": "sections",
+      "type": "List<String>",
+      "default": "required",
+      "description": "The sections in order; leave out what the person has no data for. With onLayoutChange and editing the person can rearrange them."
+    },
+    {
+      "name": "today",
+      "type": "MonarchSectionCard",
+      "default": "optional",
+      "description": "Today's tasks as MonarchCheckboxRows, overdue first with a danger badge (see the TodayPanel recipe for the agenda)."
+    },
+    {
+      "name": "assigned / due soon",
+      "type": "MonarchWidget",
+      "default": "optional",
+      "description": "Rows of the person's items with a status badge, and View all."
+    },
+    {
+      "name": "progress",
+      "type": "MonarchWidget with MonarchProgress",
+      "default": "optional",
+      "description": "Progress towards a goal or sprint, with the count in words."
+    },
+    {
+      "name": "activity",
+      "type": "MonarchWidget with MonarchActivityTimeline",
+      "default": "optional",
+      "description": "Recent events about the person's work (the ActivityWidget recipe)."
+    },
+    {
+      "name": "MonarchWidget.state",
+      "type": "MonarchWidgetState",
+      "default": "Ready",
+      "description": "Loading, Empty or Failed per section while its data loads or fails."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "Each section shows its data."
+    },
+    {
+      "name": "loading or failed section",
+      "description": "MonarchWidget with state = Loading or Failed and onRetry, per section."
+    },
+    {
+      "name": "editing",
+      "description": "MonarchDashboardGrid with editing = true shows arrange bars to move sections."
+    }
+  ],
+  "appearance": "Widgets and section cards on the surface color with the subtle border, checkbox rows and badges in their own appearance, the progress bar in the accent color. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web DashboardPersonalWork is one server-safe template with a header (title, period, actions), a KPI row, an insight strip and named slots laid out in a responsive grid. On Android it is a recipe the app owns: MonarchDashboardGrid is the screen's scrolling list (one column on a phone, more from 1024dp, and rearrangeable with editing), and each section is a MonarchWidget or another Monarch part. The title and actions belong to the screen's TopAppBar; add a KPI row (MonarchStatCard in a FlowRow) as the first full-span item when the product has key figures. Lazy parts such as MonarchActivityTimeline get a bounded height inside a grid item. iOS has no entry yet.",
+  "accessibility": [
+    "Each section's title is a heading, so TalkBack users can jump between sections.",
+    "Each task is one MonarchCheckboxRow with a 48dp row; overdue is a badge in words.",
+    "The progress bar reads its value and its label.",
+    "Statuses are badges in words, not colors alone."
+  ],
+  "edgeCases": [
+    "Keep each section short and link to the full list with View all.",
+    "A lazy timeline inside a grid item needs a bounded height.",
+    "Leave out sections with no data instead of showing empty cards, or use MonarchWidgetState.Empty with a message."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "One person’s work, arrangeable",
+      "fixture": "dashboard-personal-work",
+      "webExample": "One person’s work, arrangeable",
+      "template": "CompositionLocalProvider(LocalConfiguration provides locale) {\n    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n        MonarchText(text = {{title}}, style = MonarchTextStyle.Heading)\n        MonarchText(text = {{description}})\n        MonarchSegmentedControl(\n            modifier = Modifier.horizontalScroll(rememberScrollState()),\n            options = periods,\n            selectedIndex = periods.indexOf(period),\n            onSelect = { period = periods[it] },\n        )\n        MonarchButton(\n            text = if (editing) \"Done\" else {{arrange}},\n            onClick = { editing = !editing },\n            size = MonarchButtonSize.Sm,\n        )\n        Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n            MonarchStatCard(label = {{kpis.0.label}}, value = {{kpis.0.value|double}}, modifier = Modifier.weight(1f).testTag({{kpis.0.id}}))\n            MonarchStatCard(label = {{kpis.1.label}}, value = {{kpis.1.value|double}}, modifier = Modifier.weight(1f).testTag({{kpis.1.id}}))\n            MonarchStatCard(\n                label = {{kpis.2.label}},\n                value = {{kpis.2.value|double}},\n                modifier = Modifier.weight(1f).testTag({{kpis.2.id}}),\n                change = MonarchMetricChange({{kpis.2.change.value|double}}, comparison = {{kpis.2.change.comparison}}),\n            )\n        }\n        MonarchInsightStrip(\n            insights = listOf(\n                MonarchInsight(\n                    id = {{insights.0.id}},\n                    title = {{insights.0.title}},\n                    why = {{insights.0.why}},\n                    origin = MonarchInsightOrigin.{{insights.0.origin|pascal}},\n                    tone = {{insights.0.severity|tone}},\n                ),\n            ),\n            title = \"Insights\",\n        )\n        MonarchDashboardGrid(\n            items = tiles,\n            key = { it },\n            itemLabel = { it },\n            layout = layout,\n            onLayoutChange = { layout = it },\n            editing = editing,\n            modifier = Modifier.fillMaxSize(),\n        ) { tile ->\n            when (tile) {\n                {{today.title}} -> MonarchWidget(title = tile, description = {{today.date}}) {\n                    MonarchText(text = {{today.heading}}, style = MonarchTextStyle.BodyStrong)\n                    tasks.forEach { (id, title) ->\n                        Row(verticalAlignment = Alignment.CenterVertically) {\n                            MonarchCheckboxRow(\n                                checked = id in done,\n                                onCheckedChange = { on -> done = if (on) done + id else done - id },\n                                label = title,\n                                modifier = Modifier.weight(1f),\n                            )\n                            if (id == {{today.overdue.0}}) MonarchBadge(text = \"Overdue\", tone = MonarchTone.Danger)\n                        }\n                    }\n                }\n                {{assigned.title}} -> MonarchWidget(title = tile) {\n                    Row(verticalAlignment = Alignment.CenterVertically) { MonarchText(text = {{assigned.rows.0.label}}, modifier = Modifier.weight(1f)); MonarchBadge(text = {{assigned.rows.0.value}}, tone = {{assigned.rows.0.tone|tone}}) }\n                    Row(verticalAlignment = Alignment.CenterVertically) { MonarchText(text = {{assigned.rows.1.label}}, modifier = Modifier.weight(1f)); MonarchBadge(text = {{assigned.rows.1.value}}, tone = {{assigned.rows.1.tone|tone}}) }\n                    Row(verticalAlignment = Alignment.CenterVertically) { MonarchText(text = {{assigned.rows.2.label}}, modifier = Modifier.weight(1f)); MonarchBadge(text = {{assigned.rows.2.value}}, tone = {{assigned.rows.2.tone|tone}}) }\n                }\n                {{dueSoon.title}} -> MonarchWidget(title = tile) {\n                    row({{dueSoon.rows.0.label}}, {{dueSoon.rows.0.value}})\n                    row({{dueSoon.rows.1.label}}, {{dueSoon.rows.1.value}})\n                    row({{dueSoon.rows.2.label}}, {{dueSoon.rows.2.value}})\n                }\n                {{progress.title}} -> MonarchWidget(title = tile) {\n                    row({{progress.goals.0.label}}, {{progress.goals.0.value}}.toString() + \"%\")\n                    MonarchProgress(progress = {{progress.goals.0.value}} / 100f, label = {{progress.goals.0.label}})\n                    row({{progress.goals.1.label}}, {{progress.goals.1.value}}.toString() + \"%\")\n                    MonarchProgress(progress = {{progress.goals.1.value}} / 100f, label = {{progress.goals.1.label}})\n                }\n                {{announcements.title}} -> MonarchWidget(title = tile) {\n                    MonarchText(text = {{announcements.items.0.term}}, style = MonarchTextStyle.BodyStrong)\n                    MonarchText(text = {{announcements.items.0.body}})\n                }\n                {{team.title}} -> MonarchWidget(title = tile) {\n                    row({{team.rows.0.label}}, {{team.rows.0.value}})\n                    row({{team.rows.1.label}}, {{team.rows.1.value}})\n                }\n                else -> MonarchWidget(title = tile) {\n                    MonarchActivityTimeline(\n                        events = events,\n                        modifier = Modifier\n                            .fillMaxWidth()\n                            .heightIn(max = 320.dp),\n                        groupByDay = false,\n                        density = MonarchActivityTimelineDensity.Compact,\n                        now = now,\n                        timeZone = {{timeZone}},\n                    )\n                }\n            }\n        }\n    }\n}",
+      "setupTemplate": "var period by rememberSaveable { mutableStateOf({{period}}) }\nval periods = listOf({{periods.0}}, {{periods.1}}, {{periods.2}}, {{periods.3}}, {{periods.4}})\nvar editing by remember { mutableStateOf(false) }\nvar layout by remember { mutableStateOf(emptyList<String>()) }\nvar done by rememberSaveable { mutableStateOf(setOf({{today.done.0}})) }\nval tiles = listOf({{today.title}}, {{assigned.title}}, {{dueSoon.title}}, {{progress.title}}, {{announcements.title}}, {{team.title}}, {{activity.title}})\nval now = {{activity.now|millis}}\nval tasks = listOf(\n    {{today.tasks.0.id}} to {{today.tasks.0.title}},\n    {{today.tasks.1.id}} to {{today.tasks.1.title}},\n    {{today.tasks.2.id}} to {{today.tasks.2.title}},\n)\nval row: @Composable (String, String) -> Unit = { label, value ->\n    Row(verticalAlignment = Alignment.CenterVertically) {\n        MonarchText(text = label, modifier = Modifier.weight(1f))\n        MonarchText(text = value)\n    }\n}\nval events = listOf(\n    MonarchActivityTimelineEvent(\n        id = {{activity.events.0.id}},\n        verb = {{activity.events.0.verb}},\n        time = {{activity.events.0.time|millis}},\n        actor = MonarchActivityTimelineActor({{activity.events.0.actor}}),\n        target = {{activity.events.0.object}},\n    ),\n    MonarchActivityTimelineEvent(\n        id = {{activity.events.1.id}},\n        verb = {{activity.events.1.verb}},\n        time = {{activity.events.1.time|millis}},\n        actor = MonarchActivityTimelineActor({{activity.events.1.actor}}),\n        target = {{activity.events.1.object}},\n    ),\n)\nval configuration = LocalConfiguration.current\nval locale = remember(configuration) {\n    Configuration(configuration).apply { setLocale(Locale.forLanguageTag({{locale}})) }\n}",
+      "imports": [
+        "android.content.res.Configuration",
+        "androidx.compose.ui.platform.LocalConfiguration",
+        "java.util.Locale",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.foundation.horizontalScroll",
+        "androidx.compose.foundation.rememberScrollState"
+      ],
+      "setup": "var period by rememberSaveable { mutableStateOf(\"Last 7 days\") }\nval periods = listOf(\"Today\", \"Last 7 days\", \"Last 30 days\", \"This quarter\", \"Custom\")\nvar editing by remember { mutableStateOf(false) }\nvar layout by remember { mutableStateOf(emptyList<String>()) }\nvar done by rememberSaveable { mutableStateOf(setOf(\"t3\")) }\nval tiles = listOf(\"Today\", \"Assigned to you\", \"Due soon\", \"Progress\", \"Announcements\", \"Your team\", \"Recent activity\")\nval now = 1_781_517_600_000L\nval tasks = listOf(\n    \"t1\" to \"Reply to the Harbor Labs request\",\n    \"t2\" to \"Review the checkout redesign\",\n    \"t3\" to \"Send the sprint notes\",\n)\nval row: @Composable (String, String) -> Unit = { label, value ->\n    Row(verticalAlignment = Alignment.CenterVertically) {\n        MonarchText(text = label, modifier = Modifier.weight(1f))\n        MonarchText(text = value)\n    }\n}\nval events = listOf(\n    MonarchActivityTimelineEvent(\n        id = \"e1\",\n        verb = \"commented on\",\n        time = 1_781_516_400_000L,\n        actor = MonarchActivityTimelineActor(\"Jonas Weber\"),\n        target = \"Checkout redesign\",\n    ),\n    MonarchActivityTimelineEvent(\n        id = \"e2\",\n        verb = \"assigned you\",\n        time = 1_781_510_700_000L,\n        actor = MonarchActivityTimelineActor(\"Amara Okafor\"),\n        target = \"Update the pricing page\",\n    ),\n)\nval configuration = LocalConfiguration.current\nval locale = remember(configuration) {\n    Configuration(configuration).apply { setLocale(Locale.forLanguageTag(\"en-GB\")) }\n}",
+      "code": "CompositionLocalProvider(LocalConfiguration provides locale) {\n    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n        MonarchText(text = \"My work\", style = MonarchTextStyle.Heading)\n        MonarchText(text = \"Priya Raman · Product team\")\n        MonarchSegmentedControl(\n            modifier = Modifier.horizontalScroll(rememberScrollState()),\n            options = periods,\n            selectedIndex = periods.indexOf(period),\n            onSelect = { period = periods[it] },\n        )\n        MonarchButton(\n            text = if (editing) \"Done\" else \"Arrange\",\n            onClick = { editing = !editing },\n            size = MonarchButtonSize.Sm,\n        )\n        Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n            MonarchStatCard(label = \"Assigned to you\", value = 12.0, modifier = Modifier.weight(1f).testTag(\"assigned\"))\n            MonarchStatCard(label = \"Due this week\", value = 4.0, modifier = Modifier.weight(1f).testTag(\"due\"))\n            MonarchStatCard(\n                label = \"Done this month\",\n                value = 27.0,\n                modifier = Modifier.weight(1f).testTag(\"done\"),\n                change = MonarchMetricChange(0.17, comparison = \"vs last month\"),\n            )\n        }\n        MonarchInsightStrip(\n            insights = listOf(\n                MonarchInsight(\n                    id = \"blocked\",\n                    title = \"Two of your tasks are blocked\",\n                    why = \"Both wait on the design review on Wednesday.\",\n                    origin = MonarchInsightOrigin.Rule,\n                    tone = MonarchTone.Info,\n                ),\n            ),\n            title = \"Insights\",\n        )\n        MonarchDashboardGrid(\n            items = tiles,\n            key = { it },\n            itemLabel = { it },\n            layout = layout,\n            onLayoutChange = { layout = it },\n            editing = editing,\n            modifier = Modifier.fillMaxSize(),\n        ) { tile ->\n            when (tile) {\n                \"Today\" -> MonarchWidget(title = tile, description = \"Monday 15 June\") {\n                    MonarchText(text = \"Due today\", style = MonarchTextStyle.BodyStrong)\n                    tasks.forEach { (id, title) ->\n                        Row(verticalAlignment = Alignment.CenterVertically) {\n                            MonarchCheckboxRow(\n                                checked = id in done,\n                                onCheckedChange = { on -> done = if (on) done + id else done - id },\n                                label = title,\n                                modifier = Modifier.weight(1f),\n                            )\n                            if (id == \"t1\") MonarchBadge(text = \"Overdue\", tone = MonarchTone.Danger)\n                        }\n                    }\n                }\n                \"Assigned to you\" -> MonarchWidget(title = tile) {\n                    Row(verticalAlignment = Alignment.CenterVertically) { MonarchText(text = \"In progress\", modifier = Modifier.weight(1f)); MonarchBadge(text = \"5\", tone = MonarchTone.Info) }\n                    Row(verticalAlignment = Alignment.CenterVertically) { MonarchText(text = \"In review\", modifier = Modifier.weight(1f)); MonarchBadge(text = \"3\", tone = MonarchTone.Warning) }\n                    Row(verticalAlignment = Alignment.CenterVertically) { MonarchText(text = \"To do\", modifier = Modifier.weight(1f)); MonarchBadge(text = \"4\", tone = MonarchTone.Neutral) }\n                }\n                \"Due soon\" -> MonarchWidget(title = tile) {\n                    row(\"Update the pricing page\", \"Wed 17 Jun\")\n                    row(\"Plan the June release\", \"Thu 18 Jun\")\n                    row(\"Write the onboarding guide\", \"Fri 19 Jun\")\n                }\n                \"Progress\" -> MonarchWidget(title = tile) {\n                    row(\"Q2 goal: ship the new checkout\", 70.toString() + \"%\")\n                    MonarchProgress(progress = 70 / 100f, label = \"Q2 goal: ship the new checkout\")\n                    row(\"Cut first reply time to one hour\", 45.toString() + \"%\")\n                    MonarchProgress(progress = 45 / 100f, label = \"Cut first reply time to one hour\")\n                }\n                \"Announcements\" -> MonarchWidget(title = tile) {\n                    MonarchText(text = \"Office closed on Friday 19 June\", style = MonarchTextStyle.BodyStrong)\n                    MonarchText(text = \"Everyone works from home that day.\")\n                }\n                \"Your team\" -> MonarchWidget(title = tile) {\n                    row(\"Leave request, Jonas Weber\", \"22 to 26 Jun\")\n                    row(\"Expense claim, Amara Okafor\", \"£86.40\")\n                }\n                else -> MonarchWidget(title = tile) {\n                    MonarchActivityTimeline(\n                        events = events,\n                        modifier = Modifier\n                            .fillMaxWidth()\n                            .heightIn(max = 320.dp),\n                        groupByDay = false,\n                        density = MonarchActivityTimelineDensity.Compact,\n                        now = now,\n                        timeZone = \"Europe/London\",\n                    )\n                }\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "DashboardPersonalWork",
+  "dependsOn": [
+    "dashboard-grid",
+    "widget",
+    "today-panel",
+    "activity-widget",
+    "progress-bar"
+  ]
+}

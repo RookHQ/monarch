@@ -60,8 +60,10 @@ packages: `react` may import `tokens`; `conformance` imports neither.
 
 ## Updating dependencies
 
-- Dependabot checks npm packages and GitHub Actions every Monday and opens
-  pull requests against `uat` ([branching](branching.md#dependencies)).
+- Dependabot checks npm packages, GitHub Actions, the Android Gradle build
+  (`platforms/android`) and the Swift package (`platforms/ios`) every Monday
+  and opens pull requests against `uat`
+  ([branching](branching.md#dependencies)).
   Minor and patch updates are grouped (Radix together, development tooling
   together).
 - Major versions are not opened by Dependabot. A maintainer upgrades them on

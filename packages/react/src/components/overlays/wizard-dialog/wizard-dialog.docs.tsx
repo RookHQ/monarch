@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Button, Checkbox, WizardDialog } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './wizard-dialog.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
@@ -8,43 +10,50 @@ function CloseProject() {
   const [exported, setExported] = useState(false);
   return (
     <WizardDialog
-      trigger={<Button variant="danger">Close project</Button>}
-      title="Close project"
-      description="Closing removes the project for everyone."
+      trigger={<Button variant="danger">{fixture.data.trigger}</Button>}
+      defaultOpen
+      title={fixture.data.title}
+      description={fixture.data.description}
       steps={[
         {
           id: 'review',
-          title: 'What happens',
+          title: fixture.data.review.title,
           content: (
             <ul>
-              <li>48 tasks are archived</li>
-              <li>6 people lose access</li>
+              {fixture.data.review.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
           ),
         },
         {
           id: 'export',
-          title: 'Keep a copy',
-          description: 'Download the tasks and comments before you continue.',
+          title: fixture.data.export.title,
+          description: fixture.data.export.description,
           content: (
             <Checkbox
-              label="I have downloaded a copy, or I do not need one"
+              label={fixture.data.export.label}
               checked={exported}
               onCheckedChange={(next) => setExported(next === true)}
             />
           ),
           canContinue: exported,
-          blockedReason: 'Tick the box to continue.',
+          blockedReason: fixture.data.export.blocked,
         },
         {
           id: 'confirm',
-          title: 'Close the project',
-          content: <p>You can reopen it from Archive for 30 days.</p>,
+          title: fixture.data.confirm.title,
+          content: <p>{fixture.data.confirm.content}</p>,
           tone: 'danger',
-          continueLabel: 'Close project',
+          continueLabel: fixture.data.confirm.continueLabel,
           onContinue: () => wait(1200),
         },
-        { id: 'done', kind: 'done', title: 'Project closed', content: <p>It is in Archive.</p> },
+        {
+          id: 'done',
+          kind: 'done',
+          title: fixture.data.done.title,
+          content: <p>{fixture.data.done.content}</p>,
+        },
       ]}
     />
   );
@@ -200,7 +209,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Review, export, confirm, done', render: () => <CloseProject /> },
+        {
+          title: 'Review, export, confirm, done',
+          stage: { align: 'center' },
+          render: () => <CloseProject />,
+        },
         { title: 'A failing step', render: () => <FailingStep /> },
       ],
     },

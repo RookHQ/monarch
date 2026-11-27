@@ -8,6 +8,8 @@ import {
   type AiStreamEvent,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-reasoning.fixture.json';
 
 const reasoningDeltas = (text: string): AiStreamEvent[] =>
   textDeltas(text).map((e) => ({
@@ -171,9 +173,9 @@ export default {
             <AiReasoning
               part={{
                 type: 'reasoning',
-                text: 'Compare both drafts, then list what changed in the budget section.',
+                text: fixture.data.text,
                 state: 'done',
-                durationMs: 12_000,
+                durationMs: fixture.data.durationMs,
               }}
             />
           ),

@@ -1,0 +1,148 @@
+{
+  "id": "search-result-item",
+  "name": "MonarchSearchResultItem",
+  "title": "SearchResultItem",
+  "family": "search",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Button with a ButtonStyle, Text with a highlighted AttributedString, MonarchFileTypeIcon, MonarchFlowLayout",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "One search result: a title, a breadcrumb path, a snippet with the matched words highlighted, an optional leading icon and optional trailing details.",
+  "whenToUse": "For each row of a search results list or a global search panel.",
+  "whenNotToUse": "Not for search suggestions while typing; use the system searchSuggestions modifier. Not for plain navigation rows without a query; use a List row or LabeledContent.",
+  "api": [
+    "init(_ title: String, path: [String] = [], snippet: String? = nil, terms: [String] = [], titleRanges: [Range<Int>]? = nil, snippetRanges: [Range<Int>]? = nil, snippetHasMarkTags: Bool = false, systemImage: String? = nil, fileName: String? = nil, pathLabel: String? = nil, action: (@MainActor () -> Void)? = nil, @ViewBuilder meta: () -> Meta)",
+    "init(_ title: String, path: [String] = [], snippet: String? = nil, terms: [String] = [], titleRanges: [Range<Int>]? = nil, snippetRanges: [Range<Int>]? = nil, snippetHasMarkTags: Bool = false, systemImage: String? = nil, fileName: String? = nil, pathLabel: String? = nil, action: (@MainActor () -> Void)? = nil) where Meta == EmptyView",
+    "static func terms(from query: String) -> [String] where Meta == EmptyView"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The title, as plain text."
+    },
+    {
+      "name": "path",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Breadcrumb segments, shown with a slash between them and read as a list."
+    },
+    {
+      "name": "snippet",
+      "type": "String?",
+      "default": "nil",
+      "description": "A short excerpt of the matching content, at most three lines."
+    },
+    {
+      "name": "terms",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Words to highlight in the title and snippet, matched without regard to case. Use terms(from:)."
+    },
+    {
+      "name": "titleRanges",
+      "type": "[Range<Int>]?",
+      "default": "nil",
+      "description": "Exact matches in the title as UTF-16 offsets, as the web and most search services count. Replaces terms for the title."
+    },
+    {
+      "name": "snippetRanges",
+      "type": "[Range<Int>]?",
+      "default": "nil",
+      "description": "Exact matches in the snippet as UTF-16 offsets. Replaces terms for the snippet."
+    },
+    {
+      "name": "snippetHasMarkTags",
+      "type": "Bool",
+      "default": "false",
+      "description": "The snippet carries <mark> and </mark> markers, for example from PostgreSQL ts_headline. Only those markers are read."
+    },
+    {
+      "name": "systemImage",
+      "type": "String?",
+      "default": "nil",
+      "description": "An SF Symbol in the leading tile."
+    },
+    {
+      "name": "fileName",
+      "type": "String?",
+      "default": "nil",
+      "description": "A file name; its file type icon fills the leading tile. Takes precedence over systemImage."
+    },
+    {
+      "name": "pathLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in Location read before the path."
+    },
+    {
+      "name": "action",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Runs when the row is activated. With it the row is a Button and the title takes the link colour."
+    },
+    {
+      "name": "meta",
+      "type": "@ViewBuilder () -> Meta",
+      "default": "EmptyView",
+      "description": "Trailing details such as a badge, a date or an owner."
+    }
+  ],
+  "states": [
+    {
+      "name": "interactive",
+      "description": "With an action: the title is in the link colour and the row shows a subtle fill while pressed."
+    },
+    {
+      "name": "plain",
+      "description": "Without an action: the title is in the default text colour and the row is static content."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true) the row does not respond; the system dims the button."
+    }
+  ],
+  "appearance": "The title is medium weight in the link colour (or the default text colour), the path and meta are captions in the muted text colour with subtle separators, and the snippet is muted body text. Matched words have the subtle warning fill, the default text colour and a semibold weight. The leading tile is the muted background with a muted icon.",
+  "platformNotes": "The web item renders the title as a link (href) or a button and supports a router link component and roving tab index. On iOS the row runs an action; to navigate, leave the action out and wrap the row in a NavigationLink, or open a URL in the action. Exact ranges use UTF-16 offsets, the same numbers the web receives. The web places the meta under the text on narrow screens; on iOS it moves under the text at the accessibility text sizes. The match fill has no padding or rounded corner, which AttributedString cannot draw.",
+  "accessibility": [
+    "The row is one element that reads the title, then Location and the path segments separated by commas, then the snippet without markers, then the meta.",
+    "With an action the row is a Button, so it has the button trait and one activation.",
+    "Matches are also semibold, so they do not depend on the fill colour; the highlight itself is not read.",
+    "The leading icon is decorative.",
+    "An interactive row is at least 44 points high; text wraps and scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Text is never parsed as markup: only <mark> and </mark> are read, and only when snippetHasMarkTags is true; other tags stay visible text.",
+    "Ranges outside the text are clamped, overlapping ranges merge, and an offset inside a character covers the whole character.",
+    "The snippet is limited to three lines; the title wraps without a limit.",
+    "Empty path segments are skipped."
+  ],
+  "tests": [
+    "MonarchSearchResultItemTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Link result with path and highlighted snippet",
+      "fixture": "search-result-item",
+      "webExample": "Link result with path and highlighted snippet",
+      "template": "MonarchSearchResultItem(\n    {{title}},\n    path: [{{path.0}}, {{path.1}}],\n    snippet: {{snippet}},\n    terms: MonarchSearchResultItem.terms(from: {{query}}),\n    systemImage: \"tray\",\n    action: {},\n    meta: { MonarchBadge({{badge}}) }\n)",
+      "code": "MonarchSearchResultItem(\n    \"Travel policy\",\n    path: [\"Handbook\", \"Policies\"],\n    snippet: \"Book travel at least two weeks ahead and add the trip to the shared calendar.\",\n    terms: MonarchSearchResultItem.terms(from: \"travel calendar\"),\n    systemImage: \"tray\",\n    action: {},\n    meta: { MonarchBadge(\"Document\") }\n)"
+    },
+    {
+      "title": "Markers from the search service",
+      "code": "MonarchSearchResultItem(\n    \"Roadmap\",\n    snippet: \"The <mark>roadmap</mark> for the next quarter.\",\n    snippetHasMarkTags: true,\n    systemImage: \"map\"\n)"
+    }
+  ],
+  "webEquivalent": "SearchResultItem",
+  "dependsOn": [
+    "text",
+    "file-type-icon",
+    "inline"
+  ]
+}

@@ -14,8 +14,8 @@ without asking anyone else.
 
 ## Decision
 
-1. From the next release, all packages and the documentation site are
-   licensed under the Apache License 2.0. The root has the
+1. From the next release, all packages, the documentation site and the native
+   libraries are licensed under the Apache License 2.0. The root has the
    unmodified license text (`LICENSE`), a `NOTICE` file, and every npm
    package ships both. Earlier releases stay available under MIT.
 2. `TRADEMARK.md` states what the license does not grant: the Rook and

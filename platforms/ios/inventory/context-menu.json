@@ -1,0 +1,87 @@
+{
+  "id": "context-menu",
+  "name": null,
+  "title": "ContextMenu",
+  "family": "overlays",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "contextMenu(menuItems:), and contextMenu(menuItems:preview:) for a custom preview",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The standard context menu, opened by touching and holding a view, or by a secondary click with a pointer. Monarch ships nothing.",
+  "whenToUse": "To offer shortcuts to the actions of an item: a row, a file, a message. Every action in the menu must also be reachable another way, such as a menu button, swipe actions or the detail screen.",
+  "whenNotToUse": "Do not make a context menu the only way to an action; the gesture is hidden. For a visible button that opens a menu use Menu.",
+  "api": [
+    "func contextMenu(menuItems: () -> some View) -> some View",
+    "func contextMenu(menuItems: () -> some View, preview: () -> some View) -> some View",
+    "func contentShape(_ kind: ContentShapeKinds, _ shape: some Shape) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "open",
+      "description": "The view lifts as a preview, the screen behind is blurred, and the menu appears beside it."
+    },
+    {
+      "name": "destructive item",
+      "description": "A button with the destructive role is drawn in red."
+    }
+  ],
+  "appearance": "The system draws the menu and the lifted preview in every theme. Set contentShape(.contextMenuPreview, …) to the view's own rounded shape so the preview has the right corners.",
+  "platformNotes": "The web ContextMenu opens on right-click, Shift F10 or a long press and is composed of Monarch-styled items, checkboxes, radio groups and submenus. On iOS the menu is the system's: items are Button, Toggle, Picker and nested Menu, with Divider and Section for groups, and none of them is styled. The web's label and modal props have no equivalent. Android uses a DropdownMenu opened from a long press.",
+  "accessibility": [
+    "System behaviour: VoiceOver offers the context menu through the Actions rotor and by a double tap and hold.",
+    "System behaviour: the menu is modal; focus moves into it and returns to the view when it closes.",
+    "Because the gesture is not discoverable, give the same actions a visible control, for example a Menu with an ellipsis icon that has a label."
+  ],
+  "edgeCases": [
+    "An empty menu builder disables the context menu.",
+    "On a view inside a Button or a NavigationLink the long press wins over the tap only after the hold.",
+    "Items cannot show a custom view; only a title, an image and a role.",
+    "contentShape(.contextMenuPreview, …) is not available on macOS, where the examples are also compiled, so the compiled example leaves it out. The catalogue page uses it."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "File actions",
+      "fixture": "context-menu",
+      "webExample": "File actions",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    VStack(spacing: theme.spacing.space2) {\n        MonarchButton({{file}}, variant: .ghost) {}\n        Text(\"Touch and hold the file for its actions.\")\n            .monarchTextStyle(.caption)\n    }\n    .frame(maxWidth: .infinity, minHeight: 128)\n    .padding(theme.spacing.space4)\n    .background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: theme.radius.lg))\n    .contextMenu {\n        Button({{items.0.label}}, systemImage: \"pencil\") { last = {{items.0.label}} }\n        Button({{items.1.label}}) { last = {{items.1.label}} }\n        Divider()\n        Button({{items.2.label}}, systemImage: \"trash\", role: .destructive) { last = {{items.2.label}} }\n    }\n    .accessibilityLabel({{menuLabel}})\n    Text(\"Last action: \\(last)\")\n        .monarchTextStyle(.caption)\n}\n.frame(maxWidth: 384)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var last = {{lastAction}}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var last = \"Nothing yet\"",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    VStack(spacing: theme.spacing.space2) {\n        MonarchButton(\"Quarterly report.pdf\", variant: .ghost) {}\n        Text(\"Touch and hold the file for its actions.\")\n            .monarchTextStyle(.caption)\n    }\n    .frame(maxWidth: .infinity, minHeight: 128)\n    .padding(theme.spacing.space4)\n    .background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: theme.radius.lg))\n    .contextMenu {\n        Button(\"Rename\", systemImage: \"pencil\") { last = \"Rename\" }\n        Button(\"Duplicate\") { last = \"Duplicate\" }\n        Divider()\n        Button(\"Delete\", systemImage: \"trash\", role: .destructive) { last = \"Delete\" }\n    }\n    .accessibilityLabel(\"File actions\")\n    Text(\"Last action: \\(last)\")\n        .monarchTextStyle(.caption)\n}\n.frame(maxWidth: 384)"
+    }
+  ],
+  "webEquivalent": "ContextMenu",
+  "dependsOn": [],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "items.0.shortcut"
+      ],
+      "reason": "A context menu on iOS shows no keyboard shortcut next to an item.",
+      "convention": "Apple HIG: context menu items are touch first and carry no key hints."
+    },
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "hint"
+      ],
+      "reason": "The web hint names the mouse and keyboard gestures; iOS says \"Touch and hold\".",
+      "convention": "Apple HIG: name the gesture as the platform does."
+    },
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web opens its menu on a right click; on iPhone the menu is the system context menu (touch and hold), whose surface, type size and destructive red are drawn by iOS and cannot take Monarch colours; the hint under the file reads \"Touch and hold\" for the same reason. The items and their order match the web.",
+      "convention": "HIG: system menus and date pickers keep the system's own look"
+    }
+  ]
+}

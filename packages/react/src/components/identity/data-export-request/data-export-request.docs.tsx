@@ -1,25 +1,20 @@
 import { useState } from 'react';
 import { DataExportRequest, type DataExportStatus } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './data-export-request.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
-const scope = [
-  { id: 'profile', label: 'Profile and settings', description: 'Name, email, preferences.' },
-  { id: 'content', label: 'Projects and documents', description: 'Everything you created.' },
-  { id: 'activity', label: 'Activity history', description: 'Sign-ins and changes you made.' },
-];
+const scope = fixture.data.scope;
 
-const formats = [
-  { value: 'zip', label: 'ZIP archive (JSON files)' },
-  { value: 'csv', label: 'CSV spreadsheets' },
-];
+const formats = fixture.data.formats;
 
-const note = 'Preparing an export can take up to two days. We will email you when it is ready.';
+const note = fixture.data.note;
 
 /** Walks through requested → preparing → ready, as a backend would report it. */
 function Lifecycle() {
-  const [status, setStatus] = useState<DataExportStatus>('idle');
+  const [status, setStatus] = useState<DataExportStatus>(fixture.data.status as DataExportStatus);
   const [requestedAt, setRequestedAt] = useState<string>();
   const [readyAt, setReadyAt] = useState<string>();
   const request = async () => {

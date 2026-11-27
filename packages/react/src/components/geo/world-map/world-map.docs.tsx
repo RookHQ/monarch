@@ -1,18 +1,22 @@
 import { WorldMap } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './world-map.fixture.json';
 
-const byCountry = [
-  { country: 'US', value: 1240, details: [{ label: 'Users', value: 3820 }] },
-  { country: 'GB', value: 410, details: [{ label: 'Users', value: 1190 }] },
-  { country: 'DE', value: 380, details: [{ label: 'Users', value: 1020 }] },
-  { country: 'IN', value: 350, details: [{ label: 'Users', value: 1460 }] },
-  { country: 'BR', value: 210, details: [{ label: 'Users', value: 540 }] },
-  { country: 'FR', value: 190, details: [{ label: 'Users', value: 470 }] },
-  { country: 'JP', value: 120, details: [{ label: 'Users', value: 300 }] },
-  { country: 'AU', value: 95, details: [{ label: 'Users', value: 210 }] },
-  { country: 'ZA', value: 40, details: [{ label: 'Users', value: 88 }] },
-  { country: 'SG', value: 60, details: [{ label: 'Users', value: 150 }] },
-];
+const data = fixture.data as unknown as {
+  title: string;
+  description: string;
+  locale: string;
+  detailLabel: string;
+  countries: { country: string; value: number; users: number }[];
+  extra: { key: string; label: string; value: number };
+};
+
+const byCountry = data.countries.map(({ country, value, users }) => ({
+  country,
+  value,
+  details: [{ label: data.detailLabel, value: users }],
+}));
 
 export default {
   id: 'world-map',
@@ -152,11 +156,11 @@ export default {
           stack: true,
           render: () => (
             <WorldMap
-              title="Workspaces by country"
-              description="Last 30 days"
+              title={data.title}
+              description={data.description}
               data={byCountry}
-              extras={[{ key: 'global', label: 'Global', value: 75 }]}
-              locale="en-US"
+              extras={[data.extra]}
+              locale={data.locale}
               style={{ width: '100%', maxWidth: '44rem' }}
             />
           ),

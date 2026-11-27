@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Monarch for iOS inventory entry",
+  "description": "One file per web component id: inventory/<id>.json. Validated by Scripts/generate.py, which supports the keywords used here: type, enum, required, properties, additionalProperties, items, minItems, minLength, pattern.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id", "name", "title", "family", "category", "coverage", "kind", "wrapsNative", "status", "layer", "since",
+    "summary", "whenToUse", "whenNotToUse", "api", "options", "states", "appearance", "platformNotes",
+    "accessibility", "edgeCases", "tests", "examples", "webEquivalent", "dependsOn"
+  ],
+  "properties": {
+    "id": {
+      "description": "The web component id from platforms/parity.json. Equal to the file name without .json.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "name": {
+      "description": "The primary Swift declaration (ios.name in parity.json), or null when Monarch ships nothing.",
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "title": { "description": "The display title from parity.json.", "type": "string", "minLength": 1 },
+    "family": {
+      "description": "The web family from parity.json, or foundations for entries with no web id.",
+      "type": "string",
+      "enum": [
+        "actions", "billing", "charts", "collaboration", "crm", "data-display", "data-grid", "feedback", "files",
+        "forms", "geo", "identity", "intelligence", "interaction", "layout", "navigation", "overlays",
+        "scheduling", "search", "technical", "typography", "workflow", "foundations"
+      ]
+    },
+    "category": {
+      "description": "A: native adoption. B: Monarch style or wrapper. C: custom.",
+      "type": "string",
+      "enum": ["A", "B", "C"]
+    },
+    "coverage": {
+      "description": "How the web component is covered on iOS, as in parity.json.",
+      "type": "string",
+      "enum": ["build", "style", "native", "compose", "web-only"]
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["style", "wrapper", "custom", "modifier", "native", "recipe", "none"]
+    },
+    "wrapsNative": {
+      "description": "The exact SwiftUI API used. Null only for web-only coverage.",
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "status": {
+      "description": "An experimental entry ships its declarations as @_spi(Experimental) public (checked by Scripts/generate.py).",
+      "type": "string",
+      "enum": ["available", "experimental", "planned", "deprecated"]
+    },
+    "layer": {
+      "description": "The documentation layer (ADR 0017): patterns are experimental domain composites (AI panels, product screens, composites of one domain); everything else is components. A pattern is always experimental. Equal to the layer of the same id on Android (scripts/native/status-check.mjs).",
+      "type": "string",
+      "enum": ["components", "patterns"]
+    },
+    "since": {
+      "description": "The Monarch for iOS version that added the entry.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "summary": { "type": "string", "minLength": 1 },
+    "whenToUse": { "type": "string", "minLength": 1 },
+    "whenNotToUse": { "type": "string", "minLength": 1 },
+    "api": {
+      "description": "Signature strings, as written in the source.",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "type", "default", "description"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "type": { "type": "string", "minLength": 1 },
+          "default": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "states": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "description"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "appearance": {
+      "description": "How it looks in the light, dark and high-contrast themes. One or two sentences.",
+      "type": "string",
+      "minLength": 1
+    },
+    "platformNotes": {
+      "description": "How it differs from Android and the web, and why.",
+      "type": "string",
+      "minLength": 1
+    },
+    "accessibility": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "edgeCases": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "tests": {
+      "description": "The test suites that cover the entry.",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "examples": {
+      "description": "Every example is compiled and rendered by the tests.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "code"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1 },
+          "code": {
+            "description": "The body of a SwiftUI view.",
+            "type": "string",
+            "minLength": 1
+          },
+          "setup": {
+            "description": "Optional declarations the code needs, placed in the same view: state, environment, functions.",
+            "type": "string",
+            "minLength": 1
+          },
+          "previewPresented": {
+            "description": "For the documentation previews only: the @State variables of setup that start presented in the preview host, so a sheet, alert, dialog, popover or flow is open in the image. A name starts true; name=expr starts as expr. The first example of an entry with this field is the one the preview shows.",
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "previewTap": {
+            "description": "For the documentation previews only: true when the example opens its presentation from its own button (state inside a component), so the preview host activates the first button.",
+            "type": "boolean"
+          },
+          "previewScreen": {
+            "description": "For the documentation previews only: true when the capture is the whole screen cut to a presentation that previewAction opens (a sheet opened by an action rather than by a Bool).",
+            "type": "boolean"
+          },
+          "previewAction": {
+            "description": "For the documentation previews only: statements the preview host runs once after the example appears, for a state that only an action creates (a toast after a delete, a result after a save). Can use the example's own methods and state.",
+            "type": "string",
+            "minLength": 1
+          },
+          "previewMenu": {
+            "description": "For the documentation previews only: true when the example's menu (a Menu or a context menu) cannot be presented by state, so the preview host opens it.",
+            "type": "boolean"
+          },
+          "experimental": {
+            "description": "True when the example of a stable entry uses an experimental symbol. It is then compiled with @_spi(Experimental) import MonarchUI. Examples of an experimental entry need not set it.",
+            "type": "boolean"
+          },
+          "imports": {
+            "description": "Optional system frameworks to import besides SwiftUI, MonarchUI and MonarchTokens.",
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" }
+          },
+          "fixture": {"description": "Only on the first example: the id of the parity fixture (packages/react/src/**/<id>.fixture.json) whose scenario this example renders, equal to the entry's id. Its code and setup are then written from template and setupTemplate by scripts/native/fixtures.mjs (CROSS-PLATFORM.md section 8).", "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+          "webExample": {"description": "With fixture: the title of the web primary example (sections.examples.items[0] in <id>.docs.tsx), checked by scripts/native/fixtures.mjs and scripts/native/status-check.mjs.", "type": "string", "minLength": 1},
+          "template": {"description": "With fixture: the Swift of code with {{path}} placeholders for the fixture's data (filters: tone, case, pascal, double, millis, date, raw). code is generated from it; edit the template, then run npm run native:fixtures.", "type": "string", "minLength": 1},
+          "setupTemplate": {"description": "With fixture: setup with {{path}} placeholders, as template.", "type": "string", "minLength": 1}
+        }
+      }
+    },
+    "webEquivalent": {
+      "description": "The React component name, or null.",
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "dependsOn": {
+      "description": "Inventory ids this entry builds on, as in parity.json.",
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" }
+    },
+    "toneMap": {"description": "The web component's state-to-tone tables this entry reproduces, by the web table name (for example STATE_TONE in ai-spend-cap.tsx): { \"<TABLE>\": { \"<state>\": \"<tone>\" } }. Checked against the web source and this platform's source by scripts/native/parity-lint.mjs.", "type": "object"},
+    "icons": {"description": "The glyphs the web component draws itself and this entry draws by default: { \"<slot>\": \"<web glyph, a key of platforms/icons.json>\" }. Checked by scripts/native/parity-lint.mjs.", "type": "object"},
+    "parityExceptions": {"description": "Written exceptions to the cross-platform parity rule (CROSS-PLATFORM.md section 8): each names the rule, the reason and the platform convention. Shown on the docs page under Platform behaviour. rule fixture-data with paths waives fixture values the example cannot show.", "type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["rule", "reason", "convention"], "properties": {"rule": {"type": "string", "minLength": 1}, "platform": {"type": "string", "enum": ["ios", "android"]}, "paths": {"type": "array", "items": {"type": "string", "minLength": 1}}, "reason": {"type": "string", "minLength": 1}, "convention": {"type": "string", "minLength": 1}}}}
+  }
+}

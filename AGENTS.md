@@ -43,7 +43,7 @@ Rules:
    `SignInWithRookButton`, `rookIntelligenceTransport`, the `ROOK_*`
    constants) encode Rook platform contracts. Import them from
    `@rookcom/monarch-react/rook`; the old paths (`/shell`, `/patterns`,
-   `/ai`) are deprecated and stop exporting them in 0.15.0. Outside Rook, use
+   `/ai`) are deprecated; they stop exporting them no earlier than 2027-02-11 (90-day window). Outside Rook, use
    the general components instead
    ([rook-specific-exports](https://github.com/RookHQ/monarch/blob/main/docs/guides/rook-specific-exports.md)).
    `monarch search` lists general components first.

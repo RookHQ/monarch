@@ -1,0 +1,156 @@
+{
+  "id": "email-verification-banner",
+  "name": "MonarchEmailVerificationBanner",
+  "title": "EmailVerificationBanner",
+  "family": "identity",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchCalloutBanner with MonarchButton actions in a androidx.compose.foundation.layout.FlowRow, a LaunchedEffect countdown and a polite live region",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A notice that the email address is not verified yet, with the address, a Resend button that waits out a cooldown, and an optional Change email button.",
+  "whenToUse": "While a signed-in person has not verified their email address, or after they changed it and the new one is not verified.",
+  "whenNotToUse": "On the verification screen itself, where entering a code is the task, use MonarchOtpPinInput. For general notices use MonarchCalloutBanner.",
+  "api": [
+    "@Composable fun MonarchEmailVerificationBanner(email: String, onResend: suspend () -> Unit, modifier: Modifier = Modifier, tone: MonarchTone = MonarchTone.Warning, placement: MonarchCalloutBannerPlacement = MonarchCalloutBannerPlacement.Section, cooldownSeconds: Int = 60, initialCooldownSeconds: Int = 0, onChangeEmail: (() -> Unit)? = null, onDismiss: (() -> Unit)? = null, icon: (@Composable () -> Unit)? = null, dismissIcon: (@Composable () -> Unit)? = null, labels: MonarchEmailVerificationBannerLabels = MonarchEmailVerificationBannerLabels())",
+    "class MonarchEmailVerificationBannerLabels(title: String? = null, message: ((email: String) -> String)? = null, resend: String? = null, resendIn: ((seconds: Int) -> String)? = null, sent: String? = null, changeEmail: String? = null, dismiss: String? = null, error: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "email",
+      "type": "String",
+      "default": "required",
+      "description": "The address waiting for verification, shown in the message."
+    },
+    {
+      "name": "onResend",
+      "type": "suspend () -> Unit",
+      "default": "required",
+      "description": "Sends the email again. Throwing shows the error from labels and starts no cooldown."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the banner."
+    },
+    {
+      "name": "tone",
+      "type": "MonarchTone",
+      "default": "MonarchTone.Warning",
+      "description": "Warning when features are locked until verified; Info when nothing is blocked yet. Other tones draw as Warning."
+    },
+    {
+      "name": "placement",
+      "type": "MonarchCalloutBannerPlacement",
+      "default": "MonarchCalloutBannerPlacement.Section",
+      "description": "A rounded callout in the content, or a full-width strip at the top of a screen."
+    },
+    {
+      "name": "cooldownSeconds",
+      "type": "Int",
+      "default": "60",
+      "description": "Seconds before another send after a successful one."
+    },
+    {
+      "name": "initialCooldownSeconds",
+      "type": "Int",
+      "default": "0",
+      "description": "Seconds already remaining when the banner appears, for example right after sign-up sent the first email."
+    },
+    {
+      "name": "onChangeEmail",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Shows a Change email button."
+    },
+    {
+      "name": "onDismiss",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Shows a dismiss button. The banner does not hide itself; remove it here."
+    },
+    {
+      "name": "icon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "An icon at the start in the tone color. Monarch bundles no icons."
+    },
+    {
+      "name": "dismissIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The close mark of the dismiss button. Without it the button shows \"Dismiss\" as text."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchEmailVerificationBannerLabels",
+      "default": "MonarchEmailVerificationBannerLabels()",
+      "description": "Replacements for the title, the message, the button titles, the sent line, the dismiss name and the error."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "Resend email can be used."
+    },
+    {
+      "name": "sending",
+      "description": "The resend button shows its progress indicator, reads \"Loading\" and ignores taps."
+    },
+    {
+      "name": "sent",
+      "description": "\"Verification email sent\" in the success strong color, announced; the cooldown starts."
+    },
+    {
+      "name": "cooldown",
+      "description": "The button reads \"Resend in 42s\", counts down every second and is disabled until 0."
+    },
+    {
+      "name": "error",
+      "description": "\"Couldn’t send the email. Try again.\" in the danger strong color, announced; Resend is available at once."
+    }
+  ],
+  "appearance": "The surface of MonarchCalloutBanner: the subtle fill and border of the warning or info tone, rounded in a section, a strip with a line below on a page. Resend is a small secondary button, Change email a small ghost button; the status line uses the success strong or danger strong role. All roles come from the theme.",
+  "platformNotes": "The parity map names MonarchBanner; the component is built on MonarchCalloutBanner instead, because it needs two actions and a page placement, as on iOS. The web exports useResendCooldown for other resend controls; on Android the cooldown is the internal MonarchResendCooldown, to be promoted if another component needs it. onResend is a suspend function run in the banner's coroutine scope. A failed send always shows the error from labels: Android exception messages are not written for people, so the thrown message is not shown (iOS shows a LocalizedError description). On the web the cooldown button keeps focus with aria-disabled; on Android it is disabled, which TalkBack still reads with the seconds left in its title. The web's landmark and actionPlacement props have no Android equivalent.",
+  "accessibility": [
+    "The tone name, title and message with the address are one TalkBack element, as MonarchCalloutBanner reads them.",
+    "Resend, Change email and Dismiss are separate buttons with 48dp touch targets.",
+    "During the cooldown the resend button is disabled and its title says the seconds left.",
+    "\"Verification email sent\" and failures are announced through a polite live region and shown as text, not color alone."
+  ],
+  "edgeCases": [
+    "Long addresses wrap inside the message.",
+    "The countdown runs while the banner is on screen; a banner removed and shown again starts from initialCooldownSeconds.",
+    "A send started while the banner leaves the screen is cancelled with it."
+  ],
+  "tests": [
+    "MonarchEmailVerificationBannerTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Resend with a cooldown",
+      "fixture": "email-verification-banner",
+      "webExample": "Resend with a cooldown",
+      "template": "MonarchEmailVerificationBanner(\n    email = {{email}},\n    onResend = { /* call the service */ },\n    cooldownSeconds = {{cooldownSeconds}},\n    onChangeEmail = {},\n)",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "code": "MonarchEmailVerificationBanner(\n    email = \"sam@example.com\",\n    onResend = { /* call the service */ },\n    cooldownSeconds = 20,\n    onChangeEmail = {},\n)"
+    },
+    {
+      "title": "Info tone as a page strip",
+      "code": "MonarchEmailVerificationBanner(\n    email = \"ana@example.com\",\n    onResend = {},\n    tone = MonarchTone.Info,\n    placement = MonarchCalloutBannerPlacement.Page,\n)"
+    }
+  ],
+  "webEquivalent": "EmailVerificationBanner",
+  "dependsOn": [
+    "callout-banner",
+    "button"
+  ]
+}

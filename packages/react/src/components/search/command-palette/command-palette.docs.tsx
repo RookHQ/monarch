@@ -14,29 +14,27 @@ import {
   TrashIcon,
 } from '../../../internal/docs-demo.js';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './command-palette.fixture.json';
 
-/** Built lazily: docs files cannot create JSX at module scope. */
-const commands = (): CommandPaletteItem[] => [
-  { id: 'new', label: 'Create task', group: 'Actions', icon: <PlusIcon />, shortcut: 'c' },
-  { id: 'rename', label: 'Rename', group: 'Actions', icon: <PencilIcon />, shortcut: 'f2' },
-  {
-    id: 'archive',
-    label: 'Archive',
-    group: 'Actions',
-    icon: <TrashIcon />,
-    keywords: ['delete', 'remove'],
-    tone: 'danger',
-  },
-  { id: 'board', label: 'Board', group: 'Go to', icon: <BoardIcon />, shortcut: ['G', 'B'] },
-  { id: 'list', label: 'My tasks', group: 'Go to', icon: <ListIcon />, shortcut: ['G', 'M'] },
-  {
-    id: 'settings',
-    label: 'Settings',
-    group: 'Go to',
-    description: 'Workspace',
-    shortcut: 'mod+,',
-  },
-];
+/** What only the web draws on a command: its icon, hotkey and search keywords. Built lazily: docs files cannot create JSX at module scope. */
+const webOnly = (): Record<string, Partial<CommandPaletteItem>> => ({
+  new: { icon: <PlusIcon />, shortcut: 'c' },
+  rename: { icon: <PencilIcon />, shortcut: 'f2' },
+  archive: { icon: <TrashIcon />, keywords: ['delete', 'remove'] },
+  board: { icon: <BoardIcon />, shortcut: ['G', 'B'] },
+  list: { icon: <ListIcon />, shortcut: ['G', 'M'] },
+  settings: { shortcut: 'mod+,' },
+});
+
+const commands = (): CommandPaletteItem[] => {
+  const extra = webOnly();
+  return fixture.data.groups.flatMap((group) =>
+    group.items.map(
+      (item) => ({ ...item, group: group.title, ...extra[item.id] }) as CommandPaletteItem,
+    ),
+  );
+};
 
 const RECORDS = [
   'Quarterly planning notes',
@@ -75,10 +73,11 @@ function GroupsDemo() {
   return (
     <>
       <CommandPalette
+        defaultOpen
         items={commands()}
         trigger={
           <Button variant="secondary">
-            Search commands
+            {fixture.data.trigger}
             {formatHotkey('mod+k').map((k) => (
               <Kbd key={k}>{k}</Kbd>
             ))}
@@ -86,7 +85,7 @@ function GroupsDemo() {
         }
         onItemSelect={(item) => setLast(item.label)}
       />
-      <span>{last ? `Ran: ${last}` : 'Press ⌘K or Ctrl+K anywhere on this page.'}</span>
+      <span>{last ? `Ran: ${last}` : fixture.data.hint}</span>
     </>
   );
 }
@@ -306,6 +305,7 @@ export default {
       items: [
         {
           title: 'Commands, groups and shortcut hints',
+          stage: true,
           render: () => <GroupsDemo />,
         },
         {

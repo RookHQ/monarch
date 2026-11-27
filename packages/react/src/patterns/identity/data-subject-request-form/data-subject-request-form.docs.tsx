@@ -4,6 +4,8 @@ import {
   DataSubjectRequestForm,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './data-subject-request-form.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
@@ -22,7 +24,11 @@ function PublicForm() {
   return (
     <DataSubjectRequestForm
       countries={countries}
-      verificationNote="To protect the account, we will email a link to confirm the request before acting on it."
+      types={fixture.data.types.map((t) => ({
+        ...t,
+        ...(t.id === 'correct' && { detailsRequired: true }),
+      }))}
+      verificationNote={fixture.data.verificationNote}
       responseTimeNote="We will reply by email. The time it takes depends on where you live and the type of request."
       onSubmit={async () => {
         await wait(900);

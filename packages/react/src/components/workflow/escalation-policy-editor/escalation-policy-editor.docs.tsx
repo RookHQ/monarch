@@ -5,20 +5,13 @@ import {
   type EscalationTarget,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './escalation-policy-editor.fixture.json';
 
-const TARGETS: EscalationTarget[] = [
-  { value: 'oncall', label: 'On-call rota' },
-  { value: 'chat', label: 'Team chat', description: 'Chat channel' },
-  { value: 'email', label: 'Operations email', description: 'Email list' },
-  { value: 'lead', label: 'Team lead', description: 'Person' },
-];
+const TARGETS = fixture.data.targets as EscalationTarget[];
 
 function PolicyDemo() {
-  const [levels, setLevels] = useState<EscalationLevel[]>([
-    { id: '1', afterMinutes: 5, targets: ['oncall'] },
-    { id: '2', afterMinutes: 20, targets: ['chat', 'lead'] },
-    { id: '3', afterMinutes: 60, targets: [] },
-  ]);
+  const [levels, setLevels] = useState<EscalationLevel[]>(fixture.data.levels as EscalationLevel[]);
   return (
     <EscalationPolicyEditor
       style={{ width: '100%', maxWidth: 640 }}
@@ -26,7 +19,7 @@ function PolicyDemo() {
       onChange={setLevels}
       targets={TARGETS}
       showErrors
-      description="Each level fires only if nobody has acknowledged yet. Times are measured from when the incident opened."
+      description={fixture.data.description}
     />
   );
 }

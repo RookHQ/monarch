@@ -1,0 +1,82 @@
+{
+  "id": "virtual-list",
+  "name": null,
+  "title": "VirtualList",
+  "family": "data-grid",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyColumn, androidx.compose.foundation.lazy.grid.LazyVerticalGrid",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Long lists are virtualised by the platform: LazyColumn and LazyVerticalGrid compose an item only when it is about to appear. Monarch ships nothing.",
+  "whenToUse": "For any list or grid that can grow beyond a screen: tickets, contacts, search results, a feed. Give every item a stable key and, where rows differ, a content type.",
+  "whenNotToUse": "For a handful of rows inside a screen that already scrolls, use a Column; a lazy list cannot be nested in a vertical scroll of the same direction. For a table with columns and sorting, use a data grid.",
+  "api": [
+    "@Composable fun LazyColumn(modifier: Modifier = Modifier, state: LazyListState = rememberLazyListState(), contentPadding: PaddingValues = PaddingValues(0.dp), ..., content: LazyListScope.() -> Unit)",
+    "fun <T> LazyListScope.items(items: List<T>, key: ((item: T) -> Any)? = null, contentType: (item: T) -> Any? = { null }, itemContent: @Composable LazyItemScope.(item: T) -> Unit)",
+    "@Composable fun LazyVerticalGrid(columns: GridCells, modifier: Modifier = Modifier, state: LazyGridState = rememberLazyGridState(), ..., content: LazyGridScope.() -> Unit)",
+    "suspend fun LazyListState.animateScrollToItem(index: Int, scrollOffset: Int = 0)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "loading more",
+      "description": "Add an item with a progress indicator after the last one and load the next page from a LaunchedEffect in it, or watch LazyListState.layoutInfo."
+    },
+    {
+      "name": "empty",
+      "description": "Show MonarchEmptyState in place of the list."
+    }
+  ],
+  "appearance": "No appearance of its own: rows use Monarch components and MonarchDivider, which follow the theme in light, dark and high contrast.",
+  "platformNotes": "The web VirtualList measures row heights, keeps a window of rows and exposes scrollToIndex; LazyColumn and LazyVerticalGrid do all of that inside Compose. The web getItemKey is the key lambda of items(): use an id that is stable across reloads, so the scroll position and item state follow the data. contentType lets Compose reuse the composition of rows of the same type. Heights are measured by Compose, so there is no estimated height or overscan to set. The web onEndReached is an item at the end whose LaunchedEffect requests the next page. The web scrollToKey is LazyListState.animateScrollToItem with the index of the key. iOS uses List and LazyVStack.",
+  "accessibility": [
+    "System behavior: TalkBack moves through the items in order and scrolls the list as it goes.",
+    "Items that have not been composed are not in the accessibility tree until scrolling composes them; TalkBack reports the collection size from the lazy list's collection info.",
+    "A trailing loading item should have a content description that says more items are loading."
+  ],
+  "edgeCases": [
+    "Without keys, inserting an item at the top moves the state of every row below it, and the scroll position jumps.",
+    "A LazyColumn inside verticalScroll throws, because it would be measured with infinite height; give it a bounded height or make the whole screen one LazyColumn."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "5,000 contacts",
+      "fixture": "virtual-list",
+      "webExample": "5,000 contacts",
+      "template": "LazyColumn(modifier = Modifier.height({{height}}.dp).semantics { contentDescription = {{label}} }) {\n    items(count = {{count}}) { index ->\n        Row(\n            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),\n            horizontalArrangement = Arrangement.SpaceBetween,\n        ) {\n            MonarchText(text = {{itemLabel}} + \" \" + (index + 1))\n            MonarchText(text = teams[index % teams.size], color = MonarchTheme.colors.textMuted)\n        }\n    }\n}",
+      "setupTemplate": "val teams = listOf({{teams.0}}, {{teams.1}}, {{teams.2}}, {{teams.3}})",
+      "imports": [
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.semantics.contentDescription",
+        "androidx.compose.ui.semantics.semantics"
+      ],
+      "setup": "val teams = listOf(\"Design\", \"Finance\", \"Support\", \"Engineering\")",
+      "code": "LazyColumn(modifier = Modifier.height(320.dp).semantics { contentDescription = \"Contacts\" }) {\n    items(count = 5000) { index ->\n        Row(\n            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),\n            horizontalArrangement = Arrangement.SpaceBetween,\n        ) {\n            MonarchText(text = \"Contact\" + \" \" + (index + 1))\n            MonarchText(text = teams[index % teams.size], color = MonarchTheme.colors.textMuted)\n        }\n    }\n}"
+    },
+    {
+      "title": "A loading item that requests the next page",
+      "code": "LazyColumn(modifier = Modifier.height(MonarchTheme.spacing.space24 * 3)) {\n    items(items = List(loaded) { it + 1 }, key = { it }) { ticket ->\n        MonarchText(text = \"Ticket $ticket\")\n    }\n    item(key = \"loading\", contentType = \"loading\") {\n        MonarchProgress(\n            modifier = Modifier.fillMaxWidth(),\n            label = \"Loading more tickets\",\n        )\n        LaunchedEffect(loaded) { if (loaded < 200) loaded += 50 }\n    }\n}",
+      "setup": "var loaded by remember { mutableIntStateOf(50) }"
+    },
+    {
+      "title": "A grid of cards",
+      "code": "LazyVerticalGrid(\n    columns = GridCells.Adaptive(MonarchTheme.spacing.space24),\n    modifier = Modifier.height(MonarchTheme.spacing.space24 * 3),\n) {\n    items(items = List(500) { it + 1 }, key = { it }) { item ->\n        MonarchCard { MonarchText(text = \"Item $item\") }\n    }\n}",
+      "imports": [
+        "androidx.compose.foundation.lazy.grid.*"
+      ]
+    }
+  ],
+  "webEquivalent": "VirtualList",
+  "dependsOn": []
+}

@@ -1,0 +1,206 @@
+{
+  "id": "backlog-planner",
+  "name": "MonarchBacklogPlanner",
+  "title": "BacklogPlanner",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyColumn with detectDragGesturesAfterLongPress and Modifier.animateItem; androidx.compose.material3.DropdownMenu with DropdownMenuItem for Move to; MonarchDragHandle, MonarchProgress, MonarchButton and MonarchText",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Backlog and iteration planning on one screen: buckets stacked top to bottom with items moved within and between them by dragging, TalkBack actions or a Move to menu, and points against capacity.",
+  "whenToUse": "For planning which work goes into which sprint, release or iteration, with the backlog at the bottom.",
+  "whenNotToUse": "For work moving through stages (To do, Doing, Done), use MonarchKanbanBoard. For ordering one flat list, use MonarchReorderableList.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun <T> MonarchBacklogPlanner(buckets: List<MonarchBacklogBucket<T>>, key: (T) -> String, itemLabel: (T) -> String, modifier: Modifier = Modifier, itemPoints: ((T) -> Int?)? = null, onMove: (suspend (move: MonarchBacklogMove<T>, buckets: List<MonarchBacklogBucket<T>>) -> Unit)? = null, canMove: ((item: T, toBucketId: String, fromBucketId: String) -> Boolean)? = null, moveMenu: Boolean = true, collapsed: Set<String>? = null, onCollapsedChange: ((Set<String>) -> Unit)? = null, state: LazyListState = rememberLazyListState(), labels: MonarchBacklogPlannerLabels = MonarchBacklogPlannerLabels(), collapseIcon: (@Composable () -> Unit)? = null, menuIcon: (@Composable () -> Unit)? = null, itemContent: @Composable RowScope.(item: T, state: MonarchBacklogPlannerItemState) -> Unit)",
+    "class MonarchBacklogBucket<T>(id: String, title: String, items: List<T>, subtitle: String? = null, capacity: Int? = null, emptyText: String? = null, badge: (@Composable () -> Unit)? = null, actions: (@Composable RowScope.() -> Unit)? = null, footer: (@Composable () -> Unit)? = null) { fun withItems(items: List<T>): MonarchBacklogBucket<T> }",
+    "data class MonarchBacklogMove<T>(item: T, itemKey: String, fromBucketId: String, fromIndex: Int, toBucketId: String, toIndex: Int)",
+    "class MonarchBacklogPlannerItemState(bucketId: String, index: Int, dragged: Boolean, pending: Boolean)",
+    "class MonarchBacklogPlannerLabels(summary: ((count: Int, points: Int?, unestimated: Int) -> String)? = null, capacity: ((points: Int, capacity: Int) -> String)? = null, overCapacity: ((by: Int) -> String)? = null, points: ((points: Int) -> String)? = null, unestimated: String? = null, notEstimated: String? = null, handle: ((label: String) -> String)? = null, moveMenu: ((label: String) -> String)? = null, move: String? = null, moveTo: ((bucket: String) -> String)? = null, empty: String? = null, expanded: String? = null, collapsed: String? = null, pickedUp: ((label: String, bucket: String, position: Int, total: Int) -> String)? = null, moved: ((label: String, bucket: String, position: Int, total: Int) -> String)? = null, dropped: ((label: String, bucket: String, position: Int, total: Int) -> String)? = null, cancelled: ((label: String) -> String)? = null, failed: ((label: String) -> String)? = null, actions: Map<MonarchDragHandleDirection, String> = emptyMap())"
+  ],
+  "options": [
+    {
+      "name": "buckets",
+      "type": "List<MonarchBacklogBucket<T>>",
+      "default": "required",
+      "description": "The buckets, top to bottom: usually the active and planned iterations, then the backlog."
+    },
+    {
+      "name": "key",
+      "type": "(T) -> String",
+      "default": "required",
+      "description": "A stable, unique key for an item, across every bucket."
+    },
+    {
+      "name": "itemLabel",
+      "type": "(T) -> String",
+      "default": "required",
+      "description": "The short plain-text name of an item, used in the handle's name, the menu and announcements."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the planner. Give it a bounded height: the list is lazy."
+    },
+    {
+      "name": "itemPoints",
+      "type": "((T) -> Int?)?",
+      "default": "null",
+      "description": "The points of an item, null when it has no estimate. Adds totals, points on rows and the capacity meters."
+    },
+    {
+      "name": "onMove",
+      "type": "(suspend (move: MonarchBacklogMove<T>, buckets: List<MonarchBacklogBucket<T>>) -> Unit)?",
+      "default": "null",
+      "description": "Saves a finished move with the buckets after it. Without it items cannot be moved. Throwing puts the item back and announces it."
+    },
+    {
+      "name": "canMove",
+      "type": "((item: T, toBucketId: String, fromBucketId: String) -> Boolean)?",
+      "default": "null",
+      "description": "Whether an item may go to a bucket. Refused buckets are skipped by the drag and the actions and disabled in the menu."
+    },
+    {
+      "name": "moveMenu",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Adds the Move to button to each row."
+    },
+    {
+      "name": "collapsed",
+      "type": "Set<String>?",
+      "default": "null",
+      "description": "The ids of closed buckets. null keeps them inside the planner, all open at first."
+    },
+    {
+      "name": "onCollapsedChange",
+      "type": "((Set<String>) -> Unit)?",
+      "default": "null",
+      "description": "Called with the new set when the person opens or closes a bucket."
+    },
+    {
+      "name": "state",
+      "type": "LazyListState",
+      "default": "rememberLazyListState()",
+      "description": "The scroll state of the list."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchBacklogPlannerLabels",
+      "default": "MonarchBacklogPlannerLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "collapseIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "An icon at the start of each bucket title that turns a quarter turn while the bucket is open. None by default: Monarch bundles no icons."
+    },
+    {
+      "name": "menuIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "An icon for the Move to button. null shows the word Move."
+    },
+    {
+      "name": "itemContent",
+      "type": "@Composable RowScope.(item: T, state: MonarchBacklogPlannerItemState) -> Unit",
+      "default": "required",
+      "description": "The content of a row after the handle: the item's key, title and pickers."
+    }
+  ],
+  "states": [
+    {
+      "name": "dragging",
+      "description": "After a long press the row follows the finger above the others with a shadow and the accent border; its handle is read as Picked up. Other rows slide aside; the list scrolls at its edges."
+    },
+    {
+      "name": "pending",
+      "description": "While onMove runs the item stays in its new place and its row's state has pending true."
+    },
+    {
+      "name": "failed",
+      "description": "When onMove throws, the item goes back and \"ABC-12 could not be moved. It is back where it was.\" is announced."
+    },
+    {
+      "name": "collapsed",
+      "description": "A closed bucket shows only its header, read as Collapsed; drags and Move up and Move down skip it."
+    },
+    {
+      "name": "empty",
+      "description": "An open bucket with no items shows its emptyText, or \"Nothing here yet.\""
+    },
+    {
+      "name": "over capacity",
+      "description": "The capacity meter is full and \"Planned work is over capacity by 3 points.\" is written in the strong danger color."
+    },
+    {
+      "name": "refused",
+      "description": "Buckets canMove refuses are disabled in the Move to menu and skipped by the drag and the actions."
+    },
+    {
+      "name": "read only",
+      "description": "Without onMove there is no handle, no Move to button and no drag."
+    }
+  ],
+  "appearance": "Bucket headers use the subheading style in the default text color with captions in the muted text color. Rows are surface-coloured cards with a subtle border and the medium radius; a dragged row gets the accent border and a medium shadow. The capacity meter is MonarchProgress; the over-capacity note uses the strong danger color and is written out. The same roles adapt to dark and both high-contrast themes.",
+  "platformNotes": "A domain composite, marked experimental until a Rook app adopts it. The web picks items up with the keyboard (Space, arrows, Space) or a pointer; on Android a long press anywhere on the row starts the drag, and the handle offers Move up and Move down as TalkBack actions and arrow keys, each saving one step, so there is no separate keyboard pick-up mode. Bucket titles, subtitles and empty text are strings; badge, actions and footer are slots. Points are whole numbers. Collapse is hoisted as collapsed and onCollapsedChange. The web's chevron and menu glyphs are app-supplied slots because Monarch bundles no icons; without them the header has no glyph and the menu button reads Move. Announcements use a polite live region where the web uses an assertive one. There is no iOS entry yet.",
+  "accessibility": [
+    "Each bucket title is a heading and a button read with the state Expanded or Collapsed, with the TalkBack expand and collapse actions.",
+    "Each row's handle is named \"Move ABC-12\" and offers Move up and Move down actions that cross into the next open bucket.",
+    "The Move to button is named \"Move ABC-12 to another bucket\" and opens a menu of the other buckets; refused buckets are disabled.",
+    "Pick up, each move, drop, cancel and a failed save are announced through a polite live region that is always present.",
+    "A row with no estimate shows a dash that TalkBack reads as \"Not estimated\".",
+    "Capacity is a progress indicator named \"18 of 20 points\", and over capacity is written as text, not shown by color alone.",
+    "Headers, handles and Move to buttons have 48dp touch targets."
+  ],
+  "edgeCases": [
+    "The planner shows a saved move until onMove returns and the app passes the new buckets list; passing a new list instance replaces it.",
+    "Moving to the same place does not call onMove.",
+    "The list is lazy: give the planner a bounded height. Inside a vertically scrolling parent it would get an infinite height and fail.",
+    "Move up at the top of the first open bucket, or Move down at the end of the last, does nothing.",
+    "Long titles and subtitles wrap; rows grow at font scale 2.0."
+  ],
+  "tests": [
+    "MonarchBacklogPlannerTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Iterations and backlog",
+      "fixture": "backlog-planner",
+      "webExample": "Iterations and backlog",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchBacklogPlanner(\n    buckets = buckets,\n    key = { it.id },\n    itemLabel = { \"${it.key} ${it.title}\" },\n    itemPoints = { it.points },\n    onMove = { _, next -> buckets = next },\n    collapseIcon = { MonarchIcon(imageVector = SampleIcons.ChevronRight, contentDescription = null) },\n    menuIcon = { MonarchIcon(imageVector = SampleIcons.More, contentDescription = null) },\n) { issue, _ ->\n    MonarchText(text = issue.key, style = MonarchTextStyle.CodeSmall)\n    MonarchText(text = issue.title)\n}",
+      "setupTemplate": "class Issue(val id: String, val key: String, val title: String, val points: Int?)\nvar buckets by remember {\n    mutableStateOf(\n        listOf(\n            MonarchBacklogBucket(\n                id = {{buckets.0.id}},\n                title = {{buckets.0.title}},\n                items = listOf(\n                    Issue({{buckets.0.items.0.id}}, {{buckets.0.items.0.key}}, {{buckets.0.items.0.title}}, {{buckets.0.items.0.points}}),\n                    Issue({{buckets.0.items.1.id}}, {{buckets.0.items.1.key}}, {{buckets.0.items.1.title}}, {{buckets.0.items.1.points}}),\n                    Issue({{buckets.0.items.2.id}}, {{buckets.0.items.2.key}}, {{buckets.0.items.2.title}}, {{buckets.0.items.2.points}}),\n                ),\n                subtitle = {{buckets.0.subtitle}},\n                capacity = {{buckets.0.capacity}},\n                badge = { MonarchBadge(text = {{buckets.0.badge.label}}, tone = {{buckets.0.badge.tone|tone}}) },\n            ),\n            MonarchBacklogBucket(\n                id = {{buckets.1.id}},\n                title = {{buckets.1.title}},\n                items = listOf(\n                    Issue({{buckets.1.items.0.id}}, {{buckets.1.items.0.key}}, {{buckets.1.items.0.title}}, {{buckets.1.items.0.points}}),\n                ),\n                subtitle = {{buckets.1.subtitle}},\n                capacity = {{buckets.1.capacity}},\n                actions = { MonarchButton(text = {{buckets.1.action}}, onClick = {}, size = MonarchButtonSize.Sm) },\n            ),\n            MonarchBacklogBucket(\n                id = {{buckets.2.id}},\n                title = {{buckets.2.title}},\n                items = listOf(\n                    Issue({{buckets.2.items.0.id}}, {{buckets.2.items.0.key}}, {{buckets.2.items.0.title}}, {{buckets.2.items.0.points}}),\n                    Issue({{buckets.2.items.1.id}}, {{buckets.2.items.1.key}}, {{buckets.2.items.1.title}}, null),\n                    Issue({{buckets.2.items.2.id}}, {{buckets.2.items.2.key}}, {{buckets.2.items.2.title}}, {{buckets.2.items.2.points}}),\n                ),\n            ),\n        ),\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "class Issue(val id: String, val key: String, val title: String, val points: Int?)\nvar buckets by remember {\n    mutableStateOf(\n        listOf(\n            MonarchBacklogBucket(\n                id = \"it-14\",\n                title = \"Iteration 14\",\n                items = listOf(\n                    Issue(\"1\", \"WEB-21\", \"Fix the sign-in redirect\", 3),\n                    Issue(\"2\", \"WEB-24\", \"Export reports as CSV\", 5),\n                    Issue(\"3\", \"WEB-30\", \"Keyboard shortcuts help\", 2),\n                ),\n                subtitle = \"12 – 23 Jan\",\n                capacity = 13,\n                badge = { MonarchBadge(text = \"Active\", tone = MonarchTone.Accent) },\n            ),\n            MonarchBacklogBucket(\n                id = \"it-15\",\n                title = \"Iteration 15\",\n                items = listOf(\n                    Issue(\"4\", \"WEB-33\", \"Dark mode for charts\", 8),\n                ),\n                subtitle = \"26 Jan – 6 Feb\",\n                capacity = 13,\n                actions = { MonarchButton(text = \"Start\", onClick = {}, size = MonarchButtonSize.Sm) },\n            ),\n            MonarchBacklogBucket(\n                id = \"backlog\",\n                title = \"Backlog\",\n                items = listOf(\n                    Issue(\"5\", \"WEB-35\", \"Audit log filters\", 5),\n                    Issue(\"6\", \"WEB-36\", \"Bulk archive\", null),\n                    Issue(\"7\", \"WEB-41\", \"Saved views\", 3),\n                ),\n            ),\n        ),\n    )\n}",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchBacklogPlanner(\n    buckets = buckets,\n    key = { it.id },\n    itemLabel = { \"${it.key} ${it.title}\" },\n    itemPoints = { it.points },\n    onMove = { _, next -> buckets = next },\n    collapseIcon = { MonarchIcon(imageVector = SampleIcons.ChevronRight, contentDescription = null) },\n    menuIcon = { MonarchIcon(imageVector = SampleIcons.More, contentDescription = null) },\n) { issue, _ ->\n    MonarchText(text = issue.key, style = MonarchTextStyle.CodeSmall)\n    MonarchText(text = issue.title)\n}"
+    },
+    {
+      "title": "A closed bucket that takes no items",
+      "setup": "val buckets = listOf(\n    MonarchBacklogBucket(id = \"done\", title = \"Released\", items = listOf(\"Sign in with passkeys\")),\n    MonarchBacklogBucket(id = \"next\", title = \"Next release\", items = listOf(\"Team billing\", \"Audit log\")),\n)",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchBacklogPlanner(\n    buckets = buckets,\n    key = { it },\n    itemLabel = { it },\n    modifier = Modifier.height(320.dp),\n    onMove = { _, _ -> },\n    canMove = { _, to, _ -> to != \"done\" },\n    collapsed = setOf(\"done\"),\n) { title, _ ->\n    MonarchText(text = title)\n}",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ]
+    }
+  ],
+  "webEquivalent": "BacklogPlanner",
+  "dependsOn": [
+    "reorderable-list",
+    "issue-card",
+    "dropdown-menu"
+  ],
+  "icons": {
+    "bucket.collapse": "ChevronRightGlyph",
+    "item.menu": "MoreGlyph"
+  }
+}

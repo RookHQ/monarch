@@ -1,5 +1,7 @@
 import { ImpersonationBanner } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './impersonation-banner.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 const minutesAgo = (n: number) => new Date(Date.now() - n * 60_000);
@@ -108,10 +110,10 @@ export default {
           stack: true,
           render: () => (
             <ImpersonationBanner
-              name="Sam Rivera"
-              detail="sam@example.com"
-              reason="Case 4821"
-              startedAt={minutesAgo(12)}
+              name={fixture.data.name}
+              detail={fixture.data.detail}
+              reason={fixture.data.reason}
+              startedAt={minutesAgo(fixture.data.startedMinutesAgo)}
               sticky={false}
               onStop={() => wait(800)}
             />

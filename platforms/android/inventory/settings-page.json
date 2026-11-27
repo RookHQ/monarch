@@ -1,0 +1,124 @@
+{
+  "id": "settings-page",
+  "name": null,
+  "title": "SettingsPage",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchListRow rows that push a detail screen, androidx.activity.compose.BackHandler, MonarchSectionCard, MonarchFormActionsBar and MonarchUnsavedChangesGuard; androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold on wide windows",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a settings screen as a list of sections, each opening its own detail screen with its settings, a save bar while there are unsaved changes, a guard before leaving them, and the danger zone last.",
+  "whenToUse": "An app or workspace has several groups of settings (profile, notifications, billing, members) that people change from time to time.",
+  "whenNotToUse": "For one short group of settings, show a single settings-section recipe on the screen. For settings that save as soon as they change, use MonarchSwitchSettingsList without a save bar.",
+  "api": [
+    "MonarchListRow(headlineContent = { Text(\"Notifications\") }, supportingContent = { … }, onClick = { section = \"notifications\" }, divider = true)",
+    "BackHandler(enabled = !dirty) { section = null }",
+    "MonarchSectionCard(title = \"Notifications\", description = …) { MonarchSwitchRow(…) }",
+    "MonarchFormActionsBar(dirty = dirty, onSave = …, onDiscard = …)",
+    "MonarchUnsavedChangesGuard(hasChanges = dirty, open = asking, onOpenChange = …, onLeave = { section = null }, onSave = …)",
+    "NavigableListDetailPaneScaffold(navigator = rememberListDetailPaneScaffoldNavigator<String>(), listPane = { … }, detailPane = { … })"
+  ],
+  "options": [
+    {
+      "name": "sections",
+      "type": "List of MonarchListRow rows",
+      "default": "required",
+      "description": "One row per group of settings, with a short summary as supporting text; the danger zone row comes last."
+    },
+    {
+      "name": "section",
+      "type": "String?",
+      "default": "null",
+      "description": "The open section, kept in rememberSaveable (or the app's navigation); null shows the list."
+    },
+    {
+      "name": "dirty",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Whether the open section's draft differs from what is saved: shows the save bar and turns on the guard."
+    },
+    {
+      "name": "onSave",
+      "type": "() -> Unit",
+      "default": "required",
+      "description": "Saves the open section, from the save bar and from Save in the guard."
+    },
+    {
+      "name": "onDiscard",
+      "type": "() -> Unit",
+      "default": "null",
+      "description": "Puts the draft back to what is saved."
+    }
+  ],
+  "states": [
+    {
+      "name": "list",
+      "description": "The title and one row per section; each row opens its detail screen."
+    },
+    {
+      "name": "detail",
+      "description": "The section's settings in a MonarchSectionCard, with a back button and system back to the list."
+    },
+    {
+      "name": "unsaved changes",
+      "description": "MonarchFormActionsBar shows Save and Discard; back or the back button opens MonarchUnsavedChangesGuard."
+    },
+    {
+      "name": "danger zone",
+      "description": "The last row opens the danger-zone recipe: a danger-toned card with its confirmed actions."
+    },
+    {
+      "name": "wide window",
+      "description": "On a tablet or a desktop window NavigableListDetailPaneScaffold shows the list and the open section side by side."
+    }
+  ],
+  "appearance": "List rows on the surface color separated by subtle dividers, the danger row's title in the strong danger text color; detail screens use MonarchSectionCard, the save bar and the guard dialog. Every part is an existing component, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web ships SettingsPage: a title, a section navigation (a sticky side list, a scrolling strip on phones), all sections on one long page, a page-wide save bar and a guard on leaving. Android follows the system Settings pattern instead: the screen is a list of sections and each opens its own detail screen, which saves on its own; system back returns to the list. That is why there is no Android component: the list rows, BackHandler, MonarchSectionCard, MonarchFormActionsBar and MonarchUnsavedChangesGuard already cover it, and the app's own navigation (or NavigableListDetailPaneScaffold from the split-layout entry on wide windows) holds the open section. The web's interceptLinks, guardRef and activeSection have no Android equivalent: components do not navigate.",
+  "accessibility": [
+    "Each section row is one TalkBack element with the Button role, its title and summary read together, and a target of at least 48dp from MonarchListRow.",
+    "The danger zone is named by its title, not by color alone.",
+    "System back returns to the list, and while there are unsaved changes MonarchUnsavedChangesGuard asks first.",
+    "The save bar announces unsaved changes and keeps Save and Discard as 48dp buttons, from MonarchFormActionsBar."
+  ],
+  "edgeCases": [
+    "Keep each row's summary to one line, such as the current value; long summaries wrap.",
+    "Save per section: a change in one section never waits for another.",
+    "When the app uses its own navigation library, replace the section state with its back stack and keep the guard on each detail screen."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Sections with nav and a danger zone",
+      "fixture": "settings-page",
+      "webExample": "Sections with nav and a danger zone",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    MonarchText(\n        text = {{title}},\n        style = MonarchTextStyle.Title,\n        modifier = Modifier.semantics { heading() },\n    )\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space6)) {\n        MonarchTableOfContents(\n            items = listOf(\n                MonarchTableOfContentsItem({{sections.0.title}}, \"general\"),\n                MonarchTableOfContentsItem({{sections.1.title}}, \"notifications\"),\n                MonarchTableOfContentsItem(\"Danger zone\", \"danger\"),\n            ),\n            selectedId = \"general\",\n            onSelect = {},\n            modifier = Modifier.width(200.dp),\n            showTitle = false,\n        )\n        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n            MonarchSectionCard(title = {{sections.0.title}}) {\n                MonarchTextField(\n                    value = workspaceName,\n                    onValueChange = { workspaceName = it },\n                    label = {{sections.0.row.label}},\n                )\n            }\n            MonarchSectionCard(title = {{sections.1.title}}) {\n                MonarchSwitchRow(\n                    checked = digest,\n                    onCheckedChange = { digest = it },\n                    label = {{sections.1.row.label}},\n                    description = {{sections.1.row.description}},\n                )\n            }\n            MonarchSectionCard(title = \"Danger zone\", tone = MonarchTone.Danger) {\n                Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                    MonarchText(text = {{danger.title}}, style = MonarchTextStyle.BodyStrong)\n                    MonarchText(text = {{danger.description}}, style = MonarchTextStyle.Caption)\n                    MonarchButton(text = {{danger.action}}, onClick = {}, variant = MonarchButtonVariant.Danger)\n                }\n            }\n        }\n    }\n}",
+      "setupTemplate": "var workspaceName by rememberSaveable { mutableStateOf({{sections.0.row.value}}) }\nvar digest by rememberSaveable { mutableStateOf({{sections.1.row.on}}) }",
+      "imports": [
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.ui.semantics.heading",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.width",
+        "androidx.compose.ui.unit.dp",
+        "com.rookhq.monarch.components.navigation.tableofcontents.MonarchTableOfContents",
+        "com.rookhq.monarch.components.navigation.tableofcontents.MonarchTableOfContentsItem"
+      ],
+      "setup": "var workspaceName by rememberSaveable { mutableStateOf(\"Northwind\") }\nvar digest by rememberSaveable { mutableStateOf(true) }",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    MonarchText(\n        text = \"Workspace settings\",\n        style = MonarchTextStyle.Title,\n        modifier = Modifier.semantics { heading() },\n    )\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space6)) {\n        MonarchTableOfContents(\n            items = listOf(\n                MonarchTableOfContentsItem(\"General\", \"general\"),\n                MonarchTableOfContentsItem(\"Notifications\", \"notifications\"),\n                MonarchTableOfContentsItem(\"Danger zone\", \"danger\"),\n            ),\n            selectedId = \"general\",\n            onSelect = {},\n            modifier = Modifier.width(200.dp),\n            showTitle = false,\n        )\n        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n            MonarchSectionCard(title = \"General\") {\n                MonarchTextField(\n                    value = workspaceName,\n                    onValueChange = { workspaceName = it },\n                    label = \"Workspace name\",\n                )\n            }\n            MonarchSectionCard(title = \"Notifications\") {\n                MonarchSwitchRow(\n                    checked = digest,\n                    onCheckedChange = { digest = it },\n                    label = \"Email digest\",\n                    description = \"A summary once a week.\",\n                )\n            }\n            MonarchSectionCard(title = \"Danger zone\", tone = MonarchTone.Danger) {\n                Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                    MonarchText(text = \"Delete this workspace\", style = MonarchTextStyle.BodyStrong)\n                    MonarchText(text = \"Removes the workspace and everything in it.\", style = MonarchTextStyle.Caption)\n                    MonarchButton(text = \"Delete workspace\", onClick = {}, variant = MonarchButtonVariant.Danger)\n                }\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "SettingsPage",
+  "dependsOn": [
+    "settings-section",
+    "danger-zone",
+    "form-actions-bar",
+    "unsaved-changes-guard",
+    "split-layout"
+  ]
+}

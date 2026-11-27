@@ -1,0 +1,136 @@
+{
+  "id": "status-badge",
+  "name": "MonarchStatusBadge",
+  "title": "StatusBadge",
+  "family": "data-display",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Text and Image in a Capsule (as MonarchBadge), or MonarchStatusDot for the dot variant",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A status shown as words, a tone and a distinct icon or dot, looked up by key in a registry of built-in and app-defined statuses.",
+  "whenToUse": "Wherever the same set of statuses appears many times (services, tickets, deployments) and should look the same everywhere.",
+  "whenNotToUse": "For a one-off label, use MonarchBadge. For a live state such as \"Running\" with a pulse, use MonarchStatusDot. For something people act on, use MonarchTag.",
+  "api": [
+    "init(_ status: String?, registry: MonarchStatusRegistry? = nil, label: String? = nil, systemImage: String? = nil, showsIcon: Bool = true, variant: MonarchStatusBadgeVariant = .subtle, size: MonarchStatusBadgeSize = .md)",
+    "init(_ definition: MonarchStatusDefinition, showsIcon: Bool = true, variant: MonarchStatusBadgeVariant = .subtle, size: MonarchStatusBadgeSize = .md)",
+    "MonarchStatusDefinition.init(_ label: String, tone: MonarchTone, systemImage: String? = nil, description: String? = nil)",
+    "MonarchStatusRegistry.init(_ definitions: [String: MonarchStatusDefinition])",
+    "MonarchStatusRegistry.init<Key: RawRepresentable>(_ definitions: [Key: MonarchStatusDefinition]) where Key.RawValue == String",
+    "static var MonarchStatusRegistry.builtIn: MonarchStatusRegistry",
+    "func MonarchStatusRegistry.merging(_ other: MonarchStatusRegistry) -> MonarchStatusRegistry",
+    "func MonarchStatusRegistry.resolve(_ key: String?) -> MonarchStatusDefinition",
+    "func monarchStatusRegistry(_ registry: MonarchStatusRegistry) -> some View",
+    "enum MonarchStatusBadgeVariant { case subtle, outline, solid, dot }",
+    "enum MonarchStatusBadgeSize { case sm, md }"
+  ],
+  "options": [
+    {
+      "name": "status",
+      "type": "String?",
+      "default": "required",
+      "description": "The key: built-in (operational, degraded, partial, down, maintenance, unknown, success, warning, danger, info, neutral) or from a registry. nil is unknown."
+    },
+    {
+      "name": "registry",
+      "type": "MonarchStatusRegistry?",
+      "default": "nil",
+      "description": "Statuses for this badge only, looked up before the installed registries and the built-in set."
+    },
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the registry's label."
+    },
+    {
+      "name": "systemImage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the registry's SF Symbol; in the dot variant it replaces the dot."
+    },
+    {
+      "name": "showsIcon",
+      "type": "Bool",
+      "default": "true",
+      "description": "Hides the icon when false; the label still carries the meaning."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchStatusBadgeVariant",
+      "default": ".subtle",
+      "description": "subtle, outline, solid or dot."
+    },
+    {
+      "name": "size",
+      "type": "MonarchStatusBadgeSize",
+      "default": ".md",
+      "description": "sm uses caption text, md label text."
+    },
+    {
+      "name": "definition",
+      "type": "MonarchStatusDefinition",
+      "default": "required",
+      "description": "Second initialiser: the label, tone and symbol given directly."
+    }
+  ],
+  "states": [
+    {
+      "name": "known",
+      "description": "The registry's label, tone and symbol."
+    },
+    {
+      "name": "unknown",
+      "description": "The neutral tone, a question mark symbol and a label made from the key (\"pending_delete\" reads \"Pending delete\"); nil reads \"Unknown\"."
+    }
+  ],
+  "appearance": "Subtle is a tinted capsule with strong-coloured text, outline a capsule with the tone's border, solid a filled capsule, all from the tone roles of the theme. The dot variant is a MonarchStatusDot: a dot in the tone's solid colour and default-coloured text.",
+  "platformNotes": "The web registry also accepts a custom #rrggbb colour per status, passed through a contrast guard. iOS takes colours only from the theme by role, so a status picks one of the five tones; workspace-defined colours are not offered. The web has no accent tone equivalent here because MonarchTone has no accent case. The web's StatusRegistryProvider is the monarchStatusRegistry(_:) modifier; defineStatuses is a MonarchStatusRegistry built from a dictionary, typed by an enumeration with string raw values. Android shares the name and the built-in set.",
+  "accessibility": [
+    "One element read as the label.",
+    "The icon and the dot are decorative; every built-in health status has a symbol of a different shape, and the label always names the status.",
+    "An unknown key is read as words made from the key, never as a raw identifier.",
+    "Text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "A long label wraps inside the capsule; keep labels to a few words.",
+    "Nested monarchStatusRegistry(_:) calls add up; the innermost wins where two define the same key.",
+    "The description of a definition is not drawn; use it for a legend."
+  ],
+  "tests": [
+    "MonarchStatusBadgeTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Service health",
+      "fixture": "status-badge",
+      "webExample": "Service health",
+      "template": "MonarchFlowLayout(spacing: theme.spacing.space2) {\n    MonarchStatusBadge({{statuses.0}})\n    MonarchStatusBadge({{statuses.1}})\n    MonarchStatusBadge({{statuses.2}})\n    MonarchStatusBadge({{statuses.3}})\n    MonarchStatusBadge({{statuses.4}})\n    MonarchStatusBadge({{statuses.5}})\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme",
+      "setup": "@Environment(\\.monarchTheme) private var theme",
+      "code": "MonarchFlowLayout(spacing: theme.spacing.space2) {\n    MonarchStatusBadge(\"operational\")\n    MonarchStatusBadge(\"degraded\")\n    MonarchStatusBadge(\"partial\")\n    MonarchStatusBadge(\"down\")\n    MonarchStatusBadge(\"maintenance\")\n    MonarchStatusBadge(\"unknown\")\n}"
+    },
+    {
+      "title": "The app's statuses from an installed registry",
+      "setup": "enum TicketStatus: String { case open, waiting }\nprivate let ticketStatuses = MonarchStatusRegistry([\n    TicketStatus.open: MonarchStatusDefinition(\"Open\", tone: .info, systemImage: \"circle\"),\n    TicketStatus.waiting: MonarchStatusDefinition(\"Waiting on customer\", tone: .warning, systemImage: \"clock\"),\n])",
+      "code": "VStack(alignment: .leading) {\n    MonarchStatusBadge(TicketStatus.open.rawValue)\n    MonarchStatusBadge(TicketStatus.waiting.rawValue, variant: .outline)\n}\n.monarchStatusRegistry(ticketStatuses)"
+    }
+  ],
+  "webEquivalent": "StatusBadge",
+  "dependsOn": [
+    "badge",
+    "status-dot"
+  ],
+  "icons": {
+    "operational": "SuccessGlyph",
+    "degraded": "WarningGlyph",
+    "partial": "PartialGlyph",
+    "down": "ErrorGlyph",
+    "maintenance": "WrenchGlyph",
+    "unknown": "HelpGlyph"
+  }
+}

@@ -1,0 +1,206 @@
+{
+  "id": "slot-picker",
+  "name": "MonarchSlotPicker",
+  "title": "SlotPicker",
+  "family": "scheduling",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchMiniMonth (UICalendarView with UICalendarSelectionSingleDate) above a LazyVGrid(columns: [GridItem(.adaptive(minimum:))]) of Toggle with .toggleStyle(.monarchButton(.outline)); MonarchTimezoneSelect for the zone, MonarchBanner for errors and warnings, redacted(reason: .placeholder) while loading",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Pick a day on a month calendar, then one of that day's open times, shown in the visitor's time zone with an optional zone picker.",
+  "whenToUse": "Booking flows: choose a meeting, an appointment or a demo time from the times the app loads for each day.",
+  "whenNotToUse": "For any date and time without a list of open times use DatePicker. For a whole day only use MonarchMiniMonth. For scheduling across people use MonarchTeamCalendar.",
+  "api": [
+    "init(selection: Binding<Date?>, day: Binding<Date?>, slots: [MonarchSlotPickerSlot], timeZone: String, visibleMonth: Binding<Date>? = nil, minimumDate: Date? = nil, maximumDate: Date? = nil, today: Date? = nil, availableDays: [Date]? = nil, businessTimeZone: String? = nil, pinnedTimeZones: [String] = [], isLoading: Bool = false, errorMessage: String? = nil, allowsDeselect: Bool = false, labels: MonarchSlotPickerLabels = MonarchSlotPickerLabels(), isDayDisabled: (@MainActor (Date) -> Bool)? = nil, onTimeZoneChange: (@MainActor (String) -> Void)? = nil, onRetry: (@MainActor () -> Void)? = nil, onChooseOutside: (@MainActor () -> Void)? = nil)",
+    "MonarchSlotPickerSlot.init(start: Date, end: Date? = nil, seatsLeft: Int? = nil, isDisabled: Bool = false)",
+    "MonarchSlotPickerLabels.init(chooseDay:empty:loading:loaded:times:seatsLeft:timeZone:shownIn:convertedFrom:notOpen:chooseOutside:retry:), every parameter optional"
+  ],
+  "options": [
+    {
+      "name": "selection",
+      "type": "Binding<Date?>",
+      "default": "required",
+      "description": "The start of the chosen time, or nil."
+    },
+    {
+      "name": "day",
+      "type": "Binding<Date?>",
+      "default": "required",
+      "description": "The day whose times are shown: its first moment in the environment's calendar, or nil. The selection is not cleared when it changes."
+    },
+    {
+      "name": "slots",
+      "type": "[MonarchSlotPickerSlot]",
+      "default": "required",
+      "description": "The times of day, in display order: start, optional end, seats left and disabled."
+    },
+    {
+      "name": "timeZone",
+      "type": "String",
+      "default": "required",
+      "description": "The IANA zone the times are shown in."
+    },
+    {
+      "name": "visibleMonth",
+      "type": "Binding<Date>?",
+      "default": "nil",
+      "description": "Any date in the month on screen, to load its bookable days."
+    },
+    {
+      "name": "minimumDate",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The first bookable day."
+    },
+    {
+      "name": "maximumDate",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The last bookable day (the booking window)."
+    },
+    {
+      "name": "today",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The day drawn as today in the calendar. The clock by default; fixes it for tests and previews."
+    },
+    {
+      "name": "availableDays",
+      "type": "[Date]?",
+      "default": "nil",
+      "description": "The bookable days. When given, every other day is disabled."
+    },
+    {
+      "name": "businessTimeZone",
+      "type": "String?",
+      "default": "nil",
+      "description": "The zone the business works in. When it differs from timeZone, a note says the times are converted."
+    },
+    {
+      "name": "pinnedTimeZones",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Zones listed first in the zone picker."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows placeholder times and announces loading."
+    },
+    {
+      "name": "errorMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Why the times could not be loaded; shown as a danger banner."
+    },
+    {
+      "name": "allowsDeselect",
+      "type": "Bool",
+      "default": "false",
+      "description": "Pressing the selected time again clears it."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSlotPickerLabels",
+      "default": "MonarchSlotPickerLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "isDayDisabled",
+      "type": "(@MainActor (Date) -> Bool)?",
+      "default": "nil",
+      "description": "Disables more days, such as days the app knows are full."
+    },
+    {
+      "name": "onTimeZoneChange",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Shows the zone picker (MonarchTimezoneSelect) and receives the new zone."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows Try again in the error banner."
+    },
+    {
+      "name": "onChooseOutside",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Offers \"Choose another time\" on an empty day and in the not-open warning."
+    }
+  ],
+  "states": [
+    {
+      "name": "no day",
+      "description": "\"Choose a day to see available times.\" under the calendar."
+    },
+    {
+      "name": "times",
+      "description": "The day as a heading and a grid of times; the chosen one is filled, disabled ones are dimmed, seats left show under the time."
+    },
+    {
+      "name": "loading",
+      "description": "Six placeholder times, hidden from VoiceOver; \"Loading available times\" is announced."
+    },
+    {
+      "name": "error",
+      "description": "A danger banner with the message and Try again."
+    },
+    {
+      "name": "empty",
+      "description": "\"No times are available on this day. Try another day.\" and Choose another time."
+    },
+    {
+      "name": "selection not open",
+      "description": "A warning banner: \"9:30 AM is not an open time on this day.\""
+    },
+    {
+      "name": "zone",
+      "description": "A zone picker, or \"Times shown in …\"; \"Times are converted from …\" when the business zone differs."
+    }
+  ],
+  "appearance": "The system calendar in the theme's accent, outlined toggle buttons for the times (filled with the selected colours when chosen), muted caption notes, and Monarch banners in the danger and warning tones. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web places the month beside the times on wide containers; iOS stacks them, the phone layout. The web takes ISO strings; iOS takes Dates, with the day as the first moment in the environment's calendar and times formatted in timeZone. The web moves between times with arrow keys as one tab stop; on iOS each time is a toggle VoiceOver reaches by swiping. The web's headingLevel is the header trait on iOS. weekStartsOn, locale and hourCycle come from the environment's calendar and locale on iOS. Android uses the same name and options. Several closures are optional (isDayDisabled, onTimeZoneChange, onRetry, onChooseOutside). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is isDayDisabled.",
+  "accessibility": [
+    "The chosen day is a heading.",
+    "The times are a container named \"Available times on Wednesday, November 4\".",
+    "Each time is a toggle read as its time and the places left (\"1:30 PM, 2 left\"), selected when chosen and not activatable when disabled.",
+    "Loading, and then the number of open times, are announced when they change.",
+    "Errors and the not-open warning are MonarchBanner text with a tone icon, not only colour.",
+    "Times are at least 44 points high and the grid uses fewer columns as text grows."
+  ],
+  "edgeCases": [
+    "Times are matched to the selection by their exact start Date.",
+    "Disabled times are shown but cannot be chosen, and are not counted in the announcement.",
+    "Changing the zone does not change the selection; it changes how times are written.",
+    "An unknown zone identifier falls back to the environment calendar's zone."
+  ],
+  "tests": [
+    "MonarchSlotPickerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Booking with a time zone picker",
+      "fixture": "slot-picker",
+      "webExample": "Booking with a time zone picker",
+      "template": "VStack(alignment: .leading, spacing: 8) {\n    MonarchSlotPicker(\n        selection: $selection,\n        day: $day,\n        slots: slots,\n        timeZone: zone,\n        minimumDate: {{min|date}},\n        maximumDate: {{max|date}},\n        today: {{today|date}},\n        availableDays: [{{availableDays.0|date}}, {{availableDays.1|date}}, {{availableDays.2|date}}, {{availableDays.3|date}}, {{availableDays.4|date}}, {{availableDays.5|date}}],\n        businessTimeZone: {{businessTimeZone}},\n        pinnedTimeZones: [{{pinnedTimeZones.0}}, {{pinnedTimeZones.1}}, {{pinnedTimeZones.2}}],\n        onTimeZoneChange: { zone = $0 }\n    )\n    .environment(\\.locale, Locale(identifier: {{locale}}))\n    Text(verbatim: \"Selected: \" + (selection.map { $0.formatted(.iso8601) } ?? \"none\"))\n        .monarchTextStyle(.caption)\n}",
+      "setupTemplate": "@State private var selection: Date?\n@State private var day: Date? = {{day|date}}\n@State private var zone = {{timeZone}}\n\nprivate var slots: [MonarchSlotPickerSlot] {\n    guard let day else { return [] }\n    let shift = day.timeIntervalSince({{day|date}})\n    return [\n        MonarchSlotPickerSlot(start: {{slots.0.start|date}}.addingTimeInterval(shift)),\n        MonarchSlotPickerSlot(start: {{slots.1.start|date}}.addingTimeInterval(shift)),\n        MonarchSlotPickerSlot(start: {{slots.2.start|date}}.addingTimeInterval(shift), isDisabled: {{slots.2.disabled}}),\n        MonarchSlotPickerSlot(start: {{slots.3.start|date}}.addingTimeInterval(shift)),\n        MonarchSlotPickerSlot(start: {{slots.4.start|date}}.addingTimeInterval(shift), seatsLeft: {{slots.4.seatsLeft}}),\n        MonarchSlotPickerSlot(start: {{slots.5.start|date}}.addingTimeInterval(shift)),\n    ]\n}",
+      "setup": "@State private var selection: Date?\n@State private var day: Date? = Date(timeIntervalSince1970: 1_793_750_400)\n@State private var zone = \"Europe/London\"\n\nprivate var slots: [MonarchSlotPickerSlot] {\n    guard let day else { return [] }\n    let shift = day.timeIntervalSince(Date(timeIntervalSince1970: 1_793_750_400))\n    return [\n        MonarchSlotPickerSlot(start: Date(timeIntervalSince1970: 1_793_782_800).addingTimeInterval(shift)),\n        MonarchSlotPickerSlot(start: Date(timeIntervalSince1970: 1_793_784_600).addingTimeInterval(shift)),\n        MonarchSlotPickerSlot(start: Date(timeIntervalSince1970: 1_793_786_400).addingTimeInterval(shift), isDisabled: true),\n        MonarchSlotPickerSlot(start: Date(timeIntervalSince1970: 1_793_788_200).addingTimeInterval(shift)),\n        MonarchSlotPickerSlot(start: Date(timeIntervalSince1970: 1_793_790_000).addingTimeInterval(shift), seatsLeft: 3),\n        MonarchSlotPickerSlot(start: Date(timeIntervalSince1970: 1_793_791_800).addingTimeInterval(shift)),\n    ]\n}",
+      "code": "VStack(alignment: .leading, spacing: 8) {\n    MonarchSlotPicker(\n        selection: $selection,\n        day: $day,\n        slots: slots,\n        timeZone: zone,\n        minimumDate: Date(timeIntervalSince1970: 1_793_577_600),\n        maximumDate: Date(timeIntervalSince1970: 1_798_675_200),\n        today: Date(timeIntervalSince1970: 1_793_577_600),\n        availableDays: [Date(timeIntervalSince1970: 1_793_750_400), Date(timeIntervalSince1970: 1_793_836_800), Date(timeIntervalSince1970: 1_793_923_200), Date(timeIntervalSince1970: 1_794_182_400), Date(timeIntervalSince1970: 1_794_268_800), Date(timeIntervalSince1970: 1_794_355_200)],\n        businessTimeZone: \"Europe/London\",\n        pinnedTimeZones: [\"Europe/London\", \"America/New_York\", \"Asia/Kolkata\"],\n        onTimeZoneChange: { zone = $0 }\n    )\n    .environment(\\.locale, Locale(identifier: \"en-GB\"))\n    Text(verbatim: \"Selected: \" + (selection.map { $0.formatted(.iso8601) } ?? \"none\"))\n        .monarchTextStyle(.caption)\n}"
+    }
+  ],
+  "webEquivalent": "SlotPicker",
+  "dependsOn": [
+    "mini-month",
+    "timezone-select",
+    "radio-group"
+  ],
+  "parityExceptions": []
+}

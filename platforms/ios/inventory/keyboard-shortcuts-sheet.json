@@ -1,0 +1,80 @@
+{
+  "id": "keyboard-shortcuts-sheet",
+  "name": null,
+  "title": "KeyboardShortcutsSheet",
+  "family": "navigation",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "keyboardShortcut(_:modifiers:) on Button and other controls; iPadOS lists the shortcuts while the Command key is held",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "An app declares its shortcuts with keyboardShortcut, and iPadOS shows them in its own overlay when the Command key is held. Monarch ships nothing.",
+  "whenToUse": "Add keyboardShortcut to the buttons and menu items of the actions people repeat. The title of the control is the name shown in the system's list, so every shortcut needs a control with a title.",
+  "whenNotToUse": "Do not build a sheet that lists shortcuts, and do not bind a key to open one. Do not reuse the system's shortcuts (Command C, Command H, Command Tab).",
+  "api": [
+    "func keyboardShortcut(_ key: KeyEquivalent, modifiers: EventModifiers = .command) -> some View",
+    "func keyboardShortcut(_ shortcut: KeyboardShortcut?) -> some View",
+    "static let defaultAction: KeyboardShortcut",
+    "static let cancelAction: KeyboardShortcut"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "Command held",
+      "description": "On an iPad with a hardware keyboard the system shows the app's shortcuts, grouped by menu, with their titles."
+    }
+  ],
+  "appearance": "The system draws the overlay. Nothing in it is themed by Monarch.",
+  "platformNotes": "The web KeyboardShortcutsSheet is a side sheet opened with \"?\" that lists groups of shortcuts, can be filtered and shows the Command or Control symbol for the platform. On iOS the list is the system's: holding Command on iPadOS shows every shortcut the visible screen declares, and shortcuts in the app's commands menus (the commands scene modifier) are grouped under their menu. There is nothing to filter or translate; the titles are the controls' own. An iPhone has no such overlay, and shortcuts still work with a connected keyboard. Android shows the system's shortcut helper in the same way.",
+  "accessibility": [
+    "System behaviour: a shortcut runs the control's action, so it does the same as activating the control with VoiceOver or touch.",
+    "System behaviour: a disabled control's shortcut does nothing and is dimmed in the list.",
+    "Every shortcut must also be reachable as a visible control or menu item; a shortcut alone cannot be found without a keyboard."
+  ],
+  "edgeCases": [
+    "A shortcut works only while its control is in the view tree of the active scene.",
+    "Two controls with the same shortcut on one screen: the system picks one. Keep them unique.",
+    "Letter keys are matched by the character the layout produces, so a shortcut may sit on another key on a non-US keyboard."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "From a help button",
+      "fixture": "keyboard-shortcuts-sheet",
+      "webExample": "From a help button",
+      "template": "MonarchButton({{trigger}}) { isOpen = true }\n    .popover(isPresented: $isOpen, arrowEdge: .top) {\n        VStack(alignment: .leading, spacing: theme.spacing.space3) {\n            HStack(alignment: .top) {\n                Text(\"Keyboard shortcuts\")\n                    .monarchTextStyle(.heading)\n                    .accessibilityAddTraits(.isHeader)\n                    .frame(maxWidth: .infinity, alignment: .leading)\n                Button { isOpen = false } label: {\n                    Image(systemName: \"xmark\").frame(width: 24, height: 24)\n                }\n                .buttonStyle(.plain)\n                .accessibilityLabel(\"Close\")\n            }\n            Text({{description}})\n                .monarchTextStyle(.caption)\n                .foregroundStyle(theme.colors.textMuted)\n            MonarchTextField(\"Filter shortcuts\", text: $query, prompt: \"Filter shortcuts\", labelVisibility: .hidden) {\n                Image(systemName: \"magnifyingglass\")\n            } trailing: {\n                EmptyView()\n            }\n            ForEach(sections.indices, id: \\.self) { index in\n                VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                    if let group = sections[index].group {\n                        Text(group)\n                            .monarchTextStyle(.label)\n                            .textCase(.uppercase)\n                            .foregroundStyle(theme.colors.textMuted)\n                            .accessibilityAddTraits(.isHeader)\n                    }\n                    ForEach(sections[index].items) { item in\n                        if item.id != sections[index].items.first?.id { Divider() }\n                        HStack(spacing: theme.spacing.space1) {\n                            Text(item.label).monarchTextStyle(.body)\n                            Spacer(minLength: theme.spacing.space2)\n                            ForEach(item.keys.indices, id: \\.self) { key in\n                                if key > 0, !item.joiner.isEmpty {\n                                    Text(item.joiner)\n                                        .monarchTextStyle(.caption)\n                                        .foregroundStyle(theme.colors.textMuted)\n                                }\n                                MonarchKbd(item.keys[key], isAlwaysVisible: true)\n                            }\n                        }\n                    }\n                }\n            }\n        }\n        .foregroundStyle(theme.colors.textDefault)\n        .padding(theme.spacing.space4)\n        .frame(width: 340)\n        .presentationCompactAdaptation(.popover)\n        .presentationBackground(theme.colors.bgRaised)\n    }",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = false\n@State private var query = \"\"\n\nprivate struct Shortcut: Identifiable {\n    let id: String\n    let label: String\n    let keys: [String]\n    let joiner: String\n}\n\nprivate var sections: [(group: String?, items: [Shortcut])] {\n    [\n        (nil, [\n            Shortcut(id: \"search\", label: {{sections.0.items.0.label}}, keys: [\"⌘\", \"K\"], joiner: \"\"),\n            Shortcut(id: \"help\", label: {{sections.0.items.1.label}}, keys: [\"?\"], joiner: \"\"),\n        ]),\n        ({{sections.1.group}}, [\n            Shortcut(id: \"create\", label: {{sections.1.items.0.label}}, keys: [\"C\"], joiner: \"\"),\n            Shortcut(id: \"next\", label: {{sections.1.items.1.label}}, keys: [\"J\", \"↓\"], joiner: \"or\"),\n            Shortcut(id: \"previous\", label: {{sections.1.items.2.label}}, keys: [\"K\", \"↑\"], joiner: \"or\"),\n            Shortcut(id: \"select\", label: {{sections.1.items.3.label}}, keys: [\"X\"], joiner: \"\"),\n            Shortcut(id: \"open\", label: {{sections.1.items.4.label}}, keys: [\"↵\"], joiner: \"\"),\n        ]),\n        ({{sections.2.group}}, [\n            Shortcut(id: \"inbox\", label: {{sections.2.items.0.label}}, keys: [\"G\", \"I\"], joiner: \"then\"),\n            Shortcut(id: \"projects\", label: {{sections.2.items.1.label}}, keys: [\"G\", \"P\"], joiner: \"then\"),\n            Shortcut(id: \"close\", label: {{sections.2.items.2.label}}, keys: [\"Esc\"], joiner: \"\"),\n        ]),\n    ]\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = false\n@State private var query = \"\"\n\nprivate struct Shortcut: Identifiable {\n    let id: String\n    let label: String\n    let keys: [String]\n    let joiner: String\n}\n\nprivate var sections: [(group: String?, items: [Shortcut])] {\n    [\n        (nil, [\n            Shortcut(id: \"search\", label: \"Search and commands\", keys: [\"⌘\", \"K\"], joiner: \"\"),\n            Shortcut(id: \"help\", label: \"Show this list\", keys: [\"?\"], joiner: \"\"),\n        ]),\n        (\"Tasks\", [\n            Shortcut(id: \"create\", label: \"Create task\", keys: [\"C\"], joiner: \"\"),\n            Shortcut(id: \"next\", label: \"Next task\", keys: [\"J\", \"↓\"], joiner: \"or\"),\n            Shortcut(id: \"previous\", label: \"Previous task\", keys: [\"K\", \"↑\"], joiner: \"or\"),\n            Shortcut(id: \"select\", label: \"Select the focused task\", keys: [\"X\"], joiner: \"\"),\n            Shortcut(id: \"open\", label: \"Open the focused task\", keys: [\"↵\"], joiner: \"\"),\n        ]),\n        (\"Navigation\", [\n            Shortcut(id: \"inbox\", label: \"Go to inbox\", keys: [\"G\", \"I\"], joiner: \"then\"),\n            Shortcut(id: \"projects\", label: \"Go to projects\", keys: [\"G\", \"P\"], joiner: \"then\"),\n            Shortcut(id: \"close\", label: \"Close panel or clear selection\", keys: [\"Esc\"], joiner: \"\"),\n        ]),\n    ]\n}",
+      "code": "MonarchButton(\"Keyboard shortcuts\") { isOpen = true }\n    .popover(isPresented: $isOpen, arrowEdge: .top) {\n        VStack(alignment: .leading, spacing: theme.spacing.space3) {\n            HStack(alignment: .top) {\n                Text(\"Keyboard shortcuts\")\n                    .monarchTextStyle(.heading)\n                    .accessibilityAddTraits(.isHeader)\n                    .frame(maxWidth: .infinity, alignment: .leading)\n                Button { isOpen = false } label: {\n                    Image(systemName: \"xmark\").frame(width: 24, height: 24)\n                }\n                .buttonStyle(.plain)\n                .accessibilityLabel(\"Close\")\n            }\n            Text(\"Single-key shortcuts do not work while typing in a field.\")\n                .monarchTextStyle(.caption)\n                .foregroundStyle(theme.colors.textMuted)\n            MonarchTextField(\"Filter shortcuts\", text: $query, prompt: \"Filter shortcuts\", labelVisibility: .hidden) {\n                Image(systemName: \"magnifyingglass\")\n            } trailing: {\n                EmptyView()\n            }\n            ForEach(sections.indices, id: \\.self) { index in\n                VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                    if let group = sections[index].group {\n                        Text(group)\n                            .monarchTextStyle(.label)\n                            .textCase(.uppercase)\n                            .foregroundStyle(theme.colors.textMuted)\n                            .accessibilityAddTraits(.isHeader)\n                    }\n                    ForEach(sections[index].items) { item in\n                        if item.id != sections[index].items.first?.id { Divider() }\n                        HStack(spacing: theme.spacing.space1) {\n                            Text(item.label).monarchTextStyle(.body)\n                            Spacer(minLength: theme.spacing.space2)\n                            ForEach(item.keys.indices, id: \\.self) { key in\n                                if key > 0, !item.joiner.isEmpty {\n                                    Text(item.joiner)\n                                        .monarchTextStyle(.caption)\n                                        .foregroundStyle(theme.colors.textMuted)\n                                }\n                                MonarchKbd(item.keys[key], isAlwaysVisible: true)\n                            }\n                        }\n                    }\n                }\n            }\n        }\n        .foregroundStyle(theme.colors.textDefault)\n        .padding(theme.spacing.space4)\n        .frame(width: 340)\n        .presentationCompactAdaptation(.popover)\n        .presentationBackground(theme.colors.bgRaised)\n    }",
+      "previewPresented": [
+        "isOpen"
+      ]
+    }
+  ],
+  "webEquivalent": "KeyboardShortcutsSheet",
+  "dependsOn": [],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "sections.0.items.0.keys",
+        "sections.0.items.1.keys",
+        "sections.1.items.0.keys",
+        "sections.1.items.1.keys",
+        "sections.1.items.2.keys",
+        "sections.1.items.3.keys",
+        "sections.1.items.4.keys",
+        "sections.2.items.0.keys",
+        "sections.2.items.1.keys",
+        "sections.2.items.2.keys"
+      ],
+      "reason": "Decision: web-only, the platform convention applies. there is no shortcuts sheet with key caps; the system lists shortcuts it finds on the screen (iOS) or in onProvideKeyboardShortcuts (Android), which cannot show sequences such as g then i, or a bare ? key. The labels and groups are listed in order.",
+      "convention": "HIG keyboards: the system shortcut overlay (hold Command)"
+    }
+  ]
+}

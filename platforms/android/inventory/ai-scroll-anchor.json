@@ -1,0 +1,66 @@
+{
+  "id": "ai-scroll-anchor",
+  "name": null,
+  "title": "AiScrollAnchor",
+  "family": "intelligence",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyColumn with reverseLayout = true, androidx.compose.foundation.lazy.LazyListState.animateScrollToItem",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Keeping a growing conversation pinned to its newest message is a property of the platform list: a LazyColumn with reverseLayout. Monarch ships nothing.",
+  "whenToUse": "For a conversation or a log that grows at the bottom and should follow new entries while the person is at the end.",
+  "whenNotToUse": "For a list read from the top, such as search results, use a normal LazyColumn. For a short thread inside a screen that already scrolls, use a Column.",
+  "api": [
+    "@Composable fun LazyColumn(modifier: Modifier = Modifier, state: LazyListState = rememberLazyListState(), contentPadding: PaddingValues = PaddingValues(0.dp), reverseLayout: Boolean = false, ..., content: LazyListScope.() -> Unit)",
+    "suspend fun LazyListState.animateScrollToItem(index: Int, scrollOffset: Int = 0)",
+    "suspend fun LazyListState.scrollToItem(index: Int, scrollOffset: Int = 0)",
+    "val LazyListState.firstVisibleItemIndex: Int"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "at the bottom",
+      "description": "With reverseLayout, item 0 (the newest) is at the bottom; while it is the first visible item, new items appear at the bottom and the list stays there."
+    },
+    {
+      "name": "scrolled up",
+      "description": "The person's position is kept while items are added. animateScrollToItem(0) returns to the newest entry; scrollToItem(0) does so without animation."
+    }
+  ],
+  "appearance": "No appearance of its own: messages use Monarch components and follow the theme in light, dark and high contrast.",
+  "platformNotes": "The web ships a hook and a headless container that measure the scroller, pin it while the person is within 48 pixels of the bottom and report atBottom. In Compose, reverseLayout lays the list out from the bottom, so pinning is the list's own behavior and there is no Monarch type. atBottom is a derivedStateOf on firstVisibleItemIndex == 0, which can show a Jump to latest button. Give the messages in newest-first order, with stable keys. iOS uses defaultScrollAnchor(.bottom) on a ScrollView.",
+  "accessibility": [
+    "System behavior: TalkBack moves through the items and scrolls the list as it goes.",
+    "Scrolling to the newest entry does not move TalkBack focus.",
+    "Use scrollToItem instead of animateScrollToItem when MonarchTheme.motion.reducedMotion is true; the example does."
+  ],
+  "edgeCases": [
+    "With reverseLayout the item order is newest first; pass the messages reversed or index from the end.",
+    "Content shorter than the list is laid out from the bottom.",
+    "While a message streams and grows, the list keeps the bottom edge of item 0 in place only while the person is at the bottom.",
+    "A LazyColumn inside a vertical scroll needs a bounded height."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Scrolled up, with a jump button",
+      "fixture": "ai-scroll-anchor",
+      "webExample": "Scrolled up, with a jump button",
+      "template": "Column {\n    LazyColumn(\n        modifier = Modifier.height(MonarchTheme.spacing.space24 * 3),\n        state = state,\n        reverseLayout = true,\n    ) {\n        items(count = {{count}}, key = { it }) { index ->\n            MonarchListRow(headlineContent = { MonarchText(text = lines[({{count}} - 1 - index) % lines.size]) }, divider = true)\n        }\n    }\n    if (!atBottom) {\n        MonarchButton(\n            text = {{jump}},\n            size = MonarchButtonSize.Sm,\n            onClick = { scope.launch { if (reduceMotion) state.scrollToItem(0) else state.animateScrollToItem(0) } },\n        )\n    }\n}",
+      "setupTemplate": "val lines = remember {\n    listOf(\n        {{lines.0}},\n        {{lines.1}},\n        {{lines.2}},\n        {{lines.3}},\n        {{lines.4}},\n        {{lines.5}},\n    )\n}\nval state = rememberLazyListState(initialFirstVisibleItemIndex = 4)\nval scope = rememberCoroutineScope()\nval atBottom by remember { derivedStateOf { state.firstVisibleItemIndex == 0 } }\nval reduceMotion = MonarchTheme.motion.reducedMotion",
+      "imports": [
+        "kotlinx.coroutines.launch"
+      ],
+      "setup": "val lines = remember {\n    listOf(\n        \"The draft has three sections.\",\n        \"The first summarises the request.\",\n        \"The second lists the open questions.\",\n        \"The third proposes next steps.\",\n        \"Each step has an owner and a date.\",\n        \"Nothing is sent until you approve it.\",\n    )\n}\nval state = rememberLazyListState(initialFirstVisibleItemIndex = 4)\nval scope = rememberCoroutineScope()\nval atBottom by remember { derivedStateOf { state.firstVisibleItemIndex == 0 } }\nval reduceMotion = MonarchTheme.motion.reducedMotion",
+      "code": "Column {\n    LazyColumn(\n        modifier = Modifier.height(MonarchTheme.spacing.space24 * 3),\n        state = state,\n        reverseLayout = true,\n    ) {\n        items(count = 10, key = { it }) { index ->\n            MonarchListRow(headlineContent = { MonarchText(text = lines[(10 - 1 - index) % lines.size]) }, divider = true)\n        }\n    }\n    if (!atBottom) {\n        MonarchButton(\n            text = \"Jump to latest\",\n            size = MonarchButtonSize.Sm,\n            onClick = { scope.launch { if (reduceMotion) state.scrollToItem(0) else state.animateScrollToItem(0) } },\n        )\n    }\n}"
+    }
+  ],
+  "webEquivalent": "AiScrollAnchor",
+  "dependsOn": []
+}

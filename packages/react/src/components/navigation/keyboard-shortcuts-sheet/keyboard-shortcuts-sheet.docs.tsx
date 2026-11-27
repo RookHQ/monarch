@@ -1,18 +1,16 @@
 import { Button, KeyboardShortcutsSheet, type KeyboardShortcut } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './keyboard-shortcuts-sheet.fixture.json';
 
-const shortcuts: KeyboardShortcut[] = [
-  { keys: 'mod+k', label: 'Search and commands' },
-  { keys: '?', label: 'Show this list' },
-  { keys: 'c', label: 'Create task', group: 'Tasks' },
-  { keys: ['j', 'arrowdown'], label: 'Next task', group: 'Tasks' },
-  { keys: ['k', 'arrowup'], label: 'Previous task', group: 'Tasks' },
-  { keys: 'x', label: 'Select the focused task', group: 'Tasks' },
-  { keys: 'enter', label: 'Open the focused task', group: 'Tasks' },
-  { keys: 'g i', label: 'Go to inbox', group: 'Navigation' },
-  { keys: 'g p', label: 'Go to projects', group: 'Navigation' },
-  { keys: 'escape', label: 'Close panel or clear selection', group: 'Navigation' },
-];
+const sections = fixture.data.sections as readonly {
+  group?: string;
+  items: readonly { keys: string | string[]; label: string }[];
+}[];
+
+const shortcuts: KeyboardShortcut[] = sections.flatMap(({ group, items }) =>
+  items.map((item) => ({ ...item, ...(group !== undefined && { group }) })),
+);
 
 export default {
   id: 'keyboard-shortcuts-sheet',
@@ -134,12 +132,14 @@ export default {
       items: [
         {
           title: 'From a help button',
+          stage: true,
           render: () => (
             <KeyboardShortcutsSheet
               shortcuts={shortcuts}
-              trigger={<Button>Keyboard shortcuts</Button>}
+              trigger={<Button>{fixture.data.trigger}</Button>}
+              defaultOpen
               hotkey={false}
-              description="Single-key shortcuts do not work while typing in a field."
+              description={fixture.data.description}
             />
           ),
         },

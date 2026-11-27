@@ -1,0 +1,165 @@
+{
+  "id": "dependency-picker",
+  "name": "MonarchDependencyPicker",
+  "title": "DependencyPicker",
+  "family": "workflow",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "VStack of relation sections with Link rows and icon-only Buttons; adding through a Picker(.menu) for the relation inside MonarchFormField and MonarchCombobox, which presents a .sheet with a List and .searchable",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Lists an item's links (blocked by, blocks, related to, duplicates, duplicated by) grouped by relation, and adds a link by choosing the relation and searching for the item.",
+  "whenToUse": "On an issue, task or record page where work items depend on each other or duplicate each other.",
+  "whenNotToUse": "To pick a single related record for a field use MonarchCombobox; to show a timeline of dependent tasks use a Gantt-style view; for parent and child items use MonarchGoalTree.",
+  "api": [
+    "MonarchDependencyPicker.init(links: [MonarchDependencyLink], items: [MonarchDependencyItem] = [], excludedIDs: Set<String> = [], relations: [MonarchDependencyRelation] = MonarchDependencyRelation.allCases, defaultRelation: MonarchDependencyRelation? = nil, isReadOnly: Bool = false, isSearching: Bool = false, searchText: Binding<String>? = nil, labels: MonarchDependencyPickerLabels = MonarchDependencyPickerLabels(), onAdd: (@MainActor (MonarchDependencyRelation, MonarchDependencyItem) -> Void)? = nil, onRemove: (@MainActor (MonarchDependencyLink) -> Void)? = nil)",
+    "enum MonarchDependencyRelation: String, CaseIterable { case blockedBy, blocks, relates, duplicates, duplicatedBy }",
+    "MonarchDependencyItem.init(id: String, key: String? = nil, title: String, status: MonarchStatusDefinition? = nil, url: URL? = nil)",
+    "MonarchDependencyLink.init(id: String, relation: MonarchDependencyRelation, item: MonarchDependencyItem)",
+    "MonarchDependencyPickerLabels.init(relation:relationLabel:searchLabel:searchPrompt:noResults:empty:remove:added:removed:status:), every parameter optional"
+  ],
+  "options": [
+    {
+      "name": "links",
+      "type": "[MonarchDependencyLink]",
+      "default": "required",
+      "description": "The current links, each with its own id, a relation and the other item."
+    },
+    {
+      "name": "items",
+      "type": "[MonarchDependencyItem]",
+      "default": "[]",
+      "description": "The items the search can find: id, key, title, status and an optional web address."
+    },
+    {
+      "name": "excludedIDs",
+      "type": "Set<String>",
+      "default": "[]",
+      "description": "Items that cannot be linked, such as the item itself. Already linked items are left out too."
+    },
+    {
+      "name": "relations",
+      "type": "[MonarchDependencyRelation]",
+      "default": "MonarchDependencyRelation.allCases",
+      "description": "The relations offered and the order of the groups."
+    },
+    {
+      "name": "defaultRelation",
+      "type": "MonarchDependencyRelation?",
+      "default": "nil",
+      "description": "The relation chosen at first; the first of relations by default."
+    },
+    {
+      "name": "isReadOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Hides the add controls and the remove buttons."
+    },
+    {
+      "name": "isSearching",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the combobox's loading state while a server search runs."
+    },
+    {
+      "name": "searchText",
+      "type": "Binding<String>?",
+      "default": "nil",
+      "description": "The search text, for apps that search a server and update items."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchDependencyPickerLabels",
+      "default": "MonarchDependencyPickerLabels()",
+      "description": "Replacements for the relation names, the field labels, the empty and no-results text, the remove names, the announcements and the spoken status."
+    },
+    {
+      "name": "onAdd",
+      "type": "(@MainActor (MonarchDependencyRelation, MonarchDependencyItem) -> Void)?",
+      "default": "nil",
+      "description": "Adds a link; the app saves it and updates links. Without it the add controls are hidden."
+    },
+    {
+      "name": "onRemove",
+      "type": "(@MainActor (MonarchDependencyLink) -> Void)?",
+      "default": "nil",
+      "description": "Removes a link. Without it rows have no remove button."
+    }
+  ],
+  "states": [
+    {
+      "name": "links",
+      "description": "Each relation with links has a heading and rows with the key, the title (a link when it has a web address), a status badge and a remove button."
+    },
+    {
+      "name": "empty",
+      "description": "\"No linked items.\" above the add controls."
+    },
+    {
+      "name": "adding",
+      "description": "The Relation menu and the \"Find an item to link\" field, which opens a searchable sheet of the items not yet linked."
+    },
+    {
+      "name": "searching",
+      "description": "The combobox shows its loading state while isSearching is true."
+    },
+    {
+      "name": "read only",
+      "description": "Only the grouped list, without add controls or remove buttons."
+    },
+    {
+      "name": "disabled",
+      "description": "disabled(_:) on the picker disables the menu, the field and the buttons."
+    }
+  ],
+  "appearance": "Headings use the default text role, keys the code font in the muted role, linked titles the link role, and statuses a MonarchStatusBadge in their tone with a symbol. The search field and its sheet are MonarchCombobox's. Roles adapt to the dark and high-contrast themes.",
+  "platformNotes": "The web DependencyPicker searches with an inline combobox and an async onSearch with abort signals, and shows a status glyph with a hidden name. On iOS the search is MonarchCombobox's searchable sheet; a server search is driven by the app through searchText, items and isSearching rather than a promise. The status is a visible MonarchStatusBadge. Headings have the header trait instead of a heading level. Android builds the same component with the same name. Several closures are optional (onAdd, onRemove). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onAdd.",
+  "accessibility": [
+    "Each relation heading has the header trait; the relation is always a word.",
+    "Each row is one element that reads \"STR-12 Fix login, Status: In progress\"; an item with an http or https address is a link.",
+    "Remove buttons are icon-only and named \"Remove “Blocked by” link to STR-12 Fix login\".",
+    "\"Blocked by STR-14 Update the pricing page added.\" and \"… removed.\" are announced after a change.",
+    "The relation menu and the search field are labelled; the search sheet is MonarchCombobox's, with its own VoiceOver support.",
+    "Every control has a touch target of at least 44 points and the text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Addresses that are not http or https (such as javascript:) are not turned into links.",
+    "An item already linked under any relation is not offered again.",
+    "The add is reported through onAdd; the list changes only when the app updates links.",
+    "Long keys and titles wrap at the largest text sizes."
+  ],
+  "tests": [
+    "MonarchDependencyPickerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Issue dependencies",
+      "fixture": "dependency-picker",
+      "webExample": "Issue dependencies",
+      "template": "MonarchDependencyPicker(\n    links: links,\n    items: Self.issues,\n    excludedIDs: [{{excludeIds.0}}],\n    onAdd: { relation, item in\n        links.append(MonarchDependencyLink(id: \"\\(relation.rawValue)-\\(item.id)\", relation: relation, item: item))\n    },\n    onRemove: { link in links.removeAll { $0.id == link.id } }\n)",
+      "setupTemplate": "private static func status(_ id: String, _ category: String, _ name: String) -> MonarchStatusDefinition {\n    switch category {\n    case \"completed\": return MonarchStatusDefinition(name, tone: .success, systemImage: \"checkmark.circle.fill\")\n    case \"started\": return MonarchStatusDefinition(name, tone: .warning, systemImage: \"circle.lefthalf.filled\")\n    case \"backlog\": return MonarchStatusDefinition(name, tone: .neutral, systemImage: \"circle.dashed\")\n    default: return MonarchStatusDefinition(name, tone: .neutral, systemImage: \"circle\")\n    }\n}\nprivate static let issues = [\n    MonarchDependencyItem(id: {{items.0.id}}, key: {{items.0.key}}, title: {{items.0.title}}, status: Self.status({{items.0.status.id}}, {{items.0.status.category}}, {{items.0.status.name}})),\n    MonarchDependencyItem(id: {{items.1.id}}, key: {{items.1.key}}, title: {{items.1.title}}, status: Self.status({{items.1.status.id}}, {{items.1.status.category}}, {{items.1.status.name}})),\n    MonarchDependencyItem(id: {{items.2.id}}, key: {{items.2.key}}, title: {{items.2.title}}, status: Self.status({{items.2.status.id}}, {{items.2.status.category}}, {{items.2.status.name}})),\n    MonarchDependencyItem(id: {{items.3.id}}, key: {{items.3.key}}, title: {{items.3.title}}, status: Self.status({{items.3.status.id}}, {{items.3.status.category}}, {{items.3.status.name}})),\n    MonarchDependencyItem(id: {{items.4.id}}, key: {{items.4.key}}, title: {{items.4.title}}, status: Self.status({{items.4.status.id}}, {{items.4.status.category}}, {{items.4.status.name}})),\n\n]\n@State private var links = [\n    MonarchDependencyLink(id: {{links.0.id}}, relation: {{links.0.relation|case}}, item: Self.issues.first { $0.id == {{links.0.itemId}} }!),\n    MonarchDependencyLink(id: {{links.1.id}}, relation: {{links.1.relation|case}}, item: Self.issues.first { $0.id == {{links.1.itemId}} }!),\n]",
+      "setup": "private static func status(_ id: String, _ category: String, _ name: String) -> MonarchStatusDefinition {\n    switch category {\n    case \"completed\": return MonarchStatusDefinition(name, tone: .success, systemImage: \"checkmark.circle.fill\")\n    case \"started\": return MonarchStatusDefinition(name, tone: .warning, systemImage: \"circle.lefthalf.filled\")\n    case \"backlog\": return MonarchStatusDefinition(name, tone: .neutral, systemImage: \"circle.dashed\")\n    default: return MonarchStatusDefinition(name, tone: .neutral, systemImage: \"circle\")\n    }\n}\nprivate static let issues = [\n    MonarchDependencyItem(id: \"11\", key: \"APP-11\", title: \"Agree the data model\", status: Self.status(\"done\", \"completed\", \"Done\")),\n    MonarchDependencyItem(id: \"12\", key: \"APP-12\", title: \"Build the import endpoint\", status: Self.status(\"doing\", \"started\", \"In progress\")),\n    MonarchDependencyItem(id: \"13\", key: \"APP-13\", title: \"Write the migration guide\", status: Self.status(\"todo\", \"unstarted\", \"Todo\")),\n    MonarchDependencyItem(id: \"14\", key: \"APP-14\", title: \"Add import to settings\", status: Self.status(\"todo\", \"unstarted\", \"Todo\")),\n    MonarchDependencyItem(id: \"15\", key: \"APP-15\", title: \"Import from spreadsheets\", status: Self.status(\"backlog\", \"backlog\", \"Backlog\")),\n\n]\n@State private var links = [\n    MonarchDependencyLink(id: \"a\", relation: .blockedBy, item: Self.issues.first { $0.id == \"11\" }!),\n    MonarchDependencyLink(id: \"b\", relation: .blocks, item: Self.issues.first { $0.id == \"14\" }!),\n]",
+      "code": "MonarchDependencyPicker(\n    links: links,\n    items: Self.issues,\n    excludedIDs: [\"12\"],\n    onAdd: { relation, item in\n        links.append(MonarchDependencyLink(id: \"\\(relation.rawValue)-\\(item.id)\", relation: relation, item: item))\n    },\n    onRemove: { link in links.removeAll { $0.id == link.id } }\n)"
+    },
+    {
+      "title": "Read only",
+      "code": "MonarchDependencyPicker(\n    links: [\n        MonarchDependencyLink(id: \"l1\", relation: .blocks, item: MonarchDependencyItem(id: \"20\", key: \"STR-20\", title: \"Ship the release\")),\n    ],\n    isReadOnly: true\n)"
+    }
+  ],
+  "webEquivalent": "DependencyPicker",
+  "dependsOn": [
+    "combobox",
+    "select",
+    "badge",
+    "status-badge"
+  ],
+  "icons": {
+    "remove": "CloseGlyph",
+    "relation": "ChevronDownGlyph",
+    "status.done": "SuccessGlyph"
+  }
+}

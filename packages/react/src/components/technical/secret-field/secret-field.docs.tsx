@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { Field, FieldDescription, FieldLabel, SecretField } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './secret-field.fixture.json';
 
 const narrow = { width: '100%', maxWidth: '28rem' } as const;
 
 function NewKey() {
   return (
     <Field style={narrow}>
-      <FieldLabel>Signing secret</FieldLabel>
-      <SecretField label="Signing secret" defaultValue="whsec_9d2f7a61c0b84e3f" readOnly copyable />
-      <FieldDescription>
-        Shown once. Store it somewhere safe before you leave this page.
-      </FieldDescription>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
+      <SecretField label={fixture.data.label} defaultValue={fixture.data.value} readOnly copyable />
+      <FieldDescription>{fixture.data.description}</FieldDescription>
     </Field>
   );
 }

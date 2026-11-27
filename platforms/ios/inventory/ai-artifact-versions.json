@@ -1,0 +1,137 @@
+{
+  "id": "ai-artifact-versions",
+  "name": "MonarchAiArtifactVersions",
+  "title": "AiArtifactVersions",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchAiMessageBranch (previous and next buttons), Menu with .menuStyle(.button) and an inline Picker, Toggle with .toggleStyle(.button), MonarchDiffViewer, Date.FormatStyle(date: .abbreviated, time: .shortened)",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Steps through the versions of an AI artifact with previous and next buttons, the position, a menu to jump to any version and Compare with previous, which shows a diff of what changed.",
+  "whenToUse": "When an AI-made document, plan or snippet has more than one version and people need to go back to an earlier one, jump to any version or see what changed since the version before.",
+  "whenNotToUse": "For alternative replies to the same prompt use MonarchAiMessageBranch. For an audit history with authors and comments use a version history list. For one proposed edit with Accept and Reject use MonarchAiEditProposal.",
+  "api": [
+    "init(selection: Binding<Int>, versions: [MonarchAiArtifactVersion], isComparing: Binding<Bool>? = nil, granularity: MonarchDiffViewerGranularity = .word, showsCompare: Bool = true, labels: MonarchAiArtifactVersionsLabels = MonarchAiArtifactVersionsLabels())",
+    "struct MonarchAiArtifactVersion { init(_ version: Int, createdAt: Date, label: String? = nil, content: String? = nil) }",
+    "struct MonarchAiArtifactVersionsLabels { init(label:, position:, previous:, next:, select:, versionTag:, versionName:, compare:, announce:) }"
+  ],
+  "options": [
+    {
+      "name": "selection",
+      "type": "Binding<Int>",
+      "default": "required",
+      "description": "The version number shown. A number not in versions shows the newest."
+    },
+    {
+      "name": "versions",
+      "type": "[MonarchAiArtifactVersion]",
+      "default": "required",
+      "description": "Every version, in any order; shown oldest to newest, one per number."
+    },
+    {
+      "name": "isComparing",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Whether the diff with the previous version shows. Without it the stepper keeps the state itself."
+    },
+    {
+      "name": "granularity",
+      "type": "MonarchDiffViewerGranularity",
+      "default": ".word",
+      "description": "Whether the diff marks changed words (prose) or whole lines (code)."
+    },
+    {
+      "name": "showsCompare",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether Compare with previous is offered."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiArtifactVersionsLabels",
+      "default": "MonarchAiArtifactVersionsLabels()",
+      "description": "Replacements for every built-in string."
+    }
+  ],
+  "states": [
+    {
+      "name": "middle version",
+      "description": "Previous and next are enabled; the position reads \"Version 2 of 4\"."
+    },
+    {
+      "name": "first or last",
+      "description": "Previous (first) or next (last) is disabled."
+    },
+    {
+      "name": "single version",
+      "description": "Both buttons are disabled; the position reads \"Version 1 of 1\"; there is no Compare."
+    },
+    {
+      "name": "comparing",
+      "description": "Compare is on (filled in the accent colour) and a MonarchDiffViewer from the previous version to this one shows under the controls."
+    },
+    {
+      "name": "compare unavailable",
+      "description": "No Compare when there is no previous version or either version has no content."
+    },
+    {
+      "name": "no versions",
+      "description": "Nothing is shown."
+    },
+    {
+      "name": "disabled",
+      "description": "Through disabled(_:), every control is disabled and the position uses the disabled text colour."
+    }
+  ],
+  "appearance": "Ghost buttons with mirrored chevrons, a caption position in the muted text colour, a ghost menu button with a clock symbol and a system button-style toggle tinted with the strong accent colour; the diff has MonarchDiffViewer's added and removed colours. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The parity map names a version stepper and a diff; the stepper reuses MonarchAiMessageBranch for previous and next, the web's native select is a system Menu with an inline Picker, and the diff is MonarchDiffViewer, which this component shows itself when Compare is on, where the web calls onCompare for the app to render an AiArtifactDiff. So each version carries its content. The web's aria-pressed compare button is a system button-style Toggle. Dates in the menu use the environment's locale, calendar and time zone. The web's separate AiArtifactDiff export is not a separate type: MonarchDiffViewer covers it. Marked experimental as an AI product pattern until a Rook app adopts it. Android builds the same component.",
+  "accessibility": [
+    "The controls are a group named \"Versions\".",
+    "Previous and next are named \"Previous version\" and \"Next version\", keep 44-point touch targets and their chevrons mirror in right-to-left layouts.",
+    "The position is read as text, \"Version 3 of 5\", built by a tested pure function.",
+    "The menu button is named \"Choose a version\"; its items are a system Picker, so the chosen version is read as selected.",
+    "Compare is a toggle, read with its on or off state.",
+    "Every change of version, from the buttons or the menu, is announced: \"Showing version 3 of 5\".",
+    "The diff is MonarchDiffViewer, named \"Changes from Version 2 to Version 3\"; changes are marked with signs as well as colour."
+  ],
+  "edgeCases": [
+    "Duplicate version numbers keep the first one given.",
+    "A selection that is not in versions shows the newest version; moving from there changes the selection.",
+    "Version numbers with gaps (1, 2, 5) are stepped in order and the position counts versions, not numbers.",
+    "A version without content cannot be compared."
+  ],
+  "tests": [
+    "MonarchAiArtifactVersionsTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Versions with compare",
+      "fixture": "ai-artifact-versions",
+      "webExample": "Versions with compare",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n    MonarchAiArtifactVersions(selection: $version, versions: versions)\n    Text(versions.first { $0.version == version }?.content ?? \"\")\n}",
+      "setupTemplate": "@State private var version = {{value}}\nprivate let versions = [\n    MonarchAiArtifactVersion({{versions.0.version}}, createdAt: {{versions.0.createdAt|date}}, content: {{versions.0.text}}),\n    MonarchAiArtifactVersion({{versions.1.version}}, createdAt: {{versions.1.createdAt|date}}, label: {{versions.1.label}}, content: {{versions.1.text}}),\n    MonarchAiArtifactVersion({{versions.2.version}}, createdAt: {{versions.2.createdAt|date}}, label: {{versions.2.label}}, content: {{versions.2.text}}),\n]",
+      "setup": "@State private var version = 3\nprivate let versions = [\n    MonarchAiArtifactVersion(1, createdAt: Date(timeIntervalSince1970: 1_773_306_000), content: \"The team shipped the new onboarding flow in May. Sign-ups grew and support tickets went down.\"),\n    MonarchAiArtifactVersion(2, createdAt: Date(timeIntervalSince1970: 1_773_307_200), label: \"Shorter intro\", content: \"The team shipped the onboarding flow in May. Sign-ups grew by a fifth.\"),\n    MonarchAiArtifactVersion(3, createdAt: Date(timeIntervalSince1970: 1_773_309_900), label: \"Added risks\", content: \"The team shipped the onboarding flow in May. Sign-ups grew by a fifth. The main risk is the June migration.\"),\n]",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n    MonarchAiArtifactVersions(selection: $version, versions: versions)\n    Text(versions.first { $0.version == version }?.content ?? \"\")\n}"
+    },
+    {
+      "title": "Stepper only",
+      "setup": "@State private var version = 1",
+      "code": "MonarchAiArtifactVersions(\n    selection: $version,\n    versions: (1...3).map {\n        MonarchAiArtifactVersion($0, createdAt: Date(timeIntervalSinceReferenceDate: 800_000_000))\n    },\n    showsCompare: false\n)"
+    }
+  ],
+  "webEquivalent": "AiArtifactVersions",
+  "dependsOn": [
+    "diff-viewer",
+    "button",
+    "ai-message-branch"
+  ],
+  "icons": {
+    "previous": "ChevronDownGlyph",
+    "menu": "ChevronDownGlyph"
+  }
+}

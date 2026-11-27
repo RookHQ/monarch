@@ -1,0 +1,128 @@
+{
+  "id": "ai-welcome",
+  "name": "MonarchAiWelcome",
+  "title": "AiWelcome",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of MonarchAiAgentAvatar, Text and a checklist, with ViewBuilder slots for the starters and the footer",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The empty state of a new conversation: who the assistant is, a greeting, what it can help with and where to start.",
+  "whenToUse": "As the content of a conversation that has no messages yet, with MonarchAiStarterPrompts as the starters and MonarchAiDisclaimer as the footer.",
+  "whenNotToUse": "Not for an empty list of conversations or any other empty screen, which is MonarchEmptyState. Not for follow-up suggestions after a reply, which is MonarchAiFollowUpSuggestions.",
+  "api": [
+    "init(_ title: String, agent: MonarchAiAgentRef? = nil, description: String? = nil, capabilities: [String] = [], capabilitiesLabel: String? = nil, agentPrefix: String? = nil, @ViewBuilder starters: () -> Starters, @ViewBuilder footer: () -> Footer)",
+    "init(_ title: String, agent: MonarchAiAgentRef? = nil, description: String? = nil, capabilities: [String] = [], capabilitiesLabel: String? = nil, agentPrefix: String? = nil, @ViewBuilder starters: () -> Starters) where Footer == EmptyView",
+    "init(_ title: String, agent: MonarchAiAgentRef? = nil, description: String? = nil, capabilities: [String] = [], capabilitiesLabel: String? = nil, agentPrefix: String? = nil) where Starters == EmptyView, Footer == EmptyView"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The greeting, such as \"How can I help?\". It is a heading and names the welcome."
+    },
+    {
+      "name": "agent",
+      "type": "MonarchAiAgentRef?",
+      "default": "nil",
+      "description": "The assistant: shown with MonarchAiAgentAvatar, its name and its role. Without it a bot mark is shown."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "One or two sentences on what the assistant can see or do."
+    },
+    {
+      "name": "capabilities",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Short capability statements, shown as a checklist. Blank entries are left out."
+    },
+    {
+      "name": "capabilitiesLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in spoken name \"What I can help with\"."
+    },
+    {
+      "name": "agentPrefix",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"AI assistant\" read before the agent's name."
+    },
+    {
+      "name": "starters",
+      "type": "@ViewBuilder () -> Starters",
+      "default": "EmptyView",
+      "description": "Where to start, usually MonarchAiStarterPrompts."
+    },
+    {
+      "name": "footer",
+      "type": "@ViewBuilder () -> Footer",
+      "default": "EmptyView",
+      "description": "Content under the starters, usually MonarchAiDisclaimer."
+    }
+  ],
+  "states": [
+    {
+      "name": "with agent",
+      "description": "The agent avatar in its idle state, then the name and the role."
+    },
+    {
+      "name": "without agent",
+      "description": "A bot symbol on the subtle AI fill stands in for the avatar."
+    },
+    {
+      "name": "static",
+      "description": "The welcome itself is not interactive; the starters and the footer may be."
+    }
+  ],
+  "appearance": "A centred column: the avatar or the bot mark (the strong AI role on the subtle AI fill), the agent's name in default text and role in muted text, the title as a heading, the description in muted text and the capabilities with check marks in the strong AI role. All roles come from the theme, so it follows light, dark and both high-contrast themes.",
+  "platformNotes": "The web takes a heading level (h1 to h4); iOS has no heading levels in SwiftUI's simple API, so the title has the header trait. The agent's avatar comes from MonarchAiAgentAvatar, which loads the http or https address with AsyncImage. Starters and footer are view slots, the same as the web's ReactNode props. The web shrinks the padding below 30rem; on iOS the column simply wraps.",
+  "accessibility": [
+    "The welcome is a container named by its title; the title has the header trait.",
+    "The agent line is one element read as \"AI assistant: name, role\". The avatar beside it is decorative.",
+    "The capabilities are a group named \"What I can help with\", with one element per capability; the check marks are decorative.",
+    "The bot mark is hidden from VoiceOver.",
+    "All text scales with Dynamic Type and wraps."
+  ],
+  "edgeCases": [
+    "Blank capabilities are not shown.",
+    "A long title, description or capability wraps; nothing is cut.",
+    "The starters are laid out leading-aligned even though the column is centred."
+  ],
+  "tests": [
+    "MonarchAiWelcomeTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "In an empty thread",
+      "fixture": "ai-welcome",
+      "webExample": "In an empty thread",
+      "template": "MonarchAiWelcome(\n    {{title}},\n    agent: MonarchAiAgentRef(name: {{agent.name}}, role: {{agent.role}}),\n    description: {{description}},\n    starters: {\n        MonarchAiStarterPrompts(\n            [\n                MonarchAiStarterPrompt(id: {{prompts.0.id}}, title: {{prompts.0.title}}, prompt: {{prompts.0.prompt}}),\n                MonarchAiStarterPrompt(id: {{prompts.1.id}}, title: {{prompts.1.title}}, prompt: {{prompts.1.prompt}}),\n            ]\n        ) { starter in\n            draft = starter.prompt\n        }\n    }\n)",
+      "setupTemplate": "@State private var draft = \"\"",
+      "setup": "@State private var draft = \"\"",
+      "code": "MonarchAiWelcome(\n    \"How can I help?\",\n    agent: MonarchAiAgentRef(name: \"Assistant\", role: \"Workspace assistant\"),\n    description: \"I can read the page you are on and the documents you share with me.\",\n    starters: {\n        MonarchAiStarterPrompts(\n            [\n                MonarchAiStarterPrompt(id: \"sum\", title: \"Summarise this page\", prompt: \"Summarise this page.\"),\n                MonarchAiStarterPrompt(id: \"next\", title: \"Suggest next steps\", prompt: \"What should I do next on this project?\"),\n            ]\n        ) { starter in\n            draft = starter.prompt\n        }\n    }\n)"
+    },
+    {
+      "title": "With capabilities",
+      "code": "MonarchAiWelcome(\n    \"Ask about your projects\",\n    capabilities: [\"Find a project by name or owner\", \"Summarise what changed this week\"]\n)"
+    }
+  ],
+  "webEquivalent": "AiWelcome",
+  "dependsOn": [
+    "ai-agent-avatar",
+    "ai-starter-prompts",
+    "ai-disclaimer"
+  ],
+  "icons": {
+    "mark": "BotGlyph"
+  }
+}

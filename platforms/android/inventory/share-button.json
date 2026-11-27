@@ -1,0 +1,105 @@
+{
+  "id": "share-button",
+  "name": null,
+  "title": "ShareButton",
+  "family": "actions",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "android.content.Intent.ACTION_SEND, android.content.Intent.createChooser (the Android Sharesheet)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A share button opens a small panel with the link, a Copy link button and an Email action; where the app has more to offer it hands the link to the Android Sharesheet (an ACTION_SEND intent wrapped in Intent.createChooser) instead. Monarch ships a MonarchPopover for the panel.",
+  "whenToUse": "To send a link or text to another app or person. Put the intent in the onClick of a MonarchButton, or of an IconButton with a share icon and a content description, inside MonarchTheme.",
+  "whenNotToUse": "To copy a value to the clipboard use MonarchCopyButton; the Sharesheet already offers Copy, so do not add a copy fallback next to it.",
+  "api": [
+    "Intent(Intent.ACTION_SEND).apply { type = \"text/plain\"; putExtra(Intent.EXTRA_TEXT, text); putExtra(Intent.EXTRA_TITLE, title) }",
+    "Intent.createChooser(target: Intent, title: CharSequence?): Intent",
+    "Context.startActivity(intent: Intent)"
+  ],
+  "options": [
+    {
+      "name": "Intent.EXTRA_TEXT",
+      "type": "String",
+      "default": "required",
+      "description": "The link or text to share."
+    },
+    {
+      "name": "Intent.EXTRA_TITLE",
+      "type": "String?",
+      "default": "null",
+      "description": "A title shown in the preview at the top of the Sharesheet on Android 10 and later."
+    },
+    {
+      "name": "Intent.EXTRA_SUBJECT",
+      "type": "String?",
+      "default": "null",
+      "description": "A subject that email apps use."
+    },
+    {
+      "name": "createChooser title",
+      "type": "CharSequence?",
+      "default": "null",
+      "description": "Pass null so that the system shows its own localised title."
+    }
+  ],
+  "states": [
+    {
+      "name": "resting",
+      "description": "The button that opens the Sharesheet has the states of the button it is: MonarchButton or IconButton."
+    },
+    {
+      "name": "sheet open",
+      "description": "The system Sharesheet covers the app; the app is not told which target was chosen unless it passes an IntentSender to createChooser."
+    }
+  ],
+  "appearance": "The button follows MonarchTheme like any Monarch button. The Sharesheet is drawn by the system in the system's own colors, not the app theme.",
+  "platformNotes": "The web component uses the Web Share API where the browser has it and otherwise opens its own panel with the link, a Copy link button and optional targets such as email. Android shows that panel, a MonarchPopover, so the screen reads as on the web; an app that prefers the system chooser puts the ACTION_SEND intent in the onClick of the button instead. iOS uses ShareLink. A web ShareEvent with the chosen target needs a PendingIntent IntentSender on Android; Monarch does not wrap it.",
+  "accessibility": [
+    "System behavior: the Sharesheet is a system screen with its own TalkBack labels and focus order.",
+    "The button that opens it is a MonarchButton or an IconButton, so it has the Button role and a touch target of at least 48dp.",
+    "An icon-only share button needs a content description such as \"Share\"."
+  ],
+  "edgeCases": [
+    "Pass null as the chooser title; a fixed English title would not be translated by the system.",
+    "Without Intent.createChooser, Android may open a default app directly; the chooser always shows the Sharesheet.",
+    "Share a content:// Uri with FLAG_GRANT_READ_URI_PERMISSION and ClipData for files; plain text needs no permission."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Share sheet with panel fallback",
+      "fixture": "share-button",
+      "webExample": "Share sheet with panel fallback",
+      "template": "Box {\n    MonarchButton(text = {{label}}, onClick = { open = true }, variant = MonarchButtonVariant.Secondary)\n    MonarchPopover(expanded = open, onDismissRequest = { open = false }, label = \"Share\") {\n        MonarchText(text = \"Link\", style = MonarchTextStyle.Label)\n        Row(\n            horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n            verticalAlignment = Alignment.CenterVertically,\n        ) {\n            MonarchTextField(\n                value = {{url}},\n                onValueChange = {},\n                readOnly = true,\n                modifier = Modifier.weight(1f),\n            )\n            MonarchButton(\n                text = \"Copy link\",\n                onClick = { /* Copy the link to the clipboard. */ },\n                variant = MonarchButtonVariant.Secondary,\n                size = MonarchButtonSize.Sm,\n                leadingIcon = { MonarchIcon(SampleIcons.Copy, contentDescription = null, size = MonarchIconSize.Sm) },\n            )\n        }\n        MonarchDivider()\n        MonarchButton(\n            text = \"Email\",\n            onClick = { /* Open a new message with the link. */ },\n            variant = MonarchButtonVariant.Ghost,\n            size = MonarchButtonSize.Sm,\n        )\n    }\n}",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.ui.Alignment"
+      ],
+      "setup": "var open by remember { mutableStateOf(true) }",
+      "code": "Box {\n    MonarchButton(text = \"Share\", onClick = { open = true }, variant = MonarchButtonVariant.Secondary)\n    MonarchPopover(expanded = open, onDismissRequest = { open = false }, label = \"Share\") {\n        MonarchText(text = \"Link\", style = MonarchTextStyle.Label)\n        Row(\n            horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n            verticalAlignment = Alignment.CenterVertically,\n        ) {\n            MonarchTextField(\n                value = \"https://example.com/reports/q3\",\n                onValueChange = {},\n                readOnly = true,\n                modifier = Modifier.weight(1f),\n            )\n            MonarchButton(\n                text = \"Copy link\",\n                onClick = { /* Copy the link to the clipboard. */ },\n                variant = MonarchButtonVariant.Secondary,\n                size = MonarchButtonSize.Sm,\n                leadingIcon = { MonarchIcon(SampleIcons.Copy, contentDescription = null, size = MonarchIconSize.Sm) },\n            )\n        }\n        MonarchDivider()\n        MonarchButton(\n            text = \"Email\",\n            onClick = { /* Open a new message with the link. */ },\n            variant = MonarchButtonVariant.Ghost,\n            size = MonarchButtonSize.Sm,\n        )\n    }\n}",
+      "setupTemplate": "var open by remember { mutableStateOf(true) }"
+    }
+  ],
+  "webEquivalent": "ShareButton",
+  "dependsOn": [
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "android",
+      "paths": [
+        "title"
+      ],
+      "reason": "The title is the email subject and the title of the system share payload; it is not shown on screen.",
+      "convention": "internal values that are not displayed"
+    }
+  ]
+}

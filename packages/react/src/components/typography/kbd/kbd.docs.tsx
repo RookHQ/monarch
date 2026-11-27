@@ -1,5 +1,9 @@
 import { Kbd } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './kbd.fixture.json';
+
+const keys = fixture.data.keys as [string, string];
 
 export default {
   id: 'kbd',
@@ -30,7 +34,7 @@ export default {
           title: 'Shortcut',
           render: () => (
             <>
-              <Kbd>⌘</Kbd> <Kbd>K</Kbd>
+              <Kbd>{keys[0]}</Kbd> <Kbd>{keys[1]}</Kbd>
             </>
           ),
         },

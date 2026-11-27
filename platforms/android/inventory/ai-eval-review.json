@@ -1,0 +1,190 @@
+{
+  "id": "ai-eval-review",
+  "name": null,
+  "title": "AiEvalReview",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold with a LazyColumn of MonarchListRow for the queue and a verticalScroll Column for the item; MonarchSegmentedControl for the verdict",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a review queue for AI outputs, with each output's prompt, output and expected answer, a 1 to 5 rubric per criterion, notes and a pass or fail verdict.",
+  "whenToUse": "Human evaluation of model or prompt changes, or spot-checking AI outputs before a feature launches or a model is switched.",
+  "whenNotToUse": "For end-user feedback on one reply use MonarchAiFeedback. For reviewing AI drafts before they are sent use MonarchAiDraftQueue.",
+  "api": [
+    "NavigableListDetailPaneScaffold(navigator, listPane = { AnimatedPane { LazyColumn { MonarchProgress(progress, label); ListItem(headline = title, supporting = verdict, Modifier.selectable(selected = id == current) { … }) } } }, detailPane = { AnimatedPane { Column(Modifier.verticalScroll(…)) { … } } })",
+    "MonarchAiMarkdown(text = item.output) after MonarchAiGeneratedBadge(size = MonarchAiGeneratedBadgeSize.Sm)",
+    "MonarchRatingPicker(value = scores[criterion.id], onValueChange = …, label = criterion.label, options = MonarchRatingOption.range(1, criterion.scale))",
+    "MonarchTextField(value = notes, onValueChange = …, label = \"Notes\", singleLine = false)",
+    "SingleChoiceSegmentedButtonRow { SegmentedButton(selected = verdict == \"pass\", onClick = …, shape = SegmentedButtonDefaults.itemShape(0, 2)) { Text(\"Pass\") } … }",
+    "MonarchButton(text = \"Previous\" / \"Next\", onClick = …, size = MonarchButtonSize.Sm, enabled = …)"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "App list of outputs: id, title, prompt, output, reference",
+      "default": "required",
+      "description": "The queue. The output is Markdown text for MonarchAiMarkdown; the reference is optional and its block is left out without it."
+    },
+    {
+      "name": "rubric",
+      "type": "App list of criteria: id, label, description, scale",
+      "default": "required",
+      "description": "One MonarchRatingPicker per criterion, scored 1 to scale (at most 5), with its description as a caption above it."
+    },
+    {
+      "name": "reviews",
+      "type": "Scores, notes and verdict per item id",
+      "default": "empty",
+      "description": "Held by the app and persisted on every change, as the web's onReviewChange."
+    },
+    {
+      "name": "current",
+      "type": "String",
+      "default": "the first item",
+      "description": "The item shown in the detail pane; Previous and Next change it."
+    },
+    {
+      "name": "advance on verdict",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Set current to the next item in the verdict's onClick to move on after pass or fail, as the web's advanceOnVerdict."
+    }
+  ],
+  "states": [
+    {
+      "name": "pending",
+      "description": "A queue row reads \"Not reviewed\" under its title."
+    },
+    {
+      "name": "pass / fail",
+      "description": "The row reads \"Pass\" or \"Fail\", and the segmented button is selected with Material 3's check mark."
+    },
+    {
+      "name": "current",
+      "description": "The queue row of the item shown is selected (Modifier.selectable), so TalkBack reads it as selected."
+    },
+    {
+      "name": "scored",
+      "description": "\"Score 9 / 13\" sums the scores given; each picker reads its value."
+    },
+    {
+      "name": "first / last",
+      "description": "Previous is disabled on the first item, Next on the last."
+    },
+    {
+      "name": "done",
+      "description": "The progress bar is full and Submit reviews is enabled once every item has a verdict."
+    },
+    {
+      "name": "empty",
+      "description": "With no items, show a MonarchEmptyState in the list pane instead of the queue."
+    }
+  ],
+  "appearance": "Every part is an existing component: Material 3 list items and segmented buttons in the Monarch theme, the linear MonarchProgress, MonarchAiGeneratedBadge on the AI roles, MonarchAiMarkdown, MonarchRatingPicker, MonarchTextField and small MonarchButtons. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships AiEvalReview as one component with a sticky queue column beside the item from 768px and the queue stacked above it below. On Android it is a recipe on the list-detail pattern: NavigableListDetailPaneScaffold shows the queue and the item side by side on a wide window and as a list that opens the item, with the system back gesture, on a phone. The web's radio choices per criterion are MonarchRatingPicker; its pass and fail radios are a single-choice segmented button row. The web's J / K and P / F shortcuts and the visible shortcut hint are left out: the web hides the hint on touch screens, and an app that wants them for hardware keyboards adds Modifier.onPreviewKeyEvent on the detail pane. The web moves focus to the new item's heading after Previous and Next; this recipe does not move focus. The web's check, cross and dot glyphs in the queue are left out because Monarch bundles no icons; the verdict is the row's supporting text. iOS has not covered this entry yet.",
+  "accessibility": [
+    "Each queue row is one a MonarchListRow made selectable, so TalkBack reads its title, its verdict as text and whether it is the current item.",
+    "The item's title and the Prompt, Output, Expected, Rubric and Verdict labels are MonarchText headings, so TalkBack can move between them.",
+    "The output carries MonarchAiGeneratedBadge, read as AI-generated.",
+    "Each MonarchRatingPicker is named by its criterion and reads its value, for example \"3 of 5\".",
+    "Pass and Fail are Material 3 segmented buttons in a single-choice row: radio buttons with a selected state and a check mark, not color alone.",
+    "Previous, Next and Submit reviews are MonarchButtons with 48dp targets; the queue rows are at least 48dp tall."
+  ],
+  "edgeCases": [
+    "Keep each criterion at five points or fewer, as the web does.",
+    "Persist every change; nothing in the recipe saves reviews by itself.",
+    "Do not show which model produced an output when reviewers should judge blind.",
+    "A long output scrolls in the detail pane; the queue scrolls on its own, so do not put the scaffold in a scrolling parent.",
+    "Clearing a score (a clearable picker) removes it from the total."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Review queue with a submit footer",
+      "fixture": "ai-eval-review",
+      "webExample": "Review queue with a submit footer",
+      "template": "@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nNavigableListDetailPaneScaffold(\n    navigator = navigator,\n    listPane = {\n        AnimatedPane {\n            val reviewed = items.count { it.id in verdicts }\n            LazyColumn {\n                item(key = \"progress\") {\n                    Column(\n                        modifier = Modifier.padding(MonarchTheme.spacing.space4),\n                        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n                    ) {\n                        MonarchText(text = \"$reviewed of ${items.size} reviewed\", style = MonarchTextStyle.Caption)\n                        MonarchProgress(\n                            progress = reviewed.toFloat() / items.size,\n                            label = \"$reviewed of ${items.size} reviewed\",\n                        )\n                    }\n                }\n                items(items = items, key = { it.id }) { item ->\n                    MonarchListRow(\n                        headlineContent = { Text(item.title) },\n                        trailingContent = {\n                            MonarchText(\n                                text = when (verdicts[item.id]) {\n                                    \"pass\" -> \"Pass\"\n                                    \"fail\" -> \"Fail\"\n                                    else -> \"Not reviewed\"\n                                },\n                                style = MonarchTextStyle.Caption,\n                                color = MonarchTheme.colors.textMuted,\n                            )\n                        },\n                        onClick = {\n                            current = item.id\n                            scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item.id) }\n                        },\n                        selected = item.id == current,\n                    )\n                }\n            }\n        }\n    },\n    detailPane = {\n        AnimatedPane {\n            val index = items.indexOfFirst { it.id == current }.coerceAtLeast(0)\n            val item = items[index]\n            val itemScores = scores[item.id].orEmpty()\n            val total = itemScores.values.sum()\n            val max = rubric.sumOf { it.scale }\n            Column(\n                modifier = Modifier.verticalScroll(rememberScrollState()).padding(MonarchTheme.spacing.space4),\n                verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n            ) {\n                MonarchText(text = \"${index + 1} of ${items.size}\", style = MonarchTextStyle.Caption)\n                MonarchText(text = item.title, style = MonarchTextStyle.Heading)\n                MonarchText(text = item.meta, style = MonarchTextStyle.Caption)\n                FlowRow(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                    MonarchButton(\n                        text = \"Previous\",\n                        onClick = { current = items[index - 1].id },\n                        size = MonarchButtonSize.Sm,\n                        enabled = index > 0,\n                    )\n                    MonarchButton(\n                        text = \"Next\",\n                        onClick = { current = items[index + 1].id },\n                        size = MonarchButtonSize.Sm,\n                        enabled = index < items.lastIndex,\n                    )\n                }\n                MonarchCard {\n                    MonarchText(text = \"Prompt\".uppercase(), style = MonarchTextStyle.Label, color = MonarchTheme.colors.textMuted)\n                    MonarchText(text = item.prompt)\n                }\n                MonarchCard(tone = MonarchTone.Ai) {\n                    Row(\n                        modifier = Modifier.fillMaxWidth(),\n                        horizontalArrangement = Arrangement.SpaceBetween,\n                        verticalAlignment = Alignment.CenterVertically,\n                    ) {\n                        MonarchText(text = \"Output\".uppercase(), style = MonarchTextStyle.Label, color = MonarchTheme.colors.textMuted)\n                        MonarchAiGeneratedBadge(size = MonarchAiGeneratedBadgeSize.Sm)\n                    }\n                    MonarchAiMarkdown(text = item.output)\n                }\n                item.reference?.let { reference ->\n                    MonarchCard {\n                        MonarchText(text = \"Expected\".uppercase(), style = MonarchTextStyle.Label, color = MonarchTheme.colors.textMuted)\n                        MonarchText(text = reference)\n                    }\n                }\n                Row(\n                    modifier = Modifier.fillMaxWidth(),\n                    horizontalArrangement = Arrangement.SpaceBetween,\n                    verticalAlignment = Alignment.CenterVertically,\n                ) {\n                    MonarchText(text = \"Rubric\".uppercase(), style = MonarchTextStyle.Label, color = MonarchTheme.colors.textMuted)\n                    MonarchText(text = \"Score $total / $max\", style = MonarchTextStyle.BodyStrong)\n                }\n                rubric.forEach { criterion ->\n                    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n                        MonarchText(text = criterion.label, style = MonarchTextStyle.Label)\n                        criterion.description?.let { MonarchText(text = it, style = MonarchTextStyle.Caption) }\n                        MonarchRatingPicker(\n                            value = itemScores[criterion.id],\n                            onValueChange = { score ->\n                                val next = if (score == null) {\n                                    itemScores - criterion.id\n                                } else {\n                                    itemScores + (criterion.id to score)\n                                }\n                                scores = scores + (item.id to next)\n                            },\n                            options = MonarchRatingOption.range(1, criterion.scale),\n                            clearable = true,\n                        )\n                    }\n                }\n                MonarchTextField(\n                    value = notes[item.id].orEmpty(),\n                    onValueChange = { notes = notes + (item.id to it) },\n                    label = \"Notes\",\n                    singleLine = false,\n                )\n                MonarchText(text = \"Verdict\", style = MonarchTextStyle.Label)\n                Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                    listOf(\"pass\" to \"Pass\", \"fail\" to \"Fail\").forEach { (value, label) ->\n                        MonarchButton(\n                            text = label,\n                            onClick = { verdicts = verdicts + (item.id to value) },\n                            variant = if (verdicts[item.id] == value) MonarchButtonVariant.Primary else MonarchButtonVariant.Secondary,\n                            size = MonarchButtonSize.Sm,\n                            leadingIcon = { MonarchIcon(if (value == \"pass\") SampleIcons.Check else SampleIcons.Close, contentDescription = null) },\n                        )\n                    }\n                }\n                MonarchButton(\n                    text = \"Submit reviews\",\n                    onClick = { /* Send the reviews to the evaluation service. */ },\n                    variant = MonarchButtonVariant.Primary,\n                    enabled = verdicts.size == items.size,\n                )\n            }\n        }\n    },\n)",
+      "setupTemplate": "class EvalItem(val id: String, val title: String, val prompt: String, val output: String, val reference: String? = null, val meta: String = \"\")\nclass Criterion(val id: String, val label: String, val description: String? = null, val scale: Int = 5)\nval items = remember {\n    listOf(\n        EvalItem(\n            id = {{items.0.id}},\n            title = {{items.0.title}},\n            prompt = {{items.0.prompt}},\n            output = {{items.0.output}},\n            reference = {{items.0.reference}},\n            meta = {{items.0.meta}},\n        ),\n        EvalItem(\n            id = {{items.1.id}},\n            title = {{items.1.title}},\n            prompt = {{items.1.prompt}},\n            output = {{items.1.output}},\n            meta = {{items.1.meta}},\n        ),\n        EvalItem(\n            id = {{items.2.id}},\n            title = {{items.2.title}},\n            prompt = {{items.2.prompt}},\n            output = {{items.2.output}},\n            meta = {{items.2.meta}},\n        ),\n    )\n}\nval rubric = remember {\n    listOf(\n        Criterion({{rubric.0.id}}, {{rubric.0.label}}, {{rubric.0.description}}),\n        Criterion({{rubric.1.id}}, {{rubric.1.label}}, {{rubric.1.description}}),\n        Criterion({{rubric.2.id}}, {{rubric.2.label}}, scale = {{rubric.2.scale}}),\n    )\n}\n// Reviews by item id; persist every change in the app so no review is lost.\nvar scores by remember { mutableStateOf(mapOf<String, Map<String, Int>>()) }\nvar notes by remember { mutableStateOf(mapOf<String, String>()) }\nvar verdicts by remember { mutableStateOf(mapOf<String, String>()) }\nvar current by rememberSaveable { mutableStateOf(items.first().id) }\n@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nval navigator = rememberListDetailPaneScaffoldNavigator<String>()\nval scope = rememberCoroutineScope()",
+      "imports": [
+        "androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi",
+        "androidx.compose.material3.adaptive.layout.*",
+        "androidx.compose.material3.adaptive.navigation.*",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.ui.Alignment",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.foundation.*",
+        "kotlinx.coroutines.launch",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth"
+      ],
+      "setup": "class EvalItem(val id: String, val title: String, val prompt: String, val output: String, val reference: String? = null, val meta: String = \"\")\nclass Criterion(val id: String, val label: String, val description: String? = null, val scale: Int = 5)\nval items = remember {\n    listOf(\n        EvalItem(\n            id = \"q1\",\n            title = \"Summarise a meeting\",\n            prompt = \"Summarise the attached meeting notes in three bullet points.\",\n            output = \"- The launch moves to **next Tuesday**.\\n- Design owns the final copy review.\\n- Support needs the FAQ by Friday.\",\n            reference = \"Launch moved to Tuesday; design reviews copy; support needs the FAQ by Friday.\",\n            meta = \"Model A · 12 Oct\",\n        ),\n        EvalItem(\n            id = \"q2\",\n            title = \"Answer a policy question\",\n            prompt = \"Can I expense a train ticket for a client visit?\",\n            output = \"Yes. Travel for client visits is reimbursable with a receipt, up to the standard fare.\",\n            meta = \"Model A · 12 Oct\",\n        ),\n        EvalItem(\n            id = \"q3\",\n            title = \"Draft a reply\",\n            prompt = \"Draft a short, polite reply declining the invitation.\",\n            output = \"Thank you for the invitation. Unfortunately I can’t join this time, but I hope it goes well.\",\n            meta = \"Model B · 13 Oct\",\n        ),\n    )\n}\nval rubric = remember {\n    listOf(\n        Criterion(\"accuracy\", \"Accuracy\", \"Facts match the source or reference.\"),\n        Criterion(\"completeness\", \"Completeness\", \"Covers everything asked.\"),\n        Criterion(\"tone\", \"Tone\", scale = 3),\n    )\n}\n// Reviews by item id; persist every change in the app so no review is lost.\nvar scores by remember { mutableStateOf(mapOf<String, Map<String, Int>>()) }\nvar notes by remember { mutableStateOf(mapOf<String, String>()) }\nvar verdicts by remember { mutableStateOf(mapOf<String, String>()) }\nvar current by rememberSaveable { mutableStateOf(items.first().id) }\n@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nval navigator = rememberListDetailPaneScaffoldNavigator<String>()\nval scope = rememberCoroutineScope()",
+      "code": "@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nNavigableListDetailPaneScaffold(\n    navigator = navigator,\n    listPane = {\n        AnimatedPane {\n            val reviewed = items.count { it.id in verdicts }\n            LazyColumn {\n                item(key = \"progress\") {\n                    Column(\n                        modifier = Modifier.padding(MonarchTheme.spacing.space4),\n                        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n                    ) {\n                        MonarchText(text = \"$reviewed of ${items.size} reviewed\", style = MonarchTextStyle.Caption)\n                        MonarchProgress(\n                            progress = reviewed.toFloat() / items.size,\n                            label = \"$reviewed of ${items.size} reviewed\",\n                        )\n                    }\n                }\n                items(items = items, key = { it.id }) { item ->\n                    MonarchListRow(\n                        headlineContent = { Text(item.title) },\n                        trailingContent = {\n                            MonarchText(\n                                text = when (verdicts[item.id]) {\n                                    \"pass\" -> \"Pass\"\n                                    \"fail\" -> \"Fail\"\n                                    else -> \"Not reviewed\"\n                                },\n                                style = MonarchTextStyle.Caption,\n                                color = MonarchTheme.colors.textMuted,\n                            )\n                        },\n                        onClick = {\n                            current = item.id\n                            scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item.id) }\n                        },\n                        selected = item.id == current,\n                    )\n                }\n            }\n        }\n    },\n    detailPane = {\n        AnimatedPane {\n            val index = items.indexOfFirst { it.id == current }.coerceAtLeast(0)\n            val item = items[index]\n            val itemScores = scores[item.id].orEmpty()\n            val total = itemScores.values.sum()\n            val max = rubric.sumOf { it.scale }\n            Column(\n                modifier = Modifier.verticalScroll(rememberScrollState()).padding(MonarchTheme.spacing.space4),\n                verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n            ) {\n                MonarchText(text = \"${index + 1} of ${items.size}\", style = MonarchTextStyle.Caption)\n                MonarchText(text = item.title, style = MonarchTextStyle.Heading)\n                MonarchText(text = item.meta, style = MonarchTextStyle.Caption)\n                FlowRow(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                    MonarchButton(\n                        text = \"Previous\",\n                        onClick = { current = items[index - 1].id },\n                        size = MonarchButtonSize.Sm,\n                        enabled = index > 0,\n                    )\n                    MonarchButton(\n                        text = \"Next\",\n                        onClick = { current = items[index + 1].id },\n                        size = MonarchButtonSize.Sm,\n                        enabled = index < items.lastIndex,\n                    )\n                }\n                MonarchCard {\n                    MonarchText(text = \"Prompt\".uppercase(), style = MonarchTextStyle.Label, color = MonarchTheme.colors.textMuted)\n                    MonarchText(text = item.prompt)\n                }\n                MonarchCard(tone = MonarchTone.Ai) {\n                    Row(\n                        modifier = Modifier.fillMaxWidth(),\n                        horizontalArrangement = Arrangement.SpaceBetween,\n                        verticalAlignment = Alignment.CenterVertically,\n                    ) {\n                        MonarchText(text = \"Output\".uppercase(), style = MonarchTextStyle.Label, color = MonarchTheme.colors.textMuted)\n                        MonarchAiGeneratedBadge(size = MonarchAiGeneratedBadgeSize.Sm)\n                    }\n                    MonarchAiMarkdown(text = item.output)\n                }\n                item.reference?.let { reference ->\n                    MonarchCard {\n                        MonarchText(text = \"Expected\".uppercase(), style = MonarchTextStyle.Label, color = MonarchTheme.colors.textMuted)\n                        MonarchText(text = reference)\n                    }\n                }\n                Row(\n                    modifier = Modifier.fillMaxWidth(),\n                    horizontalArrangement = Arrangement.SpaceBetween,\n                    verticalAlignment = Alignment.CenterVertically,\n                ) {\n                    MonarchText(text = \"Rubric\".uppercase(), style = MonarchTextStyle.Label, color = MonarchTheme.colors.textMuted)\n                    MonarchText(text = \"Score $total / $max\", style = MonarchTextStyle.BodyStrong)\n                }\n                rubric.forEach { criterion ->\n                    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n                        MonarchText(text = criterion.label, style = MonarchTextStyle.Label)\n                        criterion.description?.let { MonarchText(text = it, style = MonarchTextStyle.Caption) }\n                        MonarchRatingPicker(\n                            value = itemScores[criterion.id],\n                            onValueChange = { score ->\n                                val next = if (score == null) {\n                                    itemScores - criterion.id\n                                } else {\n                                    itemScores + (criterion.id to score)\n                                }\n                                scores = scores + (item.id to next)\n                            },\n                            options = MonarchRatingOption.range(1, criterion.scale),\n                            clearable = true,\n                        )\n                    }\n                }\n                MonarchTextField(\n                    value = notes[item.id].orEmpty(),\n                    onValueChange = { notes = notes + (item.id to it) },\n                    label = \"Notes\",\n                    singleLine = false,\n                )\n                MonarchText(text = \"Verdict\", style = MonarchTextStyle.Label)\n                Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                    listOf(\"pass\" to \"Pass\", \"fail\" to \"Fail\").forEach { (value, label) ->\n                        MonarchButton(\n                            text = label,\n                            onClick = { verdicts = verdicts + (item.id to value) },\n                            variant = if (verdicts[item.id] == value) MonarchButtonVariant.Primary else MonarchButtonVariant.Secondary,\n                            size = MonarchButtonSize.Sm,\n                            leadingIcon = { MonarchIcon(if (value == \"pass\") SampleIcons.Check else SampleIcons.Close, contentDescription = null) },\n                        )\n                    }\n                }\n                MonarchButton(\n                    text = \"Submit reviews\",\n                    onClick = { /* Send the reviews to the evaluation service. */ },\n                    variant = MonarchButtonVariant.Primary,\n                    enabled = verdicts.size == items.size,\n                )\n            }\n        }\n    },\n)"
+    },
+    {
+      "title": "Scoring one output",
+      "setup": "var accuracy by rememberSaveable { mutableStateOf<Int?>(null) }\nvar tone by rememberSaveable { mutableStateOf<Int?>(null) }\nvar notes by rememberSaveable { mutableStateOf(\"\") }\nvar verdict by rememberSaveable { mutableStateOf<String?>(null) }",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    MonarchText(text = \"Score ${(accuracy ?: 0) + (tone ?: 0)} / 8\", style = MonarchTextStyle.BodyStrong)\n    MonarchText(text = \"Facts match the source or reference.\", style = MonarchTextStyle.Caption)\n    MonarchRatingPicker(value = accuracy, onValueChange = { accuracy = it }, label = \"Accuracy\")\n    MonarchRatingPicker(\n        value = tone,\n        onValueChange = { tone = it },\n        label = \"Tone\",\n        options = MonarchRatingOption.range(1, 3),\n    )\n    MonarchTextField(value = notes, onValueChange = { notes = it }, label = \"Notes\", singleLine = false)\n    MonarchText(text = \"Verdict\", style = MonarchTextStyle.Label)\n    MonarchSegmentedControl(fillWidth = true) {\n        listOf(\"pass\" to \"Pass\", \"fail\" to \"Fail\").forEach { (value, label) ->\n            Segment(selected = verdict == value, onClick = { verdict = value }, label = label)\n        }\n    }\n}",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.foundation.*"
+      ]
+    }
+  ],
+  "webEquivalent": "AiEvalReview",
+  "dependsOn": [
+    "rating-picker",
+    "text-field",
+    "button",
+    "split-layout",
+    "segmented-control",
+    "ai-markdown",
+    "ai-generated-badge",
+    "progress-bar",
+    "text"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-text",
+      "platform": "android",
+      "paths": [
+        "1 of 3",
+        "Model A · 12 Oct",
+        "Previous",
+        "Next",
+        "Prompt",
+        "Summarise the attached meeting notes in three bullet points.",
+        "Output",
+        "AI generated",
+        "The launch moves to next Tuesday.",
+        "Design owns the final copy review.",
+        "Support needs the FAQ by Friday.",
+        "Expected",
+        "Launch moved to Tuesday; design reviews copy; support needs the FAQ by Friday.",
+        "Rubric",
+        "Score 0 / 13",
+        "Accuracy",
+        "Facts match the source or reference.",
+        "Completeness",
+        "Covers everything asked.",
+        "Tone",
+        "Notes",
+        "Verdict",
+        "Pass",
+        "Fail",
+        "Submit reviews",
+        "Summarise a meetingNot reviewed",
+        "Answer a policy questionNot reviewed",
+        "Draft a replyNot reviewed"
+      ],
+      "reason": "On a phone the review is a list of items; the prompt, output, rubric and verdict of the open item are its detail screen, opened by tapping an item, so they are not on the list screen. The docs preview is recorded in an 840dp tablet window, where both panes show side by side, as on the web; the exception applies to a compact phone window only.",
+      "convention": "master-detail navigation on a phone (list, then detail), not two panes"
+    }
+  ]
+}

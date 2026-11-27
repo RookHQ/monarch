@@ -2,13 +2,12 @@ import { useEffect, useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiTableAnswer } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-table-answer.fixture.json';
 
-const regions = [
-  { Region: 'North', Deals: 42, Revenue: '1,240,000', 'Last update': '2026-03-04' },
-  { Region: 'South', Deals: 31, Revenue: '980,500', 'Last update': '2026-01-15' },
-  { Region: 'East', Deals: 57, Revenue: '1,710,250', 'Last update': '2026-02-20' },
-  { Region: 'West', Deals: 18, Revenue: '455,000', 'Last update': '2026-03-11' },
-];
+const regions = fixture.data.rows.map((row) =>
+  Object.fromEntries(fixture.data.columns.map((column, i) => [column, row[i]])),
+);
 
 function StreamingDemo() {
   const [count, setCount] = useState(0);
@@ -153,7 +152,7 @@ export default {
           title: 'Sortable table',
           stack: true,
           render: () => (
-            <AiTableAnswer title="Pipeline by region" rows={regions} onOpenAsArtifact={() => {}} />
+            <AiTableAnswer title={fixture.data.title} rows={regions} onOpenAsArtifact={() => {}} />
           ),
         },
         { title: 'Rows streaming in', stack: true, render: () => <StreamingDemo /> },

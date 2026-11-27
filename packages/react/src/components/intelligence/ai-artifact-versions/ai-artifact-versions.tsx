@@ -39,7 +39,7 @@ export interface AiArtifactVersionsMessages {
   select: string;
   /** One option of the select, e.g. "v3 · Shorter intro · 12 Mar, 14:05". */
   option: (info: { version: number; label?: string | undefined; date: string }) => string;
-  /** Formats `createdAt`. */
+  /** Formats `createdAt`. Default: medium date and short time in `locale` and `timeZone`. */
   formatDate: (date: Date) => string;
   /** Compare button. */
   compare: string;
@@ -54,11 +54,18 @@ export const AI_ARTIFACT_VERSIONS_MESSAGES: AiArtifactVersionsMessages = {
   next: 'Next version',
   select: 'Choose a version',
   option: ({ version, label, date }) => [`v${version}`, label, date].filter(Boolean).join(' · '),
-  formatDate: (date) =>
-    new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date),
+  formatDate: (date) => formatVersionDate(date),
   compare: 'Compare with previous',
   announce: (version, total) => `Showing version ${version} of ${total}`,
 };
+
+function formatVersionDate(date: Date, locale?: string, timeZone?: string): string {
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    ...(timeZone ? { timeZone } : {}),
+  }).format(date);
+}
 
 function toDate(value: string | number | Date): Date | null {
   const d = value instanceof Date ? value : new Date(value);
@@ -79,6 +86,10 @@ export interface AiArtifactVersionsProps extends Omit<HTMLAttributes<HTMLDivElem
   onCompare?: ((from: number, to: number) => void) | undefined;
   /** The compare view is showing. Sets `aria-pressed` on the compare button. */
   comparing?: boolean | undefined;
+  /** BCP 47 locale for the dates. Default: the runtime locale. */
+  locale?: string | undefined;
+  /** IANA time zone for the dates; pass it for identical server rendering. */
+  timeZone?: string | undefined;
   /** Strings, for localisation. */
   messages?: Partial<AiArtifactVersionsMessages> | undefined;
 }
@@ -90,10 +101,25 @@ export interface AiArtifactVersionsProps extends Omit<HTMLAttributes<HTMLDivElem
  */
 export const AiArtifactVersions = forwardRef<HTMLDivElement, AiArtifactVersionsProps>(
   function AiArtifactVersions(
-    { versions, value, onChange, onCompare, comparing, messages: messagesProp, className, ...rest },
+    {
+      versions,
+      value,
+      onChange,
+      onCompare,
+      comparing,
+      locale,
+      timeZone,
+      messages: messagesProp,
+      className,
+      ...rest
+    },
     ref,
   ) {
-    const m = { ...AI_ARTIFACT_VERSIONS_MESSAGES, ...messagesProp };
+    const m = {
+      ...AI_ARTIFACT_VERSIONS_MESSAGES,
+      formatDate: (date: Date) => formatVersionDate(date, locale, timeZone),
+      ...messagesProp,
+    };
     const sorted = useMemo(() => [...versions].sort((a, b) => a.version - b.version), [versions]);
     const total = sorted.length;
     const index = sorted.findIndex((v) => v.version === value);

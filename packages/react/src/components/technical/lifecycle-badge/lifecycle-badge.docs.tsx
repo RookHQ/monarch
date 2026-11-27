@@ -1,5 +1,10 @@
 import { LifecycleBadge } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './lifecycle-badge.fixture.json';
+
+type Stage = { lifecycle: 'planned' | 'preview' | 'stable' | 'deprecated' };
+const stages = fixture.data.stages as unknown as readonly [Stage, Stage, Stage, Stage];
 
 const apis = [
   { name: 'Projects API', lifecycle: 'stable' },
@@ -116,10 +121,10 @@ export default {
           title: 'Built-in stages',
           render: () => (
             <>
-              <LifecycleBadge lifecycle="planned" />
-              <LifecycleBadge lifecycle="preview" />
-              <LifecycleBadge lifecycle="stable" />
-              <LifecycleBadge lifecycle="deprecated" />
+              <LifecycleBadge lifecycle={stages[0].lifecycle} />
+              <LifecycleBadge lifecycle={stages[1].lifecycle} />
+              <LifecycleBadge lifecycle={stages[2].lifecycle} />
+              <LifecycleBadge lifecycle={stages[3].lifecycle} />
             </>
           ),
         },

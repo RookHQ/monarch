@@ -34,6 +34,14 @@ function searchOk(query: string) {
 }
 
 describe('AddressAutocomplete', () => {
+  it('looks up defaultQuery at once and shows its suggestions', async () => {
+    const search = vi.fn(searchOk);
+    render(<AddressAutocomplete search={search} defaultQuery="Market" debounce={10_000} />);
+    expect(screen.getByRole('combobox')).toHaveValue('Market');
+    expect(await screen.findByRole('option', { name: /10 Market Street/ })).toBeTruthy();
+    expect(search).toHaveBeenCalledWith('Market', expect.anything());
+  });
+
   it('searches after the minimum length, picks with the keyboard and fills the fields', async () => {
     const search = vi.fn(searchOk);
     const onValueChange = vi.fn();

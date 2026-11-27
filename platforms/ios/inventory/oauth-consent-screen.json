@@ -1,0 +1,97 @@
+{
+  "id": "oauth-consent-screen",
+  "name": null,
+  "title": "OAuthConsentScreen",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "VStack of MonarchAvatar (square, for the app), MonarchBadge, MonarchInlineNotice, MonarchCard with the account, MonarchConsequenceList for the permissions, two full-width MonarchButtons, and Link with the Monarch link style in a MonarchFlowLayout",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the screen where a person allows or cancels a third-party app's access to their account, showing which app asks, which account would grant access, and what the app could do.",
+  "whenToUse": "In an identity provider's app, when another app asks for access to the signed-in account (an OAuth or OpenID Connect authorization request).",
+  "whenNotToUse": "Not for the system permission prompts (camera, location), which iOS shows itself. To list apps that already have access, use MonarchConnectedAppsList; to remove access, use the revoke access recipe.",
+  "api": [
+    "MonarchAvatar(image: nil, name: app.name, systemImage: \"app\", shape: .square, size: .lg, isDecorative: true)",
+    "MonarchBadge(\"Verified\", tone: .success, systemImage: \"checkmark.seal\")",
+    "MonarchInlineNotice(\"Only continue if you know and trust Notes.\", title: \"This app hasn’t been verified\", tone: .warning)",
+    "MonarchConsequenceList(scopes, heading: \"Notes will be able to:\", kindLabel: { $0 == .warning ? \"Sensitive\" : \"Allowed\" })",
+    "MonarchButton(\"Cancel\", variant: .secondary, isLoading: isDenying, fullWidth: true) { … }",
+    "MonarchButton(\"Allow\", variant: .primary, isLoading: isAllowing, fullWidth: true) { … }",
+    "Link(\"privacy policy\", destination: url).buttonStyle(.monarchLink(.inline, isExternal: true))"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "verified",
+      "description": "The app's logo or initial, its name and domain, a success Verified badge, the account card, the permissions, then Cancel and Allow of equal width."
+    },
+    {
+      "name": "unverified",
+      "description": "No badge, and a warning MonarchInlineNotice \"This app hasn’t been verified\" above the account."
+    },
+    {
+      "name": "sensitive permission",
+      "description": "A warning row in the permission list, read as \"Sensitive\", with a detail line."
+    },
+    {
+      "name": "pending",
+      "description": "The pressed button shows its spinner and both are disabled until the request returns."
+    },
+    {
+      "name": "failed",
+      "description": "Put a danger MonarchInlineNotice with the message above the buttons."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component in the theme: the square avatar on its fallback colour, the success badge, the warning notice, the raised card, the consequence list with success and warning icons, secondary and primary buttons, and inline links.",
+  "platformNotes": "The web's OAuthConsentScreen is one component with its own pending and error state. On iOS it is a recipe, because the authorization request, the redirect and the account picker belong to the identity provider's app. The permission list is MonarchConsequenceList with kept rows for ordinary permissions and warning rows for sensitive ones, renamed \"Allowed\" and \"Sensitive\" through kindLabel. Permissions held back until the app is verified go in a second MonarchConsequenceList under their own heading. An app that only signs in to another provider uses ASWebAuthenticationSession, which shows that provider's own page, not this screen. Android composes the same recipe.",
+  "accessibility": [
+    "The title has the header trait.",
+    "The app's name and domain, and the signed-in account, are each read as one element; the avatars are decorative.",
+    "Each permission is one element read as its kind and its text, such as \"Sensitive: Read and change your notes\"; the kind also has its own icon.",
+    "Cancel and Allow are buttons of equal width and weight, with 44-point touch targets; while pending the spinner's button is named \"Loading\".",
+    "The policy links use the Monarch link style, which says they open outside the app."
+  ],
+  "edgeCases": [
+    "Show only http and https policy links; drop any other scheme from the app's data.",
+    "A long app name wraps; keep the domain visible so people can spot an imitation.",
+    "When the person cannot grant access (a policy blocks it), show only Cancel with the reason in a MonarchInlineNotice."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Verified app with a sensitive permission",
+      "fixture": "oauth-consent-screen",
+      "webExample": "Verified app with a sensitive permission",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    VStack(spacing: theme.spacing.space2) {\n        MonarchAvatar(image: nil, name: {{app.name}}, shape: .square, size: .xl, isDecorative: true)\n        Text({{app.name}} + \" wants to access your account\")\n            .monarchTextStyle(.heading)\n            .foregroundStyle(theme.colors.textDefault)\n            .multilineTextAlignment(.center)\n            .accessibilityAddTraits(.isHeader)\n        Text({{app.domain}}).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n        if isVerified {\n            MonarchBadge(\"Verified\", tone: .success)\n        }\n    }\n    .frame(maxWidth: .infinity)\n    MonarchCard {\n        ViewThatFits(in: .horizontal) {\n            HStack(spacing: theme.spacing.space3) {\n                accountSummary\n                    .frame(maxWidth: .infinity, alignment: .leading)\n                    .fixedSize(horizontal: true, vertical: false)\n                    .frame(maxWidth: .infinity, alignment: .leading)\n                switchButton\n            }\n            VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                accountSummary\n                switchButton\n            }\n        }\n    }\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        Text({{app.name}} + \" will be able to:\").monarchTextStyle(.bodyStrong).foregroundStyle(theme.colors.textDefault)\n        scopeRow({{scopes.0.kind|case}}, {{scopes.0.label}})\n        scopeRow({{scopes.1.kind|case}}, {{scopes.1.label}})\n        scopeRow({{scopes.2.kind|case}}, {{scopes.2.label}}, detail: {{scopes.2.description}})\n    }\n    .frame(maxWidth: .infinity, alignment: .leading)\n    HStack(spacing: theme.spacing.space3) {\n        MonarchButton(\"Cancel\", variant: .secondary, size: .lg, isLoading: isDenying, fullWidth: true) { decide(allow: false) }\n        MonarchButton(\"Allow\", variant: .primary, size: .lg, isLoading: isAllowing, fullWidth: true) { decide(allow: true) }\n    }\n    .disabled(isAllowing || isDenying)\n    Text(policies)\n        .monarchTextStyle(.caption)\n        .multilineTextAlignment(.center)\n        .frame(maxWidth: .infinity)\n    Text({{footnote}})\n        .monarchTextStyle(.caption)\n        .foregroundStyle(theme.colors.textMuted)\n        .multilineTextAlignment(.center)\n        .frame(maxWidth: .infinity)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isAllowing = false\n@State private var isDenying = false\nprivate let isVerified = {{app.verified}}\nprivate let privacyURL = URL(string: {{app.privacyUrl}})\nprivate let termsURL = URL(string: {{app.termsUrl}})\n\nprivate var policies: AttributedString {\n    func plain(_ string: String) -> AttributedString {\n        var run = AttributedString(string)\n        run.foregroundColor = theme.colors.textMuted\n        return run\n    }\n    func link(_ string: String, _ url: URL?) -> AttributedString {\n        var run = AttributedString(string)\n        run.link = url\n        run.foregroundColor = theme.colors.textLink\n        run.underlineStyle = .single\n        return run\n    }\n    return plain(\"Before you continue, read \" + {{app.name}} + \"\\u{2019}s \") + link(\"privacy policy\", privacyURL)\n        + plain(\" and \") + link(\"terms\", termsURL) + plain(\".\")\n}\n\nprivate var accountSummary: some View {\n    HStack(spacing: theme.spacing.space3) {\n        MonarchAvatar(image: nil, name: {{account.name}}, isDecorative: true)\n        VStack(alignment: .leading, spacing: theme.spacing.space0_5) {\n            Text({{account.name}}).monarchTextStyle(.bodyStrong).foregroundStyle(theme.colors.textDefault)\n            Text(verbatim: {{account.email}}).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n        }\n    }\n    .accessibilityElement(children: .combine)\n}\n\nprivate var switchButton: some View {\n    MonarchButton(\"Use another account\", variant: .ghost, size: .sm) {\n        // Show the account picker.\n    }\n    .fixedSize()\n}\n\nprivate func scopeRow(_ kind: MonarchConsequenceKind, _ label: String, detail: String? = nil) -> some View {\n    HStack(alignment: .firstTextBaseline, spacing: theme.spacing.space2) {\n        MonarchIcon(systemName: \"checkmark\", size: .sm)\n            .foregroundStyle(kind == .warning ? theme.colors.warningStrong : theme.colors.successStrong)\n        VStack(alignment: .leading, spacing: theme.spacing.space0_5) {\n            Text(label)\n                .monarchTextStyle(kind == .warning ? .bodyStrong : .body)\n                .foregroundStyle(theme.colors.textDefault)\n                .fixedSize(horizontal: false, vertical: true)\n            if let detail {\n                Text(detail).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n            }\n        }\n        .frame(maxWidth: .infinity, alignment: .leading)\n    }\n    .frame(maxWidth: .infinity, alignment: .leading)\n    .accessibilityElement(children: .ignore)\n    .accessibilityLabel((kind == .warning ? \"Sensitive: \" : \"Allowed: \") + label)\n}\n\nprivate func decide(allow: Bool) {\n    if allow { isAllowing = true } else { isDenying = true }\n    Task {\n        // The app grants or refuses the authorization request, then returns to the app's redirect.\n        isAllowing = false\n        isDenying = false\n    }\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isAllowing = false\n@State private var isDenying = false\nprivate let isVerified = true\nprivate let privacyURL = URL(string: \"https://notes.example.com/privacy\")\nprivate let termsURL = URL(string: \"https://notes.example.com/terms\")\n\nprivate var policies: AttributedString {\n    func plain(_ string: String) -> AttributedString {\n        var run = AttributedString(string)\n        run.foregroundColor = theme.colors.textMuted\n        return run\n    }\n    func link(_ string: String, _ url: URL?) -> AttributedString {\n        var run = AttributedString(string)\n        run.link = url\n        run.foregroundColor = theme.colors.textLink\n        run.underlineStyle = .single\n        return run\n    }\n    return plain(\"Before you continue, read \" + \"Example Notes\" + \"\\u{2019}s \") + link(\"privacy policy\", privacyURL)\n        + plain(\" and \") + link(\"terms\", termsURL) + plain(\".\")\n}\n\nprivate var accountSummary: some View {\n    HStack(spacing: theme.spacing.space3) {\n        MonarchAvatar(image: nil, name: \"Sam Rivera\", isDecorative: true)\n        VStack(alignment: .leading, spacing: theme.spacing.space0_5) {\n            Text(\"Sam Rivera\").monarchTextStyle(.bodyStrong).foregroundStyle(theme.colors.textDefault)\n            Text(verbatim: \"sam@example.com\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n        }\n    }\n    .accessibilityElement(children: .combine)\n}\n\nprivate var switchButton: some View {\n    MonarchButton(\"Use another account\", variant: .ghost, size: .sm) {\n        // Show the account picker.\n    }\n    .fixedSize()\n}\n\nprivate func scopeRow(_ kind: MonarchConsequenceKind, _ label: String, detail: String? = nil) -> some View {\n    HStack(alignment: .firstTextBaseline, spacing: theme.spacing.space2) {\n        MonarchIcon(systemName: \"checkmark\", size: .sm)\n            .foregroundStyle(kind == .warning ? theme.colors.warningStrong : theme.colors.successStrong)\n        VStack(alignment: .leading, spacing: theme.spacing.space0_5) {\n            Text(label)\n                .monarchTextStyle(kind == .warning ? .bodyStrong : .body)\n                .foregroundStyle(theme.colors.textDefault)\n                .fixedSize(horizontal: false, vertical: true)\n            if let detail {\n                Text(detail).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n            }\n        }\n        .frame(maxWidth: .infinity, alignment: .leading)\n    }\n    .frame(maxWidth: .infinity, alignment: .leading)\n    .accessibilityElement(children: .ignore)\n    .accessibilityLabel((kind == .warning ? \"Sensitive: \" : \"Allowed: \") + label)\n}\n\nprivate func decide(allow: Bool) {\n    if allow { isAllowing = true } else { isDenying = true }\n    Task {\n        // The app grants or refuses the authorization request, then returns to the app's redirect.\n        isAllowing = false\n        isDenying = false\n    }\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    VStack(spacing: theme.spacing.space2) {\n        MonarchAvatar(image: nil, name: \"Example Notes\", shape: .square, size: .xl, isDecorative: true)\n        Text(\"Example Notes\" + \" wants to access your account\")\n            .monarchTextStyle(.heading)\n            .foregroundStyle(theme.colors.textDefault)\n            .multilineTextAlignment(.center)\n            .accessibilityAddTraits(.isHeader)\n        Text(\"notes.example.com\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n        if isVerified {\n            MonarchBadge(\"Verified\", tone: .success)\n        }\n    }\n    .frame(maxWidth: .infinity)\n    MonarchCard {\n        ViewThatFits(in: .horizontal) {\n            HStack(spacing: theme.spacing.space3) {\n                accountSummary\n                    .frame(maxWidth: .infinity, alignment: .leading)\n                    .fixedSize(horizontal: true, vertical: false)\n                    .frame(maxWidth: .infinity, alignment: .leading)\n                switchButton\n            }\n            VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                accountSummary\n                switchButton\n            }\n        }\n    }\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        Text(\"Example Notes\" + \" will be able to:\").monarchTextStyle(.bodyStrong).foregroundStyle(theme.colors.textDefault)\n        scopeRow(.kept, \"See your name and profile photo\")\n        scopeRow(.kept, \"See your email address\")\n        scopeRow(.warning, \"Create and change files in your workspace\", detail: \"Only in the workspace you choose.\")\n    }\n    .frame(maxWidth: .infinity, alignment: .leading)\n    HStack(spacing: theme.spacing.space3) {\n        MonarchButton(\"Cancel\", variant: .secondary, size: .lg, isLoading: isDenying, fullWidth: true) { decide(allow: false) }\n        MonarchButton(\"Allow\", variant: .primary, size: .lg, isLoading: isAllowing, fullWidth: true) { decide(allow: true) }\n    }\n    .disabled(isAllowing || isDenying)\n    Text(policies)\n        .monarchTextStyle(.caption)\n        .multilineTextAlignment(.center)\n        .frame(maxWidth: .infinity)\n    Text(\"You can remove access at any time in your account’s security settings.\")\n        .monarchTextStyle(.caption)\n        .foregroundStyle(theme.colors.textMuted)\n        .multilineTextAlignment(.center)\n        .frame(maxWidth: .infinity)\n}"
+    }
+  ],
+  "webEquivalent": "OAuthConsentScreen",
+  "dependsOn": [
+    "avatar",
+    "consequence-list",
+    "button",
+    "link",
+    "badge",
+    "inline-notice",
+    "card"
+  ],
+  "icons": {
+    "scope": "CheckGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "When Use another account does not fit beside the account name and address on one line of a phone column, it drops under them instead of wrapping inside the card; the account, its tone and the copy are as on the web.",
+      "convention": "HIG: content reflows to the screen width"
+    }
+  ]
+}

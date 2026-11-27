@@ -9,6 +9,7 @@
 import {
   bestForeground,
   contrast,
+  emitted,
   ensureContrast,
   hsl,
   mixSrgb,
@@ -101,7 +102,9 @@ export const themes: Readonly<Record<ThemeId, ThemeDefinition>> = {
       'bg-canvas': neutral[950],
       'bg-surface': neutral[900],
       'bg-raised': neutral[850],
-      'bg-subtle': neutral[900],
+      // One step lighter than bg-surface, so a subtle panel stays visible on a
+      // surface (it was neutral[900], identical to bg-surface).
+      'bg-subtle': neutral[850],
       'bg-muted': neutral[800],
       'bg-emphasis': neutral[700],
       'bg-inverse': neutral[50],
@@ -112,7 +115,10 @@ export const themes: Readonly<Record<ThemeId, ThemeDefinition>> = {
       'text-inverse': neutral[900],
       'text-inverse-muted': neutral[600],
       'border-subtle': neutral[850],
-      'border-default': neutral[800],
+      // Between neutral[800] and neutral[700], so a default border stays visible on
+      // a bg-muted fill (it was neutral[800], identical to bg-muted). Decorative,
+      // like the light theme's: border-input carries the 3:1 boundary (WCAG 1.4.11).
+      'border-default': hsl(220, 14, 22.5),
       'border-strong': neutral[700],
       'border-input': hsl(220, 9, 45),
       'border-inverse': neutral[200],
@@ -246,13 +252,19 @@ export const INVERSE_RAISED = 0.09;
 const SOLID_CANVAS_FLOOR = 1.5;
 
 /**
- * Derives the nine colours an intent needs in one theme, each meeting the
+ * Derives the ten colours an intent needs in one theme, each meeting the
  * theme's contrast targets.
+ *
+ * Every colour is computed and measured in emitted precision (`emitted`: one
+ * decimal per HSL channel, as the CSS prints it), so the guarantees hold for
+ * the values the stylesheets and the native token files ship, not only for
+ * the unrounded maths.
  */
 export function deriveIntent(
-  base: Hsl,
+  input: Hsl,
   theme: ThemeDefinition,
 ): { scale: IntentScale; report: IntentReport } {
+  const base = emitted(input);
   const n = theme.neutrals;
   const dark = theme.scheme === 'dark';
   const hc = theme.contrast === 'more';
@@ -325,7 +337,7 @@ export function deriveIntent(
     const prefer = onSolid === WHITE ? -1 : 1;
     for (const magnitude of [steps, steps / 2]) {
       for (const dir of [prefer, -prefer]) {
-        const c = hsl(solid.h, solid.s, solid.l + dir * magnitude);
+        const c = emitted(hsl(solid.h, solid.s, solid.l + dir * magnitude));
         if (ok(c)) return c;
       }
     }
@@ -334,12 +346,16 @@ export function deriveIntent(
   const solidHover = shade(5);
   const solidActive = shade(9);
 
-  const subtle = dark
-    ? hsl(base.h, base.s * 0.4, hc ? 10 : 14)
-    : hsl(base.h, Math.min(base.s, 90) * 0.9, hc ? 97 : 96.5);
-  const subtleHover = dark
-    ? hsl(base.h, base.s * 0.4, hc ? 14 : 18)
-    : hsl(base.h, Math.min(base.s, 90) * 0.9, hc ? 94 : 93.5);
+  const subtle = emitted(
+    dark
+      ? hsl(base.h, base.s * 0.4, hc ? 10 : 14)
+      : hsl(base.h, Math.min(base.s, 90) * 0.9, hc ? 97 : 96.5),
+  );
+  const subtleHover = emitted(
+    dark
+      ? hsl(base.h, base.s * 0.4, hc ? 14 : 18)
+      : hsl(base.h, Math.min(base.s, 90) * 0.9, hc ? 94 : 93.5),
+  );
 
   // Strong: the accessible version of the brand for text, icons, focus rings
   // and state indicators (checkbox fill, switch track).
@@ -362,9 +378,7 @@ export function deriveIntent(
 
   const border = hc
     ? strong
-    : dark
-      ? hsl(base.h, base.s * 0.45, 32)
-      : hsl(base.h, base.s * 0.6, 84);
+    : emitted(dark ? hsl(base.h, base.s * 0.45, 32) : hsl(base.h, base.s * 0.6, 84));
 
   // Accent text on inverse (dark-in-light, light-in-dark) sections, including
   // the corner of --mn-gradient-inverse, which is tinted with INVERSE_TINT of

@@ -315,13 +315,13 @@ export const AiModelPicker = forwardRef<HTMLButtonElement, AiModelPickerProps>(
                   {items.map(({ model, index }) => {
                     const state = optionState(model, !!onConfigureKey);
                     const isSelected = model.id === value;
-                    const descId = `${optionId(index)}-desc`;
                     const meta = [
                       model.contextTokens ? m.context(compact.format(model.contextTokens)) : null,
                       model.speed ? m.speed[model.speed] : null,
                     ].filter(Boolean);
                     return (
                       // Keyboard lives on the listbox (aria-activedescendant); options are not focusable.
+                      // The name comes from the content, so it holds everything the option shows.
                       // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus
                       <div
                         key={model.id}
@@ -329,8 +329,6 @@ export const AiModelPicker = forwardRef<HTMLButtonElement, AiModelPickerProps>(
                         role="option"
                         aria-selected={isSelected}
                         aria-disabled={state === 'blocked' || undefined}
-                        aria-labelledby={`${optionId(index)}-name${model.requiresKey ? ` ${optionId(index)}-key` : ''}`}
-                        aria-describedby={descId}
                         data-index={index}
                         data-active={index === active || undefined}
                         data-state={state}
@@ -343,15 +341,9 @@ export const AiModelPicker = forwardRef<HTMLButtonElement, AiModelPickerProps>(
                         </span>
                         <span className="mn-ai-model-picker__body">
                           <span className="mn-ai-model-picker__row">
-                            <span
-                              id={`${optionId(index)}-name`}
-                              className="mn-ai-model-picker__option-name"
-                            >
-                              {model.name}
-                            </span>
+                            <span className="mn-ai-model-picker__option-name">{model.name}</span>
                             {model.requiresKey ? (
                               <span
-                                id={`${optionId(index)}-key`}
                                 className="mn-ai-model-picker__key"
                                 data-configured={model.keyConfigured || undefined}
                               >
@@ -360,7 +352,7 @@ export const AiModelPicker = forwardRef<HTMLButtonElement, AiModelPickerProps>(
                               </span>
                             ) : null}
                           </span>
-                          <span id={descId} className="mn-ai-model-picker__details">
+                          <span className="mn-ai-model-picker__details">
                             {model.description ? (
                               <span className="mn-ai-model-picker__description">
                                 {model.description}

@@ -1,0 +1,168 @@
+{
+  "id": "rook-rail",
+  "name": null,
+  "title": "RookRail",
+  "family": "navigation",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "A Compose Row: a red Column rail of icon buttons (a dot badge for unread, dividers, an avatar) beside the page card. The rail is built from Monarch parts and the app's own icon buttons, not from Material's drawer.",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the Rook navigation on a phone, as a top app bar whose menu button opens a navigation drawer with the app's name, the workspace and space switchers, the app's sections, Help & support, the Workspace links and the account.",
+  "whenToUse": "As the primary navigation of a Rook app that has more destinations than fit in a bottom navigation bar, or that needs the Rook workspace and space switchers.",
+  "whenNotToUse": "For an app outside Rook, or one with three to five destinations, use the app-shell recipe (NavigationSuiteScaffold). For the top bar alone, use the identity-bar recipe.",
+  "api": [
+    "ModalNavigationDrawer(drawerState = drawerState, drawerContent = { ModalDrawerSheet { … } }) { … }",
+    "NavigationDrawerItem(label = { Text(name) }, selected = current == key, onClick = { …; scope.launch { drawerState.close() } }, icon = { … }, badge = { … })",
+    "TopAppBar(title = { … }, navigationIcon = { MonarchIconButton(label = \"Open navigation\", onClick = { scope.launch { drawerState.open() } }) { … } })",
+    "@OptIn(ExperimentalMonarchApi::class) MonarchWorkspaceSwitcher(workspaces = …, selection = …, onSelectionChange = …)",
+    "@OptIn(ExperimentalMonarchApi::class) MonarchSpaceSwitcher(spaces = …, selection = …, onSelectionChange = …)"
+  ],
+  "options": [
+    {
+      "name": "brand",
+      "type": "@Composable",
+      "default": "none",
+      "description": "The app's name as a heading at the top of the drawer and as the title of the top app bar; a logo before it is decorative."
+    },
+    {
+      "name": "switchers",
+      "type": "@Composable",
+      "default": "none",
+      "description": "MonarchWorkspaceSwitcher and MonarchSpaceSwitcher under the brand."
+    },
+    {
+      "name": "sections",
+      "type": "NavigationDrawerItem",
+      "default": "required",
+      "description": "One NavigationDrawerItem per destination, with a decorative icon, the selected state and an unread badge that is also a state description. A section title is a muted caption between groups."
+    },
+    {
+      "name": "support",
+      "type": "NavigationDrawerItem",
+      "default": "none",
+      "description": "Help & support, which closes the drawer and opens the support-panel recipe."
+    },
+    {
+      "name": "workspace",
+      "type": "NavigationDrawerItem",
+      "default": "none",
+      "description": "Workspace links into Rook ID (members, billing), opened in a Custom Tab and described as opening in Rook ID."
+    },
+    {
+      "name": "account",
+      "type": "NavigationDrawerItem",
+      "default": "none",
+      "description": "The signed-in person with a decorative avatar, opening the account-menu recipe."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "Only the top app bar with the menu button and the app's name is visible."
+    },
+    {
+      "name": "open",
+      "description": "The modal drawer covers the content with a scrim; back, a tap on the scrim or a swipe closes it, and choosing a destination closes it."
+    },
+    {
+      "name": "selected",
+      "description": "The current destination has the Material 3 selected indicator and the selected state."
+    },
+    {
+      "name": "unread",
+      "description": "A count badge after the label, read as \"3 unread\"."
+    }
+  ],
+  "appearance": "The Material 3 modal navigation drawer and items in the Monarch theme, with the Monarch switchers and avatar. Light, dark and both high-contrast themes follow from the theme's color scheme.",
+  "platformNotes": "The web RookRail is a 48dp rail of icons that expands to labels, remembers its state in the rook_rail cookie shared across Rook apps, and becomes a top bar with a drawer below 768px. On a phone Android uses that phone form: a TopAppBar with a navigation icon that opens a ModalNavigationDrawer, which brings focus handling, the scrim, the back gesture and swipe to close. The cookie and the expanded state do not apply: the drawer starts closed, and each app restores its own destination. Links are callbacks: destinations of the app navigate inside it; Rook ID and other products open in a Custom Tab, so the web's \"opens in a new tab\" becomes a description that says where it opens. Keyboard shortcuts and tooltips of the collapsed rail are not offered; TalkBack reads each item's label. On wide windows a PermanentNavigationDrawer, or the Material 3 WideNavigationRail (an expressive, experimental API in Material 3 1.4), shows the same items beside the content. The theme toggle and notifications slots of the web go into the account menu and the top app bar's actions (the identity-bar recipe). Rook-specific: apps outside Rook use the app-shell recipe. MonarchWorkspaceSwitcher and MonarchSpaceSwitcher are experimental, so the recipe opts in where it uses them. iOS has the same recipe coverage.",
+  "accessibility": [
+    "The menu button is named \"Open navigation\"; the drawer and its items are Material 3 navigation drawer items with the selected state and 48dp rows.",
+    "Icons are decorative; every item is named by its label.",
+    "An unread count is a badge hidden from TalkBack and read as the item's state, \"3 unread\".",
+    "A link that leaves the app says so as its state, \"Opens in Rook ID\".",
+    "The account item is named \"Account: \" and the person's name; the avatar is decorative.",
+    "The drawer closes with the back gesture, a tap on the scrim or after choosing a destination."
+  ],
+  "edgeCases": [
+    "Long section lists scroll inside the drawer, which has no lazy list, so it may sit in the drawer's column.",
+    "Hide the space switcher when the workspace has no spaces (MonarchSpaceSwitcher does this with hidesWhenEmpty).",
+    "Keep a large count short in the badge (such as 99+) and give the full number in the state description."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Collapsed, with Help & support and a theme toggle",
+      "fixture": "rook-rail",
+      "webExample": "Collapsed, with Help & support and a theme toggle",
+      "template": "Row(modifier = Modifier.fillMaxWidth().height(MonarchTheme.spacing.space24 * 7)) {\n    Column(\n        modifier = Modifier\n            .width((MonarchTheme.spacing.space12 + MonarchTheme.spacing.space2))\n            .fillMaxHeight()\n            .background(\n                MonarchTheme.colors.accentSolid,\n                RoundedCornerShape(topStart = MonarchTheme.spacing.space3, bottomStart = MonarchTheme.spacing.space3),\n            )\n            .padding(vertical = MonarchTheme.spacing.space2),\n        horizontalAlignment = Alignment.CenterHorizontally,\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n    ) {\n        Box(\n            modifier = Modifier\n                .size(MonarchTheme.spacing.space8)\n                .background(MonarchTheme.colors.accentOnSolid.copy(alpha = 0.2f), MonarchTheme.shapes.md)\n                .semantics { contentDescription = {{brand}} },\n            contentAlignment = Alignment.Center,\n        ) {\n            MonarchText(text = \"R\", style = MonarchTextStyle.BodyStrong, color = MonarchTheme.colors.accentOnSolid)\n        }\n        destinations.forEach { (key, name) ->\n            RailButton(\n                icon = icons.getValue(key),\n                label = name,\n                selected = current == key,\n                badge = (unread[key] ?: 0) > 0,\n                onClick = { current = key },\n            )\n        }\n        RailDivider()\n        RailButton(SampleIcons.Lifebuoy, \"Help & support\", badge = {{supportUnread}} > 0, onClick = { supportOpen = true })\n        RailButton(SampleIcons.Users, {{workspaceItems.0.label}})\n        RailButton(SampleIcons.Settings, {{workspaceItems.1.label}}, note = \"Opens in \" + {{workspaceItems.1.opensIn}})\n        RailButton(SampleIcons.Card, {{workspaceItems.2.label}}, note = \"Opens in \" + {{workspaceItems.2.opensIn}})\n        Spacer(Modifier.weight(1f))\n        RailDivider()\n        RailButton(SampleIcons.Plus, {{quickAction.label}})\n        RailButton(SampleIcons.LightMode, \"Switch theme\")\n        RailButton(SampleIcons.PanelLeft, \"Expand navigation\")\n        RailButton(SampleIcons.Bell, {{notifications.label}}, badge = {{notifications.count}} > 0)\n        Box(\n            modifier = Modifier\n                .padding(top = MonarchTheme.spacing.space1)\n                .semantics { contentDescription = \"Account: \" + {{account.name}} + \", \" + {{account.email}} },\n        ) {\n            MonarchAvatar(image = null, name = {{account.name}}, size = MonarchAvatarSize.Sm, status = MonarchPresenceStatus.Online, decorative = true)\n        }\n    }\n    Box(\n        modifier = Modifier\n            .weight(1f)\n            .fillMaxHeight()\n            .border(\n                MonarchTheme.spacing.px,\n                MonarchTheme.colors.borderSubtle,\n                RoundedCornerShape(topEnd = MonarchTheme.spacing.space3, bottomEnd = MonarchTheme.spacing.space3),\n            )\n            .padding(MonarchTheme.spacing.space4),\n    ) {\n        MonarchText(text = {{page}})\n        if (supportOpen) MonarchText(text = \"The support-panel recipe opens here.\")\n    }\n}",
+      "setupTemplate": "@Composable\nfun RailDivider() = Box(\n    Modifier\n        .width(MonarchTheme.spacing.space6)\n        .height(MonarchTheme.spacing.px)\n        .background(MonarchTheme.colors.accentSolidHover),\n)\n@Composable\nfun RailButton(\n    icon: ImageVector,\n    label: String,\n    selected: Boolean = false,\n    badge: Boolean = false,\n    note: String? = null,\n    onClick: () -> Unit = {},\n) {\n    Box(\n        modifier = Modifier\n            .size(MonarchTheme.spacing.space10)\n            .background(\n                if (selected) MonarchTheme.colors.accentSolidActive else Color.Transparent,\n                MonarchTheme.shapes.md,\n            )\n            .clickable(role = Role.Button, onClick = onClick)\n            .semantics {\n                contentDescription = label\n                if (note != null) stateDescription = note\n                this.selected = selected\n            },\n        contentAlignment = Alignment.Center,\n    ) {\n        Icon(icon, contentDescription = null, tint = MonarchTheme.colors.accentOnSolid)\n        if (badge) {\n            Box(\n                Modifier\n                    .align(Alignment.TopEnd)\n                    .padding(MonarchTheme.spacing.space1)\n                    .size(MonarchTheme.spacing.space2)\n                    .background(MonarchTheme.colors.accentOnSolid, CircleShape)\n                    .clearAndSetSemantics { },\n            )\n        }\n    }\n}\nvar current by rememberSaveable { mutableStateOf({{current}}) }\nvar supportOpen by rememberSaveable { mutableStateOf(false) }\nval destinations = listOf({{items.0.key}} to {{items.0.label}}, {{items.1.key}} to {{items.1.label}}, {{items.2.key}} to {{items.2.label}})\nval icons = mapOf({{items.0.key}} to SampleIcons.Home, {{items.1.key}} to SampleIcons.Inbox, {{items.2.key}} to SampleIcons.Calendar)\nval unread = mapOf({{items.1.key}} to {{items.1.badge}})",
+      "imports": [
+        "com.rookhq.monarch.foundation.*",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxHeight",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.width",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.vector.ImageVector",
+        "androidx.compose.ui.semantics.Role",
+        "androidx.compose.ui.semantics.clearAndSetSemantics",
+        "androidx.compose.ui.semantics.contentDescription",
+        "androidx.compose.ui.semantics.selected",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.semantics.stateDescription"
+      ],
+      "setup": "@Composable\nfun RailDivider() = Box(\n    Modifier\n        .width(MonarchTheme.spacing.space6)\n        .height(MonarchTheme.spacing.px)\n        .background(MonarchTheme.colors.accentSolidHover),\n)\n@Composable\nfun RailButton(\n    icon: ImageVector,\n    label: String,\n    selected: Boolean = false,\n    badge: Boolean = false,\n    note: String? = null,\n    onClick: () -> Unit = {},\n) {\n    Box(\n        modifier = Modifier\n            .size(MonarchTheme.spacing.space10)\n            .background(\n                if (selected) MonarchTheme.colors.accentSolidActive else Color.Transparent,\n                MonarchTheme.shapes.md,\n            )\n            .clickable(role = Role.Button, onClick = onClick)\n            .semantics {\n                contentDescription = label\n                if (note != null) stateDescription = note\n                this.selected = selected\n            },\n        contentAlignment = Alignment.Center,\n    ) {\n        Icon(icon, contentDescription = null, tint = MonarchTheme.colors.accentOnSolid)\n        if (badge) {\n            Box(\n                Modifier\n                    .align(Alignment.TopEnd)\n                    .padding(MonarchTheme.spacing.space1)\n                    .size(MonarchTheme.spacing.space2)\n                    .background(MonarchTheme.colors.accentOnSolid, CircleShape)\n                    .clearAndSetSemantics { },\n            )\n        }\n    }\n}\nvar current by rememberSaveable { mutableStateOf(\"calendar\") }\nvar supportOpen by rememberSaveable { mutableStateOf(false) }\nval destinations = listOf(\"home\" to \"Home\", \"inbox\" to \"Inbox\", \"calendar\" to \"Calendar\")\nval icons = mapOf(\"home\" to SampleIcons.Home, \"inbox\" to SampleIcons.Inbox, \"calendar\" to SampleIcons.Calendar)\nval unread = mapOf(\"inbox\" to 4)",
+      "code": "Row(modifier = Modifier.fillMaxWidth().height(MonarchTheme.spacing.space24 * 7)) {\n    Column(\n        modifier = Modifier\n            .width((MonarchTheme.spacing.space12 + MonarchTheme.spacing.space2))\n            .fillMaxHeight()\n            .background(\n                MonarchTheme.colors.accentSolid,\n                RoundedCornerShape(topStart = MonarchTheme.spacing.space3, bottomStart = MonarchTheme.spacing.space3),\n            )\n            .padding(vertical = MonarchTheme.spacing.space2),\n        horizontalAlignment = Alignment.CenterHorizontally,\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n    ) {\n        Box(\n            modifier = Modifier\n                .size(MonarchTheme.spacing.space8)\n                .background(MonarchTheme.colors.accentOnSolid.copy(alpha = 0.2f), MonarchTheme.shapes.md)\n                .semantics { contentDescription = \"Acme Planner\" },\n            contentAlignment = Alignment.Center,\n        ) {\n            MonarchText(text = \"R\", style = MonarchTextStyle.BodyStrong, color = MonarchTheme.colors.accentOnSolid)\n        }\n        destinations.forEach { (key, name) ->\n            RailButton(\n                icon = icons.getValue(key),\n                label = name,\n                selected = current == key,\n                badge = (unread[key] ?: 0) > 0,\n                onClick = { current = key },\n            )\n        }\n        RailDivider()\n        RailButton(SampleIcons.Lifebuoy, \"Help & support\", badge = 1 > 0, onClick = { supportOpen = true })\n        RailButton(SampleIcons.Users, \"Members\")\n        RailButton(SampleIcons.Settings, \"Settings\", note = \"Opens in \" + \"Rook ID\")\n        RailButton(SampleIcons.Card, \"Billing\", note = \"Opens in \" + \"Rook ID\")\n        Spacer(Modifier.weight(1f))\n        RailDivider()\n        RailButton(SampleIcons.Plus, \"New event\")\n        RailButton(SampleIcons.LightMode, \"Switch theme\")\n        RailButton(SampleIcons.PanelLeft, \"Expand navigation\")\n        RailButton(SampleIcons.Bell, \"Notifications\", badge = 2 > 0)\n        Box(\n            modifier = Modifier\n                .padding(top = MonarchTheme.spacing.space1)\n                .semantics { contentDescription = \"Account: \" + \"Ada Lovelace\" + \", \" + \"ada@example.com\" },\n        ) {\n            MonarchAvatar(image = null, name = \"Ada Lovelace\", size = MonarchAvatarSize.Sm, status = MonarchPresenceStatus.Online, decorative = true)\n        }\n    }\n    Box(\n        modifier = Modifier\n            .weight(1f)\n            .fillMaxHeight()\n            .border(\n                MonarchTheme.spacing.px,\n                MonarchTheme.colors.borderSubtle,\n                RoundedCornerShape(topEnd = MonarchTheme.spacing.space3, bottomEnd = MonarchTheme.spacing.space3),\n            )\n            .padding(MonarchTheme.spacing.space4),\n    ) {\n        MonarchText(text = \"Page content\")\n        if (supportOpen) MonarchText(text = \"The support-panel recipe opens here.\")\n    }\n}"
+    }
+  ],
+  "webEquivalent": "RookRail",
+  "dependsOn": [
+    "app-shell",
+    "workspace-switcher",
+    "space-switcher",
+    "account-menu",
+    "support-panel"
+  ],
+  "icons": {
+    "quickAction": "PlusGlyph",
+    "notifications": "BellGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "android",
+      "paths": [
+        "quickAction.shortcut"
+      ],
+      "reason": "The rail is icon-only, so the quick action shows no shortcut key: a touch rail has no keyboard hint.",
+      "convention": "a touch rail has no keyboard shortcut hint"
+    },
+    {
+      "rule": "fixture-text",
+      "platform": "android",
+      "reason": "The web label of this button joins its visible text and hidden text with no separator; on Android the button is named with a sentence for TalkBack and its visible text is shown as it is.",
+      "convention": "a control is named in a sentence, not by concatenated visible text (Material accessibility)",
+      "paths": [
+        "Help & support1, 1 unread"
+      ]
+    }
+  ]
+}

@@ -201,6 +201,12 @@ export interface AddressAutocompleteProps extends Omit<
   mode?: AddressEntryMode | undefined;
   /** Initial mode when uncontrolled. Default `search`, or `manual` when `defaultValue` has a street line. */
   defaultMode?: AddressEntryMode | undefined;
+  /**
+   * Text already in the search field when it mounts, such as a street name
+   * carried over from an earlier step. Its suggestions are looked up at once
+   * (no debounce) and shown.
+   */
+  defaultQuery?: string | undefined;
   onModeChange?: ((mode: AddressEntryMode) => void) | undefined;
   /** Offer manual entry from the list and below the field. Default true. */
   allowManualEntry?: boolean | undefined;
@@ -251,6 +257,7 @@ export const AddressAutocomplete = forwardRef<HTMLDivElement, AddressAutocomplet
       onSuggestionSelect,
       mode: modeProp,
       defaultMode,
+      defaultQuery,
       onModeChange,
       allowManualEntry = true,
       locationAdapter,
@@ -298,8 +305,10 @@ export const AddressAutocomplete = forwardRef<HTMLDivElement, AddressAutocomplet
     };
 
     // ----- Search -----
-    const [query, setQuery] = useState('');
-    const [open, setOpen] = useState(false);
+    const [query, setQuery] = useState(defaultQuery ?? '');
+    const [open, setOpen] = useState(Boolean(defaultQuery?.trim()));
+    // Typed text waits for `debounce`; the starting query is looked up at once.
+    const typed = useRef(false);
     const [state, setState] = useState<SearchState>({ status: 'idle' });
     const [attempt, setAttempt] = useState(0);
     const [active, setActive] = useState(-1);
@@ -321,20 +330,25 @@ export const AddressAutocomplete = forwardRef<HTMLDivElement, AddressAutocomplet
       }
       const controller = new AbortController();
       setState({ status: 'loading' });
-      const timer = setTimeout(() => {
-        Promise.resolve()
-          .then(() => searchRef.current(trimmed, { signal: controller.signal }))
-          .then(
-            (items) => {
-              if (controller.signal.aborted) return;
-              setState({ status: 'ready', items });
-              setAnnouncement(items.length === 0 ? messages.empty : messages.results(items.length));
-            },
-            () => {
-              if (!controller.signal.aborted) setState({ status: 'error' });
-            },
-          );
-      }, debounce);
+      const timer = setTimeout(
+        () => {
+          Promise.resolve()
+            .then(() => searchRef.current(trimmed, { signal: controller.signal }))
+            .then(
+              (items) => {
+                if (controller.signal.aborted) return;
+                setState({ status: 'ready', items });
+                setAnnouncement(
+                  items.length === 0 ? messages.empty : messages.results(items.length),
+                );
+              },
+              () => {
+                if (!controller.signal.aborted) setState({ status: 'error' });
+              },
+            );
+        },
+        typed.current ? debounce : 0,
+      );
       return () => {
         clearTimeout(timer);
         controller.abort();
@@ -513,6 +527,7 @@ export const AddressAutocomplete = forwardRef<HTMLDivElement, AddressAutocomplet
                   placeholder={messages.placeholder}
                   value={query}
                   onChange={(e) => {
+                    typed.current = true;
                     setQuery(e.target.value);
                     setResolveFailed(false);
                     // Typing again withdraws the pick whose details are still loading;

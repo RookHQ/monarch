@@ -2,26 +2,14 @@ import { useEffect, useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiStructuredAnswer, type AiStructuredField } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-structured-answer.fixture.json';
 
-const briefSchema: AiStructuredField[] = [
-  { key: 'candidate', label: 'Candidate', type: 'text' },
-  { key: 'role', label: 'Role', type: 'text' },
-  { key: 'stage', label: 'Stage', type: 'badge', tone: 'info' },
-  { key: 'score', label: 'Overall score', type: 'number', format: { maximumFractionDigits: 1 } },
-  { key: 'strengths', label: 'Strengths', type: 'list' },
-  { key: 'risks', label: 'Open questions', type: 'list' },
-  { key: 'summary', label: 'Summary', type: 'markdown' },
-];
+const briefSchema = fixture.data.schema.map((field) =>
+  field.key === 'score' ? { ...field, format: { maximumFractionDigits: 1 } } : field,
+) as AiStructuredField[];
 
-const brief: Record<string, unknown> = {
-  candidate: 'Alex Morgan',
-  role: 'Senior engineer',
-  stage: 'Final interview',
-  score: 4.2,
-  strengths: ['Clear system design reasoning', 'Strong written communication'],
-  risks: ['Limited on-call experience'],
-  summary: 'Interviewers agree on **technical depth**. Confirm availability for the start date.',
-};
+const brief: Record<string, unknown> = fixture.data.brief;
 
 function StreamingDemo() {
   const [count, setCount] = useState(0);
@@ -155,7 +143,7 @@ export default {
           title: 'Interview brief',
           stack: true,
           render: () => (
-            <AiStructuredAnswer title="Interview brief" schema={briefSchema} data={brief} />
+            <AiStructuredAnswer title={fixture.data.title} schema={briefSchema} data={brief} />
           ),
         },
         { title: 'Streaming in', stack: true, render: () => <StreamingDemo /> },

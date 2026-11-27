@@ -1,0 +1,121 @@
+{
+  "id": "booking-flow",
+  "name": null,
+  "title": "BookingFlow",
+  "family": "scheduling",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.layout.Column with verticalScroll, androidx.activity.compose.BackHandler; MonarchStepper (compact), MonarchRadioRow, MonarchSlotPicker (with its MonarchTimezoneSelect), MonarchTextField, MonarchDescriptionList, MonarchButton and MonarchEmptyState for the confirmation",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: booking an appointment one step per screen (service, date and time, details, review), with a compact stepper, Back and Continue, and a confirmation.",
+  "whenToUse": "For a customer booking a service, a call or a visit in the app, when it takes more than one choice.",
+  "whenNotToUse": "To move an existing booking use the reschedule-dialog recipe; for one choice of time on its own use MonarchSlotPicker directly.",
+  "api": [
+    "MonarchStepper(steps = …, current = step, compact = MonarchStepperCompactMode.Always, onSelect = { _, index -> if (index < step) step = index })",
+    "MonarchText(text = title, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }, style = MonarchTextStyle.Heading, heading = true)",
+    "MonarchSlotPicker(slots = …, selection = slot, onSelectionChange = …, day = …, onDayChange = …, timeZone = zone, previousMonthIcon = …, nextMonthIcon = …, onTimeZoneChange = { zone = it })",
+    "MonarchButton(text = \"Back\", …, variant = MonarchButtonVariant.Ghost); MonarchButton(text = if (last) \"Confirm booking\" else \"Continue\", …, variant = MonarchButtonVariant.Primary, enabled = complete)",
+    "BackHandler(enabled = step > 0) { step-- }",
+    "MonarchEmptyState(title = \"Booking complete\", kind = MonarchEmptyStateKind.Success, message = …)"
+  ],
+  "options": [
+    {
+      "name": "steps",
+      "type": "List<MonarchStepperStep>",
+      "default": "required",
+      "description": "The steps, in order; leave out those that do not apply (one service: no service step)."
+    },
+    {
+      "name": "step",
+      "type": "Int",
+      "default": "0",
+      "description": "The current step, in rememberSaveable state."
+    },
+    {
+      "name": "complete",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether Continue is enabled for the current step."
+    },
+    {
+      "name": "submit",
+      "type": "suspend () -> Unit",
+      "default": "none",
+      "description": "What Confirm booking does: book, then show the confirmation; on failure show a MonarchBanner above the buttons."
+    },
+    {
+      "name": "confirmation",
+      "type": "composable",
+      "default": "MonarchEmptyState",
+      "description": "What replaces the steps once the booking is made."
+    }
+  ],
+  "states": [
+    {
+      "name": "a step",
+      "description": "Stepper summary (Step 2 of 4), the step's heading, its content and Back and Continue."
+    },
+    {
+      "name": "incomplete",
+      "description": "Continue is disabled until the step has what it needs."
+    },
+    {
+      "name": "last step",
+      "description": "Continue reads Confirm booking."
+    },
+    {
+      "name": "submitting / failed",
+      "description": "Show loading on the confirm button and a danger MonarchBanner on failure."
+    },
+    {
+      "name": "complete",
+      "description": "The confirmation replaces the steps."
+    }
+  ],
+  "appearance": "Existing Monarch components on the screen background: the compact stepper, a heading, radio rows, the slot picker, text fields, a description list and a ghost Back with a primary Continue. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships BookingFlow as a pattern component with steps, step, onStepChange, onSubmit, submitLabel, confirmation, completed, pending, error and messages, plus a useBookingFlow hook, a progress list and a summary panel beside the steps on wide screens. On a phone it is a recipe: one step per screen with the compact MonarchStepper, the system back gesture going to the previous step through BackHandler, and the summary as the last step. Completed steps can be reopened from the stepper (onSelect) instead of Change buttons. A wide window can show the summary in a supporting pane.",
+  "accessibility": [
+    "Each step's heading has heading semantics and sits in a polite live region, so moving between steps is announced.",
+    "The stepper reads its position (Step 2 of 4) and completed steps; reached steps are buttons.",
+    "Back is a button and also the system back gesture.",
+    "Continue is disabled, not hidden, until the step is complete.",
+    "Radio rows and the slot picker carry their own selected states."
+  ],
+  "edgeCases": [
+    "A service that has no choices: leave its step out.",
+    "Changing the day clears the chosen time.",
+    "At the largest text sizes each step scrolls while the buttons stay at the bottom.",
+    "Keep the state in rememberSaveable so rotation keeps the person's place."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Steps layout",
+      "fixture": "booking-flow",
+      "webExample": "Steps layout",
+      "template": "// System back goes to the previous step before it leaves the flow.\nBackHandler(enabled = step > 0 && !done) { step-- }\nif (done) {\n    MonarchEmptyState(\n        title = \"Booking complete\",\n        kind = MonarchEmptyStateKind.Success,\n        message = \"We sent the details by email.\",\n    )\n} else {\n    Column(Modifier.padding(vertical = MonarchTheme.spacing.space4), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n        MonarchStepper(\n            steps = steps.mapIndexed { i, s -> MonarchStepperStep(s.id, s.label, complete = i < step) },\n            current = step,\n            compact = MonarchStepperCompactMode.Never,\n            onSelect = { _, index -> if (index < step) step = index },\n        )\n        Column(\n            modifier = Modifier.fillMaxWidth(),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        ) {\n            MonarchText(\n                text = \"STEP \" + (step + 1) + \" OF \" + steps.size,\n                style = MonarchTextStyle.Caption,\n                color = MonarchTheme.colors.textMuted,\n            )\n            MonarchText(\n                text = titles[step],\n                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },\n                style = MonarchTextStyle.Heading,\n                heading = true,\n            )\n            when (step) {\n                0 -> services.forEach { option ->\n                    MonarchButton(\n                        text = option,\n                        onClick = {\n                            service = option\n                            step++\n                        },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Secondary,\n                    )\n                }\n                1 -> MonarchSlotPicker(\n                    slots = listOf(0L, 1_800_000L).map { MonarchSlotPickerSlot((day ?: nov4) + 32_400_000L + it) },\n                    selection = slot,\n                    onSelectionChange = { slot = it },\n                    day = day,\n                    onDayChange = {\n                        day = it\n                        slot = null\n                    },\n                    timeZone = zone,\n                    previousMonthIcon = {\n                        MonarchIcon(SampleIcons.ChevronLeft, null)\n                    },\n                    nextMonthIcon = {\n                        MonarchIcon(SampleIcons.ChevronRight, null)\n                    },\n                    today = nov4,\n                    onTimeZoneChange = { zone = it },\n                )\n                2 -> MonarchTextField(value = name, onValueChange = { name = it }, label = \"Name\")\n                else -> MonarchDescriptionList(\n                    items = listOf(\n                        MonarchDescriptionItem(\"Service\", service),\n                        MonarchDescriptionItem(\"Time zone\", zone),\n                        MonarchDescriptionItem(\"Name\", name),\n                    ),\n                )\n            }\n        }\n        if (step > 0) Row(verticalAlignment = Alignment.CenterVertically) {\n            if (step > 0) MonarchButton(text = \"Back\", onClick = { step-- }, variant = MonarchButtonVariant.Ghost)\n            Spacer(Modifier.weight(1f))\n            MonarchButton(\n                text = if (step == steps.lastIndex) \"Confirm booking\" else \"Continue\",\n                onClick = { if (step == steps.lastIndex) done = true else step++ },\n                variant = MonarchButtonVariant.Primary,\n                enabled = complete,\n            )\n        }\n    }\n}",
+      "setupTemplate": "val nov4 = 1_793_750_400_000L\nval steps = listOf(\n    MonarchStepperStep({{steps.0.id}}, {{steps.0.label}}),\n    MonarchStepperStep({{steps.1.id}}, {{steps.1.label}}),\n    MonarchStepperStep({{steps.2.id}}, {{steps.2.label}}),\n    MonarchStepperStep({{steps.3.id}}, {{steps.3.label}}),\n)\nval services = listOf(\n    {{services.0.name}} + \" · {{services.0.minutes|raw}} min\",\n    {{services.1.name}} + \" · {{services.1.minutes|raw}} min\",\n)\nval titles = listOf({{steps.0.title}}, \"Choose a date and time\", \"Enter your details\", \"Check and confirm\")\nvar step by rememberSaveable { mutableIntStateOf(0) }\nvar service by rememberSaveable { mutableStateOf<String?>(null) }\nvar day by rememberSaveable { mutableStateOf<Long?>(nov4) }\nvar slot by rememberSaveable { mutableStateOf<Long?>(null) }\nvar zone by rememberSaveable { mutableStateOf(\"Europe/London\") }\nvar name by rememberSaveable { mutableStateOf(\"\") }\nvar done by rememberSaveable { mutableStateOf(false) }\nval complete = when (step) {\n    0 -> service != null\n    1 -> slot != null\n    2 -> name.isNotBlank()\n    else -> true\n}",
+      "imports": [
+        "androidx.activity.compose.BackHandler",
+        "com.rookhq.monarch.foundation.icon.MonarchIcon",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "val nov4 = 1_793_750_400_000L\nval steps = listOf(\n    MonarchStepperStep(\"service\", \"Service\"),\n    MonarchStepperStep(\"time\", \"Date and time\"),\n    MonarchStepperStep(\"details\", \"Your details\"),\n    MonarchStepperStep(\"review\", \"Review\"),\n)\nval services = listOf(\n    \"Introductory call\" + \" · 20 min\",\n    \"Consultation\" + \" · 45 min\",\n)\nval titles = listOf(\"Choose a service\", \"Choose a date and time\", \"Enter your details\", \"Check and confirm\")\nvar step by rememberSaveable { mutableIntStateOf(0) }\nvar service by rememberSaveable { mutableStateOf<String?>(null) }\nvar day by rememberSaveable { mutableStateOf<Long?>(nov4) }\nvar slot by rememberSaveable { mutableStateOf<Long?>(null) }\nvar zone by rememberSaveable { mutableStateOf(\"Europe/London\") }\nvar name by rememberSaveable { mutableStateOf(\"\") }\nvar done by rememberSaveable { mutableStateOf(false) }\nval complete = when (step) {\n    0 -> service != null\n    1 -> slot != null\n    2 -> name.isNotBlank()\n    else -> true\n}",
+      "code": "// System back goes to the previous step before it leaves the flow.\nBackHandler(enabled = step > 0 && !done) { step-- }\nif (done) {\n    MonarchEmptyState(\n        title = \"Booking complete\",\n        kind = MonarchEmptyStateKind.Success,\n        message = \"We sent the details by email.\",\n    )\n} else {\n    Column(Modifier.padding(vertical = MonarchTheme.spacing.space4), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n        MonarchStepper(\n            steps = steps.mapIndexed { i, s -> MonarchStepperStep(s.id, s.label, complete = i < step) },\n            current = step,\n            compact = MonarchStepperCompactMode.Never,\n            onSelect = { _, index -> if (index < step) step = index },\n        )\n        Column(\n            modifier = Modifier.fillMaxWidth(),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        ) {\n            MonarchText(\n                text = \"STEP \" + (step + 1) + \" OF \" + steps.size,\n                style = MonarchTextStyle.Caption,\n                color = MonarchTheme.colors.textMuted,\n            )\n            MonarchText(\n                text = titles[step],\n                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },\n                style = MonarchTextStyle.Heading,\n                heading = true,\n            )\n            when (step) {\n                0 -> services.forEach { option ->\n                    MonarchButton(\n                        text = option,\n                        onClick = {\n                            service = option\n                            step++\n                        },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Secondary,\n                    )\n                }\n                1 -> MonarchSlotPicker(\n                    slots = listOf(0L, 1_800_000L).map { MonarchSlotPickerSlot((day ?: nov4) + 32_400_000L + it) },\n                    selection = slot,\n                    onSelectionChange = { slot = it },\n                    day = day,\n                    onDayChange = {\n                        day = it\n                        slot = null\n                    },\n                    timeZone = zone,\n                    previousMonthIcon = {\n                        MonarchIcon(SampleIcons.ChevronLeft, null)\n                    },\n                    nextMonthIcon = {\n                        MonarchIcon(SampleIcons.ChevronRight, null)\n                    },\n                    today = nov4,\n                    onTimeZoneChange = { zone = it },\n                )\n                2 -> MonarchTextField(value = name, onValueChange = { name = it }, label = \"Name\")\n                else -> MonarchDescriptionList(\n                    items = listOf(\n                        MonarchDescriptionItem(\"Service\", service),\n                        MonarchDescriptionItem(\"Time zone\", zone),\n                        MonarchDescriptionItem(\"Name\", name),\n                    ),\n                )\n            }\n        }\n        if (step > 0) Row(verticalAlignment = Alignment.CenterVertically) {\n            if (step > 0) MonarchButton(text = \"Back\", onClick = { step-- }, variant = MonarchButtonVariant.Ghost)\n            Spacer(Modifier.weight(1f))\n            MonarchButton(\n                text = if (step == steps.lastIndex) \"Confirm booking\" else \"Continue\",\n                onClick = { if (step == steps.lastIndex) done = true else step++ },\n                variant = MonarchButtonVariant.Primary,\n                enabled = complete,\n            )\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "BookingFlow",
+  "dependsOn": [
+    "slot-picker",
+    "text-field",
+    "stepper",
+    "button",
+    "timezone-select"
+  ]
+}

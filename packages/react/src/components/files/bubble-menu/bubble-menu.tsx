@@ -15,6 +15,7 @@ import {
 import { useIsomorphicLayoutEffect } from '../../../internal/layout-effect.js';
 import type { Editor } from '@tiptap/core';
 import { cx } from '../../../internal/cx.js';
+import { useOverlayStage } from '../../../internal/overlay-stage.js';
 import {
   EDITOR_TOOLBAR_INLINE_ITEMS,
   EditorToolbar,
@@ -102,6 +103,8 @@ export const BubbleMenu = forwardRef<HTMLDivElement, BubbleMenuProps>(function B
   const [selecting, setSelecting] = useState(false);
   const shouldShowRef = useRef(shouldShow);
   shouldShowRef.current = shouldShow;
+  // In a docs preview stage the menu is a picture: shown for the selection without focus.
+  const staged = useOverlayStage();
 
   const setRefs = useCallback(
     (node: HTMLDivElement | null) => {
@@ -131,7 +134,7 @@ export const BubbleMenu = forwardRef<HTMLDivElement, BubbleMenuProps>(function B
     !editor?.isDestroyed &&
     dismissed !== selectionKey &&
     !selecting &&
-    hasFocus() &&
+    (staged || hasFocus()) &&
     shouldShowRef.current(editor as Editor);
 
   useEffect(() => {
@@ -144,7 +147,13 @@ export const BubbleMenu = forwardRef<HTMLDivElement, BubbleMenuProps>(function B
     document.addEventListener('focusin', rerender);
     window.addEventListener('scroll', rerender, true);
     window.addEventListener('resize', rerender);
+    // Text that reflows (a font arriving, a narrower column) or content that
+    // grows above the editor moves the selection on the screen.
+    const reflow = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(rerender);
+    reflow?.observe(editor.view.dom);
+    reflow?.observe(editor.view.dom.ownerDocument.body);
     return () => {
+      reflow?.disconnect();
       editor.off('transaction', rerender);
       editor.off('focus', rerender);
       editor.off('blur', later);

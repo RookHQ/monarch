@@ -1,17 +1,42 @@
 import { UptimeBar, UptimeLegend } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './uptime-bar.fixture.json';
 
-const days = Array.from({ length: 30 }, (_, i) => {
-  const date = new Date(Date.UTC(2026, 2, 1 + i));
-  const label = `Mar ${i + 1}`;
-  const uptime = i === 0 ? null : i === 11 ? 97.8 : i === 19 ? 99.4 : 100;
+const data = fixture.data as unknown as {
+  label: string;
+  description: string;
+  startLabel: string;
+  endLabel: string;
+  month: string;
+  monthKey: string;
+  days: number;
+  noDataDay: number;
+  down: { day: number; uptime: number; note: string };
+  degraded: { day: number; uptime: number };
+  maintenanceDay: number;
+  detailLabel: string;
+  checks: number;
+};
+
+const days = Array.from({ length: data.days }, (_, i) => {
+  const day = i + 1;
+  const label = `${data.month} ${day}`;
+  const uptime =
+    day === data.noDataDay
+      ? null
+      : day === data.down.day
+        ? data.down.uptime
+        : day === data.degraded.day
+          ? data.degraded.uptime
+          : 100;
   return {
-    key: date.toISOString().slice(0, 10),
+    key: `${data.monthKey}-${String(day).padStart(2, '0')}`,
     label,
     uptime,
-    ...(i === 24 ? { status: 'maintenance' as const } : {}),
-    ...(i === 11 ? { note: 'Elevated error rate' } : {}),
-    ...(uptime !== null ? { details: [{ label: 'Checks', value: 1440 }] } : {}),
+    ...(day === data.maintenanceDay ? { status: 'maintenance' as const } : {}),
+    ...(day === data.down.day ? { note: data.down.note } : {}),
+    ...(uptime !== null ? { details: [{ label: data.detailLabel, value: data.checks }] } : {}),
   };
 });
 
@@ -150,11 +175,11 @@ export default {
           render: () => (
             <div style={{ display: 'grid', gap: '1.5rem', width: '100%', maxWidth: '40rem' }}>
               <UptimeBar
-                label="Public API"
-                description="api.example.com"
+                label={data.label}
+                description={data.description}
                 segments={days}
-                startLabel="30 days ago"
-                endLabel="Today"
+                startLabel={data.startLabel}
+                endLabel={data.endLabel}
                 locale="en-US"
               />
               <UptimeLegend />

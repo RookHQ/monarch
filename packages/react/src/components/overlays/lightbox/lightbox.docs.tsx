@@ -1,20 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Lightbox, type LightboxItem } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './lightbox.fixture.json';
 
-const PHOTOS = [
-  {
-    alt: 'Planning board with three columns of notes',
-    caption: 'Sprint planning board',
-    fill: '#94a3b8',
-  },
-  { alt: 'Pencil sketch of a settings screen', caption: 'Settings sketch', fill: '#a3b18a' },
-  { alt: 'Plain sample image in a warm grey', fill: '#c9ada7' },
-];
+const FILLS = ['#94a3b8', '#a3b18a', '#c9ada7'];
+
+const PHOTOS = fixture.data.photos.map((photo, i) => ({ ...photo, fill: FILLS[i] }));
 
 /** Demo images: solid SVGs served as `blob:` URLs, which Lightbox accepts. */
 function sampleItems(): LightboxItem[] {
-  if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') return [];
   return PHOTOS.map(({ fill, ...item }) => ({
     ...item,
     width: 640,
@@ -31,22 +26,32 @@ function sampleItems(): LightboxItem[] {
 }
 
 function Gallery() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [index, setIndex] = useState(0);
-  const [items] = useState(sampleItems);
+  // Made in the browser after mount: a `blob:` URL made while prerendering belongs to the
+  // build machine, and browsers refuse to load it.
+  const [items, setItems] = useState<LightboxItem[]>([]);
+  useEffect(() => {
+    if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') return;
+    const made = sampleItems();
+    setItems(made);
+    return () => made.forEach((item) => URL.revokeObjectURL(item.src));
+  }, []);
   return (
     <>
-      {items.map((item, i) => (
-        <Button
-          key={item.alt}
-          onClick={() => {
-            setIndex(i);
-            setOpen(true);
-          }}
-        >
-          View image {i + 1}
-        </Button>
-      ))}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        {items.map((item, i) => (
+          <Button
+            key={item.alt}
+            onClick={() => {
+              setIndex(i);
+              setOpen(true);
+            }}
+          >
+            {fixture.data.buttonLabel} {i + 1}
+          </Button>
+        ))}
+      </div>
       <Lightbox
         items={items}
         open={open}
@@ -171,7 +176,7 @@ export default {
         'Each image has its `alt`; a video gets it as `aria-label`.',
         'The position and current alt text are announced politely on every step.',
         'Icon buttons have names from `messages` and their shortcuts in `aria-keyshortcuts`.',
-        'The zoom level is visible text; the reset button is named "Reset zoom".',
+        'The zoom level is visible text; the reset button is named "Reset zoom" followed by that level, so its name holds what it shows.',
       ],
     },
     responsive: {
@@ -190,7 +195,7 @@ export default {
       ],
     },
     examples: {
-      items: [{ title: 'Gallery of three images', render: () => <Gallery /> }],
+      items: [{ title: 'Gallery of three images', stage: true, render: () => <Gallery /> }],
     },
     doDont: {
       do: [

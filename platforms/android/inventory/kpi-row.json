@@ -1,0 +1,89 @@
+{
+  "id": "kpi-row",
+  "name": null,
+  "title": "KPIRow",
+  "family": "data-display",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.layout.FlowRow (two columns) or androidx.compose.foundation.lazy.LazyRow with androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior (one row that scrolls sideways), holding MonarchStatCard; MonarchInlineErrorRetry for a row that failed",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the row of key figures at the top of a dashboard, made of MonarchStatCard in two columns, or in one row that scrolls sideways, with one loading and one error state for the whole row.",
+  "whenToUse": "At the top of a dashboard or a report screen, for three to six headline figures that are read together, such as revenue, new customers and churn for this month.",
+  "whenNotToUse": "For one figure, use MonarchStatCard on its own. For figures that each need a title, a menu and a body, use MonarchWidget in a grid. For a long table of figures, use a list with a detail screen.",
+  "api": [
+    "FlowRow(modifier = Modifier.semantics { isTraversalGroup = true; contentDescription = label }, maxItemsInEachRow = 2, horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) { items.forEach { MonarchStatCard(label = …, value = …, modifier = Modifier.weight(1f), change = …, loading = loading) } }",
+    "LazyRow(state = state, flingBehavior = rememberSnapFlingBehavior(state), horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) { items(items, key = { it.id }) { MonarchStatCard(…, modifier = Modifier.fillParentMaxWidth(0.7f)) } }",
+    "MonarchInlineErrorRetry(message = …, onRetry = …, variant = MonarchInlineErrorRetryVariant.Banner)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "two columns",
+      "description": "FlowRow with maxItemsInEachRow = 2 and Modifier.weight(1f) on each card: equal columns that wrap onto new rows. An odd last card takes the full width."
+    },
+    {
+      "name": "scroll",
+      "description": "A LazyRow of cards at 70% of the width, so the next card peeks in, with snapping to each card. Use it for a hero row with many figures."
+    },
+    {
+      "name": "loading",
+      "description": "Pass loading = true to every card; each shows its value placeholder and reads as loading. With no figures yet, show four placeholder cards labelled \"Loading\" in the app's language."
+    },
+    {
+      "name": "error",
+      "description": "Replace the row with MonarchInlineErrorRetry in its Banner variant: the message, and Try again when the app can retry."
+    },
+    {
+      "name": "sizes and variants",
+      "description": "Pass the same size (Sm for a dense row, Lg for a hero row) and variant (Card, or Plain inside a MonarchWidget) to every card."
+    }
+  ],
+  "appearance": "Each figure is a MonarchStatCard: the card surface with its subtle border, the label in muted text, the value in the strong text style and the change in its success or danger color with a sign. The gaps are the theme's space3. The same roles change in dark and both high-contrast themes.",
+  "platformNotes": "The web KPIRow is a component over StatCardGroup with an automatic CSS grid (columns, minItemWidth) and overflow = wrap or scroll. On a phone there is no room for an automatic grid of many columns, so on Android, as planned, it is a recipe: two equal columns (FlowRow) or one row that scrolls sideways with snapping (LazyRow, the pattern of a home screen's tiles). For three or more columns on a tablet, read currentWindowAdaptiveInfo() and raise maxItemsInEachRow. The web's whole-row loading and error props become loading = true on each card and MonarchInlineErrorRetry in place of the row; Monarch ships no strings for the recipe, so the app supplies \"Loading\" and the group label in its language. The web makes the scrolling row a tab stop; on Android a LazyRow scrolls with swipes and TalkBack's scroll actions. There is no iOS entry for this id.",
+  "accessibility": [
+    "Each figure is one MonarchStatCard, read as one TalkBack element with its label, value and change; the change is also a sign and words, never color alone.",
+    "The row is a traversal group with the app's label (\"This month\"), so the figures are read together.",
+    "A scrolling LazyRow exposes TalkBack's scroll forward and backward actions.",
+    "A loading card reads its loading state instead of a value; the error banner's Try again is a button with a 48dp touch target."
+  ],
+  "edgeCases": [
+    "An odd number of figures in two columns leaves the last card alone on its row at the full width; pass an even number or accept the wide card.",
+    "At font scale 2.0 the cards grow taller and the values wrap; the two-column layout keeps working down to a 320dp screen.",
+    "A LazyRow cannot sit inside another LazyRow; inside a vertically scrolling screen a LazyRow is fine because it scrolls the other way.",
+    "Keys: give each figure a stable id so a scrolling row keeps its position when values update."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Headline figures with changes",
+      "fixture": "kpi-row",
+      "webExample": "Headline figures with changes",
+      "template": "FlowRow(\n    modifier = Modifier.semantics {\n        isTraversalGroup = true\n        contentDescription = {{label}}\n    },\n    maxItemsInEachRow = 2,\n    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n) {\n    MonarchStatCard(\n        label = {{items.0.label}},\n        value = {{items.0.value|double}},\n        modifier = Modifier.weight(1f),\n        format = MonarchMetricFormat.{{items.0.format|pascal}},\n        change = MonarchMetricChange(\n            value = {{items.0.change|double}},\n            comparison = {{items.0.caption}},\n            goodDirection = MonarchDeltaIndicatorGoodDirection.{{items.0.goodDirection|pascal}},\n        ),\n    )\n    MonarchStatCard(\n        label = {{items.1.label}},\n        value = {{items.1.value|double}},\n        modifier = Modifier.weight(1f),\n        format = MonarchMetricFormat.{{items.1.format|pascal}},\n        change = MonarchMetricChange(value = {{items.1.change|double}}),\n    )\n    MonarchStatCard(\n        label = {{items.2.label}},\n        value = {{items.2.value|double}},\n        modifier = Modifier.weight(1f),\n        unit = {{items.2.unit}},\n        change = MonarchMetricChange(\n            value = {{items.2.change|double}},\n            goodDirection = MonarchDeltaIndicatorGoodDirection.{{items.2.goodDirection|pascal}},\n        ),\n    )\n    MonarchStatCard(\n        label = {{items.3.label}},\n        value = {{items.3.value}},\n        modifier = Modifier.weight(1f),\n        hint = {{items.3.hint}},\n    )\n}",
+      "code": "FlowRow(\n    modifier = Modifier.semantics {\n        isTraversalGroup = true\n        contentDescription = \"Last 30 days\"\n    },\n    maxItemsInEachRow = 2,\n    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n) {\n    MonarchStatCard(\n        label = \"Open tickets\",\n        value = 128.0,\n        modifier = Modifier.weight(1f),\n        format = MonarchMetricFormat.Number,\n        change = MonarchMetricChange(\n            value = 0.12,\n            comparison = \"vs previous 30 days\",\n            goodDirection = MonarchDeltaIndicatorGoodDirection.Down,\n        ),\n    )\n    MonarchStatCard(\n        label = \"Within target\",\n        value = 0.94,\n        modifier = Modifier.weight(1f),\n        format = MonarchMetricFormat.Percent,\n        change = MonarchMetricChange(value = 0.02),\n    )\n    MonarchStatCard(\n        label = \"First reply\",\n        value = 42.0,\n        modifier = Modifier.weight(1f),\n        unit = \"min\",\n        change = MonarchMetricChange(\n            value = -0.08,\n            goodDirection = MonarchDeltaIndicatorGoodDirection.Down,\n        ),\n    )\n    MonarchStatCard(\n        label = \"Satisfaction\",\n        value = null,\n        modifier = Modifier.weight(1f),\n        hint = \"No survey answers yet\",\n    )\n}"
+    },
+    {
+      "title": "A hero row that scrolls sideways",
+      "setup": "val figures = listOf(\"Revenue\" to 48_200.0, \"Orders\" to 1_204.0, \"Refunds\" to 12.0, \"Visitors\" to 30_115.0)\nval state = rememberLazyListState()",
+      "code": "LazyRow(\n    state = state,\n    flingBehavior = rememberSnapFlingBehavior(state),\n    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n) {\n    items(figures, key = { it.first }) { (label, value) ->\n        MonarchStatCard(\n            label = label,\n            value = value,\n            modifier = Modifier.fillParentMaxWidth(0.7f),\n            size = MonarchStatCardSize.Lg,\n        )\n    }\n}",
+      "imports": [
+        "androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior"
+      ]
+    },
+    {
+      "title": "Loading, and a row that failed",
+      "setup": "var failed by remember { mutableStateOf(true) }",
+      "code": "if (failed) {\n    MonarchInlineErrorRetry(\n        message = \"The figures could not be loaded.\",\n        onRetry = { failed = false },\n        variant = MonarchInlineErrorRetryVariant.Banner,\n    )\n} else {\n    FlowRow(\n        maxItemsInEachRow = 2,\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n    ) {\n        repeat(4) {\n            MonarchStatCard(label = \"Loading\", value = null, modifier = Modifier.weight(1f), loading = true)\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "KPIRow",
+  "dependsOn": [
+    "stat-card",
+    "grid"
+  ]
+}

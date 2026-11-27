@@ -1,7 +1,7 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 const require = createRequire(import.meta.url);
 export const AXE_SOURCE = readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8');
@@ -65,6 +65,13 @@ const EXPECTED_CONSOLE = [
   // EmbedBlock's video frames: Chromium supports both and the players use them
   // (picture in picture, casting), Firefox and WebKit report the token they skip.
   /Feature Policy: Skipping unsupported feature name “picture-in-picture”/,
+  // ChatDock's frame asks for calls, autoplay and the clipboard (DEFAULT_CHAT_ALLOW): Chromium
+  // supports each, Firefox reports the tokens it does not know and applies the rest.
+  /Feature Policy: Skipping unsupported feature name “(autoplay|clipboard-read|clipboard-write)”/,
+  // Firefox, on pages whose first example is a staged popover or menu (overlay stage): Radix
+  // positions popper content from scroll events, and the stage pins it in the flow with
+  // !important styles, so nothing moves; Firefox still reports the scroll-driven style write.
+  /This site appears to use a scroll-linked positioning effect/,
   /'sandbox' attribute: 'allow-presentation' is an invalid sandbox flag/,
   // AiArtifactCanvas's HTML preview is a `srcdoc` frame with an empty `sandbox`,
   // so no script runs in it: Chromium reports the example's own <script> (which
@@ -204,6 +211,17 @@ export function componentRoutes(): string[] {
  * Waits for entrance animations to finish (the home hero rises in), so contrast
  * is measured on the final colours. Infinite decorative loops are ignored.
  */
+/**
+ * Waits until a component page has hydrated. The prerendered HTML already has
+ * the headline example's controls, and a click or key press on them before
+ * hydration does nothing, which made interaction tests fail under load. The
+ * platform tabs go live only after hydration (pages/components/native-slot.tsx),
+ * so they are the signal.
+ */
+export async function componentPageHydrated(page: Page): Promise<void> {
+  await expect(page.locator('[role="tablist"][data-live]')).toBeAttached({ timeout: 15_000 });
+}
+
 export async function settle(page: Page): Promise<void> {
   await page.waitForFunction(() =>
     document
@@ -212,4 +230,20 @@ export async function settle(page: Page): Promise<void> {
         (a) => a.playState !== 'running' || a.effect?.getComputedTiming().iterations === Infinity,
       ),
   );
+}
+
+/**
+ * `/native/<id>` for every native guide whose Markdown file exists: a guide
+ * that is not written yet has no page (apps/docs/plugins/native.ts).
+ */
+export function nativeGuideRoutes(): string[] {
+  const guides: Record<string, string> = {
+    'adaptive-layout': 'docs/guides/native-adaptive-layout.md',
+    accessibility: 'docs/guides/native-accessibility-and-testing.md',
+    compatibility: 'docs/architecture/NATIVE-COMPATIBILITY.md',
+    contributing: 'docs/guides/native-contributing.md',
+  };
+  return Object.entries(guides)
+    .filter(([, file]) => existsSync(fileURLToPath(new URL(`../../../${file}`, import.meta.url))))
+    .map(([id]) => `/native/${id}`);
 }

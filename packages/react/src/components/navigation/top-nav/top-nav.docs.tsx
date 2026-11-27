@@ -2,6 +2,8 @@ import { forwardRef, useState, type AnchorHTMLAttributes } from 'react';
 import { Button, Text, TopNav, type TopNavItem } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { AppMark } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './top-nav.fixture.json';
 
 /** Stands in for a router link: the docs site's own URL must not change. */
 const DemoLink = forwardRef<HTMLAnchorElement, AnchorHTMLAttributes<HTMLAnchorElement>>(
@@ -22,14 +24,18 @@ const DemoLink = forwardRef<HTMLAnchorElement, AnchorHTMLAttributes<HTMLAnchorEl
   },
 );
 
-const ITEMS: TopNavItem[] = [
-  { key: 'overview', label: 'Overview', href: '/', exact: true },
-  { key: 'projects', label: 'Projects', href: '/projects', badge: 3 },
-  { key: 'calendar', label: 'Calendar', href: '/calendar' },
-  { key: 'reports', label: 'Reports', href: '/reports' },
-  { key: 'people', label: 'People', href: '/people' },
-  { key: 'settings', label: 'Settings', href: '/settings' },
-];
+const data = fixture.data as unknown as {
+  items: { key: string; label: string; badge?: number }[];
+  end: string;
+};
+
+const ITEMS: TopNavItem[] = data.items.map((item) => ({
+  key: item.key,
+  label: item.label,
+  href: item.key === 'overview' ? '/' : `/${item.key}`,
+  ...(item.key === 'overview' && { exact: true }),
+  ...(item.badge !== undefined && { badge: item.badge }),
+}));
 
 function Demo({ width }: { width: number }) {
   const [path, setPath] = useState('/');
@@ -44,7 +50,7 @@ function Demo({ width }: { width: number }) {
         start={<AppMark />}
         end={
           <Button size="sm" variant="secondary">
-            Share
+            {data.end}
           </Button>
         }
       />

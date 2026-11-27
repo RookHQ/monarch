@@ -1,0 +1,168 @@
+{
+  "id": "phone-country-select",
+  "name": "MonarchPhoneCountrySelect",
+  "title": "PhoneCountrySelect",
+  "family": "geo",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchCombobox (a .sheet with a List and .searchable) over a bundled E.164 calling-code table, with names from Locale.localizedString(forRegionCode:)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A searchable picker for the country calling code of a phone number, with the bundled calling codes and a parser that finds the country of a typed number.",
+  "whenToUse": "Before a phone number field, so people choose the country of the number; MonarchPhoneCountry.matching(_:preferred:) can preset it from a pasted number.",
+  "whenNotToUse": "Not for a postal or billing country; use MonarchCountrySelect. Not for validating or formatting the number itself.",
+  "api": [
+    "init(_ label: String, selection: Binding<String?>, prompt: String? = nil, helper: String? = nil, error: String? = nil, countries: [String]? = nil, preferred: [String] = [], locale: Locale? = nil, showsFlags: Bool = true, isRequired: Bool = false, isClearable: Bool = false, labels: MonarchPhoneCountrySelectLabels = MonarchPhoneCountrySelectLabels())",
+    "struct MonarchPhoneCountry: Identifiable { let code: String; let dialCode: String; let leadingDigits: [String]; init(code: String, dialCode: String, leadingDigits: [String] = []) }",
+    "static var MonarchPhoneCountry.all: [MonarchPhoneCountry]",
+    "static func MonarchPhoneCountry.country(code: String) -> MonarchPhoneCountry?",
+    "static func MonarchPhoneCountry.matching(_ phone: String, preferred: String? = nil) -> MonarchPhoneCountry?",
+    "struct MonarchPhoneCountrySelectLabels { init(suggested: String? = nil, all: String? = nil, option: (@Sendable (String, String) -> String)? = nil, combobox: MonarchComboboxLabels = MonarchComboboxLabels()) }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The visible label, already localised."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<String?>",
+      "default": "required",
+      "description": "The chosen country's ISO 3166-1 alpha-2 code, because several countries share a calling code. Read the calling code with MonarchPhoneCountry.country(code:)."
+    },
+    {
+      "name": "prompt",
+      "type": "String?",
+      "default": "nil",
+      "description": "Shown in the field while nothing is chosen."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Help text under the field."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "An error message, shown with an icon and announced."
+    },
+    {
+      "name": "countries",
+      "type": "[String]?",
+      "default": "nil",
+      "description": "Limits the list to these ISO codes. nil lists every country in MonarchPhoneCountry.all."
+    },
+    {
+      "name": "preferred",
+      "type": "[String]",
+      "default": "[]",
+      "description": "ISO codes listed first under Suggested. Each country is listed once."
+    },
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "nil",
+      "description": "The language of the names and the sort order. The environment's locale when nil."
+    },
+    {
+      "name": "showsFlags",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows each country's flag emoji at the end of its row."
+    },
+    {
+      "name": "isRequired",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows a mark after the label and adds Required to the hint."
+    },
+    {
+      "name": "isClearable",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows a clear button in the field. Off by default because a phone number needs a country."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchPhoneCountrySelectLabels",
+      "default": "MonarchPhoneCountrySelectLabels()",
+      "description": "Replaces Suggested, All countries, the row text (Portugal (+351)) and the combobox strings; the combobox's empty text is built in as No matching country."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "The field shows the prompt in the subtle text colour."
+    },
+    {
+      "name": "chosen",
+      "description": "The field shows the row text, such as Portugal (+351); no clear button unless isClearable."
+    },
+    {
+      "name": "suggestions",
+      "description": "With preferred, those countries come first under Suggested and the rest under All countries."
+    },
+    {
+      "name": "searching",
+      "description": "Matches by name, ISO code or digits, with labels that start with the query first."
+    },
+    {
+      "name": "no match",
+      "description": "The list reads No matching country."
+    },
+    {
+      "name": "error",
+      "description": "The field border and message use the danger colour, with an icon; the error is announced."
+    },
+    {
+      "name": "disabled",
+      "description": "Label, value and border use the disabled roles; the sheet does not open."
+    }
+  ],
+  "appearance": "The field is MonarchCombobox's. Each row is the name and calling code in the default text colour with the flag at the end. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "Neither iOS nor Android exposes calling codes publicly, so the table is bundled: the same 243 entries and shared-code rules as the web. Names come from Foundation. The web reports the code and the calling code in onValueChange; iOS binds the ISO code and the app reads the calling code from MonarchPhoneCountry. MonarchComboboxOption has no slot before the label, so the flag is at the end of the row. The web's listLabel has no equivalent: the sheet's title is the field label.",
+  "accessibility": [
+    "The field is a button labelled with the label, whose value is the chosen row's label or None.",
+    "The help text, the error (read as Error: ...) and Required are the field's hint; a new error is announced.",
+    "The chosen row has the selected trait and a check mark, not colour alone.",
+    "Rows and the field are at least 44 points high.",
+    "Each row is read with its text, including the calling code, then the flag emoji as VoiceOver names it."
+  ],
+  "edgeCases": [
+    "Countries that share +1, +7, +44 and others are told apart by their leading digits; without them, preferred or the code's main country (US for +1) wins.",
+    "matching reads numbers that start with + or 00, in Arabic-Indic, Persian or full-width digits, with bidirectional marks, spaces, dots, dashes and brackets.",
+    "Searching 44, +44 or 1242 finds the countries with that calling code.",
+    "Unknown codes in countries and preferred are ignored."
+  ],
+  "tests": [
+    "MonarchPhoneCountrySelectTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Beside a phone number",
+      "fixture": "phone-country-select",
+      "webExample": "Beside a phone number",
+      "template": "HStack(alignment: .top, spacing: 8) {\n    MonarchPhoneCountrySelect(\n        {{countryLabel}},\n        selection: $country,\n        preferred: [{{preferred.0}}, {{preferred.1}}]\n    )\n    .fixedSize(horizontal: true, vertical: false)\n    .onChange(of: country) { _, code in\n        dialCode = code.flatMap { MonarchPhoneCountry.country(code: $0)?.dialCode }\n    }\n    MonarchTextField(\n        {{phoneLabel}},\n        text: $number,\n        helper: {{savedAs}} + \" \" + (dialCode ?? \"—\") + \" \" + (number.isEmpty ? {{numberPlaceholder}} : number)\n    )\n}",
+      "setupTemplate": "@State private var country: String? = {{country}}\n@State private var dialCode: String? = {{dialCode}}\n@State private var number = {{number}}",
+      "setup": "@State private var country: String? = \"GB\"\n@State private var dialCode: String? = \"+44\"\n@State private var number = \"\"",
+      "code": "HStack(alignment: .top, spacing: 8) {\n    MonarchPhoneCountrySelect(\n        \"Country code\",\n        selection: $country,\n        preferred: [\"GB\", \"US\"]\n    )\n    .fixedSize(horizontal: true, vertical: false)\n    .onChange(of: country) { _, code in\n        dialCode = code.flatMap { MonarchPhoneCountry.country(code: $0)?.dialCode }\n    }\n    MonarchTextField(\n        \"Phone number\",\n        text: $number,\n        helper: \"Saved as\" + \" \" + (dialCode ?? \"—\") + \" \" + (number.isEmpty ? \"…\" : number)\n    )\n}"
+    },
+    {
+      "title": "Preset from a typed number",
+      "setup": "@State private var country = MonarchPhoneCountry.matching(\"+44 20 7946 0000\")?.code",
+      "code": "MonarchPhoneCountrySelect(\n    \"Country code\",\n    selection: $country,\n    locale: Locale(identifier: \"en_US\"),\n    showsFlags: false\n)"
+    }
+  ],
+  "webEquivalent": "PhoneCountrySelect",
+  "dependsOn": [
+    "combobox"
+  ]
+}

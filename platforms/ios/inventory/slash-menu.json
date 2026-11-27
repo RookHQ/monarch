@@ -1,0 +1,113 @@
+{
+  "id": "slash-menu",
+  "name": "MonarchSlashMenu",
+  "title": "SlashMenu",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "A full-width VStack of Buttons (MonarchIcon and Text) under group headings, in a ScrollView when long, placed with safeAreaInset(edge: .bottom) above the composer and the keyboard",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The / menu of a composer or document editor: a grouped list of blocks to insert, filtered by what is typed after the slash, in a strip above the keyboard, with helpers that find the command being typed and replace it.",
+  "whenToUse": "In a notes, document or message composer where people insert headings, lists and other blocks by typing a slash at the start of a line.",
+  "whenNotToUse": "For @mentions, use MonarchMentionPicker. For a fixed set of formatting actions, use MonarchEditorToolbar.",
+  "api": [
+    "init(_ query: MonarchSlashMenuQuery?, items: [MonarchSlashMenuItem], groupOrder: [String] = [], visibleRows: CGFloat = 4.5, labels: MonarchSlashMenuLabels = MonarchSlashMenuLabels(), onSelect: @escaping @MainActor (MonarchSlashMenuItem) -> Void)",
+    "static func filter(_ items: [MonarchSlashMenuItem], query: String) -> [MonarchSlashMenuItem]",
+    "MonarchSlashMenuItem.init(id: String, label: String, description: String? = nil, systemImage: String? = nil, group: String? = nil, keywords: [String] = [], isDisabled: Bool = false)",
+    "static func MonarchSlashMenuQuery.find(in text: String, caret: String.Index? = nil, trigger: Character = \"/\", position: MonarchSlashMenuTriggerPosition = .lineStart, maxLength: Int = 24) -> MonarchSlashMenuQuery?",
+    "func MonarchSlashMenuQuery.replacing(in text: String, with replacement: String = \"\") -> String",
+    "MonarchSlashMenuQuery.init(trigger: Character, text: String, range: Range<String.Index>)",
+    "enum MonarchSlashMenuTriggerPosition { case lineStart, wordStart }",
+    "MonarchSlashMenuLabels.init(label: String? = nil, empty: (@Sendable (String) -> String)? = nil, count: (@Sendable (Int) -> String)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "query",
+      "type": "MonarchSlashMenuQuery?",
+      "default": "required",
+      "description": "The command being typed, from MonarchSlashMenuQuery.find. Nothing is drawn while it is nil."
+    },
+    {
+      "name": "items",
+      "type": "[MonarchSlashMenuItem]",
+      "default": "required",
+      "description": "Every item the menu offers. The menu filters them by the query with MonarchSlashMenu.filter."
+    },
+    {
+      "name": "groupOrder",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Group headings in display order. Groups not listed follow in the order they first appear."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSlashMenuLabels",
+      "default": "MonarchSlashMenuLabels()",
+      "description": "Replacements for the list's spoken name, the empty text and the count announcement."
+    },
+    {
+      "name": "onSelect",
+      "type": "@MainActor (MonarchSlashMenuItem) -> Void",
+      "default": "required",
+      "description": "Receives the chosen item. Replace the query with query.replacing(in:with:) and set the query to nil."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "No query: nothing is drawn."
+    },
+    {
+      "name": "results",
+      "description": "The matching items under their group headings; more than four rows scroll."
+    },
+    {
+      "name": "disabled item",
+      "description": "Icon and text in the disabled colour; the row cannot be chosen."
+    },
+    {
+      "name": "nothing matches",
+      "description": "One line, \"Nothing matches “/xyz”\", in the muted text colour."
+    }
+  ],
+  "appearance": "A strip on the surface colour with a subtle top border. Group headings are captions in the muted text colour; each row has a muted icon, the label in the default text colour and the description in the muted text colour. Disabled rows use the disabled text colour. The roles follow light, dark and high-contrast themes.",
+  "platformNotes": "The web SlashMenu is a popover beside the caret, with the highlight moved by arrow keys while focus stays in the field (aria-activedescendant), and hooks that wire it to a textarea or a rich-text editor. iOS gives no caret rectangle to a SwiftUI text field, so the menu is a full-width strip above the keyboard, the same placement as MonarchMentionPicker, and a row is chosen by tapping it; there is no highlighted row and no arrow-key handling. The web hooks become MonarchSlashMenuQuery.find and replacing; the web's filterSlashMenuItems is MonarchSlashMenu.filter with the same ranking. The menu filters the items itself, where the web takes them already filtered. Android shares this design.",
+  "accessibility": [
+    "Each item is a button named by its label and description, for example \"Heading, Large section title\"; disabled items are dimmed and not activatable.",
+    "The list is a container named \"Insert block\"; group headings have the header trait.",
+    "The number of options, or \"Nothing matches “/xyz”\", is announced as the list changes, so focus can stay in the text field.",
+    "Rows are at least 44 points high and grow with Dynamic Type; icons are decorative."
+  ],
+  "edgeCases": [
+    "A slash inside a line (1/2, a path) never opens the menu with the default line-start position; use .wordStart to allow it after a space.",
+    "A space, punctuation or more than 24 characters after the slash closes the menu, so typing on continues normally.",
+    "Keep the strip in the same safe-area inset as the composer so it stays above the keyboard."
+  ],
+  "tests": [
+    "MonarchSlashMenuTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Composer with a block menu",
+      "fixture": "slash-menu",
+      "webExample": "Composer with a block menu",
+      "template": "let query = MonarchSlashMenuQuery.find(in: text)\nVStack(spacing: 0) {\n    MonarchSlashMenu(query, items: commands, groupOrder: [{{groups.0}}, {{groups.1}}, {{groups.2}}], visibleRows: 10) { item in\n        if let query { text = query.replacing(in: text, with: markdown[item.id] ?? \"\") }\n    }\n    .padding(.bottom, theme.spacing.space2)\n    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n        Text({{field.label}}).monarchTextStyle(.label)\n        TextField({{field.label}}, text: $text, prompt: Text({{field.placeholder}}), axis: .vertical)\n            .padding(theme.spacing.space2)\n            .overlay(RoundedRectangle(cornerRadius: theme.radius.md).stroke(theme.colors.borderInput))\n    }\n}",
+      "setupTemplate": "@State private var text = {{field.value}}\nprivate let markdown = [{{items.0.id}}: {{markdown.heading}}, {{items.1.id}}: {{markdown.quote}}, {{items.2.id}}: {{markdown.bullets}}, {{items.3.id}}: {{markdown.checklist}}, {{items.4.id}}: {{markdown.mention}}]\nprivate let commands = [\n    MonarchSlashMenuItem(id: {{items.0.id}}, label: {{items.0.label}}, description: {{items.0.description}}, systemImage: \"pencil\", group: {{items.0.group}}, keywords: [{{items.0.keywords.0}}, {{items.0.keywords.1}}]),\n    MonarchSlashMenuItem(id: {{items.1.id}}, label: {{items.1.label}}, description: {{items.1.description}}, systemImage: \"pencil\", group: {{items.1.group}}),\n    MonarchSlashMenuItem(id: {{items.2.id}}, label: {{items.2.label}}, description: {{items.2.description}}, systemImage: \"list.bullet\", group: {{items.2.group}}),\n    MonarchSlashMenuItem(id: {{items.3.id}}, label: {{items.3.label}}, description: {{items.3.description}}, systemImage: \"list.bullet\", group: {{items.3.group}}, keywords: [{{items.3.keywords.0}}, {{items.3.keywords.1}}]),\n    MonarchSlashMenuItem(id: {{items.4.id}}, label: {{items.4.label}}, description: {{items.4.description}}, systemImage: \"person.2\", group: {{items.4.group}}),\n    MonarchSlashMenuItem(id: {{items.5.id}}, label: {{items.5.label}}, description: {{items.5.description}}, systemImage: \"calendar\", group: {{items.5.group}}),\n    MonarchSlashMenuItem(id: {{items.6.id}}, label: {{items.6.label}}, description: {{items.6.description}}, systemImage: \"tablecells\", group: {{items.6.group}}, isDisabled: {{items.6.disabled}}),\n]\n@Environment(\\.monarchTheme) private var theme",
+      "setup": "@State private var text = \"/\"\nprivate let markdown = [\"heading\": \"## \", \"quote\": \"> \", \"bullets\": \"- \", \"checklist\": \"- [ ] \", \"mention\": \"@\"]\nprivate let commands = [\n    MonarchSlashMenuItem(id: \"heading\", label: \"Heading\", description: \"Large section title\", systemImage: \"pencil\", group: \"Text\", keywords: [\"title\", \"h2\"]),\n    MonarchSlashMenuItem(id: \"quote\", label: \"Quote\", description: \"Indented quotation\", systemImage: \"pencil\", group: \"Text\"),\n    MonarchSlashMenuItem(id: \"bullets\", label: \"Bulleted list\", description: \"A simple list\", systemImage: \"list.bullet\", group: \"Lists\"),\n    MonarchSlashMenuItem(id: \"checklist\", label: \"Checklist\", description: \"Items to tick off\", systemImage: \"list.bullet\", group: \"Lists\", keywords: [\"todo\", \"task\"]),\n    MonarchSlashMenuItem(id: \"mention\", label: \"Mention someone\", description: \"Notify a teammate\", systemImage: \"person.2\", group: \"Insert\"),\n    MonarchSlashMenuItem(id: \"date\", label: \"Date\", description: \"Insert today’s date\", systemImage: \"calendar\", group: \"Insert\"),\n    MonarchSlashMenuItem(id: \"table\", label: \"Table\", description: \"Not available in replies\", systemImage: \"tablecells\", group: \"Insert\", isDisabled: true),\n]\n@Environment(\\.monarchTheme) private var theme",
+      "code": "let query = MonarchSlashMenuQuery.find(in: text)\nVStack(spacing: 0) {\n    MonarchSlashMenu(query, items: commands, groupOrder: [\"Text\", \"Lists\", \"Insert\"], visibleRows: 10) { item in\n        if let query { text = query.replacing(in: text, with: markdown[item.id] ?? \"\") }\n    }\n    .padding(.bottom, theme.spacing.space2)\n    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n        Text(\"Message\").monarchTextStyle(.label)\n        TextField(\"Message\", text: $text, prompt: Text(\"Type / to insert a block\"), axis: .vertical)\n            .padding(theme.spacing.space2)\n            .overlay(RoundedRectangle(cornerRadius: theme.radius.md).stroke(theme.colors.borderInput))\n    }\n}"
+    },
+    {
+      "title": "Filtered, with nothing matching",
+      "code": "VStack {\n    MonarchSlashMenu(\n        MonarchSlashMenuQuery.find(in: \"/li\"),\n        items: [\n            MonarchSlashMenuItem(id: \"bullets\", label: \"Bulleted list\", systemImage: \"list.bullet\"),\n            MonarchSlashMenuItem(id: \"table\", label: \"Table\", description: \"Not available in replies\", systemImage: \"tablecells\", isDisabled: true),\n        ]\n    ) { _ in }\n    MonarchSlashMenu(MonarchSlashMenuQuery.find(in: \"/zzz\"), items: []) { _ in }\n}"
+    }
+  ],
+  "webEquivalent": "SlashMenu",
+  "dependsOn": [
+    "mention-picker"
+  ]
+}

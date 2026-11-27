@@ -1,0 +1,102 @@
+{
+  "id": "quick-switcher",
+  "name": null,
+  "title": "QuickSwitcher",
+  "family": "search",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "The command-palette recipe with jump-to defaults: sheet(isPresented:onDismiss:content:) with NavigationStack, searchable(text:prompt:), toolbar(.cancellationAction) and keyboardShortcut(\"k\", modifiers: .command) on the trigger, with MonarchSearchResults showing a Recent group for an empty query, letter-order matching and a “Search for” row",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a “jump to” sheet where typing a few letters of a channel, project, person or document and choosing it goes there; recent places show while the query is empty.",
+  "whenToUse": "In an app with many named places that people know by name (conversations, projects, documents, people), as the fastest way to move between them.",
+  "whenNotToUse": "For running actions such as “Create issue”, use the command-palette recipe. For filtering one list on screen, use searchable on that screen.",
+  "api": [
+    "func sheet<Content: View>(isPresented: Binding<Bool>, onDismiss: (() -> Void)? = nil, content: @escaping () -> Content) -> some View",
+    "func searchable(text: Binding<String>, prompt: String) -> some View",
+    "func keyboardShortcut(_ key: KeyEquivalent, modifiers: EventModifiers = .command) -> some View",
+    "MonarchSearchResults.init(groups: [MonarchSearchResultGroup], query: String = \"\", isLoading: Bool = false, …, onSelect: @escaping @MainActor (MonarchSearchResult, MonarchSearchResultGroup) -> Void)",
+    "MonarchSearchResultGroup.init(_ title: String?, id: String, results: [MonarchSearchResult], total: Int? = nil, systemImage: String? = nil)",
+    "MonarchSearchResult.init(_ title: String, id: String, path: [String] = [], snippet: String? = nil, …, systemImage: String? = nil, fileName: String? = nil, meta: String? = nil)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "closed",
+      "description": "The trigger: a MonarchButton in a toolbar or header. Command-K opens it from a hardware keyboard."
+    },
+    {
+      "name": "recent",
+      "description": "Open with an empty query: the Recent group lists where the person was last."
+    },
+    {
+      "name": "filtered",
+      "description": "Typing narrows the places by the query's letters in order; whole-word matches can be ranked first; empty groups disappear."
+    },
+    {
+      "name": "search everywhere",
+      "description": "With two or more characters a last “Search for …” row hands the query to the app's full search."
+    },
+    {
+      "name": "loading",
+      "description": "While the app searches a server, pass isLoading to MonarchSearchResults for its skeleton rows."
+    },
+    {
+      "name": "no match",
+      "description": "MonarchSearchResults shows its empty state, “No results for …”."
+    },
+    {
+      "name": "went",
+      "description": "Choosing a place closes the sheet, clears the query and the app navigates."
+    }
+  ],
+  "appearance": "The sheet, navigation bar and search field are the system's in every theme; rows are MonarchSearchResultItem rows with the place's symbol, the highlighted title and an optional second line in the muted colour.",
+  "platformNotes": "The web QuickSwitcher is a preset of CommandPalette: a centred dialog with a Mod+K hotkey, recent items, forgiving matching, debounced remote sources and a “Search for” row. On iOS it is the command-palette recipe with those defaults: a sheet is the phone's surface for a modal task, searchable gives the system field with dictation and the Search key, keyboardShortcut gives Command-K on a hardware keyboard. Remote sources are the app's own task(id: query) that sets the results and isLoading; Monarch adds no networking, debounce or cancellation helpers. There is no Android entry yet.",
+  "accessibility": [
+    "The trigger is a MonarchButton with a 44-point target; the Command-K shortcut is listed in the iPad keyboard shortcut overlay.",
+    "The sheet has a Close button in the cancellation position and can be dismissed by swipe or the VoiceOver escape gesture.",
+    "Each place is a button read with its title and second line; group headings, including Recent, have the header trait and are read with their count.",
+    "The results summary is announced when the query changes, as MonarchSearchResults does."
+  ],
+  "edgeCases": [
+    "Clear the query in onDismiss so every opening starts with the recent places.",
+    "Navigate after the sheet has dismissed when the destination presents another sheet.",
+    "Letter-order matching finds more than word matching: rank whole-word matches first when lists are long.",
+    "Debounce remote searches in the app's task(id:) and drop results for an older query."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Jump to a channel or person",
+      "fixture": "quick-switcher",
+      "webExample": "Jump to a channel or person",
+      "template": "VStack(alignment: .leading) {\n    MonarchButton({{trigger}}, systemImage: \"magnifyingglass\") { isOpen = true }\n        .keyboardShortcut(\"k\", modifiers: .command)\n        .sheet(\n            isPresented: $isOpen,\n            onDismiss: { query = \"\" },\n            content: {\n                NavigationStack {\n                    MonarchSearchResults(groups: groups, query: query) { place, _ in\n                        current = place.id == \"search-all\" ? \"Search results\" : place.title\n                        isOpen = false\n                    }\n                    .searchable(text: $query, prompt: {{trigger}})\n                    .navigationTitle(\"Jump to\")\n                    #if os(iOS)\n                    .navigationBarTitleDisplayMode(.inline)\n                    #endif\n                    .toolbar {\n                        ToolbarItem(placement: .cancellationAction) {\n                            Button(\"Close\") { isOpen = false }\n                        }\n                    }\n                }\n            }\n        )\n    Text(\"Open: \\(current)\")\n        .monarchTextStyle(.body)\n}",
+      "setupTemplate": "@State private var isOpen = false\n@State private var query = \"\"\n@State private var current = {{groups.0.items.0.label}}\n\nprivate static let places = [\n    MonarchSearchResultGroup({{groups.0.label}}, id: \"channels\", results: [\n        MonarchSearchResult({{groups.0.items.0.label}}, id: {{groups.0.items.0.id}}, systemImage: \"tray\", tone: .neutral),\n        MonarchSearchResult({{groups.0.items.1.label}}, id: {{groups.0.items.1.id}}, systemImage: \"tray\", tone: .neutral),\n        MonarchSearchResult({{groups.0.items.2.label}}, id: {{groups.0.items.2.id}}, systemImage: \"tray\", tone: .neutral),\n    ]),\n    MonarchSearchResultGroup({{groups.1.label}}, id: \"people\", results: [\n        MonarchSearchResult({{groups.1.items.0.label}}, id: {{groups.1.items.0.id}}, snippet: {{groups.1.items.0.description}}, systemImage: \"person.2\", tone: .neutral),\n        MonarchSearchResult({{groups.1.items.1.label}}, id: {{groups.1.items.1.id}}, snippet: {{groups.1.items.1.description}}, systemImage: \"person.2\", tone: .neutral),\n    ]),\n]\nprivate let recent = Array(Self.places[0].results.prefix(2))\n\n/// Forgiving match: the query's letters in order, so \"gnl\" finds \"#general\".\nprivate func matches(_ text: String) -> Bool {\n    var rest = Substring(text.lowercased())\n    for letter in query.lowercased() where !letter.isWhitespace {\n        guard let found = rest.firstIndex(of: letter) else { return false }\n        rest = rest[rest.index(after: found)...]\n    }\n    return true\n}\n\nprivate var groups: [MonarchSearchResultGroup] {\n    let term = query.trimmingCharacters(in: .whitespaces)\n    guard !term.isEmpty else {\n        return [MonarchSearchResultGroup(\"Recent\", id: \"recent\", results: recent)] + Self.places\n    }\n    var groups = Self.places.map { group in\n        MonarchSearchResultGroup(group.title, id: group.id, results: group.results.filter {\n            matches($0.title) || ($0.snippet.map(matches) ?? false)\n        })\n    }\n    if term.count >= 2 {\n        groups.append(MonarchSearchResultGroup(\"Search\", id: \"search\", results: [\n            MonarchSearchResult(\"Search for \\u{201C}\\(term)\\u{201D}\", id: \"search-all\", systemImage: \"magnifyingglass\"),\n        ]))\n    }\n    return groups\n}",
+      "previewPresented": [
+        "isOpen"
+      ],
+      "setup": "@State private var isOpen = false\n@State private var query = \"\"\n@State private var current = \"#general\"\n\nprivate static let places = [\n    MonarchSearchResultGroup(\"Channels\", id: \"channels\", results: [\n        MonarchSearchResult(\"#general\", id: \"c-general\", systemImage: \"tray\", tone: .neutral),\n        MonarchSearchResult(\"#design-review\", id: \"c-design\", systemImage: \"tray\", tone: .neutral),\n        MonarchSearchResult(\"#launch-plan\", id: \"c-launch\", systemImage: \"tray\", tone: .neutral),\n    ]),\n    MonarchSearchResultGroup(\"People\", id: \"people\", results: [\n        MonarchSearchResult(\"Ana Silva\", id: \"p-ana\", snippet: \"ana@example.com\", systemImage: \"person.2\", tone: .neutral),\n        MonarchSearchResult(\"Kofi Mensah\", id: \"p-kofi\", snippet: \"kofi@example.com\", systemImage: \"person.2\", tone: .neutral),\n    ]),\n]\nprivate let recent = Array(Self.places[0].results.prefix(2))\n\n/// Forgiving match: the query's letters in order, so \"gnl\" finds \"#general\".\nprivate func matches(_ text: String) -> Bool {\n    var rest = Substring(text.lowercased())\n    for letter in query.lowercased() where !letter.isWhitespace {\n        guard let found = rest.firstIndex(of: letter) else { return false }\n        rest = rest[rest.index(after: found)...]\n    }\n    return true\n}\n\nprivate var groups: [MonarchSearchResultGroup] {\n    let term = query.trimmingCharacters(in: .whitespaces)\n    guard !term.isEmpty else {\n        return [MonarchSearchResultGroup(\"Recent\", id: \"recent\", results: recent)] + Self.places\n    }\n    var groups = Self.places.map { group in\n        MonarchSearchResultGroup(group.title, id: group.id, results: group.results.filter {\n            matches($0.title) || ($0.snippet.map(matches) ?? false)\n        })\n    }\n    if term.count >= 2 {\n        groups.append(MonarchSearchResultGroup(\"Search\", id: \"search\", results: [\n            MonarchSearchResult(\"Search for \\u{201C}\\(term)\\u{201D}\", id: \"search-all\", systemImage: \"magnifyingglass\"),\n        ]))\n    }\n    return groups\n}",
+      "code": "VStack(alignment: .leading) {\n    MonarchButton(\"Jump to…\", systemImage: \"magnifyingglass\") { isOpen = true }\n        .keyboardShortcut(\"k\", modifiers: .command)\n        .sheet(\n            isPresented: $isOpen,\n            onDismiss: { query = \"\" },\n            content: {\n                NavigationStack {\n                    MonarchSearchResults(groups: groups, query: query) { place, _ in\n                        current = place.id == \"search-all\" ? \"Search results\" : place.title\n                        isOpen = false\n                    }\n                    .searchable(text: $query, prompt: \"Jump to…\")\n                    .navigationTitle(\"Jump to\")\n                    #if os(iOS)\n                    .navigationBarTitleDisplayMode(.inline)\n                    #endif\n                    .toolbar {\n                        ToolbarItem(placement: .cancellationAction) {\n                            Button(\"Close\") { isOpen = false }\n                        }\n                    }\n                }\n            }\n        )\n    Text(\"Open: \\(current)\")\n        .monarchTextStyle(.body)\n}"
+    }
+  ],
+  "webEquivalent": "QuickSwitcher",
+  "dependsOn": [
+    "command-palette",
+    "search-results",
+    "search-input",
+    "sheet",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web draws a centred dialog with the field on top, no count badges or result summary, and a keyboard-hint footer. On iOS the sheet uses the system search field (at the bottom on the phone), the results list shows its group counts and result summary, and there is no hint footer because there is no pointer or arrow-key navigation on a phone.",
+      "convention": "HIG: searchable places the system search field; a sheet is the phone's modal task surface"
+    }
+  ]
+}

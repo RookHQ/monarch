@@ -1,0 +1,131 @@
+{
+  "id": "ai-source-list",
+  "name": "MonarchAiSourceList",
+  "title": "AiSourceList",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of Button or Link rows with MonarchFavicon and MonarchIcon, and a MonarchButton toggle",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The block of sources under an AI answer: each with its favicon or kind icon, [n] number, title, host and snippet, grouped into Used and Considered, and collapsed to the first few.",
+  "whenToUse": "Under an assistant reply that has source parts, to show what the answer relied on and let the person open each source.",
+  "whenNotToUse": "Not for a single inline citation marker in the text (AiCitation). Not for search results; use MonarchSearchResultItem.",
+  "api": [
+    "init(_ items: [MonarchAiSourceListItem], collapseAfter: Int? = 3, isInitiallyExpanded: Bool = false, isNumbered: Bool = true, labels: MonarchAiSourceListLabels = MonarchAiSourceListLabels(), onOpen: (@MainActor (MonarchAiSourceListItem) -> Void)? = nil)",
+    "MonarchAiSourceListItem.init(_ source: MonarchAiSourcePart, isUsed: Bool = true, snippet: String? = nil)",
+    "static func MonarchAiSourceListItem.sources(of message: MonarchAiConversationMessage) -> [MonarchAiSourceListItem]",
+    "MonarchAiSourceListLabels.init(heading: String? = nil, used: (@Sendable (Int) -> String)? = nil, considered: (@Sendable (Int) -> String)? = nil, showAll: (@Sendable (Int) -> String)? = nil, showFewer: String? = nil, source: (@Sendable (Int, String) -> String)? = nil, opensSource: String? = nil, kind: (@Sendable (MonarchAiSourceKind) -> String)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "[MonarchAiSourceListItem]",
+      "default": "required",
+      "description": "The sources in citation order; the first is [1]. MonarchAiSourceListItem wraps the conversation model's MonarchAiSourcePart with isUsed and a snippet."
+    },
+    {
+      "name": "collapseAfter",
+      "type": "Int?",
+      "default": "3",
+      "description": "How many sources show while collapsed. nil never collapses."
+    },
+    {
+      "name": "isInitiallyExpanded",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether a collapsible list starts expanded."
+    },
+    {
+      "name": "isNumbered",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the [n] number that matches each source's citation marker."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiSourceListLabels",
+      "default": "MonarchAiSourceListLabels()",
+      "description": "Replacements for the heading, group headings, toggle titles, spoken source name, link hint and kind names."
+    },
+    {
+      "name": "onOpen",
+      "type": "(@MainActor (MonarchAiSourceListItem) -> Void)?",
+      "default": "nil",
+      "description": "Makes each source a button that calls this, for example to show MonarchAiSourcePreview. Without it, safe addresses are links."
+    }
+  ],
+  "states": [
+    {
+      "name": "ungrouped",
+      "description": "All sources are used: one list under the heading."
+    },
+    {
+      "name": "grouped",
+      "description": "Some sources were considered but not used: Used (n) and Considered (n) groups, used first."
+    },
+    {
+      "name": "collapsed",
+      "description": "More sources than collapseAfter: the first few of used then considered show, with Show all n sources."
+    },
+    {
+      "name": "expanded",
+      "description": "Every source shows, with Show fewer."
+    },
+    {
+      "name": "actionable",
+      "description": "With onOpen each row is a button; otherwise a row with a safe address is a link and the title uses the link colour."
+    },
+    {
+      "name": "plain",
+      "description": "A source without onOpen and without a safe address is text in the default colour."
+    }
+  ],
+  "appearance": "No container of its own: the heading and group headings in the muted text role, numbers in the AI citation role, titles in the link role when they open something and default text otherwise, meta lines and snippets in muted text. A pressed row gets the subtle background.",
+  "platformNotes": "The web list renders a title button or an anchor that opens a new tab; on iOS the whole row is the button or a SwiftUI Link opened through openURL, so the touch target is the row. The web's controlled messages object is one labels value with closures for the counted strings. Sources come from the conversation model (MonarchAiSourcePart); MonarchAiSourceListItem adds the web's used and snippet fields, and sources(of:) gives the message's sources in citation order. The favicon is loaded with MonarchFavicon; a source without one shows its kind's SF Symbol instead of the web's drawn glyph.",
+  "accessibility": [
+    "The heading and the Used and Considered headings have the header trait.",
+    "Each source is one element read as \"Source 1: title\", then host, product and kind, then the snippet; with isNumbered false the number is left out.",
+    "A row that opens is a button or a link at least 44 points high; a link has the hint \"Opens the source.\".",
+    "The favicon and the kind icon are decorative and hidden.",
+    "The toggle is a separate button whose title says Show all 5 sources or Show fewer."
+  ],
+  "edgeCases": [
+    "Unsafe addresses such as javascript: are never opened; the row becomes plain text.",
+    "The group headings count every source, also the ones hidden while collapsed.",
+    "collapseAfter 0 hides every source until the list is expanded.",
+    "Long titles and meta lines wrap; snippets stop at two lines.",
+    "An empty list shows only the heading; leave the view out when a reply has no sources."
+  ],
+  "tests": [
+    "MonarchAiSourceListTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Used and considered, opening a preview",
+      "fixture": "ai-source-list",
+      "webExample": "Used and considered, opening a preview",
+      "template": "MonarchAiSourceList(\n    [\n        MonarchAiSourceListItem(MonarchAiSourcePart(id: {{sources.0.id}}, title: {{sources.0.title}}, url: {{sources.0.url}}, kind: {{sources.0.kind|case}}, product: {{sources.0.product}}), snippet: {{sources.0.snippet}}),\n        MonarchAiSourceListItem(MonarchAiSourcePart(id: {{sources.1.id}}, title: {{sources.1.title}}, url: {{sources.1.url}}, kind: {{sources.1.kind|case}}), snippet: {{sources.1.snippet}}),\n        MonarchAiSourceListItem(MonarchAiSourcePart(id: {{sources.2.id}}, title: {{sources.2.title}}, kind: {{sources.2.kind|case}}, product: {{sources.2.product}}), isUsed: {{sources.2.used}}),\n        MonarchAiSourceListItem(MonarchAiSourcePart(id: {{sources.3.id}}, title: {{sources.3.title}}, kind: {{sources.3.kind|case}}), isUsed: {{sources.3.used}}, snippet: {{sources.3.snippet}}),\n    ],\n    onOpen: { _ in }\n)",
+      "code": "MonarchAiSourceList(\n    [\n        MonarchAiSourceListItem(MonarchAiSourcePart(id: \"s1\", title: \"Team handbook\", url: \"https://example.com/handbook\", kind: .doc, product: \"Docs\"), snippet: \"Requests are answered within two working days.\"),\n        MonarchAiSourceListItem(MonarchAiSourcePart(id: \"s2\", title: \"Support policy\", url: \"https://example.com/support-policy\", kind: .web), snippet: \"Urgent issues go to the on-call queue.\"),\n        MonarchAiSourceListItem(MonarchAiSourcePart(id: \"s3\", title: \"Ticket 1042\", kind: .record, product: \"Helpdesk\"), isUsed: false),\n        MonarchAiSourceListItem(MonarchAiSourcePart(id: \"s4\", title: \"Onboarding checklist.pdf\", kind: .file), isUsed: false, snippet: \"A list of first-week tasks.\"),\n    ],\n    onOpen: { _ in }\n)"
+    },
+    {
+      "title": "The sources of a message, as links",
+      "setup": "private let message = MonarchAiConversationMessage(\n    id: \"m1\",\n    role: .assistant,\n    parts: [\n        .text(MonarchAiTextPart(text: \"Revenue grew 12%.\")),\n        .source(MonarchAiSourcePart(id: \"s1\", title: \"Quarterly planning notes\", url: \"https://www.example.com/notes/q3\", kind: .doc, product: \"Docs\")),\n        .source(MonarchAiSourcePart(id: \"s2\", title: \"Industry report\", url: \"https://example.org/report\", kind: .web)),\n    ],\n    createdAt: \"2024-10-14T10:00:00Z\"\n)",
+      "code": "MonarchAiSourceList(MonarchAiSourceListItem.sources(of: message))"
+    }
+  ],
+  "webEquivalent": "AiSourceList",
+  "dependsOn": [
+    "favicon",
+    "link",
+    "collapsible",
+    "ai-conversation"
+  ],
+  "icons": {
+    "toggle": "ChevronDownGlyph"
+  }
+}

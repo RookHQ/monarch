@@ -1,13 +1,20 @@
 import { useState } from 'react';
 import { CurrencyInput, Field, FieldDescription, FieldLabel } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './currency-input.fixture.json';
 
 function PriceDemo() {
-  const [cents, setCents] = useState<number | null>(4900);
+  const [cents, setCents] = useState<number | null>(fixture.data.minorUnits);
   return (
     <Field style={{ width: '100%', maxWidth: 260 }}>
-      <FieldLabel>Unit price</FieldLabel>
-      <CurrencyInput currency="USD" minorUnits value={cents} onValueChange={setCents} />
+      <FieldLabel>{fixture.data.label}</FieldLabel>
+      <CurrencyInput
+        currency={fixture.data.currency}
+        minorUnits
+        value={cents}
+        onValueChange={setCents}
+      />
       <FieldDescription>Stored as {cents ?? 0} cents.</FieldDescription>
     </Field>
   );

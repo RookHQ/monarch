@@ -6,48 +6,45 @@ import {
   type SharePerson,
 } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './share-dialog.fixture.json';
 
-const ROLES = [
-  { value: 'viewer', label: 'Viewer' },
-  { value: 'commenter', label: 'Commenter' },
-  { value: 'editor', label: 'Editor' },
-];
+const ROLES = fixture.data.roles;
 
-const ACCESS = [
-  {
-    value: 'invited',
-    label: 'Only people invited',
-    description: 'Only the people listed above can open it.',
-  },
-  {
-    value: 'workspace',
-    label: 'Anyone in the workspace',
-    description: 'Everyone in the workspace can find and open it.',
-  },
-];
+const ACCESS = fixture.data.access.options;
 
-const CANDIDATES = [
-  { value: 'u4', label: 'Jordan Kim', description: 'jordan@example.com' },
-  { value: 'u5', label: 'Riley Chen', description: 'riley@example.com' },
-  { value: 'u6', label: 'Taylor Brooks', description: 'taylor@example.com' },
-];
+const CANDIDATES = fixture.data.candidates;
 
 const wait = () => new Promise((resolve) => setTimeout(resolve, 600));
 
 function PeopleDemo() {
-  const [people, setPeople] = useState<SharePerson[]>([
-    { id: 'u1', name: 'Alex Morgan', email: 'alex@example.com', role: 'editor', isSelf: true },
-    { id: 'u2', name: 'Sam Lee', email: 'sam@example.com', role: 'commenter' },
-    { id: 'u3', name: 'Jamie Fox', email: 'jamie@example.com', role: 'viewer', status: 'invited' },
-  ]);
-  const [access, setAccess] = useState('invited');
+  const [people, setPeople] = useState<SharePerson[]>(
+    (
+      fixture.data.people as {
+        name: string;
+        email: string;
+        role: string;
+        isSelf?: boolean;
+        status?: SharePerson['status'];
+      }[]
+    ).map(({ name, email, role, isSelf, status }, index) => ({
+      id: `u${index + 1}`,
+      name,
+      email,
+      role,
+      ...(isSelf !== undefined && { isSelf }),
+      ...(status !== undefined && { status }),
+    })),
+  );
+  const [access, setAccess] = useState(fixture.data.access.value);
   return (
     <ShareDialog
-      itemName="Quarterly plan"
-      description="People you invite get the role you choose."
-      trigger={<Button>Share</Button>}
+      itemName={fixture.data.itemName}
+      description={fixture.data.description}
+      trigger={<Button>{fixture.data.trigger}</Button>}
+      defaultOpen
       roles={ROLES}
-      defaultInviteRole="viewer"
+      defaultInviteRole={fixture.data.defaultInviteRole}
       inviteOptions={CANDIDATES}
       onInvite={async (values, role) => {
         await wait();
@@ -80,7 +77,7 @@ function PeopleDemo() {
         await wait();
         setAccess(value);
       }}
-      link="https://example.com/d/quarterly-plan"
+      link={fixture.data.link}
     />
   );
 }
@@ -259,7 +256,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Invite people and set access', render: () => <PeopleDemo /> },
+        {
+          title: 'Invite people and set access',
+          stage: { align: 'center' },
+          render: () => <PeopleDemo />,
+        },
         { title: 'Share links with password and expiry', render: () => <LinksDemo /> },
       ],
     },

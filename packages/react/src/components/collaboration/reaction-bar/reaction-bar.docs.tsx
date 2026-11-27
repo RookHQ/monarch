@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { ReactionBar, type ReactionBarItem } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './reaction-bar.fixture.json';
 
-const QUICK = ['👍', '❤️', '😄', '🎉', '👀', '✅'];
+const QUICK = fixture.data.quick;
 
-const START: ReactionBarItem[] = [
-  { emoji: '👍', count: 4, reacted: true, label: 'thumbs up', title: 'You, Priya, Tom and Lee' },
-  { emoji: '🎉', count: 2, label: 'party popper', title: 'Ana and Ben' },
-  { emoji: '👀', count: 1, label: 'eyes', title: 'Sam' },
-];
+const START = fixture.data.reactions as ReactionBarItem[];
 
 function ReactionDemo() {
   const [reactions, setReactions] = useState(START);

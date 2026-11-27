@@ -14,6 +14,14 @@ import {
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { PencilIcon, TrashIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './context-menu.fixture.json';
+
+const [RENAME, DUPLICATE, REMOVE] = fixture.data.items as [
+  { label: string; shortcut: string },
+  { label: string },
+  { label: string },
+];
 
 const regionStyle = {
   display: 'grid',
@@ -27,22 +35,33 @@ const regionStyle = {
 } as const;
 
 function FileTile() {
-  const [last, setLast] = useState('Nothing yet');
+  const [last, setLast] = useState<string>(fixture.data.lastAction);
+  const [open, setOpen] = useState(true);
   return (
     <div style={{ display: 'grid', gap: '0.5rem', width: '100%', maxWidth: '24rem' }}>
-      <ContextMenu label="File actions">
+      <ContextMenu label={fixture.data.menuLabel} open={open} onOpenChange={setOpen}>
         <ContextMenuTrigger style={regionStyle}>
-          <Button variant="ghost">Quarterly report.pdf</Button>
-          <span>Right-click, press Shift+F10 on the file, or long-press on touch.</span>
+          <Button variant="ghost">{fixture.data.file}</Button>
+          <span>{fixture.data.hint}</span>
         </ContextMenuTrigger>
         <ContextMenuContent>
-          <ContextMenuItem icon={<PencilIcon />} shortcut="F2" onSelect={() => setLast('Rename')}>
-            Rename
+          <ContextMenuItem
+            icon={<PencilIcon />}
+            shortcut={RENAME.shortcut}
+            onSelect={() => setLast(RENAME.label)}
+          >
+            {RENAME.label}
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => setLast('Duplicate')}>Duplicate</ContextMenuItem>
+          <ContextMenuItem onSelect={() => setLast(DUPLICATE.label)}>
+            {DUPLICATE.label}
+          </ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem tone="danger" icon={<TrashIcon />} onSelect={() => setLast('Delete')}>
-            Delete
+          <ContextMenuItem
+            tone="danger"
+            icon={<TrashIcon />}
+            onSelect={() => setLast(REMOVE.label)}
+          >
+            {REMOVE.label}
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -195,7 +214,7 @@ export default {
     },
     examples: {
       items: [
-        { title: 'File actions', render: () => <FileTile /> },
+        { title: 'File actions', stage: true, render: () => <FileTile /> },
         { title: 'Checkbox items and a submenu', render: () => <CanvasMenu /> },
       ],
     },

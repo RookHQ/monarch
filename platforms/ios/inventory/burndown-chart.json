@@ -1,0 +1,201 @@
+{
+  "id": "burndown-chart",
+  "name": "MonarchBurndownChart",
+  "title": "BurndownChart",
+  "family": "charts",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Swift Charts: Chart with LineMark for the remaining and dashed ideal lines and the scope step line, PointMark with an annotation for each scope change and for lone and inspected points, RuleMark for the dashed today marker and the crosshair, chartXSelection(value:) for touch inspection, inside MonarchChartFrame (accessibilityChartDescriptor and View as table)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A sprint burndown: work remaining each day against the ideal line, with the scope line and its changes, a today marker and a sentence saying whether the sprint is ahead or behind.",
+  "whenToUse": "For a time-boxed iteration with an estimate of remaining work per day, to show whether it will finish on time, and to show scope changes next to progress so a flat stretch is explained.",
+  "whenNotToUse": "For open-ended work without a fixed end, use MonarchLineChart of throughput or a stacked MonarchAreaChart for cumulative flow. To compare several sprints, use a bar chart of completed work per sprint.",
+  "api": [
+    "MonarchBurndownChart.init(_ title: String, points: [MonarchBurndownChartPoint], description: String? = nil, idealStart: Double? = nil, todayIndex: Int? = nil, showsToday: Bool = true, showsScope: Bool = true, status: MonarchChartFrameStatus = .ready, hiddenLines: Binding<Set<MonarchBurndownChartLine>>? = nil, activeIndex: Binding<Int?>? = nil, dateFormat: Date.FormatStyle = .dateTime.month(.abbreviated).day(), emptyMessage: String? = nil, footer: String? = nil, height: CGFloat? = nil, labels: MonarchBurndownChartLabels = MonarchBurndownChartLabels(), formatValue: ((Double) -> String)? = nil, onRetry: (@MainActor () -> Void)? = nil)",
+    "MonarchBurndownChartPoint.init(date: Date, remaining: Double? = nil, scope: Double? = nil)",
+    "MonarchBurndownChartPoint.init(label: String, remaining: Double? = nil, scope: Double? = nil)",
+    "enum MonarchBurndownChartLine: String { case remaining, ideal, scope }",
+    "MonarchBurndownChartLabels.init(remaining: String? = nil, ideal: String? = nil, scope: String? = nil, day: String? = nil, today: String? = nil, scopeChange: String? = nil, change: (@Sendable (_ amount: String, _ added: Bool) -> String)? = nil, status: (@Sendable (_ day: String, _ remaining: String, _ ideal: String) -> String)? = nil, ahead: (@Sendable (_ amount: String) -> String)? = nil, behind: (@Sendable (_ amount: String) -> String)? = nil, onTrack: String? = nil, scopeSummary: (@Sendable (_ scope: String, _ added: String, _ removed: String) -> String)? = nil, notStarted: String? = nil, frame: MonarchChartFrameLabels = MonarchChartFrameLabels())"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The name of the chart, a heading in the frame and the name VoiceOver reads."
+    },
+    {
+      "name": "points",
+      "type": "[MonarchBurndownChartPoint]",
+      "default": "required",
+      "description": "One point per sprint day, in order, including days not reached yet (no remaining), each with a date or a label, remaining work and scope."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "One line under the title. Default: the generated summary, such as \"Mar 6: 24 remaining, ideal 17.8, 6.2 behind ideal. Scope 43, 5 added and 2 removed since the start\"."
+    },
+    {
+      "name": "idealStart",
+      "type": "Double?",
+      "default": "nil",
+      "description": "The work at the start of the ideal line. Default: the first day's scope, else its remaining. The ideal reaches zero on the last day."
+    },
+    {
+      "name": "todayIndex",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The day of the today marker. Default: the latest day with a remaining value, when later days exist. An index outside the days draws no marker."
+    },
+    {
+      "name": "showsToday",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the today marker is drawn at all."
+    },
+    {
+      "name": "showsScope",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the scope line, its changes and the scope columns are shown, when any day has a scope."
+    },
+    {
+      "name": "status",
+      "type": "MonarchChartFrameStatus",
+      "default": ".ready",
+      "description": "ready, loading, empty or error, drawn by the frame. A ready chart with no points is empty."
+    },
+    {
+      "name": "hiddenLines",
+      "type": "Binding<Set<MonarchBurndownChartLine>>?",
+      "default": "nil",
+      "description": "The hidden lines. Kept inside when nil. The legend keeps one line visible."
+    },
+    {
+      "name": "activeIndex",
+      "type": "Binding<Int?>?",
+      "default": "nil",
+      "description": "The inspected day, to share a crosshair between charts. Kept inside when nil."
+    },
+    {
+      "name": "dateFormat",
+      "type": "Date.FormatStyle",
+      "default": ".dateTime.month(.abbreviated).day()",
+      "description": "How dated points are written on the axis, in the popover, the table and the summary."
+    },
+    {
+      "name": "emptyMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "The empty-state message."
+    },
+    {
+      "name": "footer",
+      "type": "String?",
+      "default": "nil",
+      "description": "Notes under the chart."
+    },
+    {
+      "name": "height",
+      "type": "CGFloat?",
+      "default": "nil",
+      "description": "The height of the plot; 240 points by default."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchBurndownChartLabels",
+      "default": "MonarchBurndownChartLabels()",
+      "description": "Replacements for every built-in string, including the frame's."
+    },
+    {
+      "name": "formatValue",
+      "type": "((Double) -> String)?",
+      "default": "nil",
+      "description": "Writes a value, such as \"24 pts\", everywhere the chart writes one. Default: a number in the locale."
+    },
+    {
+      "name": "onRetry",
+      "type": "(() -> Void)?",
+      "default": "nil",
+      "description": "Shows Try again in the error status."
+    }
+  ],
+  "states": [
+    {
+      "name": "in progress",
+      "description": "The remaining line stops at the latest day with data; the dashed today marker stands on that day; the summary says how far ahead or behind the ideal it is."
+    },
+    {
+      "name": "ahead, behind, on track",
+      "description": "The summary compares the latest remaining value with the ideal that day, rounded to two decimals."
+    },
+    {
+      "name": "not started",
+      "description": "No day has a remaining value: the summary says \"Not started\" and only the ideal (and scope) are drawn."
+    },
+    {
+      "name": "scope changes",
+      "description": "The scope is a step line; each day it changes has a dot and a \"+5\" or \"−2\" label, and the popover has a Scope change footer."
+    },
+    {
+      "name": "inspecting",
+      "description": "While the plot is touched, or activeIndex is set: a crosshair, a point on the remaining line and a popover with remaining, ideal and scope that day."
+    },
+    {
+      "name": "line hidden",
+      "description": "Remaining, ideal or scope can be hidden from the legend; the last visible line stays. Hidden lines stay in the data table."
+    },
+    {
+      "name": "loading, empty, error",
+      "description": "Drawn by MonarchChartFrame at the chart's height."
+    }
+  ],
+  "appearance": "Remaining is the first data colour and the thickest line; the ideal is the neutral subtle text colour, dashed; scope is the second data colour, a thinner step line. Scope change labels are the default text colour; the today marker is a dashed strong border line with a muted label. The crosshair is the strong border colour and the popover the raised surface with a medium shadow. Light, dark and both high-contrast themes follow the same roles.",
+  "platformNotes": "Built on Swift Charts; days are placed by position so left-out days (weekends) make no flat stretch, as on the web. The generated summary, which the web gives only to assistive technology, is the visible description unless the app sets one, and it is the summary of the chart descriptor. A point has a date or a label instead of the web's mixed date, number or label. todayIndex nil means the default, and showsToday false means no marker (the web uses null). Touch inspection uses chartXSelection and clears when the finger lifts; there is no keyboard inspection, live region or onDaySelect drill-in. valueFormat, formatTick and formatX are formatValue and dateFormat. Android uses the same names. Several closures are optional (formatValue, onRetry). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is formatValue.",
+  "accessibility": [
+    "The frame's title is a heading; the plot is one element named by the title, with the data as an accessibility chart descriptor whose summary is the description: where the sprint stands and how scope changed.",
+    "\"View as table\" shows the data table, where each row is read as the day, remaining, ideal, scope and scope change (\"+5\"), \"No value\" for days not reached.",
+    "Values are read with formatValue, so VoiceOver says \"24 pts\".",
+    "The inspection popover is hidden from VoiceOver.",
+    "The ideal differs from the other lines by its dash and its name; remaining and scope by their names and line weights, never by colour alone.",
+    "Legend toggles are switches with a 44-point target; the last visible line cannot be hidden."
+  ],
+  "edgeCases": [
+    "Days not reached yet have no remaining value; the remaining line ends at the latest day with one and a lone value is a dot.",
+    "A gap in the middle of the remaining values breaks the line.",
+    "Without idealStart, scope or a first remaining value there is no ideal line.",
+    "A single day has an ideal equal to its start, drawn centred.",
+    "Float noise never reads as behind: the difference to ideal is rounded to two decimals.",
+    "No day with a scope means no scope line, legend entry or table columns, whatever showsScope says.",
+    "A ready chart with no points shows the empty state."
+  ],
+  "tests": [
+    "MonarchBurndownChartTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Sprint in progress with scope changes",
+      "fixture": "burndown-chart",
+      "webExample": "Sprint in progress with scope changes",
+      "template": "MonarchBurndownChart(\n    {{title}},\n    points: [\n    MonarchBurndownChartPoint(date: {{days.0.date|date}}, remaining: {{days.0.remaining|double}}, scope: {{days.0.scope|double}}),\n    MonarchBurndownChartPoint(date: {{days.1.date|date}}, remaining: {{days.1.remaining|double}}, scope: {{days.1.scope|double}}),\n    MonarchBurndownChartPoint(date: {{days.2.date|date}}, remaining: {{days.2.remaining|double}}, scope: {{days.2.scope|double}}),\n    MonarchBurndownChartPoint(date: {{days.3.date|date}}, remaining: {{days.3.remaining|double}}, scope: {{days.3.scope|double}}),\n    MonarchBurndownChartPoint(date: {{days.4.date|date}}, remaining: {{days.4.remaining|double}}, scope: {{days.4.scope|double}}),\n    MonarchBurndownChartPoint(date: {{days.5.date|date}}, remaining: {{days.5.remaining|double}}, scope: {{days.5.scope|double}}),\n    MonarchBurndownChartPoint(date: {{days.6.date|date}}, remaining: {{days.6.remaining|double}}, scope: {{days.6.scope|double}}),\n    MonarchBurndownChartPoint(date: {{days.7.date|date}}),\n    MonarchBurndownChartPoint(date: {{days.8.date|date}}),\n    MonarchBurndownChartPoint(date: {{days.9.date|date}}),\n    ],\n    description: {{description}},\n    formatValue: { \"\\($0.formatted()) {{unit|raw}}\" }\n)\n.environment(\\.locale, Locale(identifier: {{locale}}))",
+      "code": "MonarchBurndownChart(\n    \"Sprint 14\",\n    points: [\n    MonarchBurndownChartPoint(date: Date(timeIntervalSince1970: 1_772_452_800), remaining: 40.0, scope: 40.0),\n    MonarchBurndownChartPoint(date: Date(timeIntervalSince1970: 1_772_539_200), remaining: 38.0, scope: 40.0),\n    MonarchBurndownChartPoint(date: Date(timeIntervalSince1970: 1_772_625_600), remaining: 35.0, scope: 40.0),\n    MonarchBurndownChartPoint(date: Date(timeIntervalSince1970: 1_772_712_000), remaining: 37.0, scope: 45.0),\n    MonarchBurndownChartPoint(date: Date(timeIntervalSince1970: 1_772_798_400), remaining: 31.0, scope: 45.0),\n    MonarchBurndownChartPoint(date: Date(timeIntervalSince1970: 1_773_057_600), remaining: 26.0, scope: 43.0),\n    MonarchBurndownChartPoint(date: Date(timeIntervalSince1970: 1_773_144_000), remaining: 24.0, scope: 43.0),\n    MonarchBurndownChartPoint(date: Date(timeIntervalSince1970: 1_773_230_400)),\n    MonarchBurndownChartPoint(date: Date(timeIntervalSince1970: 1_773_316_800)),\n    MonarchBurndownChartPoint(date: Date(timeIntervalSince1970: 1_773_403_200)),\n    ],\n    description: \"Remaining story points\",\n    formatValue: { \"\\($0.formatted()) pts\" }\n)\n.environment(\\.locale, Locale(identifier: \"en-US\"))"
+    },
+    {
+      "title": "A finished sprint without scope",
+      "code": "MonarchBurndownChart(\n    \"Sprint 13\",\n    points: [30, 24, 18, 11, 3, 0].enumerated().map {\n        MonarchBurndownChartPoint(label: \"Day \\($0.offset + 1)\", remaining: Double($0.element))\n    },\n    height: 180\n)"
+    }
+  ],
+  "webEquivalent": "BurndownChart",
+  "dependsOn": [
+    "chart-frame",
+    "chart-legend",
+    "line-chart",
+    "area-chart"
+  ]
+}

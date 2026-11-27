@@ -1,0 +1,158 @@
+{
+  "id": "ai-autofill-field",
+  "name": "MonarchAiAutofillField",
+  "title": "AiAutofillField",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "VStack around any form control, with MonarchAiGeneratedBadge, MonarchAiConfidenceMeter and Text in a MonarchFlowLayout, and MonarchButton for Accept and Clear",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A form field that AI filled in: the app's control, marked with the AI badge and a confidence badge, where the value came from, and Accept and Clear.",
+  "whenToUse": "Around each field an assistant filled from a document, an email or earlier answers, until the person has checked it.",
+  "whenNotToUse": "Not for inline completion while typing (use MonarchAiGhostText). Not for a whole AI answer (use the conversation components).",
+  "api": [
+    "init(state: MonarchAiAutofillState, suggestion: String, fieldName: String? = nil, source: String? = nil, confidence: Double? = nil, lowThreshold: Double = 0.6, highThreshold: Double = 0.85, confidenceExplanation: String? = nil, model: String? = nil, date: Date? = nil, labels: MonarchAiAutofillFieldLabels = MonarchAiAutofillFieldLabels(), onAccept: @escaping @MainActor () -> Void, onClear: @escaping @MainActor () -> Void, @ViewBuilder control: () -> Control)",
+    "enum MonarchAiAutofillState: String { case suggested, accepted, edited, cleared }",
+    "struct MonarchAiAutofillFieldLabels { init(badge: (@Sendable (MonarchAiAutofillState) -> String)? = nil, accept: String? = nil, clear: String? = nil, acceptField: (@Sendable (String) -> String)? = nil, clearField: (@Sendable (String) -> String)? = nil, source: (@Sendable (String) -> String)? = nil, original: (@Sendable (String) -> String)? = nil, accepted: String? = nil, cleared: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "state",
+      "type": "MonarchAiAutofillState",
+      "default": "required",
+      "description": "Where the field stands: suggested, accepted, edited or cleared. The app drives it."
+    },
+    {
+      "name": "suggestion",
+      "type": "String",
+      "default": "required",
+      "description": "The value AI suggested, shown as \"AI suggested: …\" once the person edits it."
+    },
+    {
+      "name": "fieldName",
+      "type": "String?",
+      "default": "nil",
+      "description": "The field's name, so the actions are named \"Accept suggested Company\"."
+    },
+    {
+      "name": "source",
+      "type": "String?",
+      "default": "nil",
+      "description": "Where the value came from, shown as \"From …\" until the person edits it."
+    },
+    {
+      "name": "confidence",
+      "type": "Double?",
+      "default": "nil",
+      "description": "How sure the AI is, 0 through 1, shown as a MonarchAiConfidenceMeter badge while suggested."
+    },
+    {
+      "name": "lowThreshold / highThreshold",
+      "type": "Double",
+      "default": "0.6 / 0.85",
+      "description": "The confidence band edges, passed to MonarchAiConfidenceMeter."
+    },
+    {
+      "name": "confidenceExplanation",
+      "type": "String?",
+      "default": "nil",
+      "description": "Why the AI chose the value, offered by the confidence badge."
+    },
+    {
+      "name": "model / date",
+      "type": "String? / Date?",
+      "default": "nil",
+      "description": "The model and the time, offered by the AI badge."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiAutofillFieldLabels",
+      "default": "MonarchAiAutofillFieldLabels()",
+      "description": "Replacements for the badge texts, the action titles and names, the source and original lines and the announcements."
+    },
+    {
+      "name": "onAccept",
+      "type": "@MainActor () -> Void",
+      "default": "required",
+      "description": "The person accepted the value: set state to accepted."
+    },
+    {
+      "name": "onClear",
+      "type": "@MainActor () -> Void",
+      "default": "required",
+      "description": "The person cleared the value: empty the control and set state to cleared."
+    },
+    {
+      "name": "control",
+      "type": "@ViewBuilder () -> Control",
+      "default": "required",
+      "description": "The form control, usually MonarchTextField or MonarchFormField."
+    }
+  ],
+  "states": [
+    {
+      "name": "suggested",
+      "description": "A bar in the AI border colour beside the control; \"AI suggested\", the confidence badge, the source, and Accept and Clear."
+    },
+    {
+      "name": "accepted",
+      "description": "\"AI filled\" and the source; no actions."
+    },
+    {
+      "name": "edited",
+      "description": "\"Edited by you\" and \"AI suggested: …\" with the original value."
+    },
+    {
+      "name": "cleared",
+      "description": "The control alone; the status line is gone."
+    }
+  ],
+  "appearance": "The status line uses the AI generated badge and the confidence badge as they are elsewhere, and muted caption text. The marker bar uses the AI border role. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web tints the input itself with the AI subtle background and border; a SwiftUI control's inner field cannot be restyled from outside, so iOS draws a bar in the AI border colour beside the control while it is suggested. The web notices typing through the bubbling input event and calls onEdit; SwiftUI has no such event for any control, so the app sets edited in onChange of its own value (see the example). The web links the status line to the control with aria-describedby; on iOS the status line is one element read right after the control. The web moves focus back to the control after Accept and Clear; iOS announces the result instead. Android has the same parameters.",
+  "accessibility": [
+    "The control keeps its own label, value and traits.",
+    "The status line is one element, such as \"AI suggested, High confidence, From invoice.pdf\", read after the control.",
+    "Accept and Clear are buttons named with the field, such as \"Accept suggested Company\", with 44-point touch targets.",
+    "After Accept or Clear, \"Suggestion accepted\" or \"Suggestion cleared\" is announced.",
+    "The suggested state is in words (the badge), so the marker bar's colour is not the only signal."
+  ],
+  "edgeCases": [
+    "A long source wraps onto its own line.",
+    "With no confidence and no source, the status line is the badge and the actions.",
+    "If the app never sets edited, the field keeps saying \"AI suggested\" after the person types."
+  ],
+  "tests": [
+    "MonarchAiAutofillFieldTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Fields filled from a document",
+      "fixture": "ai-autofill-field",
+      "webExample": "Fields filled from a document",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    MonarchAiAutofillField(\n        state: state0,\n        suggestion: {{fields.0.suggestion}},\n        fieldName: {{fields.0.label}}.lowercased(),\n        source: {{fields.0.source}},\n        confidence: {{fields.0.confidence}},\n        onAccept: { state0 = .accepted },\n        onClear: {\n            value0 = \"\"\n            state0 = .cleared\n        },\n        control: { MonarchTextField({{fields.0.label}}, text: $value0) }\n    )\n    MonarchAiAutofillField(\n        state: state1,\n        suggestion: {{fields.1.suggestion}},\n        fieldName: {{fields.1.label}}.lowercased(),\n        source: {{fields.1.source}},\n        confidence: {{fields.1.confidence}},\n        onAccept: { state1 = .accepted },\n        onClear: {\n            value1 = \"\"\n            state1 = .cleared\n        },\n        control: { MonarchTextField({{fields.1.label}}, text: $value1) }\n    )\n    MonarchAiAutofillField(\n        state: state2,\n        suggestion: {{fields.2.suggestion}},\n        fieldName: {{fields.2.label}}.lowercased(),\n        confidence: {{fields.2.confidence}},\n        onAccept: { state2 = .accepted },\n        onClear: {\n            value2 = \"\"\n            state2 = .cleared\n        },\n        control: { MonarchTextField({{fields.2.label}}, text: $value2) }\n    )\n}\n.frame(maxWidth: 416)",
+      "setupTemplate": "@State private var value0 = {{fields.0.suggestion}}\n@State private var state0: MonarchAiAutofillState = .suggested\n@State private var value1 = {{fields.1.suggestion}}\n@State private var state1: MonarchAiAutofillState = .suggested\n@State private var value2 = {{fields.2.suggestion}}\n@State private var state2: MonarchAiAutofillState = .suggested",
+      "setup": "@State private var value0 = \"Northwind Ltd\"\n@State private var state0: MonarchAiAutofillState = .suggested\n@State private var value1 = \"1,240.00\"\n@State private var state1: MonarchAiAutofillState = .suggested\n@State private var value2 = \"2026-05-30\"\n@State private var state2: MonarchAiAutofillState = .suggested",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    MonarchAiAutofillField(\n        state: state0,\n        suggestion: \"Northwind Ltd\",\n        fieldName: \"Company\".lowercased(),\n        source: \"invoice-0412.pdf\",\n        confidence: 0.93,\n        onAccept: { state0 = .accepted },\n        onClear: {\n            value0 = \"\"\n            state0 = .cleared\n        },\n        control: { MonarchTextField(\"Company\", text: $value0) }\n    )\n    MonarchAiAutofillField(\n        state: state1,\n        suggestion: \"1,240.00\",\n        fieldName: \"Invoice total\".lowercased(),\n        source: \"invoice-0412.pdf\",\n        confidence: 0.71,\n        onAccept: { state1 = .accepted },\n        onClear: {\n            value1 = \"\"\n            state1 = .cleared\n        },\n        control: { MonarchTextField(\"Invoice total\", text: $value1) }\n    )\n    MonarchAiAutofillField(\n        state: state2,\n        suggestion: \"2026-05-30\",\n        fieldName: \"Due date\".lowercased(),\n        confidence: 0.38,\n        onAccept: { state2 = .accepted },\n        onClear: {\n            value2 = \"\"\n            state2 = .cleared\n        },\n        control: { MonarchTextField(\"Due date\", text: $value2) }\n    )\n}\n.frame(maxWidth: 416)"
+    }
+  ],
+  "webEquivalent": "AiAutofillField",
+  "dependsOn": [
+    "form-field",
+    "ai-confidence-meter",
+    "ai-generated-badge",
+    "button"
+  ],
+  "icons": {
+    "badge": "BotGlyph",
+    "confidence.high": "SuccessGlyph",
+    "confidence.medium": "PartialGlyph",
+    "confidence.low": "WarningGlyph",
+    "accept": "CheckGlyph",
+    "clear": "CloseGlyph"
+  }
+}

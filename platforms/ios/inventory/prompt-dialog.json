@@ -1,0 +1,73 @@
+{
+  "id": "prompt-dialog",
+  "name": null,
+  "title": "PromptDialog",
+  "family": "overlays",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "alert(_:isPresented:actions:message:) with a TextField in its actions",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Asking for one short value is the system alert with a TextField among its actions. Monarch ships nothing.",
+  "whenToUse": "To ask for a single short value without leaving the screen: a name for a saved view, a new name for a group, a link address.",
+  "whenNotToUse": "Not when the value must be checked before the dialog closes, is more than one line, or is saved while the dialog shows progress: the alert closes on any button. Use a sheet with MonarchTextField for those, as in the second example.",
+  "api": [
+    "func alert<A: View, M: View>(_ title: String, isPresented: Binding<Bool>, actions: () -> A, message: () -> M) -> some View",
+    "TextField(_ title: String, text: Binding<String>)",
+    "Button(_ title: String, role: ButtonRole?, action: () -> Void)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "presented",
+      "description": "The system alert with the title, the message, the field and the buttons. The keyboard opens with the field focused."
+    },
+    {
+      "name": "dismissed",
+      "description": "Any button closes the alert. The cancel role also answers the escape gesture."
+    }
+  ],
+  "appearance": "The alert is drawn by the system in every theme. Monarch colours, type and the Monarch text field are not applied inside it; only TextField and SecureField are shown, other views are ignored.",
+  "platformNotes": "The web PromptDialog validates (required, maxLength, url and email types, a validate function), shows an error under the field, keeps the dialog open while an async save is pending, has a multiline mode, and offers usePrompt, which returns a promise. The system alert has none of these: it closes when a button is tapped, so check the value afterwards or use a sheet with MonarchTextField, which shows helper and error text. The web's inputType maps to keyboardType, textContentType and textInputAutocapitalization on the TextField. A promise-style call is a withCheckedContinuation around the same state. Android uses AlertDialog with an OutlinedTextField in the same way.",
+  "accessibility": [
+    "System behaviour: the alert confines VoiceOver and keyboard focus, reads the title and message when it appears, and returns focus when it closes.",
+    "The TextField title is the placeholder and the spoken name of the field; write it as a label (\"Name\"), not as an example value.",
+    "The button with the cancel role answers the escape gesture.",
+    "The alert follows Dynamic Type and scrolls when the message is long."
+  ],
+  "edgeCases": [
+    "The text binding keeps its value after the alert closes; reset it before presenting again.",
+    "Do not rely on disabling the Save button while the field is empty; treat an empty value as cancel in the action, as the example does.",
+    "A second TextField or a SecureField can be added for a name and password; more than two fields belong in a sheet."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Name a saved view",
+      "fixture": "prompt-dialog",
+      "webExample": "Name a saved view",
+      "template": "MonarchButton({{trigger}}) { isAsking = true }\n    .monarchDialog(isPresented: $isAsking, title: {{title}}, message: {{description}}) {\n        MonarchTextField({{label}}, text: $name, prompt: {{placeholder}}, isRequired: true)\n            .onChange(of: name) { _, new in name = String(new.prefix({{maxLength}})) }\n    } footer: {\n        HStack(spacing: 8) {\n            MonarchButton(\"Cancel\") { isAsking = false }\n            MonarchButton({{submitLabel}}, variant: .primary) {\n                name = name.trimmingCharacters(in: .whitespacesAndNewlines)\n                isAsking = false\n            }\n        }\n    }",
+      "setupTemplate": "@State private var isAsking = false\n@State private var name = \"\"",
+      "previewPresented": [
+        "isAsking"
+      ],
+      "setup": "@State private var isAsking = false\n@State private var name = \"\"",
+      "code": "MonarchButton(\"Save view as\") { isAsking = true }\n    .monarchDialog(isPresented: $isAsking, title: \"Name this view\", message: \"Saved views appear in the sidebar.\") {\n        MonarchTextField(\"View name\", text: $name, prompt: \"For example: Open this week\", isRequired: true)\n            .onChange(of: name) { _, new in name = String(new.prefix(60)) }\n    } footer: {\n        HStack(spacing: 8) {\n            MonarchButton(\"Cancel\") { isAsking = false }\n            MonarchButton(\"Save view\", variant: .primary) {\n                name = name.trimmingCharacters(in: .whitespacesAndNewlines)\n                isAsking = false\n            }\n        }\n    }"
+    },
+    {
+      "title": "With validation, in a sheet",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isAsking = false\n@State private var link = \"\"\n@State private var error: String?",
+      "code": "MonarchButton(\"Add a link\") { isAsking = true }\n    .sheet(isPresented: $isAsking) {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            Text(\"Add a link\").monarchTextStyle(.heading)\n            MonarchTextField(\"Address\", text: $link, prompt: \"https://\", error: error)\n            MonarchButton(\"Add\", variant: .primary, fullWidth: true) {\n                if URL(string: link)?.scheme == \"https\" {\n                    isAsking = false\n                } else {\n                    error = \"Enter a full web address, starting with https://.\"\n                }\n            }\n            MonarchButton(\"Cancel\", variant: .ghost, fullWidth: true) { isAsking = false }\n        }\n        .foregroundStyle(theme.colors.textDefault)\n        .padding(theme.spacing.space4)\n        .presentationDetents([.medium])\n    }"
+    }
+  ],
+  "webEquivalent": "PromptDialog",
+  "dependsOn": [
+    "button",
+    "text-field"
+  ],
+  "parityExceptions": []
+}

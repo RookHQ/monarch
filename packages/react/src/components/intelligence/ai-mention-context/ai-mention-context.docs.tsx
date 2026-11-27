@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import {
   AiContextChips,
   AiMentionContext,
@@ -12,22 +12,10 @@ import {
   type AiMentionSearch,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-mention-context.fixture.json';
 
-const DIRECTORY: AiMentionItem[] = [
-  { id: 'doc-plan', kind: 'doc', label: 'Quarterly plan', description: 'Planning', tokens: 4200 },
-  { id: 'doc-notes', kind: 'doc', label: 'Launch notes', description: 'Product', tokens: 1800 },
-  { id: 'p-ana', kind: 'person', label: 'Ana Lopez', description: 'Design lead', tokens: 120 },
-  { id: 'p-sam', kind: 'person', label: 'Sam Okafor', description: 'Engineering', tokens: 110 },
-  { id: 'r-1042', kind: 'record', label: 'Account 1042', description: 'Customer', tokens: 300 },
-  { id: 'app-cal', kind: 'app', label: 'Calendar', description: 'Next 14 days', tokens: 900 },
-  {
-    id: 'doc-board',
-    kind: 'doc',
-    label: 'Board minutes',
-    description: 'No access for the assistant',
-    disabled: true,
-  },
-];
+const DIRECTORY = fixture.data.directory as AiMentionItem[];
 
 const wait = (ms: number, signal: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
@@ -45,13 +33,31 @@ const search: AiMentionSearch = async (query, { signal }) => {
   return DIRECTORY.filter((i) => i.label.toLowerCase().includes(q));
 };
 
+// The headline demo answers at once, so the page opens with the menu filled.
+const searchNow: AiMentionSearch = (query) => {
+  const q = query.toLowerCase();
+  return DIRECTORY.filter((i) => i.label.toLowerCase().includes(q));
+};
+
+/** Types `text` into the prompt once, as a person would, so the page opens on its menu. */
+function useTypedOnce(prompt: RefObject<HTMLDivElement | null>, text: string) {
+  useEffect(() => {
+    const area = prompt.current?.querySelector('textarea');
+    if (!area) return;
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set?.call(area, text);
+    area.setSelectionRange(text.length, text.length);
+    area.dispatchEvent(new Event('input', { bubbles: true }));
+  }, [prompt, text]);
+}
+
 function MentionDemo() {
-  const [context, setContext] = useState<AiContextChip[]>([
-    { id: 'page', kind: 'page', label: 'Current page', removable: false, tokens: 650 },
-  ]);
+  const prompt = useRef<HTMLDivElement>(null);
+  useTypedOnce(prompt, fixture.data.query);
+  const [context, setContext] = useState<AiContextChip[]>([fixture.data.context as AiContextChip]);
   const [sent, setSent] = useState('');
   const mention = useAiMentionContext({
-    search,
+    search: searchNow,
+    debounceMs: 0,
     exclude: context.map((c) => c.id),
     onSelect: (item) => {
       setContext((list) => [...list, aiMentionToContextChip(item)]);
@@ -64,18 +70,20 @@ function MentionDemo() {
         gap: 'var(--mn-space-2)',
         width: '100%',
         maxWidth: '40rem',
-        paddingBlockStart: '16rem',
+        paddingBlockStart: '22rem',
       }}
     >
-      <AiContextChips
-        items={context}
-        onRemove={(id) => setContext((list) => list.filter((c) => c.id !== id))}
-      />
       <AiPromptInput
+        ref={prompt}
         label="Message the assistant"
         placeholder="Type @ to add a document, person, record or app"
         onSubmit={(text) => setSent(`${text} (with ${context.length} context items)`)}
         {...mention}
+      />
+      {/* Below the prompt here, so the open menu above it never covers them. */}
+      <AiContextChips
+        items={context}
+        onRemove={(id) => setContext((list) => list.filter((c) => c.id !== id))}
       />
       {sent ? <p style={{ margin: 0 }}>Sent: {sent}</p> : null}
     </div>
@@ -218,7 +226,7 @@ export default {
       items: [
         'The prompt keeps its textbox role with `aria-autocomplete="list"`, `aria-controls` and `aria-activedescendant` while results are shown.',
         'Options are named by their label and described by their description; token counts are visual only.',
-        'The highlighted option is kept in view as the arrows move it. While the results overflow, the menu is also a focusable region named like the list, so it can be scrolled from the keyboard.',
+        'The highlighted option is kept in view as the arrows move it. While the results overflow, the menu is also a focusable group named like the list (not a landmark), so it can be scrolled from the keyboard.',
         'A polite status announces "Searching…", the number of results, no matches or the error.',
         'Avatars and glyphs are decorative.',
       ],

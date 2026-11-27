@@ -127,6 +127,8 @@ export interface PriorityPickerProps extends Omit<
   showLabel?: boolean | undefined;
   /** Trigger size. Default `md`. */
   size?: 'sm' | 'md' | undefined;
+  /** Start with the menu open (documentation previews). */
+  defaultOpen?: boolean | undefined;
   /** Translated strings. */
   messages?:
     | (Partial<Omit<PriorityPickerMessages, 'levels'>> & {
@@ -148,6 +150,7 @@ export const PriorityPicker = forwardRef<HTMLButtonElement, PriorityPickerProps>
       levels = PRIORITY_LEVELS,
       showLabel = true,
       size = 'md',
+      defaultOpen,
       messages: messagesProp,
       className,
       ...rest
@@ -162,7 +165,7 @@ export const PriorityPicker = forwardRef<HTMLButtonElement, PriorityPickerProps>
     const current = value ?? 'none';
     const name = m.levels[current];
     return (
-      <DropdownMenu>
+      <DropdownMenu {...(defaultOpen !== undefined ? { defaultOpen } : {})}>
         <DropdownMenuTrigger
           ref={ref}
           type="button"

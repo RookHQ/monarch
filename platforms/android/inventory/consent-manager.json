@@ -1,0 +1,94 @@
+{
+  "id": "consent-manager",
+  "name": null,
+  "title": "ConsentProvider",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "The app's own state holder (a view model or rememberSaveable) of MonarchConsentRecord, with MonarchBanner and MonarchButtons for the first ask and MonarchBottomSheet holding MonarchConsentPreferences",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the app keeps the person's consent as a MonarchConsentRecord, asks once with equal Reject all and Accept all buttons, shows the choices in a sheet with MonarchConsentPreferences, and gates its SDKs on the stored record.",
+  "whenToUse": "In an app that runs analytics, advertising or other optional processing that needs consent, on first launch and from a \"Privacy choices\" entry in its settings.",
+  "whenNotToUse": "For data the app needs to work (sign-in, security), ask for nothing: list it as a required category. For Android runtime permissions (location, camera), use the system permission request.",
+  "api": [
+    "var record by remember { mutableStateOf<MonarchConsentRecord?>(null) } // or the app's settings store",
+    "MonarchConsentRecord(id = …, dateMillis = …, method = method, policyVersion = \"2026-01\", regime = MonarchConsentRegime.OptIn, categories = decided)",
+    "MonarchBanner(message = …, title = \"Your privacy choices\") with MonarchButton(\"Reject all\", …) and MonarchButton(\"Accept all\", …)",
+    "ModalBottomSheet(onDismissRequest = …) { MonarchConsentPreferences(categories = categories, onDecide = decide, choices = record?.categories.orEmpty(), record = record) }"
+  ],
+  "options": [
+    {
+      "name": "regime",
+      "type": "MonarchConsentRegime",
+      "default": "OptIn",
+      "description": "Decided by the app (usually its server, from the person's region): OptIn asks before anything optional runs, OptOut runs until the person says no (MonarchConsentPreferencesMode.Choice for \"Do not sell or share\"), Notice only informs."
+    },
+    {
+      "name": "policyVersion",
+      "type": "String",
+      "default": "required",
+      "description": "The version of the privacy policy the person decided on. Ask again when it changes."
+    },
+    {
+      "name": "record",
+      "type": "MonarchConsentRecord?",
+      "default": "null",
+      "description": "The last decision. null means the person has not been asked."
+    }
+  ],
+  "states": [
+    {
+      "name": "not asked",
+      "description": "No record: a banner with Reject all, Accept all (equal buttons) and Choose; nothing optional runs."
+    },
+    {
+      "name": "choosing",
+      "description": "A sheet with MonarchConsentPreferences: a switch per optional category, required ones always on, and Save, Reject all and Accept all."
+    },
+    {
+      "name": "decided",
+      "description": "A record with the method, the date, the policy version, the regime and the categories; the banner is gone and the app starts only the allowed SDKs."
+    },
+    {
+      "name": "changed",
+      "description": "Privacy choices reopens the sheet with the stored choices and the date of the last decision; a new record replaces it."
+    }
+  ],
+  "appearance": "The banner is MonarchBanner in the info tone; Reject all and Accept all are secondary MonarchButtons of equal weight so neither is pushed; the sheet is the Material 3 sheet surface with MonarchConsentPreferences. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web's ConsentManager is a provider that decides the regime from the visitor's jurisdiction, honours Global Privacy Control, records each decision and feeds the cookie banner, preferences dialog and ConsentGate. Android has no system consent prompt and no Global Privacy Control signal, so the provider is the app's own state: a view model or settings store holding MonarchConsentRecord, the regime from the app's server, and if-checks before starting an SDK in place of ConsentGate. Monarch ships no type for it because the storage and the gating are the app's. iOS documents App Tracking Transparency as a native entry instead; an Android app that also shows ads follows Google Play's own consent requirements (for example the User Messaging Platform), which Monarch does not wrap.",
+  "accessibility": [
+    "The banner is read with its title and message by MonarchBanner; the buttons follow it in reading order.",
+    "Reject all and Accept all are buttons with the same size and variant, so neither is easier to reach.",
+    "MonarchConsentPreferences gives each category a switch with its name, description and state, and announces when choices are saved.",
+    "The sheet's content scrolls, so every category is reachable at the largest font scale."
+  ],
+  "edgeCases": [
+    "Store the record before starting any optional SDK; until then treat every optional category as off.",
+    "When policyVersion changes, ask again: clear the record or compare its version.",
+    "Withdrawal (MonarchConsentPreferences' Withdraw) writes a record that turns every optional category off; stop the SDKs at once.",
+    "Keep the history of records on the server; show it with MonarchConsentHistory."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Opt-in",
+      "fixture": "consent-manager",
+      "webExample": "Opt-in",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    MonarchDescriptionList(\n        items = listOf(\n            MonarchDescriptionItem({{regime.term}}, {{regime.value}}),\n            MonarchDescriptionItem({{status.term}}, {{status.value}}),\n            MonarchDescriptionItem({{categories.0.label}}, null, content = { MonarchBadge(text = {{categories.0.badge}}, tone = {{categories.0.tone|tone}}) }),\n            MonarchDescriptionItem({{categories.1.label}}, null, content = { MonarchBadge(text = {{categories.1.badge}}, tone = {{categories.1.tone|tone}}) }),\n            MonarchDescriptionItem({{categories.2.label}}, null, content = { MonarchBadge(text = {{categories.2.badge}}, tone = {{categories.2.tone|tone}}) }),\n            MonarchDescriptionItem({{categories.3.label}}, null, content = { MonarchBadge(text = {{categories.3.badge}}, tone = {{categories.3.tone|tone}}) }),\n        ),\n        layout = MonarchDescriptionListLayout.Inline,\n    )\n    FlowRow(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n        MonarchButton(text = {{actions.rejectAll}}, onClick = {}, variant = MonarchButtonVariant.Secondary, size = MonarchButtonSize.Sm)\n        MonarchButton(text = {{actions.acceptAll}}, onClick = {}, variant = MonarchButtonVariant.Secondary, size = MonarchButtonSize.Sm)\n        MonarchButton(text = {{actions.withdraw}}, onClick = {}, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm)\n    }\n    MonarchText(text = {{fallback}}, color = MonarchTheme.colors.textMuted)\n}",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    MonarchDescriptionList(\n        items = listOf(\n            MonarchDescriptionItem(\"Regime\", \"opt-in\"),\n            MonarchDescriptionItem(\"Status\", \"pending\"),\n            MonarchDescriptionItem(\"Strictly necessary\", null, content = { MonarchBadge(text = \"Allowed\", tone = MonarchTone.Success) }),\n            MonarchDescriptionItem(\"Preferences\", null, content = { MonarchBadge(text = \"Not allowed\", tone = MonarchTone.Neutral) }),\n            MonarchDescriptionItem(\"Analytics\", null, content = { MonarchBadge(text = \"Not allowed\", tone = MonarchTone.Neutral) }),\n            MonarchDescriptionItem(\"Marketing\", null, content = { MonarchBadge(text = \"Not allowed\", tone = MonarchTone.Neutral) }),\n        ),\n        layout = MonarchDescriptionListLayout.Inline,\n    )\n    FlowRow(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n        MonarchButton(text = \"Reject all\", onClick = {}, variant = MonarchButtonVariant.Secondary, size = MonarchButtonSize.Sm)\n        MonarchButton(text = \"Accept all\", onClick = {}, variant = MonarchButtonVariant.Secondary, size = MonarchButtonSize.Sm)\n        MonarchButton(text = \"Withdraw\", onClick = {}, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm)\n    }\n    MonarchText(text = \"The analytics script is not loaded.\", color = MonarchTheme.colors.textMuted)\n}"
+    }
+  ],
+  "webEquivalent": "ConsentProvider",
+  "dependsOn": [
+    "consent-preferences"
+  ]
+}

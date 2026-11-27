@@ -1,15 +1,15 @@
 import { AiToolResultCard, type AiToolResultKind } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-tool-result-card.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-const KINDS: { kind: AiToolResultKind; title: string; description: string }[] = [
-  { kind: 'record-created', title: 'Northwind Traders', description: 'Added to Accounts' },
-  { kind: 'email-sent', title: 'Weekly update', description: 'To 3 people' },
-  { kind: 'event-booked', title: 'Design review', description: 'Wed 4 Mar, 10:00–10:30' },
-  { kind: 'ticket-filed', title: 'Export fails for large files', description: 'Support queue' },
-  { kind: 'generic', title: 'Settings updated', description: 'Notifications turned on' },
-];
+const KINDS = fixture.data.items as {
+  kind: AiToolResultKind;
+  title: string;
+  description: string;
+}[];
 
 export default {
   id: 'ai-tool-result-card',
@@ -121,7 +121,7 @@ export default {
                   kind={item.kind}
                   title={item.title}
                   description={item.description}
-                  href="#"
+                  href={fixture.data.href}
                 />
               ))}
             </>

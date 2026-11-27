@@ -1,35 +1,65 @@
-import { useState } from 'react';
+import { useState, type ComponentProps } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { RenewalsPanel } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './renewals-panel.fixture.json';
 
-const NOW = '2026-11-01T00:00:00Z';
+const NOW = fixture.data.now;
 
-const sample = [
+type Item = NonNullable<ComponentProps<typeof RenewalsPanel>['items']>[number];
+interface FixtureItem {
+  id: string;
+  name: string;
+  description: string;
+  renewalDate: string;
+  amount: number;
+  currency: string;
+  amountNote: string;
+  status: string;
+  probability: number;
+  owner: string;
+  nextAction: string;
+  nextActionDate: string;
+  nextActionOverdue: boolean;
+  noticeDeadline: string;
+  autoRenew: boolean;
+}
+const [r1, r2] = fixture.data.items as unknown as readonly [
+  Omit<FixtureItem, 'noticeDeadline' | 'autoRenew'>,
+  Pick<
+    FixtureItem,
+    'id' | 'name' | 'description' | 'renewalDate' | 'noticeDeadline' | 'autoRenew' | 'status'
+  >,
+];
+// The fixture holds amounts in major units; the panel takes minor units here.
+const minor = (amount: number) => Math.round(amount * 100);
+
+const sample: Item[] = [
   {
-    id: 'r1',
-    name: 'Example agreement',
+    id: r1.id,
+    name: r1.name,
     href: '#example-agreement',
-    description: 'Contract · Example Co',
-    renewalDate: '2026-11-08T00:00:00Z',
-    amount: { amount: 120000, currency: 'USD' },
-    amountNote: 'per year',
-    status: 'open',
-    probability: 60,
-    owner: 'Sam Lee',
-    nextAction: 'Send a quote',
-    nextActionDate: '2026-11-03T00:00:00Z',
-    nextActionOverdue: true,
+    description: r1.description,
+    renewalDate: r1.renewalDate,
+    amount: { amount: minor(r1.amount), currency: r1.currency },
+    amountNote: r1.amountNote,
+    status: r1.status,
+    probability: r1.probability,
+    owner: r1.owner,
+    nextAction: r1.nextAction,
+    nextActionDate: r1.nextActionDate,
+    nextActionOverdue: r1.nextActionOverdue,
   },
   {
-    id: 'r2',
-    name: 'example.org',
-    description: 'Domain',
-    renewalDate: '2027-02-01T00:00:00Z',
-    noticeDeadline: '2027-01-01T00:00:00Z',
+    id: r2.id,
+    name: r2.name,
+    description: r2.description,
+    renewalDate: r2.renewalDate,
+    noticeDeadline: r2.noticeDeadline,
     amount: null,
-    autoRenew: true,
-    status: 'in_progress',
+    autoRenew: r2.autoRenew,
+    status: r2.status,
   },
   {
     id: 'r3',
@@ -43,34 +73,28 @@ const sample = [
 ];
 
 function FilteredExample() {
-  const [filter, setFilter] = useState('open');
+  const [filter, setFilter] = useState(fixture.data.filter);
   const items = filter === 'open' ? sample.filter((i) => i.status !== 'renewed') : sample;
   return (
     <RenewalsPanel
-      title="Renewals"
-      description="Items appear when their notice window opens."
+      title={fixture.data.title}
+      description={fixture.data.description}
       items={items}
-      filters={[
-        { value: 'open', label: 'Open' },
-        { value: 'all', label: 'All' },
-      ]}
+      filters={fixture.data.filters}
       filter={filter}
       onFilterChange={setFilter}
-      totals={[
-        { currency: 'USD', amount: 120000, count: 1 },
-        { currency: 'EUR', amount: 30000, count: 1 },
-      ]}
-      unpricedCount={1}
+      totals={fixture.data.totals.map((t) => ({ ...t, amount: minor(t.amount) }))}
+      unpricedCount={fixture.data.unpricedCount}
       actions={
         <Button size="sm" variant="secondary">
-          Check now
+          {fixture.data.actionLabel}
         </Button>
       }
       onItemAction={() => undefined}
       canAct={(i: { status: string }) => i.status !== 'renewed'}
       minorUnits
-      locale="en-US"
-      timeZone="UTC"
+      locale={fixture.data.locale}
+      timeZone={fixture.data.timeZone}
       now={NOW}
     />
   );

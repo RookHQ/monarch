@@ -105,15 +105,32 @@ for (const { theme, accent, width } of MARKETING) {
   });
 }
 
+/**
+ * Opens a component's gallery page without overlay stages (`/live`), so overlays
+ * are the real, portalled ones. A first example that starts open (it is staged on
+ * the docs page) opens here as a real overlay on load: close it, so the test opens
+ * the overlay it names from its trigger.
+ */
+async function openLive(page: Page, variant: Variant, id: string) {
+  await page.goto('about:blank');
+  await openGallery(page, variant, `/#/__gallery/${id}/live`);
+  const layers = page.locator('[role="dialog"], [role="alertdialog"], [role="menu"]');
+  for (let i = 0; i < 4 && (await layers.count()) > 0; i++) {
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(250);
+  }
+  await expect(layers).toHaveCount(0);
+}
+
 test('open overlays · light · 1280', async ({ page }) => {
   const light: Variant = { theme: 'light', accent: null, width: 1280 };
-  await openGallery(page, light, '/#/__gallery/dropdown-menu');
+  await openLive(page, light, 'dropdown-menu');
   await page.getByRole('button', { name: 'Actions', exact: true }).first().click();
   await expect(page.getByRole('menu')).toBeVisible();
   await expect(page).toHaveScreenshot(['overlays', 'menu-light.png']);
   await page.keyboard.press('Escape');
 
-  await openGallery(page, light, '/#/__gallery/dialog');
+  await openLive(page, light, 'dialog');
   await page.getByRole('button', { name: 'Delete project' }).first().click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(page).toHaveScreenshot(['overlays', 'dialog-light.png']);
@@ -130,8 +147,7 @@ async function shootOpen(
   triggerRole: 'button' | 'combobox' = 'button',
 ) {
   // A fresh document each time: a hash-only navigation would keep the last overlay open.
-  await page.goto('about:blank');
-  await openGallery(page, { theme: 'light', accent: null, width }, `/#/__gallery/${id}`);
+  await openLive(page, { theme: 'light', accent: null, width }, id);
   await page.getByRole(triggerRole, { name: trigger, exact: true }).first().click();
   // The newest layer: an inline listbox example may already be on the page.
   const layer = page.getByRole(role).last();
@@ -283,11 +299,12 @@ test('open overlays · wave 6 conversations · light', async ({ page }) => {
     { theme: 'light', accent: null, width: 1280 },
     '/#/__gallery/mention-picker',
   );
-  const field = page.getByRole('textbox', { name: 'Comment' }).first();
+  // The first example is the list shown open (staged); the live comment field is the last.
+  const field = page.getByRole('textbox', { name: 'Comment' }).last();
   await field.click();
   await field.press('End');
   await field.pressSequentially('@');
-  const list = page.getByRole('listbox', { name: 'Suggestions' });
+  const list = page.getByRole('listbox', { name: 'Suggestions' }).last();
   await expect(list).toBeVisible();
   await list.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
   await expect(page).toHaveScreenshot(['overlays', 'mention-picker-light.png']);

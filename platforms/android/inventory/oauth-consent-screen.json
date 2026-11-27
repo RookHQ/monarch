@@ -1,0 +1,124 @@
+{
+  "id": "oauth-consent-screen",
+  "name": null,
+  "title": "OAuthConsentScreen",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.layout.Column with MonarchAvatar (square, for the app), MonarchBadge or MonarchInlineNotice, MonarchCard with the account, MonarchConsequenceList for the permissions, MonarchLink in an androidx.compose.foundation.layout.FlowRow, and two MonarchButtons of equal width in a Row",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the screen where a person allows or cancels a third-party app's access to their account, showing which app asks, which account would grant access, and what the app could do.",
+  "whenToUse": "In an identity provider's app, when another app asks for access to the signed-in account (an OAuth or OpenID Connect authorization request).",
+  "whenNotToUse": "Not for Android's own runtime permissions (camera, location), which the system asks for. To remove access an app already has, use the revoke access flow recipe.",
+  "api": [
+    "MonarchAvatar(image = appLogo, name = appName, shape = MonarchAvatarShape.Square, size = MonarchAvatarSize.Lg, decorative = true)",
+    "MonarchBadge(text = \"Verified\", tone = MonarchTone.Success)",
+    "MonarchInlineNotice(message = \"Only continue if you know and trust Notes.\", title = \"This app hasn’t been verified.\", tone = MonarchTone.Warning)",
+    "MonarchConsequenceList(items = scopes, heading = \"Notes will be able to:\", kindLabel = { … })",
+    "MonarchLink(text = \"privacy policy\", onClick = …, external = true)",
+    "MonarchButton(text = \"Cancel\", onClick = …, modifier = Modifier.weight(1f), loading = denying)",
+    "MonarchButton(text = \"Allow\", onClick = …, modifier = Modifier.weight(1f), variant = MonarchButtonVariant.Primary, loading = allowing)"
+  ],
+  "options": [
+    {
+      "name": "verified",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Whether the identity provider has verified the app: a success badge, else a warning notice."
+    },
+    {
+      "name": "scopes",
+      "type": "List<MonarchConsequence>",
+      "default": "required",
+      "description": "What the app could do, one line each; sensitive scopes are warnings with a detail line."
+    },
+    {
+      "name": "allowing / denying",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Which answer is being sent; that button shows progress and the other is disabled."
+    }
+  ],
+  "states": [
+    {
+      "name": "verified",
+      "description": "The app's logo or initial, its name and domain, a success Verified badge, the account card, the permissions, then Cancel and Allow of equal width."
+    },
+    {
+      "name": "unverified",
+      "description": "No badge, and a warning notice \"This app hasn’t been verified\" above the account."
+    },
+    {
+      "name": "sensitive permission",
+      "description": "A warning row in the permission list, read as \"Sensitive\", with a detail line."
+    },
+    {
+      "name": "pending",
+      "description": "The pressed button shows its progress indicator and the other is disabled."
+    }
+  ],
+  "appearance": "Existing Monarch parts in the theme: a square avatar for the app, the success badge or warning notice, a card on the surface color for the account, the consequence list's kind colors, inline links, and a secondary and a primary button side by side.",
+  "platformNotes": "The web ships OAuthConsentScreen as one pattern with app, account, scopes and callback props. On Android it is a recipe, as on iOS, because the authorization request, the redirect and the session are the identity provider's own code. The links open the app's policies with the app's own browser handling (for example a Custom Tab), so MonarchLink only calls back. Cancel and Allow share the width so neither looks preferred.",
+  "accessibility": [
+    "The request \"Notes wants to access your account\" has the heading role.",
+    "The app's square avatar is decorative because its name is written next to it.",
+    "Each permission is read with its kind, \"Allowed\" or \"Sensitive\", so it does not depend on color.",
+    "The links say they open in the browser; Cancel and Allow are buttons with 48dp touch targets and read \"Loading\" while pending."
+  ],
+  "edgeCases": [
+    "A long app name or domain wraps under the logo.",
+    "With many scopes, put the column in a verticalScroll so the buttons stay reachable."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Verified app with a sensitive permission",
+      "fixture": "oauth-consent-screen",
+      "webExample": "Verified app with a sensitive permission",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    Column(\n        modifier = Modifier.fillMaxWidth(),\n        horizontalAlignment = Alignment.CenterHorizontally,\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n    ) {\n        MonarchAvatar(\n            image = null,\n            name = {{app.name}},\n            shape = MonarchAvatarShape.Square,\n            size = MonarchAvatarSize.Lg,\n            decorative = true,\n        )\n        MonarchText(\n            text = {{app.name}} + \" wants to access your account\",\n            style = MonarchTextStyle.Heading,\n            heading = true,\n            textAlign = TextAlign.Center,\n        )\n        MonarchText(text = {{app.domain}}, color = MonarchTheme.colors.textMuted, textAlign = TextAlign.Center)\n        if (verified) {\n            MonarchBadge(text = \"Verified\", tone = MonarchTone.Success)\n        }\n    }\n    MonarchCard {\n        Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n            Row(\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n                verticalAlignment = Alignment.CenterVertically,\n            ) {\n                MonarchAvatar(image = null, name = {{account.name}}, decorative = true)\n                Column(modifier = Modifier.weight(1f)) {\n                    MonarchText(text = {{account.name}}, style = MonarchTextStyle.BodyStrong)\n                    MonarchText(text = {{account.email}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n                }\n            }\n            MonarchButton(\n                text = \"Use another account\",\n                onClick = {},\n                modifier = Modifier.align(Alignment.End),\n                variant = MonarchButtonVariant.Ghost,\n                size = MonarchButtonSize.Sm,\n            )\n        }\n    }\n    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n        MonarchText(text = {{app.name}} + \" will be able to:\", style = MonarchTextStyle.Label)\n        scopes.forEach { scope ->\n            val sensitive = scope.kind == MonarchConsequenceKind.Warning\n            Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                MonarchIcon(\n                    SampleIcons.Check,\n                    contentDescription = if (sensitive) \"Sensitive\" else \"Allowed\",\n                    size = MonarchIconSize.Sm,\n                    tint = if (sensitive) MonarchTheme.colors.warningStrong else MonarchTheme.colors.successStrong,\n                )\n                Column {\n                    MonarchText(text = scope.label, style = if (sensitive) MonarchTextStyle.BodyStrong else MonarchTextStyle.Body)\n                    scope.detail?.let {\n                        MonarchText(text = it, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n                    }\n                }\n            }\n        }\n    }\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n        MonarchButton(\n            text = \"Cancel\",\n            onClick = { denying = true },\n            modifier = Modifier.weight(1f),\n            size = MonarchButtonSize.Lg,\n            enabled = !allowing,\n            loading = denying,\n        )\n        MonarchButton(\n            text = \"Allow\",\n            onClick = { allowing = true },\n            modifier = Modifier.weight(1f),\n            variant = MonarchButtonVariant.Primary,\n            size = MonarchButtonSize.Lg,\n            enabled = !denying,\n            loading = allowing,\n        )\n    }\n    MonarchText(text = legal, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted, textAlign = TextAlign.Center)\n    MonarchText(text = {{footnote}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n}",
+      "setupTemplate": "// Whether the identity provider has verified the app.\nval verified = {{app.verified}}\nvar allowing by remember { mutableStateOf(false) }\nvar denying by remember { mutableStateOf(false) }\nval links = MonarchLinkDefaults.styles()\nval legal = buildAnnotatedString {\n    append(\"Before you continue, read \" + {{app.name}} + \"’s \")\n    withLink(LinkAnnotation.Url({{app.privacyUrl}}, links)) { append(\"privacy policy\") }\n    append(\" and \")\n    withLink(LinkAnnotation.Url({{app.termsUrl}}, links)) { append(\"terms\") }\n    append(\".\")\n}\nval scopes = listOf(\n    MonarchConsequence(MonarchConsequenceKind.{{scopes.0.kind|pascal}}, {{scopes.0.label}}),\n    MonarchConsequence(MonarchConsequenceKind.{{scopes.1.kind|pascal}}, {{scopes.1.label}}),\n    MonarchConsequence(\n        // The web draws a check for every scope; the sensitive one is amber and bold, with its note under it.\n        MonarchConsequenceKind.Warning,\n        {{scopes.2.label}},\n        detail = {{scopes.2.description}},\n    ),\n)",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.ui.text.LinkAnnotation",
+        "androidx.compose.ui.text.buildAnnotatedString",
+        "androidx.compose.ui.text.withLink",
+        "androidx.compose.ui.text.style.TextAlign",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "// Whether the identity provider has verified the app.\nval verified = true\nvar allowing by remember { mutableStateOf(false) }\nvar denying by remember { mutableStateOf(false) }\nval links = MonarchLinkDefaults.styles()\nval legal = buildAnnotatedString {\n    append(\"Before you continue, read \" + \"Example Notes\" + \"’s \")\n    withLink(LinkAnnotation.Url(\"https://notes.example.com/privacy\", links)) { append(\"privacy policy\") }\n    append(\" and \")\n    withLink(LinkAnnotation.Url(\"https://notes.example.com/terms\", links)) { append(\"terms\") }\n    append(\".\")\n}\nval scopes = listOf(\n    MonarchConsequence(MonarchConsequenceKind.Kept, \"See your name and profile photo\"),\n    MonarchConsequence(MonarchConsequenceKind.Kept, \"See your email address\"),\n    MonarchConsequence(\n        // The web draws a check for every scope; the sensitive one is amber and bold, with its note under it.\n        MonarchConsequenceKind.Warning,\n        \"Create and change files in your workspace\",\n        detail = \"Only in the workspace you choose.\",\n    ),\n)",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    Column(\n        modifier = Modifier.fillMaxWidth(),\n        horizontalAlignment = Alignment.CenterHorizontally,\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n    ) {\n        MonarchAvatar(\n            image = null,\n            name = \"Example Notes\",\n            shape = MonarchAvatarShape.Square,\n            size = MonarchAvatarSize.Lg,\n            decorative = true,\n        )\n        MonarchText(\n            text = \"Example Notes\" + \" wants to access your account\",\n            style = MonarchTextStyle.Heading,\n            heading = true,\n            textAlign = TextAlign.Center,\n        )\n        MonarchText(text = \"notes.example.com\", color = MonarchTheme.colors.textMuted, textAlign = TextAlign.Center)\n        if (verified) {\n            MonarchBadge(text = \"Verified\", tone = MonarchTone.Success)\n        }\n    }\n    MonarchCard {\n        Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n            Row(\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n                verticalAlignment = Alignment.CenterVertically,\n            ) {\n                MonarchAvatar(image = null, name = \"Sam Rivera\", decorative = true)\n                Column(modifier = Modifier.weight(1f)) {\n                    MonarchText(text = \"Sam Rivera\", style = MonarchTextStyle.BodyStrong)\n                    MonarchText(text = \"sam@example.com\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n                }\n            }\n            MonarchButton(\n                text = \"Use another account\",\n                onClick = {},\n                modifier = Modifier.align(Alignment.End),\n                variant = MonarchButtonVariant.Ghost,\n                size = MonarchButtonSize.Sm,\n            )\n        }\n    }\n    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n        MonarchText(text = \"Example Notes\" + \" will be able to:\", style = MonarchTextStyle.Label)\n        scopes.forEach { scope ->\n            val sensitive = scope.kind == MonarchConsequenceKind.Warning\n            Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                MonarchIcon(\n                    SampleIcons.Check,\n                    contentDescription = if (sensitive) \"Sensitive\" else \"Allowed\",\n                    size = MonarchIconSize.Sm,\n                    tint = if (sensitive) MonarchTheme.colors.warningStrong else MonarchTheme.colors.successStrong,\n                )\n                Column {\n                    MonarchText(text = scope.label, style = if (sensitive) MonarchTextStyle.BodyStrong else MonarchTextStyle.Body)\n                    scope.detail?.let {\n                        MonarchText(text = it, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n                    }\n                }\n            }\n        }\n    }\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n        MonarchButton(\n            text = \"Cancel\",\n            onClick = { denying = true },\n            modifier = Modifier.weight(1f),\n            size = MonarchButtonSize.Lg,\n            enabled = !allowing,\n            loading = denying,\n        )\n        MonarchButton(\n            text = \"Allow\",\n            onClick = { allowing = true },\n            modifier = Modifier.weight(1f),\n            variant = MonarchButtonVariant.Primary,\n            size = MonarchButtonSize.Lg,\n            enabled = !denying,\n            loading = allowing,\n        )\n    }\n    MonarchText(text = legal, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted, textAlign = TextAlign.Center)\n    MonarchText(text = \"You can remove access at any time in your account’s security settings.\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n}"
+    }
+  ],
+  "webEquivalent": "OAuthConsentScreen",
+  "dependsOn": [
+    "avatar",
+    "consequence-list",
+    "button",
+    "link"
+  ],
+  "icons": {
+    "scope": "CheckGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "android",
+      "paths": [
+        "scopes.2.kind"
+      ],
+      "reason": "The web draws the same check for every scope, the sensitive one too, with its note under it, so the third scope is written as the kept kind instead of the warning triangle.",
+      "convention": "icon parity: the web check glyph for every scope"
+    },
+    {
+      "rule": "layout",
+      "platform": "android",
+      "reason": "The web puts Use another account at the end of the account row, beside the name and email. At a phone width of 344dp that left the name and the address about 90dp and both broke in the middle of a word, so on Android the button sits under the name, at the end, in the same card.",
+      "convention": "no text broken inside a word on a compact window; a row that does not fit wraps its action below (Material adaptive layout)"
+    }
+  ]
+}

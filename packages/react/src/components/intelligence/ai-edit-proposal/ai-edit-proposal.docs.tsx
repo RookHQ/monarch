@@ -7,22 +7,10 @@ import {
   type AiEditProposalPart,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-edit-proposal.fixture.json';
 
-const HUNKS: AiEditHunk[] = [
-  { id: 'title', label: 'Title', before: 'Quarterly plan', after: 'Quarterly roadmap' },
-  {
-    id: 'summary',
-    label: 'Summary',
-    before: 'The team will ship the new onboarding flow in May.',
-    after: 'The team will ship the redesigned onboarding flow in early June.',
-  },
-  {
-    id: 'owner',
-    label: 'Owner',
-    before: 'Sam',
-    after: 'Sam Lee',
-  },
-];
+const HUNKS: AiEditHunk[] = fixture.data.hunks;
 
 function proposal(state: AiEditProposalPart['state']): AiEditProposalPart {
   return { type: 'edit-proposal', id: 'edit-1', target: 'doc-1', diff: null, state };

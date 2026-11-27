@@ -1,0 +1,145 @@
+{
+  "id": "load-more",
+  "name": "MonarchLoadMore",
+  "title": "LoadMore",
+  "family": "data-grid",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack footer of Text, MonarchButton and MonarchInlineErrorRetry; onAppear for auto-loading",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The footer of a paginated list: a Load more button with loading, failure and retry, an end-of-list line, an optional count and announcements.",
+  "whenToUse": "At the end of a List or LazyVStack that loads pages from a cursor, with a button, or loading on its own when it scrolls into view.",
+  "whenNotToUse": "For a list that is loaded whole, show nothing. For a first load, use MonarchLoadingState; for a first load that failed, use MonarchErrorState. For new content at the top, use refreshable(action:).",
+  "api": [
+    "init(hasMore: Bool, isLoading: Bool = false, isFailed: Bool = false, loadedCount: Int? = nil, totalCount: Int? = nil, showsCount: Bool? = nil, showsEnd: Bool = true, autoLoads: Bool = false, labels: MonarchLoadMoreLabels = MonarchLoadMoreLabels(), onRetry: (@MainActor () -> Void)? = nil, onLoadMore: @escaping @MainActor () -> Void)",
+    "struct MonarchLoadMoreLabels { var loadMore, loading, failed, retry, end: String?; var count: (@Sendable (Int, Int?) -> String)?; var loaded: (@Sendable (Int) -> String)? }"
+  ],
+  "options": [
+    {
+      "name": "hasMore",
+      "type": "Bool",
+      "default": "required",
+      "description": "Whether there is another page. False shows the end line."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "A page is being fetched; the button shows progress and ignores taps."
+    },
+    {
+      "name": "isFailed",
+      "type": "Bool",
+      "default": "false",
+      "description": "The last fetch failed; shows the failure with a retry button and pauses auto-loading."
+    },
+    {
+      "name": "loadedCount",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The items on screen. Shown in the count; increases are announced."
+    },
+    {
+      "name": "totalCount",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The total, when the server knows it."
+    },
+    {
+      "name": "showsCount",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Whether the count is shown. By default when loadedCount is given."
+    },
+    {
+      "name": "showsEnd",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether \"That's everything\" is shown and announced at the end."
+    },
+    {
+      "name": "autoLoads",
+      "type": "Bool",
+      "default": "false",
+      "description": "Loads the next page when the footer appears on screen; the button stays as the fallback."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchLoadMoreLabels",
+      "default": "MonarchLoadMoreLabels()",
+      "description": "Replacements for the built-in strings, including the count and the announcement."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Runs when retry is activated. By default onLoadMore."
+    },
+    {
+      "name": "onLoadMore",
+      "type": "@MainActor () -> Void",
+      "default": "required",
+      "description": "Loads the next page."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "A small secondary Load more button, with the count above it."
+    },
+    {
+      "name": "loading",
+      "description": "The button shows a progress indicator and the title \"Loading…\"."
+    },
+    {
+      "name": "failed",
+      "description": "\"Couldn't load more.\" with a danger icon and a Retry button; while a retry runs, the button is busy."
+    },
+    {
+      "name": "done",
+      "description": "\"That's everything\" in muted text, or nothing with showsEnd false."
+    }
+  ],
+  "appearance": "Centred under the list with vertical padding. The count and the end line are caption text in the muted text colour. The button is a small secondary MonarchButton; the failure is a MonarchInlineErrorRetry in the danger tone.",
+  "platformNotes": "The web also ships a useLoadMore hook that keeps the cursor and pages; on iOS the app's model keeps them, and the footer only shows the state. Auto-loading uses onAppear inside a lazy container instead of an IntersectionObserver, so there is no root margin: put the footer inside the List or LazyVStack. The web returns keyboard focus to the end line when the button disappears; on iOS VoiceOver focus is not moved. Android shares the name and the options.",
+  "accessibility": [
+    "The button is a standard button with a 44-point touch target; while loading its value is \"Loading…\".",
+    "A failure is a MonarchInlineErrorRetry: the message is read with the danger tone's name and the retry button is separate.",
+    "New items are announced (\"20 more items loaded.\"), as are a failure and the end of the list.",
+    "The button stays when auto-loading, so VoiceOver and Switch Control users load pages on purpose."
+  ],
+  "edgeCases": [
+    "With autoLoads, a page that still leaves the footer on screen loads the next one when loading ends, until the screen is filled.",
+    "A failure pauses auto-loading until the retry succeeds.",
+    "The plural rules of the built-in count and announcement are English; pass labels.count and labels.loaded for other languages."
+  ],
+  "tests": [
+    "MonarchLoadMoreTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "With useLoadMore",
+      "fixture": "load-more",
+      "webExample": "With useLoadMore",
+      "template": "VStack(alignment: .leading, spacing: 8) {\n    VStack(alignment: .leading, spacing: 4) {\n        ForEach(entries, id: \\.self) { entry in\n            // A bulleted list, as on the web.\n            HStack(alignment: .firstTextBaseline, spacing: 8) {\n                Text(\"•\")\n                Text(entry)\n            }\n            .monarchTextStyle(.body)\n        }\n    }\n    .accessibilityElement(children: .contain)\n    .accessibilityLabel({{label}})\n    MonarchLoadMore(\n        hasMore: true,\n        loadedCount: entries.count,\n        totalCount: {{total}},\n        labels: MonarchLoadMoreLabels(count: { loaded, total in\n            \"Showing \\(loaded) of \\(total ?? loaded) \" + (total == 1 ? {{noun.one}} : {{noun.other}})\n        }),\n        onLoadMore: {}\n    )\n}",
+      "setupTemplate": "private let entries = [{{entries.0}}, {{entries.1}}, {{entries.2}}]",
+      "setup": "private let entries = [\"Audit entry 1\", \"Audit entry 2\", \"Audit entry 3\"]",
+      "code": "VStack(alignment: .leading, spacing: 8) {\n    VStack(alignment: .leading, spacing: 4) {\n        ForEach(entries, id: \\.self) { entry in\n            // A bulleted list, as on the web.\n            HStack(alignment: .firstTextBaseline, spacing: 8) {\n                Text(\"•\")\n                Text(entry)\n            }\n            .monarchTextStyle(.body)\n        }\n    }\n    .accessibilityElement(children: .contain)\n    .accessibilityLabel(\"Audit log\")\n    MonarchLoadMore(\n        hasMore: true,\n        loadedCount: entries.count,\n        totalCount: 9,\n        labels: MonarchLoadMoreLabels(count: { loaded, total in\n            \"Showing \\(loaded) of \\(total ?? loaded) \" + (total == 1 ? \"entry\" : \"entries\")\n        }),\n        onLoadMore: {}\n    )\n}"
+    },
+    {
+      "title": "A failed page",
+      "code": "MonarchLoadMore(hasMore: true, isFailed: true, loadedCount: 40, onLoadMore: {})"
+    }
+  ],
+  "webEquivalent": "LoadMore",
+  "dependsOn": [
+    "button",
+    "spinner",
+    "inline-error-retry"
+  ]
+}

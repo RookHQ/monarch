@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { CSATSurvey, type CSATRating } from '@rookcom/monarch-react/marketing';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './csat-survey.fixture.json';
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -9,7 +11,13 @@ function Instant() {
   return (
     <CSATSurvey
       headingAs="h2"
-      context="Request #1042 · Billing question"
+      context={fixture.data.context}
+      messages={{
+        question: fixture.data.question,
+        good: fixture.data.choices[0] ?? 'Good',
+        bad: fixture.data.choices[1] ?? 'Bad',
+        chooseFirst: fixture.data.hint,
+      }}
       rating={rating}
       onRate={async (next) => {
         await wait(500);

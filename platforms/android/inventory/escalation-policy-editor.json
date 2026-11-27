@@ -1,0 +1,182 @@
+{
+  "id": "escalation-policy-editor",
+  "name": "MonarchEscalationPolicyEditor",
+  "title": "EscalationPolicyEditor",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of outlined levels, each a MonarchDurationInput (androidx.compose.material3.OutlinedTextField with steppers) and a multiple-choice MonarchEntityPicker (androidx.compose.material3.ModalBottomSheet), with MonarchInlineNotice and MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Edits an escalation ladder: at each level, after how long and whom to notify, so an alert or request nobody acts on reaches someone else.",
+  "whenToUse": "Unacknowledged incidents or overdue approvals must move to other people over time, and each level notifies one or more channels, rotas or people.",
+  "whenNotToUse": "For approvals that happen in order, use MonarchApprovalChainEditor. For messages sent to customers on a schedule, use a sequence of steps built from MonarchActionEditor.",
+  "api": [
+    "@Composable public fun MonarchEscalationPolicyEditor(value: List<MonarchEscalationLevel>, onValueChange: (List<MonarchEscalationLevel>) -> Unit, targets: List<MonarchEntityPickerEntity>, modifier: Modifier = Modifier, timing: MonarchEscalationTiming = MonarchEscalationTiming.Cumulative, description: String? = null, defaultStepMinutes: Int = 15, minLevels: Int = 1, maxLevels: Int = 10, showErrors: Boolean = false, enabled: Boolean = true, createId: (() -> String)? = null, removeIcon: (@Composable () -> Unit)? = null, addIcon: (@Composable () -> Unit)? = null, labels: MonarchEscalationPolicyEditorLabels = MonarchEscalationPolicyEditorLabels())",
+    "public data class MonarchEscalationLevel(id: String, afterMinutes: Int, targets: List<String> = emptyList()) { companion object { fun validate(levels: List<MonarchEscalationLevel>, timing: MonarchEscalationTiming = MonarchEscalationTiming.Cumulative): Map<String, MonarchEscalationLevelProblem> } }",
+    "public enum class MonarchEscalationTiming { Cumulative, Interval }",
+    "public enum class MonarchEscalationLevelProblem { Targets, Order }",
+    "public class MonarchEscalationPolicyEditorLabels(label: String? = null, level: ((position: Int) -> String)? = null, after: String? = null, notify: String? = null, summary: ((duration: String, names: String) -> String)? = null, nobody: String? = null, remove: String? = null, removeLevel: ((position: Int) -> String)? = null, add: String? = null, noTargets: String? = null, targetsProblem: String? = null, orderProblem: String? = null, maxReached: ((max: Int) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "value",
+      "type": "List<MonarchEscalationLevel>",
+      "default": "required",
+      "description": "The levels, in order. Ids must be unique."
+    },
+    {
+      "name": "onValueChange",
+      "type": "(List<MonarchEscalationLevel>) -> Unit",
+      "default": "required",
+      "description": "Called with the whole new list after every change."
+    },
+    {
+      "name": "targets",
+      "type": "List<MonarchEntityPickerEntity>",
+      "default": "required",
+      "description": "What a level can notify: channels, rotas or people, with an optional description such as the kind."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the editor."
+    },
+    {
+      "name": "timing",
+      "type": "MonarchEscalationTiming",
+      "default": "MonarchEscalationTiming.Cumulative",
+      "description": "Cumulative measures every time from the start, so levels must get later; Interval measures each from the previous level."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "null",
+      "description": "Help under the levels."
+    },
+    {
+      "name": "defaultStepMinutes",
+      "type": "Int",
+      "default": "15",
+      "description": "The minutes a new level adds to the last one (cumulative), or its time (interval)."
+    },
+    {
+      "name": "minLevels",
+      "type": "Int",
+      "default": "1",
+      "description": "The fewest levels; the remove buttons are disabled at this count."
+    },
+    {
+      "name": "maxLevels",
+      "type": "Int",
+      "default": "10",
+      "description": "The most levels; the add button is replaced by a note at this count."
+    },
+    {
+      "name": "showErrors",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows the problems of each level, for example after a save attempt."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the policy can be changed."
+    },
+    {
+      "name": "createId",
+      "type": "(() -> String)?",
+      "default": "null",
+      "description": "Makes the id of a new level; by default the first free level-<n>."
+    },
+    {
+      "name": "removeIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The icon of each remove button; without it the button reads Remove."
+    },
+    {
+      "name": "addIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "An icon before the text of the add button."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchEscalationPolicyEditorLabels",
+      "default": "MonarchEscalationPolicyEditorLabels()",
+      "description": "Replacements for the built-in strings."
+    }
+  ],
+  "states": [
+    {
+      "name": "editing",
+      "description": "Each level shows its heading, a summary such as After 15m, notify On-call rota, a remove button, the time field and the target picker."
+    },
+    {
+      "name": "no targets",
+      "description": "A warning notice says there is nothing to notify yet."
+    },
+    {
+      "name": "invalid",
+      "description": "With showErrors, a level that notifies nobody shows the problem on the picker, and a level not later than the one before shows it on the time field; the level takes the danger outline."
+    },
+    {
+      "name": "at the minimum",
+      "description": "The remove buttons are disabled."
+    },
+    {
+      "name": "at the limit",
+      "description": "The add button is replaced by A policy can have up to 10 levels."
+    },
+    {
+      "name": "disabled",
+      "description": "Every field and button is disabled."
+    }
+  ],
+  "appearance": "Each level is an outlined card on the surface color with a subtle border, or the danger border while it shows a problem. Headings are strong body text, summaries muted captions; the fields have the input border and the add button is a small secondary MonarchButton. Light, dark and both high-contrast themes follow from the color roles.",
+  "platformNotes": "Same data shape, defaults and checks as the web (validateEscalationPolicy is MonarchEscalationLevel.validate). Targets are MonarchEntityPickerEntity values chosen in a multiple-choice MonarchEntityPicker sheet, where the web lists a checkbox per target; the sheet searches and scales to long lists of people. Problems are shown as the error of the field concerned instead of a paragraph under the level, so TalkBack reads them with that field. The web's numbered marker beside each level is left out: the Level 1 heading carries the number. The web's messages prop is labels. There is no iOS entry yet.",
+  "accessibility": [
+    "Each level heading (Level 1) is a heading, and each level is a traversal group with its summary, fields and remove button.",
+    "The list of levels is named Escalation levels.",
+    "Remove buttons are named with the position (Remove level 1) and are 48dp targets.",
+    "A problem is the error of the field concerned, read with it and announced when it appears; the danger outline is never the only signal.",
+    "The no-targets warning is a MonarchInlineNotice that says its tone."
+  ],
+  "edgeCases": [
+    "Clearing the time field stores 1 minute, the minimum, as on the web.",
+    "Target ids that are not in targets keep their place at the end of the level and show the id in the summary.",
+    "Durations of a day or more show days in the summary, such as 1d 2h.",
+    "The editor does not scroll on its own: put it in a scrolling screen."
+  ],
+  "tests": [
+    "MonarchEscalationPolicyEditorTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Incident escalation with a problem shown",
+      "fixture": "escalation-policy-editor",
+      "webExample": "Incident escalation with a problem shown",
+      "template": "MonarchEscalationPolicyEditor(\n    value = levels,\n    onValueChange = { levels = it },\n    targets = targets,\n    description = {{description}},\n    showErrors = true,\n)",
+      "setupTemplate": "val targets = listOf(\n    MonarchEntityPickerEntity({{targets.0.value}}, {{targets.0.label}}),\n    MonarchEntityPickerEntity({{targets.1.value}}, {{targets.1.label}}, description = {{targets.1.description}}),\n    MonarchEntityPickerEntity({{targets.2.value}}, {{targets.2.label}}, description = {{targets.2.description}}),\n    MonarchEntityPickerEntity({{targets.3.value}}, {{targets.3.label}}, description = {{targets.3.description}}),\n)\nvar levels by remember {\n    mutableStateOf(\n        listOf(\n            MonarchEscalationLevel({{levels.0.id}}, {{levels.0.afterMinutes}}, listOf({{levels.0.targets.0}})),\n            MonarchEscalationLevel({{levels.1.id}}, {{levels.1.afterMinutes}}, listOf({{levels.1.targets.0}}, {{levels.1.targets.1}})),\n            MonarchEscalationLevel({{levels.2.id}}, {{levels.2.afterMinutes}}, listOf()),\n        ),\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "val targets = listOf(\n    MonarchEntityPickerEntity(\"oncall\", \"On-call rota\"),\n    MonarchEntityPickerEntity(\"chat\", \"Team chat\", description = \"Chat channel\"),\n    MonarchEntityPickerEntity(\"email\", \"Operations email\", description = \"Email list\"),\n    MonarchEntityPickerEntity(\"lead\", \"Team lead\", description = \"Person\"),\n)\nvar levels by remember {\n    mutableStateOf(\n        listOf(\n            MonarchEscalationLevel(\"1\", 5, listOf(\"oncall\")),\n            MonarchEscalationLevel(\"2\", 20, listOf(\"chat\", \"lead\")),\n            MonarchEscalationLevel(\"3\", 60, listOf()),\n        ),\n    )\n}",
+      "code": "MonarchEscalationPolicyEditor(\n    value = levels,\n    onValueChange = { levels = it },\n    targets = targets,\n    description = \"Each level fires only if nobody has acknowledged yet. Times are measured from when the incident opened.\",\n    showErrors = true,\n)"
+    }
+  ],
+  "webEquivalent": "EscalationPolicyEditor",
+  "dependsOn": [
+    "duration-input",
+    "entity-picker",
+    "button"
+  ]
+}

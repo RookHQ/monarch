@@ -7,40 +7,36 @@ import {
   type GanttMilestone,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+import fixture from './gantt-timeline.fixture.json';
 
-const TODAY = '2026-01-14';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+const day = (iso: string) => iso.slice(0, 10);
+const TODAY = day(fixture.data.today);
+const DEFAULT_START = day(fixture.data.defaultStart);
 
-const TASKS: GanttItem[] = [
-  {
-    id: 'brief',
-    label: 'Write the brief',
-    start: '2026-01-05',
-    end: '2026-01-09',
-    progress: 100,
-    tone: 'success',
-  },
-  { id: 'design', label: 'Design', start: '2026-01-12', end: '2026-01-23', progress: 60 },
-  {
-    id: 'build',
-    label: 'Build',
-    start: '2026-01-21',
-    end: '2026-02-13',
-    conflict: 'Starts before Design ends',
-  },
-  { id: 'api', label: 'API changes', parentId: 'build', start: '2026-01-26', end: '2026-02-04' },
-  { id: 'ui', label: 'Screens', parentId: 'build', start: '2026-02-02', end: '2026-02-13' },
-  { id: 'launch', label: 'Launch', end: '2026-02-20', meta: <Badge size="sm">Fixed date</Badge> },
-  { id: 'research', label: 'Pricing research' },
-];
-const LINKS: GanttDependency[] = [
-  { id: 'l1', from: 'brief', to: 'design' },
-  { id: 'l2', from: 'design', to: 'build', conflict: true },
-  { id: 'l3', from: 'api', to: 'ui', kind: 'start-to-start' },
-];
-const MILESTONES: GanttMilestone[] = [
-  { id: 'm1', label: 'Design review', date: '2026-01-23' },
-  { id: 'm2', label: 'Beta', date: '2026-02-09' },
-];
+type FixtureTask = {
+  id: string;
+  label: string;
+  start?: string;
+  end?: string;
+  progress?: number;
+  tone?: NonNullable<GanttItem['tone']>;
+  parentId?: string;
+  conflict?: string;
+  meta?: string;
+};
+const TASKS: GanttItem[] = (fixture.data.tasks as readonly FixtureTask[]).map(
+  ({ start, end, meta, ...task }) => ({
+    ...task,
+    ...(start !== undefined && { start: day(start) }),
+    ...(end !== undefined && { end: day(end) }),
+    ...(meta !== undefined && { meta: <Badge size="sm">{meta}</Badge> }),
+  }),
+);
+const LINKS = fixture.data.dependencies as readonly GanttDependency[] as GanttDependency[];
+const MILESTONES: GanttMilestone[] = (
+  fixture.data.milestones as readonly { id: string; label: string; date: string }[]
+).map((m) => ({ ...m, date: day(m.date) }));
 
 function EditableDemo() {
   const [items, setItems] = useState(TASKS);
@@ -50,7 +46,8 @@ function EditableDemo() {
       dependencies={LINKS}
       milestones={MILESTONES}
       today={TODAY}
-      defaultStart="2026-01-05"
+      defaultStart={DEFAULT_START}
+      locale="en-GB"
       onChange={(item, dates) =>
         setItems((all) => all.map((i) => (i.id === item.id ? { ...i, ...dates } : i)))
       }

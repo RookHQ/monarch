@@ -1,14 +1,21 @@
 import { useState } from 'react';
 import { Field, FieldDescription, FieldLabel, NumberInput } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './number-input.fixture.json';
 
 function SeatsDemo() {
-  const [seats, setSeats] = useState<number | null>(5);
+  const [seats, setSeats] = useState<number | null>(fixture.data.value);
   return (
     <Field style={{ width: '100%', maxWidth: 220 }}>
-      <FieldLabel>Seats</FieldLabel>
-      <NumberInput value={seats} onValueChange={setSeats} min={1} max={50} />
-      <FieldDescription>Between 1 and 50.</FieldDescription>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
+      <NumberInput
+        value={seats}
+        onValueChange={setSeats}
+        min={fixture.data.min}
+        max={fixture.data.max}
+      />
+      <FieldDescription>{fixture.data.description}</FieldDescription>
     </Field>
   );
 }

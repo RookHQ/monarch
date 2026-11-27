@@ -1,0 +1,137 @@
+{
+  "id": "video-thumbnail",
+  "name": "MonarchVideoThumbnail",
+  "title": "VideoThumbnail",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Image or AsyncImage for the poster, Button when it plays, MonarchBadge for the length, AVAssetImageGenerator for a captured frame",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A poster for a video with a round play mark and a badge that shows its length. With an action the whole thumbnail is a button.",
+  "whenToUse": "In a list, a card or a message, as the still that stands for a video and opens the player.",
+  "whenNotToUse": "To play the video, present VideoPlayer from AVKit. To show any other file, use Quick Look (see file-preview).",
+  "api": [
+    "init(_ title: String, image: Image?, duration: TimeInterval? = nil, aspectRatio: CGFloat? = nil, contentMode: ContentMode = .fill, showsPlayIcon: Bool = true, playLabel: String? = nil, onPlay: (@MainActor () -> Void)? = nil)",
+    "init(_ title: String, url: URL?, duration: TimeInterval? = nil, aspectRatio: CGFloat? = nil, contentMode: ContentMode = .fill, showsPlayIcon: Bool = true, playLabel: String? = nil, onPlay: (@MainActor () -> Void)? = nil)",
+    "nonisolated static func frame(of videoURL: URL, at time: TimeInterval? = nil) async throws -> Image"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "What the video shows, already localised. Read by VoiceOver; not drawn. Empty gives the built-in \"Video\"."
+    },
+    {
+      "name": "image",
+      "type": "Image?",
+      "default": "required",
+      "description": "The poster the app already has. First initialiser."
+    },
+    {
+      "name": "url",
+      "type": "URL?",
+      "default": "required",
+      "description": "The URL of a poster image, loaded with AsyncImage. Second initialiser. Not the URL of the video."
+    },
+    {
+      "name": "duration",
+      "type": "TimeInterval?",
+      "default": "nil",
+      "description": "The length in seconds, shown as 1:05 or 1:01:05."
+    },
+    {
+      "name": "aspectRatio",
+      "type": "CGFloat?",
+      "default": "nil",
+      "description": "Width divided by height. 16 to 9 when nil or not positive."
+    },
+    {
+      "name": "contentMode",
+      "type": "ContentMode",
+      "default": ".fill",
+      "description": ".fill crops the poster to the frame; .fit letterboxes it."
+    },
+    {
+      "name": "showsPlayIcon",
+      "type": "Bool",
+      "default": "true",
+      "description": "Draws the round play mark over the poster."
+    },
+    {
+      "name": "playLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Play <title>\" spoken name of the button."
+    },
+    {
+      "name": "onPlay",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Makes the thumbnail a button that runs this."
+    }
+  ],
+  "states": [
+    {
+      "name": "poster",
+      "description": "The image fills or fits the frame, with the play mark in the middle."
+    },
+    {
+      "name": "placeholder",
+      "description": "While there is no image, while a URL loads and when it fails: an inverse fill with a muted play glyph. With no source at all the round play mark is not drawn."
+    },
+    {
+      "name": "button",
+      "description": "With onPlay the thumbnail is a plain-style Button; disabled(_:) stops it."
+    }
+  ],
+  "appearance": "The frame is filled with the inverse background and clipped to 12-point corners. The play mark is a surface-coloured disc with a glyph in the default text colour. The length is a solid neutral MonarchBadge in the trailing bottom corner. The same roles are used in light, dark and both high-contrast themes.",
+  "platformNotes": "The web captures a frame from the video itself when no thumbnail is given. On iOS the view takes a poster by the image convention (an Image or a URL, nothing else), and frame capture is the separate async function frame(of:at:), which the app calls and whose result it passes as image, so the view never decodes video while it draws. The web's translucent play disc and badge are opaque here, because Monarch on iOS takes colours by role and does not dim. The web's onCaptureError is the error thrown by frame(of:at:). The spoken length is in words (\"1 minute, 5 seconds\"), not the digits of the badge.",
+  "accessibility": [
+    "With onPlay it is one button whose label is \"Play <title>\", or playLabel.",
+    "Without onPlay it is one element with the image trait whose label is the title.",
+    "The length is the accessibility value, formatted in words for the locale of the environment.",
+    "The play mark and the badge are not separate elements.",
+    "The badge text and the play mark scale with Dynamic Type."
+  ],
+  "edgeCases": [
+    "A title of only spaces is read as \"Video\".",
+    "A negative length shows 0:00; an infinite or not-a-number length shows no badge.",
+    "The touch target is the whole thumbnail; a thumbnail narrower or shorter than 44 points is smaller than the minimum target.",
+    "At the largest text sizes the badge can cover much of a small thumbnail.",
+    "frame(of:at:) clamps the requested second to the length of the video and throws the AVFoundation error for a file it cannot open."
+  ],
+  "tests": [
+    "MonarchVideoThumbnailTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "With a poster and duration",
+      "fixture": "video-thumbnail",
+      "webExample": "With a poster and duration",
+      "template": "MonarchVideoThumbnail({{alt}}, image: picture, duration: {{duration}})",
+      "code": "MonarchVideoThumbnail(\"Product overview\", image: picture, duration: 65)",
+      "setupTemplate": "private let picture: Image = {\n    let width = 960, height = 540\n    guard let context = CGContext(\n        data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,\n        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue\n    ) else { return Image(systemName: \"photo\") }\n    // Core Graphics counts up from the bottom: flip it so the picture is drawn from the top left.\n    context.translateBy(x: 0, y: CGFloat(height))\n    context.scaleBy(x: 1, y: -1)\n    let colors = [\n        CGColor(red: 0.26, green: 0.52, blue: 0.74, alpha: 1),\n        CGColor(red: 0.18, green: 0.55, blue: 0.36, alpha: 1),\n    ]\n    if let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: [0, 1]) {\n        context.drawLinearGradient(\n            gradient, start: .zero, end: CGPoint(x: width, y: height), options: [])\n    }\n    context.setFillColor(red: 1, green: 1, blue: 1, alpha: 0.35)\n    context.fillEllipse(in: CGRect(x: 690, y: 70, width: 150, height: 150))\n    context.setFillColor(red: 1, green: 1, blue: 1, alpha: 0.5)\n    context.move(to: CGPoint(x: 0, y: 540))\n    context.addLine(to: CGPoint(x: 0, y: 400))\n    context.addLine(to: CGPoint(x: 280, y: 200))\n    context.addLine(to: CGPoint(x: 520, y: 360))\n    context.addLine(to: CGPoint(x: 700, y: 280))\n    context.addLine(to: CGPoint(x: 960, y: 430))\n    context.addLine(to: CGPoint(x: 960, y: 540))\n    context.fillPath()\n    guard let picture = context.makeImage() else { return Image(systemName: \"photo\") }\n    return Image(decorative: picture, scale: 1)\n}()",
+      "setup": "private let picture: Image = {\n    let width = 960, height = 540\n    guard let context = CGContext(\n        data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,\n        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue\n    ) else { return Image(systemName: \"photo\") }\n    // Core Graphics counts up from the bottom: flip it so the picture is drawn from the top left.\n    context.translateBy(x: 0, y: CGFloat(height))\n    context.scaleBy(x: 1, y: -1)\n    let colors = [\n        CGColor(red: 0.26, green: 0.52, blue: 0.74, alpha: 1),\n        CGColor(red: 0.18, green: 0.55, blue: 0.36, alpha: 1),\n    ]\n    if let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: [0, 1]) {\n        context.drawLinearGradient(\n            gradient, start: .zero, end: CGPoint(x: width, y: height), options: [])\n    }\n    context.setFillColor(red: 1, green: 1, blue: 1, alpha: 0.35)\n    context.fillEllipse(in: CGRect(x: 690, y: 70, width: 150, height: 150))\n    context.setFillColor(red: 1, green: 1, blue: 1, alpha: 0.5)\n    context.move(to: CGPoint(x: 0, y: 540))\n    context.addLine(to: CGPoint(x: 0, y: 400))\n    context.addLine(to: CGPoint(x: 280, y: 200))\n    context.addLine(to: CGPoint(x: 520, y: 360))\n    context.addLine(to: CGPoint(x: 700, y: 280))\n    context.addLine(to: CGPoint(x: 960, y: 430))\n    context.addLine(to: CGPoint(x: 960, y: 540))\n    context.fillPath()\n    guard let picture = context.makeImage() else { return Image(systemName: \"photo\") }\n    return Image(decorative: picture, scale: 1)\n}()"
+    },
+    {
+      "title": "A poster from a URL, not interactive",
+      "code": "MonarchVideoThumbnail(\"Keynote\", url: nil, duration: 3725)"
+    },
+    {
+      "title": "A frame captured from the video",
+      "setup": "@State private var poster: Image?\nprivate let videoURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(\"clip.mov\")",
+      "code": "MonarchVideoThumbnail(\"Clip\", image: poster, aspectRatio: 1, contentMode: .fit)\n    .task { poster = try? await MonarchVideoThumbnail.frame(of: videoURL) }"
+    }
+  ],
+  "webEquivalent": "VideoThumbnail",
+  "dependsOn": [
+    "badge",
+    "icon"
+  ]
+}

@@ -1,42 +1,31 @@
 import { useState } from 'react';
 import { ConnectedAppsList, type ConnectedApp } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './connected-apps-list.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 const daysAgo = (d: number) => new Date(Date.now() - d * 86_400_000);
 
-const SAMPLE: ConnectedApp[] = [
-  {
-    id: 'app-1',
-    name: 'Notes',
-    domain: 'notes.example.com',
-    verified: true,
-    workspace: 'Design team',
-    scopes: ['See your name and profile picture', 'See your email address'],
-    connectedAt: daysAgo(40),
-    lastUsedAt: daysAgo(1),
-  },
-  {
-    id: 'app-2',
-    name: 'Planner',
-    domain: 'planner.example.org',
-    scopes: ['See your name and profile picture'],
-    connectedAt: daysAgo(200),
-    lastUsedAt: daysAgo(90),
-  },
-  {
-    id: 'app-3',
-    name: 'Survey tool',
-    suspended: true,
-    connectedAt: daysAgo(12),
-  },
-];
+const SAMPLE: ConnectedApp[] = fixture.data.apps.map((a) => ({
+  id: a.id,
+  name: a.name,
+  ...('domain' in a ? { domain: a.domain } : {}),
+  ...('verified' in a ? { verified: a.verified } : {}),
+  ...('suspended' in a ? { suspended: a.suspended } : {}),
+  ...('workspace' in a ? { workspace: a.workspace } : {}),
+  ...('scopes' in a ? { scopes: a.scopes } : {}),
+  connectedAt: daysAgo(a.connectedDaysAgo),
+  ...('lastUsedDaysAgo' in a ? { lastUsedAt: daysAgo(a.lastUsedDaysAgo) } : {}),
+}));
 
 function Revocable() {
   const [apps, setApps] = useState(SAMPLE);
   return (
     <ConnectedAppsList
       apps={apps}
+      title={fixture.data.title}
+      description={fixture.data.description}
       onRevoke={async (id) => {
         await wait(600);
         setApps((all) => all.filter((a) => a.id !== id));

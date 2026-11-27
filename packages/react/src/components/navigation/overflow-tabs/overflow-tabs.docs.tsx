@@ -1,22 +1,15 @@
 import { OverflowTabs, TabsContent, type OverflowTabsItem } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './overflow-tabs.fixture.json';
 
-const TABS: OverflowTabsItem[] = [
-  { value: 'overview', label: 'Overview' },
-  { value: 'activity', label: 'Activity', count: 4, countTone: 'accent' },
-  { value: 'files', label: 'Files' },
-  { value: 'members', label: 'Members' },
-  { value: 'integrations', label: 'Integrations' },
-  { value: 'billing', label: 'Billing', disabled: true },
-  { value: 'audit', label: 'Audit log' },
-  { value: 'settings', label: 'Settings' },
-];
+const TABS = fixture.data.tabs as OverflowTabsItem[];
 
 function Demo({ width, variant }: { width: number; variant?: 'line' | 'pill' }) {
   return (
     <div style={{ width: '100%', maxWidth: width }}>
       <OverflowTabs
-        aria-label={`Workspace sections ${width}`}
+        aria-label={`${fixture.data.label} ${width}`}
         tabs={TABS}
         variant={variant ?? 'line'}
       >

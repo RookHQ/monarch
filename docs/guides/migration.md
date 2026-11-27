@@ -90,7 +90,9 @@ with every export that encodes a Rook platform contract: `RookRail`,
 `rookIntelligenceTransport`, `mapRookIntelligenceEvent`, and their types.
 
 Nothing breaks in 0.14.x: `/shell`, `/patterns` and `/ai` still export them,
-marked `@deprecated`. They stop in 0.15.0. To move now:
+marked `@deprecated`. They are removed from those paths in a later 0.14.x
+patch, no earlier than 2027-02-11 (90-day window) and not before 0.14.7. To
+move now:
 
 1. Run `npx monarch check --fix` (or `eslint --fix` with the Monarch plugin).
    It changes the import path and nothing else:

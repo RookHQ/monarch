@@ -10,6 +10,7 @@ import {
   type SVGProps,
 } from 'react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { StagePortal, stagedLayerProps, useOverlayStage } from '../../../internal/overlay-stage.js';
 import { cx } from '../../../internal/cx.js';
 import { isSafeImageSrc, isSafeUrl } from '../../../internal/sanitize.js';
 import type { AiPart, AiSourcePart } from '../ai-conversation/index.js';
@@ -271,6 +272,7 @@ export const AiCitation = forwardRef<HTMLButtonElement, AiCitationProps>(functio
   const meta = aiSourceMeta(source, m.kinds);
   const cardLabel = m.card(index);
 
+  const staged = useOverlayStage();
   return (
     <PopoverPrimitive.Root
       open={open}
@@ -330,7 +332,7 @@ export const AiCitation = forwardRef<HTMLButtonElement, AiCitationProps>(functio
           <span aria-hidden>[{index}]</span>
         </button>
       </PopoverPrimitive.Trigger>
-      <PopoverPrimitive.Portal>
+      <StagePortal portal={PopoverPrimitive.Portal}>
         <PopoverPrimitive.Content
           ref={contentRef}
           className="mn-ai-citation__card"
@@ -348,6 +350,7 @@ export const AiCitation = forwardRef<HTMLButtonElement, AiCitationProps>(functio
           }}
           onPointerEnter={hoverIn}
           onPointerLeave={hoverOut}
+          {...stagedLayerProps(staged)}
         >
           {meta ? (
             <p className="mn-ai-citation__meta">
@@ -391,7 +394,7 @@ export const AiCitation = forwardRef<HTMLButtonElement, AiCitationProps>(functio
             </div>
           ) : null}
         </PopoverPrimitive.Content>
-      </PopoverPrimitive.Portal>
+      </StagePortal>
     </PopoverPrimitive.Root>
   );
 });

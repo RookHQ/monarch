@@ -84,9 +84,12 @@ function parse(html) {
 }
 
 const classes = (n) => (n.attrs?.class ?? '').split(/\s+/);
+// A tab panel that is not selected is still content: the Markdown copy has
+// every panel, one after the other, and leaves out the tabs that switch them.
 const hidden = (n) =>
   n.attrs?.['aria-hidden'] === 'true' ||
-  'hidden' in (n.attrs ?? {}) ||
+  n.attrs?.role === 'tablist' ||
+  ('hidden' in (n.attrs ?? {}) && n.attrs.role !== 'tabpanel') ||
   classes(n).some((c) => c.startsWith('docs-example__preview') || c === 'docs-example__canvas');
 
 function inline(node, base) {
@@ -122,8 +125,16 @@ function plain(node) {
   return node.children.map(plain).join('');
 }
 
+// On a component page the iOS and Android panels come before the web panel
+// in the HTML (they are one lazily loaded block with the tabs); the Markdown
+// copy reads the web documentation first, as the page shows it first.
+const nativeLast = (children) => [
+  ...children.filter((c) => !classes(c).includes('docs-native-slot')),
+  ...children.filter((c) => classes(c).includes('docs-native-slot')),
+];
+
 function blocks(node, base, out, depth = 0) {
-  for (const child of node.children) {
+  for (const child of nativeLast(node.children)) {
     if (child.text !== undefined) {
       const t = decode(child.text).replace(/\s+/g, ' ').trim();
       if (t) out.push(t);
@@ -146,7 +157,11 @@ function blocks(node, base, out, depth = 0) {
       }
       case 'pre': {
         const code = plain(child).replace(/\n+$/, '');
-        if (code.trim()) out.push('```tsx\n' + code + '\n```');
+        // Native examples and guide blocks name their language (`data-lang`).
+        const lang = /^[a-z]+$/.test(child.attrs['data-lang'] ?? '')
+          ? child.attrs['data-lang']
+          : 'tsx';
+        if (code.trim()) out.push('```' + lang + '\n' + code + '\n```');
         break;
       }
       case 'ul':

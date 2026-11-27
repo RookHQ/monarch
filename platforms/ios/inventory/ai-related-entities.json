@@ -1,0 +1,129 @@
+{
+  "id": "ai-related-entities",
+  "name": "MonarchAiRelatedEntities",
+  "title": "AiRelatedEntities",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of rows (MonarchAvatar, MonarchBadge, a Capsule relevance bar), Button when selectable; a custom Layout (radial placement) with a Shape for relation lines for the graph variant",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "People, organisations, projects and records the assistant found related to the current content, ranked by relevance with their relations, as a list or a radial graph.",
+  "whenToUse": "Beside an answer or a record, to show what the assistant connected it to and let the person open one.",
+  "whenNotToUse": "Not for the sources an answer cites (use MonarchAiSourceList) and not for a full network chart (use MonarchForceGraph).",
+  "api": [
+    "init(_ entities: [MonarchAiRelatedEntity], relations: [MonarchAiEntityRelation] = [], variant: MonarchAiRelatedEntitiesVariant = .list, centerID: String? = nil, maxGraphNodes: Int = 12, labels: MonarchAiRelatedEntitiesLabels = MonarchAiRelatedEntitiesLabels(), onSelect: (@MainActor (MonarchAiRelatedEntity) -> Void)? = nil)",
+    "struct MonarchAiRelatedEntity { init(id: String, label: String, kind: MonarchAiRelatedEntityKind, weight: Double? = nil, imageURL: URL? = nil) }",
+    "struct MonarchAiRelatedEntityKind: RawRepresentable, ExpressibleByStringLiteral { static let person, org, project, document, record, place, other }",
+    "struct MonarchAiEntityRelation { init(from: String, to: String, label: String? = nil) }",
+    "enum MonarchAiRelatedEntitiesVariant { case list, graph }",
+    "struct MonarchAiRelatedEntitiesLabels { init(label: String? = nil, kind: ((MonarchAiRelatedEntityKind) -> String)? = nil, weight: ((Double) -> String)? = nil, relation: ((String, String?) -> String)? = nil, relatedTo: String? = nil, empty: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "entities",
+      "type": "[MonarchAiRelatedEntity]",
+      "default": "required",
+      "description": "The entities: id, label, kind, optional weight from 0 to 1 and optional imageURL. The list is sorted by weight, highest first; unweighted entities keep their order after them."
+    },
+    {
+      "name": "relations",
+      "type": "[MonarchAiEntityRelation]",
+      "default": "[]",
+      "description": "Links between entities by id, with an optional label such as \"works at\". Shown under each entity and as lines in the graph."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchAiRelatedEntitiesVariant",
+      "default": ".list",
+      "description": "A ranked list, or a radial graph."
+    },
+    {
+      "name": "centerID",
+      "type": "String?",
+      "default": "nil",
+      "description": "The graph's middle entity. The one with the highest weight when nil or unknown."
+    },
+    {
+      "name": "maxGraphNodes",
+      "type": "Int",
+      "default": "12",
+      "description": "Above this many entities the graph variant shows the list."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiRelatedEntitiesLabels",
+      "default": "MonarchAiRelatedEntitiesLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "onSelect",
+      "type": "(@MainActor (MonarchAiRelatedEntity) -> Void)?",
+      "default": "nil",
+      "description": "Makes every entity a button that calls this with the entity."
+    }
+  ],
+  "states": [
+    {
+      "name": "list",
+      "description": "Bordered rows with the avatar, the name, the relations line, the kind badge and a relevance bar."
+    },
+    {
+      "name": "graph",
+      "description": "A square up to four node widths across: the centre entity with a large avatar in the middle, the others on a ring from the top, clockwise, with medium or small avatars by weight, and a line for each relation."
+    },
+    {
+      "name": "graph fallback",
+      "description": "More than maxGraphNodes entities, or an accessibility text size: the list is shown instead."
+    },
+    {
+      "name": "selectable",
+      "description": "With onSelect each row or node is a plain button."
+    },
+    {
+      "name": "empty",
+      "description": "A small MonarchEmptyState reading \"No related entities\"."
+    }
+  ],
+  "appearance": "Names use the default text role, relations and ring labels the muted role; the relevance bar fills with the AI solid role on the muted background; relation lines and row borders use the default and subtle border roles. Avatars and badges use their own Monarch colours. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web draws the graph in SVG with circles; iOS places MonarchAvatar nodes with a custom Layout and draws relation lines with a Shape. The diagram is drawn left to right in both layout directions, because a radial diagram has no reading direction and the lines must meet the nodes. iOS also falls back to the list at accessibility text sizes, where node labels would overlap. Entities can carry an imageURL for the avatar; the web shows no pictures. The web's kind is any string; iOS uses a string-backed kind with static members, so custom kinds still work.",
+  "accessibility": [
+    "The list or the diagram is a container named \"Related entities\".",
+    "Each entity is one element read as \"Jordan Lee. Person. Relevance 90%. Related to: works at Acme\"; with onSelect it is a button.",
+    "Avatars are decorative; relevance bars and relation lines are hidden because the spoken name carries them.",
+    "The kind is written in a badge, so it does not depend on the avatar symbol.",
+    "Rows and nodes are at least 44 points high; text scales with Dynamic Type, and the graph becomes the list at accessibility sizes."
+  ],
+  "edgeCases": [
+    "Weights outside 0 to 1 are limited; missing or infinite weights count as unweighted.",
+    "Relations that name an entity not in the list are left out.",
+    "Graph node labels are cut to two lines; the full name is spoken.",
+    "A single entity in the graph sits alone in the middle."
+  ],
+  "tests": [
+    "MonarchAiRelatedEntitiesTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "List",
+      "fixture": "ai-related-entities",
+      "webExample": "List",
+      "template": "MonarchAiRelatedEntities(\n    [\n        MonarchAiRelatedEntity(id: {{entities.0.id}}, label: {{entities.0.label}}, kind: {{entities.0.kind}}, weight: {{entities.0.weight}}),\n        MonarchAiRelatedEntity(id: {{entities.1.id}}, label: {{entities.1.label}}, kind: {{entities.1.kind}}, weight: {{entities.1.weight}}),\n        MonarchAiRelatedEntity(id: {{entities.2.id}}, label: {{entities.2.label}}, kind: {{entities.2.kind}}, weight: {{entities.2.weight}}),\n        MonarchAiRelatedEntity(id: {{entities.3.id}}, label: {{entities.3.label}}, kind: {{entities.3.kind}}, weight: {{entities.3.weight}}),\n        MonarchAiRelatedEntity(id: {{entities.4.id}}, label: {{entities.4.label}}, kind: {{entities.4.kind}}, weight: {{entities.4.weight}}),\n    ],\n    relations: [\n        MonarchAiEntityRelation(from: {{relations.0.from}}, to: {{relations.0.to}}, label: {{relations.0.label}}),\n        MonarchAiEntityRelation(from: {{relations.1.from}}, to: {{relations.1.to}}, label: {{relations.1.label}}),\n        MonarchAiEntityRelation(from: {{relations.2.from}}, to: {{relations.2.to}}, label: {{relations.2.label}}),\n        MonarchAiEntityRelation(from: {{relations.3.from}}, to: {{relations.3.to}}, label: {{relations.3.label}}),\n        MonarchAiEntityRelation(from: {{relations.4.from}}, to: {{relations.4.to}}, label: {{relations.4.label}}),\n    ]\n)",
+      "code": "MonarchAiRelatedEntities(\n    [\n        MonarchAiRelatedEntity(id: \"northwind\", label: \"Northwind\", kind: \"org\", weight: 0.92),\n        MonarchAiRelatedEntity(id: \"jordan\", label: \"Jordan Lee\", kind: \"person\", weight: 0.74),\n        MonarchAiRelatedEntity(id: \"sam\", label: \"Sam Rivera\", kind: \"person\", weight: 0.58),\n        MonarchAiRelatedEntity(id: \"q3-plan\", label: \"Q3 plan\", kind: \"document\", weight: 0.51),\n        MonarchAiRelatedEntity(id: \"harbor\", label: \"Harbor office\", kind: \"place\", weight: 0.33),\n    ],\n    relations: [\n        MonarchAiEntityRelation(from: \"jordan\", to: \"northwind\", label: \"works at\"),\n        MonarchAiEntityRelation(from: \"sam\", to: \"northwind\", label: \"works at\"),\n        MonarchAiEntityRelation(from: \"q3-plan\", to: \"northwind\", label: \"mentions\"),\n        MonarchAiEntityRelation(from: \"jordan\", to: \"q3-plan\", label: \"wrote\"),\n        MonarchAiEntityRelation(from: \"northwind\", to: \"harbor\", label: \"based at\"),\n    ]\n)"
+    },
+    {
+      "title": "A selectable graph",
+      "code": "MonarchAiRelatedEntities(\n    [\n        MonarchAiRelatedEntity(id: \"jordan\", label: \"Jordan Lee\", kind: .person, weight: 0.9),\n        MonarchAiRelatedEntity(id: \"acme\", label: \"Acme\", kind: .org, weight: 0.7),\n        MonarchAiRelatedEntity(id: \"brief\", label: \"Launch brief\", kind: .document, weight: 0.3),\n    ],\n    relations: [MonarchAiEntityRelation(from: \"jordan\", to: \"acme\", label: \"works at\")],\n    variant: .graph\n) { _ in }"
+    }
+  ],
+  "webEquivalent": "AiRelatedEntities",
+  "dependsOn": [
+    "avatar",
+    "badge",
+    "empty-state"
+  ]
+}

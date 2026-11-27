@@ -1,0 +1,113 @@
+{
+  "id": "link",
+  "name": "MonarchLinkStyle",
+  "title": "Link",
+  "family": "navigation",
+  "category": "B",
+  "coverage": "style",
+  "kind": "style",
+  "wrapsNative": "Link and Button, with a ButtonStyle",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The Monarch look for a text link: a button style for the SwiftUI Link, or for a Button that navigates, in the variants inline, standalone and subtle.",
+  "whenToUse": "For a link that is its own view: under a field, at the end of a row, in a footer, after a paragraph. Use Link when it opens a URL and Button when it navigates inside the app.",
+  "whenNotToUse": "For a link in the middle of a sentence, write the sentence as Markdown in Text and set tint to the theme's link colour; a view cannot flow inside a line of text. For an action that changes something use MonarchButton.",
+  "api": [
+    "MonarchLinkStyle.init(_ variant: MonarchLinkVariant = .inline, isExternal: Bool = false, externalLabel: String? = nil)",
+    "static func monarchLink(_ variant: MonarchLinkVariant = .inline, isExternal: Bool = false, externalLabel: String? = nil) -> MonarchLinkStyle",
+    "enum MonarchLinkVariant { case inline, standalone, subtle }"
+  ],
+  "options": [
+    {
+      "name": "variant",
+      "type": "MonarchLinkVariant",
+      "default": ".inline",
+      "description": "inline: link colour, underlined. standalone: link colour, medium weight, no underline. subtle: muted text colour, no underline."
+    },
+    {
+      "name": "isExternal",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether the link leaves the app. Adds an arrow.up.forward icon after the title, read as \"opens in the browser\"."
+    },
+    {
+      "name": "externalLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"opens in the browser\", read after the title."
+    }
+  ],
+  "states": [
+    {
+      "name": "resting",
+      "description": "inline is underlined in the link colour; standalone is the link colour in medium weight; subtle is the muted text colour."
+    },
+    {
+      "name": "pressed",
+      "description": "Every variant is underlined; subtle takes the default text colour."
+    },
+    {
+      "name": "disabled",
+      "description": "The disabled text colour. Set with the standard disabled(_:) modifier."
+    },
+    {
+      "name": "Button Shapes on",
+      "description": "Every variant is underlined at rest, so the link is not told from text by colour alone."
+    },
+    {
+      "name": "external",
+      "description": "A small arrow icon follows the title."
+    }
+  ],
+  "appearance": "The title and icon use the link text role (inline, standalone) or the muted text role (subtle), and the disabled text role when disabled. The underline is the text colour. The style draws no background. The high-contrast themes resolve the same roles to stronger colours.",
+  "platformNotes": "The parity map lists this entry as a style named MonarchLinkStyle, and that is what is built; Android builds a MonarchLink composable because Compose has no link control. The style does not set the type size: like the web link it takes the font of the text around it, so apply monarchTextStyle to the link or its container. The web underlines inline links at 40% of the text colour and standalone and subtle links on hover; iOS has no hover on touch, so the underline is full strength, and the other variants are underlined while pressed and when Button Shapes is on. The web adds the external icon and note for target=\"_blank\"; here isExternal is explicit, because where a URL opens is decided by the app: Link opens the default browser, and an app that wants an in-app browser sets the openURL environment action and presents SFSafariViewController (UIKit) itself. asChild has no equivalent; the style applies to any Button or Link.",
+  "accessibility": [
+    "Link keeps the system's link trait and Button its button trait; the style changes only the look.",
+    "With isExternal the icon carries a label, so VoiceOver reads it after the title: \"Terms of service, opens in the browser\".",
+    "When the Button Shapes accessibility setting is on, every variant is underlined.",
+    "The touch target is at least 44 by 44 points; the visible text is centred in it.",
+    "The title scales with Dynamic Type through the font of its container and wraps, aligned to the leading edge."
+  ],
+  "edgeCases": [
+    "Without monarchTextStyle on the link or its container the title uses the system body font.",
+    "The 44-point minimum height makes a link taller than a line of text; it is not meant to sit inside a paragraph.",
+    "A Button that opens a screen is read as a button. Add accessibilityAddTraits(.isLink) when it should be read as a link.",
+    "A label that is not text (an HStack with an icon) is underlined only on its text."
+  ],
+  "tests": [
+    "MonarchLinkStyleTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Variants and external",
+      "fixture": "link",
+      "webExample": "Variants and external",
+      "template": "MonarchFlowLayout(spacing: theme.spacing.space4) {\n    Button({{links.0.label}}) {}\n        .buttonStyle(.monarchLink({{links.0.variant|case}}))\n    Button({{links.1.label}}) {}\n        .buttonStyle(.monarchLink({{links.1.variant|case}}))\n    Button({{links.2.label}}) {}\n        .buttonStyle(.monarchLink({{links.2.variant|case}}))\n    if let url = URL(string: {{links.3.href}}) {\n        Link({{links.3.label}}, destination: url)\n            .buttonStyle(.monarchLink({{links.3.variant|case}}, isExternal: {{links.3.external}}))\n    }\n}\n.monarchTextStyle(.body)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme",
+      "setup": "@Environment(\\.monarchTheme) private var theme",
+      "code": "MonarchFlowLayout(spacing: theme.spacing.space4) {\n    Button(\"Inline link\") {}\n        .buttonStyle(.monarchLink(.inline))\n    Button(\"Standalone link\") {}\n        .buttonStyle(.monarchLink(.standalone))\n    Button(\"Subtle link\") {}\n        .buttonStyle(.monarchLink(.subtle))\n    if let url = URL(string: \"https://rookhq.com\") {\n        Link(\"Rook website\", destination: url)\n            .buttonStyle(.monarchLink(.inline, isExternal: true))\n    }\n}\n.monarchTextStyle(.body)"
+    },
+    {
+      "title": "A subtle link under a field",
+      "code": "VStack(alignment: .leading) {\n    MonarchTextField(\"Password\", text: $password, isSecure: true)\n    Button(\"Forgot password?\") { showsReset = true }\n        .buttonStyle(.monarchLink(.subtle))\n        .monarchTextStyle(.caption)\n}",
+      "setup": "@State private var password = \"\"\n@State private var showsReset = false"
+    },
+    {
+      "title": "A standalone link at the end of a list",
+      "code": "Button(\"View all invoices\") {}\n    .buttonStyle(.monarchLink(.standalone))\n    .monarchTextStyle(.label)"
+    },
+    {
+      "title": "A link inside a sentence: Markdown in Text",
+      "code": "Text(\"Read the [terms of service](https://example.com/terms) before you continue.\")\n    .monarchTextStyle(.body)\n    .tint(theme.colors.textLink)",
+      "setup": "@Environment(\\.monarchTheme) private var theme"
+    }
+  ],
+  "webEquivalent": "Link",
+  "dependsOn": [
+    "text",
+    "icon"
+  ]
+}

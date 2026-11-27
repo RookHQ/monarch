@@ -1,0 +1,121 @@
+{
+  "id": "rook-rail",
+  "name": null,
+  "title": "RookRail",
+  "family": "navigation",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "A column of icon buttons on the accent colour (Image(systemName:) in a Button with an accessibility label, a dot for something new), beside the page; MonarchAvatar for the account; the Help & support button opens a sheet; MonarchWorkspaceSwitcher and MonarchSpaceSwitcher inside rook-rail",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: Rook's primary navigation on iOS: the app's name, the workspace and space switchers, the Rook sections with unread counts, workspace links into Rook ID, Help & support and the account menu, in a sidebar that becomes the root list on iPhone.",
+  "whenToUse": "As the top-level navigation of a Rook app with more destinations than fit a tab bar, so every Rook app is arranged the same way.",
+  "whenNotToUse": "For apps outside Rook, or with five or fewer destinations, use the app-shell recipe (TabView, with .sidebarAdaptable from iOS 18). For navigation inside a section use NavigationStack and List.",
+  "api": [
+    "NavigationSplitView { List(selection: $current) { Section { MonarchWorkspaceSwitcher(selection:workspaces:); MonarchSpaceSwitcher(selection:spaces:) } Section { ForEach(items) { item in NavigationLink(value: item.id) { Label(item.name, systemImage: item.systemImage) }.badge(item.unread) } } Section(\"Workspace\") { Link(destination: url) { Label(\"Members\", systemImage: …) }.accessibilityHint(\"Opens in Rook ID\") } Section { Button { showsSupport = true } label: { Label(\"Help & support\", systemImage: …) } } }.navigationTitle(appName).toolbar { ToolbarItem(placement: .primaryAction) { Menu { … } label: { MonarchAvatar(…, isDecorative: true) } } } } detail: { … }"
+  ],
+  "options": [
+    {
+      "name": "app name",
+      "type": "navigationTitle",
+      "default": "required",
+      "description": "The Rook app's name as the sidebar's title."
+    },
+    {
+      "name": "switchers",
+      "type": "MonarchWorkspaceSwitcher, MonarchSpaceSwitcher",
+      "default": "none",
+      "description": "At the top of the sidebar, in their own section."
+    },
+    {
+      "name": "sections",
+      "type": "NavigationLink(value:)",
+      "default": "required",
+      "description": "One row per destination with a decorative symbol, the selected state from List(selection:) and an unread count with badge(_:). Group destinations into Sections with headers when there are many."
+    },
+    {
+      "name": "workspace links",
+      "type": "Link",
+      "default": "none",
+      "description": "Members, billing and other Rook ID pages; they leave the app, so each has the hint \"Opens in Rook ID\"."
+    },
+    {
+      "name": "support",
+      "type": "Button",
+      "default": "none",
+      "description": "Help & support, which opens the support-panel recipe in a sheet."
+    },
+    {
+      "name": "account",
+      "type": "Menu",
+      "default": "none",
+      "description": "The account-menu recipe in the primary toolbar slot, labelled by a decorative MonarchAvatar."
+    }
+  ],
+  "states": [
+    {
+      "name": "iPhone",
+      "description": "The sidebar is the root list; choosing a destination pushes it, and the back button returns to the list."
+    },
+    {
+      "name": "iPad and wide windows",
+      "description": "The sidebar sits beside the detail; the system button collapses and shows it."
+    },
+    {
+      "name": "selected",
+      "description": "The current destination has the system selection highlight and the selected trait."
+    },
+    {
+      "name": "unread",
+      "description": "A count badge at the end of the row; a count of 0 shows nothing."
+    },
+    {
+      "name": "support open",
+      "description": "The support-panel sheet at medium height, which can be pulled to large."
+    }
+  ],
+  "appearance": "The system sidebar list and navigation bar, Monarch switchers and avatar, and the system badge. The theme's accent tints selection. Light, dark and both high-contrast themes follow the system and the Monarch theme roles.",
+  "platformNotes": "The web RookRail is a 48-point rail of icons that expands to labels, remembers its state in the rook_rail cookie shared across Rook apps, and becomes a top bar with a drawer below 768 px. iOS has no navigation drawer; its pattern for many destinations is a sidebar, so the recipe uses NavigationSplitView: on iPhone the sidebar is the root list and destinations push, on iPad it sits beside the content and collapses with the system button. Android uses a modal navigation drawer for the same role. The cookie and the expanded state do not apply: each app restores its own destination (for example with SceneStorage). Keyboard shortcuts and tooltips of the collapsed rail are not offered; VoiceOver reads each row's label. Links to Rook ID and other products leave the app, so the web's \"opens in a new tab\" becomes the hint \"Opens in Rook ID\". The web's theme toggle and notifications slots go into the account menu and the toolbar (the identity-bar recipe). Rook-specific: apps outside Rook use the app-shell recipe.",
+  "accessibility": [
+    "The sidebar's navigation title names the app and is read first.",
+    "Each destination is a standard navigation row read as its label; the selected one has the selected trait.",
+    "The unread count is a system badge, text rather than a colour; check on a device that VoiceOver reads it with the row.",
+    "Workspace links have the hint \"Opens in Rook ID\" so leaving the app is not a surprise.",
+    "The account menu is named \"Account menu for …\" and its avatar is decorative.",
+    "Rows and buttons are at least 44 points; symbols in labels are decorative."
+  ],
+  "edgeCases": [
+    "Long app or destination names truncate in the sidebar title and wrap in rows at the largest text sizes.",
+    "With no spaces, MonarchSpaceSwitcher hides itself.",
+    "Restore the selected destination when the app relaunches; the web's shared cookie has no iOS counterpart.",
+    "Many destinations: group them in Sections with headers instead of one long list."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Collapsed, with Help & support and a theme toggle",
+      "fixture": "rook-rail",
+      "webExample": "Collapsed, with Help & support and a theme toggle",
+      "template": "HStack(spacing: 0) {\n    VStack(spacing: theme.spacing.space1) {\n        Text(\"R\")\n            .monarchTextStyle(.bodyStrong)\n            .foregroundStyle(theme.colors.accentOnSolid)\n            .frame(width: 32, height: 32)\n            .background(theme.colors.accentOnSolid.opacity(0.2), in: RoundedRectangle(cornerRadius: 8, style: .continuous))\n            .accessibilityLabel({{brand}})\n        railButton({{items.0.label}}, systemImage: \"house\", key: {{items.0.key}})\n        railButton({{items.1.label}}, systemImage: \"tray\", key: {{items.1.key}}, hasDot: true, unread: {{items.1.badge}})\n        railButton({{items.2.label}}, systemImage: \"calendar\", key: {{items.2.key}})\n        Rectangle().fill(theme.colors.accentOnSolid.opacity(0.25)).frame(height: 1).padding(.horizontal, theme.spacing.space2)\n        railButton(\"Help & support\", systemImage: \"lifepreserver\", hasDot: true, unread: {{supportUnread}}) { showsSupport = true }\n        railButton({{workspaceItems.0.label}}, systemImage: \"person.2\")\n        railButton({{workspaceItems.1.label}}, systemImage: \"gearshape\", hint: \"Opens in \" + {{workspaceItems.1.opensIn}})\n        railButton({{workspaceItems.2.label}}, systemImage: \"creditcard\", hint: \"Opens in \" + {{workspaceItems.2.opensIn}})\n        Spacer(minLength: 0)\n        Rectangle().fill(theme.colors.accentOnSolid.opacity(0.25)).frame(height: 1).padding(.horizontal, theme.spacing.space2)\n        railButton({{quickAction.label}}, systemImage: \"plus\")\n            .keyboardShortcut({{quickAction.shortcut}}, modifiers: [])\n        railButton(\"Theme\", systemImage: \"sun.max\")\n        railButton(\"Expand navigation\", systemImage: \"sidebar.left\")\n        railButton({{notifications.label}}, systemImage: \"bell\", hasDot: true, unread: {{notifications.count}})\n        MonarchAvatar(image: nil, name: {{account.name}}, size: .sm, status: .online, isDecorative: false)\n            .accessibilityHint({{account.email}})\n    }\n    .padding(.vertical, theme.spacing.space2)\n    .frame(width: 52)\n    .background(theme.colors.accentSolid)\n    Text({{page}})\n        .monarchTextStyle(.body)\n        .foregroundStyle(theme.colors.textMuted)\n        .padding(theme.spacing.space4)\n        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)\n        .background(theme.colors.bgSurface)\n}\n.clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))\n.frame(minHeight: theme.spacing.space24 * 5)\n.sheet(isPresented: $showsSupport) {\n    NavigationStack {\n        List {\n            Section(\"Popular articles\") {\n                Button(\"Reset your password\") {}\n            }\n        }\n        .navigationTitle(\"Help & support\")\n        .toolbar {\n            ToolbarItem(placement: .confirmationAction) {\n                Button(\"Done\") { showsSupport = false }\n            }\n            .monarchFlat()\n        }\n    }\n    .presentationDetents([.medium, .large])\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var current: String? = {{current}}\n@State private var showsSupport = false\n\n/// One icon button of the rail: named for VoiceOver, with a dot when something is new, and a dark plate and a bar when current.\nprivate func railButton(_ label: String, systemImage: String, key: String? = nil, hasDot: Bool = false, unread: Int? = nil, hint: String? = nil, action: @escaping () -> Void = {}) -> some View {\n    Button {\n        if let key { current = key }\n        action()\n    } label: {\n        Image(systemName: systemImage)\n            .foregroundStyle(theme.colors.accentOnSolid)\n            .frame(width: 40, height: 40)\n            .overlay(alignment: .topTrailing) {\n                if hasDot {\n                    Circle().fill(theme.colors.accentOnSolid).frame(width: 8, height: 8)\n                }\n            }\n            .background {\n                if key != nil && current == key {\n                    RoundedRectangle(cornerRadius: 8, style: .continuous).fill(theme.colors.accentSolidActive)\n                }\n            }\n            .overlay(alignment: .leading) {\n                if key != nil && current == key {\n                    Capsule().fill(theme.colors.accentOnSolid).frame(width: 3, height: 24).offset(x: -2)\n                }\n            }\n            .frame(minWidth: 44, minHeight: 44)\n    }\n    .buttonStyle(.plain)\n    .accessibilityLabel(label)\n    .accessibilityValue(unread.map { \"\\($0) unread\" } ?? \"\")\n    .accessibilityHint(hint ?? \"\")\n    .accessibilityAddTraits(key != nil && current == key ? .isSelected : [])\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var current: String? = \"calendar\"\n@State private var showsSupport = false\n\n/// One icon button of the rail: named for VoiceOver, with a dot when something is new, and a dark plate and a bar when current.\nprivate func railButton(_ label: String, systemImage: String, key: String? = nil, hasDot: Bool = false, unread: Int? = nil, hint: String? = nil, action: @escaping () -> Void = {}) -> some View {\n    Button {\n        if let key { current = key }\n        action()\n    } label: {\n        Image(systemName: systemImage)\n            .foregroundStyle(theme.colors.accentOnSolid)\n            .frame(width: 40, height: 40)\n            .overlay(alignment: .topTrailing) {\n                if hasDot {\n                    Circle().fill(theme.colors.accentOnSolid).frame(width: 8, height: 8)\n                }\n            }\n            .background {\n                if key != nil && current == key {\n                    RoundedRectangle(cornerRadius: 8, style: .continuous).fill(theme.colors.accentSolidActive)\n                }\n            }\n            .overlay(alignment: .leading) {\n                if key != nil && current == key {\n                    Capsule().fill(theme.colors.accentOnSolid).frame(width: 3, height: 24).offset(x: -2)\n                }\n            }\n            .frame(minWidth: 44, minHeight: 44)\n    }\n    .buttonStyle(.plain)\n    .accessibilityLabel(label)\n    .accessibilityValue(unread.map { \"\\($0) unread\" } ?? \"\")\n    .accessibilityHint(hint ?? \"\")\n    .accessibilityAddTraits(key != nil && current == key ? .isSelected : [])\n}",
+      "code": "HStack(spacing: 0) {\n    VStack(spacing: theme.spacing.space1) {\n        Text(\"R\")\n            .monarchTextStyle(.bodyStrong)\n            .foregroundStyle(theme.colors.accentOnSolid)\n            .frame(width: 32, height: 32)\n            .background(theme.colors.accentOnSolid.opacity(0.2), in: RoundedRectangle(cornerRadius: 8, style: .continuous))\n            .accessibilityLabel(\"Acme Planner\")\n        railButton(\"Home\", systemImage: \"house\", key: \"home\")\n        railButton(\"Inbox\", systemImage: \"tray\", key: \"inbox\", hasDot: true, unread: 4)\n        railButton(\"Calendar\", systemImage: \"calendar\", key: \"calendar\")\n        Rectangle().fill(theme.colors.accentOnSolid.opacity(0.25)).frame(height: 1).padding(.horizontal, theme.spacing.space2)\n        railButton(\"Help & support\", systemImage: \"lifepreserver\", hasDot: true, unread: 1) { showsSupport = true }\n        railButton(\"Members\", systemImage: \"person.2\")\n        railButton(\"Settings\", systemImage: \"gearshape\", hint: \"Opens in \" + \"Rook ID\")\n        railButton(\"Billing\", systemImage: \"creditcard\", hint: \"Opens in \" + \"Rook ID\")\n        Spacer(minLength: 0)\n        Rectangle().fill(theme.colors.accentOnSolid.opacity(0.25)).frame(height: 1).padding(.horizontal, theme.spacing.space2)\n        railButton(\"New event\", systemImage: \"plus\")\n            .keyboardShortcut(\"C\", modifiers: [])\n        railButton(\"Theme\", systemImage: \"sun.max\")\n        railButton(\"Expand navigation\", systemImage: \"sidebar.left\")\n        railButton(\"Notifications\", systemImage: \"bell\", hasDot: true, unread: 2)\n        MonarchAvatar(image: nil, name: \"Ada Lovelace\", size: .sm, status: .online, isDecorative: false)\n            .accessibilityHint(\"ada@example.com\")\n    }\n    .padding(.vertical, theme.spacing.space2)\n    .frame(width: 52)\n    .background(theme.colors.accentSolid)\n    Text(\"Page content\")\n        .monarchTextStyle(.body)\n        .foregroundStyle(theme.colors.textMuted)\n        .padding(theme.spacing.space4)\n        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)\n        .background(theme.colors.bgSurface)\n}\n.clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))\n.frame(minHeight: theme.spacing.space24 * 5)\n.sheet(isPresented: $showsSupport) {\n    NavigationStack {\n        List {\n            Section(\"Popular articles\") {\n                Button(\"Reset your password\") {}\n            }\n        }\n        .navigationTitle(\"Help & support\")\n        .toolbar {\n            ToolbarItem(placement: .confirmationAction) {\n                Button(\"Done\") { showsSupport = false }\n            }\n            .monarchFlat()\n        }\n    }\n    .presentationDetents([.medium, .large])\n}"
+    }
+  ],
+  "webEquivalent": "RookRail",
+  "dependsOn": [
+    "app-shell",
+    "workspace-switcher",
+    "space-switcher",
+    "account-menu",
+    "support-panel"
+  ],
+  "icons": {
+    "quickAction": "PlusGlyph",
+    "notifications": "BellGlyph"
+  }
+}

@@ -1,5 +1,7 @@
-import { AiTypingDots } from '@rookcom/monarch-react/ai';
+import { AiTypingDots, type AiTypingDotsProps } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-typing-dots.fixture.json';
 
 export default {
   id: 'ai-typing-dots',
@@ -74,8 +76,12 @@ export default {
           title: 'Sizes',
           render: () => (
             <>
-              <AiTypingDots size="sm" />
-              <AiTypingDots />
+              <AiTypingDots
+                size={fixture.data.sizes[0] as NonNullable<AiTypingDotsProps['size']>}
+              />
+              <AiTypingDots
+                size={fixture.data.sizes[1] as NonNullable<AiTypingDotsProps['size']>}
+              />
             </>
           ),
         },

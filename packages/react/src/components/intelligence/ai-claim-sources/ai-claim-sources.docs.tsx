@@ -1,78 +1,29 @@
 import { useState } from 'react';
 import { AiClaimSources, type AiClaim, type AiClaimSource } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-claim-sources.fixture.json';
 
-const sources: AiClaimSource[] = [
-  {
-    id: 's1',
-    title: 'Team handbook',
-    url: 'https://example.com/handbook',
-    kind: 'doc',
-    publishedAt: '2026-03-03',
-  },
-  {
-    id: 's2',
-    title: 'Support policy',
-    url: 'https://example.com/support-policy',
-    kind: 'web',
-    publishedAt: '2025-11-20',
-  },
-  { id: 's3', title: 'Ticket 1042', kind: 'record' },
-];
+const sources: AiClaimSource[] = fixture.data.sources.map((s) => ({
+  id: s.id,
+  title: s.title,
+  kind: s.kind as AiClaimSource['kind'],
+  ...('url' in s ? { url: s.url } : {}),
+  ...('publishedAt' in s ? { publishedAt: s.publishedAt } : {}),
+}));
 
-const claims: AiClaim[] = [
-  {
-    id: 'c1',
-    text: 'Requests are answered within two working days.',
-    support: 'supported',
-    evidence: [
-      {
-        id: 'e1',
-        sourceId: 's1',
-        quote: 'We answer every request within two working days.',
-        location: 'Page 4',
-        stance: 'supports',
-      },
-    ],
-  },
-  {
-    id: 'c2',
-    text: 'Urgent issues are handled within one hour.',
-    support: 'conflicting',
-    evidence: [
-      {
-        id: 'e2',
-        sourceId: 's2',
-        quote: 'Urgent issues go to the on-call queue and are picked up within one hour.',
-        location: 'Section 2.1',
-        stance: 'supports',
-      },
-      {
-        id: 'e3',
-        sourceId: 's3',
-        quote: 'Marked urgent at 09:10. First reply at 15:42.',
-        location: 'Activity log',
-        stance: 'contradicts',
-      },
-    ],
-  },
-  {
-    id: 'c3',
-    text: 'Refunds are paid within five days to the original payment method.',
-    support: 'partial',
-    evidence: [
-      {
-        id: 'e4',
-        sourceId: 's2',
-        quote: 'Refunds go back to the original payment method.',
-        location: 'Section 5',
-        stance: 'supports',
-      },
-    ],
-  },
-  { id: 'c4', text: 'Support is open at weekends.', support: 'unsupported', evidence: [] },
-  { id: 'c5', text: 'The office moved in May.', support: 'unchecked', evidence: [] },
-];
+const claims: AiClaim[] = fixture.data.claims.map((c) => ({
+  id: c.id,
+  text: c.text,
+  support: c.support as AiClaim['support'],
+  evidence: ('evidence' in c ? c.evidence : []).map((ev) => ({
+    id: ev.id,
+    sourceId: ev.sourceId,
+    quote: ev.quote,
+    location: ev.location,
+    stance: ev.stance as 'supports' | 'contradicts',
+  })),
+}));
 
 function SelectDemo() {
   const [selected, setSelected] = useState<string | null>('c2');
@@ -250,8 +201,8 @@ export default {
             <AiClaimSources
               claims={claims}
               sources={sources}
-              locale="en-GB"
-              defaultExpandedIds={['c1', 'c2']}
+              locale={fixture.data.locale}
+              defaultExpandedIds={fixture.data.expanded}
             />
           ),
         },

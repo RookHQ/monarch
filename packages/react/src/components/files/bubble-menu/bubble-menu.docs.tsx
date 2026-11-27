@@ -1,19 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Button } from '@rookcom/monarch-react';
 import { BubbleMenu } from '@rookcom/monarch-react/editor';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './bubble-menu.fixture.json';
 
-const TEXT =
-  '<p>Select any words in this paragraph to see the menu. It floats above the selection, flips below near the top of the window, and never takes focus until you ask for it with Alt+F10.</p>';
+const TEXT = `<p>${fixture.data.text}</p>`;
 
 function useDemoEditor() {
   return useEditor({
     immediatelyRender: false,
     extensions: [StarterKit.configure({ link: { openOnClick: false } })],
     content: TEXT,
-    editorProps: { attributes: { 'aria-label': 'Sample text', role: 'textbox' } },
+    editorProps: { attributes: { 'aria-label': fixture.data.label, role: 'textbox' } },
   });
 }
 
@@ -28,6 +29,13 @@ const frame = {
 
 function FormattingDemo() {
   const editor = useDemoEditor();
+  // Start with a few words selected, so the menu is showing.
+  useEffect(() => {
+    if (!editor) return;
+    // Document positions count the paragraph's opening, one more than the text offsets.
+    const { start, end } = fixture.data.selection;
+    editor.commands.setTextSelection({ from: start + 1, to: end + 1 });
+  }, [editor]);
   return (
     <div style={frame}>
       <EditorContent editor={editor} />
@@ -179,7 +187,12 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Inline formatting', stack: true, render: () => <FormattingDemo /> },
+        {
+          title: 'Inline formatting',
+          stack: true,
+          stage: true,
+          render: () => <FormattingDemo />,
+        },
         { title: 'Custom action', stack: true, render: () => <CommentDemo /> },
       ],
     },

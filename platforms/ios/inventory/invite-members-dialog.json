@@ -1,0 +1,93 @@
+{
+  "id": "invite-members-dialog",
+  "name": null,
+  "title": "InviteMembersDialog",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:) with a NavigationStack, a ScrollView around MonarchTagInput, MonarchRolePicker, MonarchAppAccessPicker and MonarchTextField, cancellation and confirmation ToolbarItems, and interactiveDismissDisabled(_:) while sending",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: invite people by email with a role and app access, from a sheet with Cancel and Send in the navigation bar, reporting the addresses that could not be invited.",
+  "whenToUse": "When a workspace admin adds people by email from a members screen.",
+  "whenNotToUse": "For assigning existing members to something, use MonarchAssigneePicker. For a shareable invite link, show the link with a ShareLink instead of a form.",
+  "api": [
+    ".sheet(isPresented: $isOpen) { NavigationStack { ScrollView { form }.navigationTitle(\"Invite people\").toolbar { ToolbarItem(placement: .cancellationAction) { … } ToolbarItem(placement: .confirmationAction) { Button(\"Send invite\") { … } } } }.interactiveDismissDisabled(isSending) }",
+    "MonarchTagInput(\"Email addresses\", tags: $emails, separators: [\",\", \" \"], maxCount:, validate: { value, _ in … })",
+    "MonarchRolePicker(\"Role\", selection: $role, roles: [MonarchRoleOption(…)], layout: .compact)",
+    "MonarchAppAccessPicker([MonarchAppAccessOption(…)], selection: $apps, label: \"App access\")",
+    "MonarchTextField(\"Personal note (optional)\", text: $note)",
+    "MonarchBanner(\"Some invitations were not sent\", message:, tone: .warning)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "empty",
+      "description": "Send invite is disabled until at least one valid address and a role are chosen."
+    },
+    {
+      "name": "filled",
+      "description": "Each address is a removable tag; the confirmation button reads Send 3 invites."
+    },
+    {
+      "name": "invalid address",
+      "description": "MonarchTagInput refuses the text and shows why, such as “ana” is not an email address."
+    },
+    {
+      "name": "sending",
+      "description": "A progress bar shows and the sheet cannot be swiped away."
+    },
+    {
+      "name": "partial failure",
+      "description": "A warning banner lists the addresses that failed with the reason; only those stay in the field."
+    },
+    {
+      "name": "done",
+      "description": "The sheet closes and \"Invited 3 people\" is announced."
+    }
+  ],
+  "appearance": "A system sheet with a navigation bar; the fields are Monarch's tag input, role picker, app access picker and text field on the canvas background, and failures are a warning MonarchBanner. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "The web InviteMembersDialog is one component with a trigger, controlled open state, email parsing, maxEmails and plural messages. On iOS it is a recipe: a sheet with Cancel and Send in the navigation bar is the system's form pattern, MonarchTagInput splits and checks the addresses, plural text comes from the app's String Catalog, and the app's invite call returns the failed addresses. Android composes the same recipe.",
+  "accessibility": [
+    "The sheet's navigation title is read first; Cancel and Send are the system's toolbar buttons.",
+    "MonarchTagInput announces each address added or removed and reads why an address was refused.",
+    "MonarchRolePicker and MonarchAppAccessPicker read each choice with its selected state.",
+    "Announce the result with AccessibilityNotification.Announcement when the sheet closes."
+  ],
+  "edgeCases": [
+    "Keep the addresses that failed in the field so the admin can fix and resend them.",
+    "Lock the sheet with interactiveDismissDisabled while sending.",
+    "Pasting several addresses at once is split on the separators.",
+    "The role picker's compact layout keeps the sheet short; use .cards when roles need their descriptions."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Invite with role, apps and a note",
+      "fixture": "invite-members-dialog",
+      "webExample": "Invite with role, apps and a note",
+      "template": "MonarchButton({{trigger}}, systemImage: \"person.badge.plus\", variant: .primary) { isOpen = true }\n    .sheet(isPresented: $isOpen) {\n        NavigationStack {\n            ScrollView {\n                VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                    Text({{description}}).monarchTextStyle(.body)\n                    if !failed.isEmpty {\n                        MonarchBanner(\"Some invitations were not sent\", message: failed.joined(separator: \"\\n\"), tone: .warning)\n                    }\n                    MonarchTagInput(\n                        {{emails.label}},\n                        tags: $emails,\n                        isRequired: true,\n                        prompt: {{emails.placeholder}},\n                        helper: {{emails.helper}},\n                        separators: [\",\", \" \", \"\\n\"],\n                        maxCount: 20,\n                        validate: { value, _ in value.contains(\"@\") ? nil : \"“\\(value)” is not an email address.\" }\n                    )\n                    .monarchHelperAbove()\n                    MonarchRolePicker(\n                        {{role.label}},\n                        selection: $role,\n                        roles: [\n                            MonarchRoleOption({{role.options.0.value}}, title: {{role.options.0.label}}, description: {{role.options.0.description}}),\n                            MonarchRoleOption({{role.options.1.value}}, title: {{role.options.1.label}}, description: {{role.options.1.description}}),\n                            MonarchRoleOption({{role.options.2.value}}, title: {{role.options.2.label}}, description: {{role.options.2.description}}),\n                        ],\n                        isRequired: true,\n                        showsDescription: false,\n                        layout: .compact\n                    )\n                    MonarchAppAccessPicker(\n                        [\n                            MonarchAppAccessOption(id: {{apps.options.0.id}}, name: {{apps.options.0.name}}, description: {{apps.options.0.description}}),\n                            MonarchAppAccessOption(id: {{apps.options.1.id}}, name: {{apps.options.1.name}}, description: {{apps.options.1.description}}),\n                            MonarchAppAccessOption(id: {{apps.options.2.id}}, name: {{apps.options.2.name}}, description: {{apps.options.2.description}}),\n                        ],\n                        selection: $apps,\n                        label: {{apps.label}}\n                    )\n                    MonarchTextField({{note.label}}, text: $note, prompt: {{note.placeholder}}, optionalText: {{note.helper}}, axis: .vertical, lineLimit: 3...6)\n                }\n                .padding(theme.spacing.space4)\n            }\n            .navigationTitle({{title}})\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button({{cancel}}) { isOpen = false }\n                }\n                ToolbarItem(placement: .confirmationAction) {\n                    Button(emails.count > 1 ? \"Send \\(emails.count) invites\" : {{send}}) { send() }\n                        .disabled(emails.isEmpty || role == nil || isSending)\n                }\n            }\n        }\n        .interactiveDismissDisabled(isSending)\n    }",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = false\n@State private var emails: [String] = []\n@State private var role: String? = {{role.value}}\n@State private var apps: Set<String> = []\n@State private var note = \"\"\n@State private var isSending = false\n@State private var failed: [String] = []\n\nprivate func send() {\n    isSending = true\n    Task {\n        // Send the invitations here; keep the addresses that failed.\n        try? await Task.sleep(for: .milliseconds(300))\n        failed = []\n        isSending = false\n        isOpen = false\n        AccessibilityNotification.Announcement(\"Invited \\(emails.count) people\").post()\n    }\n}",
+      "experimental": true,
+      "previewPresented": [
+        "isOpen"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = false\n@State private var emails: [String] = []\n@State private var role: String? = \"member\"\n@State private var apps: Set<String> = []\n@State private var note = \"\"\n@State private var isSending = false\n@State private var failed: [String] = []\n\nprivate func send() {\n    isSending = true\n    Task {\n        // Send the invitations here; keep the addresses that failed.\n        try? await Task.sleep(for: .milliseconds(300))\n        failed = []\n        isSending = false\n        isOpen = false\n        AccessibilityNotification.Announcement(\"Invited \\(emails.count) people\").post()\n    }\n}",
+      "code": "MonarchButton(\"Invite people\", systemImage: \"person.badge.plus\", variant: .primary) { isOpen = true }\n    .sheet(isPresented: $isOpen) {\n        NavigationStack {\n            ScrollView {\n                VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                    Text(\"They’ll get an email and join once they accept the invitation.\").monarchTextStyle(.body)\n                    if !failed.isEmpty {\n                        MonarchBanner(\"Some invitations were not sent\", message: failed.joined(separator: \"\\n\"), tone: .warning)\n                    }\n                    MonarchTagInput(\n                        \"Email addresses\",\n                        tags: $emails,\n                        isRequired: true,\n                        prompt: \"name@example.com\",\n                        helper: \"Separate several addresses with commas, spaces or new lines.\",\n                        separators: [\",\", \" \", \"\\n\"],\n                        maxCount: 20,\n                        validate: { value, _ in value.contains(\"@\") ? nil : \"“\\(value)” is not an email address.\" }\n                    )\n                    .monarchHelperAbove()\n                    MonarchRolePicker(\n                        \"Role\",\n                        selection: $role,\n                        roles: [\n                            MonarchRoleOption(\"viewer\", title: \"Viewer\", description: \"Can see everything but change nothing.\"),\n                            MonarchRoleOption(\"member\", title: \"Member\", description: \"Can create and edit work.\"),\n                            MonarchRoleOption(\"admin\", title: \"Admin\", description: \"Can also manage members and settings.\"),\n                        ],\n                        isRequired: true,\n                        showsDescription: false,\n                        layout: .compact\n                    )\n                    MonarchAppAccessPicker(\n                        [\n                            MonarchAppAccessOption(id: \"notes\", name: \"Notes\", description: \"Shared documents\"),\n                            MonarchAppAccessOption(id: \"tasks\", name: \"Tasks\", description: \"Projects and issues\"),\n                            MonarchAppAccessOption(id: \"calendar\", name: \"Calendar\", description: \"Shared calendars\"),\n                        ],\n                        selection: $apps,\n                        label: \"App access\"\n                    )\n                    MonarchTextField(\"Personal note\", text: $note, prompt: \"Add a note to the invitation email\", optionalText: \"Optional\", axis: .vertical, lineLimit: 3...6)\n                }\n                .padding(theme.spacing.space4)\n            }\n            .navigationTitle(\"Invite people\")\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button(\"Cancel\") { isOpen = false }\n                }\n                ToolbarItem(placement: .confirmationAction) {\n                    Button(emails.count > 1 ? \"Send \\(emails.count) invites\" : \"Send invite\") { send() }\n                        .disabled(emails.isEmpty || role == nil || isSending)\n                }\n            }\n        }\n        .interactiveDismissDisabled(isSending)\n    }"
+    }
+  ],
+  "webEquivalent": "InviteMembersDialog",
+  "dependsOn": [
+    "sheet",
+    "tag-input",
+    "role-picker",
+    "app-access-picker",
+    "text-field",
+    "button",
+    "alert"
+  ]
+}

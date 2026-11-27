@@ -6,20 +6,18 @@ import {
   type RoleOption,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './invite-members-dialog.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
-const ROLES: RoleOption[] = [
-  { value: 'viewer', label: 'Viewer', description: 'Can see everything but change nothing.' },
-  { value: 'member', label: 'Member', description: 'Can create and edit work.' },
-  { value: 'admin', label: 'Admin', description: 'Can also manage members and settings.' },
-];
+const ROLES: RoleOption[] = fixture.data.role.options.map(({ value, label, description }) => ({
+  value,
+  label,
+  description,
+}));
 
-const APPS: AppAccessOption[] = [
-  { id: 'notes', name: 'Notes', description: 'Shared documents' },
-  { id: 'tasks', name: 'Tasks', description: 'Projects and issues' },
-  { id: 'calendar', name: 'Calendar', description: 'Shared calendars' },
-];
+const APPS: AppAccessOption[] = fixture.data.apps.options;
 
 async function sendInvites({ emails }: InviteMembersPayload) {
   await wait(800);
@@ -152,11 +150,13 @@ export default {
       items: [
         {
           title: 'Invite with role, apps and a note',
+          stage: { align: 'center' },
           render: () => (
             <InviteMembersDialog
-              trigger={<Button variant="primary">Invite people</Button>}
+              trigger={<Button variant="primary">{fixture.data.trigger}</Button>}
+              defaultOpen
               roles={ROLES}
-              defaultRole="member"
+              defaultRole={fixture.data.role.value}
               apps={APPS}
               allowMessage
               onInvite={sendInvites}

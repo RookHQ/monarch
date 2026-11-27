@@ -1,40 +1,46 @@
 import { useState } from 'react';
 import { Button, TermsUpdateDialog } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './terms-update-dialog.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
-const DOCUMENTS = [
-  { label: 'Terms of Service', href: '#terms', version: '2026-12-01' },
-  { label: 'Privacy Policy', href: '#privacy', version: '2026-12-01' },
-];
+const HREFS = ['#terms', '#privacy'];
+
+const DOCUMENTS = fixture.data.documents.map((document, i) => ({
+  ...document,
+  href: HREFS[i] ?? '#',
+}));
 
 function Summary() {
   return (
     <>
-      <p>Here is what changed:</p>
+      <p>{fixture.data.summary.intro}</p>
       <ul>
-        <li>We explain how long we keep support messages.</li>
-        <li>We list the providers that host your data.</li>
+        {fixture.data.summary.items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
       </ul>
     </>
   );
 }
 
 function BlockingUpdate() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Show blocking update</Button>
+      <Button onClick={() => setOpen(true)}>{fixture.data.trigger}</Button>
       <TermsUpdateDialog
         open={open}
         onOpenChange={setOpen}
         summary={<Summary />}
-        effectiveDate="2026-12-01"
+        effectiveDate={fixture.data.effectiveDate}
+        locale={fixture.data.locale}
         documents={DOCUMENTS}
         onAccept={() => wait(800)}
         onDecline={() => setOpen(false)}
-        declineLabel="Sign out"
+        declineLabel={fixture.data.declineLabel}
       />
     </>
   );
@@ -52,6 +58,7 @@ function InformationalUpdate() {
         title="We’ve updated our Privacy Policy"
         summary="We now explain how long we keep support messages. Nothing changes in how you use the product."
         effectiveDate="2026-12-01"
+        locale="en-GB"
         documents={DOCUMENTS.slice(1)}
         onAccept={() => {}}
       />
@@ -69,6 +76,7 @@ function FailingAccept() {
         onOpenChange={setOpen}
         summary="We clarified how refunds work."
         effectiveDate="2026-12-01"
+        locale="en-GB"
         documents={DOCUMENTS.slice(0, 1)}
         onAccept={async () => {
           await wait(800);
@@ -201,7 +209,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Blocking, with sign out', render: () => <BlockingUpdate /> },
+        {
+          title: 'Blocking, with sign out',
+          stage: { align: 'center' },
+          render: () => <BlockingUpdate />,
+        },
         { title: 'Informational', render: () => <InformationalUpdate /> },
         { title: 'Error and retry', render: () => <FailingAccept /> },
       ],

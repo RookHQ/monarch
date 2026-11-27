@@ -7,6 +7,8 @@ import {
   type LinkCardPreview,
 } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './link-card.fixture.json';
 
 /** A neutral inline picture, so the examples need no network. */
 const PICTURE =
@@ -16,11 +18,11 @@ const PICTURE =
   );
 
 const ARTICLE: LinkCardPreview = {
-  url: 'https://example.com/guides/first-week',
-  title: 'Your first week: a practical guide',
-  description: 'What to set up, who to meet and where to find things in your first five days.',
-  siteName: 'Example Guides',
-  image: { src: PICTURE, width: 1200, height: 630 },
+  url: fixture.data.url,
+  title: fixture.data.title,
+  description: fixture.data.description,
+  siteName: fixture.data.siteName,
+  image: { src: PICTURE, width: fixture.data.image.width, height: fixture.data.image.height },
 };
 
 const VIDEO: LinkCardPreview = {

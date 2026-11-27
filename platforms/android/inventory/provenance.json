@@ -1,0 +1,128 @@
+{
+  "id": "provenance",
+  "name": "MonarchProvenance",
+  "title": "Provenance",
+  "family": "data-display",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Row, androidx.compose.material3.Text, android.text.format.DateUtils.getRelativeTimeSpanString",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Where a value came from and how fresh it is, such as \"Registry · 2 hours ago\".",
+  "whenToUse": "Next to any value the product did not get from the user: data from a registry, an import or a calculation, so people can judge how far to trust it.",
+  "whenNotToUse": "For the freshness of a whole data set with a refresh button, use MonarchFreshnessIndicator. For an AI-generated value, use MonarchAiGeneratedBadge.",
+  "api": [
+    "@Composable fun MonarchProvenance(source: String, modifier: Modifier = Modifier, variant: MonarchProvenanceVariant = MonarchProvenanceVariant.Chip, checkedAt: Long? = null, icon: (@Composable () -> Unit)? = null, onClick: (() -> Unit)? = null, labels: MonarchProvenanceLabels = MonarchProvenanceLabels())",
+    "enum class MonarchProvenanceVariant { Chip, Inline }",
+    "class MonarchProvenanceLabels(source: ((source: String) -> String)? = null, checked: ((time: String) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "source",
+      "type": "String",
+      "default": "required",
+      "description": "Where the value came from, already localised. Nothing is drawn when it is empty."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the note."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchProvenanceVariant",
+      "default": "MonarchProvenanceVariant.Chip",
+      "description": "Chip is a small bordered tag; Inline is plain muted text."
+    },
+    {
+      "name": "checkedAt",
+      "type": "Long?",
+      "default": "null",
+      "description": "When the value was fetched, checked or computed, in epoch milliseconds (UTC); shown as relative time and redrawn every minute."
+    },
+    {
+      "name": "icon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "A decorative icon before the text. Hidden from TalkBack."
+    },
+    {
+      "name": "onClick",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Makes the note a button that opens the source record. The app navigates."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchProvenanceLabels",
+      "default": "MonarchProvenanceLabels()",
+      "description": "Replacements for the spoken \"Source: …\" (monarch_provenance_source) and \"checked …\" (monarch_provenance_checked)."
+    }
+  ],
+  "states": [
+    {
+      "name": "with time",
+      "description": "The source, a middle dot and the relative time."
+    },
+    {
+      "name": "without time",
+      "description": "The source only."
+    },
+    {
+      "name": "opens the source",
+      "description": "The source in the link color and underlined; the note is a button with a 48dp touch target."
+    }
+  ],
+  "appearance": "Caption text in the muted text color. The chip adds the subtle background and the subtle border with small rounded corners; the inline form has neither. When it opens the source, the source takes the link color and an underline. The same roles in every theme, including both high-contrast themes.",
+  "platformNotes": "The web shows the absolute time in a tooltip on hover and focus; touch has no hover, so TalkBack reads the relative time that is shown, as on iOS. The web source can be any content; here it is text. The web href turns the source into a link; components do not navigate on Android, so onClick makes the whole note a button and the app opens the record. Dates are epoch milliseconds, formatted with DateUtils because java.time needs API 26. iOS shares the name and the variants.",
+  "accessibility": [
+    "The note is one TalkBack element read as \"Source: Registry, checked 2 hours ago\"; the icon and the middle dot are hidden.",
+    "With onClick the note has the button role and a touch target of at least 48dp, reserved in the layout.",
+    "The link state is shown by an underline as well as the color.",
+    "The text wraps at the largest font size instead of being cut off."
+  ],
+  "edgeCases": [
+    "An empty source draws nothing.",
+    "A time in the future reads as \"in 5 minutes\".",
+    "The relative time is redrawn once a minute while the note is on screen."
+  ],
+  "tests": [
+    "MonarchProvenanceTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Next to values",
+      "fixture": "provenance",
+      "webExample": "Next to values",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4), verticalAlignment = Alignment.CenterVertically) {\n        MonarchText(text = {{items.0.label}})\n        MonarchText(text = {{items.0.value}})\n        MonarchProvenance(source = {{items.0.source}}, checkedAt = System.currentTimeMillis() - {{items.0.checkedHoursAgo}} * 3_600_000L, icon = { MonarchIcon(SampleIcons.Database, contentDescription = null, size = MonarchIconSize.Sm) })\n    }\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4), verticalAlignment = Alignment.CenterVertically) {\n        MonarchText(text = {{items.1.label}})\n        MonarchText(text = {{items.1.value}})\n        MonarchProvenance(source = {{items.1.source}})\n    }\n}",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4), verticalAlignment = Alignment.CenterVertically) {\n        MonarchText(text = \"Expires\")\n        MonarchText(text = \"12 Aug 2027\")\n        MonarchProvenance(source = \"Registry\", checkedAt = System.currentTimeMillis() - 2 * 3_600_000L, icon = { MonarchIcon(SampleIcons.Database, contentDescription = null, size = MonarchIconSize.Sm) })\n    }\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4), verticalAlignment = Alignment.CenterVertically) {\n        MonarchText(text = \"Owner\")\n        MonarchText(text = \"Example team\")\n        MonarchProvenance(source = \"Entered by hand\")\n    }\n}",
+      "imports": [
+        "com.rookhq.monarch.foundation.icon.MonarchIcon",
+        "com.rookhq.monarch.foundation.icon.MonarchIconSize",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ]
+    },
+    {
+      "title": "Inline, opening the source record",
+      "code": "MonarchProvenance(\n    source = \"Imported file\",\n    variant = MonarchProvenanceVariant.Inline,\n    onClick = { /* open the import */ },\n)"
+    }
+  ],
+  "webEquivalent": "Provenance",
+  "dependsOn": [
+    "relative-time"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "android",
+      "reason": "The web underlines the age (\"2 hours ago\") with a dotted line because hovering it shows the absolute time in a tooltip. Touch has no hover, so the dotted line would suggest a tap target that does not exist.",
+      "convention": "Material guidance: no hover tooltips on touch; do not mark non-interactive text as interactive"
+    }
+  ]
+}

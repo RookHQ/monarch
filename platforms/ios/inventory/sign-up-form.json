@@ -1,0 +1,87 @@
+{
+  "id": "sign-up-form",
+  "name": null,
+  "title": "SignUpForm",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "VStack of MonarchTextField with textContentType(.name) and (.username), MonarchPasswordInput with the .new purpose (the .newPassword content type), MonarchPasswordStrengthMeter, MonarchTermsAcceptance, MonarchButton and a Button with the Monarch link style; onSubmit",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: create an account with a name, an email and a new password, with the password rules, terms to accept, field errors and a link to sign in.",
+  "whenToUse": "For the sign-up screen of an app that has its own accounts.",
+  "whenNotToUse": "When the app creates accounts only through Rook ID, show MonarchSignInWithRookButton alone. To sign in, use the sign-in form recipe; to set up a workspace after sign-up, use the workspace onboarding recipe.",
+  "api": [
+    "MonarchTextField(\"Full name\", text: $name, error: nameError).textContentType(.name)",
+    "MonarchTextField(\"Email\", text: $email, error: emailError).textContentType(.username)",
+    "MonarchPasswordInput(\"Password\", text: $password, error: passwordError, purpose: .new)",
+    "MonarchPasswordStrengthMeter(password: password, rules: rules)",
+    "MonarchTermsAcceptance(isAccepted: $acceptsTerms, documents: documents, showsRequiredError: showsTermsError)",
+    "MonarchButton(\"Create account\", variant: .primary, isLoading: isCreating, fullWidth: true, action: createAccount)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "ready",
+      "description": "Optional single sign-on above an \"or\" divider, the name, email and password fields, the strength meter with its rules, the terms checkbox, Create account and the sign-in line."
+    },
+    {
+      "name": "field errors",
+      "description": "An empty name, an empty or malformed email, a password that misses a rule and unaccepted terms each show their error before anything is sent."
+    },
+    {
+      "name": "creating",
+      "description": "Create account shows its spinner."
+    },
+    {
+      "name": "email taken",
+      "description": "The server's answer goes on the email field; any other failure goes in a danger MonarchInlineNotice above the fields."
+    },
+    {
+      "name": "invitation",
+      "description": "Prefill the email from an invitation and make it read-only by showing it as text instead of a field."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component in the theme: the title style heading, MonarchTextField and MonarchPasswordInput with their borders and errors, the strength meter's segments and rule list, the Monarch checkbox with document links, and a full-width primary button.",
+  "platformNotes": "The web's SignUpForm is one component with onSubmit, its own messages and an optional confirm-password field. On iOS it is a recipe, because the request and navigation belong to the app. There is no confirm field: the password's reveal button shows typos, and the .newPassword content type that MonarchPasswordInput's new purpose sets lets iOS suggest a strong password and save it to the keychain with the app's associated domain. On a device add keyboardType(.emailAddress), textInputAutocapitalization(.never) and autocorrectionDisabled() to the email field (the sample page does); they are left out of the compiled example because the host build also targets macOS. Android composes the same recipe.",
+  "accessibility": [
+    "The title has the header trait.",
+    "Field errors come from MonarchTextField and MonarchPasswordInput, which show and announce them in words.",
+    "The strength meter reads the strength and each rule as met or not met, so nothing depends on colour.",
+    "The terms checkbox is a standard toggle in the Monarch checkbox style; its required error is shown and read in words.",
+    "Create account and Sign in have 44-point touch targets."
+  ],
+  "edgeCases": [
+    "Trim spaces around the name and the email but never change the password.",
+    "Validate on submit, not on every keystroke, so errors do not appear while the person is still typing.",
+    "Keep the rules the meter shows equal to the rules the server checks."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "With terms (try an @example.org address)",
+      "fixture": "sign-up-form",
+      "webExample": "With terms (try an @example.org address)",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    MonarchTextField(\"Full name\", text: $name, error: nameError, isRequired: true)\n        .textContentType(.name)\n    MonarchTextField(\"Email\", text: $email, error: emailError, isRequired: true)\n        .textContentType(.username)\n    MonarchPasswordInput(\"Password\", text: $password, error: passwordError, purpose: .new, isRequired: true)\n        .onSubmit(createAccount)\n    MonarchPasswordStrengthMeter(password: password, rules: rules)\n    MonarchTermsAcceptance(isAccepted: $acceptsTerms, documents: documents, showsRequiredError: showsTermsError)\n    MonarchButton(\"Create account\", variant: .primary, isLoading: isCreating, fullWidth: true, action: createAccount)\n    HStack(spacing: theme.spacing.space1) {\n        Text(\"Already have an account?\")\n            .monarchTextStyle(.bodySmall)\n            .foregroundStyle(theme.colors.textMuted)\n        Button(\"Sign in\") {\n            // Open sign-in.\n        }\n        .buttonStyle(.monarchLink())\n        .monarchTextStyle(.bodySmall)\n    }\n    .frame(maxWidth: .infinity)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var name = \"\"\n@State private var email = {{email}}\n@State private var password = \"\"\n@State private var acceptsTerms = false\n@State private var nameError: String?\n@State private var emailError: String?\n@State private var passwordError: String?\n@State private var showsTermsError = false\n@State private var isCreating = false\nprivate let rules = MonarchPasswordRule.defaults\nprivate let documents = [\n    MonarchTermsDocument({{terms.0.label}}, url: URL(filePath: \"/terms\"), version: {{terms.0.version}}),\n    MonarchTermsDocument({{terms.1.label}}, url: URL(filePath: \"/privacy\"), version: {{terms.1.version}}),\n]\n\nprivate func createAccount() {\n    let trimmedEmail = email.trimmingCharacters(in: .whitespaces)\n    nameError = name.trimmingCharacters(in: .whitespaces).isEmpty ? \"Enter your name.\" : nil\n    emailError = trimmedEmail.isEmpty\n        ? \"Enter your email address.\"\n        : (trimmedEmail.contains(\"@\") && trimmedEmail.contains(\".\") ? nil : \"Enter an email address like name@example.com.\")\n    passwordError = password.isEmpty\n        ? \"Choose a password.\"\n        : (rules.allSatisfy { $0.test(password) } ? nil : \"Choose a password that meets every requirement.\")\n    showsTermsError = !acceptsTerms\n    guard nameError == nil, emailError == nil, passwordError == nil, acceptsTerms else { return }\n    isCreating = true\n    Task {\n        // The app creates the account. An email already in use goes in emailError.\n        isCreating = false\n    }\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var name = \"\"\n@State private var email = \"\"\n@State private var password = \"\"\n@State private var acceptsTerms = false\n@State private var nameError: String?\n@State private var emailError: String?\n@State private var passwordError: String?\n@State private var showsTermsError = false\n@State private var isCreating = false\nprivate let rules = MonarchPasswordRule.defaults\nprivate let documents = [\n    MonarchTermsDocument(\"Terms of Service\", url: URL(filePath: \"/terms\"), version: \"2026-01\"),\n    MonarchTermsDocument(\"Privacy Policy\", url: URL(filePath: \"/privacy\"), version: \"2026-01\"),\n]\n\nprivate func createAccount() {\n    let trimmedEmail = email.trimmingCharacters(in: .whitespaces)\n    nameError = name.trimmingCharacters(in: .whitespaces).isEmpty ? \"Enter your name.\" : nil\n    emailError = trimmedEmail.isEmpty\n        ? \"Enter your email address.\"\n        : (trimmedEmail.contains(\"@\") && trimmedEmail.contains(\".\") ? nil : \"Enter an email address like name@example.com.\")\n    passwordError = password.isEmpty\n        ? \"Choose a password.\"\n        : (rules.allSatisfy { $0.test(password) } ? nil : \"Choose a password that meets every requirement.\")\n    showsTermsError = !acceptsTerms\n    guard nameError == nil, emailError == nil, passwordError == nil, acceptsTerms else { return }\n    isCreating = true\n    Task {\n        // The app creates the account. An email already in use goes in emailError.\n        isCreating = false\n    }\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    MonarchTextField(\"Full name\", text: $name, error: nameError, isRequired: true)\n        .textContentType(.name)\n    MonarchTextField(\"Email\", text: $email, error: emailError, isRequired: true)\n        .textContentType(.username)\n    MonarchPasswordInput(\"Password\", text: $password, error: passwordError, purpose: .new, isRequired: true)\n        .onSubmit(createAccount)\n    MonarchPasswordStrengthMeter(password: password, rules: rules)\n    MonarchTermsAcceptance(isAccepted: $acceptsTerms, documents: documents, showsRequiredError: showsTermsError)\n    MonarchButton(\"Create account\", variant: .primary, isLoading: isCreating, fullWidth: true, action: createAccount)\n    HStack(spacing: theme.spacing.space1) {\n        Text(\"Already have an account?\")\n            .monarchTextStyle(.bodySmall)\n            .foregroundStyle(theme.colors.textMuted)\n        Button(\"Sign in\") {\n            // Open sign-in.\n        }\n        .buttonStyle(.monarchLink())\n        .monarchTextStyle(.bodySmall)\n    }\n    .frame(maxWidth: .infinity)\n}"
+    }
+  ],
+  "webEquivalent": "SignUpForm",
+  "dependsOn": [
+    "text-field",
+    "password-input",
+    "password-strength-meter",
+    "terms-acceptance",
+    "button",
+    "link",
+    "sign-in-with-rook-button",
+    "inline-notice",
+    "separator"
+  ]
+}

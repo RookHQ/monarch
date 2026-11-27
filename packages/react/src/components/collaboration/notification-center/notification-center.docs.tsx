@@ -2,37 +2,14 @@ import { useState } from 'react';
 import { Button, Link } from '@rookcom/monarch-react';
 import { NotificationCenter, type NotificationItem } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './notification-center.fixture.json';
 
-const NOW = '2026-03-02T12:00:00Z';
-const SAMPLE: NotificationItem[] = [
-  {
-    id: 'n1',
-    title: 'Ana Lopez mentioned you in Launch checklist',
-    description: '“Can you confirm the legal sign-off date?”',
-    time: '2026-03-02T11:42:00Z',
-    actor: { name: 'Ana Lopez' },
-  },
-  {
-    id: 'n2',
-    title: 'Ben Okafor assigned you Update pricing page',
-    time: '2026-03-02T09:15:00Z',
-    actor: { name: 'Ben Okafor' },
-  },
-  {
-    id: 'n3',
-    title: 'Chloé Martin replied to your comment',
-    description: '“Agreed, let’s ship the shorter version.”',
-    time: '2026-03-02T08:03:00Z',
-    actor: { name: 'Chloé Martin' },
-    read: true,
-  },
-  {
-    id: 'n4',
-    title: 'Your weekly export is ready',
-    time: '2026-03-01T17:30:00Z',
-    read: true,
-  },
-];
+const NOW = fixture.data.now;
+const SAMPLE = fixture.data.items.map((item) => ({
+  ...item,
+  ...('actor' in item && { actor: { name: item.actor } }),
+})) as NotificationItem[];
 
 function Demo() {
   const [items, setItems] = useState(SAMPLE);
@@ -40,13 +17,14 @@ function Demo() {
     setItems((list) => list.map((i) => (i.id === id ? { ...i, read: true } : i)));
   return (
     <NotificationCenter
+      defaultOpen
       items={items}
       onMarkRead={markRead}
       onMarkAllRead={() => setItems((list) => list.map((i) => ({ ...i, read: true })))}
       onSelect={() => {}}
-      hasMore
+      hasMore={fixture.data.hasMore}
       onLoadMore={() => {}}
-      footer={<Link href="#/components/notification-center">Notification settings</Link>}
+      footer={<Link href="#/components/notification-center">{fixture.data.footer}</Link>}
       now={NOW}
       timeZone="UTC"
       align="start"
@@ -174,6 +152,7 @@ export default {
       items: [
         {
           title: 'Bell and panel',
+          stage: true,
           render: () => <Demo />,
         },
         {

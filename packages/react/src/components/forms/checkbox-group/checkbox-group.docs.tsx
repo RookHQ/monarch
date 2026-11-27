@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { CheckboxGroup, Field, FieldError, FieldLabel } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './checkbox-group.fixture.json';
 
 function AtLeastOne() {
   const [value, setValue] = useState<string[]>([]);
@@ -152,15 +154,10 @@ export default {
           title: 'With select all',
           render: () => (
             <CheckboxGroup
-              label="Notify me by"
-              selectAll
-              defaultValue={['email']}
-              options={[
-                { value: 'email', label: 'Email', description: 'To your sign-in address.' },
-                { value: 'sms', label: 'Text message' },
-                { value: 'push', label: 'Push notification' },
-                { value: 'post', label: 'Post', disabled: true },
-              ]}
+              label={fixture.data.label}
+              selectAll={fixture.data.selectAll}
+              defaultValue={fixture.data.selected}
+              options={fixture.data.options}
             />
           ),
         },

@@ -1,0 +1,257 @@
+{
+  "id": "shift-roster",
+  "name": "MonarchShiftRoster",
+  "title": "ShiftRoster",
+  "family": "scheduling",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.material3.PrimaryScrollableTabRow and Tab (one day or one person at a time), androidx.compose.material3.DropdownMenu with DropdownMenuItem and RadioButton (the cell menu), androidx.compose.foundation.horizontalScroll with CollectionInfo semantics (the grid), MonarchEventChip, MonarchAvatar, MonarchBadge, MonarchSkeleton, MonarchBanner, MonarchEmptyState, android.icu.text.DateFormat",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Who works which shift on which day: a shift, a day off or nothing for each person and day of a range, with hours per person and the number of people working per day, edited from a menu on each cell.",
+  "whenToUse": "For a team's weekly or fortnightly rota in a workforce or attendance screen, where a manager assigns shifts and reads coverage per day. Save each MonarchShiftRosterChange as it arrives.",
+  "whenNotToUse": "For meetings or appointments use MonarchAgendaList or a calendar time grid. For one person's own upcoming shifts use MonarchAgendaList. For bulk rotations or copying a week, build the product's own dialog; the roster edits one cell at a time.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchShiftRoster(members: List<MonarchShiftRosterMember>, shifts: List<MonarchShiftRosterShift>, from: Long, value: Map<String, Map<Long, MonarchShiftRosterAssignment>>, onValueChange: (Map<String, Map<Long, MonarchShiftRosterAssignment>>, MonarchShiftRosterChange) -> Unit, modifier: Modifier = Modifier, days: Int = 7, layout: MonarchShiftRosterLayout = MonarchShiftRosterLayout.Automatic, enabled: Boolean = true, readOnly: Boolean = false, loading: Boolean = false, showTotals: Boolean = true, today: Long? = System.currentTimeMillis(), timeZone: String? = null, is24Hour: Boolean? = null, error: String? = null, onMemberClick: ((MonarchShiftRosterMember) -> Unit)? = null, labels: MonarchShiftRosterLabels = MonarchShiftRosterLabels(), empty: (@Composable () -> Unit)? = null)",
+    "class MonarchShiftRosterShift(id: String, name: String, start: Int, end: Int, shortName: String? = null, color: Color = Color.Unspecified)",
+    "class MonarchShiftRosterMember(id: String, name: String, description: String? = null, image: Painter? = null)",
+    "sealed interface MonarchShiftRosterAssignment { class Shift(shiftId: String); data object Off }",
+    "class MonarchShiftRosterChange(memberId: String, day: Long, assignment: MonarchShiftRosterAssignment?)",
+    "enum class MonarchShiftRosterLayout { Automatic, Grid, ByDay, ByPerson }",
+    "class MonarchShiftRosterLabels(roster: String? = null, person: String? = null, day: String? = null, off: String? = null, unassigned: String? = null, clear: String? = null, menuTitle: ((name: String, day: String) -> String)? = null, cell: ((name: String, day: String, assignment: String) -> String)? = null, range: ((start: String, end: String) -> String)? = null, overnight: String? = null, hours: String? = null, hoursValue: ((hours: String) -> String)? = null, working: String? = null, workingValue: ((count: Int) -> String)? = null, today: String? = null, emptyTitle: String? = null, emptyDescription: String? = null, loading: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "members",
+      "type": "List<MonarchShiftRosterMember>",
+      "default": "required",
+      "description": "The people in display order, each with an id, a name, an optional description line and an optional picture Painter."
+    },
+    {
+      "name": "shifts",
+      "type": "List<MonarchShiftRosterShift>",
+      "default": "required",
+      "description": "The shifts in menu order: id, name, start and end in minutes from midnight (an end at or before the start ends the next day), an optional short name for the grid and an optional color."
+    },
+    {
+      "name": "from",
+      "type": "Long",
+      "default": "required",
+      "description": "The first day shown: any time on that date in UTC, as epoch milliseconds (a day key)."
+    },
+    {
+      "name": "value",
+      "type": "Map<String, Map<Long, MonarchShiftRosterAssignment>>",
+      "default": "required",
+      "description": "Assignments by member id, then by day key: Shift(shiftId) or Off. A missing day is not assigned."
+    },
+    {
+      "name": "onValueChange",
+      "type": "(Map<String, Map<Long, MonarchShiftRosterAssignment>>, MonarchShiftRosterChange) -> Unit",
+      "default": "required",
+      "description": "Called with the whole new value and the one change (member, day, new assignment or null when cleared)."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "Applied to the roster."
+    },
+    {
+      "name": "days",
+      "type": "Int",
+      "default": "7",
+      "description": "How many days to show from from, 1 to 62."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchShiftRosterLayout",
+      "default": "MonarchShiftRosterLayout.Automatic",
+      "description": "Grid (people by days), ByDay (tabs of days, a row per person), ByPerson (tabs of people, a row per day), or Automatic: the grid when every column fits and the font scale is at most 1.3, otherwise ByDay."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the cells can be used, for example false while saving. Tabs keep working."
+    },
+    {
+      "name": "readOnly",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows the assignments as text without menus."
+    },
+    {
+      "name": "loading",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows a skeleton placeholder, read as \"Loading roster\", instead of the roster."
+    },
+    {
+      "name": "showTotals",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows each person's hours over the range and the number of people working per day."
+    },
+    {
+      "name": "today",
+      "type": "Long?",
+      "default": "System.currentTimeMillis()",
+      "description": "Any time on the day marked Today, read in timeZone; null for no marker. The day layout opens on it when it is in the range."
+    },
+    {
+      "name": "timeZone",
+      "type": "String?",
+      "default": "null",
+      "description": "The zone today is read in. An IANA id such as Europe/Berlin; null, or an id the device does not know, is the device's zone."
+    },
+    {
+      "name": "is24Hour",
+      "type": "Boolean?",
+      "default": "null",
+      "description": "Shows shift times on a 24-hour clock. null follows the device's 24-hour setting."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "null",
+      "description": "A message shown in a danger MonarchBanner instead of the roster."
+    },
+    {
+      "name": "onMemberClick",
+      "type": "((MonarchShiftRosterMember) -> Unit)?",
+      "default": "null",
+      "description": "Makes each person a button, for example to open their schedule on a detail screen."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchShiftRosterLabels",
+      "default": "MonarchShiftRosterLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "empty",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "Replaces the built-in empty state shown when members is empty."
+    }
+  ],
+  "states": [
+    {
+      "name": "shift",
+      "description": "A MonarchEventChip bar in the shift's color with the name (the short name in the grid) and the times."
+    },
+    {
+      "name": "off",
+      "description": "A muted fill with the word Off."
+    },
+    {
+      "name": "not assigned",
+      "description": "A dashed outline with \"Not assigned\" (a dash in the narrow grid cells; TalkBack still reads \"Not assigned\")."
+    },
+    {
+      "name": "today",
+      "description": "Today's tab reads \"Today\" above the date, the day heading and grid header use the strong accent and an info badge or the word Today."
+    },
+    {
+      "name": "menu open",
+      "description": "A Material 3 DropdownMenu headed by the person and the day, with a radio item per shift, Off, and Clear when the day is assigned."
+    },
+    {
+      "name": "read only",
+      "description": "Cells are text without menus."
+    },
+    {
+      "name": "disabled",
+      "description": "Cells keep their look but cannot be pressed; TalkBack reads them as disabled."
+    },
+    {
+      "name": "loading",
+      "description": "A skeleton placeholder replaces the roster."
+    },
+    {
+      "name": "error",
+      "description": "A danger banner with the app's message replaces the roster."
+    },
+    {
+      "name": "empty",
+      "description": "With no people, an empty state (or the app's empty slot) replaces the roster."
+    }
+  ],
+  "appearance": "Rows are separated by the default divider; names are in the default text color and descriptions, hours and counts in the muted color. A shift cell keeps the event chip's colors (the shift color only as the bar and a light tint), a day off uses the muted background, and an unassigned day a dashed default border. Today uses the strong accent and an info badge. The grid's header and footer rows sit on the subtle background. High contrast themes use their own roles; every state is also written.",
+  "platformNotes": "The web ShiftRoster is always a table of people by days with a roving-focus keyboard grid and Delete to clear. On a phone that table does not fit, so Android shows one day at a time with Material 3 tabs (or one person at a time) and keeps the table for wide windows (Automatic picks it when every column fits). The web takes ISO dates and a BCP 47 locale and hour cycle; Android takes day keys in epoch milliseconds, the configuration's locale and the device's 24-hour setting. Assignments are a sealed MonarchShiftRosterAssignment (Shift or Off; a missing day is not assigned) because Kotlin cannot tell undefined from null. The value is controlled only (no defaultValue), as for every Monarch component. The plan's drag to assign is not offered: the web has no drag either, and a menu per cell is the touch and TalkBack pattern. There is no iOS ShiftRoster yet, so the names follow the web. Experimental because it is a product pattern not yet adopted by a Rook Android app.",
+  "accessibility": [
+    "Each editable cell is one button with a 48dp touch target, named \"<person>, <day>: <assignment>\", for example \"Alex Kim, Monday, November 2, Today: Morning, 06:00 to 14:00\"; an overnight shift adds \"overnight\" and a grid cell with a short name adds it after the full name.",
+    "The cell menu is a Material 3 DropdownMenu headed by a heading with the person and the day; the current choice is marked selected and has a filled radio button, and each shift is read with its spoken time range.",
+    "Read-only cells are one text element with the same name and no click action; disabled cells are read as disabled.",
+    "Day tabs are Material 3 tabs read as the full date, with \"Today\" for today; the selected tab is marked selected. The tab rows are named \"Day\" or \"Person\".",
+    "The day's date is a heading, and the number working is a polite live region, so TalkBack says the new count after an assignment.",
+    "Each person is one element read as \"name, description, Hours: total\"; with onMemberClick it is a button with a 48dp target.",
+    "The grid is a collection named \"Shift roster\"; each cell carries its row and column, day headers are headings read as the full date, and footer counts are read with the date.",
+    "Avatars are decorative; no state is shown by color alone.",
+    "From font scale 1.5 the cell moves under the person so no text is cut."
+  ],
+  "edgeCases": [
+    "Day keys in value may be any time on the date in UTC; they are matched by date, and a change replaces any key of that date.",
+    "An assignment to a shift id that is not among shifts reads as not assigned and counts no hours.",
+    "A shift whose end equals its start lasts 24 hours.",
+    "days is clamped to 1 to 62.",
+    "Hours are rounded to one decimal in the locale's number format.",
+    "The roster does not scroll vertically; put it in a scrolling screen. The grid scrolls sideways when forced on a narrow window.",
+    "Long names and descriptions wrap; nothing is truncated."
+  ],
+  "tests": [
+    "MonarchShiftRosterTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Editable week",
+      "fixture": "shift-roster",
+      "webExample": "Editable week",
+      "template": "CompositionLocalProvider(LocalConfiguration provides locale) {\n    @OptIn(ExperimentalMonarchApi::class)\n    MonarchShiftRoster(\n        members = listOf(\n            MonarchShiftRosterMember({{members.0.id}}, {{members.0.name}}, description = {{members.0.description}}),\n            MonarchShiftRosterMember({{members.1.id}}, {{members.1.name}}, description = {{members.1.description}}),\n            MonarchShiftRosterMember({{members.2.id}}, {{members.2.name}}, description = {{members.2.description}}),\n        ),\n        shifts = listOf(\n            MonarchShiftRosterShift(\n                id = {{shifts.0.id}},\n                name = {{shifts.0.name}},\n                start = {{shifts.0.start}},\n                end = {{shifts.0.end}},\n                shortName = {{shifts.0.shortName}},\n                color = Color(red = {{shifts.0.color.r}}, green = {{shifts.0.color.g}}, blue = {{shifts.0.color.b}}),\n            ),\n            MonarchShiftRosterShift(\n                id = {{shifts.1.id}},\n                name = {{shifts.1.name}},\n                start = {{shifts.1.start}},\n                end = {{shifts.1.end}},\n                color = Color(red = {{shifts.1.color.r}}, green = {{shifts.1.color.g}}, blue = {{shifts.1.color.b}}),\n            ),\n            MonarchShiftRosterShift(\n                id = {{shifts.2.id}},\n                name = {{shifts.2.name}},\n                start = {{shifts.2.start}},\n                end = {{shifts.2.end}},\n                color = Color(red = {{shifts.2.color.r}}, green = {{shifts.2.color.g}}, blue = {{shifts.2.color.b}}),\n            ),\n        ),\n        from = {{from|millis}},\n        value = roster,\n        onValueChange = { next, change ->\n            roster = next\n            // The app saves change.memberId, change.day and change.assignment here.\n        },\n        today = {{today|millis}},\n        timeZone = \"UTC\",\n        is24Hour = true,\n        layout = MonarchShiftRosterLayout.Grid,\n    )\n}",
+      "setupTemplate": "var roster by remember {\n    mutableStateOf(\n        mapOf<String, Map<Long, MonarchShiftRosterAssignment>>(\n            {{roster.0.member}} to mapOf(\n                {{roster.0.days.0.day|millis}} to MonarchShiftRosterAssignment.Shift({{roster.0.days.0.shift}}),\n                {{roster.0.days.1.day|millis}} to MonarchShiftRosterAssignment.Shift({{roster.0.days.1.shift}}),\n                {{roster.0.days.2.day|millis}} to MonarchShiftRosterAssignment.Shift({{roster.0.days.2.shift}}),\n                {{roster.0.days.3.day|millis}} to MonarchShiftRosterAssignment.{{roster.0.days.3.shift|pascal}},\n                {{roster.0.days.4.day|millis}} to MonarchShiftRosterAssignment.{{roster.0.days.4.shift|pascal}},\n            ),\n            {{roster.1.member}} to mapOf(\n                {{roster.1.days.0.day|millis}} to MonarchShiftRosterAssignment.Shift({{roster.1.days.0.shift}}),\n                {{roster.1.days.1.day|millis}} to MonarchShiftRosterAssignment.Shift({{roster.1.days.1.shift}}),\n                {{roster.1.days.2.day|millis}} to MonarchShiftRosterAssignment.Shift({{roster.1.days.2.shift}}),\n                {{roster.1.days.3.day|millis}} to MonarchShiftRosterAssignment.Shift({{roster.1.days.3.shift}}),\n            ),\n            {{roster.2.member}} to mapOf(\n                {{roster.2.days.0.day|millis}} to MonarchShiftRosterAssignment.Shift({{roster.2.days.0.shift}}),\n                {{roster.2.days.1.day|millis}} to MonarchShiftRosterAssignment.{{roster.2.days.1.shift|pascal}},\n            ),\n        ),\n    )\n}\nval configuration = LocalConfiguration.current\nval locale = remember(configuration) {\n    Configuration(configuration).apply { setLocale(Locale.forLanguageTag({{locale}})) }\n}",
+      "imports": [
+        "android.content.res.Configuration",
+        "androidx.compose.runtime.CompositionLocalProvider",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.LocalConfiguration",
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "java.util.Locale",
+        "com.rookhq.monarch.components.scheduling.shiftroster.MonarchShiftRosterLayout"
+      ],
+      "setup": "var roster by remember {\n    mutableStateOf(\n        mapOf<String, Map<Long, MonarchShiftRosterAssignment>>(\n            \"a\" to mapOf(\n                1_793_577_600_000L to MonarchShiftRosterAssignment.Shift(\"m\"),\n                1_793_664_000_000L to MonarchShiftRosterAssignment.Shift(\"m\"),\n                1_793_750_400_000L to MonarchShiftRosterAssignment.Shift(\"m\"),\n                1_794_009_600_000L to MonarchShiftRosterAssignment.Off,\n                1_794_096_000_000L to MonarchShiftRosterAssignment.Off,\n            ),\n            \"b\" to mapOf(\n                1_793_577_600_000L to MonarchShiftRosterAssignment.Shift(\"e\"),\n                1_793_664_000_000L to MonarchShiftRosterAssignment.Shift(\"e\"),\n                1_793_836_800_000L to MonarchShiftRosterAssignment.Shift(\"n\"),\n                1_793_923_200_000L to MonarchShiftRosterAssignment.Shift(\"n\"),\n            ),\n            \"c\" to mapOf(\n                1_793_750_400_000L to MonarchShiftRosterAssignment.Shift(\"n\"),\n                1_793_836_800_000L to MonarchShiftRosterAssignment.Off,\n            ),\n        ),\n    )\n}\nval configuration = LocalConfiguration.current\nval locale = remember(configuration) {\n    Configuration(configuration).apply { setLocale(Locale.forLanguageTag(\"en-GB\")) }\n}",
+      "code": "CompositionLocalProvider(LocalConfiguration provides locale) {\n    @OptIn(ExperimentalMonarchApi::class)\n    MonarchShiftRoster(\n        members = listOf(\n            MonarchShiftRosterMember(\"a\", \"Alex Kim\", description = \"Support\"),\n            MonarchShiftRosterMember(\"b\", \"Sam Lee\", description = \"Support\"),\n            MonarchShiftRosterMember(\"c\", \"Priya Nair\", description = \"Operations\"),\n        ),\n        shifts = listOf(\n            MonarchShiftRosterShift(\n                id = \"m\",\n                name = \"Morning\",\n                start = 360,\n                end = 840,\n                shortName = \"Morning\",\n                color = Color(red = 47, green = 125, blue = 109),\n            ),\n            MonarchShiftRosterShift(\n                id = \"e\",\n                name = \"Evening\",\n                start = 840,\n                end = 1320,\n                color = Color(red = 122, green = 91, blue = 181),\n            ),\n            MonarchShiftRosterShift(\n                id = \"n\",\n                name = \"Night\",\n                start = 1320,\n                end = 360,\n                color = Color(red = 59, green = 91, blue = 143),\n            ),\n        ),\n        from = 1_793_577_600_000L,\n        value = roster,\n        onValueChange = { next, change ->\n            roster = next\n            // The app saves change.memberId, change.day and change.assignment here.\n        },\n        today = 1_793_750_400_000L,\n        timeZone = \"UTC\",\n        is24Hour = true,\n        layout = MonarchShiftRosterLayout.Grid,\n    )\n}"
+    },
+    {
+      "title": "Read only, one person at a time, with a week toolbar",
+      "setup": "var week by remember { mutableIntStateOf(0) }\nval from = 1_793_577_600_000L + week * 7 * 86_400_000L",
+      "code": "Column {\n    MonarchCalendarToolbar(\n        title = \"Week ${week + 1}\",\n        view = MonarchCalendarToolbarView.Week,\n        onToday = { week = 0 },\n        onPrevious = { week -= 1 },\n        onNext = { week += 1 },\n        previousIcon = { Icon(SampleIcons.ChevronLeft, contentDescription = null) },\n        nextIcon = { Icon(SampleIcons.ChevronRight, contentDescription = null) },\n    )\n    @OptIn(ExperimentalMonarchApi::class)\n    MonarchShiftRoster(\n        members = listOf(MonarchShiftRosterMember(\"a\", \"Alex Kim\")),\n        shifts = listOf(MonarchShiftRosterShift(\"e\", \"Evening\", start = 14 * 60, end = 22 * 60)),\n        from = from,\n        value = mapOf(\"a\" to mapOf(from to MonarchShiftRosterAssignment.Shift(\"e\"))),\n        onValueChange = { _, _ -> },\n        days = 3,\n        layout = MonarchShiftRosterLayout.ByPerson,\n        readOnly = true,\n        today = null,\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ]
+    }
+  ],
+  "webEquivalent": "ShiftRoster",
+  "dependsOn": [
+    "avatar",
+    "event-chip",
+    "calendar-toolbar"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-text",
+      "platform": "android",
+      "reason": "An unassigned cell is drawn as a dash, and its button is named for TalkBack with the person, the day and \"Not assigned\" (\"Sam Lee, Wednesday 4 November: Not assigned\"), not with the dash alone.",
+      "convention": "a control is named by what it does and where, not by its glyph (Material accessibility)",
+      "paths": [
+        "–"
+      ]
+    }
+  ]
+}

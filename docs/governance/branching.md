@@ -16,7 +16,8 @@ docs/theming-guide ────────────┘     │        │
 | `uat`  | Acceptance. Everything that is going into the next release is merged and tried here first. | The maintainer, by pull request                            | `canary` |
 
 Nobody pushes directly to `main` or `uat`. Both require a pull request, passing checks (`verify`, `secrets`,
-`Build docs site`, `branch-policy`), a code-owner review (see `.github/CODEOWNERS`), resolved conversations,
+`Build docs site`, `branch-policy`, `Native / tokens`, `Native / android`, `Native / ios`; the last three are described in
+[native release and maintenance](native-release-and-maintenance.md#required-ci-checks)), a code-owner review (see `.github/CODEOWNERS`), resolved conversations,
 no force-pushes and no deletion. Only a repository admin can bypass the review requirement, and that
 is reserved for the maintainer.
 

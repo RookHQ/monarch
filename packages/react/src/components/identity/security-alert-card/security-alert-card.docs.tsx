@@ -1,30 +1,51 @@
 import { useState } from 'react';
 import { SecurityAlertCard, type SecurityAlert } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './security-alert-card.fixture.json';
 
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000);
 
+const [first, second, third] = fixture.data.alerts as unknown as readonly [
+  {
+    id: string;
+    title: string;
+    description: string;
+    severity: SecurityAlert['severity'];
+    hoursAgo: number;
+    action: string;
+  },
+  { id: string; title: string; severity: SecurityAlert['severity']; hoursAgo: number },
+  {
+    id: string;
+    title: string;
+    severity: SecurityAlert['severity'];
+    hoursAgo: number;
+    read: boolean;
+  },
+];
+
 const SAMPLE: SecurityAlert[] = [
   {
-    id: 'a-1',
-    title: 'New sign-in from Firefox on Linux',
-    description: 'Lisbon, Portugal. If this was not you, sign that session out.',
-    severity: 'high',
-    createdAt: hoursAgo(1),
-    action: { label: 'Review sessions', href: '#sessions' },
+    id: first.id,
+    title: first.title,
+    description: first.description,
+    severity: first.severity,
+    createdAt: hoursAgo(first.hoursAgo),
+    action: { label: first.action, href: '#sessions' },
   },
   {
-    id: 'a-2',
-    title: 'Two-step verification turned on',
-    severity: 'info',
-    createdAt: hoursAgo(26),
+    id: second.id,
+    title: second.title,
+    severity: second.severity,
+    createdAt: hoursAgo(second.hoursAgo),
   },
   {
-    id: 'a-3',
-    title: 'Password changed',
-    severity: 'medium',
-    createdAt: hoursAgo(24 * 6),
-    read: true,
+    id: third.id,
+    title: third.title,
+    severity: third.severity,
+    createdAt: hoursAgo(third.hoursAgo),
+    read: third.read,
   },
 ];
 

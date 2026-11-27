@@ -1,0 +1,128 @@
+{
+  "id": "ai-memory-chip",
+  "name": "MonarchAiMemoryChip",
+  "title": "AiMemoryChip",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "HStack of Text in a Capsule like MonarchTag, Menu for Edit and Forget, alert(_:isPresented:actions:) with a TextField for editing",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "One thing the assistant remembers, from a MonarchAiMemoryPart, shown as \"Remembered: …\" with a menu to edit or forget it.",
+  "whenToUse": "In a thread when the assistant used, saved or forgot a memory (chip), or as a row in a list of memories (row).",
+  "whenNotToUse": "For what the assistant can see in this turn only use MonarchAiContextChips. For a plain removable label use MonarchTag.",
+  "api": [
+    "MonarchAiMemoryChip.init(_ memory: MonarchAiMemoryPart, variant: MonarchAiMemoryChipVariant = .chip, showsScope: Bool? = nil, labels: MonarchAiMemoryChipLabels = MonarchAiMemoryChipLabels(), onEdit: (@MainActor (_ id: String, _ text: String) -> Void)? = nil, onForget: (@MainActor (_ id: String) -> Void)? = nil)",
+    "enum MonarchAiMemoryChipVariant { case chip, row }",
+    "MonarchAiMemoryChipLabels.init(prefix: (@Sendable (_ action: MonarchAiMemoryAction) -> String)? = nil, options: (@Sendable (_ text: String) -> String)? = nil, edit: String? = nil, forget: String? = nil, editTitle: String? = nil, editField: String? = nil, save: String? = nil, cancel: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "memory",
+      "type": "MonarchAiMemoryPart",
+      "default": "required",
+      "description": "The memory from the conversation model: its id, action (read, write, forget), text and scope."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchAiMemoryChipVariant",
+      "default": ".chip",
+      "description": "chip: an inline pill in the AI colours with the AI glyph and a prefix. row: a full-width row without the prefix."
+    },
+    {
+      "name": "showsScope",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Whether the scope is shown under the text. By default on the chip and not on the row."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiMemoryChipLabels",
+      "default": "MonarchAiMemoryChipLabels()",
+      "description": "Replaces the prefixes, the menu name and the edit dialog strings."
+    },
+    {
+      "name": "onEdit",
+      "type": "(@MainActor (_ id: String, _ text: String) -> Void)?",
+      "default": "nil",
+      "description": "Adds Edit. Receives the id and the trimmed new text; never called with empty or unchanged text."
+    },
+    {
+      "name": "onForget",
+      "type": "(@MainActor (_ id: String) -> Void)?",
+      "default": "nil",
+      "description": "Adds Forget. Runs straight away, without confirmation."
+    }
+  ],
+  "states": [
+    {
+      "name": "read",
+      "description": "Prefix \"Used memory:\"."
+    },
+    {
+      "name": "write",
+      "description": "Prefix \"Remembered:\"."
+    },
+    {
+      "name": "forget",
+      "description": "Prefix \"Forgotten:\", muted struck-through text and no commands."
+    },
+    {
+      "name": "read only",
+      "description": "No callbacks: no menu."
+    },
+    {
+      "name": "editable",
+      "description": "A menu button with Edit and Forget, as given."
+    },
+    {
+      "name": "editing",
+      "description": "A dialog with a text field, Save and Cancel. Save is disabled while the text is empty or unchanged."
+    }
+  ],
+  "appearance": "The chip uses the AI subtle background, the AI border and the AI strong colour on the glyph, prefix and menu button, with default text. The row has no fill or border and a muted prefix. A forgotten memory's text is muted. The high-contrast themes resolve the same roles to stronger colours.",
+  "platformNotes": "Built on the shared MonarchAiMemoryPart, so the web's separate entity becomes the part's scope and the prefix follows the part's action (the web always says \"Remembered:\"). Editing happens in a system alert with a text field instead of inline, so there are no Enter and Escape hints; the web's Edit and Forget buttons are a Menu, as the iOS plan asks. The web's leading and meta slots for the row are not offered. Android uses the same names.",
+  "accessibility": [
+    "The prefix, the text and the scope are one element.",
+    "That element carries Edit and Forget as accessibility actions when they are offered.",
+    "The menu button is a separate element named \"Options for memory:\" and a shortened copy of the text, so each name is unique in a list, with a 44-point touch target.",
+    "The AI glyph is decorative; the prefix says that the assistant kept the memory.",
+    "A forgotten memory is struck through and also says \"Forgotten:\", so the state does not depend on the line."
+  ],
+  "edgeCases": [
+    "Long text wraps; the spoken menu name uses at most 48 characters of it, with an ellipsis.",
+    "An empty or white-space scope is never shown.",
+    "A forgotten memory offers no commands even when callbacks are given."
+  ],
+  "tests": [
+    "MonarchAiMemoryChipTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Read only",
+      "fixture": "ai-memory-chip",
+      "webExample": "Read only",
+      "template": "MonarchAiMemoryChip(\n    MonarchAiMemoryPart(id: \"m1\", action: .write, text: {{text}}, scope: {{entity}})\n)",
+      "code": "MonarchAiMemoryChip(\n    MonarchAiMemoryPart(id: \"m1\", action: .write, text: \"Prefers summaries under 200 words\", scope: \"Ada Lovelace\")\n)"
+    },
+    {
+      "title": "A row in a list of memories",
+      "code": "MonarchAiMemoryChip(\n    MonarchAiMemoryPart(id: \"m2\", action: .write, text: \"Writes in British English\"),\n    variant: .row,\n    onForget: { _ in }\n)"
+    }
+  ],
+  "webEquivalent": "AiMemoryChip",
+  "dependsOn": [
+    "tag",
+    "dropdown-menu",
+    "ai-conversation"
+  ],
+  "icons": {
+    "chip": "BotGlyph",
+    "edit": "PencilGlyph",
+    "forget": "CloseGlyph"
+  }
+}

@@ -6,14 +6,16 @@ import {
   type CallViewMode,
 } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './call-controls.fixture.json';
 
 function FullToolbar() {
-  const [micOn, setMicOn] = useState(true);
-  const [cameraOn, setCameraOn] = useState(true);
-  const [sharing, setSharing] = useState(false);
-  const [hand, setHand] = useState(false);
+  const [micOn, setMicOn] = useState(fixture.data.micOn);
+  const [cameraOn, setCameraOn] = useState(fixture.data.cameraOn);
+  const [sharing, setSharing] = useState(fixture.data.sharing);
+  const [hand, setHand] = useState(fixture.data.handRaised);
   const [mode, setMode] = useState<CallViewMode>('auto');
-  const [lowData, setLowData] = useState(false);
+  const [lowData, setLowData] = useState(fixture.data.lowData);
   const [fullscreen, setFullscreen] = useState(false);
   const [last, setLast] = useState('Nothing yet');
   return (

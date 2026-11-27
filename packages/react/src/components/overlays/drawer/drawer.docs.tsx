@@ -11,6 +11,8 @@ import {
   DrawerTrigger,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './drawer.fixture.json';
 
 export default {
   id: 'drawer',
@@ -134,24 +136,25 @@ export default {
       items: [
         {
           title: 'Actions drawer',
+          stage: true,
           render: () => (
-            <Drawer>
+            <Drawer defaultOpen>
               <DrawerTrigger asChild>
-                <Button>Open drawer</Button>
+                <Button>{fixture.data.trigger}</Button>
               </DrawerTrigger>
               <DrawerContent>
                 <DrawerHeader>
-                  <DrawerTitle>Share link</DrawerTitle>
-                  <DrawerDescription>Anyone with the link can view this page.</DrawerDescription>
+                  <DrawerTitle>{fixture.data.title}</DrawerTitle>
+                  <DrawerDescription>{fixture.data.description}</DrawerDescription>
                 </DrawerHeader>
                 <DrawerBody>
-                  <p>Drag the handle down, press Escape or use Close to dismiss.</p>
+                  <p>{fixture.data.body}</p>
                 </DrawerBody>
                 <DrawerFooter>
                   <DrawerClose asChild>
-                    <Button>Cancel</Button>
+                    <Button>{fixture.data.cancel}</Button>
                   </DrawerClose>
-                  <Button variant="primary">Copy link</Button>
+                  <Button variant="primary">{fixture.data.confirm}</Button>
                 </DrawerFooter>
               </DrawerContent>
             </Drawer>

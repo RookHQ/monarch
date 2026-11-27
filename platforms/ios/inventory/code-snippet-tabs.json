@@ -1,0 +1,128 @@
+{
+  "id": "code-snippet-tabs",
+  "name": "MonarchCodeSnippetTabs",
+  "title": "CodeSnippetTabs",
+  "family": "technical",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchTabs over a MonarchCodeBlock in a VStack; @AppStorage (UserDefaults) for the synced choice",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The same code example in several languages or tools, one tab each, with a copy button, optionally kept on the reader's language across every snippet set that shares a sync key.",
+  "whenToUse": "In API documentation, onboarding or settings screens that show the same request in cURL, Python, Node and so on.",
+  "whenNotToUse": "For one code sample, use MonarchCodeBlock. For tabs over other content, use MonarchTabs.",
+  "api": [
+    "init(_ label: String? = nil, snippets: [MonarchCodeSnippet], selection: Binding<String>? = nil, syncKey: String? = nil, variant: MonarchTabsVariant = .line, showsLineNumbers: Bool = false, codeBlockLabels: MonarchCodeBlockLabels = MonarchCodeBlockLabels(), onCopy: (@MainActor (String) -> Void)? = nil)",
+    "struct MonarchCodeSnippet: Identifiable { init(_ label: String, code: String, language: String? = nil, id: String? = nil, title: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "nil",
+      "description": "The spoken name of the tab strip. Built in: Language."
+    },
+    {
+      "name": "snippets",
+      "type": "[MonarchCodeSnippet]",
+      "default": "required",
+      "description": "The same example in each language, in tab order. A snippet's id defaults to its label; repeated ids are left out."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<String>?",
+      "default": "nil",
+      "description": "The selected snippet's id, when the app controls it. An id with no snippet falls back to the stored or own choice, then the first snippet."
+    },
+    {
+      "name": "syncKey",
+      "type": "String?",
+      "default": "nil",
+      "description": "Keeps every set with this key on the same language and remembers it in UserDefaults under monarch.codeSnippetTabs.<key>."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchTabsVariant",
+      "default": ".line",
+      "description": "A line under the selected tab, or a pill on a track."
+    },
+    {
+      "name": "showsLineNumbers",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether the code shows line numbers."
+    },
+    {
+      "name": "codeBlockLabels",
+      "type": "MonarchCodeBlockLabels",
+      "default": "MonarchCodeBlockLabels()",
+      "description": "Replacements for the code block's built-in strings (Copy, Copied, Wrap, …)."
+    },
+    {
+      "name": "onCopy",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Runs with the copied code after each copy."
+    }
+  ],
+  "states": [
+    {
+      "name": "several snippets",
+      "description": "The tab strip and the selected snippet's code block."
+    },
+    {
+      "name": "one snippet",
+      "description": "Only the code block, without tabs."
+    },
+    {
+      "name": "no snippets",
+      "description": "Nothing is drawn."
+    },
+    {
+      "name": "synced",
+      "description": "Choosing a tab in one set switches every visible set with the same syncKey that has that snippet, and the choice is restored on the next launch."
+    }
+  ],
+  "appearance": "The tab strip and the code block keep their own looks: the accent on the selected tab, the code on the muted background role with syntax colours from the theme, in light, dark and both high-contrast themes.",
+  "platformNotes": "The web keeps the synced choice in localStorage and notifies other sets in the page; on iOS @AppStorage stores it in UserDefaults and SwiftUI updates every view that reads the same key, so sets stay in sync across screens and launches. The web's CodeTabs props (copy label, wrap) are reached through codeBlockLabels; the web's defaultValue is the first snippet or the stored choice. Android has the same parameters, with DataStore for the synced choice.",
+  "accessibility": [
+    "The tab strip is a tab bar named Language (or label); each tab is a button with the selected trait.",
+    "The code block is a container named after its title or language and reads line by line; the copy button announces the copy.",
+    "Tab labels and code scale with Dynamic Type; tabs scroll sideways when they do not fit.",
+    "Code reads left to right in right-to-left layouts, as in MonarchCodeBlock."
+  ],
+  "edgeCases": [
+    "A stored choice that a set has no snippet for is ignored by that set, which keeps its own choice.",
+    "Two snippets with the same label need distinct ids.",
+    "Changing tabs replaces the code block, so its wrap toggle resets.",
+    "The stored value is only written when syncKey is given."
+  ],
+  "tests": [
+    "MonarchCodeSnippetTabsTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Request in three languages",
+      "fixture": "code-snippet-tabs",
+      "webExample": "Request in three languages",
+      "template": "MonarchCodeSnippetTabs(\n    {{label}},\n    snippets: [\n        MonarchCodeSnippet({{snippets.0.label}}, code: {{snippets.0.code}}, language: {{snippets.0.language}}),\n        MonarchCodeSnippet({{snippets.1.label}}, code: {{snippets.1.code}}, language: {{snippets.1.language}}),\n        MonarchCodeSnippet({{snippets.2.label}}, code: {{snippets.2.code}}, language: {{snippets.2.language}}),\n    ]\n)",
+      "code": "MonarchCodeSnippetTabs(\n    \"Request examples\",\n    snippets: [\n        MonarchCodeSnippet(\"cURL\", code: \"curl https://api.example.com/v1/items \\\\\\n  -H \\\"Authorization: Bearer $API_KEY\\\"\", language: \"bash\"),\n        MonarchCodeSnippet(\"JavaScript\", code: \"const res = await fetch('https://api.example.com/v1/items', {\\n  headers: { Authorization: `Bearer ${process.env.API_KEY}` },\\n});\", language: \"js\"),\n        MonarchCodeSnippet(\"Python\", code: \"import os, requests\\n\\nrequests.get(\\n    'https://api.example.com/v1/items',\\n    headers={'Authorization': f\\\"Bearer {os.environ['API_KEY']}\\\"},\\n)\", language: \"python\"),\n    ]\n)"
+    },
+    {
+      "title": "Two sets kept on the same language",
+      "code": "VStack(alignment: .leading) {\n    MonarchCodeSnippetTabs(\n        \"List items\",\n        snippets: [\n            MonarchCodeSnippet(\"cURL\", code: \"curl https://api.example.com/v1/items\", language: \"bash\"),\n            MonarchCodeSnippet(\"Python\", code: \"requests.get(url)\", language: \"python\"),\n        ],\n        syncKey: \"api-docs\"\n    )\n    MonarchCodeSnippetTabs(\n        \"Delete an item\",\n        snippets: [\n            MonarchCodeSnippet(\"cURL\", code: \"curl -X DELETE https://api.example.com/v1/items/42\", language: \"bash\"),\n            MonarchCodeSnippet(\"Python\", code: \"requests.delete(url)\", language: \"python\"),\n        ],\n        syncKey: \"api-docs\"\n    )\n}"
+    }
+  ],
+  "webEquivalent": "CodeSnippetTabs",
+  "dependsOn": [
+    "code-block",
+    "tabs"
+  ],
+  "icons": {
+    "copy": "CopyGlyph"
+  }
+}

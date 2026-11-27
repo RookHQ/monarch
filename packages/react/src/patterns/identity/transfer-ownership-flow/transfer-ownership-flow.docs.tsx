@@ -1,30 +1,63 @@
+import { useState } from 'react';
 import { Button, DangerZone, DangerZoneItem } from '@rookcom/monarch-react';
 import {
   TransferOwnershipFlow,
   type TransferOwnershipCandidate,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './transfer-ownership-flow.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
+const ROLE_BY_ID: Record<string, string> = { m1: 'admin', m2: 'admin', m3: 'member', m4: 'admin' };
+
 const members: TransferOwnershipCandidate[] = [
   { id: 'me', name: 'Sam Rivera', email: 'sam@example.com', role: 'owner' },
-  { id: 'm1', name: 'Alex Morgan', email: 'alex@example.com', role: 'admin' },
-  { id: 'm2', name: 'Priya Shah', email: 'priya@example.com', role: 'admin' },
-  { id: 'm3', name: 'Jordan Lee', email: 'jordan@example.com', role: 'member' },
-  {
-    id: 'm4',
-    name: 'Chris Novak',
-    email: 'chris@example.com',
-    role: 'admin',
-    ineligibleReason: 'Invite not accepted yet',
-  },
+  ...(
+    fixture.data.candidates as {
+      id: string;
+      name: string;
+      email: string;
+      ineligibleReason?: string;
+    }[]
+  ).map(({ id, name, email, ineligibleReason }) => ({
+    id,
+    name,
+    email,
+    ...(ROLE_BY_ID[id] !== undefined && { role: ROLE_BY_ID[id] }),
+    ...(ineligibleReason !== undefined && { ineligibleReason }),
+  })),
 ];
 
 const roles = [
   { value: 'admin', label: 'Admin' },
   { value: 'member', label: 'Member' },
 ];
+
+function FromDangerZone() {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <DangerZone>
+        <DangerZoneItem
+          title={fixture.data.item.title}
+          description={fixture.data.item.description}
+          action={<Button onClick={() => setOpen(true)}>{fixture.data.item.action}</Button>}
+        />
+      </DangerZone>
+      <TransferOwnershipFlow
+        open={open}
+        onOpenChange={setOpen}
+        candidates={members}
+        currentOwnerId="me"
+        eligibleRoles={['admin']}
+        yourRoleOptions={roles}
+        onTransfer={() => wait(900)}
+      />
+    </>
+  );
+}
 
 export default {
   id: 'transfer-ownership-flow',
@@ -178,25 +211,8 @@ export default {
       items: [
         {
           title: 'From a danger zone',
-          stack: true,
-          render: () => (
-            <DangerZone>
-              <DangerZoneItem
-                title="Transfer ownership"
-                description="Another member becomes the owner. You choose your role afterwards."
-                action={
-                  <TransferOwnershipFlow
-                    trigger={<Button>Transfer ownership</Button>}
-                    candidates={members}
-                    currentOwnerId="me"
-                    eligibleRoles={['admin']}
-                    yourRoleOptions={roles}
-                    onTransfer={() => wait(900)}
-                  />
-                }
-              />
-            </DangerZone>
-          ),
+          stage: { align: 'center' },
+          render: () => <FromDangerZone />,
         },
         {
           title: 'Waiting for acceptance, with re-authentication',

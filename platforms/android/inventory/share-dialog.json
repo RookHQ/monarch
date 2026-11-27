@@ -1,0 +1,98 @@
+{
+  "id": "share-dialog",
+  "name": null,
+  "title": "ShareDialog",
+  "family": "collaboration",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet, androidx.compose.foundation.layout.Column with verticalScroll; MonarchEntityPicker, MonarchRolePicker, MonarchMemberRow, MonarchCopyField, MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: sharing one record with people and setting its general access, in a Material 3 bottom sheet: invite people with a role, the people with access and their roles, general access and the link to copy.",
+  "whenToUse": "When a record (a document, a board, a folder) is shared with people inside the product and their access is managed in place, from a Share button on its screen.",
+  "whenNotToUse": "To send a link to another app (a message, an email), use the system share sheet (Intent.ACTION_SEND via Intent.createChooser), documented as share-button. To manage the members of a whole workspace, use a screen of MonarchMemberRows.",
+  "api": [
+    "MonarchBottomSheet(onDismissRequest = { open = false }, title = …) { Column(Modifier.verticalScroll(rememberScrollState())) { … } }",
+    "MonarchEntityPicker(label: String, entities: List<MonarchEntityPickerEntity>, selected: List<String>, onSelectedChange: (List<String>) -> Unit, …)",
+    "MonarchRolePicker(roles: List<MonarchRoleOption<T>>, selected: T?, onSelect: (T) -> Unit, layout = MonarchRolePickerLayout.Compact, label: String? = null, …)",
+    "MonarchMemberRow(name: String, email: String? = null, role: String? = null, roles: List<MonarchRoleOption<String>> = emptyList(), self: Boolean = false, onRoleChange: (suspend (String) -> Unit)? = null, onRemove: (suspend () -> Unit)? = null, …)",
+    "MonarchCopyField(value: String, label: String, …)",
+    "MonarchButton(text: String, onClick: () -> Unit, variant = MonarchButtonVariant.Primary, enabled: Boolean, …)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "closed",
+      "description": "A Share button on the record's screen."
+    },
+    {
+      "name": "open",
+      "description": "A bottom sheet, fully expanded, that scrolls as one column: the title, Invite people, the role for new people, Invite, People with access, General access and the link."
+    },
+    {
+      "name": "inviting",
+      "description": "Invite is enabled once at least one person is picked; the picked people are added with the chosen role."
+    },
+    {
+      "name": "changing a member",
+      "description": "Each MonarchMemberRow opens its role menu and its remove confirmation; the app saves and throws to restore."
+    },
+    {
+      "name": "copied",
+      "description": "MonarchCopyField copies the link; Android 13 and later show the system clipboard confirmation."
+    }
+  ],
+  "appearance": "The Material 3 bottom sheet on the raised surface with Monarch's large radius and the scrim role, a heading in the heading text style, and the Monarch pickers, rows, copy field and buttons in their own roles. The same roles adapt to dark and both high-contrast themes.",
+  "platformNotes": "The web ships ShareDialog as one component in a dialog, with the people, the access options, password-protected links with expiry, view counts and revoking, and a long list of message overrides. On Android, as on iOS, it is a recipe in a MonarchBottomSheet, the phone pattern for a task that belongs to the current screen, built from the Monarch components that already do each part, so no Monarch type is added. Link management (passwords, expiry, revoking several links) is product-specific: add MonarchTextFields and a list of MonarchMemberRow-like rows inside the same column when the product needs it. Sending the link to another app goes through the system share sheet, not this recipe.",
+  "accessibility": [
+    "The title and People with access are headings, so TalkBack can move between the parts of the sheet.",
+    "MonarchEntityPicker names its field Invite people and reads the picked people.",
+    "MonarchRolePicker in the compact layout is a menu field with its label; the selected role is read as its value.",
+    "Each MonarchMemberRow reads the name, email and role, and offers its role menu and Remove as separate buttons.",
+    "MonarchCopyField is a read-only field with a Copy button with a 48dp touch target.",
+    "The sheet has the Material 3 drag handle, which TalkBack can expand and dismiss, and closes with the system back gesture."
+  ],
+  "edgeCases": [
+    "Many people with access: the column scrolls inside the sheet; do not put a LazyColumn inside it.",
+    "Your own row is self = true, so it cannot be removed or have its role changed.",
+    "At the largest font scale skipPartiallyExpanded keeps the whole sheet open so nothing is cut off."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Invite people and set access",
+      "fixture": "share-dialog",
+      "webExample": "Invite people and set access",
+      "template": "MonarchButton(text = {{trigger}}, onClick = { open = true })\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }, title = \"Share “\" + {{itemName}} + \"”\") {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            MonarchText(text = {{description}}, color = MonarchTheme.colors.textMuted)\n            MonarchEntityPicker(\n                label = \"Invite people\",\n                placeholder = \"Name or email\",\n                entities = people,\n                selected = invitees,\n                onSelectedChange = { invitees = it },\n            )\n            MonarchRolePicker(\n                roles = roles,\n                selected = inviteRole,\n                onSelect = { inviteRole = it },\n                layout = MonarchRolePickerLayout.Compact,\n                label = \"Role for new people\",\n            )\n            MonarchButton(\n                text = \"Invite\",\n                onClick = { invitees = emptyList() },\n                variant = MonarchButtonVariant.Primary,\n                enabled = invitees.isNotEmpty(),\n            )\n            MonarchText(text = \"People with access\", style = MonarchTextStyle.Subheading, modifier = Modifier.semantics { heading() })\n            MonarchMemberRow(name = {{people.0.name}}, email = {{people.0.email}}, role = {{people.0.role}}, roles = roles, self = {{people.0.isSelf}})\n            MonarchMemberRow(\n                name = {{people.1.name}},\n                email = {{people.1.email}},\n                role = roleOf[{{people.1.email}}],\n                roles = roles,\n                onRoleChange = { next -> roleOf = roleOf + ({{people.1.email}} to next) },\n                onRemove = {},\n            )\n            MonarchMemberRow(\n                name = {{people.2.name}},\n                email = {{people.2.email}},\n                status = MonarchMemberRowStatus.{{people.2.status|pascal}},\n                role = {{people.2.role}},\n                roles = roles,\n                onRoleChange = {},\n                onRemove = {},\n            )\n            MonarchText(text = \"General access\", style = MonarchTextStyle.Subheading, modifier = Modifier.semantics { heading() })\n            MonarchRolePicker(\n                roles = listOf(\n                    MonarchRoleOption({{access.options.0.value}}, {{access.options.0.label}}, description = {{access.options.0.description}}),\n                    MonarchRoleOption({{access.options.1.value}}, {{access.options.1.label}}, description = {{access.options.1.description}}),\n                ),\n                selected = access,\n                onSelect = { access = it },\n                layout = MonarchRolePickerLayout.Compact,\n                label = \"Who can open it\",\n            )\n            MonarchText(text = {{access.options.0.description}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n            MonarchCopyField(value = {{link}}, label = \"Link\")\n        }\n    }\n}",
+      "setupTemplate": "var open by remember { mutableStateOf(true) }\nvar invitees by remember { mutableStateOf(listOf<String>()) }\nvar inviteRole by remember { mutableStateOf<String?>({{defaultInviteRole}}) }\nvar access by remember { mutableStateOf<String?>({{access.value}}) }\nvar roleOf by remember { mutableStateOf(mapOf({{people.0.email}} to {{people.0.role}}, {{people.1.email}} to {{people.1.role}})) }\nval roles = listOf(\n    MonarchRoleOption({{roles.0.value}}, {{roles.0.label}}),\n    MonarchRoleOption({{roles.1.value}}, {{roles.1.label}}),\n    MonarchRoleOption({{roles.2.value}}, {{roles.2.label}}),\n)\nval people = listOf(\n    MonarchEntityPickerEntity({{candidates.0.value}}, {{candidates.0.label}}, description = {{candidates.0.description}}),\n    MonarchEntityPickerEntity({{candidates.1.value}}, {{candidates.1.label}}, description = {{candidates.1.description}}),\n    MonarchEntityPickerEntity({{candidates.2.value}}, {{candidates.2.label}}, description = {{candidates.2.description}}),\n)",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "var open by remember { mutableStateOf(true) }\nvar invitees by remember { mutableStateOf(listOf<String>()) }\nvar inviteRole by remember { mutableStateOf<String?>(\"viewer\") }\nvar access by remember { mutableStateOf<String?>(\"invited\") }\nvar roleOf by remember { mutableStateOf(mapOf(\"alex@example.com\" to \"editor\", \"sam@example.com\" to \"commenter\")) }\nval roles = listOf(\n    MonarchRoleOption(\"viewer\", \"Viewer\"),\n    MonarchRoleOption(\"commenter\", \"Commenter\"),\n    MonarchRoleOption(\"editor\", \"Editor\"),\n)\nval people = listOf(\n    MonarchEntityPickerEntity(\"u4\", \"Jordan Kim\", description = \"jordan@example.com\"),\n    MonarchEntityPickerEntity(\"u5\", \"Riley Chen\", description = \"riley@example.com\"),\n    MonarchEntityPickerEntity(\"u6\", \"Taylor Brooks\", description = \"taylor@example.com\"),\n)",
+      "code": "MonarchButton(text = \"Share\", onClick = { open = true })\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }, title = \"Share “\" + \"Quarterly plan\" + \"”\") {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            MonarchText(text = \"People you invite get the role you choose.\", color = MonarchTheme.colors.textMuted)\n            MonarchEntityPicker(\n                label = \"Invite people\",\n                placeholder = \"Name or email\",\n                entities = people,\n                selected = invitees,\n                onSelectedChange = { invitees = it },\n            )\n            MonarchRolePicker(\n                roles = roles,\n                selected = inviteRole,\n                onSelect = { inviteRole = it },\n                layout = MonarchRolePickerLayout.Compact,\n                label = \"Role for new people\",\n            )\n            MonarchButton(\n                text = \"Invite\",\n                onClick = { invitees = emptyList() },\n                variant = MonarchButtonVariant.Primary,\n                enabled = invitees.isNotEmpty(),\n            )\n            MonarchText(text = \"People with access\", style = MonarchTextStyle.Subheading, modifier = Modifier.semantics { heading() })\n            MonarchMemberRow(name = \"Alex Morgan\", email = \"alex@example.com\", role = \"editor\", roles = roles, self = true)\n            MonarchMemberRow(\n                name = \"Sam Lee\",\n                email = \"sam@example.com\",\n                role = roleOf[\"sam@example.com\"],\n                roles = roles,\n                onRoleChange = { next -> roleOf = roleOf + (\"sam@example.com\" to next) },\n                onRemove = {},\n            )\n            MonarchMemberRow(\n                name = \"Jamie Fox\",\n                email = \"jamie@example.com\",\n                status = MonarchMemberRowStatus.Invited,\n                role = \"viewer\",\n                roles = roles,\n                onRoleChange = {},\n                onRemove = {},\n            )\n            MonarchText(text = \"General access\", style = MonarchTextStyle.Subheading, modifier = Modifier.semantics { heading() })\n            MonarchRolePicker(\n                roles = listOf(\n                    MonarchRoleOption(\"invited\", \"Only people invited\", description = \"Only the people listed above can open it.\"),\n                    MonarchRoleOption(\"workspace\", \"Anyone in the workspace\", description = \"Everyone in the workspace can find and open it.\"),\n                ),\n                selected = access,\n                onSelect = { access = it },\n                layout = MonarchRolePickerLayout.Compact,\n                label = \"Who can open it\",\n            )\n            MonarchText(text = \"Only the people listed above can open it.\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n            MonarchCopyField(value = \"https://example.com/d/quarterly-plan\", label = \"Link\")\n        }\n    }\n}"
+    },
+    {
+      "title": "In a bottom sheet opened from a Share button",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "kotlinx.coroutines.launch"
+      ],
+      "setup": "var open by remember { mutableStateOf(false) }\nvar invitees by remember { mutableStateOf(listOf<String>()) }\nval people = listOf(MonarchEntityPickerEntity(\"kat\", \"Katherine Johnson\", description = \"kat@example.com\"))",
+      "code": "MonarchButton(text = \"Share\", onClick = { open = true })\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }, title = \"Share “Q3 plan”\") {\n        val sheet = this\n        // The sheet scrolls as one column: no lazy list inside it.\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            MonarchEntityPicker(label = \"Invite people\", entities = people, selected = invitees, onSelectedChange = { invitees = it })\n            MonarchMemberRow(name = \"You\", email = \"you@example.com\", role = \"owner\", self = true)\n            MonarchCopyField(value = \"https://example.com/d/q3-plan\", label = \"Link\")\n            MonarchButton(\n                text = \"Done\",\n                onClick = { sheet.dismiss() },\n                modifier = Modifier.fillMaxWidth(),\n                variant = MonarchButtonVariant.Primary,\n            )\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "ShareDialog",
+  "dependsOn": [
+    "sheet",
+    "entity-picker",
+    "role-picker",
+    "member-row",
+    "copy-field",
+    "button"
+  ]
+}

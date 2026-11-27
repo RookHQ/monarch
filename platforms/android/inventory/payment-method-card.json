@@ -1,0 +1,186 @@
+{
+  "id": "payment-method-card",
+  "name": "MonarchPaymentMethodCard",
+  "title": "PaymentMethodCard",
+  "family": "billing",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchCard (androidx.compose.material3.Surface) with MonarchBadge, MonarchButton and MonarchInlineErrorRetry; androidx.compose.material3.AlertDialog for the removal confirmation",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A saved payment card: network, last four digits, expiry and holder, a Default badge, and actions to make it the default or remove it after a confirmation.",
+  "whenToUse": "On a billing or wallet screen that lists the cards a payment provider has saved for the account.",
+  "whenNotToUse": "Not for entering a card: card entry stays with the payment provider's SDK. Not for a plan or an invoice: use MonarchPlanCard or MonarchReceiptPreview.",
+  "api": [
+    "@Composable fun MonarchPaymentMethodCard(brand: String, last4: String, modifier: Modifier = Modifier, expiryMonth: Int? = null, expiryYear: Int? = null, holderName: String? = null, expiry: MonarchPaymentMethodCardExpiry? = null, now: Long = System.currentTimeMillis(), default: Boolean = false, removeEnabled: Boolean = true, brandImage: Painter? = null, labels: MonarchPaymentMethodCardLabels = MonarchPaymentMethodCardLabels(), onMakeDefault: (suspend () -> Unit)? = null, onRemove: (suspend () -> Unit)? = null, actions: (@Composable () -> Unit)? = null)",
+    "enum class MonarchPaymentMethodCardExpiry { Valid, Expiring, Expired; companion object { fun status(month: Int, year: Int, now: Long = System.currentTimeMillis(), soonMonths: Int = 1): MonarchPaymentMethodCardExpiry } }",
+    "class MonarchPaymentMethodCardLabels(name: ((brand: String, last4: String) -> String)? = null, expires: ((date: String) -> String)? = null, expiredOn: ((date: String) -> String)? = null, defaultBadge: String? = null, expiringBadge: String? = null, expiredBadge: String? = null, makeDefault: String? = null, remove: String? = null, actionLabel: ((action: String, name: String) -> String)? = null, removeTitle: ((name: String) -> String)? = null, removeMessage: String? = null, removeConfirm: String? = null, cancel: String? = null, failed: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "brand",
+      "type": "String",
+      "default": "required",
+      "description": "A network id (visa, mastercard, amex, rupay, discover, diners, jcb, unionpay, maestro) shown by its display name, or any display name, shown as given."
+    },
+    {
+      "name": "last4",
+      "type": "String",
+      "default": "required",
+      "description": "The last four digits, exactly as the payment provider returns them."
+    },
+    {
+      "name": "expiryMonth",
+      "type": "Int?",
+      "default": "null",
+      "description": "The expiry month, 1 to 12."
+    },
+    {
+      "name": "expiryYear",
+      "type": "Int?",
+      "default": "null",
+      "description": "The expiry year, two digits (read as 20YY) or four."
+    },
+    {
+      "name": "holderName",
+      "type": "String?",
+      "default": "null",
+      "description": "The cardholder's name, shown before the expiry."
+    },
+    {
+      "name": "expiry",
+      "type": "MonarchPaymentMethodCardExpiry?",
+      "default": "null",
+      "description": "Replaces the status worked out from the date, when the payment provider already reports it."
+    },
+    {
+      "name": "now",
+      "type": "Long",
+      "default": "System.currentTimeMillis()",
+      "description": "The current time in epoch milliseconds, for working out the status; pass a fixed value in tests."
+    },
+    {
+      "name": "default",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows the Default badge and hides Make default."
+    },
+    {
+      "name": "removeEnabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Disables Remove, for example on the only method of an active subscription."
+    },
+    {
+      "name": "brandImage",
+      "type": "Painter?",
+      "default": "null",
+      "description": "The network's logo, always decorative. While null a muted tile stands in."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchPaymentMethodCardLabels",
+      "default": "MonarchPaymentMethodCardLabels()",
+      "description": "Replacements for every built-in string (monarch_paymentmethodcard_*)."
+    },
+    {
+      "name": "onMakeDefault",
+      "type": "(suspend () -> Unit)?",
+      "default": "null",
+      "description": "Shows Make default on a card that is not the default. Progress shows while it runs; a thrown exception shows the failure with Try again."
+    },
+    {
+      "name": "onRemove",
+      "type": "(suspend () -> Unit)?",
+      "default": "null",
+      "description": "Shows Remove, which asks for confirmation in an AlertDialog first. Progress shows while it runs; a thrown exception shows the failure with Try again."
+    },
+    {
+      "name": "actions",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "Further buttons after Make default and Remove, for example a small MonarchButton."
+    }
+  ],
+  "states": [
+    {
+      "name": "valid",
+      "description": "No expiry badge; the line reads \"Expires MM/YY\"."
+    },
+    {
+      "name": "expiring",
+      "description": "A warning MonarchBadge \"Expires soon\", this month or next."
+    },
+    {
+      "name": "expired",
+      "description": "A danger MonarchBadge \"Expired\", the line reads \"Expired MM/YY\", and Make default is disabled."
+    },
+    {
+      "name": "default",
+      "description": "A Default badge in the accent roles; Make default is hidden."
+    },
+    {
+      "name": "working",
+      "description": "The button of the running action shows progress and reports \"Loading\"; the other action is disabled until it ends."
+    },
+    {
+      "name": "failed",
+      "description": "A MonarchInlineErrorRetry under the card with Try again; the message is a polite live region."
+    },
+    {
+      "name": "remove disabled",
+      "description": "Remove uses the disabled colors and cannot be activated."
+    }
+  ],
+  "appearance": "A MonarchCard on the surface role with the default border. The name uses the default text role, the expiry line the muted text role, and the Default badge the accent subtle fill with the accent strong text. Expiring and expired badges use the warning and danger tones. A missing network image is a tile in the muted background role. High-contrast themes resolve the same roles to stronger colors.",
+  "platformNotes": "The web card shows a ConfirmDialog that stays open while removal runs and shows a rejection inside the dialog. Android, like iOS, closes the Material 3 AlertDialog on confirm, shows progress on the Remove button and a failure under the card with Try again. The web onMakeDefaultError callback is replaced by the same inline error. The web heading level has no Android equivalent; the header is a heading for TalkBack. The web uses an accent badge tone; MonarchTone has no accent tone, so the Default badge draws the accent roles itself. The actions are suspend functions where iOS uses async throws. The expiry status is worked out in UTC from epoch milliseconds.",
+  "accessibility": [
+    "The network image is hidden; the name, badges, holder and expiry are merged into one element marked as a heading.",
+    "Expiry states are badges with text, never color alone.",
+    "Make default and Remove are read with their label and the card, for example \"Remove, Visa ending in 4242\".",
+    "Removal is confirmed in a Material 3 AlertDialog with a danger confirm button and a Cancel button.",
+    "A failed action is shown in MonarchInlineErrorRetry, a polite live region, so it is announced.",
+    "Action buttons keep 48dp touch targets; badges and actions wrap onto new rows at large font sizes."
+  ],
+  "edgeCases": [
+    "Two-digit years are read as 20YY; months outside 1 to 12 are clamped.",
+    "A card is valid to the end of its expiry month, in UTC.",
+    "Without a month and a year the status is valid unless expiry is given.",
+    "Retrying a failed removal does not ask for confirmation again.",
+    "An unknown network id is shown as given, so pass a localised display name.",
+    "When onRemove removes the card from the app's list, the card leaves composition and its running action is cancelled with it."
+  ],
+  "tests": [
+    "MonarchPaymentMethodCardTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "A list of saved cards",
+      "fixture": "payment-method-card",
+      "webExample": "A list of saved cards",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n    MonarchPaymentMethodCard(\n        brand = {{cards.0.brand}},\n        last4 = {{cards.0.last4}},\n        expiryMonth = {{cards.0.expiryMonth}},\n        expiryYear = {{cards.0.expiryYear}},\n        holderName = {{cards.0.holderName}},\n        now = {{now|millis}},\n        default = {{cards.0.isDefault}},\n        removeEnabled = !{{cards.0.removeDisabled}},\n        brandImage = sampleLogoPainter(SampleIcons.Card),\n        onRemove = {},\n    )\n    MonarchPaymentMethodCard(\n        brand = {{cards.1.brand}},\n        last4 = {{cards.1.last4}},\n        expiryMonth = {{cards.1.expiryMonth}},\n        expiryYear = {{cards.1.expiryYear}},\n        now = {{now|millis}},\n        brandImage = sampleLogoPainter(SampleIcons.Card),\n        onMakeDefault = {},\n        onRemove = {},\n    )\n    MonarchPaymentMethodCard(\n        brand = {{cards.2.brand}},\n        last4 = {{cards.2.last4}},\n        expiryMonth = {{cards.2.expiryMonth}},\n        expiryYear = {{cards.2.expiryYear}},\n        now = {{now|millis}},\n        brandImage = sampleLogoPainter(SampleIcons.Card),\n        onMakeDefault = {},\n        onRemove = {},\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.testing.sampleLogoPainter"
+      ],
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n    MonarchPaymentMethodCard(\n        brand = \"visa\",\n        last4 = \"4242\",\n        expiryMonth = 8,\n        expiryYear = 2028,\n        holderName = \"Account holder\",\n        now = 1_781_524_800_000L,\n        default = true,\n        removeEnabled = !true,\n        brandImage = sampleLogoPainter(SampleIcons.Card),\n        onRemove = {},\n    )\n    MonarchPaymentMethodCard(\n        brand = \"mastercard\",\n        last4 = \"4444\",\n        expiryMonth = 7,\n        expiryYear = 2026,\n        now = 1_781_524_800_000L,\n        brandImage = sampleLogoPainter(SampleIcons.Card),\n        onMakeDefault = {},\n        onRemove = {},\n    )\n    MonarchPaymentMethodCard(\n        brand = \"rupay\",\n        last4 = \"0005\",\n        expiryMonth = 1,\n        expiryYear = 2026,\n        now = 1_781_524_800_000L,\n        brandImage = sampleLogoPainter(SampleIcons.Card),\n        onMakeDefault = {},\n        onRemove = {},\n    )\n}"
+    },
+    {
+      "title": "Working out the status for a list",
+      "setup": "val status = MonarchPaymentMethodCardExpiry.status(month = 12, year = 26, now = 1_794_657_600_000L)",
+      "code": "MonarchPaymentMethodCard(brand = \"rupay\", last4 = \"6521\", expiry = status, onMakeDefault = {})"
+    }
+  ],
+  "webEquivalent": "PaymentMethodCard",
+  "dependsOn": [
+    "card",
+    "badge",
+    "dropdown-menu",
+    "confirm-dialog"
+  ]
+}

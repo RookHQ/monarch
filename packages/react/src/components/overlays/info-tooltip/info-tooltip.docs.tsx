@@ -1,5 +1,7 @@
 import { Field, FieldLabel, InfoTooltip, Input } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './info-tooltip.fixture.json';
 
 export default {
   id: 'info-tooltip',
@@ -115,11 +117,12 @@ export default {
       items: [
         {
           title: 'Next to a metric',
+          stage: true,
           render: () => (
-            <span>
-              Visibility score{' '}
-              <InfoTooltip label="About visibility score">
-                Share of tracked keywords where you rank on page one, updated daily.
+            <span style={{ display: 'inline-flex', alignItems: 'flex-start', gap: '0.25rem' }}>
+              {fixture.data.metric}
+              <InfoTooltip label={fixture.data.label} defaultOpen>
+                {fixture.data.message}
               </InfoTooltip>
             </span>
           ),

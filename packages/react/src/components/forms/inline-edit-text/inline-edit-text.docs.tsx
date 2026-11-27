@@ -1,20 +1,22 @@
 import { useState } from 'react';
 import { InlineEditText } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './inline-edit-text.fixture.json';
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
 function TitleDemo() {
-  const [title, setTitle] = useState('Update onboarding checklist');
+  const [title, setTitle] = useState(fixture.data.value);
   return (
     <div style={{ fontSize: '1.25rem', fontWeight: 600, width: '100%', maxWidth: 480 }}>
       <InlineEditText
-        label="Title"
+        label={fixture.data.label}
         value={title}
         maxLength={120}
-        validate={(v) => (v.length === 0 ? 'Enter a title.' : null)}
+        validate={(v) => (v.length === 0 ? fixture.data.emptyError : null)}
         onSave={async (next) => {
           await wait(600);
           setTitle(next);

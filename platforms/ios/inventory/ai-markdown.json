@@ -1,0 +1,134 @@
+{
+  "id": "ai-markdown",
+  "name": "MonarchAiMarkdown",
+  "title": "AiMarkdown",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Text with AttributedString (link, inlinePresentationIntent, strikethrough and baselineOffset attributes) for inline content; VStack and HStack(alignment: .firstTextBaseline) for blocks and lists; ScrollView(.horizontal) of a Grid for tables; MonarchCodeBlock for code; the openURL environment action for links",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Renders GitHub-flavoured Markdown written by a model (headings, emphasis, links, lists, task lists, quotations, code, tables, rules and footnotes) as SwiftUI text and layout, never as HTML.",
+  "whenToUse": "For the text of an assistant's answer, a model-written summary or any Markdown that comes from a model and may contain block structure. It reads untrusted input safely and can be re-rendered on every streamed chunk.",
+  "whenNotToUse": "For Markdown you write yourself in the app, use MonarchProse with MonarchProseStyle.markdown(_:in:), or Text with AttributedString(markdown:) for one line. For code alone use MonarchCodeBlock.",
+  "api": [
+    "init(_ text: String, isStreaming: Bool = false, showsLinkHosts: Bool = true, labels: MonarchAiMarkdownLabels = MonarchAiMarkdownLabels(), onOpenLink: (@MainActor (URL) -> Void)? = nil)",
+    "func image<Content: View>(@ViewBuilder _ content: @escaping @MainActor (_ url: URL, _ alt: String) -> Content) -> MonarchAiMarkdown",
+    "func codeBlock<Content: View>(@ViewBuilder _ content: @escaping @MainActor (_ language: String, _ code: String, _ isComplete: Bool) -> Content) -> MonarchAiMarkdown",
+    "struct MonarchAiMarkdownLabels { init(table: String? = nil, tableSize: (@Sendable (_ rows: Int, _ columns: Int) -> String)? = nil, footnotes: String? = nil, task: String? = nil, linkHost: (@Sendable (_ host: String) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "text",
+      "type": "String",
+      "default": "required",
+      "description": "The Markdown source, treated as untrusted. While it grows, only the last block is parsed again."
+    },
+    {
+      "name": "isStreaming",
+      "type": "Bool",
+      "default": "false",
+      "description": "The text is still arriving: an unclosed code block is incomplete, so MonarchCodeBlock hides its copy button and codeBlock(_:) receives isComplete false."
+    },
+    {
+      "name": "showsLinkHosts",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the host after a link whose text does not name it, such as \"paypal.com (evil.example)\"."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiMarkdownLabels",
+      "default": "MonarchAiMarkdownLabels()",
+      "description": "Replaces \"Table\", the spoken table size, \"Footnotes\", \"Task\" and the \"(host)\" text after links."
+    },
+    {
+      "name": "onOpenLink",
+      "type": "(@MainActor (URL) -> Void)?",
+      "default": "nil",
+      "description": "Opens links in the app instead of the environment's openURL action. With it, relative links are links too."
+    },
+    {
+      "name": "image(_:)",
+      "type": "(URL, String) -> some View",
+      "default": "none",
+      "description": "Renders a paragraph that is only an image with an http or https source and alt text. Monarch loads no images; without it the alt text is shown."
+    },
+    {
+      "name": "codeBlock(_:)",
+      "type": "(String, String, Bool) -> some View",
+      "default": "none",
+      "description": "Renders every code block instead of MonarchCodeBlock, for example a diagram for mermaid or typeset maths for math. Receives the lower-cased language (empty when none), the code and whether it is complete."
+    }
+  ],
+  "states": [
+    {
+      "name": "complete",
+      "description": "Every block is rendered; footnotes are numbered by first reference and listed at the end under \"Footnotes\"."
+    },
+    {
+      "name": "streaming",
+      "description": "The last block is parsed again on every update; an unclosed code block renders as code without its copy button."
+    },
+    {
+      "name": "empty",
+      "description": "An empty text renders nothing."
+    }
+  ],
+  "appearance": "Running text uses the body type in the default text colour; # headings use the subheading type and deeper ones the strong body type. Quotations are muted text beside a bar in the default border colour. Links take the link colour with an underline, and the host after them is muted. Inline code uses the subtle inline code look. Tables have a subtle border, a muted header fill and subtle row lines; rules use the subtle border. A checked task mark uses the accent fill, an open one the strong border. Every role resolves to its own value in the dark and high-contrast themes.",
+  "platformNotes": "The parser is a port of the web parser through the Android port (same block and inline rules, same incremental re-parse while streaming) and is internal: iOS takes the text and keeps the parse state itself, as Android does, instead of exposing parseMarkdownBlocks and a blocks prop. The image and code block slots are modifiers (image(_:), codeBlock(_:)) instead of optional closures, so the view stays one type. Links open through the openURL environment action, which the app can also replace, or through onOpenLink; there is no new-tab option. Protocol-relative links are never links, and relative links are links only when onOpenLink handles them, because a native app has no base URL. Inline maths shows as inline code; display maths reaches codeBlock(_:) with language math. Footnote references are raised numbers and the footnotes are listed at the end under a header; there are no in-page anchors or back links. Headings follow the iOS body sizes rather than the web's small answer size, and VoiceOver gets heading levels. A table is one element named \"Table\" with its size, since SwiftUI has no table semantics for a Grid; the web reads a real table. The web's trailing slot (the streaming caret) is not offered. Android uses the same names, with streaming and showLinkHosts as isStreaming and showsLinkHosts.",
+  "accessibility": [
+    "Headings have the header trait and their Markdown level, so the VoiceOver rotor moves between them.",
+    "Links are underlined, so they are not told apart by colour alone, and are reachable through the rotor; an unsafe link is plain text.",
+    "Numbers of ordered lists are read before each item; bullets are hidden.",
+    "A task's check mark is represented to VoiceOver as a dimmed toggle named \"Task\" with its checked state.",
+    "A table is an element named \"Table\" with the value \"3 rows, 2 columns\"; its header cells have the header trait.",
+    "Rules and the quotation bar are hidden; quoted text is muted but keeps its words.",
+    "Paragraphs allow text selection.",
+    "Every length that holds text grows with Dynamic Type; table columns cap at a width that grows with the text size and then wrap."
+  ],
+  "edgeCases": [
+    "Raw HTML is never interpreted: it stays visible text.",
+    "javascript:, data:, other schemes and //host links keep their text without a link, even with control characters hidden inside the scheme.",
+    "A link whose text names another site, such as [paypal.com](https://evil.example), shows the real host after it.",
+    "A reference to a footnote that is not defined stays as its text, [^label]; a definition that is never referenced is not listed.",
+    "A wide table scrolls sideways inside its border instead of widening the answer.",
+    "A single $ is never maths, so prices stay text.",
+    "Very long text renders every block at once: the column does not scroll and is not lazy; put long answers in a scrolling list."
+  ],
+  "tests": [
+    "MonarchAiMarkdownTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "A full answer",
+      "fixture": "ai-markdown",
+      "webExample": "A full answer",
+      "template": "MonarchAiMarkdown({{text}})",
+      "code": "MonarchAiMarkdown(\"# Release checklist\\n\\nHere is what is left before the **Friday** release, based on the open tasks[^1].\\n\\n1. Finish the migration review\\n   - [x] Schema changes approved\\n   - [ ] Backfill tested on a copy\\n2. Update the *changelog* and the ~~old~~ new screenshots\\n3. Tell support (see [the handover notes](https://example.com/notes))\\n\\n> Releases after 16:00 need a second reviewer.\\n\\n| Task | Owner | Days left |\\n| :-- | :-- | --: |\\n| Migration review | Sam | 2 |\\n| Changelog | Alex | 1 |\\n\\n```bash\\nnpm run release -- --dry-run\\n```\\n\\n[^1]: Tasks tagged `release` in the sample project.\")"
+    },
+    {
+      "title": "A streamed answer, links opened in the app",
+      "setup": "@State private var opened: URL?",
+      "code": "MonarchAiMarkdown(\n    \"See [the guide](docs/guide) and run:\\n\\n```sh\\nmake rel\",\n    isStreaming: true,\n    onOpenLink: { opened = $0 }\n)"
+    },
+    {
+      "title": "Maths drawn by the app",
+      "code": "MonarchAiMarkdown(\"$$\\nE = mc^2\\n$$\")\n    .codeBlock { language, code, _ in\n        if language == \"math\" {\n            Text(code).monarchTextStyle(.code)\n        } else {\n            MonarchCodeBlock(code, language: language)\n        }\n    }"
+    }
+  ],
+  "webEquivalent": "AiMarkdown",
+  "dependsOn": [
+    "prose",
+    "code-block",
+    "link",
+    "checkbox"
+  ],
+  "icons": {
+    "codeBlock.copy": "CopyGlyph"
+  }
+}

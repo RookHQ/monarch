@@ -1,0 +1,123 @@
+{
+  "id": "support-panel",
+  "name": null,
+  "title": "SupportPanel",
+  "family": "overlays",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet with MonarchTabs and Tab; MonarchMessageRow and MonarchMessageComposer for chat; MonarchSearchResults, MonarchLink and MonarchBadge for help, contacts and status",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: help and support in a bottom sheet, with a Chat tab (the support conversation and a composer) and a Help tab (articles, other ways to reach the team and the system status).",
+  "whenToUse": "An app offers in-app support chat, help articles or contact options from a Help entry in its navigation or settings.",
+  "whenNotToUse": "For a full help center, open it as its own screen or a Custom Tab. For a single contact link, use MonarchLink in place.",
+  "api": [
+    "MonarchBottomSheet(onDismissRequest = { open = false }, title = \"Help & support\") { … }",
+    "MonarchTabs(selectedIndex = currentTab, onSelectedIndexChange = { currentTab = it }) { tab(\"Chat\"); tab(\"Help\") }",
+    "@OptIn(ExperimentalMonarchApi::class) MonarchMessageRow(author = MonarchMessageRowAuthor(\"Support\"), time = …, timeStyle = MonarchMessageRowTimeStyle.Clock) { MonarchText(…) }",
+    "@OptIn(ExperimentalMonarchApi::class) MonarchMessageComposer(label = \"Message\", state = rememberTextFieldState(), onSend = { message -> … })",
+    "MonarchSearchResults(groups = articles, onSelect = { result, _ -> … }, modifier = Modifier.heightIn(max = …))",
+    "MonarchLink(text = \"Email support@example.com\", onClick = …, variant = MonarchLinkVariant.Standalone)",
+    "MonarchBadge(text = \"All systems normal\", tone = MonarchTone.Success); MonarchLink(text = \"System status\", onClick = …, external = true)"
+  ],
+  "options": [
+    {
+      "name": "open",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Whether the sheet is shown; the app's Help entry sets it."
+    },
+    {
+      "name": "tab",
+      "type": "Int",
+      "default": "0",
+      "description": "The selected tab, Chat or Help, kept in rememberSaveable."
+    },
+    {
+      "name": "chat",
+      "type": "MonarchMessageRow list and MonarchMessageComposer",
+      "default": "null",
+      "description": "The conversation from the app's support chat client; leave the Chat tab out when there is none."
+    },
+    {
+      "name": "articles",
+      "type": "List<MonarchSearchResultGroup>",
+      "default": "emptyList()",
+      "description": "Popular or matching help articles, opened in the help center."
+    },
+    {
+      "name": "contacts",
+      "type": "MonarchLink rows",
+      "default": "none",
+      "description": "Other ways to reach support: email, phone, a contact form."
+    },
+    {
+      "name": "status",
+      "type": "MonarchBadge and MonarchLink",
+      "default": "none",
+      "description": "The current system status as text with a tone, and a link to the status page."
+    }
+  ],
+  "states": [
+    {
+      "name": "chat",
+      "description": "The conversation and the composer; sent messages appear as rows."
+    },
+    {
+      "name": "connecting or offline",
+      "description": "The app shows a MonarchInlineNotice above the conversation, such as The team is away. Leave a message and they will reply here."
+    },
+    {
+      "name": "help",
+      "description": "Help articles, contact links and the system status."
+    },
+    {
+      "name": "closed",
+      "description": "Swiping the sheet down, tapping the scrim or system back closes it, from MonarchBottomSheet."
+    }
+  ],
+  "appearance": "A Material 3 bottom sheet on the surface color with a heading, a primary tab row in the accent color, message rows, an outlined composer, result rows, links in the link color and a success badge for the status. Every part is an existing component, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web ships SupportPanel: a side sheet beside the navigation rail with Chat and Help tabs, a built-in client for its Support Chat API (connecting, offline, time-outs, resend) and links that open in new tabs. On a phone it is a bottom sheet, and the parts already exist as Monarch components, so Android keeps it a recipe. The app owns the chat connection and its states (it shows them with MonarchInlineNotice and the message rows' Pending and Failed statuses) because Monarch adds no networking. Links call back: the app opens email with an ACTION_SENDTO intent and web pages in a Custom Tab; there is no target=\"_blank\" and no script-scheme check because no URL is loaded by Monarch. MonarchMessageRow and MonarchMessageComposer are experimental, so the recipe opts in where it uses them.",
+  "accessibility": [
+    "MonarchBottomSheet moves TalkBack focus into the sheet and closes on system back, a swipe down or a tap on the scrim.",
+    "The tabs are Material 3 Tabs with the Tab role and the selected state.",
+    "Message rows read the author, time and text together, from MonarchMessageRow; the composer is a labelled text field with a Send button, from MonarchMessageComposer.",
+    "The system status is text with a tone (All systems normal), never a coloured dot alone.",
+    "Links are 48dp targets and say when they open outside the app, from MonarchLink with external."
+  ],
+  "edgeCases": [
+    "Keep the sheet's content short enough to fit; the article list scrolls inside a bounded height.",
+    "Without a chat client, show only the Help content and no tabs.",
+    "While the team is away, keep the composer and say when they will reply."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Chat, help articles, contacts and status",
+      "fixture": "support-panel",
+      "webExample": "Chat, help articles, contacts and status",
+      "template": "if (!open) MonarchButton(text = {{trigger}}, onClick = { open = true })\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }, title = \"Help & support\") {\n        Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n            MonarchTabs(selectedIndex = currentTab, onSelectedIndexChange = { currentTab = it }) {\n                tab(\"Chat\")\n                tab(\"Help\")\n            }\n            if (currentTab == 0) {\n                MonarchText(text = {{chat.system}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n                MonarchMessageRow(\n                    author = MonarchMessageRowAuthor({{chat.agent}}),\n                    time = {{chat.at|millis}},\n                    timeStyle = MonarchMessageRowTimeStyle.Clock,\n                ) {\n                    MonarchText({{chat.text}})\n                }\n                MonarchText(text = {{chat.expectedReply}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n                sent.forEach { text ->\n                    MonarchMessageRow(\n                        author = MonarchMessageRowAuthor(\"You\"),\n                        time = 1_794_614_460_000L,\n                        timeStyle = MonarchMessageRowTimeStyle.Clock,\n                    ) {\n                        MonarchText(text)\n                    }\n                }\n                MonarchMessageComposer(\n                    label = \"Message\",\n                    state = draft,\n                    onSend = { message -> sent = sent + message.text /* Post it to the support chat API. */ },\n                    placeholder = \"Write a message…\",\n                )\n            } else {\n                MonarchSearchResults(\n                    groups = articles,\n                    onSelect = { result, _ -> /* Open result.id in the help center. */ },\n                    modifier = Modifier.heightIn(max = MonarchTheme.spacing.space24 * 2),\n                )\n                MonarchText(text = \"Other ways to reach us\", style = MonarchTextStyle.Subheading)\n                MonarchText(text = {{contact.description}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n                MonarchLink(\n                    text = {{contact.label}},\n                    onClick = { /* Start an ACTION_SENDTO intent with a mailto: address. */ },\n                    variant = MonarchLinkVariant.Standalone,\n                )\n            }\n            // The footer shows on both tabs, as the web's does.\n            Row(\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n                verticalAlignment = Alignment.CenterVertically,\n            ) {\n                MonarchBadge(text = \"System status: \" + {{status}}, tone = MonarchTone.Success)\n                MonarchLink(\n                    text = \"Help Center\",\n                    onClick = { /* Open the help center in a Custom Tab. */ },\n                    external = true,\n                )\n            }\n        }\n    }\n}",
+      "setupTemplate": "var open by rememberSaveable { mutableStateOf(true) }\nvar currentTab by rememberSaveable { mutableIntStateOf(0) }\nval draft = rememberTextFieldState()\nvar sent by remember { mutableStateOf(listOf<String>()) }\nval articles = listOf(\n    MonarchSearchResultGroup(\n        title = \"Popular articles\",\n        id = \"popular\",\n        results = listOf(\n            MonarchSearchResult(title = {{articles.0}}, id = \"a1\"),\n            MonarchSearchResult(title = {{articles.1}}, id = \"a2\"),\n            MonarchSearchResult(title = {{articles.2}}, id = \"a3\"),\n        ),\n    ),\n)",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.foundation.*",
+        "androidx.compose.foundation.text.input.rememberTextFieldState",
+        "androidx.compose.ui.Alignment"
+      ],
+      "setup": "var open by rememberSaveable { mutableStateOf(true) }\nvar currentTab by rememberSaveable { mutableIntStateOf(0) }\nval draft = rememberTextFieldState()\nvar sent by remember { mutableStateOf(listOf<String>()) }\nval articles = listOf(\n    MonarchSearchResultGroup(\n        title = \"Popular articles\",\n        id = \"popular\",\n        results = listOf(\n            MonarchSearchResult(title = \"Getting started\", id = \"a1\"),\n            MonarchSearchResult(title = \"Invite your team\", id = \"a2\"),\n            MonarchSearchResult(title = \"Billing questions\", id = \"a3\"),\n        ),\n    ),\n)",
+      "code": "if (!open) MonarchButton(text = \"Help & support\", onClick = { open = true })\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }, title = \"Help & support\") {\n        Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n            MonarchTabs(selectedIndex = currentTab, onSelectedIndexChange = { currentTab = it }) {\n                tab(\"Chat\")\n                tab(\"Help\")\n            }\n            if (currentTab == 0) {\n                MonarchText(text = \"Conversation started\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n                MonarchMessageRow(\n                    author = MonarchMessageRowAuthor(\"Sam\"),\n                    time = 1_793_786_280_000L,\n                    timeStyle = MonarchMessageRowTimeStyle.Clock,\n                ) {\n                    MonarchText(\"Hi! What can we help you with today?\")\n                }\n                MonarchText(text = \"Typically replies in a few minutes\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n                sent.forEach { text ->\n                    MonarchMessageRow(\n                        author = MonarchMessageRowAuthor(\"You\"),\n                        time = 1_794_614_460_000L,\n                        timeStyle = MonarchMessageRowTimeStyle.Clock,\n                    ) {\n                        MonarchText(text)\n                    }\n                }\n                MonarchMessageComposer(\n                    label = \"Message\",\n                    state = draft,\n                    onSend = { message -> sent = sent + message.text /* Post it to the support chat API. */ },\n                    placeholder = \"Write a message…\",\n                )\n            } else {\n                MonarchSearchResults(\n                    groups = articles,\n                    onSelect = { result, _ -> /* Open result.id in the help center. */ },\n                    modifier = Modifier.heightIn(max = MonarchTheme.spacing.space24 * 2),\n                )\n                MonarchText(text = \"Other ways to reach us\", style = MonarchTextStyle.Subheading)\n                MonarchText(text = \"support@example.com\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n                MonarchLink(\n                    text = \"Email support\",\n                    onClick = { /* Start an ACTION_SENDTO intent with a mailto: address. */ },\n                    variant = MonarchLinkVariant.Standalone,\n                )\n            }\n            // The footer shows on both tabs, as the web's does.\n            Row(\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n                verticalAlignment = Alignment.CenterVertically,\n            ) {\n                MonarchBadge(text = \"System status: \" + \"All systems normal\", tone = MonarchTone.Success)\n                MonarchLink(\n                    text = \"Help Center\",\n                    onClick = { /* Open the help center in a Custom Tab. */ },\n                    external = true,\n                )\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "SupportPanel",
+  "dependsOn": [
+    "sheet",
+    "message-row",
+    "message-composer",
+    "search-results",
+    "link"
+  ]
+}

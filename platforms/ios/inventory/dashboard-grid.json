@@ -1,0 +1,129 @@
+{
+  "id": "dashboard-grid",
+  "name": "MonarchDashboardGrid",
+  "title": "DashboardGrid",
+  "family": "data-display",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of HStack rows sized from onGeometryChange (widgets spanning columns); draggable(_:) and dropDestination(for:action:isTargeted:) in edit mode; Button with .buttonStyle(.monarch(.ghost, size: .sm)) for Move earlier and Move later",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The responsive grid a dashboard's widgets sit in: one column on phones, more on wide screens, widgets spanning columns, and an edit mode in which people rearrange widgets by dragging or with buttons.",
+  "whenToUse": "On a home or dashboard screen made of several independent MonarchWidgets, especially when each person should be able to put the widgets they use most first.",
+  "whenNotToUse": "For equal tiles without spans or stored layouts, use MonarchSortableGrid. For a single list of sections, use a VStack. For many items of the same kind, use a LazyVGrid.",
+  "api": [
+    "init(_ items: [Item], layout: Binding<[Item.ID]>, itemLabel: KeyPath<Item, String>, span: ((Item) -> MonarchDashboardGridSpan)? = nil, columns: Int = 3, isEditing: Bool = false, labels: MonarchDashboardGridLabels = MonarchDashboardGridLabels(), onLayoutChange: (@MainActor (_ from: Int, _ to: Int) -> Void)? = nil, @ViewBuilder content: @escaping (Item) -> Content) where Item: Identifiable",
+    "enum MonarchDashboardGridSpan { case columns(Int), full; static let one, two }",
+    "struct MonarchDashboardGridLabels { var label, dragHint: String?; var moveEarlier, moveLater: (@Sendable (String) -> String)?; var moved, dropped: (@Sendable (String, Int, Int) -> String)? }"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "[Item]",
+      "default": "required",
+      "description": "The widgets in their default order."
+    },
+    {
+      "name": "layout",
+      "type": "Binding<[Item.ID]>",
+      "default": "required",
+      "description": "The order of ids stored for this person; empty for the default order. Unknown ids are skipped and new items appended; the grid writes the new order after each move."
+    },
+    {
+      "name": "itemLabel",
+      "type": "KeyPath<Item, String>",
+      "default": "required",
+      "description": "A widget's plain-text name, for the arrange bar, the button labels and the announcements."
+    },
+    {
+      "name": "span",
+      "type": "((Item) -> MonarchDashboardGridSpan)?",
+      "default": "nil",
+      "description": "The columns a widget spans on wide screens, clamped to the columns available. One by default."
+    },
+    {
+      "name": "columns",
+      "type": "Int",
+      "default": "3",
+      "description": "The columns from 1024 points of grid width, 1 to 4. From 640 points the grid has at most two, below it one."
+    },
+    {
+      "name": "isEditing",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows an arrange bar on each widget with Move earlier and Move later, and makes the bars draggable."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchDashboardGridLabels",
+      "default": "MonarchDashboardGridLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "onLayoutChange",
+      "type": "(@MainActor (_ from: Int, _ to: Int) -> Void)?",
+      "default": "nil",
+      "description": "Called after each finished move with the old and new index, for example to save the layout."
+    },
+    {
+      "name": "content",
+      "type": "@ViewBuilder (Item) -> Content",
+      "default": "required",
+      "description": "Draws a widget, usually a MonarchWidget."
+    }
+  ],
+  "states": [
+    {
+      "name": "viewing",
+      "description": "The widgets in rows; one column on phones."
+    },
+    {
+      "name": "editing",
+      "description": "Each widget has an arrange bar in the subtle background: a grip, its name, and Move earlier and Move later buttons, disabled at the ends."
+    },
+    {
+      "name": "drop target",
+      "description": "While a bar is dragged over a widget, that widget has an accent outline."
+    }
+  ],
+  "appearance": "Widgets sit with a 16-point gap. The arrange bar uses the subtle background role with muted text and grip; the move buttons are small ghost MonarchButtons; the drop outline uses the accent strong role at twice the hairline. Light, dark and both high-contrast themes come from these roles.",
+  "platformNotes": "The web grid is a CSS grid with column spans; SwiftUI's LazyVGrid has no spans, so the iOS grid packs widgets into rows and sizes them from the measured width (it is not lazy; a dashboard has a few widgets). The web picks up a widget with Space and moves it with the arrow keys; on iOS the Move earlier and Move later buttons are the single-tap equivalent for touch, VoiceOver, Switch Control and keyboards, and dragging uses the system drag and drop. The web takes uncontrolled defaultLayout; on iOS the layout is a binding. The web widths are in rem of grid width (40rem, 64rem); iOS uses the 640 and 1024 point breakpoints. Android uses the same name and options. Several closures are optional (span, onLayoutChange). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is span.",
+  "accessibility": [
+    "The grid is a container named \"Dashboard\".",
+    "In edit mode the bar reads the widget's name with the hint \"Touch and hold, then drag to move.\"; its grip is hidden.",
+    "Move earlier and Move later are named with the widget (\"Move Team load earlier\"), have 44-point touch targets and are disabled at the ends.",
+    "Every move and drop is announced (\"Team load moved to position 2 of 6.\").",
+    "At the accessibility text sizes the grid has one column.",
+    "Moves animate with the motion tokens and are instant with Reduce Motion."
+  ],
+  "edgeCases": [
+    "A stored layout with ids of removed widgets skips them; new widgets follow in their default order.",
+    "A widget whose span does not fit in what is left of a row starts the next row, leaving a gap.",
+    "In one column, spans have no effect and the move buttons point up and down; in several they point backward and forward and mirror right to left.",
+    "Drops from another grid or another app are ignored."
+  ],
+  "tests": [
+    "MonarchDashboardGridTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Rearrangeable dashboard with a stored layout",
+      "fixture": "dashboard-grid",
+      "webExample": "Rearrangeable dashboard with a stored layout",
+      "template": "VStack(alignment: .leading) {\n    MonarchButton({{arrangeLabel}}, variant: isEditing ? .primary : .secondary, size: .sm) {\n        isEditing.toggle()\n    }\n    MonarchDashboardGrid(\n        tiles,\n        layout: $layout,\n        itemLabel: \\.title,\n        span: { $0.span },\n        isEditing: isEditing,\n        content: { tile in\n            MonarchWidget(tile.title) {\n                Text(tile.body).monarchTextStyle(.body)\n            }\n        }\n    )\n    Text(\"Saved layout: \\(layout.joined(separator: \", \"))\").monarchTextStyle(.caption)\n}",
+      "setupTemplate": "struct Tile: Identifiable {\n    let id: String\n    let title: String\n    let body: String\n    var span: MonarchDashboardGridSpan = .one\n}\n\nprivate let tiles = [\n    Tile(id: {{widgets.0.id}}, title: {{widgets.0.title}}, body: {{widgets.0.body}}, span: .{{widgets.0.span|raw}}),\n    Tile(id: {{widgets.1.id}}, title: {{widgets.1.title}}, body: {{widgets.1.body}}, span: .columns({{widgets.1.span}})),\n    Tile(id: {{widgets.2.id}}, title: {{widgets.2.title}}, body: {{widgets.2.body}}),\n]\n@State private var layout: [String] = [{{layout.0}}, {{layout.1}}, {{layout.2}}]\n@State private var isEditing = false",
+      "setup": "struct Tile: Identifiable {\n    let id: String\n    let title: String\n    let body: String\n    var span: MonarchDashboardGridSpan = .one\n}\n\nprivate let tiles = [\n    Tile(id: \"figures\", title: \"Key figures\", body: \"128 open · 94% within target\", span: .full),\n    Tile(id: \"load\", title: \"Team load\", body: \"12 open across 4 people.\", span: .columns(2)),\n    Tile(id: \"activity\", title: \"Recent activity\", body: \"3 updates today.\"),\n]\n@State private var layout: [String] = [\"figures\", \"load\", \"activity\"]\n@State private var isEditing = false",
+      "code": "VStack(alignment: .leading) {\n    MonarchButton(\"Arrange\", variant: isEditing ? .primary : .secondary, size: .sm) {\n        isEditing.toggle()\n    }\n    MonarchDashboardGrid(\n        tiles,\n        layout: $layout,\n        itemLabel: \\.title,\n        span: { $0.span },\n        isEditing: isEditing,\n        content: { tile in\n            MonarchWidget(tile.title) {\n                Text(tile.body).monarchTextStyle(.body)\n            }\n        }\n    )\n    Text(\"Saved layout: \\(layout.joined(separator: \", \"))\").monarchTextStyle(.caption)\n}"
+    }
+  ],
+  "webEquivalent": "DashboardGrid",
+  "dependsOn": [
+    "sortable-grid",
+    "widget",
+    "button"
+  ]
+}

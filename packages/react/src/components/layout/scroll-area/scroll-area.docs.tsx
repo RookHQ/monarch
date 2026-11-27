@@ -1,12 +1,18 @@
 import { ScrollArea } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './scroll-area.fixture.json';
 
-const EVENTS = Array.from({ length: 20 }, (_, i) => `Event ${i + 1}: status changed`);
+const { events } = fixture.data;
+const EVENTS = Array.from(
+  { length: events.count },
+  (_, i) => `${events.prefix}${i + 1}${events.suffix}`,
+);
 const COLUMNS = ['Name', 'Owner', 'Status', 'Priority', 'Due', 'Created', 'Updated', 'Labels'];
 
 const frame = {
   width: '100%',
-  maxWidth: 420,
+  maxWidth: fixture.data.maxWidth,
   border: '1px solid var(--mn-color-border-default)',
   borderRadius: 'var(--mn-radius-lg)',
 } as const;
@@ -136,7 +142,7 @@ export default {
           title: 'A bounded list',
           stack: true,
           render: () => (
-            <ScrollArea label="Recent events" maxHeight={220} style={frame}>
+            <ScrollArea label={fixture.data.label} maxHeight={fixture.data.maxHeight} style={frame}>
               <ul style={{ margin: 0, padding: 12, display: 'grid', gap: 8, listStyle: 'none' }}>
                 {EVENTS.map((e) => (
                   <li key={e}>{e}</li>

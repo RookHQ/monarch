@@ -1,0 +1,139 @@
+{
+  "id": "incident-timeline",
+  "name": "MonarchIncidentTimeline",
+  "title": "IncidentTimeline",
+  "family": "technical",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of updates on a drawn line, MonarchStatusBadge for each stage, MonarchTag for Automated, MonarchFlowLayout for the header, DateFormatter with a fixed time zone",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The story of one incident: each update with its stage (investigating, identified, monitoring, resolved), time and text, joined by a line, with system-posted updates tagged Automated.",
+  "whenToUse": "On a status page or an incident detail screen, to show every update posted during one incident in order.",
+  "whenNotToUse": "For a feed of many kinds of activity across objects use MonarchActivityTimeline. For the overall state of a service use MonarchStatusBadge or MonarchUptimeBar.",
+  "api": [
+    "init(_ updates: [MonarchIncidentUpdate], stages: [String: MonarchStatusDefinition] = [:], density: MonarchIncidentTimelineDensity = .regular, isLive: Bool = false, timeZone: TimeZone? = TimeZone(identifier: \"UTC\"), labels: MonarchIncidentTimelineLabels = MonarchIncidentTimelineLabels())",
+    "struct MonarchIncidentUpdate: Identifiable { init(id: String, stage: String, body: String, time: Date, isAutomated: Bool = false, author: String? = nil); init(id: String, stage: MonarchIncidentStage, body: String, time: Date, isAutomated: Bool = false, author: String? = nil) }",
+    "enum MonarchIncidentStage: String { case investigating, identified, monitoring, resolved }",
+    "enum MonarchIncidentTimelineDensity { case regular, compact }",
+    "struct MonarchIncidentTimelineLabels { init(list: String? = nil, automated: String? = nil, empty: String? = nil, investigating: String? = nil, identified: String? = nil, monitoring: String? = nil, resolved: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "updates",
+      "type": "[MonarchIncidentUpdate]",
+      "default": "required",
+      "description": "The updates in the order to show them, usually oldest first. Each has a stage key, the text (line breaks kept), the time, whether the system posted it and an optional author."
+    },
+    {
+      "name": "stages",
+      "type": "[String: MonarchStatusDefinition]",
+      "default": "[:]",
+      "description": "Product stages by key, or overrides of the label and tone of the standard ones. Looked up before the standard stages."
+    },
+    {
+      "name": "density",
+      "type": "MonarchIncidentTimelineDensity",
+      "default": ".regular",
+      "description": "compact tightens the space between updates for cards and side panels."
+    },
+    {
+      "name": "isLive",
+      "type": "Bool",
+      "default": "false",
+      "description": "Announces an update added while the view is shown, for a page that refreshes while someone reads it."
+    },
+    {
+      "name": "timeZone",
+      "type": "TimeZone?",
+      "default": "TimeZone(identifier: \"UTC\")",
+      "description": "The time zone of the times. UTC by default, so every reader quotes the same time; the zone name is shown. nil is the device's zone (.autoupdatingCurrent), read each time."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchIncidentTimelineLabels",
+      "default": "MonarchIncidentTimelineLabels()",
+      "description": "Replacements for the list name, the Automated tag, the empty text and the four standard stage labels."
+    }
+  ],
+  "states": [
+    {
+      "name": "investigating",
+      "description": "Danger tone badge and dot, \"Investigating\"."
+    },
+    {
+      "name": "identified",
+      "description": "Warning tone badge and dot, \"Identified\"."
+    },
+    {
+      "name": "monitoring",
+      "description": "Info tone badge and dot, \"Monitoring\"."
+    },
+    {
+      "name": "resolved",
+      "description": "Success tone badge and dot, \"Resolved\"."
+    },
+    {
+      "name": "product stage",
+      "description": "A key from stages uses its label and tone; an unknown key is made readable (\"partial_outage\" is \"Partial outage\") with the neutral tone and a strong border dot."
+    },
+    {
+      "name": "automated",
+      "description": "An update the system posted carries an \"Automated\" tag after the time."
+    },
+    {
+      "name": "empty",
+      "description": "No updates shows \"No updates posted yet\" in the muted text colour."
+    }
+  ],
+  "appearance": "Dots use the solid role of the stage tone (the strong border for neutral) on a line in the default border colour. Badges keep the status badge look; times and authors use the muted text colour, the body the default text colour, in light, dark and both high-contrast themes.",
+  "platformNotes": "The web accepts rich content for the body and author and a footer slot; on iOS they are strings, and the app places its own form under the view. The web formats times with Intl in UTC; iOS uses the locale's month, day and 24-hour time pattern with the zone name in the given time zone, so the characters differ slightly from the web. Stage tones are given as MonarchStatusDefinition, the same type the status badge uses. Android uses the same name and model.",
+  "accessibility": [
+    "The updates are one container named \"Incident updates\".",
+    "Each update is one element read as the stage, the time, the author and \"Automated\", then the text.",
+    "The stage is a word in a badge as well as a colour; dots and the line are hidden from VoiceOver.",
+    "With isLive, an update added while the view is shown is announced with the same text.",
+    "Text wraps at every Dynamic Type size and the dot column scales with it."
+  ],
+  "edgeCases": [
+    "Updates are shown in the order given; the view does not sort them.",
+    "Stage keys are matched to the standard stages ignoring case; product keys in stages are matched exactly and win.",
+    "An empty body shows only the header line.",
+    "Removing updates or replacing the list with a shorter one announces nothing."
+  ],
+  "tests": [
+    "MonarchIncidentTimelineTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "A resolved incident, oldest first",
+      "fixture": "incident-timeline",
+      "webExample": "A resolved incident, oldest first",
+      "template": "MonarchIncidentTimeline([\n    MonarchIncidentUpdate(id: {{updates.0.id}}, stage: .{{updates.0.stage|raw}}, body: {{updates.0.body}}, time: {{updates.0.time|date}}, isAutomated: {{updates.0.automated}}),\n    MonarchIncidentUpdate(id: {{updates.1.id}}, stage: .{{updates.1.stage|raw}}, body: {{updates.1.body}}, time: {{updates.1.time|date}}),\n    MonarchIncidentUpdate(id: {{updates.2.id}}, stage: .{{updates.2.stage|raw}}, body: {{updates.2.body}}, time: {{updates.2.time|date}}),\n    MonarchIncidentUpdate(id: {{updates.3.id}}, stage: .{{updates.3.stage|raw}}, body: {{updates.3.body}}, time: {{updates.3.time|date}}),\n])\n.environment(\\.locale, Locale(identifier: \"en-US\"))",
+      "code": "MonarchIncidentTimeline([\n    MonarchIncidentUpdate(id: \"u1\", stage: .investigating, body: \"Requests to the API are failing for some customers. We are looking into it.\", time: Date(timeIntervalSince1970: 1_772_442_300), isAutomated: true),\n    MonarchIncidentUpdate(id: \"u2\", stage: .identified, body: \"A configuration change caused the errors. We are rolling it back.\", time: Date(timeIntervalSince1970: 1_772_443_200)),\n    MonarchIncidentUpdate(id: \"u3\", stage: .monitoring, body: \"The rollback is complete. Error rates are dropping.\", time: Date(timeIntervalSince1970: 1_772_444_400)),\n    MonarchIncidentUpdate(id: \"u4\", stage: .resolved, body: \"Error rates are back to normal.\", time: Date(timeIntervalSince1970: 1_772_445_600)),\n])\n.environment(\\.locale, Locale(identifier: \"en-US\"))"
+    },
+    {
+      "title": "A product stage, compact",
+      "setup": "private let start = Date(timeIntervalSinceReferenceDate: 800_000_000)",
+      "code": "MonarchIncidentTimeline(\n    [MonarchIncidentUpdate(id: \"m\", stage: \"maintenance\", body: \"The database moves to new hardware.\", time: start)],\n    stages: [\"maintenance\": MonarchStatusDefinition(\"Scheduled maintenance\", tone: .info)],\n    density: .compact\n)"
+    }
+  ],
+  "webEquivalent": "IncidentTimeline",
+  "dependsOn": [
+    "status-badge",
+    "tag",
+    "inline"
+  ],
+  "toneMap": {
+    "STAGE_TONES": {
+      "investigating": "danger",
+      "identified": "warning",
+      "monitoring": "info",
+      "resolved": "success"
+    }
+  }
+}

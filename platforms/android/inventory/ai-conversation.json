@@ -1,0 +1,191 @@
+{
+  "id": "ai-conversation",
+  "name": "MonarchAiConversation",
+  "title": "useAiConversation",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "kotlinx.coroutines.flow.StateFlow over an injected transport that returns kotlinx.coroutines.flow.Flow, collected in a caller-supplied CoroutineScope",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Headless state for an AI conversation: it sends prompts through an injected transport, streams the reply into the vendor-neutral message model, and handles stop, regenerate, retry, edit and resend as branches, tool approval, client-side tools, an offline queue and feedback.",
+  "whenToUse": "As the model behind any chat surface. Create it with rememberMonarchAiConversation, or in a ViewModel with viewModelScope, collect messages, status and error in the UI, and implement MonarchAiTransport for your backend.",
+  "whenNotToUse": "It draws nothing: use the AI components (MonarchAiArtifactCard, MonarchAiErrorMessage and the others) to show the messages. For a single completion in a text field, call your service directly.",
+  "api": [
+    "class MonarchAiConversation(transport: MonarchAiTransport, scope: CoroutineScope, connectionLostMessage: String, toolResultFailedMessage: String, initialMessages: List<MonarchAiConversationMessage> = emptyList(), conversationId: String? = null, body: Map<String, MonarchAiJSON> = emptyMap(), queuesWhileOffline: Boolean = true, slowAfterMillis: Long? = 10_000L, generateId: (() -> String)? = null)",
+    "val messages: StateFlow<List<MonarchAiConversationMessage>>; val status: StateFlow<MonarchAiConversationStatus>; val error: StateFlow<MonarchAiConversationError?>; val conversationId: StateFlow<String?>; val agent: StateFlow<MonarchAiAgentRef?>; val slow: StateFlow<Boolean>; val online: StateFlow<Boolean>; val queued: StateFlow<List<MonarchAiQueuedMessage>>; val busy: Boolean; val canSend: Boolean",
+    "var body: Map<String, MonarchAiJSON>; var onFinish: ((MonarchAiConversationMessage) -> Unit)?; var onError: ((MonarchAiConversationError) -> Unit)?; var onToolResponse: ((MonarchAiToolResponse) -> Unit)?; var onToolCall: (suspend (MonarchAiToolCallPart) -> MonarchAiJSON)?; var toolPolicy: ((MonarchAiToolCallPart) -> MonarchAiToolDecision)?; var onMemoryEvent: ((MonarchAiMemoryPart, MonarchAiConversationMessage) -> Unit)?",
+    "fun send(text: String, files: List<MonarchAiFilePart> = emptyList(), body: Map<String, MonarchAiJSON> = emptyMap()): Boolean",
+    "fun cancelQueued(id: String); fun setOnline(online: Boolean); fun stop(); fun regenerate(messageId: String? = null, body: Map<String, MonarchAiJSON> = emptyMap()); fun retry(messageId: String? = null, body: Map<String, MonarchAiJSON> = emptyMap()); fun editAndResend(messageId: String, text: String, files: List<MonarchAiFilePart>? = null, body: Map<String, MonarchAiJSON> = emptyMap())",
+    "fun approveTool(toolCallId: String, input: MonarchAiJSON? = null); fun denyTool(toolCallId: String, reason: String? = null); fun submitToolResult(toolCallId: String, result: MonarchAiToolResult); fun resumeRun(messageId: String? = null); fun branchTo(messageId: String, index: Int); fun setFeedback(messageId: String, feedback: MonarchAiMessageFeedback?); fun reset(messages: List<MonarchAiConversationMessage> = emptyList())",
+    "@Composable fun rememberMonarchAiConversation(transport: MonarchAiTransport, initialMessages: List<MonarchAiConversationMessage> = emptyList(), conversationId: String? = null, queuesWhileOffline: Boolean = true, slowAfterMillis: Long? = 10_000L, connectionLostMessage: String? = null, toolResultFailedMessage: String? = null): MonarchAiConversation",
+    "interface MonarchAiTransport { fun stream(request: MonarchAiTransportRequest): Flow<MonarchAiStreamEvent>; val respondsToTools: Boolean; fun respondToTool(response: MonarchAiToolResponse): Flow<MonarchAiStreamEvent>; val resumesRuns: Boolean; fun resume(request: MonarchAiResumeRequest): Flow<MonarchAiStreamEvent> }",
+    "sealed interface MonarchAiStreamEvent { Agent, TextDelta, ReasoningDelta, ReasoningEnd, Part, ToolUpdate, ToolInputDelta, Finish, Run, Usage, Memory, Done, Error }",
+    "data class MonarchAiConversationMessage(id, role, parts, createdAt, agent, model, usage, feedback, branch, finishReason, runId, queued) { val text: String; val streaming: Boolean; val toolCalls; val memories; val createdAtMillis: Long?; fun toJson(): MonarchAiJSON; companion object { fun fromJson(json: MonarchAiJSON); fun listFromJson(text: String); fun listToJson(messages): String; fun timestamp(millis: Long): String } }",
+    "sealed interface MonarchAiPart { val type: String } implemented by MonarchAiTextPart, MonarchAiReasoningPart, MonarchAiToolCallPart, MonarchAiCitationPart, MonarchAiSourcePart, MonarchAiFilePart, MonarchAiArtifactPart, MonarchAiEditProposalPart, MonarchAiPlanPart, MonarchAiUiPart, MonarchAiMemoryPart, MonarchAiErrorPart",
+    "Value types: MonarchAiPlanStep, MonarchAiUsage, MonarchAiAgentRef, MonarchAiBranchPosition, MonarchAiJSON (Null, Bool, Number, Text, Array, Object; parse, toJsonString)",
+    "Enumerations: MonarchAiRole, MonarchAiPartState, MonarchAiToolCallState, MonarchAiToolCallRisk, MonarchAiFinishReason, MonarchAiSourceKind, MonarchAiArtifactKind, MonarchAiEditProposalState, MonarchAiPlanStepState, MonarchAiMemoryAction, MonarchAiMessageFeedback, MonarchAiTrigger, MonarchAiConversationStatus, MonarchAiToolDecision",
+    "Requests and results: MonarchAiTransportRequest, MonarchAiToolResponse, MonarchAiResumeRequest, MonarchAiToolCallPatch, MonarchAiQueuedMessage, MonarchAiToolResult (Output, Failure), MonarchAiConversationError (companion fun isRetryable(code: String?): Boolean)"
+  ],
+  "options": [
+    {
+      "name": "transport",
+      "type": "MonarchAiTransport",
+      "default": "required",
+      "description": "Connects the conversation to your backend. Monarch does no networking."
+    },
+    {
+      "name": "scope",
+      "type": "CoroutineScope",
+      "default": "required",
+      "description": "Collects replies and runs client-side tools. Use a main-thread scope such as viewModelScope; rememberMonarchAiConversation uses rememberCoroutineScope()."
+    },
+    {
+      "name": "connectionLostMessage",
+      "type": "String",
+      "default": "required (built-in through rememberMonarchAiConversation)",
+      "description": "The message of the error raised when the transport's flow throws. Built-in: monarch_aiconversation_connection_lost."
+    },
+    {
+      "name": "toolResultFailedMessage",
+      "type": "String",
+      "default": "required (built-in through rememberMonarchAiConversation)",
+      "description": "The error of a client-side tool that threw without a message. Built-in: monarch_aiconversation_tool_result_failed."
+    },
+    {
+      "name": "initialMessages",
+      "type": "List<MonarchAiConversationMessage>",
+      "default": "emptyList()",
+      "description": "Messages to start with, for example a stored conversation. Shown as one branch."
+    },
+    {
+      "name": "conversationId",
+      "type": "String?",
+      "default": "null",
+      "description": "The id from an earlier session, sent with every request. A Done event replaces it."
+    },
+    {
+      "name": "body",
+      "type": "Map<String, MonarchAiJSON>",
+      "default": "emptyMap()",
+      "description": "Request fields sent on every turn, merged under the fields given to send. Also a settable property."
+    },
+    {
+      "name": "queuesWhileOffline",
+      "type": "Boolean",
+      "default": "true",
+      "description": "While offline, send keeps the message in queued and sends it, in order, once setOnline(true) is called."
+    },
+    {
+      "name": "slowAfterMillis",
+      "type": "Long?",
+      "default": "10_000L",
+      "description": "The time without any event from a running reply before slow becomes true. null turns it off."
+    },
+    {
+      "name": "generateId",
+      "type": "(() -> String)?",
+      "default": "null",
+      "description": "Custom message ids. The default is a random UUID."
+    }
+  ],
+  "states": [
+    {
+      "name": "Idle",
+      "description": "Nothing is running."
+    },
+    {
+      "name": "Submitted",
+      "description": "Sent, waiting for the first event. busy is true."
+    },
+    {
+      "name": "Streaming",
+      "description": "Events are arriving and messages changes with each one. busy is true."
+    },
+    {
+      "name": "AwaitingApproval",
+      "description": "A tool call waits for approveTool or denyTool. canSend is false and send returns false."
+    },
+    {
+      "name": "AwaitingToolResult",
+      "description": "The model called a tool the client runs: onToolCall runs it, or call submitToolResult."
+    },
+    {
+      "name": "Error",
+      "description": "The last turn failed. error holds the code, the message and whether it can be retried or resumed; the reply ends with an error part."
+    },
+    {
+      "name": "Stopped",
+      "description": "stop() ended the reply. What arrived stays, streaming parts are closed and running tool calls are cancelled."
+    },
+    {
+      "name": "offline",
+      "description": "After setOnline(false), sent messages wait in queued and appear at the end of messages with queued set."
+    },
+    {
+      "name": "slow",
+      "description": "slow is true while a running reply has sent nothing for slowAfterMillis."
+    }
+  ],
+  "appearance": "None: it is a model and draws nothing.",
+  "platformNotes": "The web is the useAiConversation hook; Android has a class with StateFlows, created with rememberMonarchAiConversation or in a ViewModel. The message model has the web's fields and reads and writes the web's JSON (camelCase fields, kebab-case values, a type field per part, empty optional fields left out), with a small built-in JSON reader so no serialisation library is added. Kotlin names follow Android: booleans without is (queued, redacted, retryable, resumable, approved, streaming, busy, online, slow), times in milliseconds (durationMs, retryAfterMs, slowAfterMillis), and createdAtMillis next to the ISO 8601 createdAt. Parts are a sealed interface the part classes implement, where iOS wraps them in enum cases. The transport returns a Flow; there is no AbortSignal: stopping cancels the collection. Not offered, because they belong to the browser or to a transport: file uploads (send takes file parts the app has already uploaded), the SSE, provider, AG-UI and Rook transports and their mappers, and the testing kit. The Rook transport stays Rook-scoped. The network state comes from setOnline, fed by the app, for example from a ConnectivityManager callback. The slow timer restarts on every event. With a tool policy, every waiting call is put to the policy before the status is decided, as on iOS.",
+  "accessibility": [
+    "It draws nothing and announces nothing; the components that show the messages do.",
+    "slow, queued, the error message and the tool call states are plain values, so a view can show and announce them."
+  ],
+  "edgeCases": [
+    "Sending while a reply streams ends that reply, keeping what arrived, and starts the next.",
+    "A Done or Error event ends the reply even if the transport keeps the flow open; a flow that ends without Done leaves the status Idle and does not call onFinish.",
+    "A flow that throws ends the reply with the retryable code network. With a run id and a transport that resumes runs, the error is resumable.",
+    "retry rewrites the same message; regenerate and editAndResend add a branch, and messages then carry branch with the index and count.",
+    "A queued message that fails holds the rest of the queue until the connection comes back again.",
+    "Sending a new message cancels tool calls that still waited for a client-side result.",
+    "Ending the scope cancels the collection of the transport's flow and any client-side tools.",
+    "Reading a part with an unknown type throws IllegalArgumentException.",
+    "The functions are not thread-safe: call them from the thread of the scope, normally the main thread."
+  ],
+  "tests": [
+    "MonarchAiConversationTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "A minimal chat on the mock transport",
+      "fixture": "ai-conversation",
+      "webExample": "A minimal chat on the mock transport",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n    messages.forEachIndexed { index, it ->\n        val who = (if (it.role == MonarchAiRole.User) \"You\" else (it.agent?.name ?: \"Assistant\")) + \":\"\n        Text(\n            text = buildAnnotatedString {\n                append(\"${index + 1}. \")\n                withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(who) }\n                append(\" \" + it.text)\n            },\n            style = MonarchTheme.typography.body,\n            color = MonarchTheme.colors.textDefault,\n        )\n    }\n    MonarchText(text = \"Status: \" + status.name.lowercase())\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n        MonarchTextField(\n            value = draft,\n            onValueChange = { draft = it },\n            modifier = Modifier.weight(1f),\n            label = \"Message\",\n            labelVisibility = MonarchTextFieldLabelVisibility.Hidden,\n            placeholder = {{placeholder}},\n        )\n        MonarchButton(\n            text = \"Send\",\n            onClick = {\n                conversation.send(draft)\n                draft = \"\"\n            },\n            variant = MonarchButtonVariant.Primary,\n        )\n        MonarchButton(\n            text = \"Regenerate\",\n            onClick = { conversation.regenerate() },\n            variant = MonarchButtonVariant.Ghost,\n            enabled = !conversation.busy && messages.isNotEmpty(),\n        )\n    }\n}",
+      "setupTemplate": "val transport = remember {\n    object : MonarchAiTransport {\n        override fun stream(request: MonarchAiTransportRequest): Flow<MonarchAiStreamEvent> = flowOf(\n            MonarchAiStreamEvent.TextDelta(\"You asked: “\" + request.messages.lastOrNull()?.text.orEmpty() + \"”. This reply is streamed word by word from a mock transport.\"),\n            MonarchAiStreamEvent.Done(),\n        )\n    }\n}\nval conversation = rememberMonarchAiConversation(\n    transport,\n    initialMessages = listOf(\n        MonarchAiConversationMessage(id = {{messages.0.id}}, role = MonarchAiRole.{{messages.0.role|pascal}}, parts = listOf(MonarchAiTextPart({{messages.0.text}})), createdAt = {{messages.0.createdAt}}),\n        MonarchAiConversationMessage(id = {{messages.1.id}}, role = MonarchAiRole.{{messages.1.role|pascal}}, parts = listOf(MonarchAiTextPart({{messages.1.text}})), createdAt = {{messages.1.createdAt}}, agent = MonarchAiAgentRef(name = {{messages.1.agent}})),\n    ),\n)\nval messages by conversation.messages.collectAsState()\nval status by conversation.status.collectAsState()\nvar draft by remember { mutableStateOf(\"\") }",
+      "imports": [
+        "kotlinx.coroutines.flow.Flow",
+        "kotlinx.coroutines.flow.flowOf",
+        "androidx.compose.material3.Text",
+        "androidx.compose.ui.text.buildAnnotatedString",
+        "androidx.compose.ui.text.withStyle",
+        "androidx.compose.ui.text.SpanStyle",
+        "androidx.compose.ui.text.font.FontWeight"
+      ],
+      "setup": "val transport = remember {\n    object : MonarchAiTransport {\n        override fun stream(request: MonarchAiTransportRequest): Flow<MonarchAiStreamEvent> = flowOf(\n            MonarchAiStreamEvent.TextDelta(\"You asked: “\" + request.messages.lastOrNull()?.text.orEmpty() + \"”. This reply is streamed word by word from a mock transport.\"),\n            MonarchAiStreamEvent.Done(),\n        )\n    }\n}\nval conversation = rememberMonarchAiConversation(\n    transport,\n    initialMessages = listOf(\n        MonarchAiConversationMessage(id = \"m1\", role = MonarchAiRole.User, parts = listOf(MonarchAiTextPart(\"What changed since yesterday?\")), createdAt = \"2026-11-04T09:12:00Z\"),\n        MonarchAiConversationMessage(id = \"m2\", role = MonarchAiRole.Assistant, parts = listOf(MonarchAiTextPart(\"You asked: “What changed since yesterday?”. This reply is streamed word by word from a mock transport.\")), createdAt = \"2026-11-04T09:12:04Z\", agent = MonarchAiAgentRef(name = \"Assistant\")),\n    ),\n)\nval messages by conversation.messages.collectAsState()\nval status by conversation.status.collectAsState()\nvar draft by remember { mutableStateOf(\"\") }",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n    messages.forEachIndexed { index, it ->\n        val who = (if (it.role == MonarchAiRole.User) \"You\" else (it.agent?.name ?: \"Assistant\")) + \":\"\n        Text(\n            text = buildAnnotatedString {\n                append(\"${index + 1}. \")\n                withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(who) }\n                append(\" \" + it.text)\n            },\n            style = MonarchTheme.typography.body,\n            color = MonarchTheme.colors.textDefault,\n        )\n    }\n    MonarchText(text = \"Status: \" + status.name.lowercase())\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n        MonarchTextField(\n            value = draft,\n            onValueChange = { draft = it },\n            modifier = Modifier.weight(1f),\n            label = \"Message\",\n            labelVisibility = MonarchTextFieldLabelVisibility.Hidden,\n            placeholder = \"Ask something\",\n        )\n        MonarchButton(\n            text = \"Send\",\n            onClick = {\n                conversation.send(draft)\n                draft = \"\"\n            },\n            variant = MonarchButtonVariant.Primary,\n        )\n        MonarchButton(\n            text = \"Regenerate\",\n            onClick = { conversation.regenerate() },\n            variant = MonarchButtonVariant.Ghost,\n            enabled = !conversation.busy && messages.isNotEmpty(),\n        )\n    }\n}"
+    },
+    {
+      "title": "Stop, try again and switch between versions",
+      "setup": "val transport = remember {\n    object : MonarchAiTransport {\n        override fun stream(request: MonarchAiTransportRequest): Flow<MonarchAiStreamEvent> = flowOf(\n            MonarchAiStreamEvent.TextDelta(\"You asked: \"),\n            MonarchAiStreamEvent.TextDelta(request.messages.lastOrNull()?.text.orEmpty()),\n            MonarchAiStreamEvent.Done(),\n        )\n    }\n}\nval conversation = rememberMonarchAiConversation(transport)\nval messages by conversation.messages.collectAsState()\nval status by conversation.status.collectAsState()",
+      "code": "Column {\n    messages.lastOrNull()?.let { reply ->\n        MonarchText(text = reply.text)\n        reply.branch?.let { branch ->\n            MonarchButton(\n                text = \"Previous version\",\n                onClick = { conversation.branchTo(reply.id, branch.index - 1) },\n                enabled = branch.index > 0,\n            )\n        }\n    }\n    MonarchButton(text = \"Stop\", onClick = { conversation.stop() }, enabled = conversation.busy)\n    MonarchButton(text = \"Regenerate\", onClick = { conversation.regenerate() })\n}",
+      "imports": [
+        "kotlinx.coroutines.flow.Flow",
+        "kotlinx.coroutines.flow.flowOf"
+      ]
+    },
+    {
+      "title": "A stored conversation, read from the web's JSON",
+      "setup": "val stored = remember {\n    MonarchAiConversationMessage.listFromJson(\n        \"\"\"[{\"id\":\"u1\",\"role\":\"user\",\"createdAt\":\"2025-03-10T12:00:00.000Z\",\"parts\":[{\"type\":\"text\",\"text\":\"Hello\",\"state\":\"done\"}]}]\"\"\",\n    )\n}",
+      "code": "Column {\n    stored.forEach { MonarchText(text = \"${it.role.name}: ${it.text}\") }\n}"
+    }
+  ],
+  "webEquivalent": "useAiConversation",
+  "dependsOn": []
+}

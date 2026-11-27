@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   ColumnMenu,
   DataTable,
@@ -5,6 +6,8 @@ import {
   type DataTableColumn,
 } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './column-menu.fixture.json';
 
 interface Row {
   id: string;
@@ -14,27 +17,20 @@ interface Row {
   expires: string;
 }
 
-const ROWS: Row[] = [
-  { id: '1', name: 'example.com', status: 'Active', owner: 'Sam Lee', expires: '2027-02-01' },
-  { id: '2', name: 'example.org', status: 'Expiring', owner: 'Ana Ruiz', expires: '2026-12-01' },
-];
+const ROWS: Row[] = fixture.data.rows;
 
-const COLUMNS: DataTableColumn<Row>[] = [
-  { id: 'name', header: 'Name', hideable: false },
-  { id: 'status', header: 'Status' },
-  { id: 'owner', header: 'Owner', defaultHidden: true },
-  { id: 'expires', header: 'Expires' },
-];
+const COLUMNS = fixture.data.columns as DataTableColumn<Row>[];
 
 function Toolbar() {
   const cols = useDataTableColumns(COLUMNS);
+  const [open, setOpen] = useState(true);
   return (
-    <div style={{ display: 'grid', gap: 12 }}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <ColumnMenu {...cols.chooserProps} showAll />
+    <div style={{ display: 'grid', gap: 12, width: '100%' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 6 }}>
+        <ColumnMenu {...cols.chooserProps} showAll open={open} onOpenChange={setOpen} />
       </div>
       <DataTable
-        caption="Records"
+        caption={fixture.data.caption}
         columns={COLUMNS}
         rows={ROWS}
         getRowId={(r) => r.id}
@@ -149,7 +145,14 @@ export default {
       ],
     },
     examples: {
-      items: [{ title: 'With DataTable', stack: true, render: () => <Toolbar /> }],
+      items: [
+        {
+          title: 'With DataTable',
+          stack: true,
+          stage: { align: 'end' },
+          render: () => <Toolbar />,
+        },
+      ],
     },
     doDont: {
       do: [

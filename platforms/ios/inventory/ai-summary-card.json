@@ -1,0 +1,179 @@
+{
+  "id": "ai-summary-card",
+  "name": "MonarchAiSummaryCard",
+  "title": "AiSummaryCard",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchCard composing MonarchAiGeneratedBadge, MonarchAiMarkdown, MonarchBanner, MonarchAiSourceList and MonarchButton; Text with redacted(reason: .placeholder) for the placeholder; RelativeDateTimeFormatter and Date.FormatStyle for the age; AccessibilityNotification.Announcement",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A model-written summary of a record or a page on a card: the summary as Markdown, when it was written, its sources and a Refresh action, with generating, stale and error states, always marked as an AI summary.",
+  "whenToUse": "At the top of a record or a long page, to give a short model-written overview that people can refresh and check against its sources.",
+  "whenNotToUse": "For an answer in a conversation use the assistant message with MonarchAiMarkdown. For one insight with an action use MonarchAiInsightCallout. For text a person wrote use MonarchCard.",
+  "api": [
+    "init(_ title: String, summary: String, status: MonarchAiSummaryCardStatus = .ready, isRefreshing: Bool = false, generatedAt: Date? = nil, now: Date? = nil, sources: [MonarchAiSourcePart] = [], errorMessage: String? = nil, labels: MonarchAiSummaryCardLabels = MonarchAiSummaryCardLabels(), onRefresh: (@MainActor () -> Void)? = nil, onOpenSource: (@MainActor (MonarchAiSourcePart) -> Void)? = nil, onOpenLink: (@MainActor (URL) -> Void)? = nil, @ViewBuilder actions: () -> Actions)",
+    "init(_ title:, …the same parameters…) where Actions == EmptyView",
+    "enum MonarchAiSummaryCardStatus { case ready, generating, stale, error }",
+    "struct MonarchAiSummaryCardLabels { init(aiSummary: String? = nil, refresh: String? = nil, generated: (@Sendable (_ time: String) -> String)? = nil, generating: String? = nil, updated: String? = nil, stale: String? = nil, error: String? = nil, empty: String? = nil, sources: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "What is summarised, for example \"Account summary\". A header."
+    },
+    {
+      "name": "summary",
+      "type": "String",
+      "default": "required",
+      "description": "The summary as Markdown, rendered by MonarchAiMarkdown as untrusted model output. Empty while there is none."
+    },
+    {
+      "name": "status",
+      "type": "MonarchAiSummaryCardStatus",
+      "default": ".ready",
+      "description": "ready, generating (placeholder, or a busy Refresh when a summary exists), stale (a warning banner) or error (a danger banner and no body)."
+    },
+    {
+      "name": "isRefreshing",
+      "type": "Bool",
+      "default": "false",
+      "description": "A refresh is running: Refresh shows a spinner and the start and the end are announced."
+    },
+    {
+      "name": "generatedAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the summary was written. Shown as \"Generated 3 hours ago\"; VoiceOver reads the date and time."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for generatedAt. The current time when nil."
+    },
+    {
+      "name": "sources",
+      "type": "[MonarchAiSourcePart]",
+      "default": "[]",
+      "description": "The documents or records the summary was written from, listed by MonarchAiSourceList under \"Sources\"."
+    },
+    {
+      "name": "errorMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "A detail shown under the error title when status is error."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiSummaryCardLabels",
+      "default": "MonarchAiSummaryCardLabels()",
+      "description": "Replaces every built-in string."
+    },
+    {
+      "name": "onRefresh",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds Refresh, which asks for a new summary."
+    },
+    {
+      "name": "onOpenSource",
+      "type": "(@MainActor (MonarchAiSourcePart) -> Void)?",
+      "default": "nil",
+      "description": "Opens a source, for example in a preview sheet; without it MonarchAiSourceList opens a safe URL through the system."
+    },
+    {
+      "name": "onOpenLink",
+      "type": "(@MainActor (URL) -> Void)?",
+      "default": "nil",
+      "description": "Opens a link in the summary in the app; passed to MonarchAiMarkdown."
+    },
+    {
+      "name": "actions",
+      "type": "@ViewBuilder () -> Actions",
+      "default": "none",
+      "description": "More buttons in the footer, after the age."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The summary, its sources and its age."
+    },
+    {
+      "name": "generating",
+      "description": "Without a summary: \"Generating summary…\" and three redacted placeholder lines. With one: the summary stays and Refresh shows a spinner."
+    },
+    {
+      "name": "stale",
+      "description": "A warning banner above the summary asks for a refresh."
+    },
+    {
+      "name": "error",
+      "description": "A danger banner with \"The summary couldn’t be generated.\" and the detail; the body is empty."
+    },
+    {
+      "name": "empty",
+      "description": "\"No summary yet.\" in muted text."
+    }
+  ],
+  "appearance": "The card surface with its border and shadow; the AI generated badge in the AI colours; the title in the default text colour with the subheading type; the age, the empty text and the generating text muted. Banners use the warning and danger tones. Every role resolves to its own value in the dark and high-contrast themes.",
+  "platformNotes": "A product pattern, experimental until a Rook app adopts it, built only from Monarch parts. It is plain public API with status experimental, like the other experimental iOS entries, not @_spi(Experimental), because the compiled examples import MonarchUI without SPI. The web marks the summary with a bot glyph and an eyebrow; iOS uses MonarchAiGeneratedBadge labelled \"AI summary\". The web's heading levels are not offered; the title has the header trait. The web dims the previous summary while refreshing; iOS keeps it and shows the spinner on Refresh with an announcement. The web's sources are a plain list of links; iOS reuses MonarchAiSourceList (numbered, collapsible). The age comes from RelativeDateTimeFormatter in the environment's locale and is not updated live: render again with a new now. The header stacks Refresh under the title when they do not fit side by side. Android uses the same names, with refreshing, error and Long times as isRefreshing, errorMessage and Date.",
+  "accessibility": [
+    "The title has the header trait; the \"AI summary\" badge is read before it, so the summary is never presented as human-written.",
+    "Refresh is a button that shows a spinner and the generating text as its loading label while busy.",
+    "\"Generating summary…\" is announced when work starts and \"Summary updated.\" when it ends; nothing is announced when the card first appears or after an error.",
+    "The age is read as the full date and time instead of the relative text.",
+    "The redacted placeholder lines are hidden from VoiceOver; the generating text is read instead.",
+    "Stale and error notices are MonarchBanner, with an icon and a tone name, not colour alone."
+  ],
+  "edgeCases": [
+    "A summary of only white space counts as none.",
+    "An error without a detail shows the error title as the banner message.",
+    "A long title wraps; at large text sizes Refresh moves under the title.",
+    "Without generatedAt and actions there is no footer."
+  ],
+  "tests": [
+    "MonarchAiSummaryCardTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Refresh with sources",
+      "fixture": "ai-summary-card",
+      "webExample": "Refresh with sources",
+      "template": "MonarchAiSummaryCard(\n    {{title}},\n    summary: {{summary}},\n    generatedAt: {{generatedAt|date}},\n    now: {{now|date}},\n    sources: [\n        MonarchAiSourcePart(id: {{sources.0.id}}, title: {{sources.0.title}}, url: {{sources.0.url}}, kind: {{sources.0.kind|case}}),\n        MonarchAiSourcePart(id: {{sources.1.id}}, title: {{sources.1.title}}, kind: {{sources.1.kind|case}}, product: {{sources.1.product}}),\n    ],\n    onRefresh: {}\n) {\n    MonarchButton({{actionLabel}}, variant: .ghost, size: .sm) {}\n}",
+      "code": "MonarchAiSummaryCard(\n    \"Account summary\",\n    summary: \"The customer renewed for another year in **January** and added two seats.\\n\\n- Usage is steady at about 40 active people a week.\\n- One open support ticket about exports.\",\n    generatedAt: Date(timeIntervalSince1970: 1_795_003_200),\n    now: Date(timeIntervalSince1970: 1_795_014_000),\n    sources: [\n        MonarchAiSourcePart(id: \"notes\", title: \"Renewal call notes\", url: \"https://example.com/notes/renewal\", kind: .doc),\n        MonarchAiSourcePart(id: \"ticket\", title: \"Ticket 2041: CSV export\", kind: .record, product: \"Support\"),\n    ],\n    onRefresh: {}\n) {\n    MonarchButton(\"Open in assistant\", variant: .ghost, size: .sm) {}\n}"
+    },
+    {
+      "title": "Writing the first summary",
+      "code": "MonarchAiSummaryCard(\"Deal summary\", summary: \"\", status: .generating, onRefresh: {})"
+    },
+    {
+      "title": "A stale summary with an extra action",
+      "code": "MonarchAiSummaryCard(\n    \"Ticket summary\",\n    summary: \"Most questions were about invoices.\",\n    status: .stale,\n    onRefresh: {}\n) {\n    Button(\"Copy\") {}.buttonStyle(.monarch(.ghost, size: .sm))\n}"
+    }
+  ],
+  "webEquivalent": "AiSummaryCard",
+  "dependsOn": [
+    "card",
+    "ai-generated-badge",
+    "ai-markdown",
+    "ai-source-list",
+    "relative-time",
+    "button",
+    "alert",
+    "skeleton"
+  ],
+  "icons": {
+    "ai": "BotGlyph",
+    "refresh": "RetryGlyph",
+    "stale": "WarningGlyph",
+    "error": "ErrorGlyph"
+  }
+}

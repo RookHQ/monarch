@@ -1,7 +1,14 @@
 import { MyStatus } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './my-status.fixture.json';
 
-const now = new Date('2026-03-02T10:00:00Z');
+const now = new Date(fixture.data.now);
+const [ada, grace, alan] = fixture.data.people as [
+  { name: string; presence: 'online'; customStatus: { emoji: string; text: string } },
+  { name: string; presence: 'away' },
+  { name: string; presence: 'online' },
+];
 
 export default {
   id: 'my-status',
@@ -104,14 +111,14 @@ export default {
           render: () => (
             <div style={{ display: 'grid', gap: 'var(--mn-space-1)', width: '16rem' }}>
               <MyStatus
-                name="Ada Lovelace"
-                presence="online"
-                customStatus={{ emoji: '📅', text: 'In a workshop until 3pm' }}
+                name={ada.name}
+                presence={ada.presence}
+                customStatus={ada.customStatus}
                 href="#status"
                 now={now}
               />
-              <MyStatus name="Grace Hopper" presence="away" href="#status" now={now} />
-              <MyStatus name="Alan Turing" presence="online" onClick={() => {}} now={now} />
+              <MyStatus name={grace.name} presence={grace.presence} href="#status" now={now} />
+              <MyStatus name={alan.name} presence={alan.presence} onClick={() => {}} now={now} />
             </div>
           ),
         },

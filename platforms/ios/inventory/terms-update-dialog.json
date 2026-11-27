@@ -1,0 +1,79 @@
+{
+  "id": "terms-update-dialog",
+  "name": null,
+  "title": "TermsUpdateDialog",
+  "family": "overlays",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:) with interactiveDismissDisabled for the blocking form, holding a ScrollView with Text, Text(date, format:), Link with buttonStyle(.monarchLink(.standalone, isExternal: true)), MonarchInlineNotice for an error and MonarchButton for accept and decline",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a sheet that tells people the terms have changed, with a summary, the effective date and links to the documents, which in its blocking form cannot be dismissed until they accept or decline.",
+  "whenToUse": "When updated terms or a privacy policy must be shown at sign-in or on launch, either to be accepted (blocking) or only to inform.",
+  "whenNotToUse": "For consent to optional processing such as analytics use the consent recipes (see cookie-consent-banner). For a minor wording change, a banner (MonarchBanner) is enough.",
+  "api": [
+    "func sheet(isPresented: Binding<Bool>, content: () -> some View) -> some View",
+    "func interactiveDismissDisabled(_ isDisabled: Bool = true) -> some View",
+    "Link(_ title: String, destination: URL).buttonStyle(.monarchLink(.standalone, isExternal: true))",
+    "MonarchButton.init(_ title: String, systemImage: String? = nil, variant: MonarchButtonVariant = .secondary, size: MonarchButtonSize = .md, isLoading: Bool = false, loadingLabel: String? = nil, fullWidth: Bool = false, action: @escaping @MainActor () -> Void)",
+    "MonarchInlineNotice.init(_ message: String, title: String? = nil, systemImage: String? = nil, tone: MonarchTone = .info, …)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "blocking",
+      "description": "Accept and continue, and Decline (for example Sign out); the sheet cannot be swiped away."
+    },
+    {
+      "name": "informational",
+      "description": "One Got it button; the sheet can be swiped away."
+    },
+    {
+      "name": "pending",
+      "description": "The accept button shows its loading state and dismissal stays disabled while the acceptance is recorded."
+    },
+    {
+      "name": "error",
+      "description": "A danger MonarchInlineNotice above the buttons when recording the acceptance failed."
+    }
+  ],
+  "appearance": "A system sheet on the theme's surface colour with the title in the heading style, body text in the default and muted text colours, links in the link colour with the external icon, a primary accept button and a ghost decline button.",
+  "platformNotes": "The web TermsUpdateDialog is a component with mode, effectiveDate parsing, documents, version labels and pending and error props. On iOS it composes a sheet: the date is formatted with Text(date, format:) in the person's locale, links open in the browser through the environment's openURL, and blocking is interactiveDismissDisabled. Android plans the same recipe.",
+  "accessibility": [
+    "The title has the header trait; VoiceOver focus moves into the sheet when it appears.",
+    "Each document is a Link, read with \"opens in the browser\" from the Monarch link style.",
+    "The accept button reads its loading state; an error is shown as text in a notice with an icon, not only colour.",
+    "In the blocking form the escape gesture does nothing, so decline must be offered as a button."
+  ],
+  "edgeCases": [
+    "At the largest text sizes the summary and links scroll; keep the buttons under the ScrollView so they stay visible.",
+    "Show the sheet once per version: store the accepted version and compare on launch.",
+    "If declining signs the person out, say so on the decline button."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Blocking, with sign out",
+      "fixture": "terms-update-dialog",
+      "webExample": "Blocking, with sign out",
+      "template": "MonarchButton({{trigger}}) { isShown = true }\n    .sheet(isPresented: $isShown) {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            ScrollView {\n                VStack(alignment: .leading, spacing: theme.spacing.space3) {\n                    Text(\"We’ve updated our terms\")\n                        .monarchTextStyle(.heading)\n                        .accessibilityAddTraits(.isHeader)\n                    Text(\"Effective from \\(effective.formatted(Date.FormatStyle(date: .long, time: .omitted).locale(locale)))\")\n                        .monarchTextStyle(.bodySmall)\n                        .foregroundStyle(theme.colors.textMuted)\n                    Text({{summary.intro}})\n                        .monarchTextStyle(.bodySmall)\n                        .foregroundStyle(theme.colors.textMuted)\n                    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                        Text(\"• \" + {{summary.items.0}})\n                        Text(\"• \" + {{summary.items.1}})\n                    }\n                    .monarchTextStyle(.bodySmall)\n                    .foregroundStyle(theme.colors.textMuted)\n                    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                        Text(\"Read the full documents\")\n                            .monarchTextStyle(.label)\n                        if let termsURL {\n                        HStack(alignment: .firstTextBaseline, spacing: 0) {\n                            Link({{documents.0.label}}, destination: termsURL)\n                                .buttonStyle(.monarchLink(.inline))\n                            Text(\" (version \" + {{documents.0.version}} + \")\")\n                                .foregroundStyle(theme.colors.textMuted)\n                        }\n                        .monarchTextStyle(.bodySmall)\n                        }\n                        if let privacyURL {\n                        HStack(alignment: .firstTextBaseline, spacing: 0) {\n                            Link({{documents.1.label}}, destination: privacyURL)\n                                .buttonStyle(.monarchLink(.inline))\n                            Text(\" (version \" + {{documents.1.version}} + \")\")\n                                .foregroundStyle(theme.colors.textMuted)\n                        }\n                        .monarchTextStyle(.bodySmall)\n                        }\n                    }\n                }\n                .frame(maxWidth: .infinity, alignment: .leading)\n            }\n            HStack(spacing: theme.spacing.space2) {\n                Spacer(minLength: 0)\n                MonarchButton({{declineLabel}}, variant: .secondary) { isShown = false }\n                MonarchButton(\"Accept and continue\", variant: .primary, isLoading: isAccepting) {\n                    isAccepting = true\n                    isShown = false\n                }\n            }\n        }\n        .foregroundStyle(theme.colors.textDefault)\n        .padding(theme.spacing.space4)\n        .interactiveDismissDisabled()\n        .presentationDetents([.height(460)])\n        .presentationBackground(theme.colors.bgSurface)\n    }",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isShown = false\n@State private var isAccepting = false\nprivate let effective = {{effectiveDate|date}}\nprivate let locale = Locale(identifier: {{locale}})\nprivate let termsURL = URL(string: \"https://example.com/terms\")\nprivate let privacyURL = URL(string: \"https://example.com/privacy\")",
+      "previewPresented": [
+        "isShown"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isShown = false\n@State private var isAccepting = false\nprivate let effective = Date(timeIntervalSince1970: 1_796_083_200)\nprivate let locale = Locale(identifier: \"en-GB\")\nprivate let termsURL = URL(string: \"https://example.com/terms\")\nprivate let privacyURL = URL(string: \"https://example.com/privacy\")",
+      "code": "MonarchButton(\"Show blocking update\") { isShown = true }\n    .sheet(isPresented: $isShown) {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            ScrollView {\n                VStack(alignment: .leading, spacing: theme.spacing.space3) {\n                    Text(\"We’ve updated our terms\")\n                        .monarchTextStyle(.heading)\n                        .accessibilityAddTraits(.isHeader)\n                    Text(\"Effective from \\(effective.formatted(Date.FormatStyle(date: .long, time: .omitted).locale(locale)))\")\n                        .monarchTextStyle(.bodySmall)\n                        .foregroundStyle(theme.colors.textMuted)\n                    Text(\"Here is what changed:\")\n                        .monarchTextStyle(.bodySmall)\n                        .foregroundStyle(theme.colors.textMuted)\n                    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                        Text(\"• \" + \"We explain how long we keep support messages.\")\n                        Text(\"• \" + \"We list the providers that host your data.\")\n                    }\n                    .monarchTextStyle(.bodySmall)\n                    .foregroundStyle(theme.colors.textMuted)\n                    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                        Text(\"Read the full documents\")\n                            .monarchTextStyle(.label)\n                        if let termsURL {\n                        HStack(alignment: .firstTextBaseline, spacing: 0) {\n                            Link(\"Terms of Service\", destination: termsURL)\n                                .buttonStyle(.monarchLink(.inline))\n                            Text(\" (version \" + \"2026-12-01\" + \")\")\n                                .foregroundStyle(theme.colors.textMuted)\n                        }\n                        .monarchTextStyle(.bodySmall)\n                        }\n                        if let privacyURL {\n                        HStack(alignment: .firstTextBaseline, spacing: 0) {\n                            Link(\"Privacy Policy\", destination: privacyURL)\n                                .buttonStyle(.monarchLink(.inline))\n                            Text(\" (version \" + \"2026-12-01\" + \")\")\n                                .foregroundStyle(theme.colors.textMuted)\n                        }\n                        .monarchTextStyle(.bodySmall)\n                        }\n                    }\n                }\n                .frame(maxWidth: .infinity, alignment: .leading)\n            }\n            HStack(spacing: theme.spacing.space2) {\n                Spacer(minLength: 0)\n                MonarchButton(\"Sign out\", variant: .secondary) { isShown = false }\n                MonarchButton(\"Accept and continue\", variant: .primary, isLoading: isAccepting) {\n                    isAccepting = true\n                    isShown = false\n                }\n            }\n        }\n        .foregroundStyle(theme.colors.textDefault)\n        .padding(theme.spacing.space4)\n        .interactiveDismissDisabled()\n        .presentationDetents([.height(460)])\n        .presentationBackground(theme.colors.bgSurface)\n    }"
+    }
+  ],
+  "webEquivalent": "TermsUpdateDialog",
+  "dependsOn": [
+    "sheet",
+    "link",
+    "button",
+    "inline-notice"
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "id": "ai-streaming-text",
+  "name": "MonarchAiStreamingText",
+  "title": "AiStreamingText",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack with ForEach over parsed blocks identified by position, finished blocks in an Equatable view with .equatable(), MonarchAiMarkdown's block views, and AccessibilityNotification.Announcement",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A Markdown answer that grows while a model writes it: finished blocks stay put, only the last block updates with half-written syntax closed for display, a caret follows the last character, and VoiceOver hears whole sentences rather than tokens.",
+  "whenToUse": "For the text of an assistant reply while it streams in, token by token, for example inside a conversation message.",
+  "whenNotToUse": "For an answer that is already complete, such as conversation history, use MonarchAiMarkdown. For structured output with named fields, use MonarchAiStructuredAnswer; for rows, MonarchAiTableAnswer.",
+  "api": [
+    "init(_ text: String, isStreaming: Bool = false, announces: Bool = true, announceInterval: Duration = .seconds(1), announcesCompletion: Bool = true, showsCaret: Bool = true, showsLinkHosts: Bool = true, labels: MonarchAiStreamingTextLabels = MonarchAiStreamingTextLabels(), markdownLabels: MonarchAiMarkdownLabels = MonarchAiMarkdownLabels(), onOpenLink: (@MainActor (URL) -> Void)? = nil)",
+    "func image<Content: View>(@ViewBuilder _ content: @escaping @MainActor (_ url: URL, _ alt: String) -> Content) -> MonarchAiStreamingText",
+    "func codeBlock<Content: View>(@ViewBuilder _ content: @escaping @MainActor (_ language: String, _ code: String, _ isComplete: Bool) -> Content) -> MonarchAiStreamingText",
+    "struct MonarchAiStreamingTextLabels { init(complete: String? = nil, codeBlock: String? = nil, table: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "text",
+      "type": "String",
+      "default": "required",
+      "description": "The Markdown received so far, treated as untrusted. It normally only grows while streaming."
+    },
+    {
+      "name": "isStreaming",
+      "type": "Bool",
+      "default": "false",
+      "description": "More text is arriving: the last block is completed for display, the caret shows and sentences are announced."
+    },
+    {
+      "name": "announces",
+      "type": "Bool",
+      "default": "true",
+      "description": "Announce new sentences and finished blocks, then Response complete. Turn it off when the surrounding thread announces messages itself."
+    },
+    {
+      "name": "announceInterval",
+      "type": "Duration",
+      "default": ".seconds(1)",
+      "description": "The minimum time between announcements; values below one second are raised to one second."
+    },
+    {
+      "name": "announcesCompletion",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether Response complete may be announced when this text stops streaming. Pass false while the reply goes on after this text (a tool runs), then true once it ends: the announcement is owed until then."
+    },
+    {
+      "name": "showsCaret",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether a caret follows the last character while streaming."
+    },
+    {
+      "name": "showsLinkHosts",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the host follows a link whose text does not name it, as in MonarchAiMarkdown."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiStreamingTextLabels",
+      "default": "MonarchAiStreamingTextLabels()",
+      "description": "Replaces Response complete, Code block and Table."
+    },
+    {
+      "name": "markdownLabels",
+      "type": "MonarchAiMarkdownLabels",
+      "default": "MonarchAiMarkdownLabels()",
+      "description": "Replaces the strings of the Markdown rendering (table name and size, Footnotes, Task, link host)."
+    },
+    {
+      "name": "onOpenLink",
+      "type": "(@MainActor (URL) -> Void)?",
+      "default": "nil",
+      "description": "Opens links in the app instead of the environment's openURL action; with it, relative links are links too."
+    },
+    {
+      "name": "image(_:)",
+      "type": "modifier",
+      "default": "none",
+      "description": "Renders paragraphs that are a single http or https image; without it the alt text shows."
+    },
+    {
+      "name": "codeBlock(_:)",
+      "type": "modifier",
+      "default": "none",
+      "description": "Renders code blocks instead of MonarchCodeBlock; isComplete is false until the closing fence arrives."
+    }
+  ],
+  "states": [
+    {
+      "name": "streaming",
+      "description": "Finished blocks are drawn once and skipped while later ones arrive; the last block is completed for display (open emphasis and code spans closed, a link whose target is still arriving shown as its text, a lone trailing delimiter hidden, table rows held back until the delimiter row) and a caret follows its last character."
+    },
+    {
+      "name": "streaming code",
+      "description": "An unclosed code block renders as code without its copy button and with no caret, since the code itself grows."
+    },
+    {
+      "name": "complete",
+      "description": "The caret goes; the text renders as MonarchAiMarkdown would, and Response complete is announced once."
+    },
+    {
+      "name": "empty",
+      "description": "An empty text renders nothing."
+    }
+  ],
+  "appearance": "The same as MonarchAiMarkdown: running text in the default text role, headings, lists, quotations, code and tables in their roles. The caret is a thin block glyph in the text colour, so it follows light, dark and both high-contrast themes.",
+  "platformNotes": "The web streams into AiMarkdown with a live region; iOS uses the same incremental parser as MonarchAiMarkdown and the same completion rules, ported from the web's completeStreamingMarkdown, and announces through AccessibilityNotification.Announcement with the web's throttle: sentences and finished blocks, at most once per interval, never below one second, then Response complete, and nothing for text that never streamed. The web's caret is a blinking block in the AI solid colour placed after the text with zero width; SwiftUI text has no zero-width inline slot and MonarchAiMarkdown has no trailing slot, so the caret is a text glyph at the end of the last paragraph, heading or list item, in the text colour, and it does not blink (a blinking glyph would redraw the last paragraph twice a second, and the static form is what Reduce Motion asks for anyway). It is not drawn after code, tables or rules, and not drawn while VoiceOver runs, so it is never read. The web's headingLevelOffset, allowImageHosts, resolveImageUrl, externalLinksInNewTab and renderMath are not offered, as for MonarchAiMarkdown; image(_:) and codeBlock(_:) are the slots. Android has not covered this entry yet.",
+  "accessibility": [
+    "Complete sentences and finished blocks are announced at most once per interval, never single tokens; a code block is announced as Code block and a table as Table instead of being read out.",
+    "Response complete is announced once when streaming ends, or later, when announcesCompletion becomes true.",
+    "Text that never streamed in this view (history) is not announced, and a different answer starts the announcements over.",
+    "The caret is not drawn while VoiceOver runs, so it is never read.",
+    "Headings, links, lists, task check marks and tables keep the accessibility of MonarchAiMarkdown."
+  ],
+  "edgeCases": [
+    "If the text is replaced rather than extended (regenerate), it is parsed again in full and the announcements start over.",
+    "A link whose target is still arriving shows its text without a link until the closing parenthesis arrives, so a half URL is never tappable.",
+    "A table header is held back until its delimiter row arrives, so pipes never flash as text.",
+    "A footnote definition arriving later turns earlier references into numbers; finished blocks are drawn again once when that happens.",
+    "Very long answers render every block: put the view in the message list, which scrolls."
+  ],
+  "tests": [
+    "MonarchAiStreamingTextTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Partway through an answer",
+      "fixture": "ai-streaming-text",
+      "webExample": "Partway through an answer",
+      "template": "MonarchAiStreamingText(\n    {{text}},\n    isStreaming: {{streaming}},\n    announces: false\n)",
+      "code": "MonarchAiStreamingText(\n    \"## Summary\\n\\nThe sample project has **three open tasks** and one is overdue. Here is the order I suggest:\\n\\n1. Review the *migration plan* first, since two tasks depend on it.\\n2. Update the changelog.\",\n    isStreaming: true,\n    announces: false\n)"
+    },
+    {
+      "title": "Text inside a longer reply",
+      "setup": "@State private var isToolRunning = true",
+      "code": "MonarchAiStreamingText(\n    \"Checking the calendar first.\",\n    isStreaming: false,\n    announcesCompletion: !isToolRunning,\n    labels: MonarchAiStreamingTextLabels(complete: \"Reply complete\")\n)"
+    }
+  ],
+  "webEquivalent": "AiStreamingText",
+  "dependsOn": [
+    "ai-markdown"
+  ]
+}

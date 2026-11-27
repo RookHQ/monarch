@@ -1,0 +1,136 @@
+{
+  "id": "inline-error-retry",
+  "name": "MonarchInlineErrorRetry",
+  "title": "InlineErrorRetry",
+  "family": "feedback",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "ViewThatFits, HStack, Text, Button",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A compact row that says a part of the screen did not load, with a retry button.",
+  "whenToUse": "Inside a card, a section or a list when one part failed and the rest of the screen works, or as a strip above stale data that is still shown.",
+  "whenNotToUse": "When a whole screen or region failed, use MonarchErrorState. For a message with no retry, use MonarchInlineNotice.",
+  "api": [
+    "init(_ message: String, systemImage: String? = nil, tone: MonarchTone = .danger, variant: MonarchInlineErrorRetryVariant = .inline, isRetrying: Bool = false, toneLabel: String? = nil, retryLabel: String? = nil, retryingLabel: String? = nil, onRetry: @escaping @MainActor () -> Void)",
+    "enum MonarchInlineErrorRetryVariant { case inline, banner }"
+  ],
+  "options": [
+    {
+      "name": "message",
+      "type": "String",
+      "default": "required",
+      "description": "The failure in plain words."
+    },
+    {
+      "name": "systemImage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the SF Symbol of the tone."
+    },
+    {
+      "name": "tone",
+      "type": "MonarchTone",
+      "default": ".danger",
+      "description": "danger when nothing could load; warning when stale data is still shown."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchInlineErrorRetryVariant",
+      "default": ".inline",
+      "description": "inline is a plain row; banner is a tinted, bordered strip."
+    },
+    {
+      "name": "isRetrying",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the button as busy; its action does not run."
+    },
+    {
+      "name": "toneLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in spoken name of the tone."
+    },
+    {
+      "name": "retryLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Try again\" title."
+    },
+    {
+      "name": "retryingLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Retrying\" announcement and button value."
+    },
+    {
+      "name": "onRetry",
+      "type": "() -> Void",
+      "default": "required",
+      "description": "Runs when the retry button is activated and no retry is in progress."
+    }
+  ],
+  "states": [
+    {
+      "name": "failed",
+      "description": "The message and the retry button."
+    },
+    {
+      "name": "retrying",
+      "description": "A spinner replaces the icon of the button; \"Retrying\" is announced once and is the value of the button."
+    }
+  ],
+  "appearance": "An icon in the strong colour of the tone and the message in the default text colour. The banner variant adds the subtle fill and the border of the tone with 8-point corners; the inline variant has no surface.",
+  "platformNotes": "The busy state is always controlled with isRetrying; the web can also track a promise returned by onRetry. The web actions slot (extra actions after the button) and returnFocusTo are not offered: when the row is replaced by content, VoiceOver focus follows the system's rules. Any MonarchTone is accepted, where the web allows danger and warning. Android builds the same component.",
+  "accessibility": [
+    "The icon and the message are one element, read as the tone name, then the message; toneLabel replaces the tone name.",
+    "The retry button is a separate element with a touch target of at least 44 points.",
+    "When isRetrying changes from false to true, \"Retrying\" is posted as an announcement.",
+    "While isRetrying is true the button stays focusable, does not run its action and has the value \"Retrying\".",
+    "The message and the button stack when they do not fit on one line, so nothing is truncated at large text sizes."
+  ],
+  "edgeCases": [
+    "The end of a retry is not announced: the content, or the row again, is what follows.",
+    "The neutral tone has no spoken tone name."
+  ],
+  "tests": [
+    "MonarchInlineErrorRetryTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Inline, with a pending retry",
+      "fixture": "inline-error-retry",
+      "webExample": "Inline, with a pending retry",
+      "template": "MonarchInlineErrorRetry({{message}}, retryLabel: {{retry}}) {}",
+      "code": "MonarchInlineErrorRetry(\"Your recent payouts didn’t load.\", retryLabel: \"Try again\") {}"
+    },
+    {
+      "title": "Above stale data",
+      "code": "MonarchInlineErrorRetry(\n    \"Showing data from 10 minutes ago.\",\n    tone: .warning,\n    variant: .banner\n) {\n    attempts += 1\n}",
+      "setup": "@State private var attempts = 0"
+    }
+  ],
+  "webEquivalent": "InlineErrorRetry",
+  "dependsOn": [
+    "button",
+    "icon",
+    "text"
+  ],
+  "icons": {
+    "tone.danger": "WarningGlyph",
+    "retry": "RetryGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web puts the message and the Try again button on one row, which needs about 400 points; a phone column has 306, so the button drops under the message. The message, the warning icon and the button are the same; the row keeps the web layout whenever it fits.",
+      "convention": "HIG: controls wrap under their text when the width runs out instead of shrinking or truncating"
+    }
+  ]
+}

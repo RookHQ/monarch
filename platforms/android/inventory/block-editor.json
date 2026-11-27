@@ -1,0 +1,267 @@
+{
+  "id": "block-editor",
+  "name": "MonarchBlockEditor",
+  "title": "BlockEditor",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyColumn of androidx.compose.foundation.text.BasicTextField blocks (one MonarchRichTextEditorState each), with MonarchEditorToolbar, MonarchSlashMenu, MonarchDragHandle with androidx.compose.material3.DropdownMenu, androidx.compose.material3.Checkbox, MonarchCalloutBlock, MonarchToggleBlock, MonarchTableBlock, MonarchEmbedBlock and androidx.compose.foundation.text.contextmenu.modifier.appendTextContextMenuComponents",
+  "status": "experimental",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A block document editor: paragraphs, headings, lists, checklists, quotes, code, callouts, toggles, tables and embeds, with a / menu, a handle per block to move or change it, a formatting toolbar and formats in the text selection menu.",
+  "whenToUse": "For documents people build out of blocks, such as notes, specs, wiki pages and briefs, stored as a list of blocks.",
+  "whenNotToUse": "For one formatted text such as a description or a comment use MonarchRichTextEditor; for plain text use MonarchTextField; to show a finished document without editing it, readOnly = true is enough.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable public fun MonarchBlockEditor(label: String, state: MonarchBlockEditorState, modifier: Modifier = Modifier, blocks: Set<MonarchBlockEditorBlockType> = MonarchBlockEditorBlockType.entries.toSet(), tools: List<List<MonarchEditorTool>> = MonarchBlockEditorDefaults.Tools, enabled: Boolean = true, readOnly: Boolean = false, bubbleMenu: Boolean = true, dragHandles: Boolean = true, slashMenu: Boolean = true, slashItems: List<MonarchSlashMenuItem> = emptyList(), slashGroupOrder: List<String> = emptyList(), embedProviders: List<MonarchEmbedProvider> = MonarchEmbedProvider.Defaults, icons: Map<MonarchEditorTool, Painter> = emptyMap(), labels: MonarchBlockEditorLabels = MonarchBlockEditorLabels(), listState: LazyListState = rememberLazyListState(), onSlashItem: ((MonarchSlashMenuItem) -> Unit)? = null, onTool: ((MonarchEditorTool) -> Unit)? = null, onOpenLink: ((String) -> Unit)? = null)",
+    "@Stable public class MonarchBlockEditorState(blocks: List<MonarchBlockEditorBlock> = emptyList()) { val blocks: List<MonarchBlockEditorBlock>; val focusedBlockId: String?; val canUndo: Boolean; val canRedo: Boolean; fun setBlocks(blocks: List<MonarchBlockEditorBlock>); fun undo(); fun redo(); fun insertBlock(block: MonarchBlockEditorBlock, afterId: String? = focusedBlockId); fun updateBlock(block: MonarchBlockEditorBlock); fun moveBlock(id: String, offset: Int); fun duplicateBlock(id: String); fun deleteBlock(id: String); companion object { fun newId(): String; val Saver: Saver<MonarchBlockEditorState, Any> } }",
+    "@Composable public fun rememberMonarchBlockEditorState(blocks: List<MonarchBlockEditorBlock> = emptyList()): MonarchBlockEditorState",
+    "public sealed interface MonarchBlockEditorBlock { val id: String; val type: MonarchBlockEditorBlockType; data class Text(id: String, style: MonarchBlockEditorTextStyle = Paragraph, text: String = \"\", spans: List<MonarchRichTextSpan> = emptyList(), checked: Boolean = false); data class Callout(id: String, text: String = \"\", spans: List<MonarchRichTextSpan> = emptyList(), tone: MonarchTone = MonarchTone.Info); data class Toggle(id: String, text: String = \"\", spans: List<MonarchRichTextSpan> = emptyList(), body: String = \"\", expanded: Boolean = true); data class Table(id: String, data: MonarchTableBlockData = MonarchTableBlockData.empty()); data class Embed(id: String, url: String = \"\", caption: String? = null) }",
+    "public enum class MonarchBlockEditorBlockType { Paragraph, Heading1, Heading2, Heading3, BulletedList, NumberedList, Checklist, Quote, Code, Callout, Toggle, Table, Embed }",
+    "public enum class MonarchBlockEditorTextStyle(val type: MonarchBlockEditorBlockType) { Paragraph, Heading1, Heading2, Heading3, BulletedList, NumberedList, Checklist, Quote, Code; val isList: Boolean; val isHeading: Boolean; companion object { fun of(type: MonarchBlockEditorBlockType): MonarchBlockEditorTextStyle? } }",
+    "public object MonarchBlockEditorDefaults { val Tools: List<List<MonarchEditorTool>> }",
+    "public class MonarchBlockEditorLabels(placeholder: String? = null, names: Map<MonarchBlockEditorBlockType, String> = emptyMap(), descriptions: Map<MonarchBlockEditorBlockType, String> = emptyMap(), groupText: String? = null, groupLists: String? = null, groupBlocks: String? = null, handle: ((block: String) -> String)? = null, moveUp: String? = null, moveDown: String? = null, duplicate: String? = null, delete: String? = null, turnInto: String? = null, tone: String? = null, neutralTone: String? = null, moved: ((block: String, position: Int, total: Int) -> String)? = null, toggleShow: String? = null, toggleHide: String? = null, toggleContent: String? = null, embedLink: String? = null, embedAdd: String? = null, toolbar: MonarchEditorToolbarLabels = MonarchEditorToolbarLabels(), slashMenu: MonarchSlashMenuLabels = MonarchSlashMenuLabels(), table: MonarchTableBlockLabels = MonarchTableBlockLabels(), embed: MonarchEmbedBlockLabels = MonarchEmbedBlockLabels())"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The spoken name of the document, already localized. Show a visible title nearby."
+    },
+    {
+      "name": "state",
+      "type": "MonarchBlockEditorState",
+      "default": "required",
+      "description": "The document, the block with the caret and the undo history. Create it with rememberMonarchBlockEditorState."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the editor. Give it a bounded height: the editor scrolls itself."
+    },
+    {
+      "name": "blocks",
+      "type": "Set<MonarchBlockEditorBlockType>",
+      "default": "MonarchBlockEditorBlockType.entries.toSet()",
+      "description": "The kinds of block offered in the / menu, the toolbar, the shortcuts and the Turn into menu. Paragraphs are always offered; blocks of other kinds already in the document are still shown."
+    },
+    {
+      "name": "tools",
+      "type": "List<List<MonarchEditorTool>>",
+      "default": "MonarchBlockEditorDefaults.Tools",
+      "description": "The toolbar's tools in groups; an empty list for no toolbar. Custom tools go to onTool."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the document can be edited. Disabled shows the blocks in the disabled colors without the toolbar and the handles."
+    },
+    {
+      "name": "readOnly",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows the document as read: text with links that open, callouts, toggles that open and close, tables and embeds; no fields, toolbar or handles."
+    },
+    {
+      "name": "bubbleMenu",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Adds Bold, Italic, Strikethrough and Code to the system menu of selected text."
+    },
+    {
+      "name": "dragHandles",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the handle beside each block, which is dragged to move the block and tapped for its menu."
+    },
+    {
+      "name": "slashMenu",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Opens the / menu when / is typed at the start of a text block."
+    },
+    {
+      "name": "slashItems",
+      "type": "List<MonarchSlashMenuItem>",
+      "default": "emptyList()",
+      "description": "The app's entries of the / menu, after the built-in ones; their ids must not be the built-in ids."
+    },
+    {
+      "name": "slashGroupOrder",
+      "type": "List<String>",
+      "default": "emptyList()",
+      "description": "Group headings of the / menu in display order."
+    },
+    {
+      "name": "embedProviders",
+      "type": "List<MonarchEmbedProvider>",
+      "default": "MonarchEmbedProvider.Defaults",
+      "description": "The sites an embed may frame; other links are shown as links."
+    },
+    {
+      "name": "icons",
+      "type": "Map<MonarchEditorTool, Painter>",
+      "default": "emptyMap()",
+      "description": "The icons of the toolbar's tools. A tool without one shows its name."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchBlockEditorLabels",
+      "default": "MonarchBlockEditorLabels()",
+      "description": "Replacements for every built-in string, including those of the toolbar, the / menu, tables and embeds."
+    },
+    {
+      "name": "listState",
+      "type": "LazyListState",
+      "default": "rememberLazyListState()",
+      "description": "The scroll state of the document."
+    },
+    {
+      "name": "onSlashItem",
+      "type": "((MonarchSlashMenuItem) -> Unit)?",
+      "default": "null",
+      "description": "Receives the app's / menu entries after the typed command is removed; change the document with state."
+    },
+    {
+      "name": "onTool",
+      "type": "((MonarchEditorTool) -> Unit)?",
+      "default": "null",
+      "description": "Receives the custom tools of the toolbar."
+    },
+    {
+      "name": "onOpenLink",
+      "type": "((String) -> Unit)?",
+      "default": "null",
+      "description": "Opens a link of an embed outside the app; null uses the system browser."
+    }
+  ],
+  "states": [
+    {
+      "name": "editing",
+      "description": "Each block is a text field at least 48dp high with its handle at the start; the toolbar acts on the block with the caret and shows its style and formats as on."
+    },
+    {
+      "name": "empty",
+      "description": "A new document is one empty paragraph that shows \"Write, or type / for blocks\"; an empty block with the caret shows the placeholder (or the name of its kind)."
+    },
+    {
+      "name": "slash menu",
+      "description": "While / and a word are typed at the start of a text block, the / menu under the document lists the matching kinds; choosing one turns the block into it, or inserts a table or an embed."
+    },
+    {
+      "name": "block menu",
+      "description": "A tap on a handle opens Move up, Move down, Duplicate, Turn into (the kinds that keep the text), Tone for a callout and Delete block."
+    },
+    {
+      "name": "dragging",
+      "description": "While a handle is dragged, its block follows the finger with an accent outline and a shadow, the other blocks slide aside and the list scrolls at its edges; the move is made on release."
+    },
+    {
+      "name": "read only",
+      "description": "Blocks are shown as text, callouts, toggles that open and close, tables and embeds, without fields, toolbar or handles; links open on a tap."
+    },
+    {
+      "name": "disabled",
+      "description": "Blocks are shown in their fields with the disabled text color, without the toolbar and the handles."
+    }
+  ],
+  "appearance": "Text uses the default text role (headings in the title, heading and subheading styles, quotes in the muted text role beside a strong border bar, code on the subtle background with a subtle border), placeholders the subtle text role, list markers the muted text role, checklist boxes the accent solid role; a dragged block has the surface fill, the accent border and a medium shadow, and Delete block is in the danger strong role. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web BlockEditor is one Tiptap (ProseMirror) document. Compose has no rich-text engine, so on Android each block is its own BasicTextField over a MonarchRichTextEditorState in a LazyColumn, and the document is a list of MonarchBlockEditorBlock values instead of HTML or Tiptap JSON; no conversion is shipped, so it is experimental until the interchange format is agreed across platforms, like MonarchRichTextEditor. Consequences: a selection stays inside one block (no selection or copy across blocks); undo is the editor's own history of the whole document, grouped by word while typing. On a phone the handle is a 48dp gutter beside every block instead of appearing on hover, a tap opens the block menu and a drag moves the block; the / menu is a strip under the document, above the keyboard, because Compose gives no caret rectangle; the web's selection bubble is items added to the system text selection menu. Not offered: columns (blocks side by side do not fit a phone; the document is already one column), images (Monarch takes pictures as Painters, and an editor that stores them needs the app's upload and loading; insert them through slashItems and the app's own UI), heading levels 4 to 6, nested lists, Tab to indent, the onEditorReady and editorRef handles, maxLength, mentions, HTML or JSON output and a hidden form field. A toggle's content is plain text. iOS has no BlockEditor entry yet; the names follow the web.",
+  "accessibility": [
+    "Every block is a text field named by its kind (\"Heading 1\", \"Bulleted list\", \"Numbered list 2\"); headings are headings in editing and reading.",
+    "Each handle is one TalkBack element, a button named \"Block actions\" and the kind, that opens the block menu, with Move up and Move down as custom actions; Alt+Shift+Up and Down move the block from the keyboard.",
+    "Every move is announced through a polite live region: \"Heading 1 moved to position 2 of 4.\"",
+    "A checklist item's checkbox is named by the item's text and is checked or not, and a ticked item is also struck through, so the state is not color alone.",
+    "Blocks, handles, checkboxes and buttons are at least 48dp high, also at the largest font size, and the document scrolls instead of cutting text.",
+    "The document list is named by label; the / menu announces the number of matches itself."
+  ],
+  "edgeCases": [
+    "Return in a list or checklist item starts a new item; Return on an empty item turns it into a paragraph. Return in code adds a line.",
+    "Pasting several lines into a text block makes one block per line.",
+    "Backspace at the start of a heading, list item, quote, code, callout or empty toggle turns it into a paragraph; at the start of a paragraph it joins the paragraph to the block above, or deletes it when empty after a table or embed. Soft keyboards send Backspace on an empty field as a key event only on some devices.",
+    "Deleting the last block leaves one empty paragraph.",
+    "Blocks with repeated ids are given new ids when loaded.",
+    "The editor needs a bounded height; inside a vertically scrolling parent it throws, as every LazyColumn does."
+  ],
+  "tests": [
+    "MonarchBlockEditorTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Document with outline",
+      "fixture": "block-editor",
+      "webExample": "Document with outline",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {\n    @OptIn(ExperimentalMonarchApi::class)\n    MonarchBlockEditor(\n        label = {{label}},\n        state = state,\n        modifier = Modifier.fillMaxWidth().height(1000.dp),\n    )\n    MonarchPageOutline(\n        headings = listOf(\n            MonarchPageOutlineHeading({{blocks.0.text}}, {{blocks.0.level}}, {{blocks.0.text}}),\n            MonarchPageOutlineHeading({{blocks.2.text}}, {{blocks.2.level}}, {{blocks.2.text}}),\n            MonarchPageOutlineHeading({{blocks.6.text}}, {{blocks.6.level}}, {{blocks.6.text}}),\n            MonarchPageOutlineHeading({{blocks.8.text}}, {{blocks.8.level}}, {{blocks.8.text}}),\n        ),\n        onNavigate = {},\n        modifier = Modifier.fillMaxWidth(),\n        currentId = {{blocks.0.text}},\n        stats = MonarchPageOutlineStats(words = {{outline.words}}, minutes = {{outline.minutes}}),\n        labels = MonarchPageOutlineLabels(title = {{outline.title}}),\n    )\n}",
+      "setupTemplate": "val state = rememberMonarchBlockEditorState(\n    listOf(\n        MonarchBlockEditorBlock.Text(\"b0\", MonarchBlockEditorTextStyle.Heading1, {{blocks.0.text}}),\n        MonarchBlockEditorBlock.Text(\"b1\", text = {{blocks.1.text}}, spans = listOf(MonarchRichTextSpan(MonarchRichTextMark.Code, {{blocks.1.text}}.indexOf({{blocks.1.code}}), {{blocks.1.text}}.indexOf({{blocks.1.code}}) + {{blocks.1.code}}.length))),\n        MonarchBlockEditorBlock.Text(\"b2\", MonarchBlockEditorTextStyle.Heading2, {{blocks.2.text}}),\n        MonarchBlockEditorBlock.Text(\"b3\", MonarchBlockEditorTextStyle.Checklist, {{blocks.3.text}}, checked = {{blocks.3.checked}}),\n        MonarchBlockEditorBlock.Text(\"b4\", MonarchBlockEditorTextStyle.Checklist, {{blocks.4.text}}, checked = {{blocks.4.checked}}),\n        MonarchBlockEditorBlock.Callout(\"b5\", {{blocks.5.text}}, tone = {{blocks.5.tone|tone}}),\n        MonarchBlockEditorBlock.Text(\"b6\", MonarchBlockEditorTextStyle.Heading2, {{blocks.6.text}}),\n        MonarchBlockEditorBlock.Text(\"b7a\", text = {{blocks.7.columns.0.text}}, spans = listOf(MonarchRichTextSpan(MonarchRichTextMark.Bold, 0, {{blocks.7.columns.0.bold}}.length))),\n        MonarchBlockEditorBlock.Text(\"b7b\", text = {{blocks.7.columns.1.text}}, spans = listOf(MonarchRichTextSpan(MonarchRichTextMark.Bold, 0, {{blocks.7.columns.1.bold}}.length))),\n        MonarchBlockEditorBlock.Text(\"b8\", MonarchBlockEditorTextStyle.Heading2, {{blocks.8.text}}),\n        MonarchBlockEditorBlock.Table(\n            \"b9\",\n            MonarchTableBlockData.of(\n                listOf(\n                    listOf({{blocks.9.rows.0.0}}, {{blocks.9.rows.0.1}}),\n                    listOf({{blocks.9.rows.1.0}}, {{blocks.9.rows.1.1}}),\n                ),\n            ),\n        ),\n        MonarchBlockEditorBlock.Toggle(\"b10\", {{blocks.10.text}}, body = {{blocks.10.body}}, expanded = {{blocks.10.open}}),\n    ),\n)",
+      "imports": [
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.unit.dp",
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "com.rookhq.monarch.components.collaboration.richtexteditor.MonarchRichTextSpan",
+        "com.rookhq.monarch.components.collaboration.richtexteditor.MonarchRichTextMark"
+      ],
+      "setup": "val state = rememberMonarchBlockEditorState(\n    listOf(\n        MonarchBlockEditorBlock.Text(\"b0\", MonarchBlockEditorTextStyle.Heading1, \"Project brief\"),\n        MonarchBlockEditorBlock.Text(\"b1\", text = \"Type / on an empty line to add a block, or drag the handle beside a block to move it.\", spans = listOf(MonarchRichTextSpan(MonarchRichTextMark.Code, \"Type / on an empty line to add a block, or drag the handle beside a block to move it.\".indexOf(\"/\"), \"Type / on an empty line to add a block, or drag the handle beside a block to move it.\".indexOf(\"/\") + \"/\".length))),\n        MonarchBlockEditorBlock.Text(\"b2\", MonarchBlockEditorTextStyle.Heading2, \"Goals\"),\n        MonarchBlockEditorBlock.Text(\"b3\", MonarchBlockEditorTextStyle.Checklist, \"Agree on scope\", checked = true),\n        MonarchBlockEditorBlock.Text(\"b4\", MonarchBlockEditorTextStyle.Checklist, \"Share the timeline\", checked = false),\n        MonarchBlockEditorBlock.Callout(\"b5\", \"Decisions are recorded at the end of this page.\", tone = MonarchTone.Info),\n        MonarchBlockEditorBlock.Text(\"b6\", MonarchBlockEditorTextStyle.Heading2, \"Options\"),\n        MonarchBlockEditorBlock.Text(\"b7a\", text = \"Option A: phased rollout.\", spans = listOf(MonarchRichTextSpan(MonarchRichTextMark.Bold, 0, \"Option A\".length))),\n        MonarchBlockEditorBlock.Text(\"b7b\", text = \"Option B: single release.\", spans = listOf(MonarchRichTextSpan(MonarchRichTextMark.Bold, 0, \"Option B\".length))),\n        MonarchBlockEditorBlock.Text(\"b8\", MonarchBlockEditorTextStyle.Heading2, \"Timeline\"),\n        MonarchBlockEditorBlock.Table(\n            \"b9\",\n            MonarchTableBlockData.of(\n                listOf(\n                    listOf(\"Phase\", \"Dates\"),\n                    listOf(\"Design\", \"Weeks 1–2\"),\n                ),\n            ),\n        ),\n        MonarchBlockEditorBlock.Toggle(\"b10\", \"Background\", body = \"Notes from the earlier review.\", expanded = false),\n    ),\n)",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {\n    @OptIn(ExperimentalMonarchApi::class)\n    MonarchBlockEditor(\n        label = \"Project brief\",\n        state = state,\n        modifier = Modifier.fillMaxWidth().height(1000.dp),\n    )\n    MonarchPageOutline(\n        headings = listOf(\n            MonarchPageOutlineHeading(\"Project brief\", 1, \"Project brief\"),\n            MonarchPageOutlineHeading(\"Goals\", 2, \"Goals\"),\n            MonarchPageOutlineHeading(\"Options\", 2, \"Options\"),\n            MonarchPageOutlineHeading(\"Timeline\", 2, \"Timeline\"),\n        ),\n        onNavigate = {},\n        modifier = Modifier.fillMaxWidth(),\n        currentId = \"Project brief\",\n        stats = MonarchPageOutlineStats(words = 59, minutes = 1),\n        labels = MonarchPageOutlineLabels(title = \"Document outline\"),\n    )\n}"
+    },
+    {
+      "title": "Text blocks only, with an app entry in the / menu",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ],
+      "setup": "val state = rememberMonarchBlockEditorState()",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchBlockEditor(\n    label = \"Meeting notes\",\n    state = state,\n    modifier = Modifier.height(360.dp),\n    blocks = setOf(\n        MonarchBlockEditorBlockType.Heading2,\n        MonarchBlockEditorBlockType.BulletedList,\n        MonarchBlockEditorBlockType.Checklist,\n    ),\n    slashItems = listOf(MonarchSlashMenuItem(id = \"date\", label = \"Today's date\", group = \"Insert\")),\n    onSlashItem = { item ->\n        if (item.id == \"date\") {\n            state.insertBlock(MonarchBlockEditorBlock.Text(MonarchBlockEditorState.newId(), text = \"14 November\"))\n        }\n    },\n)"
+    },
+    {
+      "title": "Reading a saved document",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ],
+      "setup": "val state = rememberMonarchBlockEditorState(\n    listOf(\n        MonarchBlockEditorBlock.Text(\"h\", MonarchBlockEditorTextStyle.Heading2, \"FAQ\"),\n        MonarchBlockEditorBlock.Toggle(\"q\", \"Why Friday?\", body = \"Support is staffed on the weekend.\", expanded = false),\n    ),\n)",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchBlockEditor(\n    label = \"FAQ\",\n    state = state,\n    modifier = Modifier.height(240.dp),\n    readOnly = true,\n)"
+    }
+  ],
+  "webEquivalent": "BlockEditor",
+  "dependsOn": [
+    "rich-text-editor",
+    "slash-menu",
+    "drag-handle",
+    "editor-toolbar",
+    "callout-block",
+    "columns-block",
+    "embed-block",
+    "table-block",
+    "toggle-block"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "android",
+      "paths": [
+        "blocks.0.type",
+        "blocks.1.type",
+        "blocks.2.type",
+        "blocks.3.type",
+        "blocks.4.type",
+        "blocks.5.type",
+        "blocks.6.type",
+        "blocks.7.type",
+        "blocks.8.type",
+        "blocks.9.type",
+        "blocks.10.type"
+      ],
+      "reason": "The block kind is expressed by the native block constructor (heading, text, task list, callout, table, toggle), not by a string; the type only selects the web HTML builder",
+      "convention": "none: structural, the kind is the constructor"
+    }
+  ]
+}

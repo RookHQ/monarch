@@ -1,8 +1,13 @@
 import { useState } from 'react';
 import { Button, Inline, Sticky } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './sticky.fixture.json';
 
-const ROWS = Array.from({ length: 24 }, (_, i) => `Entry ${i + 1}`);
+const ROWS = Array.from(
+  { length: fixture.data.rows.count },
+  (_, i) => `${fixture.data.rows.prefix} ${i + 1}`,
+);
 
 function HeaderDemo() {
   const [stuck, setStuck] = useState(false);
@@ -23,11 +28,13 @@ function HeaderDemo() {
         borderRadius: 'var(--mn-radius-lg)',
       }}
     >
-      <p style={{ padding: 12, margin: 0 }}>Scroll this box.</p>
+      <p style={{ padding: 12, margin: 0 }}>{fixture.data.intro}</p>
       <Sticky onStuckChange={setStuck} style={{ padding: '8px 12px' }}>
         <Inline justify="between">
-          <strong>Entries</strong>
-          <span style={{ fontSize: 'var(--mn-text-sm)' }}>{stuck ? 'Pinned' : 'In place'}</span>
+          <strong>{fixture.data.header}</strong>
+          <span style={{ fontSize: 'var(--mn-text-sm)' }}>
+            {stuck ? fixture.data.pinnedLabel : fixture.data.placeLabel}
+          </span>
         </Inline>
       </Sticky>
       <ul style={{ margin: 0, padding: 12, listStyle: 'none', display: 'grid', gap: 8 }}>

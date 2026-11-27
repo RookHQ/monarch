@@ -1,0 +1,70 @@
+{
+  "id": "split-layout",
+  "name": null,
+  "title": "SplitLayout",
+  "family": "layout",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold with rememberListDetailPaneScaffoldNavigator and androidx.compose.material3.adaptive.layout.AnimatedPane",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A list and the detail of the selected item side by side on a wide window, and one pane at a time on a phone, is the Material ListDetailPaneScaffold. Monarch ships nothing.",
+  "whenToUse": "For inbox-style screens: browsing tickets, messages or contacts while reading one. Navigate to the detail with the navigator when an item is chosen; NavigableListDetailPaneScaffold handles system back and predictive back between the panes.",
+  "whenNotToUse": "For two panels that are not a list and its detail (an editor and its preview) use MonarchResizablePanels. For a single list that opens a new screen on every window size use navigation.",
+  "api": [
+    "@Composable fun <T> NavigableListDetailPaneScaffold(navigator: ThreePaneScaffoldNavigator<T>, listPane: @Composable ThreePaneScaffoldPaneScope.() -> Unit, detailPane: @Composable ThreePaneScaffoldPaneScope.() -> Unit, modifier: Modifier = Modifier, extraPane: (@Composable ThreePaneScaffoldPaneScope.() -> Unit)? = null, defaultBackBehavior: BackNavigationBehavior = ..., paneExpansionDragHandle: (@Composable ThreePaneScaffoldScope.(PaneExpansionState) -> Unit)? = null, paneExpansionState: PaneExpansionState? = null)",
+    "@Composable fun <T> rememberListDetailPaneScaffoldNavigator(scaffoldDirective: PaneScaffoldDirective = ..., adaptStrategies: ThreePaneScaffoldAdaptStrategies = ..., isDestinationHistoryAware: Boolean = true, initialDestinationHistory: List<ThreePaneScaffoldDestinationItem<T>> = ...): ThreePaneScaffoldNavigator<T>",
+    "suspend fun ThreePaneScaffoldNavigator<T>.navigateTo(pane: ThreePaneScaffoldRole, contentKey: T? = null)",
+    "@Composable fun ExtendedPaneScaffoldPaneScope.AnimatedPane(modifier: Modifier = Modifier, enterTransition: EnterTransition = ..., exitTransition: ExitTransition = ..., boundsAnimationSpec: FiniteAnimationSpec<IntRect> = ..., content: @Composable AnimatedPaneScope.() -> Unit)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "one pane",
+      "description": "On a compact window only the list or the detail is shown; back from the detail returns to the list."
+    },
+    {
+      "name": "two panes",
+      "description": "From a medium or expanded window both are shown; the detail shows the selected item or a placeholder."
+    }
+  ],
+  "appearance": "The scaffold draws no surface of its own; panes take the theme's surfaces from their content. Material 3 colors are mapped from the Monarch theme by MonarchTheme.",
+  "platformNotes": "The web SplitLayout takes detailOpen, onBack and backLabel to show one pane below 768px. ListDetailPaneScaffold decides from the window size class and posture (including foldables) how many panes fit, and the navigator keeps which pane is shown, so the app does not track detailOpen. Back is the system back gesture with predictive back, handled by NavigableListDetailPaneScaffold; there is no back label. The web's listWidth is the scaffold's pane widths, and paneExpansionDragHandle with rememberPaneExpansionState lets people drag the boundary. listLabel and detailLabel are the panes' own headings. The sample catalogue cannot show the scaffold itself because the catalogue app does not depend on the adaptive artifacts (they are implementation dependencies of monarch-compose); its page shows the same two-pane behavior with a Row and BackHandler, and the compiled examples here are the reference. In adaptive 1.3, the version the Compose BOM brings, the navigator and AnimatedPane are marked ExperimentalMaterial3AdaptiveApi, so the example opts in. iOS uses NavigationSplitView.",
+  "accessibility": [
+    "System behavior: TalkBack reads the list pane and then the detail pane when both are shown.",
+    "When the detail opens on a phone, focus moves to the new pane; system back returns to the list.",
+    "Give each pane a heading so TalkBack's heading navigation can jump between them."
+  ],
+  "edgeCases": [
+    "Rotating or unfolding the device can change from one pane to two; the navigator keeps the selected item.",
+    "Without a selection the detail pane on a wide window should show a placeholder such as MonarchEmptyState."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Inbox",
+      "fixture": "split-layout",
+      "webExample": "Inbox",
+      "template": "@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nNavigableListDetailPaneScaffold(\n    navigator = navigator,\n    modifier = Modifier.height(320.dp),\n    listPane = {\n        AnimatedPane {\n            LazyColumn {\n                items(items = items, key = { it }) { item ->\n                    MonarchListRow(\n                        headlineContent = { MonarchText(text = item) },\n                        divider = true,\n                        onClick = {\n                            scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item) }\n                        },\n                    )\n                }\n            }\n        }\n    },\n    detailPane = {\n        AnimatedPane {\n            val item = navigator.currentDestination?.contentKey\n            if (item == null) {\n                MonarchEmptyState(title = {{empty.title}}, message = {{empty.description}})\n            } else {\n                MonarchText(text = item, modifier = Modifier.padding(MonarchTheme.spacing.space4))\n            }\n        }\n    },\n)",
+      "setupTemplate": "@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nval navigator = rememberListDetailPaneScaffoldNavigator<String>()\nval scope = rememberCoroutineScope()\nval items = remember { listOf({{items.0}}, {{items.1}}) }",
+      "imports": [
+        "androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi",
+        "androidx.compose.material3.adaptive.layout.*",
+        "androidx.compose.material3.adaptive.navigation.*",
+        "kotlinx.coroutines.launch",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.ui.unit.dp"
+      ],
+      "setup": "@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nval navigator = rememberListDetailPaneScaffoldNavigator<String>()\nval scope = rememberCoroutineScope()\nval items = remember { listOf(\"Billing question\", \"Password reset\") }",
+      "code": "@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nNavigableListDetailPaneScaffold(\n    navigator = navigator,\n    modifier = Modifier.height(320.dp),\n    listPane = {\n        AnimatedPane {\n            LazyColumn {\n                items(items = items, key = { it }) { item ->\n                    MonarchListRow(\n                        headlineContent = { MonarchText(text = item) },\n                        divider = true,\n                        onClick = {\n                            scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item) }\n                        },\n                    )\n                }\n            }\n        }\n    },\n    detailPane = {\n        AnimatedPane {\n            val item = navigator.currentDestination?.contentKey\n            if (item == null) {\n                MonarchEmptyState(title = \"No conversation selected\", message = \"Pick one from the list.\")\n            } else {\n                MonarchText(text = item, modifier = Modifier.padding(MonarchTheme.spacing.space4))\n            }\n        }\n    },\n)"
+    }
+  ],
+  "webEquivalent": "SplitLayout",
+  "dependsOn": []
+}

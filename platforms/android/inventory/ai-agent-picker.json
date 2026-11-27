@@ -1,0 +1,130 @@
+{
+  "id": "ai-agent-picker",
+  "name": "MonarchAiAgentPicker",
+  "title": "AiAgentPicker",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.selection.selectableGroup of androidx.compose.foundation.selection.selectable rows, each a compact MonarchAiAgentCard with an androidx.compose.material3.RadioButton mark",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Chooses one AI agent from compact agent cards that show what each agent is for, what it can do and how many tools it has.",
+  "whenToUse": "Starting a conversation or a task with one of a few agents, or setting the default agent of a space, when people should see what each agent does before choosing.",
+  "whenNotToUse": "To choose a model rather than an agent, use MonarchAiModelPicker. For dozens of agents that need search, use MonarchCombobox with the agent names. For several agents at once, use checkbox rows.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchAiAgentPicker(agents: List<MonarchAiAgentPickerOption>, selected: String?, onSelect: (String) -> Unit, modifier: Modifier = Modifier, layout: MonarchAiAgentPickerLayout = MonarchAiAgentPickerLayout.List, enabled: Boolean = true, labels: MonarchAiAgentPickerLabels = MonarchAiAgentPickerLabels())",
+    "class MonarchAiAgentPickerOption(agent: MonarchAiAgentRef, description: String? = null, capabilities: List<String> = emptyList(), tools: List<MonarchAiAgentTool> = emptyList(), state: MonarchAiAgentState = MonarchAiAgentState.Idle, image: Painter? = null, enabled: Boolean = true) { val key: String }",
+    "enum class MonarchAiAgentPickerLayout { List, Grid }",
+    "class MonarchAiAgentPickerLabels(label: String? = null, empty: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "agents",
+      "type": "List<MonarchAiAgentPickerOption>",
+      "default": "required",
+      "description": "The agents in display order: the agent, a description, capabilities, tools, its state, its picture loaded by the app, and whether it can be chosen."
+    },
+    {
+      "name": "selected",
+      "type": "String?",
+      "default": "required",
+      "description": "The chosen agent's key (agent.id, or agent.name without an id), or null for none."
+    },
+    {
+      "name": "onSelect",
+      "type": "(String) -> Unit",
+      "default": "required",
+      "description": "Called with the key of the agent the person chooses. Not called for the chosen agent or an agent that cannot be chosen."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the group."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchAiAgentPickerLayout",
+      "default": "List",
+      "description": "One agent per row, or two columns on windows at least 640dp wide below font scale 1.5."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether any agent can be chosen."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiAgentPickerLabels",
+      "default": "MonarchAiAgentPickerLabels()",
+      "description": "Replacements for the group name (\"Choose an agent\") and the empty message."
+    }
+  ],
+  "states": [
+    {
+      "name": "chosen",
+      "description": "The chosen card has a 2dp AI accent border and its radio mark is filled."
+    },
+    {
+      "name": "not chosen",
+      "description": "The card has its usual border and an empty radio mark."
+    },
+    {
+      "name": "unavailable",
+      "description": "An option with enabled = false, or every option when the picker is disabled: the radio mark is disabled and the row is read as disabled; the card stays readable."
+    },
+    {
+      "name": "empty",
+      "description": "With no agents, \"No agents are available.\" in the muted text role."
+    }
+  ],
+  "appearance": "Each option is the compact MonarchAiAgentCard (surface fill, default border, large radius) followed by the Material 3 radio mark. The chosen card is outlined with the AI solid role; the empty message uses the muted text role. Light, dark and both high-contrast themes follow from the theme roles.",
+  "platformNotes": "The web's AiAgentPicker is a radiogroup with roving focus and arrow keys; on Android each option is a selectable row inside selectableGroup, so TalkBack reads each as a radio button with its position, and a hardware keyboard moves with Tab. The web tints the chosen card with the AI subtle fill and puts a check in its corner; MonarchAiAgentCard has no fill option, so on Android the chosen card gets the AI accent border and the Material 3 radio mark sits after the card. The web dims an unavailable card with opacity; Monarch does not dim with alpha, so it is shown by the disabled radio mark and TalkBack's disabled state. The web's onChange also passes the option; on Android onSelect passes the key and the app looks the option up. The picture of an agent is a Painter the app loads. iOS has not built this component yet.",
+  "accessibility": [
+    "Each agent is one TalkBack element with the radio button role: the agent's name and role line, its description, capabilities and tool count, and whether it is selected.",
+    "The group is named \"Choose an agent\".",
+    "An agent that cannot be chosen is read as disabled and does not react to a tap.",
+    "Each row is at least 48dp tall, so the whole card is the touch target.",
+    "The choice is shown by a filled radio mark and a heavier border, not by color alone.",
+    "In right to left the card is at the right and the mark at the left; text wraps at font scale 2.0."
+  ],
+  "edgeCases": [
+    "Agents without an id use their name as the key: keep names unique or give ids.",
+    "A selected key that matches no agent shows nothing chosen.",
+    "Choosing the chosen agent again does not call onSelect.",
+    "The grid falls back to one column on phones and at large font scales.",
+    "Many agents: the picker is a plain column; put it in a scrolling screen, not in a lazy list."
+  ],
+  "tests": [
+    "MonarchAiAgentPickerTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "List",
+      "fixture": "ai-agent-picker",
+      "webExample": "List",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiAgentPicker(\n    agents = listOf(\n        MonarchAiAgentPickerOption(\n            agent = MonarchAiAgentRef(name = {{agents.0.name}}, id = {{agents.0.id}}, role = {{agents.0.role}}),\n            description = {{agents.0.description}},\n            capabilities = listOf({{agents.0.capabilities.0}}, {{agents.0.capabilities.1}}),\n            tools = listOf(MonarchAiAgentTool({{agents.0.tools.0}}), MonarchAiAgentTool({{agents.0.tools.1}})),\n        ),\n        MonarchAiAgentPickerOption(\n            agent = MonarchAiAgentRef(name = {{agents.1.name}}, id = {{agents.1.id}}, role = {{agents.1.role}}),\n            description = {{agents.1.description}},\n            capabilities = listOf({{agents.1.capabilities.0}}, {{agents.1.capabilities.1}}),\n            tools = listOf(MonarchAiAgentTool({{agents.1.tools.0}})),\n            state = MonarchAiAgentState.{{agents.1.state|pascal}},\n        ),\n        MonarchAiAgentPickerOption(\n            agent = MonarchAiAgentRef(name = {{agents.2.name}}, id = {{agents.2.id}}, role = {{agents.2.role}}),\n            description = {{agents.2.description}},\n            enabled = !{{agents.2.disabled}},\n        ),\n    ),\n    selected = agent,\n    onSelect = { agent = it },\n)",
+      "setupTemplate": "var agent by remember { mutableStateOf<String?>({{value}}) }",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ],
+      "setup": "var agent by remember { mutableStateOf<String?>(\"research\") }",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiAgentPicker(\n    agents = listOf(\n        MonarchAiAgentPickerOption(\n            agent = MonarchAiAgentRef(name = \"Research agent\", id = \"research\", role = \"Finds and summarises sources\"),\n            description = \"Reads documents in this space and answers with citations.\",\n            capabilities = listOf(\"Summarises\", \"Cites sources\"),\n            tools = listOf(MonarchAiAgentTool(\"Search documents\"), MonarchAiAgentTool(\"Read file\")),\n        ),\n        MonarchAiAgentPickerOption(\n            agent = MonarchAiAgentRef(name = \"Writing agent\", id = \"writer\", role = \"Drafts and edits text\"),\n            description = \"Drafts replies and tightens wording in the tone you choose.\",\n            capabilities = listOf(\"Drafts\", \"Rewrites\"),\n            tools = listOf(MonarchAiAgentTool(\"Insert text\")),\n            state = MonarchAiAgentState.Working,\n        ),\n        MonarchAiAgentPickerOption(\n            agent = MonarchAiAgentRef(name = \"Scheduling agent\", id = \"scheduler\", role = \"Plans meetings\"),\n            description = \"Finds times that work and drafts invitations. Not enabled in this space.\",\n            enabled = !true,\n        ),\n    ),\n    selected = agent,\n    onSelect = { agent = it },\n)"
+    }
+  ],
+  "webEquivalent": "AiAgentPicker",
+  "dependsOn": [
+    "radio-card-group",
+    "ai-agent-card"
+  ],
+  "icons": {
+    "selected": "CheckGlyph",
+    "agent.badge": "BotGlyph"
+  }
+}

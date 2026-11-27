@@ -1,0 +1,192 @@
+{
+  "id": "ai-subagent-tree",
+  "name": "MonarchAiSubagentTree",
+  "title": "AiSubagentTree",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of rows with androidx.compose.foundation.selection.selectable agents and androidx.compose.foundation.clickable toggles; MonarchStatusBadge and MonarchButton",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A lead AI agent and the sub-agents it handed work to, as a tree with each agent's status, activity, progress and result, and actions for the selected agent.",
+  "whenToUse": "For a multi-agent run, so the person can follow which agent does what, select one, and answer, open or stop it.",
+  "whenNotToUse": "For one agent's steps, use MonarchAiPlan or MonarchAiChainOfSteps. For the timing of one run, use MonarchAiAgentRunTimeline or MonarchAiTraceView. For a hierarchy that is not agents, use MonarchTreeView.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchAiSubagentTree(agents: List<MonarchAiSubagent>, expandIcon: @Composable () -> Unit, modifier: Modifier = Modifier, selection: String? = null, expanded: Set<String>? = null, onExpandedChange: ((Set<String>) -> Unit)? = null, locale: Locale? = null, timeZone: String? = null, labels: MonarchAiSubagentTreeLabels = MonarchAiSubagentTreeLabels(), onSelect: ((MonarchAiSubagent) -> Unit)? = null, onRespond: ((MonarchAiSubagent) -> Unit)? = null, onOpen: ((MonarchAiSubagent) -> Unit)? = null, onOpenPart: ((MonarchAiSubagent) -> Unit)? = null, onStop: ((MonarchAiSubagent) -> Unit)? = null)",
+    "data class MonarchAiSubagent(id: String, name: String, status: MonarchAiSubagentStatus, role: String? = null, activity: String? = null, stepsDone: Int? = null, stepsTotal: Int? = null, toolCalls: Int? = null, startedAt: Long? = null, endedAt: Long? = null, summary: String? = null, children: List<MonarchAiSubagent> = emptyList(), partId: String? = null, messageId: String? = null)",
+    "enum class MonarchAiSubagentStatus { Working, NeedsInput, Waiting, Done, Failed, Stopped }",
+    "class MonarchAiSubagentTreeLabels(label: String? = null, status: ((MonarchAiSubagentStatus) -> String)? = null, agentCount: ((count: Int) -> String)? = null, statusCount: ((status: MonarchAiSubagentStatus, count: Int) -> String)? = null, empty: String? = null, steps: ((done: Int, total: Int?) -> String)? = null, toolCalls: ((count: Int) -> String)? = null, started: ((time: String) -> String)? = null, ran: ((start: String, end: String) -> String)? = null, actionsFor: ((name: String) -> String)? = null, stop: String? = null, open: String? = null, respond: String? = null, openPart: String? = null, announce: ((name: String, status: String) -> String)? = null, expand: ((name: String) -> String)? = null, collapse: ((name: String) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "agents",
+      "type": "List<MonarchAiSubagent>",
+      "default": "required",
+      "description": "The top-level agents (usually one lead), each with the agents it handed work to in children."
+    },
+    {
+      "name": "expandIcon",
+      "type": "@Composable () -> Unit",
+      "default": "required",
+      "description": "A chevron that points to the end; it turns a quarter when the agent is open. Monarch bundles no icons."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the tree."
+    },
+    {
+      "name": "selection",
+      "type": "String?",
+      "default": "null",
+      "description": "The id of the selected agent. The tree keeps the person's choice and starts again from this value when it changes."
+    },
+    {
+      "name": "expanded",
+      "type": "Set<String>?",
+      "default": "null",
+      "description": "The ids of the open agents. Null keeps them inside the tree: active branches start open and a branch that becomes active opens once."
+    },
+    {
+      "name": "onExpandedChange",
+      "type": "((Set<String>) -> Unit)?",
+      "default": "null",
+      "description": "Called with the new set of open ids."
+    },
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "null",
+      "description": "The locale of counts and times. Null uses the configuration's locale."
+    },
+    {
+      "name": "timeZone",
+      "type": "String?",
+      "default": "null",
+      "description": "The time zone of start and end times. An IANA id such as Europe/Berlin; null, or an id the device does not know, is the device's zone."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiSubagentTreeLabels",
+      "default": "MonarchAiSubagentTreeLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onSelect",
+      "type": "((MonarchAiSubagent) -> Unit)?",
+      "default": "null",
+      "description": "Called with the agent the person selects."
+    },
+    {
+      "name": "onRespond",
+      "type": "((MonarchAiSubagent) -> Unit)?",
+      "default": "null",
+      "description": "Shows Respond for a selected agent that needs input."
+    },
+    {
+      "name": "onOpen",
+      "type": "((MonarchAiSubagent) -> Unit)?",
+      "default": "null",
+      "description": "Shows Open for the selected agent, for example its transcript."
+    },
+    {
+      "name": "onOpenPart",
+      "type": "((MonarchAiSubagent) -> Unit)?",
+      "default": "null",
+      "description": "Shows Show in conversation for a selected agent that has a partId or messageId."
+    },
+    {
+      "name": "onStop",
+      "type": "((MonarchAiSubagent) -> Unit)?",
+      "default": "null",
+      "description": "Shows Stop for a selected agent that is waiting or working. Nothing stops until it is pressed."
+    }
+  ],
+  "states": [
+    {
+      "name": "open and closed",
+      "description": "An agent with children has a toggle; its children are listed under it, indented 24dp per level, while it is open."
+    },
+    {
+      "name": "selected",
+      "description": "The row takes the accent subtle fill and an accent mark at its start, and the actions for that agent appear under the tree."
+    },
+    {
+      "name": "working",
+      "description": "The agent's activity is shown under its role."
+    },
+    {
+      "name": "ended",
+      "description": "Done, failed or stopped agents show their summary."
+    },
+    {
+      "name": "empty",
+      "description": "The summary reads No agents yet and no tree is drawn."
+    }
+  ],
+  "appearance": "Names in the strong body style, roles in body text, activity, facts and times in muted caption text. Statuses are small subtle MonarchStatusBadges: info for working, warning for needs input, success for done, danger for failed, neutral for waiting and stopped. The selected row uses the accent subtle fill with an accent solid mark. The same roles adapt to dark and both high-contrast themes.",
+  "platformNotes": "The web builds on TreeView with a tree role, arrow keys and typeahead; Android has no tree role, so, as on iOS, each agent is a selectable button and the chevron is a separate button, which TalkBack users move through in order. The rows are a Column, not a lazy list, so the tree can sit in a scrolling screen. expandIcon is required because Monarch bundles no icons (iOS draws a system chevron). Selection is a hoisted id plus onSelect instead of a binding; the expanded set is a hoisted Set with onExpandedChange. Times are epoch milliseconds formatted with java.text.DateFormat in the given locale and time zone; the web takes ISO strings. Status icons of the web are replaced by the status badge; the status is always in words. Callbacks receive the agent; the web passes the id and the agent, and onOpenPart passes the part link. The web's Stop moves focus back to the row; on Android the button simply disappears. Experimental: a domain pattern until a Rook app adopts it.",
+  "accessibility": [
+    "A summary such as 3 agents: 1 working, 1 needs you, 1 done is read first.",
+    "Each agent is one selectable element read as its name, status, role, activity, steps, tool calls, times and summary, with a 48dp touch target.",
+    "The open and close button is a separate element named Expand or Collapse and the agent's name, with a 48dp target.",
+    "The selected state is exposed to TalkBack and drawn with a mark as well as a fill, so it does not rest on color alone.",
+    "The actions of the selected agent are a group named Actions for and the agent's name.",
+    "Status changes after the first look, and new agents that already need input or failed, are announced through a polite live region.",
+    "The chevron turn follows the reduced-motion setting."
+  ],
+  "edgeCases": [
+    "Ids must be unique across the whole tree; a repeated id selects the first agent with it.",
+    "Deep trees indent 24dp per level; keep them to three levels on a phone.",
+    "Steps without a total read 3 steps; with a total, 3 of 7 steps.",
+    "An agent that starts working inside a closed branch opens its ancestors once, unless the app keeps expanded."
+  ],
+  "tests": [
+    "MonarchAiSubagentTreeTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "A run in progress",
+      "fixture": "ai-subagent-tree",
+      "webExample": "A run in progress",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiSubagentTree(\n    agents = listOf(\n        MonarchAiSubagent(\n            id = {{agents.0.id}},\n            name = {{agents.0.name}},\n            status = MonarchAiSubagentStatus.{{agents.0.status|pascal}},\n            role = {{agents.0.role}},\n            activity = {{agents.0.activity}},\n            stepsDone = {{agents.0.stepsDone}},\n            stepsTotal = {{agents.0.stepsTotal}},\n            startedAt = {{agents.0.startedAt|millis}},\n            children = listOf(\n                MonarchAiSubagent(\n                    id = {{agents.0.children.0.id}},\n                    name = {{agents.0.children.0.name}},\n                    status = MonarchAiSubagentStatus.{{agents.0.children.0.status|pascal}},\n                    role = {{agents.0.children.0.role}},\n                    activity = {{agents.0.children.0.activity}},\n                    stepsDone = {{agents.0.children.0.stepsDone}},\n                    stepsTotal = {{agents.0.children.0.stepsTotal}},\n                    toolCalls = {{agents.0.children.0.toolCalls}},\n                    startedAt = {{agents.0.children.0.startedAt|millis}},\n                    children = listOf(\n                        MonarchAiSubagent(\n                            id = {{agents.0.children.0.children.0.id}},\n                            name = {{agents.0.children.0.children.0.name}},\n                            status = MonarchAiSubagentStatus.{{agents.0.children.0.children.0.status|pascal}},\n                            role = {{agents.0.children.0.children.0.role}},\n                            toolCalls = {{agents.0.children.0.children.0.toolCalls}},\n                            startedAt = {{agents.0.children.0.children.0.startedAt|millis}},\n                            endedAt = {{agents.0.children.0.children.0.endedAt|millis}},\n                            summary = {{agents.0.children.0.children.0.summary}},\n                        ),\n                        MonarchAiSubagent(\n                            id = {{agents.0.children.0.children.1.id}},\n                            name = {{agents.0.children.0.children.1.name}},\n                            status = MonarchAiSubagentStatus.{{agents.0.children.0.children.1.status|pascal}},\n                            role = {{agents.0.children.0.children.1.role}},\n                        ),\n                    ),\n                ),\n                MonarchAiSubagent(\n                    id = {{agents.0.children.1.id}},\n                    name = {{agents.0.children.1.name}},\n                    status = MonarchAiSubagentStatus.{{agents.0.children.1.status|pascal}},\n                    role = {{agents.0.children.1.role}},\n                    startedAt = {{agents.0.children.1.startedAt|millis}},\n                ),\n                MonarchAiSubagent(\n                    id = {{agents.0.children.2.id}},\n                    name = {{agents.0.children.2.name}},\n                    status = MonarchAiSubagentStatus.{{agents.0.children.2.status|pascal}},\n                    role = {{agents.0.children.2.role}},\n                    stepsDone = {{agents.0.children.2.stepsDone}},\n                    stepsTotal = {{agents.0.children.2.stepsTotal}},\n                    startedAt = {{agents.0.children.2.startedAt|millis}},\n                    endedAt = {{agents.0.children.2.endedAt|millis}},\n                    summary = {{agents.0.children.2.summary}},\n                ),\n            ),\n        ),\n    ),\n    statusIcon = { status ->\n        MonarchIcon(\n            when (status) {\n                MonarchAiSubagentStatus.Working -> SampleIcons.Retry\n                MonarchAiSubagentStatus.NeedsInput -> SampleIcons.Warning\n                MonarchAiSubagentStatus.Waiting -> SampleIcons.Clock\n                MonarchAiSubagentStatus.Done -> SampleIcons.Success\n                MonarchAiSubagentStatus.Failed -> SampleIcons.Error\n                MonarchAiSubagentStatus.Stopped -> SampleIcons.Pause\n            },\n            contentDescription = null,\n            size = MonarchIconSize.Sm,\n        )\n    },\n    expandIcon = {\n        MonarchIcon(\n            imageVector = SampleIcons.ChevronRight,\n            contentDescription = null,\n            size = MonarchIconSize.Sm,\n        )\n    },\n    locale = Locale.forLanguageTag({{locale}}),\n    timeZone = {{timeZone}},\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "java.util.Locale",
+        "com.rookhq.monarch.components.intelligence.aisubagenttree.MonarchAiSubagentStatus",
+        "com.rookhq.monarch.foundation.icon.MonarchIcon",
+        "com.rookhq.monarch.foundation.icon.MonarchIconSize"
+      ],
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiSubagentTree(\n    agents = listOf(\n        MonarchAiSubagent(\n            id = \"lead\",\n            name = \"Lead\",\n            status = MonarchAiSubagentStatus.Working,\n            role = \"Plans the quarterly report and hands out the work\",\n            activity = \"Waiting for two sub-agents\",\n            stepsDone = 2,\n            stepsTotal = 5,\n            startedAt = 1_767_268_800_000L,\n            children = listOf(\n                MonarchAiSubagent(\n                    id = \"research\",\n                    name = \"Researcher\",\n                    status = MonarchAiSubagentStatus.Working,\n                    role = \"Collect the figures for each region\",\n                    activity = \"Reading the sales export\",\n                    stepsDone = 3,\n                    stepsTotal = 7,\n                    toolCalls = 12,\n                    startedAt = 1_767_268_860_000L,\n                    children = listOf(\n                        MonarchAiSubagent(\n                            id = \"fetch\",\n                            name = \"Fetcher\",\n                            status = MonarchAiSubagentStatus.Done,\n                            role = \"Download the exports\",\n                            toolCalls = 4,\n                            startedAt = 1_767_268_860_000L,\n                            endedAt = 1_767_268_980_000L,\n                            summary = \"Downloaded 4 exports\",\n                        ),\n                        MonarchAiSubagent(\n                            id = \"parse\",\n                            name = \"Parser\",\n                            status = MonarchAiSubagentStatus.Waiting,\n                            role = \"Turn the exports into tables\",\n                        ),\n                    ),\n                ),\n                MonarchAiSubagent(\n                    id = \"write\",\n                    name = \"Writer\",\n                    status = MonarchAiSubagentStatus.NeedsInput,\n                    role = \"Draft the summary\",\n                    startedAt = 1_767_268_920_000L,\n                ),\n                MonarchAiSubagent(\n                    id = \"check\",\n                    name = \"Checker\",\n                    status = MonarchAiSubagentStatus.Done,\n                    role = \"Compare the totals with last quarter\",\n                    stepsDone = 4,\n                    stepsTotal = 4,\n                    startedAt = 1_767_268_860_000L,\n                    endedAt = 1_767_269_040_000L,\n                    summary = \"All totals match\",\n                ),\n            ),\n        ),\n    ),\n    statusIcon = { status ->\n        MonarchIcon(\n            when (status) {\n                MonarchAiSubagentStatus.Working -> SampleIcons.Retry\n                MonarchAiSubagentStatus.NeedsInput -> SampleIcons.Warning\n                MonarchAiSubagentStatus.Waiting -> SampleIcons.Clock\n                MonarchAiSubagentStatus.Done -> SampleIcons.Success\n                MonarchAiSubagentStatus.Failed -> SampleIcons.Error\n                MonarchAiSubagentStatus.Stopped -> SampleIcons.Pause\n            },\n            contentDescription = null,\n            size = MonarchIconSize.Sm,\n        )\n    },\n    expandIcon = {\n        MonarchIcon(\n            imageVector = SampleIcons.ChevronRight,\n            contentDescription = null,\n            size = MonarchIconSize.Sm,\n        )\n    },\n    locale = Locale.forLanguageTag(\"en-GB\"),\n    timeZone = \"UTC\",\n)"
+    },
+    {
+      "title": "Open branches kept by the app",
+      "setup": "var expanded by rememberSaveable { mutableStateOf(setOf(\"lead\")) }\nval agents = listOf(\n    MonarchAiSubagent(\n        id = \"lead\",\n        name = \"Lead\",\n        status = MonarchAiSubagentStatus.Done,\n        children = listOf(MonarchAiSubagent(\"writer\", \"Writer\", MonarchAiSubagentStatus.Done)),\n    ),\n)",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiSubagentTree(\n    agents = agents,\n    expandIcon = { Text(\"›\") },\n    expanded = expanded,\n    onExpandedChange = { expanded = it },\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ]
+    }
+  ],
+  "webEquivalent": "AiSubagentTree",
+  "dependsOn": [
+    "tree-view",
+    "ai-agent-avatar",
+    "status-badge"
+  ],
+  "icons": {
+    "status.done": "SuccessGlyph",
+    "status.waiting": "ClockGlyph",
+    "status.needs-input": "HelpGlyph",
+    "status.failed": "ErrorGlyph",
+    "status.stopped": "DashGlyph",
+    "expand": "ChevronDownGlyph"
+  }
+}

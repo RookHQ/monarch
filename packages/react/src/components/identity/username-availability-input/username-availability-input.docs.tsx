@@ -8,9 +8,20 @@ import {
   type AsyncValidator,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './username-availability-input.fixture.json';
+
+const data = fixture.data as unknown as {
+  label: string;
+  required: boolean;
+  prefix: string;
+  placeholder: string;
+  description: string;
+  taken: string[];
+};
 
 // Demo only: a product calls its own API here.
-const TAKEN = new Set(['admin', 'help', 'support', 'team']);
+const TAKEN = new Set(data.taken);
 const demoCheck: AsyncValidator = (value, signal) => {
   if (value.length < 3) return { valid: false, message: 'Use at least 3 characters.' };
   if (!/^[a-z0-9-]+$/.test(value))
@@ -39,16 +50,16 @@ function AddressDemo() {
   const [status, setStatus] = useState<AsyncValidationStatus>('idle');
   return (
     <div style={{ width: '100%', maxWidth: 300 }}>
-      <Field required>
-        <FieldLabel>Workspace address</FieldLabel>
+      <Field required={data.required}>
+        <FieldLabel>{data.label}</FieldLabel>
         <UsernameAvailabilityInput
-          prefix="example.com/"
-          placeholder="your-team"
+          prefix={data.prefix}
+          placeholder={data.placeholder}
           validate={demoCheck}
           transform={slugify}
           onStatusChange={(s) => setStatus(s)}
         />
-        <FieldDescription>Try “team” to see a taken address.</FieldDescription>
+        <FieldDescription>{data.description}</FieldDescription>
       </Field>
       <p style={{ margin: '8px 0 0', fontSize: 13 }}>
         Submit enabled: {status === 'valid' ? 'yes' : 'no'}

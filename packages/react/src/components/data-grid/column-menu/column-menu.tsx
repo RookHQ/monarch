@@ -59,6 +59,10 @@ export interface ColumnMenuProps {
   size?: 'xs' | 'sm' | 'md';
   /** Menu alignment against the trigger. Default `end`. */
   align?: 'start' | 'center' | 'end';
+  /** Whether the menu is open (controlled). */
+  open?: boolean | undefined;
+  /** Called when the menu opens or closes. */
+  onOpenChange?: ((open: boolean) => void) | undefined;
   messages?: Partial<ColumnMenuMessages>;
   className?: string;
 }
@@ -80,6 +84,8 @@ export const ColumnMenu = forwardRef<HTMLButtonElement, ColumnMenuProps>(functio
     minVisible = 1,
     size = 'sm',
     align = 'end',
+    open,
+    onOpenChange,
     messages,
     className,
   },
@@ -93,7 +99,10 @@ export const ColumnMenu = forwardRef<HTMLButtonElement, ColumnMenuProps>(functio
   const allShown = shown === columns.length;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu
+      {...(open !== undefined ? { open } : {})}
+      {...(onOpenChange ? { onOpenChange } : {})}
+    >
       <DropdownMenuTrigger asChild>
         <Button
           ref={ref}

@@ -1,14 +1,15 @@
+import type { ComponentProps } from 'react';
 import { Avatar } from '@rookcom/monarch-react';
 import { PresenceDot } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './presence-dot.fixture.json';
 
-const people = [
-  { name: 'Ada Lovelace', status: 'online' as const },
-  { name: 'Grace Hopper', status: 'away' as const, custom: { emoji: '🍽️', text: 'Lunch' } },
-  { name: 'Alan Turing', status: 'busy' as const },
-  { name: 'Katherine Johnson', status: 'dnd' as const, custom: { text: 'Focusing' } },
-  { name: 'Edsger Dijkstra', status: 'offline' as const },
-];
+const people = fixture.data.people as unknown as readonly {
+  name: string;
+  status: NonNullable<ComponentProps<typeof PresenceDot>['status']>;
+  custom?: { emoji?: string; text?: string };
+}[];
 
 export default {
   id: 'presence-dot',

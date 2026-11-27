@@ -1,8 +1,66 @@
 import { useState, type ComponentProps } from 'react';
 import { BlockEditor, PageOutline } from '@rookcom/monarch-react/editor';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './block-editor.fixture.json';
 
-const DOC = `<h1>Project brief</h1><p>Type <code>/</code> on an empty line to add a block, or drag the handle beside a block to move it.</p><h2>Goals</h2><ul data-type="taskList"><li data-type="taskItem" data-checked="true"><p>Agree on scope</p></li><li data-type="taskItem" data-checked="false"><p>Share the timeline</p></li></ul><div data-type="callout" data-tone="info"><p>Decisions are recorded at the end of this page.</p></div><h2>Options</h2><div data-type="columns" data-ratio="0.5"><div data-type="column"><p><strong>Option A</strong>: phased rollout.</p></div><div data-type="column"><p><strong>Option B</strong>: single release.</p></div></div><h2>Timeline</h2><table><tbody><tr><th><p>Phase</p></th><th><p>Dates</p></th></tr><tr><td><p>Design</p></td><td><p>Weeks 1–2</p></td></tr></tbody></table><div data-type="toggle-block" data-open="false"><div data-type="toggle-summary">Background</div><div data-type="toggle-content"><p>Notes from the earlier review.</p></div></div>`;
+type FixtureBlock = (typeof fixture.data.blocks)[number];
+
+/** The marks of a text: `code` and `bold` name the part of `text` to mark up. */
+function inline(text: string, marks: { code?: string; bold?: string }): string {
+  let out = text;
+  if (marks.code) out = out.replace(marks.code, `<code>${marks.code}</code>`);
+  if (marks.bold) out = out.replace(marks.bold, `<strong>${marks.bold}</strong>`);
+  return out;
+}
+
+/** The document of the fixture as the editor's HTML. Consecutive tasks share one list. */
+function toHtml(blocks: FixtureBlock[]): string {
+  const parts: string[] = [];
+  let tasks: string[] = [];
+  const flush = () => {
+    if (tasks.length) parts.push(`<ul data-type="taskList">${tasks.join('')}</ul>`);
+    tasks = [];
+  };
+  for (const block of blocks) {
+    if (block.type === 'task') {
+      tasks.push(
+        `<li data-type="taskItem" data-checked="${String(block.checked)}"><p>${block.text}</p></li>`,
+      );
+      continue;
+    }
+    flush();
+    if (block.type === 'heading') parts.push(`<h${block.level}>${block.text}</h${block.level}>`);
+    else if (block.type === 'paragraph')
+      parts.push(`<p>${inline(block.text ?? '', { code: block.code as string })}</p>`);
+    else if (block.type === 'callout')
+      parts.push(`<div data-type="callout" data-tone="${block.tone}"><p>${block.text}</p></div>`);
+    else if (block.type === 'columns')
+      parts.push(
+        `<div data-type="columns" data-ratio="0.5">${(block.columns ?? [])
+          .map(
+            (column) =>
+              `<div data-type="column"><p>${inline(column.text, { bold: column.bold })}</p></div>`,
+          )
+          .join('')}</div>`,
+      );
+    else if (block.type === 'table') {
+      const [head = [], ...body] = block.rows ?? [];
+      const row = (cells: string[], tag: string) =>
+        `<tr>${cells.map((cell) => `<${tag}><p>${cell}</p></${tag}>`).join('')}</tr>`;
+      parts.push(
+        `<table><tbody>${row(head, 'th')}${body.map((cells) => row(cells, 'td')).join('')}</tbody></table>`,
+      );
+    } else if (block.type === 'toggle')
+      parts.push(
+        `<div data-type="toggle-block" data-open="${String(block.open)}"><div data-type="toggle-summary">${block.text}</div><div data-type="toggle-content"><p>${block.body}</p></div></div>`,
+      );
+  }
+  flush();
+  return parts.join('');
+}
+
+const DOC = toHtml(fixture.data.blocks);
 
 function WithOutline() {
   const [editor, setEditor] = useState<ComponentProps<typeof PageOutline>['editor']>(null);
@@ -15,8 +73,8 @@ function WithOutline() {
         width: '100%',
       }}
     >
-      <BlockEditor aria-label="Project brief" defaultValue={DOC} onEditorReady={setEditor} />
-      <PageOutline editor={editor} showStats messages={{ title: 'Document outline' }} />
+      <BlockEditor aria-label={fixture.data.label} defaultValue={DOC} onEditorReady={setEditor} />
+      <PageOutline editor={editor} showStats messages={{ title: fixture.data.outline.title }} />
     </div>
   );
 }

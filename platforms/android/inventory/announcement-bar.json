@@ -1,0 +1,83 @@
+{
+  "id": "announcement-bar",
+  "name": null,
+  "title": "AnnouncementBar",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.material3.Scaffold topBar slot holding androidx.compose.material3.TopAppBar and MonarchCalloutBanner in a androidx.compose.foundation.layout.Column",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: one timely announcement across the top of a screen (a launch, a maintenance window, a policy change), with a link and a dismiss button, built from MonarchCalloutBanner in the page placement under the top app bar.",
+  "whenToUse": "For a short message that concerns everyone using the app for a while: a new feature, planned maintenance, a change of terms.",
+  "whenNotToUse": "For a message about one record or one form, use MonarchCalloutBanner in the section placement or MonarchInlineNotice. For the result of something the person just did, use a snackbar. For a session state such as impersonation, use MonarchImpersonationBanner.",
+  "api": [
+    "@Composable fun Scaffold(modifier: Modifier = Modifier, topBar: @Composable () -> Unit = {}, bottomBar: @Composable () -> Unit = {}, snackbarHost: @Composable () -> Unit = {}, …, content: @Composable (PaddingValues) -> Unit)",
+    "@Composable fun MonarchCalloutBanner(message: String, modifier: Modifier = Modifier, tone: MonarchTone = MonarchTone.Info, variant: MonarchCalloutBannerVariant = MonarchCalloutBannerVariant.Callout, placement: MonarchCalloutBannerPlacement = MonarchCalloutBannerPlacement.Section, title: String? = null, icon: (@Composable () -> Unit)? = null, action: (@Composable () -> Unit)? = null, onDismiss: (() -> Unit)? = null, …)",
+    "@Composable fun MonarchLink(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, variant: MonarchLinkVariant = MonarchLinkVariant.Inline, enabled: Boolean = true, external: Boolean = false, …)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "shown",
+      "description": "The banner sits under the top app bar, above the scrolling content, with the link and the dismiss button."
+    },
+    {
+      "name": "dismissed",
+      "description": "The banner is removed and the content moves up; store the dismissal so it stays dismissed."
+    },
+    {
+      "name": "not dismissible",
+      "description": "Without onDismiss there is no dismiss button, for a maintenance window that must stay visible."
+    }
+  ],
+  "appearance": "MonarchCalloutBanner in the page placement: a full-width band without rounded corners in the tone's subtle colors, with the message in the default text color and the link in the link color. Use the info tone for news, warning for maintenance. The same roles in light, dark and both high-contrast themes.",
+  "platformNotes": "The web AnnouncementBar is its own component with accent and inverse tones and a sticky option. On Android it is a recipe: the topBar slot of Scaffold keeps it above the scrolling content, which is what sticky does on the web. MonarchTone has no accent or inverse tone, so the recipe uses info, warning or neutral. The web leaves storing the dismissal to the product; on Android keep it in the app's settings (for example DataStore) keyed by the announcement, and use rememberSaveable only for the screen's lifetime. iOS uses the same recipe with safeAreaInset.",
+  "accessibility": [
+    "MonarchCalloutBanner reads the tone and the message as one TalkBack element, so the announcement is not conveyed by color alone.",
+    "The link and the dismiss button are separate elements with 48dp touch targets; the dismiss button is named \"Dismiss\".",
+    "The banner is not a live region by default: it is present when the screen opens. Pass announcement = MonarchBannerAnnouncement.Polite when it appears while the person is on the screen."
+  ],
+  "edgeCases": [
+    "Long messages wrap; keep them to one sentence so the banner does not take half a phone screen.",
+    "Show one announcement at a time; queue the others.",
+    "If the link opens a web page, use LocalUriHandler.current.openUri in its onClick."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Release announcement",
+      "fixture": "announcement-bar",
+      "webExample": "Release announcement",
+      "template": "if (!dismissed) {\n    MonarchCalloutBanner(\n        message = {{message}},\n        tone = MonarchTone.Accent,\n        icon = null,\n        placement = MonarchCalloutBannerPlacement.Page,\n        action = {\n            MonarchLink(\n                text = {{action.label}},\n                onClick = { /* Open the notes. */ },\n                trailingIcon = { MonarchIcon(imageVector = SampleIcons.ArrowForward, contentDescription = null) },\n            )\n        },\n        onDismiss = { dismissed = true },\n    )\n}",
+      "setupTemplate": "var dismissed by rememberSaveable { mutableStateOf(false) }",
+      "setup": "var dismissed by rememberSaveable { mutableStateOf(false) }",
+      "code": "if (!dismissed) {\n    MonarchCalloutBanner(\n        message = \"Version 2 is available.\",\n        tone = MonarchTone.Accent,\n        icon = null,\n        placement = MonarchCalloutBannerPlacement.Page,\n        action = {\n            MonarchLink(\n                text = \"Read the release notes\",\n                onClick = { /* Open the notes. */ },\n                trailingIcon = { MonarchIcon(imageVector = SampleIcons.ArrowForward, contentDescription = null) },\n            )\n        },\n        onDismiss = { dismissed = true },\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ]
+    }
+  ],
+  "webEquivalent": "AnnouncementBar",
+  "dependsOn": [
+    "callout-banner",
+    "link",
+    "text"
+  ],
+  "icons": {
+    "dismiss": "CloseGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "layout",
+      "platform": "android",
+      "reason": "The web strip is 614px wide: the message, the link with its arrow and the close button fit on one centred line (about 400px). The phone window is 344dp wide, which leaves about 250dp after the close button's 48dp target and the padding, so the link goes under the message on its own centred line. The strip is the same: red tint, no icon, the message, the link with the arrow, then the close button.",
+      "convention": "a banner wraps its action under the message on a compact window (Material banner)"
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "id": "today-panel",
+  "name": null,
+  "title": "TodayPanel",
+  "family": "data-display",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "List with a Section for the schedule (MonarchEventChip rows) and a Section for the tasks (Toggle with .toggleStyle(.monarchCheckbox) and MonarchBadge), MonarchEmptyState when the day is clear",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: today's events and the tasks due today as two sections of one list, with checkboxes on the tasks and an Overdue badge.",
+  "whenToUse": "As the content of a Today or Home screen, or a tab, that shows what is scheduled and what is due today.",
+  "whenNotToUse": "For several days of events use MonarchAgendaList. For a dashboard card about one metric use MonarchStatCard.",
+  "api": [
+    "List { Section { MonarchEventChip(_:time:detail:variant: .bar, action:) } header: { Text(\"Schedule\") }; Section { Toggle(_:isOn:).toggleStyle(.monarchCheckbox); MonarchBadge(\"Overdue\", tone: .danger, systemImage:) } header: { Text(\"Due today\") } }",
+    "MonarchEmptyState(_:systemImage:kind: .success, size: .sm) for a day with nothing on it"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "day",
+      "description": "A Schedule section of event chips and a Due today section of checkbox rows."
+    },
+    {
+      "name": "overdue",
+      "description": "A task due before today shows a danger Overdue badge with a clock icon until it is ticked."
+    },
+    {
+      "name": "done",
+      "description": "The app sets the task's done flag from the checkbox; the badge goes away."
+    },
+    {
+      "name": "one side empty",
+      "description": "Leave a section out, or show a muted \"Nothing scheduled\" or \"Nothing due today\" row in it."
+    },
+    {
+      "name": "nothing today",
+      "description": "A small MonarchEmptyState in place of the list."
+    },
+    {
+      "name": "loading and error",
+      "description": "Use .redacted(reason: .placeholder) on the list while loading and MonarchErrorState with a retry on failure."
+    }
+  ],
+  "appearance": "The system list in the theme: section headers, MonarchEventChip bars with the event colour, Monarch checkboxes and a subtle danger badge. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web TodayPanel is one component that places the agenda beside the tasks on wide screens and stacks them on phones. On iOS the phone layout is the only one, so it is a recipe: one List with a Schedule section and a Due today section, the pattern of the system's own Today and Reminders screens, which keeps system scrolling, pinned headers and swipe actions. MonarchAgendaList is not nested because it is itself a List; its MonarchEventChip rows are used directly. The web's maxTasks with a more link is the app's own NavigationLink row, its today and timeZone props are the app's Calendar, and its markDone label is the task title read by the checkbox. Android composes the same recipe.",
+  "accessibility": [
+    "Section headers are read as headers by the system list.",
+    "Each event is a MonarchEventChip button read as its title, time and detail, with a 44-point target.",
+    "Each task is a checkbox (MonarchCheckboxToggleStyle) read as its title with its checked state.",
+    "Overdue is a word in a badge with an icon, not only a colour."
+  ],
+  "edgeCases": [
+    "List the overdue tasks first, as the web does.",
+    "Format times with the app's calendar and locale, for example date.formatted(date: .omitted, time: .shortened).",
+    "A List inside a ScrollView needs a height; as the content of a screen it fills the screen."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Agenda and tasks with checkboxes",
+      "fixture": "today-panel",
+      "webExample": "Agenda and tasks with checkboxes",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    HStack(alignment: .firstTextBaseline, spacing: theme.spacing.space2) {\n        Text({{title}}).monarchTextStyle(.bodyStrong)\n        Text({{dateLabel}}).monarchTextStyle(.body).foregroundStyle(theme.colors.textMuted)\n    }\n    .accessibilityElement(children: .combine)\n    .accessibilityAddTraits(.isHeader)\n    Text({{schedule}}).monarchTextStyle(.caption).textCase(.uppercase).foregroundStyle(theme.colors.textMuted)\n    MonarchAgendaList(\n        [\n            MonarchAgendaEvent({{events.0.title}}, id: {{events.0.id}}, start: {{events.0.start|date}}, end: {{events.0.end|date}}, detail: {{events.0.detail}}, color: theme.colors.accentStrong),\n            MonarchAgendaEvent({{events.1.title}}, id: {{events.1.id}}, start: {{events.1.start|date}}, end: {{events.1.end|date}}, color: theme.colors.accentStrong),\n        ],\n        from: {{today|date}},\n        days: 1,\n        today: {{today|date}},\n        calendar: {\n            var calendar = Calendar(identifier: .gregorian)\n            calendar.timeZone = TimeZone(identifier: {{timeZone}}) ?? .gmt\n            return calendar\n        }()\n    )\n    .environment(\\.locale, Locale(identifier: {{locale}}))\n    .frame(height: 230)\n    Text({{dueToday}}).monarchTextStyle(.caption).textCase(.uppercase).foregroundStyle(theme.colors.textMuted)\n    HStack {\n        Toggle({{tasks.0.title}}, isOn: isDone({{tasks.0.id}}))\n            .toggleStyle(.monarchCheckbox)\n        Spacer(minLength: 0)\n        if {{tasks.0.overdue}} {\n            MonarchBadge({{overdueLabel}}, tone: .danger)\n        }\n        Text({{tasks.0.due}}).monarchTextStyle(.caption).foregroundStyle(theme.colors.dangerStrong)\n    }\n    VStack(alignment: .leading) {\n        Toggle({{tasks.1.title}}, isOn: isDone({{tasks.1.id}}))\n            .toggleStyle(.monarchCheckbox)\n        Text({{tasks.1.detail}}).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n            .padding(.leading, theme.spacing.space8)\n    }\n    HStack {\n        Toggle({{tasks.2.title}}, isOn: isDone({{tasks.2.id}}))\n            .toggleStyle(.monarchCheckbox)\n        Spacer(minLength: 0)\n        MonarchBadge({{tasks.2.badge.text}}, tone: {{tasks.2.badge.tone|tone}})\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var done: Set<String> = []\n\nprivate func isDone(_ id: String) -> Binding<Bool> {\n    Binding(\n        get: { done.contains(id) },\n        set: { on in\n            if on { done.insert(id) } else { done.remove(id) }\n        }\n    )\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var done: Set<String> = []\n\nprivate func isDone(_ id: String) -> Binding<Bool> {\n    Binding(\n        get: { done.contains(id) },\n        set: { on in\n            if on { done.insert(id) } else { done.remove(id) }\n        }\n    )\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    HStack(alignment: .firstTextBaseline, spacing: theme.spacing.space2) {\n        Text(\"Today\").monarchTextStyle(.bodyStrong)\n        Text(\"Saturday 7 November\").monarchTextStyle(.body).foregroundStyle(theme.colors.textMuted)\n    }\n    .accessibilityElement(children: .combine)\n    .accessibilityAddTraits(.isHeader)\n    Text(\"Schedule\").monarchTextStyle(.caption).textCase(.uppercase).foregroundStyle(theme.colors.textMuted)\n    MonarchAgendaList(\n        [\n            MonarchAgendaEvent(\"Weekly review\", id: \"e1\", start: Date(timeIntervalSince1970: 1_794_043_800), end: Date(timeIntervalSince1970: 1_794_045_600), detail: \"Room 2\", color: theme.colors.accentStrong),\n            MonarchAgendaEvent(\"Interview: product designer\", id: \"e2\", start: Date(timeIntervalSince1970: 1_794_056_400), end: Date(timeIntervalSince1970: 1_794_060_000), color: theme.colors.accentStrong),\n        ],\n        from: Date(timeIntervalSince1970: 1_794_009_600),\n        days: 1,\n        today: Date(timeIntervalSince1970: 1_794_009_600),\n        calendar: {\n            var calendar = Calendar(identifier: .gregorian)\n            calendar.timeZone = TimeZone(identifier: \"UTC\") ?? .gmt\n            return calendar\n        }()\n    )\n    .environment(\\.locale, Locale(identifier: \"en-GB\"))\n    .frame(height: 230)\n    Text(\"Due today\").monarchTextStyle(.caption).textCase(.uppercase).foregroundStyle(theme.colors.textMuted)\n    HStack {\n        Toggle(\"Approve 3 time-off requests\", isOn: isDone(\"t2\"))\n            .toggleStyle(.monarchCheckbox)\n        Spacer(minLength: 0)\n        if true {\n            MonarchBadge(\"Overdue\", tone: .danger)\n        }\n        Text(\"2 days late\").monarchTextStyle(.caption).foregroundStyle(theme.colors.dangerStrong)\n    }\n    VStack(alignment: .leading) {\n        Toggle(\"Send the quarterly proposal\", isOn: isDone(\"t1\"))\n            .toggleStyle(.monarchCheckbox)\n        Text(\"Northwind account\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n            .padding(.leading, theme.spacing.space8)\n    }\n    HStack {\n        Toggle(\"Review the release notes\", isOn: isDone(\"t3\"))\n            .toggleStyle(.monarchCheckbox)\n        Spacer(minLength: 0)\n        MonarchBadge(\"High\", tone: .info)\n    }\n}"
+    }
+  ],
+  "webEquivalent": "TodayPanel",
+  "dependsOn": [
+    "agenda-list",
+    "event-chip",
+    "checkbox",
+    "badge",
+    "empty-state"
+  ]
+}

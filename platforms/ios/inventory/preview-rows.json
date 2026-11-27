@@ -1,0 +1,153 @@
+{
+  "id": "preview-rows",
+  "name": "MonarchPreviewRows",
+  "title": "PreviewRows",
+  "family": "data-grid",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "LazyVStack of row cards with MonarchStatusBadge for the result, MonarchTabs for the filter tabs with counts, MonarchEmptyState and MonarchLoadMore",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The rows of an import file as the import will treat them: each row's number, result (ready, warning, error or duplicate), chosen values and problems, with filter tabs that count each result.",
+  "whenToUse": "In an import flow, after the columns are mapped and before the import runs, so people can see which rows will be imported, which have warnings and which will be skipped.",
+  "whenNotToUse": "Not for browsing data that is already stored (use a List or Table) and not for comparing two records (use MonarchDuplicatePanel or MonarchMergeDialog).",
+  "api": [
+    "init(_ caption: String, rows: [MonarchPreviewRow], columns: [MonarchPreviewRowsColumn], filter: Binding<MonarchPreviewRowsFilter>? = nil, isFilterable: Bool = true, pageSize: Int = 50, labels: MonarchPreviewRowsLabels = MonarchPreviewRowsLabels())",
+    "MonarchPreviewRow.init(row: Int, values: [String: String], status: MonarchPreviewRowStatus? = nil, errors: [MonarchPreviewRowIssue] = [], warnings: [MonarchPreviewRowIssue] = [], note: String? = nil)",
+    "var MonarchPreviewRow.resolvedStatus: MonarchPreviewRowStatus { get }",
+    "MonarchPreviewRowIssue.init(_ message: String, field: String? = nil)",
+    "MonarchPreviewRowsColumn.init(_ label: String, id: String, isNumeric: Bool = false)",
+    "enum MonarchPreviewRowStatus { case ready, warning, error, duplicate }",
+    "enum MonarchPreviewRowsFilter { case all; case status(MonarchPreviewRowStatus) }",
+    "struct MonarchPreviewRowsLabels { init(filter: String? = nil, all: String? = nil, ready: String? = nil, warning: String? = nil, error: String? = nil, duplicate: String? = nil, row: (@Sendable (Int) -> String)? = nil, emptyValue: String? = nil, emptyTitle: String? = nil, emptyDescription: String? = nil, filteredTitle: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "caption",
+      "type": "String",
+      "default": "required",
+      "description": "The spoken name of the rows, for example \"Preview of contacts.csv\"."
+    },
+    {
+      "name": "rows",
+      "type": "[MonarchPreviewRow]",
+      "default": "required",
+      "description": "The rows of the file in file order: number, values by column id, optional status override, errors, warnings and a note."
+    },
+    {
+      "name": "columns",
+      "type": "[MonarchPreviewRowsColumn]",
+      "default": "required",
+      "description": "The data columns shown in each row, in order. isNumeric draws tabular digits."
+    },
+    {
+      "name": "filter",
+      "type": "Binding<MonarchPreviewRowsFilter>?",
+      "default": "nil",
+      "description": "The chosen filter when the app owns it; nil keeps it inside the view, starting at all."
+    },
+    {
+      "name": "isFilterable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether filter tabs with counts are shown when some rows are not ready."
+    },
+    {
+      "name": "pageSize",
+      "type": "Int",
+      "default": "50",
+      "description": "Rows shown before the load more control; each load shows one more page. 0 shows every row."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchPreviewRowsLabels",
+      "default": "MonarchPreviewRowsLabels()",
+      "description": "Replacements for every built-in string: tab names, status names, the row title, the spoken empty value and the empty states."
+    }
+  ],
+  "states": [
+    {
+      "name": "mixed results",
+      "description": "Filter tabs appear: All, then Error, Warning, Duplicate and Ready, each with its count, only for results that have rows."
+    },
+    {
+      "name": "all ready",
+      "description": "No filter tabs; the rows are shown with a Ready badge."
+    },
+    {
+      "name": "filtered",
+      "description": "Only rows with the chosen result. Changing the filter goes back to the first page."
+    },
+    {
+      "name": "filter matches nothing",
+      "description": "MonarchEmptyState of the filtered kind with a clear filters button that goes back to All."
+    },
+    {
+      "name": "empty file",
+      "description": "MonarchEmptyState \"No rows to preview\" with the message that the file has no data rows."
+    },
+    {
+      "name": "paged",
+      "description": "After pageSize rows, MonarchLoadMore shows how many of the filtered rows are shown and loads the next page."
+    }
+  ],
+  "appearance": "Each row is a card on the surface fill with a subtle border. The result badge uses the success, warning, danger or info tone with its own symbol. Value labels and the dash for an empty value use the muted text colour; error issues use the strong danger colour and warnings the strong warning colour, each with an icon.",
+  "platformNotes": "The web shows a table with Row, Result, the data columns and Issues on wide screens and cards on narrow ones, with a page navigator. On iOS each row is a card at every width, the native form of a row on a phone; the plan named List rows, but a List cannot sit inside the scroll view of an import screen, so the rows are a lazy stack the app puts in its ScrollView. Paging is a load more control instead of page numbers. Cell values and the note are plain strings, where the web accepts any content. Android uses the same name and options.",
+  "accessibility": [
+    "The rows are a container named by caption.",
+    "Each row is one element: the label is its title (\"Row 4\") and the value reads the result, every column with its value, each issue after its kind (\"Error: Email: Not a valid address\") and the note.",
+    "A missing value is drawn as a dash and read as \"Empty\".",
+    "The result is shown by a badge with a symbol and a name, and each issue by an icon of its kind, as well as by colour.",
+    "The filter tabs are MonarchTabs: a tab bar named \"Show rows\" whose tabs read their name and count.",
+    "Text scales with Dynamic Type; values and issues wrap."
+  ],
+  "edgeCases": [
+    "A status given on the row wins over its errors and warnings, so a duplicate with warnings is counted as a duplicate.",
+    "A row with errors and warnings is an error row; both lists are shown.",
+    "A chosen filter whose result has no rows keeps its tab, with a count of 0.",
+    "Several rows with the same row number are not supported: the row number is the identity."
+  ],
+  "tests": [
+    "MonarchPreviewRowsTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Preview with problems",
+      "fixture": "preview-rows",
+      "webExample": "Preview with problems",
+      "template": "ScrollView {\n    MonarchPreviewRows(\n        {{caption}},\n        rows: [\n            MonarchPreviewRow(\n                row: {{rows.0.row}},\n                values: [{{columns.0.id}}: {{rows.0.values.name}}, {{columns.1.id}}: {{rows.0.values.email}}, {{columns.2.id}}: {{rows.0.values.country}}]\n            ),\n            MonarchPreviewRow(\n                row: {{rows.1.row}},\n                values: [{{columns.0.id}}: {{rows.1.values.name}}, {{columns.1.id}}: {{rows.1.values.email}}, {{columns.2.id}}: {{rows.1.values.country}}],\n                errors: [MonarchPreviewRowIssue({{rows.1.errors.0.message}}, field: {{rows.1.errors.0.field}}), MonarchPreviewRowIssue({{rows.1.errors.1.message}}, field: {{rows.1.errors.1.field}})]\n            ),\n            MonarchPreviewRow(\n                row: {{rows.2.row}},\n                values: [{{columns.0.id}}: {{rows.2.values.name}}, {{columns.1.id}}: {{rows.2.values.email}}, {{columns.2.id}}: {{rows.2.values.country}}],\n                warnings: [MonarchPreviewRowIssue({{rows.2.warnings.0.message}}, field: {{rows.2.warnings.0.field}})]\n            ),\n            MonarchPreviewRow(\n                row: {{rows.3.row}},\n                values: [{{columns.0.id}}: {{rows.3.values.name}}, {{columns.1.id}}: {{rows.3.values.email}}, {{columns.2.id}}: {{rows.3.values.country}}],\n                status: {{rows.3.status|case}},\n                note: {{rows.3.note}}\n            ),\n            MonarchPreviewRow(\n                row: {{rows.4.row}},\n                values: [{{columns.0.id}}: {{rows.4.values.name}}, {{columns.1.id}}: {{rows.4.values.email}}, {{columns.2.id}}: {{rows.4.values.country}}]\n            ),\n        ],\n        columns: [\n            MonarchPreviewRowsColumn({{columns.0.label}}, id: {{columns.0.id}}),\n            MonarchPreviewRowsColumn({{columns.1.label}}, id: {{columns.1.id}}),\n            MonarchPreviewRowsColumn({{columns.2.label}}, id: {{columns.2.id}}),\n        ]\n    )\n    .padding()\n}",
+      "code": "ScrollView {\n    MonarchPreviewRows(\n        \"Preview of contacts.csv\",\n        rows: [\n            MonarchPreviewRow(\n                row: 1,\n                values: [\"name\": \"Ana Ruiz\", \"email\": \"ana@example.com\", \"country\": \"Spain\"]\n            ),\n            MonarchPreviewRow(\n                row: 2,\n                values: [\"name\": \"\", \"email\": \"not-an-email\", \"country\": \"France\"],\n                errors: [MonarchPreviewRowIssue(\"Not an email address\", field: \"Email\"), MonarchPreviewRowIssue(\"Required\", field: \"Name\")]\n            ),\n            MonarchPreviewRow(\n                row: 3,\n                values: [\"name\": \"Sam Lee\", \"email\": \"sam@example.com\", \"country\": \"Atlantis\"],\n                warnings: [MonarchPreviewRowIssue(\"Not recognised; left empty\", field: \"Country\")]\n            ),\n            MonarchPreviewRow(\n                row: 4,\n                values: [\"name\": \"Kim Park\", \"email\": \"kim@example.com\", \"country\": \"Korea\"],\n                status: .duplicate,\n                note: \"Matches an existing record\"\n            ),\n            MonarchPreviewRow(\n                row: 5,\n                values: [\"name\": \"Lee Chen\", \"email\": \"lee@example.com\", \"country\": \"Canada\"]\n            ),\n        ],\n        columns: [\n            MonarchPreviewRowsColumn(\"Name\", id: \"name\"),\n            MonarchPreviewRowsColumn(\"Email\", id: \"email\"),\n            MonarchPreviewRowsColumn(\"Country\", id: \"country\"),\n        ]\n    )\n    .padding()\n}"
+    },
+    {
+      "title": "A filter the app owns",
+      "setup": "@State private var filter = MonarchPreviewRowsFilter.status(.error)",
+      "code": "MonarchPreviewRows(\n    \"Preview\",\n    rows: [\n        MonarchPreviewRow(row: 1, values: [\"name\": \"Ada\"]),\n        MonarchPreviewRow(row: 2, values: [:], errors: [MonarchPreviewRowIssue(\"Name is required\", field: \"Name\")]),\n    ],\n    columns: [MonarchPreviewRowsColumn(\"Name\", id: \"name\")],\n    filter: $filter\n)"
+    }
+  ],
+  "webEquivalent": "PreviewRows",
+  "dependsOn": [
+    "badge",
+    "status-badge",
+    "tabs",
+    "empty-state",
+    "load-more"
+  ],
+  "toneMap": {
+    "TONE": {
+      "ready": "success",
+      "warning": "warning",
+      "error": "danger",
+      "duplicate": "info"
+    }
+  },
+  "icons": {
+    "status.ready": "SuccessGlyph",
+    "status.warning": "WarningGlyph",
+    "status.error": "ErrorGlyph",
+    "status.duplicate": "CopyGlyph"
+  }
+}

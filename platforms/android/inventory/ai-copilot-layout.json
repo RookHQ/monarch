@@ -1,0 +1,151 @@
+{
+  "id": "ai-copilot-layout",
+  "name": null,
+  "title": "AiCopilotLayout",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.material3.adaptive.layout.SupportingPaneScaffold from the expanded width class (androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2), with the app content in the main pane and MonarchAiAssistantPanel (Inline) in the supporting pane; below it the content alone with MonarchAiAssistantPanel as a ModalBottomSheet (Sheet), opened by MonarchAiLauncher; androidx.activity.compose.BackHandler closes the docked pane",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the app's content with an assistant docked beside it on wide windows and opened as a sheet on phones, where the assistant sees what the person selected on the page.",
+  "whenToUse": "An app screen where the assistant should act on the rows, text or records the person has selected, and the content should make room for the assistant on a wide window instead of being covered.",
+  "whenNotToUse": "A full-screen chat with history: use the ai-chat-page recipe. An assistant that never needs page context: MonarchAiAssistantPanel opened from MonarchAiLauncher is enough.",
+  "api": [
+    "val docked = currentWindowAdaptiveInfoV2().windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)",
+    "SupportingPaneScaffold(directive = calculatePaneScaffoldDirective(adaptiveInfo).copy(maxHorizontalPartitions = if (open) 2 else 1), value = calculateThreePaneScaffoldValue(directive.maxHorizontalPartitions, SupportingPaneScaffoldDefaults.adaptStrategies(), ThreePaneScaffoldDestinationItem<Nothing>(SupportingPaneScaffoldRole.Main)), mainPane = { AnimatedPane { content() } }, supportingPane = { AnimatedPane { MonarchAiAssistantPanel(…, placement = Inline) } }) while docked",
+    "content() and MonarchAiAssistantPanel(conversation, title, open, onOpenChange = { open = it }, placement = MonarchAiAssistantPanelPlacement.Sheet, context = page and selection chips, onRemoveContext = …) below the expanded width class",
+    "MonarchAiLauncher(open, onOpenChange = { open = it }, icon = …) at the bottom end of the content, hidden while the assistant is docked open",
+    "MonarchAiAssistantPanel(…, body = mapOf(\"selection\" to MonarchAiJSON.Array(…))) so the selection is sent with each prompt",
+    "BackHandler(enabled = docked && open) { open = false }"
+  ],
+  "options": [
+    {
+      "name": "conversation",
+      "type": "MonarchAiConversation",
+      "default": "required",
+      "description": "The conversation the docked assistant shows and sends to, held above the navigation so it survives moving between screens."
+    },
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The assistant's heading, such as \"Assistant\", passed to MonarchAiAssistantPanel."
+    },
+    {
+      "name": "open",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Whether the assistant is shown; app state, set by MonarchAiLauncher, the panel's close button and, when docked, the back gesture."
+    },
+    {
+      "name": "content",
+      "type": "@Composable () -> Unit",
+      "default": "required",
+      "description": "The app screen. It writes the selection; it is the main pane while docked and the whole screen otherwise."
+    },
+    {
+      "name": "selection",
+      "type": "List<String> (app state)",
+      "default": "empty",
+      "description": "What the person selected on the page. Shown as a Selection chip after the always-present chips and sent under the selection request field as label and text objects, as the web's body.selection is."
+    },
+    {
+      "name": "context",
+      "type": "List<MonarchAiContextItem>",
+      "default": "empty",
+      "description": "Chips that always show, such as the current page (removable = false); the selection chip follows them."
+    },
+    {
+      "name": "onRemoveContext",
+      "type": "(String) -> Unit",
+      "default": "none",
+      "description": "Removing the selection chip clears the selection, so nothing is sent."
+    },
+    {
+      "name": "launcher",
+      "type": "MonarchAiLauncher",
+      "default": "shown",
+      "description": "Leave it out when the app opens the assistant from its own toolbar button (a Subtle MonarchAiLauncher in the top app bar)."
+    },
+    {
+      "name": "starters / footer / toolbar",
+      "type": "MonarchAiAssistantPanel parameters",
+      "default": "none",
+      "description": "Passed straight to the panel, as the web's panelProps are."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "The content uses the full width; the launcher shows at the bottom end."
+    },
+    {
+      "name": "docked open",
+      "description": "From the expanded width class (840dp) the content reflows into the main pane and the assistant takes the supporting pane at the directive's preferred width; the launcher hides; the back gesture closes the assistant."
+    },
+    {
+      "name": "sheet open",
+      "description": "Below the expanded width class the assistant is a full-height Material 3 modal bottom sheet over the content; back, a swipe down or a tap outside closes it."
+    },
+    {
+      "name": "with selection",
+      "description": "A Selection chip with the count of selected rows shows in the assistant, and the selection goes in the request body of the next prompt; removing the chip clears it."
+    }
+  ],
+  "appearance": "Every part is an existing component: the Material 3 supporting pane scaffold, MonarchAiAssistantPanel on the surface color (or the Material 3 sheet colors), MonarchAiLauncher in its solid accent form and the app's content in the Monarch theme. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships AiCopilotLayout as one component with a React selection context (useAiSelectionContext), a side option, a 24rem rail of at most 45%, a full-screen sheet under 640px and a launcher with Cmd+J or Ctrl+J. On Android it is a recipe, because Compose hoists state: the selection is ordinary app state the screen writes, shown as a MonarchAiContextItem chip and sent by setting MonarchAiConversation.body, so no context object is needed. The docked form is the supporting pane of SupportingPaneScaffold from the expanded width class (840dp), as Material 3 places supporting content; the scaffold decides the edge and the width, so there is no side option, and medium widths (600 to 840dp) use the sheet, where the web docks from 640px. The directive is limited to one partition while the assistant is closed, so the content keeps the full width. The phone form is MonarchAiAssistantPanel's ModalBottomSheet. The keyboard shortcut is not offered: Android has no app-wide Cmd+J convention; a hardware-keyboard app can add one with onKeyEvent. The web moves focus to the input on open and back to the launcher on close; here the input is not focused on open (the panel's choice, so the keyboard does not cover the page) and the sheet returns focus itself. The web's clearSelectionOnSend and panelProps.onSend become app code: clear the selection after send, or use the panel overload that takes onSend. The catalogue page uses BoxWithConstraints and a Row because the sample app does not depend on the adaptive artifacts. iOS has not covered this entry yet.",
+  "accessibility": [
+    "MonarchAiLauncher is a button named by its label that states whether the assistant is open.",
+    "MonarchAiAssistantPanel names its pane with its title for TalkBack; its close button is named \"Close assistant\".",
+    "What the assistant will receive is visible before sending: the Selection chip names the number of selected rows, and the chip can be removed.",
+    "The selection on the page is made with MonarchCheckboxRow, whose whole row toggles and reads its checked state.",
+    "On a phone the sheet closes with the back gesture; while docked, BackHandler closes the assistant with the back gesture.",
+    "Replies, errors and the offline notice are announced by the panel's MonarchAiThread through polite live regions."
+  ],
+  "edgeCases": [
+    "The panel's thread is a lazy list: give the layout a bounded height (the screen, or a fixed height in a scrolling page) and never put it in a vertically scrolling parent. The content pane may scroll itself.",
+    "The panel's body is merged over the conversation's own request fields for each message, so the conversation's body is never overwritten.",
+    "A prompt queued while offline keeps the body it was sent with, so it goes with the selection the person saw when sending it.",
+    "Crossing the expanded width class while open moves the panel between the pane and the sheet; hoist the prompt TextFieldState to keep a draft across the change.",
+    "An empty selection sends no selection field and shows no chip."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Selection shared with the assistant",
+      "fixture": "ai-copilot-layout",
+      "webExample": "Selection shared with the assistant",
+      "template": "val content = @Composable {\n    Box(modifier = Modifier.fillMaxSize()) {\n        Column(\n            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(MonarchTheme.spacing.space4),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n        ) {\n            MonarchText(text = {{heading}}, style = MonarchTextStyle.Heading)\n            MonarchText(text = {{description}}, style = MonarchTextStyle.Caption)\n            rows.forEach { row ->\n                MonarchCheckboxRow(\n                    checked = row in selected,\n                    onCheckedChange = { on -> selected = if (on) selected + row else selected - row },\n                    label = row,\n                )\n            }\n        }\n        // The launcher hides while the assistant is docked open; on a phone it stays under the sheet.\n        if (!(docked && open)) {\n            MonarchAiLauncher(\n                open = open,\n                onOpenChange = { open = it },\n                icon = { MonarchIcon(SampleIcons.Bot, contentDescription = null) },\n                modifier = Modifier.align(Alignment.BottomEnd).padding(MonarchTheme.spacing.space4),\n                variant = MonarchAiLauncherVariant.Subtle,\n            )\n        }\n    }\n}\nval assistant = @Composable { modifier: Modifier ->\n    @OptIn(ExperimentalMonarchApi::class)\n    MonarchAiAssistantPanel(\n        conversation = conversation,\n        title = {{assistant.title}},\n        open = open,\n        onOpenChange = { open = it },\n        modifier = modifier,\n        placement = if (docked) MonarchAiAssistantPanelPlacement.Inline else MonarchAiAssistantPanelPlacement.Sheet,\n        context = context,\n        starters = listOf(\n            MonarchAiStarterPrompt(\"sum\", {{assistant.starters.0}}, {{assistant.starters.0}}),\n            MonarchAiStarterPrompt(\"risk\", {{assistant.starters.1}}, {{assistant.starters.1}}),\n        ),\n        onRemoveContext = { id -> if (id == \"selection\") selected = emptyList() },\n        body = selectionBody,\n    )\n}\nBox(modifier = Modifier.fillMaxWidth().height(MonarchTheme.spacing.space24 * 8)) {\n    if (docked) {\n        @OptIn(ExperimentalMaterial3AdaptiveApi::class)\n        val directive = calculatePaneScaffoldDirective(adaptiveInfo)\n            .copy(maxHorizontalPartitions = if (open) 2 else 1)\n        @OptIn(ExperimentalMaterial3AdaptiveApi::class)\n        SupportingPaneScaffold(\n            directive = directive,\n            value = calculateThreePaneScaffoldValue(\n                maxHorizontalPartitions = directive.maxHorizontalPartitions,\n                adaptStrategies = SupportingPaneScaffoldDefaults.adaptStrategies(),\n                currentDestination = ThreePaneScaffoldDestinationItem<Nothing>(SupportingPaneScaffoldRole.Main),\n            ),\n            mainPane = { AnimatedPane { content() } },\n            supportingPane = { AnimatedPane { assistant(Modifier.fillMaxSize()) } },\n        )\n    } else {\n        content()\n        assistant(Modifier)\n    }\n}",
+      "setupTemplate": "val transport = remember {\n    object : MonarchAiTransport {\n        override fun stream(request: MonarchAiTransportRequest): Flow<MonarchAiStreamEvent> = flowOf(\n            MonarchAiStreamEvent.TextDelta(\"You asked: \" + request.messages.lastOrNull()?.text.orEmpty()),\n            MonarchAiStreamEvent.Done(),\n        )\n    }\n}\n// Hold the conversation above the navigation so it survives moving between screens.\nval conversation = rememberMonarchAiConversation(transport)\nvar open by rememberSaveable { mutableStateOf({{assistant.open}}) }\nval rows = listOf({{rows.0}}, {{rows.1}}, {{rows.2}}, {{rows.3}})\nvar selected by remember { mutableStateOf(listOf<String>()) }\n// The page owns the selection; the recipe shows it as a chip and sends it with the next prompt.\nval context = listOfNotNull(\n    MonarchAiContextItem(\"page\", MonarchAiContextKind.Page, {{assistant.context}}, removable = false, group = \"Page\"),\n    if (selected.isEmpty()) null else MonarchAiContextItem(\"selection\", MonarchAiContextKind.Selection, \"${selected.size} rows\"),\n)\n// Sent with each message from the panel; the conversation's own body stays as it is.\nval selectionBody = if (selected.isEmpty()) {\n    emptyMap()\n} else {\n    mapOf(\n        \"selection\" to MonarchAiJSON.Array(\n            listOf(\n                MonarchAiJSON.Object(\n                    mapOf(\n                        \"label\" to MonarchAiJSON.Text(\"Selected\"),\n                        \"text\" to MonarchAiJSON.Text(selected.joinToString(\"; \")),\n                    ),\n                ),\n            ),\n        ),\n    )\n}\nval adaptiveInfo = currentWindowAdaptiveInfoV2()\n// Docked beside the content from the expanded width class; a sheet on narrower windows.\nval docked = adaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)\n// The back gesture closes a docked assistant; the sheet handles back itself.\nBackHandler(enabled = docked && open) { open = false }",
+      "imports": [
+        "androidx.activity.compose.BackHandler",
+        "androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi",
+        "androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2",
+        "androidx.compose.material3.adaptive.layout.*",
+        "androidx.window.core.layout.WindowSizeClass",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "kotlinx.coroutines.flow.Flow",
+        "kotlinx.coroutines.flow.flowOf"
+      ],
+      "setup": "val transport = remember {\n    object : MonarchAiTransport {\n        override fun stream(request: MonarchAiTransportRequest): Flow<MonarchAiStreamEvent> = flowOf(\n            MonarchAiStreamEvent.TextDelta(\"You asked: \" + request.messages.lastOrNull()?.text.orEmpty()),\n            MonarchAiStreamEvent.Done(),\n        )\n    }\n}\n// Hold the conversation above the navigation so it survives moving between screens.\nval conversation = rememberMonarchAiConversation(transport)\nvar open by rememberSaveable { mutableStateOf(true) }\nval rows = listOf(\"Northwind renewal\", \"Harbor expansion\", \"Summit pilot\", \"Atlas migration\")\nvar selected by remember { mutableStateOf(listOf<String>()) }\n// The page owns the selection; the recipe shows it as a chip and sends it with the next prompt.\nval context = listOfNotNull(\n    MonarchAiContextItem(\"page\", MonarchAiContextKind.Page, \"Opportunities\", removable = false, group = \"Page\"),\n    if (selected.isEmpty()) null else MonarchAiContextItem(\"selection\", MonarchAiContextKind.Selection, \"${selected.size} rows\"),\n)\n// Sent with each message from the panel; the conversation's own body stays as it is.\nval selectionBody = if (selected.isEmpty()) {\n    emptyMap()\n} else {\n    mapOf(\n        \"selection\" to MonarchAiJSON.Array(\n            listOf(\n                MonarchAiJSON.Object(\n                    mapOf(\n                        \"label\" to MonarchAiJSON.Text(\"Selected\"),\n                        \"text\" to MonarchAiJSON.Text(selected.joinToString(\"; \")),\n                    ),\n                ),\n            ),\n        ),\n    )\n}\nval adaptiveInfo = currentWindowAdaptiveInfoV2()\n// Docked beside the content from the expanded width class; a sheet on narrower windows.\nval docked = adaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)\n// The back gesture closes a docked assistant; the sheet handles back itself.\nBackHandler(enabled = docked && open) { open = false }",
+      "code": "val content = @Composable {\n    Box(modifier = Modifier.fillMaxSize()) {\n        Column(\n            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(MonarchTheme.spacing.space4),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n        ) {\n            MonarchText(text = \"Opportunities\", style = MonarchTextStyle.Heading)\n            MonarchText(text = \"Select rows, then ask the assistant about them.\", style = MonarchTextStyle.Caption)\n            rows.forEach { row ->\n                MonarchCheckboxRow(\n                    checked = row in selected,\n                    onCheckedChange = { on -> selected = if (on) selected + row else selected - row },\n                    label = row,\n                )\n            }\n        }\n        // The launcher hides while the assistant is docked open; on a phone it stays under the sheet.\n        if (!(docked && open)) {\n            MonarchAiLauncher(\n                open = open,\n                onOpenChange = { open = it },\n                icon = { MonarchIcon(SampleIcons.Bot, contentDescription = null) },\n                modifier = Modifier.align(Alignment.BottomEnd).padding(MonarchTheme.spacing.space4),\n                variant = MonarchAiLauncherVariant.Subtle,\n            )\n        }\n    }\n}\nval assistant = @Composable { modifier: Modifier ->\n    @OptIn(ExperimentalMonarchApi::class)\n    MonarchAiAssistantPanel(\n        conversation = conversation,\n        title = \"Assistant\",\n        open = open,\n        onOpenChange = { open = it },\n        modifier = modifier,\n        placement = if (docked) MonarchAiAssistantPanelPlacement.Inline else MonarchAiAssistantPanelPlacement.Sheet,\n        context = context,\n        starters = listOf(\n            MonarchAiStarterPrompt(\"sum\", \"Summarise the selection\", \"Summarise the selection\"),\n            MonarchAiStarterPrompt(\"risk\", \"Which one is most at risk?\", \"Which one is most at risk?\"),\n        ),\n        onRemoveContext = { id -> if (id == \"selection\") selected = emptyList() },\n        body = selectionBody,\n    )\n}\nBox(modifier = Modifier.fillMaxWidth().height(MonarchTheme.spacing.space24 * 8)) {\n    if (docked) {\n        @OptIn(ExperimentalMaterial3AdaptiveApi::class)\n        val directive = calculatePaneScaffoldDirective(adaptiveInfo)\n            .copy(maxHorizontalPartitions = if (open) 2 else 1)\n        @OptIn(ExperimentalMaterial3AdaptiveApi::class)\n        SupportingPaneScaffold(\n            directive = directive,\n            value = calculateThreePaneScaffoldValue(\n                maxHorizontalPartitions = directive.maxHorizontalPartitions,\n                adaptStrategies = SupportingPaneScaffoldDefaults.adaptStrategies(),\n                currentDestination = ThreePaneScaffoldDestinationItem<Nothing>(SupportingPaneScaffoldRole.Main),\n            ),\n            mainPane = { AnimatedPane { content() } },\n            supportingPane = { AnimatedPane { assistant(Modifier.fillMaxSize()) } },\n        )\n    } else {\n        content()\n        assistant(Modifier)\n    }\n}"
+    }
+  ],
+  "webEquivalent": "AiCopilotLayout",
+  "dependsOn": [
+    "ai-assistant-panel",
+    "ai-launcher",
+    "peek-panel"
+  ],
+  "icons": {
+    "assistant": "BotGlyph",
+    "collapse": "ChevronRightGlyph",
+    "close": "CloseGlyph"
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "id": "ai-suggested-actions",
+  "name": "MonarchAiSuggestedActions",
+  "title": "AiSuggestedActions",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of rows with MonarchButton (Run, with isLoading), MonarchBadge tags and a ghost icon Button (dismiss), alert(_:isPresented:presenting:actions:message:) for approval, sensoryFeedback(.success/.error, trigger:) and AccessibilityNotification.Announcement",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The next best actions for a record, each with Run, an optional approval step and dismiss, and where the suggestions came from.",
+  "whenToUse": "On a record screen (a customer, a ticket, a deal) to offer a few next steps an AI model or product rules suggest, which the person runs with one tap.",
+  "whenNotToUse": "For approving a tool call an agent wants to make, with its arguments, use MonarchAiToolApproval. For follow-up prompts in a chat use MonarchAiFollowUpSuggestions. For a fixed set of record actions use the toolbar or a Menu.",
+  "api": [
+    "init(_ actions: [MonarchAiSuggestedAction], title: String? = nil, origin: MonarchAiSuggestedActionsOrigin = .ai, labels: MonarchAiSuggestedActionsLabels = MonarchAiSuggestedActionsLabels(), onDismiss: (@MainActor (String) -> Void)? = nil, onRun: @escaping @MainActor (String) async throws -> Void)",
+    "public struct MonarchAiSuggestedAction: Identifiable, Sendable, Hashable { init(id: String, label: String, description: String? = nil, requiresApproval: Bool = false, risk: MonarchAiToolCallRisk = .low, consequences: [String] = [], confirmLabel: String? = nil, status: MonarchAiSuggestedActionStatus? = nil); var needsApproval: Bool { get } }",
+    "public enum MonarchAiSuggestedActionStatus: Sendable, Hashable, CaseIterable { case ready, running, done, failed }",
+    "public enum MonarchAiSuggestedActionsOrigin: Sendable, Hashable, CaseIterable { case ai, rule }",
+    "MonarchAiSuggestedActionsLabels.init(originAi:originRule:run:runAction:running:done:failed:dismiss:needsApproval:risk:approvalTitle:approvalDescription:approve:cancel:doneAnnouncement:empty:), every string String? = nil and every function (@Sendable (String) -> String)? = nil, risk (@Sendable (MonarchAiToolCallRisk) -> String?)? = nil"
+  ],
+  "options": [
+    {
+      "name": "actions",
+      "type": "[MonarchAiSuggestedAction]",
+      "default": "required",
+      "description": "The suggestions, most useful first: id, label, description, requiresApproval, risk, consequences, confirmLabel and an optional status."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "The heading; \"Suggested actions\" without it."
+    },
+    {
+      "name": "origin",
+      "type": "MonarchAiSuggestedActionsOrigin",
+      "default": ".ai",
+      "description": "Where the suggestions came from, always shown: \"Suggested by AI\" in the assistant colour or \"Rule-based\" in the muted colour."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiSuggestedActionsLabels",
+      "default": "MonarchAiSuggestedActionsLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onDismiss",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Adds a dismiss button to each action. Remove the action from actions."
+    },
+    {
+      "name": "onRun",
+      "type": "@MainActor (String) async throws -> Void",
+      "default": "required",
+      "description": "Runs an action by id, after approval when it needs it. Running… while it runs, Done when it returns, Failed when it throws."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "Run is available."
+    },
+    {
+      "name": "running",
+      "description": "Run shows a progress indicator, reads \"Running…\" and ignores taps."
+    },
+    {
+      "name": "done",
+      "description": "Run is replaced by \"Done\" with a check mark in the strong success colour, the label turns muted, \"“…” done.\" is announced and the success haptic plays."
+    },
+    {
+      "name": "failed",
+      "description": "A line in the strong danger colour says \"That didn’t work. Try again.\", it is announced, the error haptic plays and Run is available again."
+    },
+    {
+      "name": "needs approval",
+      "description": "A \"Needs approval\" tag with a lock; Run opens a system alert titled \"Run “…”?\" with the description (or the built-in text) and the consequences, a confirm button and Cancel."
+    },
+    {
+      "name": "risk",
+      "description": "Medium and high show a warning tag, destructive a danger tag and a confirm button with the destructive role; low shows no tag."
+    },
+    {
+      "name": "empty",
+      "description": "\"No suggestions right now.\" under the heading."
+    }
+  ],
+  "appearance": "Rows separated by subtle dividers. Labels use the default text colour in the strong body style (muted once done), descriptions the muted caption style; tags are MonarchBadge in the neutral, warning and danger tones; the origin uses the strong assistant colour for AI and the muted text colour for rules; Run is the small secondary Monarch button. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web lays each action out as a row with Run and dismiss at the end; on a phone the buttons go under the text so long labels wrap at the largest text sizes, as on Android. The web's approval is its ConfirmDialog; iOS uses the system alert, which closes when a button is pressed, so a failed run shows its failure line on the row instead of inside the dialog (the web and Android keep the dialog open). The parity map names MonarchAiToolApproval as a dependency, but that component reviews an agent's tool call and its arguments, which a suggested action does not have, so it is not used. The parity map names a list of action rows; the rows are a VStack, not a List, because the list is short and sits on a scrolling record screen, where a List cannot be nested. The risk vocabulary is MonarchAiToolCallRisk, shared with the conversation model. onRun is async throws instead of a returned promise; description and consequences are strings. The origin and dismiss icons are fixed SF Symbols with spoken names, instead of Android's icon slots. The web moves focus to the Done text; on iOS VoiceOver hears the announcement and focus is not moved. The heading level is not offered: VoiceOver has the header trait only. Success and error haptics are added, as iOS apps do for a completed action. Experimental: a product composite that waits for a Rook app to adopt it.",
+  "accessibility": [
+    "The title has the header trait; the origin is a label with text, not only a colour.",
+    "Each action's label, description and tags are read as one element.",
+    "Run is named \"Run “…”\" with the action's label; while running it shows a progress indicator and reads \"Running…\" (MonarchButton's loading state).",
+    "Dismiss is an icon button named \"Dismiss “…”\".",
+    "\"“…” done.\" is announced after a run; the failure text is announced after a failed run.",
+    "Done and failed are text with a symbol, not only a colour.",
+    "Every button is at least 44 points; the approval is the system alert, which VoiceOver focuses."
+  ],
+  "edgeCases": [
+    "A controlled status on an action wins over the status the list tracks.",
+    "Pressing Run while the action runs or after it is done does nothing.",
+    "An empty description falls back to the built-in approval text in the dialog.",
+    "Long labels and descriptions wrap; the buttons stay under them.",
+    "An empty list shows the empty text under the heading; the origin is still shown."
+  ],
+  "tests": [
+    "MonarchAiSuggestedActionsTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Run, approve and dismiss",
+      "fixture": "ai-suggested-actions",
+      "webExample": "Run, approve and dismiss",
+      "template": "MonarchAiSuggestedActions(\n    [\n        MonarchAiSuggestedAction(\n            id: {{actions.0.id}},\n            label: {{actions.0.label}},\n            description: {{actions.0.description}}\n        ),\n        MonarchAiSuggestedAction(\n            id: {{actions.1.id}},\n            label: {{actions.1.label}},\n            risk: {{actions.1.risk|case}}\n        ),\n        MonarchAiSuggestedAction(\n            id: {{actions.2.id}},\n            label: {{actions.2.label}},\n            description: {{actions.2.description}},\n            requiresApproval: {{actions.2.requiresApproval}},\n            consequences: [{{actions.2.consequences.0}}, {{actions.2.consequences.1}}],\n            confirmLabel: {{actions.2.confirmLabel}}\n        ),\n        MonarchAiSuggestedAction(\n            id: {{actions.3.id}},\n            label: {{actions.3.label}},\n            description: {{actions.3.description}},\n            risk: {{actions.3.risk|case}},\n            consequences: [{{actions.3.consequences.0}}, {{actions.3.consequences.1}}],\n            confirmLabel: {{actions.3.confirmLabel}}\n        ),\n    ],\n    onDismiss: { _ in },\n    onRun: { _ in }\n)",
+      "code": "MonarchAiSuggestedActions(\n    [\n        MonarchAiSuggestedAction(\n            id: \"reminder\",\n            label: \"Send the renewal reminder\",\n            description: \"The contract ends in 14 days and no renewal is recorded.\"\n        ),\n        MonarchAiSuggestedAction(\n            id: \"task\",\n            label: \"Create a follow-up task for next Monday\",\n            risk: .medium\n        ),\n        MonarchAiSuggestedAction(\n            id: \"email\",\n            label: \"Email the account team a status update\",\n            description: \"Goes to 3 people.\",\n            requiresApproval: true,\n            consequences: [\"3 people will get an email\", \"The email is logged on the account\"],\n            confirmLabel: \"Send email\"\n        ),\n        MonarchAiSuggestedAction(\n            id: \"close\",\n            label: \"Close 4 stale tickets\",\n            description: \"No reply in 60 days.\",\n            risk: .destructive,\n            consequences: [\"4 tickets will be closed\", \"Requesters are notified\"],\n            confirmLabel: \"Close tickets\"\n        ),\n    ],\n    onDismiss: { _ in },\n    onRun: { _ in }\n)"
+    },
+    {
+      "title": "Rule-based suggestions",
+      "code": "MonarchAiSuggestedActions(\n    [MonarchAiSuggestedAction(id: \"call\", label: \"Call the customer back\", status: .done)],\n    title: \"Next steps\",\n    origin: .rule\n) { _ in }"
+    }
+  ],
+  "webEquivalent": "AiSuggestedActions",
+  "dependsOn": [
+    "button",
+    "ai-tool-approval",
+    "badge"
+  ],
+  "icons": {
+    "origin.ai": "BotGlyph",
+    "risk": "WarningGlyph",
+    "approval": "LockGlyph",
+    "dismiss": "CloseGlyph"
+  }
+}

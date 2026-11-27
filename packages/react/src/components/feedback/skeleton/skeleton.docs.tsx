@@ -1,5 +1,13 @@
 import { Skeleton } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './skeleton.fixture.json';
+
+const [circle, line, box] = fixture.data.shapes as unknown as readonly [
+  { shape: 'circle'; width: number; height: number },
+  { shape: 'text'; width: number },
+  { shape: 'rect'; width: number; height: number },
+];
 
 export default {
   id: 'skeleton',
@@ -57,9 +65,13 @@ export default {
           title: 'Shapes',
           render: () => (
             <>
-              <Skeleton shape="circle" width="2.5rem" height="2.5rem" />
-              <Skeleton shape="text" width="12rem" />
-              <Skeleton width="8rem" height="2rem" />
+              <Skeleton
+                shape={circle.shape}
+                width={`${circle.width}rem`}
+                height={`${circle.height}rem`}
+              />
+              <Skeleton shape={line.shape} width={`${line.width}rem`} />
+              <Skeleton width={`${box.width}rem`} height={`${box.height}rem`} />
             </>
           ),
         },

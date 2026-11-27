@@ -1,0 +1,123 @@
+{
+  "id": "sign-in-form",
+  "name": null,
+  "title": "SignInForm",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.layout.Column with MonarchSignInWithRookButton, MonarchButton, MonarchDivider, MonarchInlineNotice, MonarchTextField (autofill content type Username and EmailAddress), MonarchPasswordInput (current-password purpose), MonarchLink and MonarchCheckboxRow; the app's androidx.credentials Credential Manager for passkeys",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: sign in with an email and password, a passkey or single sign-on, with field errors, a form error, Keep me signed in, and links to reset the password and create an account.",
+  "whenToUse": "For the sign-in screen of an app that has its own accounts.",
+  "whenNotToUse": "When the app signs in only with Rook ID, show MonarchSignInWithRookButton alone. To reset a password use the PasswordResetForm recipe; to re-confirm a signed-in person use MonarchStepUpAuthDialog.",
+  "api": [
+    "MonarchSignInWithRookButton(onClick = …, fullWidth = true)",
+    "MonarchButton(text = \"Sign in with a passkey\", onClick = …, modifier = Modifier.fillMaxWidth())",
+    "MonarchTextField(value = email, onValueChange = …, modifier = Modifier.semantics { contentType = ContentType.Username + ContentType.EmailAddress }, label = \"Email\", errorText = emailError, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, autoCorrectEnabled = false))",
+    "MonarchPasswordInput(value = password, onValueChange = …, label = \"Password\", errorText = passwordError, purpose = MonarchPasswordInputPurpose.Current, keyboardActions = KeyboardActions(onDone = { signIn() }))",
+    "MonarchCheckboxRow(checked = keepSignedIn, onCheckedChange = …, label = \"Keep me signed in\")",
+    "MonarchButton(text = \"Sign in\", onClick = signIn, modifier = Modifier.fillMaxWidth(), variant = MonarchButtonVariant.Primary, loading = signingIn)"
+  ],
+  "options": [
+    {
+      "name": "emailError",
+      "type": "String?",
+      "default": "null",
+      "description": "An empty or malformed email, shown on the field before anything is sent."
+    },
+    {
+      "name": "passwordError",
+      "type": "String?",
+      "default": "null",
+      "description": "An empty password, shown on the field."
+    },
+    {
+      "name": "formError",
+      "type": "String?",
+      "default": "null",
+      "description": "A wrong email or password or a server failure, in a danger MonarchInlineNotice above the fields. One message for both, so the form does not reveal which accounts exist."
+    },
+    {
+      "name": "signingIn",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Passed to the Sign in button's loading while the request runs."
+    },
+    {
+      "name": "keepSignedIn",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Sent with the request; the session length is the app's."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "Single sign-on and passkey buttons, an \"or\" divider, the email and password fields, Forgot password?, Keep me signed in, Sign in and Create an account."
+    },
+    {
+      "name": "field errors",
+      "description": "An empty or malformed email and an empty password show their errors on the fields before anything is sent."
+    },
+    {
+      "name": "signing in",
+      "description": "Sign in shows its progress indicator and reads \"Loading\"."
+    },
+    {
+      "name": "failed",
+      "description": "A wrong password or a server failure goes in a danger MonarchInlineNotice above the fields."
+    },
+    {
+      "name": "passkey",
+      "description": "The passkey button starts the app's Credential Manager request, which shows the system passkey sheet; a cancelled sheet changes nothing."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component: the Rook ID button, a secondary passkey button, a divider with a muted \"or\", outlined fields with their errors, a checkbox row, links and a full-width primary button. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web's SignInForm is one component with an onSubmit that returns errors and its own messages. On Android, as on iOS, it is a recipe, because the request, the session and navigation belong to the app. Autofill comes from the content types: Username and EmailAddress on the email field and the Password type that MonarchPasswordInput's current purpose sets, so autofill services and Google Password Manager offer saved passwords. Passkey sign-in is the app's Credential Manager call (androidx.credentials GetCredentialRequest with a GetPublicKeyCredentialOption), which shows the system sheet; Monarch does not depend on androidx.credentials. The web's identifier modes (username, email or username) are the field's label, keyboard type and content type.",
+  "accessibility": [
+    "The title has the heading semantics.",
+    "Field errors come from MonarchTextField and MonarchPasswordInput, which show them in words and mark the fields as in error.",
+    "The \"or\" divider is decorative and hidden from TalkBack.",
+    "Keep me signed in is a MonarchCheckboxRow: one element with the checkbox role and its state.",
+    "Forgot password? and Create an account are MonarchLinks; the buttons are MonarchButtons with 48dp targets and a loading state.",
+    "The system passkey sheet is the system's."
+  ],
+  "edgeCases": [
+    "Do not say whether the email or the password was wrong; use one form error.",
+    "Trim spaces around the email but never change the password.",
+    "With passkey or single sign-on only, leave out the password field, Forgot password? and Keep me signed in.",
+    "Never save the password in the instance state; keep it in remember, not rememberSaveable."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Email and password (password: demo-password)",
+      "fixture": "sign-in-form",
+      "webExample": "Email and password (password: demo-password)",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    formError?.let { MonarchInlineNotice(message = it, tone = MonarchTone.Danger) }\n    MonarchTextField(\n        value = email,\n        onValueChange = { email = it },\n        modifier = Modifier.semantics { contentType = ContentType.Username + ContentType.EmailAddress },\n        label = \"Email\",\n        required = true,\n        errorText = emailError,\n        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, autoCorrectEnabled = false),\n    )\n    MonarchPasswordInput(\n        value = password,\n        onValueChange = { password = it },\n        label = \"Password\",\n        required = true,\n        errorText = passwordError,\n        purpose = MonarchPasswordInputPurpose.Current,\n        keyboardActions = KeyboardActions(onDone = { signIn() }),\n        labelAction = {\n            MonarchLink(\n                text = \"Forgot password?\",\n                onClick = { /* Open the password reset. */ },\n                variant = MonarchLinkVariant.Standalone,\n            )\n        },\n    )\n    MonarchCheckboxRow(checked = keepSignedIn, onCheckedChange = { keepSignedIn = it }, label = \"Keep me signed in\")\n    MonarchButton(\n        text = \"Sign in\",\n        onClick = signIn,\n        modifier = Modifier.fillMaxWidth(),\n        variant = MonarchButtonVariant.Primary,\n        loading = signingIn,\n    )\n    Row(\n        modifier = Modifier.align(Alignment.CenterHorizontally),\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n        verticalAlignment = Alignment.CenterVertically,\n    ) {\n        MonarchText(text = \"New here?\")\n        MonarchLink(\n            text = \"Create an account\",\n            onClick = { /* Open sign-up. */ },\n            variant = MonarchLinkVariant.Standalone,\n        )\n    }\n}",
+      "setupTemplate": "val scope = rememberCoroutineScope()\nvar email by rememberSaveable { mutableStateOf({{email}}) }\nvar password by remember { mutableStateOf(\"\") }\nvar keepSignedIn by rememberSaveable { mutableStateOf({{keepSignedIn}}) }\nvar emailError by remember { mutableStateOf<String?>(null) }\nvar passwordError by remember { mutableStateOf<String?>(null) }\nvar formError by remember { mutableStateOf<String?>(null) }\nvar signingIn by remember { mutableStateOf(false) }\nval signIn = {\n    val address = email.trim()\n    emailError = if (\"@\" in address && \".\" in address) null else \"Enter an email address like name@example.com.\"\n    passwordError = if (password.isEmpty()) \"Enter your password.\" else null\n    if (emailError == null && passwordError == null) {\n        signingIn = true\n        scope.launch {\n            // The app's request. A refused sign-in sets formError.\n            signingIn = false\n        }\n    }\n}",
+      "imports": [
+        "kotlinx.coroutines.launch",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.autofill.ContentType",
+        "androidx.compose.ui.text.input.KeyboardType"
+      ],
+      "setup": "val scope = rememberCoroutineScope()\nvar email by rememberSaveable { mutableStateOf(\"\") }\nvar password by remember { mutableStateOf(\"\") }\nvar keepSignedIn by rememberSaveable { mutableStateOf(false) }\nvar emailError by remember { mutableStateOf<String?>(null) }\nvar passwordError by remember { mutableStateOf<String?>(null) }\nvar formError by remember { mutableStateOf<String?>(null) }\nvar signingIn by remember { mutableStateOf(false) }\nval signIn = {\n    val address = email.trim()\n    emailError = if (\"@\" in address && \".\" in address) null else \"Enter an email address like name@example.com.\"\n    passwordError = if (password.isEmpty()) \"Enter your password.\" else null\n    if (emailError == null && passwordError == null) {\n        signingIn = true\n        scope.launch {\n            // The app's request. A refused sign-in sets formError.\n            signingIn = false\n        }\n    }\n}",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    formError?.let { MonarchInlineNotice(message = it, tone = MonarchTone.Danger) }\n    MonarchTextField(\n        value = email,\n        onValueChange = { email = it },\n        modifier = Modifier.semantics { contentType = ContentType.Username + ContentType.EmailAddress },\n        label = \"Email\",\n        required = true,\n        errorText = emailError,\n        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, autoCorrectEnabled = false),\n    )\n    MonarchPasswordInput(\n        value = password,\n        onValueChange = { password = it },\n        label = \"Password\",\n        required = true,\n        errorText = passwordError,\n        purpose = MonarchPasswordInputPurpose.Current,\n        keyboardActions = KeyboardActions(onDone = { signIn() }),\n        labelAction = {\n            MonarchLink(\n                text = \"Forgot password?\",\n                onClick = { /* Open the password reset. */ },\n                variant = MonarchLinkVariant.Standalone,\n            )\n        },\n    )\n    MonarchCheckboxRow(checked = keepSignedIn, onCheckedChange = { keepSignedIn = it }, label = \"Keep me signed in\")\n    MonarchButton(\n        text = \"Sign in\",\n        onClick = signIn,\n        modifier = Modifier.fillMaxWidth(),\n        variant = MonarchButtonVariant.Primary,\n        loading = signingIn,\n    )\n    Row(\n        modifier = Modifier.align(Alignment.CenterHorizontally),\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n        verticalAlignment = Alignment.CenterVertically,\n    ) {\n        MonarchText(text = \"New here?\")\n        MonarchLink(\n            text = \"Create an account\",\n            onClick = { /* Open sign-up. */ },\n            variant = MonarchLinkVariant.Standalone,\n        )\n    }\n}"
+    }
+  ],
+  "webEquivalent": "SignInForm",
+  "dependsOn": [
+    "text-field",
+    "password-input",
+    "button",
+    "checkbox",
+    "link"
+  ]
+}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- the fixture is a fixed JSON literal; the indices below exist. */
 import { useEffect, useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import {
@@ -7,16 +8,19 @@ import {
   type AiAttachmentTrayFile,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-attachment-tray.fixture.json';
 
+const F = fixture.data.files;
 const START: AiAttachmentTrayFile[] = [
-  { id: 'brief', name: 'Project brief.pdf', size: 2_450_000, type: 'application/pdf' },
-  { id: 'data', name: 'Survey results.csv', size: 384_000, type: 'text/csv', progress: 0.1 },
+  { id: F[0]!.id, name: F[0]!.name, size: F[0]!.size, type: F[0]!.type },
+  { id: F[1]!.id, name: F[1]!.name, size: F[1]!.size, type: F[1]!.type, progress: F[1]!.progress },
   {
-    id: 'deck',
-    name: 'Kickoff slides.pptx',
-    size: 48_000_000,
-    type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    error: 'Larger than the 25 MB limit',
+    id: F[2]!.id,
+    name: F[2]!.name,
+    size: F[2]!.size,
+    type: F[2]!.type,
+    error: F[2]!.error,
   },
 ];
 
@@ -49,7 +53,7 @@ function UploadDemo() {
         }
       />
       <Button size="sm" variant="ghost" onClick={() => setFiles(START)}>
-        Reset
+        {fixture.data.reset}
       </Button>
     </div>
   );

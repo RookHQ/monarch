@@ -8,39 +8,24 @@ import {
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { BoardIcon, GridIcon, ListIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './entity-picker.fixture.json';
+
+interface Project {
+  value: string;
+  label: string;
+  hint: string;
+  group: string;
+  description?: string;
+}
+
+const PROJECTS = fixture.data.projects as readonly Project[];
 
 // Built lazily: docs files cannot create JSX at module scope.
-const makeProjects = (): ComboboxOption[] => [
-  {
-    value: 'website',
-    label: 'Website refresh',
-    hint: 'WEB',
-    group: 'Active',
-    media: <BoardIcon />,
-  },
-  {
-    value: 'mobile',
-    label: 'Mobile onboarding',
-    hint: 'MOB',
-    group: 'Active',
-    media: <ListIcon />,
-  },
-  {
-    value: 'billing',
-    label: 'Billing migration',
-    hint: 'BIL',
-    group: 'Active',
-    media: <GridIcon />,
-  },
-  {
-    value: 'research',
-    label: 'Customer research',
-    hint: 'RES',
-    group: 'Paused',
-    description: 'Paused until next quarter',
-    media: <ListIcon />,
-  },
-];
+const makeProjects = (): ComboboxOption[] => {
+  const media = [<BoardIcon />, <ListIcon />, <GridIcon />, <ListIcon />];
+  return PROJECTS.map((project, i) => ({ ...project, media: media[i] }));
+};
 
 const labels: ComboboxOption[] = [
   { value: 'bug', label: 'Bug' },
@@ -51,19 +36,20 @@ const labels: ComboboxOption[] = [
 
 function ProjectDemo() {
   const [projects] = useState(makeProjects);
-  const [value, setValue] = useState<string | null>('mobile');
+  const [value, setValue] = useState<string | null>(fixture.data.value);
   return (
     <Field style={{ width: '100%', maxWidth: 300 }}>
-      <FieldLabel>Project</FieldLabel>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
       <EntityPicker
+        defaultOpen
         options={projects}
         value={value}
         onValueChange={setValue}
-        placeholder="Choose a project"
-        clearOption={{ label: 'No project' }}
+        placeholder={fixture.data.placeholder}
+        clearOption={{ label: fixture.data.clearOption }}
         footer={({ close }) => (
           <Button variant="ghost" size="sm" block onClick={close}>
-            Manage projects
+            {fixture.data.footer}
           </Button>
         )}
       />
@@ -261,6 +247,7 @@ export default {
         {
           title: 'Project with groups, clear option and footer',
           stack: true,
+          stage: true,
           render: () => <ProjectDemo />,
         },
         {

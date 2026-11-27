@@ -1,13 +1,9 @@
 import { DonutChart } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './donut-chart.fixture.json';
 
-const devices = [
-  { key: 'laptop', label: 'Laptops', value: 412 },
-  { key: 'phone', label: 'Phones', value: 268 },
-  { key: 'monitor', label: 'Monitors', value: 131 },
-  { key: 'tablet', label: 'Tablets', value: 54 },
-  { key: 'other', label: 'Accessories', value: 9 },
-];
+const devices = fixture.data.segments;
 
 export default {
   id: 'donut-chart',
@@ -140,10 +136,10 @@ export default {
           stack: true,
           render: () => (
             <DonutChart
-              title="Assets by type"
-              description="All active assets"
+              title={fixture.data.title}
+              description={fixture.data.description}
               segments={devices}
-              centerLabel="assets"
+              centerLabel={fixture.data.centerLabel}
               locale="en-US"
               style={{ width: '100%', maxWidth: '30rem' }}
             />

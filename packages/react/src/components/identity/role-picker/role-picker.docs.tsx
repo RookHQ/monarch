@@ -1,35 +1,13 @@
 import { useState } from 'react';
 import { RolePicker, type RoleOption } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './role-picker.fixture.json';
 
-const ROLES: RoleOption[] = [
-  {
-    value: 'viewer',
-    label: 'Viewer',
-    description: 'Can see everything in the workspace but cannot change it.',
-  },
-  {
-    value: 'member',
-    label: 'Member',
-    description: 'Can create and edit work in the apps they have access to.',
-    capabilities: ['Create and edit records', 'Comment and mention people'],
-  },
-  {
-    value: 'admin',
-    label: 'Admin',
-    description: 'Can also invite and remove members and change workspace settings.',
-  },
-  {
-    value: 'owner',
-    label: 'Owner',
-    description: 'Full control, including billing and deleting the workspace.',
-    disabled: true,
-    disabledReason: 'Only an owner can make someone an owner.',
-  },
-];
+const ROLES = fixture.data.roles as RoleOption[];
 
 function Cards() {
-  const [role, setRole] = useState('member');
+  const [role, setRole] = useState(fixture.data.value);
   return <RolePicker roles={ROLES} value={role} onValueChange={setRole} />;
 }
 

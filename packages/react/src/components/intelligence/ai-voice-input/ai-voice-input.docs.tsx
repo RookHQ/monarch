@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { Textarea } from '@rookcom/monarch-react';
 import {
   AiVoiceInput,
   type AiSpeechRecognitionLike,
   type AiSpeechResult,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-voice-input.fixture.json';
 
 /** A scripted recognizer so the demo works in every browser, with no microphone. */
 function scriptedRecognition(): AiSpeechRecognitionLike {
@@ -51,21 +54,24 @@ function Composer({ scripted }: { scripted?: boolean }) {
   return (
     // A single column that can shrink: a textarea's default width (wider in Firefox)
     // would otherwise stretch the column past a narrow phone screen.
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 8, maxWidth: 480 }}>
-      <textarea
-        aria-label="Prompt"
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1fr)',
+        justifyItems: 'start',
+        gap: 8,
+        width: '100%',
+        maxWidth: 480,
+      }}
+    >
+      <Textarea
+        aria-label={fixture.data.promptLabel}
         rows={3}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        style={{
-          font: 'inherit',
-          padding: 8,
-          inlineSize: '100%',
-          minInlineSize: 0,
-          boxSizing: 'border-box',
-        }}
       />
       <AiVoiceInput
+        messages={{ dictate: fixture.data.dictate }}
         levelMeter={!scripted}
         createRecognition={scripted ? scriptedRecognition : undefined}
         onTranscript={(chunk, { final }) => {

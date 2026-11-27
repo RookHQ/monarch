@@ -1,0 +1,84 @@
+{
+  "id": "account-menu",
+  "name": null,
+  "title": "AccountMenu",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchIconButton with MonarchAvatar as its content, MonarchMenu with MonarchMenuItem, MonarchRadio and MonarchDivider, MonarchThemeToggle; or MonarchBottomSheet on phones",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the signed-in person's menu, an avatar button that opens a menu (or a sheet on phones) with who is signed in, Profile and Settings, a workspace switcher, the color scheme and Sign out.",
+  "whenToUse": "At the end of the top app bar, or at the foot of a navigation rail or drawer, as the one place for the person's account, workspace and appearance.",
+  "whenNotToUse": "For a screen of account settings, use a settings screen with MonarchSwitchRows and sections. For switching workspaces as the main task of a screen, use a list of workspaces.",
+  "api": [
+    "IconButton(onClick = { open = true }, modifier = Modifier.semantics { contentDescription = \"Account menu for …\" }) { MonarchAvatar(image = …, name = …, size = MonarchAvatarSize.Sm, decorative = true) }",
+    "DropdownMenu(expanded = open, onDismissRequest = { open = false }) { …; DropdownMenuItem(text = { Text(\"Profile\") }, onClick = …); …; MonarchThemeToggle(scheme = scheme, onSchemeChange = { scheme = it }, size = MonarchThemeToggleSize.Sm); DropdownMenuItem(text = { Text(\"Sign out\") }, onClick = …, colors = MenuDefaults.itemColors(textColor = MonarchTheme.colors.dangerStrong)) }",
+    "ModalBottomSheet(onDismissRequest = { open = false }) { …; MonarchThemeToggle(scheme = scheme, onSchemeChange = { scheme = it }); MonarchButton(\"Sign out\", …, variant = MonarchButtonVariant.Danger) }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "closed",
+      "description": "The avatar, with a presence dot when given a status, as the icon button that opens the menu."
+    },
+    {
+      "name": "open (menu)",
+      "description": "A Material 3 menu: the name and email, Profile and Settings, the workspaces as radio items with the current one checked, the theme toggle, and Sign out in the strong danger color."
+    },
+    {
+      "name": "open (sheet)",
+      "description": "On phones, the same choices in a modal bottom sheet with full-width buttons and the segmented theme toggle, which leaves room at the largest font scale."
+    }
+  ],
+  "appearance": "The trigger is MonarchAvatar in its initials or picture colors inside a 48dp icon button. The menu is the Material 3 menu on the raised background role with Monarch's medium radius; the header uses the strong body and muted caption text roles; Sign out uses the strong danger role. The sheet uses the Material 3 sheet surface. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships AccountMenu as one component with user, workspaces, theme and callback props, and renderLink for router links. On Android it is a recipe, as on iOS: a MonarchIconButton and MonarchMenu already give the trigger, focus, keyboard and TalkBack behavior, so no Monarch type is added. The theme choice is MonarchThemeToggle bound to the app's MonarchScheme; apply it with MonarchTheme(scheme = …) at the root and persist it with MonarchThemeToggleStorage. The web's \"sheet on phones\" option is the second example: a MonarchBottomSheet, where a dropdown menu at the largest font scale would scroll. The web's workspaceSlot and items props are the app's own menu items; navigation is the app's (onClick). Monarch bundles no icons, so the menu items carry no glyphs unless the app adds leadingIcon.",
+  "accessibility": [
+    "The icon button is named \"Account menu for <name>\"; the avatar inside is decorative so the name is read once.",
+    "The header's name and email are one element.",
+    "Workspace items carry the radio button role and the selected state, so the current workspace is announced, not only shown by the radio mark.",
+    "\"Switch workspace\" is a heading, so TalkBack users can jump to it.",
+    "MonarchThemeToggle reads its options and the selected scheme; Sign out is a word, not only a color.",
+    "Material 3 gives each menu item a row at least 48dp high; the icon button is 48dp."
+  ],
+  "edgeCases": [
+    "With one workspace, leave the switcher out.",
+    "A long name or email wraps in the header; at the largest font scale prefer the sheet.",
+    "Keep the scheme with rememberSaveable or the app's settings store so it survives a restart, through MonarchThemeToggleStorage."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Workspaces, theme and sign out",
+      "fixture": "account-menu",
+      "webExample": "Workspaces, theme and sign out",
+      "template": "Box {\n    MonarchIconButton(label = \"Account menu for \" + {{user.name}}, onClick = { open = true }) {\n        MonarchAvatar(image = null, name = {{user.name}}, size = MonarchAvatarSize.Sm, decorative = true)\n    }\n    MonarchMenu(expanded = open, onDismissRequest = { open = false }) {\n        Column(\n            modifier = Modifier\n                .padding(horizontal = MonarchTheme.spacing.space3, vertical = MonarchTheme.spacing.space2)\n                .semantics(mergeDescendants = true) {},\n        ) {\n            MonarchText(text = {{user.name}}, style = MonarchTextStyle.BodyStrong)\n            MonarchText(text = {{user.email}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n        }\n        MonarchMenuDivider()\n        MonarchMenuItem(\n            text = \"Profile\",\n            onClick = { open = false },\n            leadingIcon = { MonarchIcon(SampleIcons.Person, contentDescription = null) },\n        )\n        MonarchMenuItem(\n            text = \"Settings\",\n            onClick = { open = false },\n            leadingIcon = { MonarchIcon(SampleIcons.Settings, contentDescription = null) },\n        )\n        MonarchMenuDivider()\n        MonarchMenuLabel(text = \"Switch workspace\")\n        workspaces.forEach { (id, name) ->\n            MonarchMenuItem(\n                text = name,\n                onClick = {\n                    workspace = id\n                    open = false\n                },\n                selected = id == workspace,\n                leadingIcon = { MonarchAvatar(image = null, name = name, size = MonarchAvatarSize.Xs, decorative = true) },\n            )\n        }\n        MonarchMenuDivider()\n        MonarchMenuLabel(text = \"Theme\")\n        listOf(MonarchScheme.Light to \"Light\", MonarchScheme.Dark to \"Dark\", MonarchScheme.System to \"System\").forEach { (option, label) ->\n            MonarchMenuItem(text = label, onClick = { scheme = option }, selected = scheme == option)\n        }\n        MonarchMenuDivider()\n        MonarchMenuItem(text = {{extraItem}}, onClick = { open = false })\n        MonarchMenuDivider()\n        MonarchMenuItem(\n            text = \"Sign out\",\n            onClick = { open = false },\n            leadingIcon = { MonarchIcon(SampleIcons.Logout, contentDescription = null) },\n        )\n    }\n}",
+      "setupTemplate": "var open by remember { mutableStateOf(true) }\nvar workspace by rememberSaveable { mutableStateOf({{workspace}}) }\nvar scheme by rememberSaveable { mutableStateOf(MonarchScheme.{{theme|pascal}}) }\nval workspaces = listOf({{workspaces.0.id}} to {{workspaces.0.name}}, {{workspaces.1.id}} to {{workspaces.1.name}})\n// Apply the choice at the root of the app: MonarchTheme(scheme = scheme) { … }",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "var open by remember { mutableStateOf(true) }\nvar workspace by rememberSaveable { mutableStateOf(\"ws-1\") }\nvar scheme by rememberSaveable { mutableStateOf(MonarchScheme.System) }\nval workspaces = listOf(\"ws-1\" to \"Northwind\", \"ws-2\" to \"Harbor Labs\")\n// Apply the choice at the root of the app: MonarchTheme(scheme = scheme) { … }",
+      "code": "Box {\n    MonarchIconButton(label = \"Account menu for \" + \"Sam Rivera\", onClick = { open = true }) {\n        MonarchAvatar(image = null, name = \"Sam Rivera\", size = MonarchAvatarSize.Sm, decorative = true)\n    }\n    MonarchMenu(expanded = open, onDismissRequest = { open = false }) {\n        Column(\n            modifier = Modifier\n                .padding(horizontal = MonarchTheme.spacing.space3, vertical = MonarchTheme.spacing.space2)\n                .semantics(mergeDescendants = true) {},\n        ) {\n            MonarchText(text = \"Sam Rivera\", style = MonarchTextStyle.BodyStrong)\n            MonarchText(text = \"sam@example.com\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n        }\n        MonarchMenuDivider()\n        MonarchMenuItem(\n            text = \"Profile\",\n            onClick = { open = false },\n            leadingIcon = { MonarchIcon(SampleIcons.Person, contentDescription = null) },\n        )\n        MonarchMenuItem(\n            text = \"Settings\",\n            onClick = { open = false },\n            leadingIcon = { MonarchIcon(SampleIcons.Settings, contentDescription = null) },\n        )\n        MonarchMenuDivider()\n        MonarchMenuLabel(text = \"Switch workspace\")\n        workspaces.forEach { (id, name) ->\n            MonarchMenuItem(\n                text = name,\n                onClick = {\n                    workspace = id\n                    open = false\n                },\n                selected = id == workspace,\n                leadingIcon = { MonarchAvatar(image = null, name = name, size = MonarchAvatarSize.Xs, decorative = true) },\n            )\n        }\n        MonarchMenuDivider()\n        MonarchMenuLabel(text = \"Theme\")\n        listOf(MonarchScheme.Light to \"Light\", MonarchScheme.Dark to \"Dark\", MonarchScheme.System to \"System\").forEach { (option, label) ->\n            MonarchMenuItem(text = label, onClick = { scheme = option }, selected = scheme == option)\n        }\n        MonarchMenuDivider()\n        MonarchMenuItem(text = \"Keyboard shortcuts\", onClick = { open = false })\n        MonarchMenuDivider()\n        MonarchMenuItem(\n            text = \"Sign out\",\n            onClick = { open = false },\n            leadingIcon = { MonarchIcon(SampleIcons.Logout, contentDescription = null) },\n        )\n    }\n}"
+    },
+    {
+      "title": "The same choices in a sheet on phones",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "var open by remember { mutableStateOf(false) }\nvar scheme by rememberSaveable { mutableStateOf(MonarchScheme.System) }",
+      "code": "MonarchIconButton(label = \"Account menu for Ada Lovelace\", onClick = { open = true }) {\n    MonarchAvatar(image = null, name = \"Ada Lovelace\", size = MonarchAvatarSize.Sm, decorative = true)\n}\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }) {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        ) {\n            Row(\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n                verticalAlignment = Alignment.CenterVertically,\n            ) {\n                MonarchAvatar(image = null, name = \"Ada Lovelace\", size = MonarchAvatarSize.Lg, decorative = true)\n                Column {\n                    MonarchText(text = \"Ada Lovelace\", style = MonarchTextStyle.Heading)\n                    MonarchText(text = \"ada@example.com\", color = MonarchTheme.colors.textMuted)\n                }\n            }\n            MonarchButton(text = \"Profile\", onClick = { open = false }, modifier = Modifier.fillMaxWidth())\n            MonarchButton(text = \"Settings\", onClick = { open = false }, modifier = Modifier.fillMaxWidth())\n            MonarchThemeToggle(scheme = scheme, onSchemeChange = { scheme = it })\n            MonarchButton(\n                text = \"Sign out\",\n                onClick = { open = false },\n                modifier = Modifier.fillMaxWidth(),\n                variant = MonarchButtonVariant.Danger,\n            )\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "AccountMenu",
+  "dependsOn": [
+    "avatar",
+    "dropdown-menu",
+    "theme-toggle"
+  ]
+}

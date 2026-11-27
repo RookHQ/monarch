@@ -1,0 +1,159 @@
+{
+  "id": "receipt-preview",
+  "name": "MonarchReceiptPreview",
+  "title": "ReceiptPreview",
+  "family": "billing",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchButton (androidx.compose.material3.Button), androidx.compose.ui.window.Dialog (full screen), MonarchFilePreview, MonarchInlineErrorRetry",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A \"View receipt\" button that shows an expense's receipt full screen, fetching a private file only when pressed, with a loading state, Try again and a \"No receipt\" fallback.",
+  "whenToUse": "In an expense, a transaction or an invoice row, to look at the attached receipt without leaving the screen.",
+  "whenNotToUse": "For any file attachment in a conversation use a file card and MonarchFilePreview. To let people attach a receipt use a file picker.",
+  "api": [
+    "@Composable fun MonarchReceiptPreview(receipt: MonarchReceipt?, modifier: Modifier = Modifier, variant: MonarchButtonVariant = MonarchButtonVariant.Ghost, size: MonarchButtonSize = MonarchButtonSize.Sm, enabled: Boolean = true, icon: (@Composable () -> Unit)? = null, onDownload: ((MonarchReceipt) -> Unit)? = null, labels: MonarchReceiptPreviewLabels = MonarchReceiptPreviewLabels())",
+    "@Composable fun MonarchReceiptPreview(load: suspend () -> MonarchReceipt, modifier: Modifier = Modifier, variant: MonarchButtonVariant = MonarchButtonVariant.Ghost, size: MonarchButtonSize = MonarchButtonSize.Sm, enabled: Boolean = true, icon: (@Composable () -> Unit)? = null, onDownload: ((MonarchReceipt) -> Unit)? = null, onLoadError: ((Throwable) -> Unit)? = null, labels: MonarchReceiptPreviewLabels = MonarchReceiptPreviewLabels())",
+    "class MonarchReceipt(name: String, contentType: String? = null, image: Painter? = null, pdf: Uri? = null)",
+    "class MonarchReceiptPreviewLabels(view: String? = null, none: String? = null, loading: String? = null, loadError: String? = null, retry: String? = null, title: String? = null, close: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "receipt",
+      "type": "MonarchReceipt?",
+      "default": "required (first overload)",
+      "description": "A receipt the app has: its name, MIME type and a Painter or a local PDF Uri. null shows \"No receipt\"."
+    },
+    {
+      "name": "load",
+      "type": "suspend () -> MonarchReceipt",
+      "default": "required (second overload)",
+      "description": "The app's code that fetches the private receipt; run on each press and on Try again. Throw to report a failure."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the button (and the error under it), or of the \"No receipt\" text."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchButtonVariant",
+      "default": "MonarchButtonVariant.Ghost",
+      "description": "Primary, Secondary, Ghost or Danger."
+    },
+    {
+      "name": "size",
+      "type": "MonarchButtonSize",
+      "default": "MonarchButtonSize.Sm",
+      "description": "Sm, Md or Lg; the touch target is at least 48dp at every size."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the receipt can be opened."
+    },
+    {
+      "name": "icon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "An icon before the label, such as a paperclip. Monarch bundles no icons."
+    },
+    {
+      "name": "onDownload",
+      "type": "((MonarchReceipt) -> Unit)?",
+      "default": "null",
+      "description": "Shows MonarchFilePreview's Download button; the app saves the file."
+    },
+    {
+      "name": "onLoadError",
+      "type": "((Throwable) -> Unit)?",
+      "default": "null",
+      "description": "Second overload: called with the loader's failure, for logging."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchReceiptPreviewLabels",
+      "default": "MonarchReceiptPreviewLabels()",
+      "description": "Replacements for \"View receipt\", \"No receipt\", \"Loading receipt\", \"The receipt could not be loaded.\", the retry text, \"Receipt\" and \"Close\"."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "The button \"View receipt\"."
+    },
+    {
+      "name": "loading",
+      "description": "Second overload: the button shows its progress indicator, ignores taps and has the state \"Loading receipt\"."
+    },
+    {
+      "name": "previewing",
+      "description": "A full-screen dialog with the heading \"Receipt\", a Close button and MonarchFilePreview of the picture or the PDF pages. Back closes it."
+    },
+    {
+      "name": "failed",
+      "description": "Second overload: MonarchInlineErrorRetry under the button with \"The receipt could not be loaded.\" and Try again."
+    },
+    {
+      "name": "none",
+      "description": "Muted caption text \"No receipt\" instead of the button."
+    },
+    {
+      "name": "disabled",
+      "description": "The button uses the disabled colors and does not open or load."
+    }
+  ],
+  "appearance": "The button has the colors of its MonarchButton variant; \"No receipt\" is the muted caption color; the full-screen preview uses the canvas color with the default text color, and MonarchFilePreview's own colors. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web ReceiptPreview opens images in a dialog with Download, opens PDFs in a new tab or an embedded viewer, takes a src or a load function returning a Blob or URL, and explains formats the browser cannot draw; iOS presents Quick Look from a local file URL. Android has no system previewer that Compose can embed, so the receipt is shown in a full-screen Dialog with MonarchFilePreview, as the plan says. Monarch does no networking: the loader returns a MonarchReceipt with a Painter the app decoded or a local PDF Uri, rather than a URL. Unsupported types show MonarchFilePreview's \"There is no preview for this file type.\". The web's controlled open and onOpenChange are not offered; the preview's open state is kept by the component. The web's mimeType is contentType inside MonarchReceipt. Like iOS, the default variant is Ghost and the default size Sm.",
+  "accessibility": [
+    "The button is a MonarchButton with the Button role and a touch target of at least 48dp at every size.",
+    "While loading, the button's state description is \"Loading receipt\" and taps are ignored.",
+    "A failure shows MonarchInlineErrorRetry, whose message is a polite live region, with a separate Try again button.",
+    "\"No receipt\" is plain text, not a disabled button.",
+    "The full-screen preview has a heading and a Close button; Back also closes it. MonarchFilePreview names the picture or the PDF pages.",
+    "The label is not cut at font scale 2.0."
+  ],
+  "edgeCases": [
+    "Leaving the screen while loading cancels the load; the loader should respect coroutine cancellation.",
+    "Pressing Try again while a previous load is still running cancels it first.",
+    "Closing the preview returns to the idle state; the next press loads again, so the app can cache in its loader.",
+    "The dialog was checked in Robolectric tests; its full-screen look with system bars was not tried on a device."
+  ],
+  "tests": [
+    "MonarchReceiptPreviewTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Image from a URL",
+      "fixture": "receipt-preview",
+      "webExample": "Image from a URL",
+      "template": "MonarchReceiptPreview(\n    receipt = MonarchReceipt(\n        name = {{fileName}},\n        contentType = {{mimeType}},\n        image = sampleReceiptPainter(),\n    ),\n    labels = MonarchReceiptPreviewLabels(view = {{label}}),\n    icon = { MonarchIcon(SampleIcons.Attach, contentDescription = null, size = MonarchIconSize.Sm) },\n    onDownload = { /* Save or open the file. */ },\n    initiallyOpen = true,\n)",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.testing.sampleReceiptPainter"
+      ],
+      "code": "MonarchReceiptPreview(\n    receipt = MonarchReceipt(\n        name = \"lunch.svg\",\n        contentType = \"image/svg+xml\",\n        image = sampleReceiptPainter(),\n    ),\n    labels = MonarchReceiptPreviewLabels(view = \"View receipt\"),\n    icon = { MonarchIcon(SampleIcons.Attach, contentDescription = null, size = MonarchIconSize.Sm) },\n    onDownload = { /* Save or open the file. */ },\n    initiallyOpen = true,\n)"
+    },
+    {
+      "title": "A private receipt loaded when pressed",
+      "code": "MonarchReceiptPreview(\n    load = {\n        // The app fetches the file with its own authorisation here.\n        MonarchReceipt(name = \"receipt-1043.pdf\", contentType = \"application/pdf\")\n    },\n    variant = MonarchButtonVariant.Secondary,\n)"
+    },
+    {
+      "title": "No receipt",
+      "code": "MonarchReceiptPreview(receipt = null)"
+    }
+  ],
+  "webEquivalent": "ReceiptPreview",
+  "dependsOn": [
+    "button",
+    "file-preview",
+    "inline-error-retry"
+  ]
+}

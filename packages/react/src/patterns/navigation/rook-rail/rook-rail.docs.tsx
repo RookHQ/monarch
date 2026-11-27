@@ -13,6 +13,8 @@ import {
   WorkspaceSwitcher,
 } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './rook-rail.fixture.json';
 import {
   AppMark,
   BellIcon,
@@ -52,7 +54,7 @@ function Frame({ name, rail }: { name: string; rail: ReactNode }) {
         skipLinkLabel={`Skip to ${name} example content`}
         rail={rail}
       >
-        <div style={page}>Page content</div>
+        <div style={page}>{fixture.data.page}</div>
       </AppShell>
     </div>
   );
@@ -70,49 +72,60 @@ function useMemoryCookies() {
   return store;
 }
 
+const rail = fixture.data;
+const itemIcons: Record<string, () => ReactNode> = {
+  home: () => <HomeIcon />,
+  inbox: () => <InboxIcon />,
+  calendar: () => <CalendarIcon />,
+  members: () => <UsersIcon />,
+  settings: () => <GearIcon />,
+  billing: () => <CardIcon />,
+};
+
 /** Built lazily: docs files are imported in Node, where module-scope JSX is not allowed. */
 const base = (): Pick<
   RookRailProps,
   'brand' | 'sections' | 'workspaceSection' | 'currentPath' | 'account' | 'notifications'
 > => ({
-  brand: { label: 'Acme Planner home', href: '#planner', icon: <AppMark /> },
-  currentPath: '/w/acme/calendar',
+  brand: { label: `${rail.brand} home`, href: '#planner', icon: <AppMark /> },
+  currentPath: `/w/acme/${rail.current}`,
   sections: [
     {
       key: 'main',
-      items: [
-        { key: 'home', label: 'Home', icon: <HomeIcon />, href: '/w/acme/home' },
-        { key: 'inbox', label: 'Inbox', icon: <InboxIcon />, href: '/w/acme/inbox', badge: 4 },
-        { key: 'calendar', label: 'Calendar', icon: <CalendarIcon />, href: '/w/acme/calendar' },
-      ],
+      items: rail.items.map((item) => ({
+        key: item.key,
+        label: item.label,
+        icon: itemIcons[item.key]?.(),
+        href: `/w/acme/${item.key}`,
+        ...('badge' in item && { badge: item.badge }),
+      })),
     },
   ],
   workspaceSection: {
     key: 'workspace',
-    items: [
-      { key: 'members', label: 'Members', icon: <UsersIcon />, href: '/w/acme/members' },
-      {
-        key: 'settings',
-        label: 'Settings',
-        icon: <GearIcon />,
-        href: 'https://id.example.com/settings',
-        external: true,
-        opensIn: 'Rook ID',
-      },
-      {
-        key: 'billing',
-        label: 'Billing',
-        icon: <CardIcon />,
-        href: 'https://id.example.com/billing',
-        external: true,
-        opensIn: 'Rook ID',
-      },
-    ],
+    items: rail.workspaceItems.map((item) => {
+      const key = item.label.toLowerCase();
+      return 'opensIn' in item
+        ? {
+            key,
+            label: item.label,
+            icon: itemIcons[key]?.(),
+            href: `https://id.example.com/${key}`,
+            external: true,
+            opensIn: item.opensIn,
+          }
+        : { key, label: item.label, icon: itemIcons[key]?.(), href: `/w/acme/${key}` };
+    }),
   },
-  notifications: { label: 'Notifications', href: '#notifications', count: 2, icon: <BellIcon /> },
+  notifications: {
+    label: rail.notifications.label,
+    href: '#notifications',
+    count: rail.notifications.count,
+    icon: <BellIcon />,
+  },
   account: {
-    name: 'Ada Lovelace',
-    email: 'ada@example.com',
+    name: rail.account.name,
+    email: rail.account.email,
     status: 'online',
     profileHref: '#profile',
     accountHref: 'https://id.example.com',
@@ -134,13 +147,17 @@ function CollapsedDemo() {
           quickActions={[
             {
               key: 'new',
-              label: 'New event',
+              label: rail.quickAction.label,
               icon: <PlusIcon />,
-              shortcut: 'C',
+              shortcut: rail.quickAction.shortcut,
               onSelect: () => {},
             },
           ]}
-          support={{ onOpen: () => setSupportOpen((o) => !o), open: supportOpen, unread: 1 }}
+          support={{
+            onOpen: () => setSupportOpen((o) => !o),
+            open: supportOpen,
+            unread: rail.supportUnread,
+          }}
           themeToggle={({ collapsed }: RookRailSlotContext) => (
             <ThemeToggle
               variant="menu"

@@ -1,0 +1,208 @@
+{
+  "id": "data-export-request",
+  "name": "MonarchDataExportRequest",
+  "title": "DataExportRequest",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchCard with a MonarchBadge status, ProgressView with .progressViewStyle(.monarchLinear), MonarchCheckboxGroup, Picker with .pickerStyle(.menu) in a MonarchFormField, MonarchBanner and MonarchButton; Date.FormatStyle for dates; openURL for the download",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A Download your data card: choose what to include and the format, request an export, follow its status, and download the file until it expires.",
+  "whenToUse": "On an account's privacy or data settings screen, where people request a copy of their data that the app builds in the background.",
+  "whenNotToUse": "Not for exporting what is on screen right now (a report or a table); use ShareLink or a fileExporter. Not for deleting an account.",
+  "api": [
+    "init(status: MonarchDataExportStatus = .idle, requestedAt: Date? = nil, readyAt: Date? = nil, expiresAt: Date? = nil, scope: [MonarchCheckboxGroupOption] = [], formats: [MonarchDataExportFormat] = [], defaultFormat: String? = nil, preparationNote: String? = nil, failureReason: String? = nil, downloadURL: URL? = nil, isRequesting: Bool = false, labels: MonarchDataExportRequestLabels = MonarchDataExportRequestLabels(), onDownload: (@MainActor () -> Void)? = nil, onRequest: (@MainActor (MonarchDataExportRequestDetails) async throws -> Void)? = nil)",
+    "enum MonarchDataExportStatus: String, CaseIterable { case idle, requested, preparing, ready, expired, failed }",
+    "struct MonarchDataExportFormat: Identifiable { init(id: String, label: String) }",
+    "struct MonarchDataExportRequestDetails { let scope: [String]; let format: String?; init(scope: [String], format: String?) }",
+    "struct MonarchDataExportRequestLabels { init(title:description:statuses:request:requestAgain:download:scopeLegend:scopeRequired:formatLabel:requested:preparing:preparingProgress:ready:expired:failed:requestFailed:), every parameter optional }"
+  ],
+  "options": [
+    {
+      "name": "status",
+      "type": "MonarchDataExportStatus",
+      "default": ".idle",
+      "description": "Where the export is, as the app reports it."
+    },
+    {
+      "name": "requestedAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the export was requested; named in the requested and preparing lines."
+    },
+    {
+      "name": "readyAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the file became ready; named in the ready line."
+    },
+    {
+      "name": "expiresAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the download stops working; named in the ready and expired lines."
+    },
+    {
+      "name": "scope",
+      "type": "[MonarchCheckboxGroupOption]",
+      "default": "[]",
+      "description": "Kinds of data to choose from, all checked at first. No checklist when empty."
+    },
+    {
+      "name": "formats",
+      "type": "[MonarchDataExportFormat]",
+      "default": "[]",
+      "description": "File formats for a menu. No menu when empty."
+    },
+    {
+      "name": "defaultFormat",
+      "type": "String?",
+      "default": "nil",
+      "description": "The id of the format chosen at first. The first format when nil."
+    },
+    {
+      "name": "preparationNote",
+      "type": "String?",
+      "default": "nil",
+      "description": "How long preparing takes and how the person hears about it. Shown while idle, requested and preparing."
+    },
+    {
+      "name": "failureReason",
+      "type": "String?",
+      "default": "nil",
+      "description": "Extra detail under the status line when failed."
+    },
+    {
+      "name": "downloadURL",
+      "type": "URL?",
+      "default": "nil",
+      "description": "The file's link when ready, opened with openURL. Only http and https links are used."
+    },
+    {
+      "name": "isRequesting",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the request button as busy, for apps that track the request themselves."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchDataExportRequestLabels",
+      "default": "MonarchDataExportRequestLabels()",
+      "description": "Replacements for every built-in string; status lines are closures that receive the formatted dates."
+    },
+    {
+      "name": "onDownload",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Runs when Download is tapped, after the link is opened. Shows Download when ready even without a link."
+    },
+    {
+      "name": "onRequest",
+      "type": "(@MainActor (MonarchDataExportRequestDetails) async throws -> Void)?",
+      "default": "nil",
+      "description": "Requests an export with the chosen scope ids (in listed order) and format. Shows the request form while idle, expired or failed. The button is busy while it runs; a thrown error is shown."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "A neutral Not requested badge and, with onRequest, the form with Request export."
+    },
+    {
+      "name": "requested",
+      "description": "An info Requested badge and We received your request on <date>."
+    },
+    {
+      "name": "preparing",
+      "description": "An info Preparing badge, the status line and an indeterminate MonarchProgressViewStyle bar."
+    },
+    {
+      "name": "ready",
+      "description": "A success Ready badge, the dates, and a primary Download button."
+    },
+    {
+      "name": "expired",
+      "description": "A neutral Expired badge and the form with Request a new export."
+    },
+    {
+      "name": "failed",
+      "description": "A danger Failed badge, the failure reason and the form with Request a new export."
+    },
+    {
+      "name": "requesting",
+      "description": "The request button shows progress and ignores taps."
+    },
+    {
+      "name": "scope error",
+      "description": "With nothing checked, the checklist shows Choose at least one kind of data. as its error."
+    },
+    {
+      "name": "request failed",
+      "description": "A danger MonarchBanner with the error's description, announced."
+    }
+  ],
+  "appearance": "A MonarchCard with the title in the subheading style, a status badge in its tone with an icon, a muted description and the status line in the default text colour. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "The web's NativeSelect is a Picker with .pickerStyle(.menu); its Alert is MonarchBanner; its Checkbox list is MonarchCheckboxGroup, whose option type is reused for the scope. Dates use the environment's locale and time zone instead of the web's locale, timeZone and dateFormat props; they are formatted as an abbreviated date and short time. The web's download link with the download attribute is openURL, so the system decides how the file is saved. The web's headingLevel has no equivalent: the title has the header trait. The web's errorMessage closure is the error's LocalizedError description. Experimental: a product-screen composite that waits for a Rook iOS app to adopt it. Several closures are optional (onDownload, onRequest). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onDownload.",
+  "accessibility": [
+    "The card is a container named by its title; the title has the header trait.",
+    "The status is a badge with an icon and a word, not colour alone.",
+    "A new status line is announced when the status changes.",
+    "The preparing bar is named Preparing your export and stops animating with Reduce Motion, from MonarchProgressViewStyle.",
+    "The scope error is the checklist's error, announced by MonarchCheckboxGroup; a failed request is announced.",
+    "The buttons are standard MonarchButtons with 44-point touch targets."
+  ],
+  "edgeCases": [
+    "The checklist and format keep what the person chose while the card is shown; a new scope list given later does not reset them.",
+    "A download link with another scheme (file, javascript) is ignored; Download then shows only with onDownload.",
+    "An error without a LocalizedError description shows The request did not go through. Try again.",
+    "Without onRequest, the card only reports status."
+  ],
+  "tests": [
+    "MonarchDataExportRequestTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Request, prepare and download",
+      "fixture": "data-export-request",
+      "webExample": "Request, prepare and download",
+      "template": "MonarchDataExportRequest(\n    status: status,\n    scope: [\n        MonarchCheckboxGroupOption(id: {{scope.0.id}}, label: {{scope.0.label}}, description: {{scope.0.description}}),\n        MonarchCheckboxGroupOption(id: {{scope.1.id}}, label: {{scope.1.label}}, description: {{scope.1.description}}),\n        MonarchCheckboxGroupOption(id: {{scope.2.id}}, label: {{scope.2.label}}, description: {{scope.2.description}}),\n    ],\n    formats: [\n        MonarchDataExportFormat(id: {{formats.0.value}}, label: {{formats.0.label}}),\n        MonarchDataExportFormat(id: {{formats.1.value}}, label: {{formats.1.label}}),\n    ],\n    preparationNote: {{note}},\n    onRequest: { _ in status = .requested }\n)",
+      "setupTemplate": "@State private var status = MonarchDataExportStatus{{status|case}}",
+      "setup": "@State private var status = MonarchDataExportStatus.idle",
+      "code": "MonarchDataExportRequest(\n    status: status,\n    scope: [\n        MonarchCheckboxGroupOption(id: \"profile\", label: \"Profile and settings\", description: \"Name, email, preferences.\"),\n        MonarchCheckboxGroupOption(id: \"content\", label: \"Projects and documents\", description: \"Everything you created.\"),\n        MonarchCheckboxGroupOption(id: \"activity\", label: \"Activity history\", description: \"Sign-ins and changes you made.\"),\n    ],\n    formats: [\n        MonarchDataExportFormat(id: \"zip\", label: \"ZIP archive (JSON files)\"),\n        MonarchDataExportFormat(id: \"csv\", label: \"CSV spreadsheets\"),\n    ],\n    preparationNote: \"Preparing an export can take up to two days. We will email you when it is ready.\",\n    onRequest: { _ in status = .requested }\n)"
+    },
+    {
+      "title": "A ready export",
+      "code": "MonarchDataExportRequest(\n    status: .ready,\n    readyAt: Date(timeIntervalSince1970: 1_800_000_000),\n    expiresAt: Date(timeIntervalSince1970: 1_800_604_800),\n    downloadURL: URL(string: \"https://example.com/export.zip\")\n)\n.environment(\\.locale, Locale(identifier: \"en_US\"))\n.environment(\\.timeZone, TimeZone(identifier: \"UTC\") ?? .gmt)"
+    }
+  ],
+  "webEquivalent": "DataExportRequest",
+  "dependsOn": [
+    "card",
+    "checkbox-group",
+    "select",
+    "button",
+    "progress-bar",
+    "badge",
+    "alert",
+    "form-field"
+  ],
+  "icons": {
+    "scope.checked": "CheckGlyph",
+    "format": "ChevronDownGlyph"
+  },
+  "toneMap": {
+    "STATUS_TONE": {
+      "idle": "neutral",
+      "requested": "info",
+      "preparing": "info",
+      "ready": "success",
+      "expired": "neutral",
+      "failed": "danger"
+    }
+  }
+}

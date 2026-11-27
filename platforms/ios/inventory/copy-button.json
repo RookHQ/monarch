@@ -1,0 +1,153 @@
+{
+  "id": "copy-button",
+  "name": "MonarchCopyButton",
+  "title": "CopyButton",
+  "family": "actions",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Button, UIPasteboard, sensoryFeedback(_:trigger:), AccessibilityNotification.Announcement",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A button that copies a string to the pasteboard, shows a short \"Copied\" state, plays the success haptic and announces the result.",
+  "whenToUse": "Beside a value the person will paste elsewhere: an API key, a link, a reference number.",
+  "whenNotToUse": "To send content to another app, use ShareLink. To let people copy text they can also select, text selection (textSelection(.enabled)) may be enough.",
+  "api": [
+    "MonarchCopyButton.init(_ title: String? = nil, value: String, target: String? = nil, systemImage: String? = nil, variant: MonarchButtonVariant = .secondary, size: MonarchButtonSize = .md, isIconOnly: Bool = false, isSensitive: Bool = false, copiedTitle: String? = nil, copiedAnnouncement: String? = nil, resetAfter: Duration = .seconds(2), onCopy: (@MainActor (String) -> Void)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in title \"Copy\". Already localised."
+    },
+    {
+      "name": "value",
+      "type": "String",
+      "default": "required",
+      "description": "The text to copy."
+    },
+    {
+      "name": "target",
+      "type": "String?",
+      "default": "nil",
+      "description": "What is copied, added to the spoken name: \"Copy webhook URL\"."
+    },
+    {
+      "name": "systemImage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the copy symbol shown before a copy."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchButtonVariant",
+      "default": ".secondary",
+      "description": "primary, secondary, ghost or danger."
+    },
+    {
+      "name": "size",
+      "type": "MonarchButtonSize",
+      "default": ".md",
+      "description": "sm, md or lg."
+    },
+    {
+      "name": "isIconOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows only the icon. The title stays the spoken name."
+    },
+    {
+      "name": "isSensitive",
+      "type": "Bool",
+      "default": "false",
+      "description": "For secrets and recovery codes: the text stays on this device (no Universal Clipboard) and leaves the pasteboard after two minutes."
+    },
+    {
+      "name": "copiedTitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in title \"Copied\"."
+    },
+    {
+      "name": "copiedAnnouncement",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in announcement \"Copied to clipboard\"."
+    },
+    {
+      "name": "resetAfter",
+      "type": "Duration",
+      "default": ".seconds(2)",
+      "description": "How long the copied state lasts. Zero keeps it."
+    },
+    {
+      "name": "onCopy",
+      "type": "((String) -> Void)?",
+      "default": "nil",
+      "description": "Runs with the copied text after each copy."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "The copy symbol and the title."
+    },
+    {
+      "name": "copied",
+      "description": "A checkmark and the copied title, for resetAfter. A second copy restarts the time."
+    },
+    {
+      "name": "disabled",
+      "description": "The button's disabled colours, with disabled(_:)."
+    }
+  ],
+  "appearance": "The Monarch button in the chosen variant, in every theme. The copied state changes the symbol and the title, not the colour.",
+  "platformNotes": "The web component has an error state because a browser can refuse a clipboard write; writing to UIPasteboard does not fail, so there is no error state, error label or error callback. The web value can be a function or a promise; here it is a string, read when the button is pressed. The web default variant for an icon-only button is ghost; here the default is always secondary. iOS adds the success haptic. On iOS 16 and later the system shows its own paste notice in the app that pastes, not here.",
+  "accessibility": [
+    "It is a standard Button with the Monarch button style, so the trait, the disabled state and the 44-point touch target are the button's.",
+    "The spoken name is the visible title followed by target, so several copy buttons on a screen have different names.",
+    "With isIconOnly the title is still the spoken name.",
+    "After a copy VoiceOver announces \"Copied to clipboard\" (or copiedAnnouncement), and the name changes to the copied title until the state ends.",
+    "The copied state is a checkmark and a changed title, not a colour.",
+    "A success haptic is played with sensoryFeedback, which follows the system haptics setting."
+  ],
+  "edgeCases": [
+    "Both titles are laid out in the same cell, so the button keeps the width of the longer one.",
+    "resetAfter of zero keeps the copied state until the view is recreated.",
+    "A custom systemImage replaces only the idle symbol; the copied symbol is always a checkmark.",
+    "The value is written to the general pasteboard as plain text and replaces what was there."
+  ],
+  "tests": [
+    "MonarchCopyButtonTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Labels and icon-only",
+      "fixture": "copy-button",
+      "webExample": "Labels and icon-only",
+      "template": "HStack {\n    MonarchCopyButton(value: {{buttons.0.value}}, target: {{buttons.0.target}})\n    MonarchCopyButton(\n        {{buttons.1.label}},\n        value: {{buttons.1.value}},\n        variant: .{{buttons.1.variant|raw}},\n        copiedTitle: {{buttons.1.copiedLabel}}\n    )\n    MonarchCopyButton(\n        {{buttons.2.label}},\n        value: {{buttons.2.value}},\n        variant: .{{buttons.2.variant|raw}},\n        size: .{{buttons.2.size|raw}},\n        isIconOnly: {{buttons.2.iconOnly}}\n    )\n}",
+      "code": "HStack {\n    MonarchCopyButton(value: \"https://example.com/hooks/inbound\", target: \"webhook URL\")\n    MonarchCopyButton(\n        \"Copy link\",\n        value: \"https://example.com/s/q3-plan\",\n        variant: .primary,\n        copiedTitle: \"Link copied\"\n    )\n    MonarchCopyButton(\n        \"Copy workspace ID\",\n        value: \"ws_01HZX4\",\n        variant: .ghost,\n        size: .sm,\n        isIconOnly: true\n    )\n}"
+    },
+    {
+      "title": "Icon only, with a callback",
+      "code": "MonarchCopyButton(value: key, target: \"API key\", variant: .ghost, isIconOnly: true) { _ in\n    copies += 1\n}",
+      "setup": "private let key = \"sk_test_1042\"\n@State private var copies = 0"
+    },
+    {
+      "title": "A secret",
+      "code": "MonarchCopyButton(value: \"sk_live_1234\", target: \"secret key\", isSensitive: true)"
+    }
+  ],
+  "webEquivalent": "CopyButton",
+  "dependsOn": [
+    "button"
+  ],
+  "icons": {
+    "copy": "CopyGlyph"
+  }
+}

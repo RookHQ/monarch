@@ -1,0 +1,142 @@
+{
+  "id": "ai-handoff",
+  "name": "MonarchAiHandoff",
+  "title": "AiHandoff",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Row with MonarchAiAgentAvatar, MonarchAvatar and androidx.compose.material3.Text",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A marker in a thread where one agent hands the work to another agent or to a person, with the reason and the time.",
+  "whenToUse": "In an AI conversation or activity feed, at the point where a different agent or a person takes over the task.",
+  "whenNotToUse": "For a reset or summary of the conversation context use MonarchAiContextDivider. For a list of every agent on a task use MonarchAiMultiAgentRoster.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchAiHandoff(from: MonarchAiAgentRef, to: MonarchAiHandoffTarget, modifier: Modifier = Modifier, reason: String? = null, dateMillis: Long? = null, nowMillis: Long? = null, fromImage: Painter? = null, arrowIcon: (@Composable () -> Unit)? = null, labels: MonarchAiHandoffLabels = MonarchAiHandoffLabels())",
+    "sealed interface MonarchAiHandoffTarget { val name: String; val image: Painter?; class Agent(agent: MonarchAiAgentRef, image: Painter? = null); class Person(name: String, image: Painter? = null, seed: String? = null) }",
+    "class MonarchAiHandoffLabels(label: String? = null, handedOff: ((from: String, to: String, toPerson: Boolean) -> String)? = null, agentKind: String? = null, reason: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "from",
+      "type": "MonarchAiAgentRef",
+      "default": "required",
+      "description": "The agent that hands the work over."
+    },
+    {
+      "name": "to",
+      "type": "MonarchAiHandoffTarget",
+      "default": "required",
+      "description": "The agent (Agent) or the person (Person) that takes the work, each with an optional picture."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the marker."
+    },
+    {
+      "name": "reason",
+      "type": "String?",
+      "default": "null",
+      "description": "Why the work moved, shown under the sentence in muted text. Blank text is left out."
+    },
+    {
+      "name": "dateMillis",
+      "type": "Long?",
+      "default": "null",
+      "description": "When it happened, in epoch milliseconds (UTC), shown as a relative time such as \"3 minutes ago\"."
+    },
+    {
+      "name": "nowMillis",
+      "type": "Long?",
+      "default": "null",
+      "description": "The reference time for dateMillis. null is the current time."
+    },
+    {
+      "name": "fromImage",
+      "type": "Painter?",
+      "default": "null",
+      "description": "The picture of the agent that hands over, loaded by the app. null shows initials."
+    },
+    {
+      "name": "arrowIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "An arrow between the pictures, tinted with the subtle text color. Monarch bundles no icons; without it the pictures sit side by side."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiHandoffLabels",
+      "default": "MonarchAiHandoffLabels()",
+      "description": "Replacements for \"Handoff\", the sentence, \"AI agent\" and \"Reason:\"."
+    }
+  ],
+  "states": [
+    {
+      "name": "to an agent",
+      "description": "The target is a square agent avatar; the border and the side lines use the AI border color."
+    },
+    {
+      "name": "to a person",
+      "description": "The target is a round person avatar; the border and the side lines use the default border color."
+    },
+    {
+      "name": "narrow window",
+      "description": "Below 640dp the side lines are left out and the marker fills the width, with the pictures at the top."
+    },
+    {
+      "name": "wide window",
+      "description": "From 640dp dashed lines run from both sides of the marker."
+    }
+  ],
+  "appearance": "A rounded row on the surface color with a 1dp border in the AI border role (agent) or the default border role (person). The sentence is caption text in the default text role with the names in the semibold weight, the reason in the muted role and the time in the subtle role. All colors are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web takes the reason as any node and a locale; here the reason is a String and the time is formatted by android.text.format.DateUtils in the device locale. The web drops the side lines below 30rem of its container; Android draws them only on windows from 640dp (the sm breakpoint), so phones show the full-width marker. The web marks the root with the note role; Compose has no note role, so the marker is one element whose description starts with \"Handoff\". The web and iOS draw an arrow glyph; Monarch for Android bundles no icons, so the arrow is the optional arrowIcon slot. The person target is MonarchAiHandoffTarget.Person instead of an object with kind human; pictures are Painters loaded by the app, not URLs. Marked experimental because it is a domain composite that no Rook app has adopted yet.",
+  "accessibility": [
+    "The marker is one TalkBack element read as \"Handoff\", the sentence, \"Reason:\" with the reason, then the time.",
+    "Agent names are read with \"(AI agent)\" after them and a person's name is not, so the direction is clear without the pictures.",
+    "The avatars, the arrow and the lines are not read.",
+    "The sentence is built by a function of both names, so a translation can reorder it; the names are made strong wherever they appear.",
+    "Nothing is interactive; text wraps at font scale 2.0."
+  ],
+  "edgeCases": [
+    "Long names and reasons wrap; nothing is cut.",
+    "A blank reason is left out of the view and of the spoken text.",
+    "Without dateMillis no time is shown.",
+    "A name that also appears inside the other name is made strong at each occurrence."
+  ],
+  "tests": [
+    "MonarchAiHandoffTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Agent to agent",
+      "fixture": "ai-handoff",
+      "webExample": "Agent to agent",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiHandoff(\n    from = MonarchAiAgentRef(name = {{from.name}}, id = {{from.id}}),\n    to = MonarchAiHandoffTarget.Agent(MonarchAiAgentRef(name = {{to.name}}, id = {{to.id}})),\n    reason = {{reason}},\n    dateMillis = {{at|millis}},\n    nowMillis = {{now|millis}},\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiHandoff(\n    from = MonarchAiAgentRef(name = \"Research agent\", id = \"research\"),\n    to = MonarchAiHandoffTarget.Agent(MonarchAiAgentRef(name = \"Writing agent\", id = \"writer\")),\n    reason = \"Sources are ready to draft from\",\n    dateMillis = 1_772_452_620_000L,\n    nowMillis = 1_772_452_800_000L,\n)"
+    },
+    {
+      "title": "An agent hands over to a person",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiHandoff(\n    from = MonarchAiAgentRef(name = \"Billing agent\"),\n    to = MonarchAiHandoffTarget.Person(\"Sam Lee\"),\n    reason = \"Needs a person to approve the refund\",\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ]
+    }
+  ],
+  "webEquivalent": "AiHandoff",
+  "dependsOn": [
+    "ai-agent-avatar",
+    "avatar",
+    "ai-context-divider"
+  ]
+}

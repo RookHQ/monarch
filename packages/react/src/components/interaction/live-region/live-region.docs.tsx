@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { AnnouncerProvider, Button, LiveRegion, useAnnouncer } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './live-region.fixture.json';
 
 function CounterDemo() {
   const [count, setCount] = useState(0);
   return (
     <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-      <Button onClick={() => setCount((c) => c + 1)}>Add item</Button>
+      <Button onClick={() => setCount((c) => c + 1)}>{fixture.data.add}</Button>
       <LiveRegion visuallyHidden={false}>
-        {count === 0 ? 'No items yet.' : `${count} ${count === 1 ? 'item' : 'items'} in the list.`}
+        {count === 0
+          ? fixture.data.empty
+          : `${count} ${count === 1 ? 'item' : 'items'} in the list.`}
       </LiveRegion>
     </div>
   );

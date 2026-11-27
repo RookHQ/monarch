@@ -1,0 +1,203 @@
+{
+  "id": "condition-editor",
+  "name": "MonarchConditionEditor",
+  "title": "ConditionEditor",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of outlined condition cards; MonarchSelect (androidx.compose.material3.ExposedDropdownMenuBox) for field, operator and one option; MonarchTextField (androidx.compose.material3.OutlinedTextField) for text and numbers; MonarchMultiSelect (androidx.compose.material3.ModalBottomSheet) for several options and free values; androidx.compose.material3.DatePickerDialog for days; androidx.compose.material3.SingleChoiceSegmentedButtonRow for all / any",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Edits a list of conditions, each a field, an operator and a value input that fits the field, with an all / any switch.",
+  "whenToUse": "When people define when something applies: ticket routing rules, form logic such as \"show this question when\", eligibility rules. Fields are data, so one editor serves every product.",
+  "whenNotToUse": "For nested AND / OR groups use MonarchQueryBuilder, which is built on this editor. For filtering a list on screen use filter chips or a filter sheet; for the actions a rule runs use MonarchActionEditor.",
+  "api": [
+    "@Composable fun MonarchConditionEditor(value: List<MonarchCondition>, onValueChange: (List<MonarchCondition>) -> Unit, fields: List<MonarchConditionField>, modifier: Modifier = Modifier, match: MonarchConditionMatch? = null, onMatchChange: ((MonarchConditionMatch) -> Unit)? = null, maxConditions: Int = 20, showErrors: Boolean = false, defaultField: String? = null, enabled: Boolean = true, createId: (() -> String)? = null, removeIcon: (@Composable () -> Unit)? = null, addIcon: (@Composable () -> Unit)? = null, emptyContent: (@Composable () -> Unit)? = null, labels: MonarchConditionEditorLabels = MonarchConditionEditorLabels())",
+    "data class MonarchCondition(id: String, field: String, operator: MonarchConditionOperator, value: MonarchConditionValue? = null) { fun problem(fields: List<MonarchConditionField>): MonarchConditionProblem?; fun matches(actual: Any?): Boolean; companion object { fun create(id: String, field: MonarchConditionField?): MonarchCondition; fun problems(conditions: List<MonarchCondition>, fields: List<MonarchConditionField>): Map<String, MonarchConditionProblem>; fun evaluate(conditions: List<MonarchCondition>, values: Map<String, Any?>, match: MonarchConditionMatch = MonarchConditionMatch.All): Boolean } }",
+    "class MonarchConditionField(key: String, label: String, type: MonarchConditionFieldType, options: List<MonarchSelectOption<String>> = emptyList(), group: String? = null, operators: List<MonarchConditionOperator>? = null, placeholder: String? = null, enabled: Boolean = true, disabledReason: String? = null)",
+    "enum class MonarchConditionFieldType { Text, Number, Date, Select, MultiSelect, Tags, Boolean }",
+    "enum class MonarchConditionOperator { Eq, Neq, In, Nin, Contains, NotContains, Gt, Gte, Lt, Lte, Before, After, IsTrue, IsFalse, IsEmpty, IsNotEmpty; val takesValue: Boolean; val takesList: Boolean; companion object { fun forField(field: MonarchConditionField?): List<MonarchConditionOperator>; fun defaultsFor(type: MonarchConditionFieldType): List<MonarchConditionOperator> } }",
+    "sealed interface MonarchConditionValue { val isEmpty: Boolean; val asList: List<String>; data class Text(text: String); data class Number(text: String) { constructor(number: Double); val number: Double? }; data class Date(millis: Long?); data class Values(values: List<String>) }",
+    "enum class MonarchConditionMatch { All, Any }",
+    "enum class MonarchConditionProblem { Field, Value, Number, Option }",
+    "class MonarchConditionEditorLabels(label: String? = null, condition: ((position: Int) -> String)? = null, field: String? = null, operator: String? = null, value: String? = null, remove: String? = null, removeItem: ((position: Int) -> String)? = null, add: String? = null, matchBefore: String? = null, matchAfter: String? = null, matchAll: String? = null, matchAny: String? = null, empty: String? = null, choose: String? = null, operators: Map<MonarchConditionOperator, String> = emptyMap(), unknownField: ((key: String) -> String)? = null, removedOption: ((value: String) -> String)? = null, problems: Map<MonarchConditionProblem, String> = emptyMap(), maxReached: ((max: Int) -> String)? = null, chooseDate: String? = null, confirmDate: String? = null, cancel: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "value",
+      "type": "List<MonarchCondition>",
+      "default": "required",
+      "description": "The conditions, in order. Ids must be unique."
+    },
+    {
+      "name": "onValueChange",
+      "type": "(List<MonarchCondition>) -> Unit",
+      "default": "required",
+      "description": "Called with the whole new list after every change: add, remove, field, operator or value."
+    },
+    {
+      "name": "fields",
+      "type": "List<MonarchConditionField>",
+      "default": "required",
+      "description": "The fields a condition can test. The type decides the operators and the value input; operators narrows them; options are the choices of Select and MultiSelect and the suggestions of Tags. A disabled field stays listed with its reason as a second line."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the editor."
+    },
+    {
+      "name": "match",
+      "type": "MonarchConditionMatch?",
+      "default": "null",
+      "description": "All or any. With onMatchChange, shown as a segmented switch once there are two conditions."
+    },
+    {
+      "name": "onMatchChange",
+      "type": "((MonarchConditionMatch) -> Unit)?",
+      "default": "null",
+      "description": "Called with the new choice of the all / any switch."
+    },
+    {
+      "name": "maxConditions",
+      "type": "Int",
+      "default": "20",
+      "description": "The most conditions. At this count the add button is replaced by \"You can add up to 20 conditions.\""
+    },
+    {
+      "name": "showErrors",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows the problem of each incomplete condition on the control that needs attention and outlines the condition in the danger border, for example after a save attempt."
+    },
+    {
+      "name": "defaultField",
+      "type": "String?",
+      "default": "null",
+      "description": "The key of the field new conditions start on. The first enabled field when null or unknown."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "When false every menu, input and button is disabled."
+    },
+    {
+      "name": "createId",
+      "type": "(() -> String)?",
+      "default": "null",
+      "description": "Makes the id of a new condition. By default the first free condition-<n>."
+    },
+    {
+      "name": "removeIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The icon of each remove button, shown in a Material 3 IconButton. Monarch bundles no icons; without it the button is a small ghost button that reads \"Remove\"."
+    },
+    {
+      "name": "addIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "An icon before the text of the add button, such as a plus."
+    },
+    {
+      "name": "emptyContent",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "Replaces the note shown when there are no conditions."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchConditionEditorLabels",
+      "default": "MonarchConditionEditorLabels()",
+      "description": "Replacements for the built-in strings, including the operator names and problem messages."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "\"No conditions. This applies every time.\" (or emptyContent) above the add button."
+    },
+    {
+      "name": "conditions",
+      "description": "One outlined card per condition: heading \"Condition 1\" with the remove button, then the field menu, the operator menu and the value input, one per line."
+    },
+    {
+      "name": "no value",
+      "description": "Operators such as \"is empty\" and \"is yes\" show no value input."
+    },
+    {
+      "name": "match switch",
+      "description": "From two conditions, with match and onMatchChange: \"Match [all | any] of these conditions\", wrapping at large text."
+    },
+    {
+      "name": "errors",
+      "description": "With showErrors, an incomplete condition takes the danger border and its problem shows as the error of the field menu (no field) or of the value input (no value, not a number, removed option)."
+    },
+    {
+      "name": "limit reached",
+      "description": "The add button is replaced by a muted note."
+    },
+    {
+      "name": "disabled",
+      "description": "Every control and button takes its disabled colors and does nothing."
+    },
+    {
+      "name": "removed field or option",
+      "description": "A stored field the list no longer has shows as \"key (removed)\"; a stored option as \"value (removed option)\"."
+    }
+  ],
+  "appearance": "Each condition is a card on the surface fill with the subtle border (the danger border while it shows a problem), with the subheading style for its title. Menus, text fields, the sheet and the date picker take their Monarch and Material 3 theme colors; notes use the muted text color. Light, dark and both high-contrast themes follow from those roles.",
+  "platformNotes": "The web lays field, operator and value side by side in a row; on Android each condition is a card with one control per line, which fits a phone and large text. The web's native selects are MonarchSelect menus, its multiple Combobox and TagInput are one MonarchMultiSelect sheet (free values are created from the search text), and its date input is a button that opens the Material 3 DatePickerDialog. A day is MonarchConditionValue.Date in epoch milliseconds at UTC midnight, not YYYY-MM-DD text, and Eq, Before and After compare the UTC day. A number keeps the typed text (MonarchConditionValue.Number) so half-typed input survives; its number is read with a dot as the decimal separator. The web field's value is called key here, and its disabled flag is enabled. The web's per-control accessible names (\"Condition 1 field\") are a visible label per control under a heading per condition. The web moves focus after add and remove; Compose leaves focus to the system. The web's messages object is MonarchConditionEditorLabels. Same name as iOS's plan; iOS has not built it yet.",
+  "accessibility": [
+    "Each condition title (\"Condition 1\") is a heading, so TalkBack can move between conditions by heading.",
+    "The remove button is named with the position (\"Remove condition 1\") and has a 48dp touch target, also when it shows an icon.",
+    "The field, operator and value controls keep their Material 3 roles and visible labels; a problem is set as the error of the control that needs attention, in text, not only as the danger border.",
+    "The all / any switch is a Material 3 segmented button row; the selected segment is read as selected and sits between the words \"Match\" and \"of these conditions\".",
+    "When disabled, the add and remove buttons are announced as disabled."
+  ],
+  "edgeCases": [
+    "A field removed from fields keeps its conditions: they show \"key (removed)\" and report the Field problem.",
+    "An operator the field no longer offers stays listed first, so a stored condition is shown as stored.",
+    "Changing the field starts the condition again on the new field's first operator; changing the operator keeps the value when its shape allows, and converts between one value and a list.",
+    "Evaluation is a convenience for previews: text comparisons ignore case, numbers are read from numbers or text, days from epoch milliseconds. The server stays the authority.",
+    "Ids are matched to keep each condition's state; give saved conditions their stored ids."
+  ],
+  "tests": [
+    "MonarchConditionEditorTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Ticket conditions with a live check",
+      "fixture": "condition-editor",
+      "webExample": "Ticket conditions with a live check",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchConditionEditor(\n        value = conditions,\n        onValueChange = { conditions = it },\n        fields = fields,\n        match = match,\n        onMatchChange = { match = it },\n    )\n    MonarchText(text = \"A high-priority refund request matches.\", style = MonarchTextStyle.Caption)\n}",
+      "setupTemplate": "val fields = listOf(\n    MonarchConditionField(\n        key = {{fields.0.value}},\n        label = {{fields.0.label}},\n        type = MonarchConditionFieldType.{{fields.0.type|pascal}},\n        options = listOf(\n            MonarchSelectOption({{fields.0.options.0.value}}, {{fields.0.options.0.label}}),\n            MonarchSelectOption({{fields.0.options.1.value}}, {{fields.0.options.1.label}}),\n            MonarchSelectOption({{fields.0.options.2.value}}, {{fields.0.options.2.label}}),\n            MonarchSelectOption({{fields.0.options.3.value}}, {{fields.0.options.3.label}}),\n        ),\n    ),\n    MonarchConditionField(\n        key = {{fields.1.value}},\n        label = {{fields.1.label}},\n        type = MonarchConditionFieldType.{{fields.1.type|pascal}},\n    ),\n    MonarchConditionField(\n        key = {{fields.2.value}},\n        label = {{fields.2.label}},\n        type = MonarchConditionFieldType.{{fields.2.type|pascal}},\n        placeholder = {{fields.2.placeholder}},\n    ),\n    MonarchConditionField(\n        key = {{fields.3.value}},\n        label = {{fields.3.label}},\n        type = MonarchConditionFieldType.{{fields.3.type|pascal}},\n        placeholder = {{fields.3.placeholder}},\n    ),\n    MonarchConditionField(\n        key = {{fields.4.value}},\n        label = {{fields.4.label}},\n        type = MonarchConditionFieldType.{{fields.4.type|pascal}},\n    ),\n    MonarchConditionField(\n        key = {{fields.5.value}},\n        label = {{fields.5.label}},\n        type = MonarchConditionFieldType.{{fields.5.type|pascal}},\n        options = listOf(\n            MonarchSelectOption({{fields.5.options.0.value}}, {{fields.5.options.0.label}}),\n        ),\n    ),\n    MonarchConditionField(\n        key = {{fields.6.value}},\n        label = {{fields.6.label}},\n        type = MonarchConditionFieldType.{{fields.6.type|pascal}},\n        options = listOf(\n            MonarchSelectOption({{fields.6.options.0.value}}, {{fields.6.options.0.label}}),\n            MonarchSelectOption({{fields.6.options.1.value}}, {{fields.6.options.1.label}}),\n        ),\n        group = {{fields.6.group}},\n    ),\n)\nvar conditions by remember {\n    mutableStateOf(\n        listOf(\n            MonarchCondition({{conditions.0.id}}, {{conditions.0.field}}, MonarchConditionOperator.{{conditions.0.operator|pascal}}, MonarchConditionValue.Values(listOf({{conditions.0.value.0}}, {{conditions.0.value.1}}))),\n            MonarchCondition({{conditions.1.id}}, {{conditions.1.field}}, MonarchConditionOperator.{{conditions.1.operator|pascal}}, MonarchConditionValue.Text({{conditions.1.value}})),\n        ),\n    )\n}\nvar match by remember { mutableStateOf(MonarchConditionMatch.{{match|pascal}}) }",
+      "setup": "val fields = listOf(\n    MonarchConditionField(\n        key = \"priority\",\n        label = \"Priority\",\n        type = MonarchConditionFieldType.Select,\n        options = listOf(\n            MonarchSelectOption(\"low\", \"Low\"),\n            MonarchSelectOption(\"normal\", \"Normal\"),\n            MonarchSelectOption(\"high\", \"High\"),\n            MonarchSelectOption(\"urgent\", \"Urgent\"),\n        ),\n    ),\n    MonarchConditionField(\n        key = \"subject\",\n        label = \"Subject\",\n        type = MonarchConditionFieldType.Text,\n    ),\n    MonarchConditionField(\n        key = \"requester.domain\",\n        label = \"Requester email domain\",\n        type = MonarchConditionFieldType.Text,\n        placeholder = \"example.com\",\n    ),\n    MonarchConditionField(\n        key = \"hoursOpen\",\n        label = \"Hours since created\",\n        type = MonarchConditionFieldType.Number,\n        placeholder = \"Hours\",\n    ),\n    MonarchConditionField(\n        key = \"businessHours\",\n        label = \"Within business hours\",\n        type = MonarchConditionFieldType.Boolean,\n    ),\n    MonarchConditionField(\n        key = \"tags\",\n        label = \"Tags\",\n        type = MonarchConditionFieldType.Tags,\n        options = listOf(\n            MonarchSelectOption(\"billing\", \"billing\"),\n        ),\n    ),\n    MonarchConditionField(\n        key = \"custom.plan\",\n        label = \"Plan\",\n        type = MonarchConditionFieldType.Select,\n        options = listOf(\n            MonarchSelectOption(\"starter\", \"Starter\"),\n            MonarchSelectOption(\"team\", \"Team\"),\n        ),\n        group = \"Custom fields\",\n    ),\n)\nvar conditions by remember {\n    mutableStateOf(\n        listOf(\n            MonarchCondition(\"1\", \"priority\", MonarchConditionOperator.In, MonarchConditionValue.Values(listOf(\"high\", \"urgent\"))),\n            MonarchCondition(\"2\", \"subject\", MonarchConditionOperator.Contains, MonarchConditionValue.Text(\"refund\")),\n        ),\n    )\n}\nvar match by remember { mutableStateOf(MonarchConditionMatch.All) }",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchConditionEditor(\n        value = conditions,\n        onValueChange = { conditions = it },\n        fields = fields,\n        match = match,\n        onMatchChange = { match = it },\n    )\n    MonarchText(text = \"A high-priority refund request matches.\", style = MonarchTextStyle.Caption)\n}"
+    },
+    {
+      "title": "Validate before saving, and test a sample record",
+      "setup": "val fields = listOf(MonarchConditionField(key = \"subject\", label = \"Subject\", type = MonarchConditionFieldType.Text))\nvar conditions by remember { mutableStateOf(listOf(MonarchCondition.create(\"c1\", fields.first()))) }\nvar submitted by remember { mutableStateOf(false) }",
+      "code": "MonarchConditionEditor(\n    value = conditions,\n    onValueChange = { conditions = it },\n    fields = fields,\n    showErrors = submitted,\n)\nMonarchButton(\n    text = \"Save\",\n    onClick = { submitted = true },\n    enabled = !submitted || MonarchCondition.problems(conditions, fields).isEmpty(),\n)\nval matches = MonarchCondition.evaluate(conditions, mapOf(\"subject\" to \"Refund request\"))\nMonarchText(text = if (matches) \"A refund request matches.\" else \"A refund request does not match.\")"
+    }
+  ],
+  "webEquivalent": "ConditionEditor",
+  "dependsOn": [
+    "select",
+    "text-field",
+    "segmented-control",
+    "date-picker"
+  ],
+  "icons": {
+    "add": "PlusGlyph",
+    "remove": "CloseGlyph",
+    "select": "ChevronDownGlyph"
+  }
+}

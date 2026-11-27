@@ -7,6 +7,8 @@ import {
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { GearIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './privacy-choices-link.fixture.json';
 
 /** Keeps the demo's choice in memory. */
 function memoryStorage(): ConsentStorage {
@@ -25,6 +27,7 @@ function FooterDemo({ withIcon = false }: { withIcon?: boolean }) {
     <ConsentProvider policyVersion="2026-01" regime="opt-out" storage={storage}>
       <footer>
         <PrivacyChoicesLink
+          label={fixture.data.label}
           policyHref="#privacy-policy"
           {...(withIcon ? { icon: <GearIcon /> } : {})}
         />

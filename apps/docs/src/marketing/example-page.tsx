@@ -169,7 +169,7 @@ export function MarketingExample({ productName }: { productName: string }) {
               Log in
             </Button>
             <Button variant="primary" size="sm">
-              Start free
+              Get started
             </Button>
           </>
         }
@@ -189,7 +189,7 @@ export function MarketingExample({ productName }: { productName: string }) {
               <Button variant="secondary">See how it works</Button>
             </>
           }
-          note="Free for teams of up to 10. No card needed."
+          note="One Rook ID signs you in to every Rook app."
           media={
             <ProductFrame
               label="Editor showing a launch plan with an outline, a decisions table and the Assistant panel"

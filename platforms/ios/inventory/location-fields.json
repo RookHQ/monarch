@@ -1,0 +1,175 @@
+{
+  "id": "location-fields",
+  "name": "MonarchLocationFields",
+  "title": "LocationFields",
+  "family": "geo",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchCountrySelect or MonarchCombobox for the country, MonarchRegionSelect for the region, MonarchCombobox with searchText and .task(id:) or MonarchTextField with .textContentType(.addressCity) for the city, and MonarchTextField with .textContentType(.postalCode) for the postal code, in a VStack",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Country, region, city and postal code as one address block, labelled with each country's own words, with lists from the built-in data or an injected adapter.",
+  "whenToUse": "In a form that needs where someone is (billing, shipping, a company's registered address) as separate, structured parts.",
+  "whenNotToUse": "For a full street address found by typing, use MonarchAddressAutocomplete. For only a country or only a region, use MonarchCountrySelect or MonarchRegionSelect on their own.",
+  "api": [
+    "init(_ legend: String? = nil, value: Binding<MonarchLocationValue>, adapter: MonarchLocationAdapter = MonarchLocationAdapter(), fields: [MonarchLocationField] = MonarchLocationField.allCases, required: Set<MonarchLocationField> = [], errors: [MonarchLocationField: String] = [:], priorityCountries: [String] = [], locale: Locale? = nil, cityMinQuery: Int = 2, cityDebounce: Duration = .milliseconds(250), allowsCustomCity: Bool = true, labels: MonarchLocationFieldsLabels = MonarchLocationFieldsLabels())",
+    "struct MonarchLocationValue: Equatable, Hashable, Sendable { var country: String?; var region: String?; var regionName: String; var city: String; var cityID: String?; var postalCode: String; init(country: String? = nil, region: String? = nil, regionName: String = \"\", city: String = \"\", cityID: String? = nil, postalCode: String = \"\") }",
+    "enum MonarchLocationField: String, CaseIterable { case country, region, city, postalCode }",
+    "struct MonarchLocationAdapter: Sendable { init(countries: (@Sendable () async throws -> [MonarchLocationOption])? = nil, regions: (@Sendable (String) async throws -> MonarchLocationRegions)? = nil, cities: (@Sendable (MonarchLocationCityQuery) async throws -> [MonarchLocationCity])? = nil) }",
+    "struct MonarchLocationOption: Identifiable, Hashable, Sendable { init(id: String, label: String, description: String? = nil) }",
+    "struct MonarchLocationRegions: Hashable, Sendable { init(_ regions: [MonarchRegion], label: String? = nil) }",
+    "struct MonarchLocationCity: Identifiable, Hashable, Sendable { init(id: String, name: String, description: String? = nil, region: MonarchRegion? = nil) }",
+    "struct MonarchLocationCityQuery: Hashable, Sendable { let country: String; let region: String?; let query: String }",
+    "struct MonarchLocationFieldsLabels: Sendable { init(country:region:city:postalCode:countriesLoadFailed:regionsLoadFailed:citiesLoadFailed:chooseCountryFirst:typeMore:noMatch:useTyped:), every parameter optional }"
+  ],
+  "options": [
+    {
+      "name": "legend",
+      "type": "String?",
+      "default": "nil",
+      "description": "A visible heading over the fields, with the header trait."
+    },
+    {
+      "name": "value",
+      "type": "Binding<MonarchLocationValue>",
+      "default": "required",
+      "description": "The address. A new country clears the region, city and postal code; a different listed region clears the city."
+    },
+    {
+      "name": "adapter",
+      "type": "MonarchLocationAdapter",
+      "default": "MonarchLocationAdapter()",
+      "description": "Where the countries, regions and cities come from. A nil closure uses the built-in country list, the built-in region lists with a text field for other countries, and a city text field."
+    },
+    {
+      "name": "fields",
+      "type": "[MonarchLocationField]",
+      "default": "MonarchLocationField.allCases",
+      "description": "The fields to show, in order."
+    },
+    {
+      "name": "required",
+      "type": "Set<MonarchLocationField>",
+      "default": "[]",
+      "description": "Fields that must be filled; the country, region and city search fields show a required mark and add Required to their hint."
+    },
+    {
+      "name": "errors",
+      "type": "[MonarchLocationField: String]",
+      "default": "[:]",
+      "description": "An error message per field, shown with an icon and announced."
+    },
+    {
+      "name": "priorityCountries",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Country codes listed first under Suggested in the built-in country list."
+    },
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "nil",
+      "description": "The language of the built-in country names. The environment's locale by default."
+    },
+    {
+      "name": "cityMinQuery",
+      "type": "Int",
+      "default": "2",
+      "description": "Letters needed before cities are searched while no region is chosen. With a region, its cities are listed at once."
+    },
+    {
+      "name": "cityDebounce",
+      "type": "Duration",
+      "default": ".milliseconds(250)",
+      "description": "How long to wait after typing before the city search runs."
+    },
+    {
+      "name": "allowsCustomCity",
+      "type": "Bool",
+      "default": "true",
+      "description": "Offers a Use “text” row that keeps the typed text as the city when it is not among the results."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchLocationFieldsLabels",
+      "default": "MonarchLocationFieldsLabels()",
+      "description": "Replaces the field labels, the load errors, Choose a country first, the city list's messages and the Use “text” row."
+    }
+  ],
+  "states": [
+    {
+      "name": "no country",
+      "description": "The region field is disabled with Choose a country first; a city search field is disabled with the same prompt."
+    },
+    {
+      "name": "listed region",
+      "description": "A MonarchRegionSelect list labelled with the country's word, such as State or Province or territory."
+    },
+    {
+      "name": "typed region",
+      "description": "A text field for a country without a list, or when the adapter returns no regions."
+    },
+    {
+      "name": "loading",
+      "description": "The country or region list shows Loading... while the adapter runs; the city list shows a progress indicator while it searches."
+    },
+    {
+      "name": "load failed",
+      "description": "The country or region field has an inline error with Try again; a failed city search shows Couldn't load the cities. as the list's text."
+    },
+    {
+      "name": "error",
+      "description": "A field with a message has the danger border, an icon and the text, and the message is announced."
+    },
+    {
+      "name": "disabled",
+      "description": "Every field uses its disabled roles and cannot be changed."
+    }
+  ],
+  "appearance": "The fields are MonarchCountrySelect, MonarchRegionSelect, MonarchCombobox and MonarchTextField, so they share the input background, border and error roles; the legend uses the subheading style in the default text role. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "The web LocationFields lays the fields out in a grid in a fieldset; on iOS they stack in one column, which fits a phone and Dynamic Type. The web adapter's AbortSignal is Swift task cancellation. Without an adapter the web needs a country list from the product; iOS uses MonarchCountrySelect with Foundation's country names and MonarchRegionSelect's built-in lists, so the default works with no data. The postal code label follows the country (ZIP code for US, Postcode for GB and AU, PIN code for IN), which the web does not do. MonarchTextField has no required mark, so required applies the mark to the list fields only. The web value's cityId is cityID, following Swift naming. A failed city search has no Try again button in the list; typing again searches again. Android plans the same component. MonarchLocationAdapter has several optional closures (countries, regions, cities). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is countries.",
+  "accessibility": [
+    "The legend has the header trait and the fields are one container, so VoiceOver can move through the block.",
+    "Each field is the button or text field of the component it is built on, labelled with the field's label, valued with the chosen name, and with the error, help and Required in its hint.",
+    "The city and postal code text fields tell AutoFill they hold the city and the postal code; the region text field tells it the state.",
+    "A failed country or region load is an inline error with a Try again button."
+  ],
+  "edgeCases": [
+    "Changing the country clears every other part, so a region or city of another country never stays behind.",
+    "A city chosen before a region fills in the city's region; a region chosen afterwards that differs clears the city.",
+    "Typed city text is stored with cityID nil, so the app can tell it from a listed city.",
+    "Adapter regions are loaded once per country while the view is shown; a failed load is asked again only after Try again.",
+    "Long legends and labels wrap at every text size."
+  ],
+  "tests": [
+    "MonarchLocationFieldsTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Controlled address",
+      "fixture": "location-fields",
+      "webExample": "Controlled address",
+      "template": "VStack(alignment: .leading, spacing: 12) {\n    MonarchLocationFields(\n        {{legend}},\n        value: $address,\n        adapter: adapter,\n        required: [{{required.0|case}}, {{required.1|case}}]\n    )\n    Text(json)\n        .monarchTextStyle(.code)\n}",
+      "setupTemplate": "@State private var address = MonarchLocationValue(country: {{value.country}}, region: {{value.region}}, regionName: {{value.regionName}}, city: {{value.city}}, cityID: {{value.cityId}}, postalCode: {{value.postalCode}})\n\nprivate let adapter = MonarchLocationAdapter(\n    countries: {\n        [\n            MonarchLocationOption(id: \"CA\", label: \"Canada\"),\n            MonarchLocationOption(id: \"IN\", label: \"India\"),\n            MonarchLocationOption(id: \"SG\", label: \"Singapore\"),\n            MonarchLocationOption(id: \"AE\", label: \"United Arab Emirates\"),\n        ]\n    },\n    regions: { country in\n        switch country {\n        case \"CA\":\n            MonarchLocationRegions(\n                [\n                    MonarchRegion(code: \"CA-BC\", name: \"British Columbia\"),\n                    MonarchRegion(code: \"CA-ON\", name: \"Ontario\"),\n                    MonarchRegion(code: \"CA-QC\", name: \"Quebec\"),\n                ],\n                label: \"Province\"\n            )\n        case \"IN\":\n            MonarchLocationRegions(\n                [\n                    MonarchRegion(code: \"IN-KA\", name: \"Karnataka\"),\n                    MonarchRegion(code: \"IN-MH\", name: \"Maharashtra\"),\n                    MonarchRegion(code: \"IN-TN\", name: \"Tamil Nadu\"),\n                ],\n                label: \"State / Union Territory\"\n            )\n        case \"AE\":\n            MonarchLocationRegions(\n                [MonarchRegion(code: \"AE-AZ\", name: \"Abu Dhabi\"), MonarchRegion(code: \"AE-DU\", name: \"Dubai\")],\n                label: \"Emirate\"\n            )\n        default:\n            MonarchLocationRegions([], label: \"Region\")\n        }\n    },\n    cities: { query in\n        let all = [\n            MonarchLocationCity(id: \"ca-van\", name: \"Vancouver\", region: MonarchRegion(code: \"CA-BC\", name: \"British Columbia\")),\n            MonarchLocationCity(id: \"ca-tor\", name: \"Toronto\", region: MonarchRegion(code: \"CA-ON\", name: \"Ontario\")),\n            MonarchLocationCity(id: \"ca-ott\", name: \"Ottawa\", region: MonarchRegion(code: \"CA-ON\", name: \"Ontario\")),\n            MonarchLocationCity(id: \"ca-mtl\", name: \"Montreal\", region: MonarchRegion(code: \"CA-QC\", name: \"Quebec\")),\n            MonarchLocationCity(id: \"in-blr\", name: \"Bengaluru\", region: MonarchRegion(code: \"IN-KA\", name: \"Karnataka\")),\n            MonarchLocationCity(id: \"in-bom\", name: \"Mumbai\", region: MonarchRegion(code: \"IN-MH\", name: \"Maharashtra\")),\n            MonarchLocationCity(id: \"in-maa\", name: \"Chennai\", region: MonarchRegion(code: \"IN-TN\", name: \"Tamil Nadu\")),\n            MonarchLocationCity(id: \"ae-dxb\", name: \"Dubai\", region: MonarchRegion(code: \"AE-DU\", name: \"Dubai\")),\n            MonarchLocationCity(id: \"ae-auh\", name: \"Abu Dhabi\", region: MonarchRegion(code: \"AE-AZ\", name: \"Abu Dhabi\")),\n        ]\n        return all.filter {\n            $0.id.hasPrefix(query.country.lowercased())\n                && (query.region == nil || $0.region?.code == query.region)\n                && (query.query.isEmpty || $0.name.localizedCaseInsensitiveContains(query.query))\n        }\n    }\n)\n\n/// The value as JSON, shown under the fields as the web example does.\nprivate var json: String {\n    func quoted(_ text: String?) -> String { text.map { \"\\\"\\($0)\\\"\" } ?? \"null\" }\n    return \"\"\"\n        {\n          \"country\": \\(quoted(address.country)),\n          \"region\": \\(quoted(address.region)),\n          \"regionName\": \\(quoted(address.regionName)),\n          \"city\": \\(quoted(address.city)),\n          \"cityId\": \\(quoted(address.cityID)),\n          \"postalCode\": \\(quoted(address.postalCode))\n        }\n        \"\"\"\n}",
+      "setup": "@State private var address = MonarchLocationValue(country: \"CA\", region: \"CA-ON\", regionName: \"Ontario\", city: \"Toronto\", cityID: \"ca-tor\", postalCode: \"\")\n\nprivate let adapter = MonarchLocationAdapter(\n    countries: {\n        [\n            MonarchLocationOption(id: \"CA\", label: \"Canada\"),\n            MonarchLocationOption(id: \"IN\", label: \"India\"),\n            MonarchLocationOption(id: \"SG\", label: \"Singapore\"),\n            MonarchLocationOption(id: \"AE\", label: \"United Arab Emirates\"),\n        ]\n    },\n    regions: { country in\n        switch country {\n        case \"CA\":\n            MonarchLocationRegions(\n                [\n                    MonarchRegion(code: \"CA-BC\", name: \"British Columbia\"),\n                    MonarchRegion(code: \"CA-ON\", name: \"Ontario\"),\n                    MonarchRegion(code: \"CA-QC\", name: \"Quebec\"),\n                ],\n                label: \"Province\"\n            )\n        case \"IN\":\n            MonarchLocationRegions(\n                [\n                    MonarchRegion(code: \"IN-KA\", name: \"Karnataka\"),\n                    MonarchRegion(code: \"IN-MH\", name: \"Maharashtra\"),\n                    MonarchRegion(code: \"IN-TN\", name: \"Tamil Nadu\"),\n                ],\n                label: \"State / Union Territory\"\n            )\n        case \"AE\":\n            MonarchLocationRegions(\n                [MonarchRegion(code: \"AE-AZ\", name: \"Abu Dhabi\"), MonarchRegion(code: \"AE-DU\", name: \"Dubai\")],\n                label: \"Emirate\"\n            )\n        default:\n            MonarchLocationRegions([], label: \"Region\")\n        }\n    },\n    cities: { query in\n        let all = [\n            MonarchLocationCity(id: \"ca-van\", name: \"Vancouver\", region: MonarchRegion(code: \"CA-BC\", name: \"British Columbia\")),\n            MonarchLocationCity(id: \"ca-tor\", name: \"Toronto\", region: MonarchRegion(code: \"CA-ON\", name: \"Ontario\")),\n            MonarchLocationCity(id: \"ca-ott\", name: \"Ottawa\", region: MonarchRegion(code: \"CA-ON\", name: \"Ontario\")),\n            MonarchLocationCity(id: \"ca-mtl\", name: \"Montreal\", region: MonarchRegion(code: \"CA-QC\", name: \"Quebec\")),\n            MonarchLocationCity(id: \"in-blr\", name: \"Bengaluru\", region: MonarchRegion(code: \"IN-KA\", name: \"Karnataka\")),\n            MonarchLocationCity(id: \"in-bom\", name: \"Mumbai\", region: MonarchRegion(code: \"IN-MH\", name: \"Maharashtra\")),\n            MonarchLocationCity(id: \"in-maa\", name: \"Chennai\", region: MonarchRegion(code: \"IN-TN\", name: \"Tamil Nadu\")),\n            MonarchLocationCity(id: \"ae-dxb\", name: \"Dubai\", region: MonarchRegion(code: \"AE-DU\", name: \"Dubai\")),\n            MonarchLocationCity(id: \"ae-auh\", name: \"Abu Dhabi\", region: MonarchRegion(code: \"AE-AZ\", name: \"Abu Dhabi\")),\n        ]\n        return all.filter {\n            $0.id.hasPrefix(query.country.lowercased())\n                && (query.region == nil || $0.region?.code == query.region)\n                && (query.query.isEmpty || $0.name.localizedCaseInsensitiveContains(query.query))\n        }\n    }\n)\n\n/// The value as JSON, shown under the fields as the web example does.\nprivate var json: String {\n    func quoted(_ text: String?) -> String { text.map { \"\\\"\\($0)\\\"\" } ?? \"null\" }\n    return \"\"\"\n        {\n          \"country\": \\(quoted(address.country)),\n          \"region\": \\(quoted(address.region)),\n          \"regionName\": \\(quoted(address.regionName)),\n          \"city\": \\(quoted(address.city)),\n          \"cityId\": \\(quoted(address.cityID)),\n          \"postalCode\": \\(quoted(address.postalCode))\n        }\n        \"\"\"\n}",
+      "code": "VStack(alignment: .leading, spacing: 12) {\n    MonarchLocationFields(\n        \"Billing address\",\n        value: $address,\n        adapter: adapter,\n        required: [.country, .city]\n    )\n    Text(json)\n        .monarchTextStyle(.code)\n}"
+    },
+    {
+      "title": "Cities from the app's service",
+      "setup": "@State private var office = MonarchLocationValue(country: \"AE\")\nprivate let adapter = MonarchLocationAdapter(\n    regions: { _ in\n        MonarchLocationRegions(\n            [MonarchRegion(code: \"AE-AZ\", name: \"Abu Dhabi\"), MonarchRegion(code: \"AE-DU\", name: \"Dubai\")],\n            label: \"Emirate\"\n        )\n    },\n    cities: { query in\n        // Ask the app's place service here.\n        [MonarchLocationCity(id: \"aa\", name: \"Al Ain\", region: MonarchRegion(code: \"AE-AZ\", name: \"Abu Dhabi\"))]\n            .filter { query.query.isEmpty || $0.name.localizedCaseInsensitiveContains(query.query) }\n    }\n)",
+      "code": "MonarchLocationFields(\"Office\", value: $office, adapter: adapter, fields: [.country, .region, .city])"
+    }
+  ],
+  "webEquivalent": "LocationFields",
+  "dependsOn": [
+    "country-select",
+    "region-select",
+    "combobox",
+    "text-field",
+    "inline-error-retry"
+  ]
+}

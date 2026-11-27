@@ -15,6 +15,25 @@ const options = [
 ];
 
 describe('Combobox', () => {
+  it('scrolls the list, never the page, to the active option', async () => {
+    const many = Array.from({ length: 30 }, (_, i) => ({ value: `o${i}`, label: `Option ${i}` }));
+    const intoView = vi.spyOn(HTMLElement.prototype, 'scrollIntoView');
+    render(<Combobox aria-label="Pick" options={many} defaultOpen value="o20" />);
+    const list = await screen.findByRole('listbox');
+    // jsdom has no layout: give the list and its options a size.
+    Object.defineProperty(list, 'clientHeight', { configurable: true, value: 100 });
+    list.querySelectorAll<HTMLElement>('[data-index]').forEach((el, i) => {
+      Object.defineProperty(el, 'offsetTop', { configurable: true, value: i * 40 });
+      Object.defineProperty(el, 'offsetHeight', { configurable: true, value: 40 });
+    });
+    const user = userEvent.setup();
+    screen.getByRole('combobox').focus();
+    await user.keyboard('{End}');
+    await waitFor(() => expect(list.scrollTop).toBeGreaterThan(0));
+    expect(intoView).not.toHaveBeenCalled();
+    intoView.mockRestore();
+  });
+
   it('filters, navigates with the keyboard and selects with Enter', async () => {
     const onValueChange = vi.fn();
     render(

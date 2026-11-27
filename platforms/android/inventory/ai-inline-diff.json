@@ -1,0 +1,145 @@
+{
+  "id": "ai-inline-diff",
+  "name": "MonarchAiInlineDiff",
+  "title": "AiInlineDiff",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.material3.Text with an androidx.compose.ui.text.AnnotatedString (SpanStyle marks), androidx.compose.foundation.gestures.detectTapGestures and MonarchButton",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "AI-suggested changes marked inline in read-only text, with Previous and Next between changes and Accept and Reject for the active one.",
+  "whenToUse": "When an assistant suggests rewording for a paragraph, a description or a message draft and the changes are small and best read in context.",
+  "whenNotToUse": "For edits that span several labelled fields or sections use MonarchAiEditProposal; for code use MonarchDiffViewer; wait until streamed text is complete before showing suggestions.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchAiInlineDiff(segments: List<MonarchAiDiffSegment>, modifier: Modifier = Modifier, onAccept: ((id: String) -> Unit)? = null, onReject: ((id: String) -> Unit)? = null, showNavigation: Boolean = true, labels: MonarchAiInlineDiffLabels = MonarchAiInlineDiffLabels())",
+    "data class MonarchAiDiffSegment(type: MonarchAiDiffSegmentType, text: String, id: String? = null) { companion object { fun diffWords(before: String, after: String): List<MonarchAiDiffSegment>; fun changes(segments: List<MonarchAiDiffSegment>): List<MonarchAiInlineDiffChange>; fun resolve(segments: List<MonarchAiDiffSegment>, id: String, accept: Boolean): List<MonarchAiDiffSegment> } }",
+    "enum class MonarchAiDiffSegmentType { Equal, Insert, Delete }",
+    "data class MonarchAiInlineDiffChange(id: String, segmentIndexes: List<Int>, deleted: String, inserted: String)",
+    "class MonarchAiInlineDiffLabels(label: String? = null, deleted: String? = null, inserted: String? = null, position: ((index: Int, total: Int) -> String)? = null, none: String? = null, previous: String? = null, next: String? = null, accept: String? = null, reject: String? = null, acceptChange: ((index: Int, total: Int) -> String)? = null, rejectChange: ((index: Int, total: Int) -> String)? = null, announcement: ((accepted: Boolean, left: Int) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "segments",
+      "type": "List<MonarchAiDiffSegment>",
+      "default": "required",
+      "description": "The text as unchanged, added and removed runs in reading order, for example from MonarchAiDiffSegment.diffWords. Controlled: update it after each decision, for example with MonarchAiDiffSegment.resolve."
+    },
+    {
+      "name": "onAccept",
+      "type": "((id: String) -> Unit)?",
+      "default": "null",
+      "description": "Accepts a change by id; shows Accept for the active change and the Accept custom action."
+    },
+    {
+      "name": "onReject",
+      "type": "((id: String) -> Unit)?",
+      "default": "null",
+      "description": "Rejects a change by id; shows Reject for the active change and the Reject custom action."
+    },
+    {
+      "name": "showNavigation",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the bar with the position, or \"No suggested changes\", and Previous and Next. Hide it for one short suggestion."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiInlineDiffLabels",
+      "default": "MonarchAiInlineDiffLabels()",
+      "description": "Replacements for the built-in strings: name, Deleted:, Inserted:, position, none, Previous, Next, Accept, Reject, the spoken names of Accept and Reject and the announcement."
+    }
+  ],
+  "states": [
+    {
+      "name": "active change",
+      "description": "Outlined in the AI border color; its position is the text's state and the bar's text; Accept and Reject act on it."
+    },
+    {
+      "name": "no changes",
+      "description": "The bar reads \"No suggested changes\", the text is plain and there are no buttons or actions."
+    },
+    {
+      "name": "one change",
+      "description": "Previous and Next are disabled."
+    },
+    {
+      "name": "read only",
+      "description": "Without onAccept and onReject the changes can be stepped through but not decided."
+    }
+  ],
+  "appearance": "Unchanged text in the default text color. Removed runs use the AI diff-remove fill and strong text and are struck through; added runs use the AI diff-add fill and strong text and are underlined. The active change has a hairline outline in the AI border role, and the position line is muted caption text. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web renders each change as a focusable span with inline icon buttons next to it, roving focus and arrow keys. On Android the text is one Text element and the controls sit outside the text: Previous and Next in the bar above, Accept and Reject below, because 48dp buttons inside a line of text break the line height. Tapping a change makes it active, and TalkBack users get custom actions on the text (Next, Previous, Accept change, Reject change) instead. Buttons are text buttons because Monarch bundles no icons. The web's AiDiffSegment, aiInlineDiffChanges and resolveAiInlineDiff are MonarchAiDiffSegment and its companion functions diffWords, changes and resolve. Marks inside an editor (the web's planned editor adapters) are not offered. iOS has no entry yet.",
+  "accessibility": [
+    "The whole diff is a traversal group named \"AI suggested changes\".",
+    "The text is one element read with \"Deleted:\" and \"Inserted:\" before removed and added runs; its state is the position, \"Change 1 of 2\".",
+    "Custom actions on the text move to the next or previous change and accept or reject the active one, so a tap on the text is never required.",
+    "Accept and Reject are named with the change, \"Accept change 2 of 5\", and have 48dp targets.",
+    "Each decision is announced through a polite live region that is always present: \"Change accepted. 1 left.\"",
+    "Removed text is struck through and added text underlined, so the kind never depends on color.",
+    "The text wraps at font scale 2.0."
+  ],
+  "edgeCases": [
+    "Neighbouring removed and added runs with the same id (or none) form one change; a different id starts a new change.",
+    "After a decision the app removes the change, and the change that takes its place becomes active; the last change moves back to the one before.",
+    "An id that is not a change leaves the segments unchanged in resolve.",
+    "Empty segments are dropped by resolve; unchanged neighbours without ids are joined.",
+    "A change without an id is named by the index of its first segment, so the ids of later changes shift after a decision; use the id passed to onAccept or onReject at once, or give segments ids."
+  ],
+  "tests": [
+    "MonarchAiInlineDiffTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Review suggestions",
+      "fixture": "ai-inline-diff",
+      "webExample": "Review suggestions",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiInlineDiff(\n    segments = segments,\n    onAccept = { id -> segments = MonarchAiDiffSegment.resolve(segments, id, accept = true) },\n    onReject = { id -> segments = MonarchAiDiffSegment.resolve(segments, id, accept = false) },\n)",
+      "setupTemplate": "var segments by remember {\n    mutableStateOf(\n        MonarchAiDiffSegment.diffWords(\n            {{before}},\n            {{after}},\n        ),\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ],
+      "setup": "var segments by remember {\n    mutableStateOf(\n        MonarchAiDiffSegment.diffWords(\n            \"Our team meets every week to review the plan. We will ship the new flow in May, and collect feedback after.\",\n            \"Our team meets every Monday to review the roadmap. We will ship the redesigned flow in June, and collect feedback after launch.\",\n        ),\n    )\n}",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiInlineDiff(\n    segments = segments,\n    onAccept = { id -> segments = MonarchAiDiffSegment.resolve(segments, id, accept = true) },\n    onReject = { id -> segments = MonarchAiDiffSegment.resolve(segments, id, accept = false) },\n)"
+    },
+    {
+      "title": "One read-only suggestion without the bar",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiInlineDiff(\n    segments = listOf(\n        MonarchAiDiffSegment(MonarchAiDiffSegmentType.Equal, \"Ships on \"),\n        MonarchAiDiffSegment(MonarchAiDiffSegmentType.Delete, \"Friday\"),\n        MonarchAiDiffSegment(MonarchAiDiffSegmentType.Insert, \"Monday\"),\n    ),\n    showNavigation = false,\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ]
+    }
+  ],
+  "webEquivalent": "AiInlineDiff",
+  "dependsOn": [
+    "ai-edit-proposal",
+    "button"
+  ],
+  "icons": {
+    "navigate": "ChevronDownGlyph",
+    "accept": "CheckGlyph",
+    "reject": "CloseGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-text",
+      "platform": "android",
+      "reason": "The web docs page has a Reset demo button that restores the example state; it is page chrome, not part of the component.",
+      "convention": "docs-page chrome is not part of a native example",
+      "paths": [
+        "Reset demo"
+      ]
+    },
+    {
+      "rule": "layout",
+      "platform": "android",
+      "reason": "The web puts a 20px check and a cross beside the active change inside the sentence. Inside a line of text a control cannot be 48dp tall without breaking the line, and Android asks for a 48dp touch target, so Accept and Reject are two labelled small buttons under the text, in the same order (check, then cross), and they act on the active change.",
+      "convention": "Material touch target of 48dp for every control, so no icon-only controls inside running text"
+    }
+  ]
+}

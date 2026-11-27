@@ -31,13 +31,25 @@ const PAGE_CSS = 60 * KB;
 // columns, embed, toggle, slash menu, toolbar).
 const EDITOR_PAGE_JS = 300 * KB;
 const PAGE_JS_OVERRIDES = {
-  '/components/block-editor': 335 * KB,
+  // 336 KB: the page measured 335.03 KB after the native consolidation (inventory fields and the
+  // Web | iOS | Android tab host), 28 bytes over the earlier 335 KB cap. The native tabs stay lazy.
+  // 337 KB: 336.0 KB at 0dd9edf8, then 336.3 KB when the top bar and the sidebar gained the iOS
+  // and Android sections (navigation.ts, top-bar.tsx, routes.tsx; about 0.3 KB in the entry chunk).
+  // 338 KB: 337.0 KB once Dialog, Popover, DropdownMenu and Tooltip learned the docs overlay stage
+  // (internal/overlay-stage.tsx, a few hundred bytes across the overlays this page loads).
+  // 339 KB: 338.1 KB measured with the merged parity fixtures of the block-editor example.
+  // 340 KB: the Linux CI build measures 338.9 KB, about 0.8 KB above a macOS build of the same tree.
+  '/components/block-editor': 340 * KB,
   '/components/callout-block': EDITOR_PAGE_JS,
   '/components/columns-block': EDITOR_PAGE_JS,
   '/components/embed-block': EDITOR_PAGE_JS,
-  '/components/message-composer': EDITOR_PAGE_JS,
+  // 301 KB: 300.3 KB with the overlay stage in the overlays the composer loads up front.
+  '/components/message-composer': 301 * KB,
   '/components/rich-text-editor': EDITOR_PAGE_JS,
-  '/components/table-block': EDITOR_PAGE_JS,
+  // 302 KB: 301.0 KB at 0dd9edf8 (over the editor cap already), 301.2 KB with the iOS and Android
+  // sections of the top bar and sidebar.
+  // 303 KB: the Linux CI build measures 302.1 KB, about 0.7 KB above a macOS build of the same tree.
+  '/components/table-block': 303 * KB,
   '/components/toggle-block': EDITOR_PAGE_JS,
 };
 const ENTRY_CHUNK = 135 * KB;

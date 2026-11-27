@@ -6,27 +6,13 @@ import {
   SplitInboxLayout,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './split-inbox-layout.fixture.json';
 
-const conversations = [
-  {
-    id: 'c1',
-    subject: 'Printer offline on floor 3',
-    from: 'Grace Hopper',
-    preview: 'It stopped after the update this morning.',
-  },
-  {
-    id: 'c2',
-    subject: 'Invoice shows the wrong address',
-    from: 'Alan Turing',
-    preview: 'Our billing address changed in March.',
-  },
-  {
-    id: 'c3',
-    subject: 'Reset two-factor',
-    from: 'Katherine Johnson',
-    preview: 'I replaced my phone and lost the codes.',
-  },
-];
+const conversations = fixture.data.conversations.map((conversation, i) => ({
+  id: `c${i + 1}`,
+  ...conversation,
+}));
 
 const listStyle = { listStyle: 'none', margin: 0, padding: 'var(--mn-space-2)' } as const;
 const itemStyle = (active: boolean) =>
@@ -45,7 +31,9 @@ const itemStyle = (active: boolean) =>
   }) as const;
 
 function InboxDemo() {
-  const [openId, setOpenId] = useState<string | null>('c1');
+  const [openId, setOpenId] = useState<string | null>(
+    conversations[fixture.data.selected]?.id ?? null,
+  );
   const open = conversations.find((c) => c.id === openId) ?? null;
   return (
     <div
@@ -93,7 +81,11 @@ function InboxDemo() {
               <RecordHeader
                 headingLevel="h2"
                 title={open.subject}
-                status={<Badge tone="info">Open</Badge>}
+                status={
+                  <Badge tone={fixture.data.status.tone as 'info'}>
+                    {fixture.data.status.label}
+                  </Badge>
+                }
                 subtitle={`From ${open.from}`}
                 actions={
                   <SplitInboxContextToggle
@@ -117,7 +109,7 @@ function InboxDemo() {
           <div style={{ padding: 'var(--mn-space-4)' }}>
             <DescriptionList columns={1}>
               <DescriptionItem term="Requester">{open?.from}</DescriptionItem>
-              <DescriptionItem term="Priority">High</DescriptionItem>
+              <DescriptionItem term="Priority">{fixture.data.priority}</DescriptionItem>
               <DescriptionItem term="Assignee">{null}</DescriptionItem>
             </DescriptionList>
           </div>
@@ -135,7 +127,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'Lays out a whole inbox on one page: a list pane, a detail pane and an optional context pane (requester, properties, activity). Panes resize with the pointer and the keyboard and collapse; below 768px it becomes one pane with a back button, and below 1280px the context pane becomes a drawer. The product supplies every pane’s content and owns the selection and URL state. One powerful page instead of five similar ones.',
+        'Lays out a whole inbox on one page: a list pane, a detail pane and an optional context pane (requester, properties, activity). Panes resize with the pointer and the keyboard and collapse; below 768px it becomes one pane with a back button, and below 1280px (or when the layout is too narrow for three panes) the context pane becomes a drawer. The product supplies every pane’s content and owns the selection and URL state. One powerful page instead of five similar ones.',
       useWhen: [
         'A queue of items people work through one by one: tickets, conversations, applications, review requests.',
         'The list, the open item and its context should stay on screen together.',
@@ -160,7 +152,7 @@ export default {
         'The splitters are APG window splitters: `role="separator"` with `aria-valuenow` (px), `aria-valuemin`, `aria-valuemax` and `aria-controls`.',
         'SplitInboxContextToggle is the details button for the detail pane’s header: it toggles the column on wide screens and the drawer otherwise, with `aria-expanded`.',
         '`useSplitInboxLayout()` returns `{ layout, contextMode, contextVisible, setContextVisible, toggleContext, listCollapsed, setListCollapsed, focusPane, ids }` inside a pane (or `null`), for custom toggles such as a focus-mode button.',
-        'Breakpoints are fixed (768px and 1280px) and shared by the stylesheet and the component, so the first render matches the server.',
+        'Breakpoints are fixed (768px and 1280px) and shared by the stylesheet and the component, so the first render matches the server. After it, the context pane also becomes the drawer while the layout itself is narrower than the list, the context and a 360px detail pane (in a column beside a sidebar, or in a preview), so the detail is never squeezed.',
         'Exported from `@rookcom/monarch-react/patterns`.',
       ],
     },

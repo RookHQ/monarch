@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Button, StepUpAuthDialog, useStepUpAuth } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './step-up-auth-dialog.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
@@ -21,8 +23,9 @@ async function demoVerify(
 function PasswordOnly() {
   return (
     <StepUpAuthDialog
-      trigger={<Button variant="danger">Delete workspace</Button>}
-      description="Deleting a workspace needs your password. Try “correct”."
+      trigger={<Button variant="danger">{fixture.data.trigger}</Button>}
+      defaultOpen
+      description={fixture.data.description}
       forgotHref="#recover"
       onVerify={demoVerify}
     />
@@ -216,7 +219,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Password with a forgot link', render: () => <PasswordOnly /> },
+        {
+          title: 'Password with a forgot link',
+          stage: { align: 'center' },
+          render: () => <PasswordOnly />,
+        },
         { title: 'Several methods, passkey preferred', render: () => <SeveralMethods /> },
         { title: 'Authenticator code only', render: () => <CodeOnly /> },
         { title: 'Before an action, with useStepUpAuth', render: () => <Imperative /> },

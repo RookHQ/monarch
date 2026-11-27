@@ -7,6 +7,8 @@ import {
   PasswordStrengthMeter,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './password-input.fixture.json';
 
 function NewPasswordDemo() {
   const [password, setPassword] = useState('');
@@ -151,9 +153,9 @@ export default {
           stack: true,
           render: () => (
             <Field style={{ width: '100%', maxWidth: 320 }}>
-              <FieldLabel>Password</FieldLabel>
+              <FieldLabel>{fixture.data.label}</FieldLabel>
               <PasswordInput />
-              <FieldDescription>The password for your account.</FieldDescription>
+              <FieldDescription>{fixture.data.description}</FieldDescription>
             </Field>
           ),
         },

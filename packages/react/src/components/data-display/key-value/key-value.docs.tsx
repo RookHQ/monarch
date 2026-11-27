@@ -1,5 +1,13 @@
 import { KeyValue, KeyValueItem } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './key-value.fixture.json';
+
+const items = fixture.data.items as [Item, Item, Item];
+interface Item {
+  label: string;
+  value: string;
+}
 
 export default {
   id: 'key-value',
@@ -122,9 +130,9 @@ export default {
           title: 'Metadata line',
           render: () => (
             <KeyValue>
-              <KeyValueItem label="Region">eu-west</KeyValueItem>
-              <KeyValueItem label="Plan">Team</KeyValueItem>
-              <KeyValueItem label="Seats">24</KeyValueItem>
+              <KeyValueItem label={items[0].label}>{items[0].value}</KeyValueItem>
+              <KeyValueItem label={items[1].label}>{items[1].value}</KeyValueItem>
+              <KeyValueItem label={items[2].label}>{items[2].value}</KeyValueItem>
             </KeyValue>
           ),
         },

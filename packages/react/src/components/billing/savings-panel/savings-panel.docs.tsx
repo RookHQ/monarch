@@ -1,6 +1,40 @@
-import { defineStatuses } from '@rookcom/monarch-react';
+import { defineStatuses, Link } from '@rookcom/monarch-react';
 import { SavingsPanel } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './savings-panel.fixture.json';
+
+const fx = fixture.data;
+// The fixture holds major units (what native takes); the web example passes minor units.
+const minor = (m: { amount: number; currency: string }) => ({
+  amount: Math.round(m.amount * 100),
+  currency: m.currency,
+});
+const [catA, catB] = fx.categories as [
+  { id: string; count: number },
+  { id: string; count: number },
+];
+const [itemA, itemB, itemC] = fx.items as unknown as [
+  {
+    id: string;
+    name: string;
+    category: string;
+    date: string;
+    amount: number;
+    currency: string;
+    decision: string;
+  },
+  { id: string; name: string; category: string; date: string; decision: string },
+  {
+    id: string;
+    name: string;
+    category: string;
+    date: string;
+    amount: number;
+    currency: string;
+    decision: string;
+  },
+];
 
 const statuses = defineStatuses({
   parked: { label: 'Parked', tone: 'neutral' },
@@ -108,54 +142,47 @@ export default {
           render: () => (
             <SavingsPanel
               statuses={statuses}
-              description="Parked, without a website or without DNS."
-              unusedCount={3}
-              costs={[
-                { amount: 4500, currency: 'USD' },
-                { amount: 2000, currency: 'EUR' },
-              ]}
-              unpricedCount={1}
+              description={fx.description}
+              unusedCount={fx.unusedCount}
+              costs={fx.costs.map(minor)}
+              unpricedCount={fx.unpricedCount}
               categories={[
-                { id: 'parked', count: 2, href: '#parked' },
-                { id: 'no_dns', count: 1, href: '#no-dns' },
+                { ...catA, href: '#parked' },
+                { ...catB, href: '#no-dns' },
               ]}
-              decisions={[
-                { id: 'keep', label: 'Keep', count: 1 },
-                { id: 'let_lapse', label: 'Let lapse', count: 1 },
-                { id: 'undecided', label: 'Undecided', count: 1 },
-              ]}
-              potentialSavings={[{ amount: 1500, currency: 'USD' }]}
+              decisions={fx.decisions}
+              potentialSavings={fx.potentialSavings.map(minor)}
               items={[
                 {
-                  id: 'a',
-                  name: 'example.com',
+                  id: itemA.id,
+                  name: itemA.name,
                   href: '#example-com',
-                  category: 'parked',
-                  date: '2027-01-10T00:00:00Z',
-                  amount: { amount: 1500, currency: 'USD' },
-                  decision: 'let_lapse',
+                  category: itemA.category,
+                  date: itemA.date,
+                  amount: minor(itemA),
+                  decision: itemA.decision,
                 },
                 {
-                  id: 'b',
-                  name: 'example.net',
-                  category: 'no_dns',
-                  date: '2027-03-02T00:00:00Z',
+                  id: itemB.id,
+                  name: itemB.name,
+                  category: itemB.category,
+                  date: itemB.date,
                   amount: null,
-                  decision: 'review',
+                  decision: itemB.decision,
                 },
                 {
-                  id: 'c',
-                  name: 'example.org',
-                  category: 'parked',
-                  date: '2027-04-20T00:00:00Z',
-                  amount: { amount: 2000, currency: 'EUR' },
-                  decision: 'keep',
+                  id: itemC.id,
+                  name: itemC.name,
+                  category: itemC.category,
+                  date: itemC.date,
+                  amount: minor(itemC),
+                  decision: itemC.decision,
                 },
               ]}
-              actions={<a href="#all">Review all</a>}
+              actions={<Link href="#all">{fx.actionLabel}</Link>}
               minorUnits
-              locale="en-US"
-              timeZone="UTC"
+              locale={fx.locale}
+              timeZone={fx.timeZone}
             />
           ),
         },

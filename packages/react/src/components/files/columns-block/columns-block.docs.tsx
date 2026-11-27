@@ -1,6 +1,9 @@
 import { ColumnsBlock, ColumnsBlockExtension, RichTextEditor } from '@rookcom/monarch-react/editor';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './columns-block.fixture.json';
+
 const EXTENSIONS = [ColumnsBlockExtension];
 
 export default {
@@ -112,12 +115,14 @@ export default {
           stack: true,
           render: () => (
             <div style={{ width: '100%', maxWidth: 640 }}>
-              <ColumnsBlock ratio={0.4}>
+              <ColumnsBlock ratio={fixture.data.ratio}>
                 <p>
-                  <strong>Before</strong>: requests were assigned by hand.
+                  <strong>{fixture.data.columns[0]?.lead}</strong>
+                  {fixture.data.columns[0]?.text}
                 </p>
                 <p>
-                  <strong>After</strong>: requests are routed by topic and workload.
+                  <strong>{fixture.data.columns[1]?.lead}</strong>
+                  {fixture.data.columns[1]?.text}
                 </p>
               </ColumnsBlock>
             </div>

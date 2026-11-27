@@ -1,0 +1,181 @@
+{
+  "id": "cursor-list",
+  "name": "MonarchCursorList",
+  "title": "CursorList",
+  "family": "data-grid",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "List with .listStyle(.plain) and a MonarchLoadMore footer row; MonarchErrorState, MonarchLoadingState and MonarchEmptyState for the first-load states; accessibilityFocused(_:equals:) for the first new item",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A list loaded page by page from a cursor: the items, a load-more footer with a count, and the first-load, empty and error states.",
+  "whenToUse": "For a screen or tab whose content is a long list fetched in pages from an API cursor (requests, activity, messages), when the app keeps the cursor in its model.",
+  "whenNotToUse": "For a list loaded whole, use a List. For rows with several columns, use MonarchDataTable with a MonarchLoadMore footer. Inside another scroll view, use MonarchLoadMore under a LazyVStack instead, because a List does not size to its content.",
+  "api": [
+    "init(_ items: [Item], label: String, hasMore: Bool, isLoading: Bool = false, isFailed: Bool = false, totalCount: Int? = nil, autoLoads: Bool = false, showsEnd: Bool = true, isDivided: Bool = true, focusesNewItems: Bool = true, loadingVariant: MonarchLoadingStateVariant = .list, labels: MonarchCursorListLabels = MonarchCursorListLabels(), onRetry: (@MainActor () -> Void)? = nil, onLoadMore: @escaping @MainActor () -> Void, @ViewBuilder row: @escaping (Item) -> Row) where Item: Identifiable",
+    "struct MonarchCursorListLabels { var loading, emptyTitle, emptyMessage, errorTitle, retry: String?; var footer: MonarchLoadMoreLabels }"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "[Item]",
+      "default": "required",
+      "description": "Every item loaded so far, in order."
+    },
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "Names the list for VoiceOver."
+    },
+    {
+      "name": "hasMore",
+      "type": "Bool",
+      "default": "required",
+      "description": "Whether there is another page. With no items and no more, shows the empty state."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "A page is being fetched. With no items, shows the loading state; otherwise the footer button shows progress."
+    },
+    {
+      "name": "isFailed",
+      "type": "Bool",
+      "default": "false",
+      "description": "The last fetch failed. With no items, shows the error state; otherwise the footer shows the failure with retry."
+    },
+    {
+      "name": "totalCount",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The total, when the server knows it, for \"Showing 20 of 140 items\"."
+    },
+    {
+      "name": "autoLoads",
+      "type": "Bool",
+      "default": "false",
+      "description": "Loads the next page when the footer scrolls into view; the button stays as the fallback."
+    },
+    {
+      "name": "showsEnd",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether \"That's everything\" is shown after the last page."
+    },
+    {
+      "name": "isDivided",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether rows are separated by the list's lines."
+    },
+    {
+      "name": "focusesNewItems",
+      "type": "Bool",
+      "default": "true",
+      "description": "Moves VoiceOver focus to the first item of a page asked for from the footer."
+    },
+    {
+      "name": "loadingVariant",
+      "type": "MonarchLoadingStateVariant",
+      "default": ".list",
+      "description": "The shape of the first-page placeholder."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchCursorListLabels",
+      "default": "MonarchCursorListLabels()",
+      "description": "Replacements for the built-in strings, including the footer's."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Repeats the failed request. By default onLoadMore."
+    },
+    {
+      "name": "onLoadMore",
+      "type": "@MainActor () -> Void",
+      "default": "required",
+      "description": "Loads the next page."
+    },
+    {
+      "name": "row",
+      "type": "@ViewBuilder (Item) -> Row",
+      "default": "required",
+      "description": "Draws one item."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The items and the footer: a Load more button with the count, or the end line."
+    },
+    {
+      "name": "loading more",
+      "description": "The footer button shows progress."
+    },
+    {
+      "name": "failed later",
+      "description": "The footer shows \"Couldn't load more.\" with Retry; the items stay."
+    },
+    {
+      "name": "first page loading",
+      "description": "A MonarchLoadingState placeholder named \"Loading\"."
+    },
+    {
+      "name": "first page failed",
+      "description": "A MonarchErrorState, \"This list could not be loaded\", with Retry; while the retry runs the button is busy."
+    },
+    {
+      "name": "empty",
+      "description": "A MonarchEmptyState, \"Nothing here yet\" with a message."
+    }
+  ],
+  "appearance": "A plain list with a hidden background, so it sits on the screen's background; separators are the system's. The footer count and end line are caption text in the muted role; the states use their components' roles. Light, dark and both high-contrast themes come from these roles.",
+  "platformNotes": "The web CursorList chooses ul or ol and takes an item class; on iOS it is a List and the row closure draws each item. The web moves keyboard focus to the first new item after a page asked for by keyboard; on iOS VoiceOver focus moves to it after a page asked for from the footer. The web replaces the empty state with any node; on iOS the empty title and message are labels. The web count noun is built into its messages; on iOS pass labels.footer.count and labels.footer.loaded. Android uses the same name and options.",
+  "accessibility": [
+    "The list is named by label.",
+    "The footer is a MonarchLoadMore: its button is a standard button with a 44-point touch target, and new items, a failure and the end are announced.",
+    "After a page asked for from the footer arrives, VoiceOver focus moves to its first item.",
+    "The first-load placeholder, error and empty states are the shared Monarch states with their own labels."
+  ],
+  "edgeCases": [
+    "With no items but more to load and no fetch running, the list shows only the footer, so the first page can be asked for.",
+    "A failure with items keeps them and shows the footer failure, not the error state.",
+    "A page that brings no new items moves no focus.",
+    "The list fills the space it is given; give it a frame when it sits in a stack."
+  ],
+  "tests": [
+    "MonarchCursorListTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "With useLoadMore and a server-rendered first page",
+      "fixture": "cursor-list",
+      "webExample": "With useLoadMore and a server-rendered first page",
+      "template": "MonarchCursorList(\n    requests,\n    label: {{label}},\n    hasMore: true,\n    totalCount: {{total}},\n    labels: MonarchCursorListLabels(footer: MonarchLoadMoreLabels(count: { loaded, total in\n        \"Showing \\(loaded) of \\(total ?? loaded) \" + (total == 1 ? {{noun.one}} : {{noun.other}})\n    })),\n    onLoadMore: {},\n    row: { request in\n        HStack(alignment: .firstTextBaseline, spacing: MonarchTokens.Space.space3) {\n            Text(request.method)\n                .monarchTextStyle(.code)\n                .foregroundStyle(theme.colors.textMuted)\n            Text(request.path)\n                .monarchTextStyle(.code)\n            Spacer()\n            Text(String(request.status))\n                .monarchTextStyle(.body)\n                .foregroundStyle(request.status >= 400 ? theme.colors.dangerStrong : theme.colors.textMuted)\n        }\n    }\n)\n.frame(height: 620)",
+      "setupTemplate": "struct Request: Identifiable {\n    let id: String\n    let method: String\n    let path: String\n    let status: Int\n}\n\n@Environment(\\.monarchTheme) private var theme\nprivate let requests = [\n    Request(id: {{requests.0.id}}, method: {{requests.0.method}}, path: {{requests.0.path}}, status: {{requests.0.status}}),\n    Request(id: {{requests.1.id}}, method: {{requests.1.method}}, path: {{requests.1.path}}, status: {{requests.1.status}}),\n    Request(id: {{requests.2.id}}, method: {{requests.2.method}}, path: {{requests.2.path}}, status: {{requests.2.status}}),\n    Request(id: {{requests.3.id}}, method: {{requests.3.method}}, path: {{requests.3.path}}, status: {{requests.3.status}}),\n    Request(id: {{requests.4.id}}, method: {{requests.4.method}}, path: {{requests.4.path}}, status: {{requests.4.status}}),\n    Request(id: {{requests.5.id}}, method: {{requests.5.method}}, path: {{requests.5.path}}, status: {{requests.5.status}}),\n    Request(id: {{requests.6.id}}, method: {{requests.6.method}}, path: {{requests.6.path}}, status: {{requests.6.status}}),\n    Request(id: {{requests.7.id}}, method: {{requests.7.method}}, path: {{requests.7.path}}, status: {{requests.7.status}}),\n]",
+      "setup": "struct Request: Identifiable {\n    let id: String\n    let method: String\n    let path: String\n    let status: Int\n}\n\n@Environment(\\.monarchTheme) private var theme\nprivate let requests = [\n    Request(id: \"req_1000\", method: \"POST\", path: \"/v1/records/100\", status: 404),\n    Request(id: \"req_1001\", method: \"GET\", path: \"/v1/records\", status: 200),\n    Request(id: \"req_1002\", method: \"GET\", path: \"/v1/records/102\", status: 200),\n    Request(id: \"req_1003\", method: \"POST\", path: \"/v1/records\", status: 200),\n    Request(id: \"req_1004\", method: \"GET\", path: \"/v1/records/104\", status: 200),\n    Request(id: \"req_1005\", method: \"GET\", path: \"/v1/records\", status: 200),\n    Request(id: \"req_1006\", method: \"POST\", path: \"/v1/records/106\", status: 200),\n    Request(id: \"req_1007\", method: \"GET\", path: \"/v1/records\", status: 404),\n]",
+      "code": "MonarchCursorList(\n    requests,\n    label: \"Recent requests\",\n    hasMore: true,\n    totalCount: 23,\n    labels: MonarchCursorListLabels(footer: MonarchLoadMoreLabels(count: { loaded, total in\n        \"Showing \\(loaded) of \\(total ?? loaded) \" + (total == 1 ? \"request\" : \"requests\")\n    })),\n    onLoadMore: {},\n    row: { request in\n        HStack(alignment: .firstTextBaseline, spacing: MonarchTokens.Space.space3) {\n            Text(request.method)\n                .monarchTextStyle(.code)\n                .foregroundStyle(theme.colors.textMuted)\n            Text(request.path)\n                .monarchTextStyle(.code)\n            Spacer()\n            Text(String(request.status))\n                .monarchTextStyle(.body)\n                .foregroundStyle(request.status >= 400 ? theme.colors.dangerStrong : theme.colors.textMuted)\n        }\n    }\n)\n.frame(height: 620)"
+    },
+    {
+      "title": "The first page failed",
+      "setup": "struct Request: Identifiable {\n    let id: Int\n}",
+      "code": "MonarchCursorList(\n    [Request](),\n    label: \"Access requests\",\n    hasMore: true,\n    isFailed: true,\n    onLoadMore: {},\n    row: { Text(\"Access request \\($0.id)\") }\n)\n.frame(height: 320)"
+    }
+  ],
+  "webEquivalent": "CursorList",
+  "dependsOn": [
+    "load-more",
+    "skeleton",
+    "empty-state",
+    "error-state",
+    "loading-state"
+  ]
+}

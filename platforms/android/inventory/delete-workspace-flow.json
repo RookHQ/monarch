@@ -1,0 +1,113 @@
+{
+  "id": "delete-workspace-flow",
+  "name": null,
+  "title": "DeleteWorkspaceFlow",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet (confirmValueChange keeps it open while deleting) with a scrolling androidx.compose.foundation.layout.Column of MonarchConsequenceList, MonarchTypeToConfirmInput, MonarchStepUpAuthDialog, MonarchInlineNotice and MonarchButtons",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: an owner deletes a whole workspace after seeing what is lost, being offered an export, typing the workspace's name and confirming who they are.",
+  "whenToUse": "On a workspace's settings screen, in its danger zone, for an owner who wants the workspace and everything in it gone.",
+  "whenNotToUse": "For a member leaving, use the leave-workspace recipe. For pausing, use the deactivate recipe. For deleting one item, a confirm dialog is enough.",
+  "api": [
+    "ModalBottomSheet(onDismissRequest = { if (!deleting) open = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { !deleting })) { … }",
+    "MonarchConsequenceList(items = listOf(MonarchConsequence(MonarchConsequenceKind.Removed, \"Apps\", count = 4), …), heading = \"What will be deleted\")",
+    "MonarchTypeToConfirmInput(phrase = workspace, value = typed, onValueChange = { typed = it }, label = \"Type $workspace to confirm\")",
+    "MonarchButton(\"Delete workspace\", …, variant = MonarchButtonVariant.Danger, enabled = MonarchTypeToConfirmInputDefaults.matches(typed, workspace))",
+    "MonarchStepUpAuthDialog(onVerify = …, description = \"Deleting a workspace needs you to confirm it’s you.\", onCancel = …, onVerified = …, onVerifyingChange = { deleting = it })"
+  ],
+  "options": [
+    {
+      "name": "impact",
+      "type": "List<MonarchConsequence>",
+      "default": "required",
+      "description": "What is lost, with counts from the server: apps, records, members, subscriptions and domains. Leave out a line whose count is 0; pass loading = true to MonarchConsequenceList while the counts load."
+    },
+    {
+      "name": "gracePeriodDays",
+      "type": "Int?",
+      "default": "null",
+      "description": "When the server keeps the workspace for a while, say \"Schedule deletion\" and the date (DateUtils) instead of \"deleted at once\"."
+    },
+    {
+      "name": "deleting",
+      "type": "Boolean",
+      "default": "false",
+      "description": "While the request runs the sheet cannot be dismissed and the step-up dialog shows its progress."
+    },
+    {
+      "name": "failure",
+      "type": "String?",
+      "default": "null",
+      "description": "A failed request, shown in a danger MonarchInlineNotice; the person can try again."
+    }
+  ],
+  "states": [
+    {
+      "name": "review",
+      "description": "The title naming the workspace, a sentence that it cannot be undone, the consequence list, Export data, the name field and a disabled danger button until the name matches."
+    },
+    {
+      "name": "verify",
+      "description": "MonarchStepUpAuthDialog in the sheet asks for the password, a code or the device's lock; Cancel goes back to the review."
+    },
+    {
+      "name": "deleting",
+      "description": "After verification the request runs; the sheet cannot be swiped or backed away."
+    },
+    {
+      "name": "failed",
+      "description": "A danger MonarchInlineNotice above the step-up content; the person can verify and try again."
+    },
+    {
+      "name": "done",
+      "description": "A title that the workspace was deleted and a Done button; the app then leaves the workspace's screens."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component on the Material 3 sheet surface: the title style, the consequence list with its kind marks and counts, a secondary Export button, the type-to-confirm field, and full-width danger and ghost buttons. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web's DeleteWorkspaceFlow is one component on WizardDialog with impact, export, transfer, confirm and done steps and a step-up requirement. On Android it is a recipe, as on iOS: a MonarchBottomSheet holds the steps, because a MonarchDialog has no room for the consequence list, the name field and the step-up content, and the steps are a when over the app's step state. The web's transfer step is a MonarchButton the app adds that opens its transfer ownership screen. The web's default messages and counts formatting are written by the app; MonarchConsequence's count is formatted by MonarchConsequenceList. Biometric step-up uses onRequestBiometric on MonarchStepUpAuthDialog; the app owns BiometricPrompt.",
+  "accessibility": [
+    "The sheet's title uses the title style, which MonarchText marks as a heading.",
+    "MonarchConsequenceList reads each line with its kind and count, so removed and warning do not depend on the mark.",
+    "MonarchTypeToConfirmInput announces when the typed name matches; the danger button is announced as disabled until then.",
+    "MonarchStepUpAuthDialog labels its fields and announces errors; its buttons have 48dp targets.",
+    "The sheet cannot be dismissed while deleting, so the result is not lost."
+  ],
+  "edgeCases": [
+    "Check the name and the step-up on the server as well; the recipe only gates the button.",
+    "The typed name must match exactly, case included; white space around it is ignored (MonarchTypeToConfirmInputDefaults.matches).",
+    "After deletion, navigate away: the workspace's screens no longer exist.",
+    "With a grace period, offer to cancel the deletion from the workspace's settings until the date."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "From a danger zone, with export, transfer and step-up",
+      "fixture": "delete-workspace-flow",
+      "webExample": "From a danger zone, with export, transfer and step-up",
+      "template": "MonarchSectionCard(\n    title = {{dangerZone.heading}},\n    description = {{dangerZone.description}},\n    tone = MonarchTone.Danger,\n) {\n    Column(\n        modifier = Modifier.semantics { isTraversalGroup = true },\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n    ) {\n        MonarchText(text = {{dangerZone.title}}, style = MonarchTextStyle.BodyStrong, heading = true)\n        MonarchText(text = {{dangerZone.itemDescription}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n        MonarchButton(\n            text = {{dangerZone.action}},\n            onClick = {\n                step = \"review\"\n                typed = \"\"\n                open = true\n            },\n            variant = MonarchButtonVariant.Danger,\n        )\n    }\n}\nif (open) {\n    // While the work runs, a swipe, back or a tap outside does not close the sheet.\n    MonarchBottomSheet(onDismissRequest = { open = false }, dismissible = !deleting) {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            val stepNumber = listOf(\"review\", \"confirm\", \"verify\", \"done\").indexOf(step) + 1\n            if (stepNumber in 1..4 && step != \"verify\") {\n                MonarchText(text = \"Step $stepNumber of 4\", style = MonarchTextStyle.Caption)\n                MonarchProgress(progress = stepNumber / 4f, size = MonarchProgressSize.Sm)\n            }\n            when (step) {\n                \"review\" -> {\n                    MonarchText(text = {{flow.title}}, style = MonarchTextStyle.Title)\n                    MonarchText(text = {{flow.heading}}, style = MonarchTextStyle.Subheading)\n                    MonarchText(text = {{flow.intro}})\n                    MonarchConsequenceList(\n                        items = listOf(\n                            MonarchConsequence(MonarchConsequenceKind.Removed, {{impactLabels.apps}}, count = {{impact.apps}}),\n                            MonarchConsequence(MonarchConsequenceKind.Removed, {{impactLabels.records}}, count = {{impact.records}}),\n                            MonarchConsequence(MonarchConsequenceKind.Changed, {{impactLabels.members}}, count = {{impact.members}}),\n                            MonarchConsequence(MonarchConsequenceKind.Changed, {{impactLabels.subscriptions}}, count = {{impact.subscriptions}}),\n                            MonarchConsequence(MonarchConsequenceKind.Changed, {{impactLabels.domains}}, count = {{impact.domains}}),\n                        ),\n                        grouped = true,\n                    )\n                    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                        MonarchButton(\n                            text = {{flow.cancel}},\n                            onClick = { open = false },\n                            modifier = Modifier.weight(1f),\n                        )\n                        MonarchButton(\n                            text = {{flow.continue}},\n                            onClick = { step = \"confirm\" },\n                            modifier = Modifier.weight(1f),\n                            variant = MonarchButtonVariant.Primary,\n                        )\n                    }\n                }\n                \"confirm\" -> {\n                    MonarchTypeToConfirmInput(\n                        phrase = workspace,\n                        value = typed,\n                        onValueChange = { typed = it },\n                        label = \"Type $workspace to confirm\",\n                    )\n                    MonarchButton(\n                        text = {{dangerZone.action}},\n                        onClick = { step = \"verify\" },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Danger,\n                        enabled = MonarchTypeToConfirmInputDefaults.matches(typed, workspace),\n                    )\n                    MonarchButton(\n                        text = {{flow.cancel}},\n                        onClick = { open = false },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Ghost,\n                    )\n                }\n                \"verify\" -> {\n                    failure?.let { MonarchInlineNotice(message = it, tone = MonarchTone.Danger) }\n                    MonarchStepUpAuthDialog(\n                        onVerify = { _ ->\n                            // Send the credential to the server; throw if it is refused.\n                        },\n                        description = \"Deleting a workspace needs you to confirm it’s you.\",\n                        onCancel = { step = \"confirm\" },\n                        onVerified = {\n                            deleting = true\n                            failure = null\n                            scope.launch {\n                                // Delete on the server. On failure: failure = \"Couldn’t delete the workspace.\"\n                                deleting = false\n                                step = \"done\"\n                            }\n                        },\n                        onVerifyingChange = { deleting = it },\n                    )\n                }\n                else -> {\n                    MonarchText(text = \"$workspace was deleted\", style = MonarchTextStyle.Title)\n                    MonarchText(text = \"Members were signed out of it and its plan was cancelled.\")\n                    MonarchButton(\n                        text = \"Done\",\n                        onClick = { open = false },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Primary,\n                    )\n                }\n            }\n        }\n    }\n}",
+      "setupTemplate": "val workspace = {{flow.workspaceName}}\nval scope = rememberCoroutineScope()\nvar open by rememberSaveable { mutableStateOf(true) }\nvar step by rememberSaveable { mutableStateOf(\"review\") } // review, confirm, verify, done\nvar typed by rememberSaveable { mutableStateOf(\"\") }\nvar deleting by remember { mutableStateOf(false) }\nvar failure by remember { mutableStateOf<String?>(null) }",
+      "imports": [
+        "kotlinx.coroutines.launch",
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "val workspace = \"north-studio\"\nval scope = rememberCoroutineScope()\nvar open by rememberSaveable { mutableStateOf(true) }\nvar step by rememberSaveable { mutableStateOf(\"review\") } // review, confirm, verify, done\nvar typed by rememberSaveable { mutableStateOf(\"\") }\nvar deleting by remember { mutableStateOf(false) }\nvar failure by remember { mutableStateOf<String?>(null) }",
+      "code": "MonarchSectionCard(\n    title = \"Danger zone\",\n    description = \"These actions affect everyone in the workspace.\",\n    tone = MonarchTone.Danger,\n) {\n    Column(\n        modifier = Modifier.semantics { isTraversalGroup = true },\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n    ) {\n        MonarchText(text = \"Delete this workspace\", style = MonarchTextStyle.BodyStrong, heading = true)\n        MonarchText(text = \"Removes the workspace, its apps and its records for every member.\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n        MonarchButton(\n            text = \"Delete workspace\",\n            onClick = {\n                step = \"review\"\n                typed = \"\"\n                open = true\n            },\n            variant = MonarchButtonVariant.Danger,\n        )\n    }\n}\nif (open) {\n    // While the work runs, a swipe, back or a tap outside does not close the sheet.\n    MonarchBottomSheet(onDismissRequest = { open = false }, dismissible = !deleting) {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            val stepNumber = listOf(\"review\", \"confirm\", \"verify\", \"done\").indexOf(step) + 1\n            if (stepNumber in 1..4 && step != \"verify\") {\n                MonarchText(text = \"Step $stepNumber of 4\", style = MonarchTextStyle.Caption)\n                MonarchProgress(progress = stepNumber / 4f, size = MonarchProgressSize.Sm)\n            }\n            when (step) {\n                \"review\" -> {\n                    MonarchText(text = \"Delete workspace\", style = MonarchTextStyle.Title)\n                    MonarchText(text = \"What will be deleted\", style = MonarchTextStyle.Subheading)\n                    MonarchText(text = \"Deleting north-studio removes it and everything in it for every member. This cannot be undone.\")\n                    MonarchConsequenceList(\n                        items = listOf(\n                            MonarchConsequence(MonarchConsequenceKind.Removed, \"apps\", count = 4),\n                            MonarchConsequence(MonarchConsequenceKind.Removed, \"records\", count = 18_340),\n                            MonarchConsequence(MonarchConsequenceKind.Changed, \"members lose access\", count = 12),\n                            MonarchConsequence(MonarchConsequenceKind.Changed, \"active subscription is cancelled\", count = 1),\n                            MonarchConsequence(MonarchConsequenceKind.Changed, \"custom domains are disconnected\", count = 2),\n                        ),\n                        grouped = true,\n                    )\n                    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                        MonarchButton(\n                            text = \"Cancel\",\n                            onClick = { open = false },\n                            modifier = Modifier.weight(1f),\n                        )\n                        MonarchButton(\n                            text = \"Continue\",\n                            onClick = { step = \"confirm\" },\n                            modifier = Modifier.weight(1f),\n                            variant = MonarchButtonVariant.Primary,\n                        )\n                    }\n                }\n                \"confirm\" -> {\n                    MonarchTypeToConfirmInput(\n                        phrase = workspace,\n                        value = typed,\n                        onValueChange = { typed = it },\n                        label = \"Type $workspace to confirm\",\n                    )\n                    MonarchButton(\n                        text = \"Delete workspace\",\n                        onClick = { step = \"verify\" },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Danger,\n                        enabled = MonarchTypeToConfirmInputDefaults.matches(typed, workspace),\n                    )\n                    MonarchButton(\n                        text = \"Cancel\",\n                        onClick = { open = false },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Ghost,\n                    )\n                }\n                \"verify\" -> {\n                    failure?.let { MonarchInlineNotice(message = it, tone = MonarchTone.Danger) }\n                    MonarchStepUpAuthDialog(\n                        onVerify = { _ ->\n                            // Send the credential to the server; throw if it is refused.\n                        },\n                        description = \"Deleting a workspace needs you to confirm it’s you.\",\n                        onCancel = { step = \"confirm\" },\n                        onVerified = {\n                            deleting = true\n                            failure = null\n                            scope.launch {\n                                // Delete on the server. On failure: failure = \"Couldn’t delete the workspace.\"\n                                deleting = false\n                                step = \"done\"\n                            }\n                        },\n                        onVerifyingChange = { deleting = it },\n                    )\n                }\n                else -> {\n                    MonarchText(text = \"$workspace was deleted\", style = MonarchTextStyle.Title)\n                    MonarchText(text = \"Members were signed out of it and its plan was cancelled.\")\n                    MonarchButton(\n                        text = \"Done\",\n                        onClick = { open = false },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Primary,\n                    )\n                }\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "DeleteWorkspaceFlow",
+  "dependsOn": [
+    "sheet",
+    "consequence-list",
+    "type-to-confirm-input",
+    "step-up-auth-dialog",
+    "button"
+  ]
+}

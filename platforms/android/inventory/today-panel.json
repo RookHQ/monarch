@@ -1,0 +1,118 @@
+{
+  "id": "today-panel",
+  "name": null,
+  "title": "TodayPanel",
+  "family": "data-display",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.layout.Column and Row inside MonarchSectionCard, with MonarchAgendaList, MonarchCheckboxRow, MonarchBadge and MonarchText",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A person's day on a home screen: MonarchSectionCard titled \"Today\" with today's agenda (MonarchAgendaList for one day) above the tasks due today, overdue first, each a MonarchCheckboxRow with an \"Overdue\" badge where it applies.",
+  "whenToUse": "At the top of a home or dashboard screen that answers \"what do I have today?\" for one person.",
+  "whenNotToUse": "For several days of events, use MonarchAgendaList on its own. For a full task list with filters, use a list screen.",
+  "api": [
+    "MonarchSectionCard(title = \"Today\", meta = date) { MonarchText(text = \"Schedule\", style = MonarchTextStyle.Label); MonarchAgendaList(events, modifier = Modifier.height(…), from = today, days = 1, today = today); MonarchText(text = \"Due today\", style = MonarchTextStyle.Label); tasks.sortedByDescending { it.overdue }.forEach { Row { MonarchCheckboxRow(checked, onCheckedChange, label = title, modifier = Modifier.weight(1f), description = detail); if (overdue) MonarchBadge(text = \"Overdue\", tone = MonarchTone.Danger) } } }"
+  ],
+  "options": [
+    {
+      "name": "MonarchSectionCard.title",
+      "type": "String",
+      "default": "required",
+      "description": "\"Today\", in the app's strings."
+    },
+    {
+      "name": "MonarchSectionCard.meta",
+      "type": "String?",
+      "default": "null",
+      "description": "Today's date, written with DateUtils.formatDateTime(context, today, FORMAT_SHOW_WEEKDAY or FORMAT_SHOW_DATE)."
+    },
+    {
+      "name": "MonarchSectionCard.state",
+      "type": "MonarchSectionCardState",
+      "default": "MonarchSectionCardState.Ready",
+      "description": "Loading, Empty or Error while the day loads or fails, with errorMessage and onRetry."
+    },
+    {
+      "name": "events",
+      "type": "List<MonarchAgendaEvent>",
+      "default": "required",
+      "description": "Today's meetings, shown by MonarchAgendaList with from = today and days = 1. Leave the schedule out for a person without a calendar."
+    },
+    {
+      "name": "tasks",
+      "type": "app data",
+      "default": "required",
+      "description": "Tasks due today and overdue ones, overdue first; each is a MonarchCheckboxRow (title as label, project as description)."
+    },
+    {
+      "name": "MonarchBadge",
+      "type": "MonarchBadge(text = \"Overdue\", tone = MonarchTone.Danger)",
+      "default": "null",
+      "description": "After an overdue task, so overdue is said in words, not by color."
+    }
+  ],
+  "states": [
+    {
+      "name": "day",
+      "description": "The schedule above the tasks."
+    },
+    {
+      "name": "loading",
+      "description": "MonarchSectionCard with state = Loading."
+    },
+    {
+      "name": "error",
+      "description": "MonarchSectionCard with state = Error, errorMessage and onRetry."
+    },
+    {
+      "name": "nothing today",
+      "description": "MonarchSectionCard with state = Empty and emptyMessage \"Nothing scheduled and nothing due today.\", or a line of text."
+    }
+  ],
+  "appearance": "MonarchSectionCard's surface, MonarchAgendaList's day, checkbox rows in default text with muted descriptions, and the danger badge, all in their own appearance in light, dark and both high-contrast themes.",
+  "platformNotes": "The web TodayPanel is one component with the agenda beside the tasks on wide screens. On a phone the two stack, so Android composes existing parts in a MonarchSectionCard: the agenda, then the tasks. The web's built-in strings, task links (href), lead and meta slots and maxTasks with a \"N more\" link are the app's choices here: open a task from its row's own action, and add a MonarchLink to the full list. MonarchAgendaList is lazy, so it gets a fixed height inside a scrolling screen. iOS shares the recipe approach.",
+  "accessibility": [
+    "The card title and the section titles (Schedule, Due today) are headings, so TalkBack users can jump between them.",
+    "Each task is one MonarchCheckboxRow: one TalkBack element with the checkbox role, its title and detail, and a 48dp row.",
+    "Overdue is a badge in words after the task, not a color.",
+    "Events are read by MonarchAgendaList with their times."
+  ],
+  "edgeCases": [
+    "Keep the task list short on a home screen and link to the full list.",
+    "Overdue tasks come first, then the others in the app's order.",
+    "Give MonarchAgendaList a fixed height inside a scrolling screen."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Agenda and tasks with checkboxes",
+      "fixture": "today-panel",
+      "webExample": "Agenda and tasks with checkboxes",
+      "template": "CompositionLocalProvider(LocalConfiguration provides locale) {\n    MonarchSectionCard(title = {{title}}, meta = {{dateLabel}}) {\n        MonarchText(text = {{schedule}}, style = MonarchTextStyle.Label)\n        MonarchAgendaList(\n            events = listOf(\n                MonarchAgendaEvent(id = {{events.0.id}}, title = {{events.0.title}}, start = {{events.0.start|millis}}, end = {{events.0.end|millis}}, detail = {{events.0.detail}}),\n                MonarchAgendaEvent(id = {{events.1.id}}, title = {{events.1.title}}, start = {{events.1.start|millis}}, end = {{events.1.end|millis}}),\n            ),\n            modifier = Modifier.height(160.dp),\n            from = {{today|millis}},\n            days = 1,\n            today = {{today|millis}},\n            timeZone = {{timeZone}},\n        )\n        MonarchText(text = {{dueToday}}, style = MonarchTextStyle.Label)\n        Row(verticalAlignment = Alignment.CenterVertically) {\n            MonarchCheckboxRow(\n                checked = {{tasks.0.id}} in done,\n                onCheckedChange = { on -> done = if (on) done + {{tasks.0.id}} else done - {{tasks.0.id}} },\n                label = {{tasks.0.title}},\n                modifier = Modifier.weight(1f),\n            )\n            if ({{tasks.0.overdue}}) MonarchBadge(text = {{overdueLabel}}, tone = MonarchTone.Danger)\n            MonarchText(text = {{tasks.0.due}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n        }\n        MonarchCheckboxRow(\n            checked = {{tasks.1.id}} in done,\n            onCheckedChange = { on -> done = if (on) done + {{tasks.1.id}} else done - {{tasks.1.id}} },\n            label = {{tasks.1.title}},\n            description = {{tasks.1.detail}},\n        )\n        Row(verticalAlignment = Alignment.CenterVertically) {\n            MonarchCheckboxRow(\n                checked = {{tasks.2.id}} in done,\n                onCheckedChange = { on -> done = if (on) done + {{tasks.2.id}} else done - {{tasks.2.id}} },\n                label = {{tasks.2.title}},\n                modifier = Modifier.weight(1f),\n            )\n            MonarchBadge(text = {{tasks.2.badge.text}}, tone = {{tasks.2.badge.tone|tone}})\n        }\n    }\n}",
+      "setupTemplate": "var done by rememberSaveable { mutableStateOf(setOf<String>()) }\nval configuration = LocalConfiguration.current\nval locale = remember(configuration) {\n    Configuration(configuration).apply { setLocale(Locale.forLanguageTag({{locale}})) }\n}",
+      "imports": [
+        "android.content.res.Configuration",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.runtime.CompositionLocalProvider",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalConfiguration",
+        "androidx.compose.ui.unit.dp",
+        "java.util.Locale"
+      ],
+      "setup": "var done by rememberSaveable { mutableStateOf(setOf<String>()) }\nval configuration = LocalConfiguration.current\nval locale = remember(configuration) {\n    Configuration(configuration).apply { setLocale(Locale.forLanguageTag(\"en-GB\")) }\n}",
+      "code": "CompositionLocalProvider(LocalConfiguration provides locale) {\n    MonarchSectionCard(title = \"Today\", meta = \"Saturday 7 November\") {\n        MonarchText(text = \"Schedule\", style = MonarchTextStyle.Label)\n        MonarchAgendaList(\n            events = listOf(\n                MonarchAgendaEvent(id = \"e1\", title = \"Weekly review\", start = 1_794_043_800_000L, end = 1_794_045_600_000L, detail = \"Room 2\"),\n                MonarchAgendaEvent(id = \"e2\", title = \"Interview: product designer\", start = 1_794_056_400_000L, end = 1_794_060_000_000L),\n            ),\n            modifier = Modifier.height(160.dp),\n            from = 1_794_009_600_000L,\n            days = 1,\n            today = 1_794_009_600_000L,\n            timeZone = \"UTC\",\n        )\n        MonarchText(text = \"Due today\", style = MonarchTextStyle.Label)\n        Row(verticalAlignment = Alignment.CenterVertically) {\n            MonarchCheckboxRow(\n                checked = \"t2\" in done,\n                onCheckedChange = { on -> done = if (on) done + \"t2\" else done - \"t2\" },\n                label = \"Approve 3 time-off requests\",\n                modifier = Modifier.weight(1f),\n            )\n            if (true) MonarchBadge(text = \"Overdue\", tone = MonarchTone.Danger)\n            MonarchText(text = \"2 days late\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n        }\n        MonarchCheckboxRow(\n            checked = \"t1\" in done,\n            onCheckedChange = { on -> done = if (on) done + \"t1\" else done - \"t1\" },\n            label = \"Send the quarterly proposal\",\n            description = \"Northwind account\",\n        )\n        Row(verticalAlignment = Alignment.CenterVertically) {\n            MonarchCheckboxRow(\n                checked = \"t3\" in done,\n                onCheckedChange = { on -> done = if (on) done + \"t3\" else done - \"t3\" },\n                label = \"Review the release notes\",\n                modifier = Modifier.weight(1f),\n            )\n            MonarchBadge(text = \"High\", tone = MonarchTone.Info)\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "TodayPanel",
+  "dependsOn": [
+    "agenda-list",
+    "checkbox",
+    "section-card"
+  ]
+}

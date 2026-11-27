@@ -6,27 +6,27 @@
  *
  * The Rook-specific exports (`RookRail`, `RookBar*`, `ROOK_*`) now live in
  * `@rookcom/monarch-react/rook`. They are still exported here, deprecated,
- * until 0.15.0. See docs/guides/rook-specific-exports.md.
+ * until they are removed no earlier than 2027-02-11 (90-day window). See docs/guides/rook-specific-exports.md.
  */
 export {
   ThemeToggle,
   applyThemePreference,
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   ROOK_THEME_COOKIE,
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   ROOK_THEME_EVENT,
   type ThemeToggleProps,
   type ThemeToggleMessages,
   type ThemePreference,
 } from '../components/interaction/theme-toggle/index.js';
 export {
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   RookRail,
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   rookRailScript,
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   ROOK_RAIL_COOKIE,
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   ROOK_RAIL_EVENT,
   type RookRailProps,
   type RookRailItem,
@@ -156,19 +156,19 @@ export {
   type MyStatusProps,
 } from '../components/identity/my-status/index.js';
 export {
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   RookBar,
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   RookBarPanelProvider,
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   useRookBarPanel,
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   RookBarAppCatalog,
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   RookBarLinkList,
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   RookBarFeaturePanel,
-  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed in 0.15.0. */
+  /** @deprecated Use `@rookcom/monarch-react/rook`. This path is removed no earlier than 2027-02-11 (90-day window). */
   RookBarStoriesPanel,
   type RookBarLinkItem,
   type RookBarMenuItem,

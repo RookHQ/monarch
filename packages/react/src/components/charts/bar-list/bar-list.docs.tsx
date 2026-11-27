@@ -1,13 +1,9 @@
 import { BarList } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './bar-list.fixture.json';
 
-const pages = [
-  { id: 'home', label: '/', value: 4820, href: '#/components/bar-list' },
-  { id: 'pricing', label: '/pricing', value: 2310, href: '#/components/bar-list' },
-  { id: 'docs', label: '/docs/getting-started', value: 1640, href: '#/components/bar-list' },
-  { id: 'blog', label: '/blog/release-notes', value: 920, href: '#/components/bar-list' },
-  { id: 'contact', label: '/contact', value: 310, href: '#/components/bar-list' },
-];
+const pages = fixture.data.items.map((item) => ({ ...item, href: '#/components/bar-list' }));
 
 export default {
   id: 'bar-list',
@@ -150,7 +146,12 @@ export default {
           stack: true,
           render: () => (
             <div style={{ width: '100%', maxWidth: '28rem' }}>
-              <BarList label="Top pages" items={pages} unit="views" locale="en-US" />
+              <BarList
+                label={fixture.data.label}
+                items={pages}
+                unit={fixture.data.unit}
+                locale={fixture.data.locale}
+              />
             </div>
           ),
         },

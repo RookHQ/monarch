@@ -1,6 +1,8 @@
-import { Button } from '@rookcom/monarch-react';
+import { Button, type ButtonProps } from '@rookcom/monarch-react';
 import { PlanCard } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './plan-card.fixture.json';
 
 export default {
   id: 'plan-card',
@@ -109,20 +111,22 @@ export default {
           render: () => (
             <div style={{ maxWidth: 320 }}>
               <PlanCard
-                name="Team"
-                price="₹X"
-                period="/ month"
-                priceNote="Billed monthly"
-                description="For teams that share work every day."
-                featuresLabel="Everything in Starter, plus"
-                features={[
-                  'Shared projects',
-                  { label: 'Audit log', hint: 'last 90 days' },
-                  { label: 'Single sign-on', included: false },
-                ]}
-                highlighted
-                badge="Recommended"
-                action={<Button variant="primary">Choose Team</Button>}
+                name={fixture.data.name}
+                price={fixture.data.price}
+                period={fixture.data.period}
+                priceNote={fixture.data.priceNote}
+                description={fixture.data.description}
+                featuresLabel={fixture.data.featuresLabel}
+                features={fixture.data.features}
+                highlighted={fixture.data.highlighted}
+                badge={fixture.data.badge}
+                action={
+                  <Button
+                    variant={fixture.data.action.variant as NonNullable<ButtonProps['variant']>}
+                  >
+                    {fixture.data.action.label}
+                  </Button>
+                }
               />
             </div>
           ),

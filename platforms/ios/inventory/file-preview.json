@@ -1,0 +1,77 @@
+{
+  "id": "file-preview",
+  "name": null,
+  "title": "FilePreview",
+  "family": "files",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "quickLookPreview(_:) from the QuickLook framework, on any view",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Quick Look, the system file viewer, presented with the quickLookPreview modifier. Monarch ships nothing; the row that opens it is made of Monarch components.",
+  "whenToUse": "To show the content of a file the app has on disk: images, PDF, text, video, audio, iWork and Office documents. Set the bound URL to present the viewer.",
+  "whenNotToUse": "For a file that is still remote, download it first: Quick Look needs a file URL. For a type Quick Look cannot show, offer ShareLink or fileExporter instead. For a video poster in a list, use MonarchVideoThumbnail.",
+  "api": [
+    "func quickLookPreview(_ item: Binding<URL?>) -> some View",
+    "func quickLookPreview<Items>(_ selection: Binding<Items.Element?>, in items: Items) -> some View where Items: RandomAccessCollection, Items.Element == URL"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "presented",
+      "description": "The viewer covers the screen while the bound URL is not nil, and sets it back to nil when dismissed."
+    },
+    {
+      "name": "unsupported type",
+      "description": "Quick Look shows the file's icon, name and size with its own share button."
+    }
+  ],
+  "appearance": "System appearance: Quick Look draws its own chrome and follows the system light, dark and contrast settings, not the Monarch theme. The row that opens it uses Monarch colours.",
+  "platformNotes": "The web FilePreview draws the file inline in the page and Android builds a MonarchFilePreview. On iOS Quick Look is the expected viewer and covers more types (PDF with search, Live Photos, Office and iWork documents, 3D models), so Monarch adds no view of its own. The differences: the preview is presented over the screen, not inline; it needs a local file URL; captions, the download link and the failed state of the web component are Quick Look's own controls or the app's. The fallback of the web component (type icon, name, message, download) is composed from MonarchFileTypeIcon, Text and ShareLink.",
+  "accessibility": [
+    "System behaviour: Quick Look is fully operable with VoiceOver, including its close, share and page controls.",
+    "The control that opens the preview is an ordinary MonarchButton; give it a title that names the action."
+  ],
+  "edgeCases": [
+    "The URL must be a file URL the app can read; a remote URL shows nothing.",
+    "A security-scoped URL from a document picker must be accessed with startAccessingSecurityScopedResource before it is presented.",
+    "Use the collection form to let people swipe between several files."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "An image preview",
+      "code": "Canvas { context, size in\n    context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(red: 0.69, green: 0.77, blue: 0.87)))\n    context.fill(\n        Path(ellipseIn: CGRect(x: size.width * 0.74, y: size.height * 0.14, width: size.width * 0.14, height: size.width * 0.14)),\n        with: .color(Color(red: 1.0, green: 0.84, blue: 0.0))\n    )\n    var hills = Path()\n    hills.move(to: CGPoint(x: 0, y: size.height * 0.82))\n    hills.addLine(to: CGPoint(x: size.width * 0.28, y: size.height * 0.4))\n    hills.addLine(to: CGPoint(x: size.width * 0.5, y: size.height * 0.68))\n    hills.addLine(to: CGPoint(x: size.width * 0.66, y: size.height * 0.5))\n    hills.addLine(to: CGPoint(x: size.width, y: size.height * 0.92))\n    hills.addLine(to: CGPoint(x: size.width, y: size.height))\n    hills.addLine(to: CGPoint(x: 0, y: size.height))\n    hills.closeSubpath()\n    context.fill(hills, with: .color(Color(red: 0.18, green: 0.55, blue: 0.34)))\n}\n.aspectRatio(1.4, contentMode: .fit)\n.clipShape(RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous))\n.accessibilityElement()\n.accessibilityLabel(\"Image preview\")\n.accessibilityAddTraits(.isImage)"
+    },
+    {
+      "title": "A file row that opens Quick Look",
+      "imports": [
+        "QuickLook"
+      ],
+      "setup": "@State private var previewURL: URL?\nprivate let fileURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(\"report.pdf\")",
+      "code": "HStack {\n    MonarchFileTypeIcon(fileName: fileURL.lastPathComponent, size: .lg, isDecorative: true)\n    Text(fileURL.lastPathComponent).monarchTextStyle(.body)\n    Spacer()\n    MonarchButton(\"Preview\") { previewURL = fileURL }\n}\n.quickLookPreview($previewURL)"
+    },
+    {
+      "title": "A type with no preview: share or save it",
+      "setup": "private let fileURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(\"backup.zip\")",
+      "code": "HStack {\n    MonarchFileTypeIcon(fileName: fileURL.lastPathComponent, size: .lg, isDecorative: true)\n    Text(fileURL.lastPathComponent).monarchTextStyle(.body)\n    Spacer()\n    ShareLink(item: fileURL) { Label(\"Share\", systemImage: \"square.and.arrow.up\") }\n        .buttonStyle(.monarch(.secondary))\n}"
+    }
+  ],
+  "webEquivalent": "FilePreview",
+  "dependsOn": [
+    "button",
+    "file-type-icon"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "no-fixture",
+      "platform": "ios",
+      "reason": "The web example is a lone image scene (SVG) with no visible text.",
+      "convention": "Native previews files with Quick Look (iOS) and the system viewer (Android)."
+    }
+  ]
+}

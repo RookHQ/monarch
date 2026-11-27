@@ -1,0 +1,209 @@
+{
+  "id": "business-hours-editor",
+  "name": "MonarchBusinessHoursEditor",
+  "title": "BusinessHoursEditor",
+  "family": "scheduling",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Section groups for a Form: TextField for the name, DatePicker with displayedComponents: .date and .datePickerStyle(.compact) (in UTC) for the effective days and each date, MonarchTimezoneSelect for the zone, MonarchWeeklyHoursEditor for the weekly hours, Picker with .pickerStyle(.menu) for closed or open and the opening and closing times, Button with .buttonStyle(.monarch(...)) and swipeActions for add and remove, Toggle for the default, MonarchInlineNotice for problems",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Edits a business-hours calendar: name, time zone, weekly hours, optional effective dates, holidays and special-hours dates, and whether it is the default.",
+  "whenToUse": "For support, SLA or office-hours settings, where a calendar needs a zone, a weekly pattern and dates that replace it.",
+  "whenNotToUse": "For a person's weekly availability alone use MonarchWeeklyHoursEditor; for people's time off use MonarchTimeOffPanel.",
+  "api": [
+    "init(value: Binding<MonarchBusinessHoursValue>, showsName: Bool = true, showsDefault: Bool = false, showsEffectiveDates: Bool = false, allowsSpecialHours: Bool = true, isNameRequired: Bool = false, isOpenRequired: Bool = false, showsErrors: Bool = false, pinnedTimeZones: [String] = [], firstWeekday: Int? = nil, uses24HourClock: Bool? = nil, step: Int = 15, isReadOnly: Bool = false, labels: MonarchBusinessHoursEditorLabels = MonarchBusinessHoursEditorLabels(), weeklyHoursLabels: MonarchWeeklyHoursEditorLabels = MonarchWeeklyHoursEditorLabels(), @ViewBuilder content: () -> Content)",
+    "init(value: Binding<MonarchBusinessHoursValue>, showsName: Bool = true, showsDefault: Bool = false, showsEffectiveDates: Bool = false, allowsSpecialHours: Bool = true, isNameRequired: Bool = false, isOpenRequired: Bool = false, showsErrors: Bool = false, pinnedTimeZones: [String] = [], firstWeekday: Int? = nil, uses24HourClock: Bool? = nil, step: Int = 15, isReadOnly: Bool = false, labels: MonarchBusinessHoursEditorLabels = MonarchBusinessHoursEditorLabels(), weeklyHoursLabels: MonarchWeeklyHoursEditorLabels = MonarchWeeklyHoursEditorLabels()) where Content == EmptyView",
+    "struct MonarchBusinessHoursValue: Hashable, Sendable { var timeZone: String; var hours: [MonarchWeeklyHoursInterval]; var exceptions: [MonarchBusinessHoursException]; var name: String; var isDefault: Bool; var effectiveFrom: Date?; var effectiveTo: Date?; init(timeZone: String, hours: [MonarchWeeklyHoursInterval] = [], exceptions: [MonarchBusinessHoursException] = [], name: String = \"\", isDefault: Bool = false, effectiveFrom: Date? = nil, effectiveTo: Date? = nil); func validate(isNameRequired: Bool = false, isOpenRequired: Bool = false) -> MonarchBusinessHoursErrors }",
+    "struct MonarchBusinessHoursException: Hashable, Sendable { var date: Date?; var name: String; var intervals: [MonarchBusinessHoursInterval]; init(date: Date?, name: String, intervals: [MonarchBusinessHoursInterval] = []) }",
+    "struct MonarchBusinessHoursInterval: Hashable, Sendable { var start: Int; var end: Int; init(start: Int, end: Int) }",
+    "struct MonarchBusinessHoursErrors: Hashable, Sendable { var isNameMissing: Bool; var hours: [Int: MonarchWeeklyHoursError]; var isOpenIntervalMissing: Bool; var exceptions: [Int: MonarchBusinessHoursExceptionError]; var isEffectiveOrderInvalid: Bool; var isValid: Bool { get }; init(isNameMissing: Bool = false, hours: [Int: MonarchWeeklyHoursError] = [:], isOpenIntervalMissing: Bool = false, exceptions: [Int: MonarchBusinessHoursExceptionError] = [:], isEffectiveOrderInvalid: Bool = false) }",
+    "enum MonarchBusinessHoursExceptionError: String, CaseIterable { case date, name, duplicate, hours }",
+    "struct MonarchBusinessHoursEditorLabels { init(name: String? = nil, namePlaceholder: String? = nil, nameRequired: String? = nil, timeZone: String? = nil, timeZoneDescription: String? = nil, noOpenHours: String? = nil, effectiveFrom: String? = nil, effectiveTo: String? = nil, effectiveOrder: String? = nil, exceptions: String? = nil, exceptionsDescription: String? = nil, noExceptions: String? = nil, addException: String? = nil, exceptionDate: ((Int) -> String)? = nil, exceptionName: ((Int) -> String)? = nil, exceptionNamePlaceholder: String? = nil, exceptionKind: ((Int) -> String)? = nil, closed: String? = nil, specialHours: String? = nil, exceptionStart: ((Int) -> String)? = nil, exceptionEnd: ((Int) -> String)? = nil, remove: String? = nil, removeException: ((Int, String) -> String)? = nil, exceptionError: ((MonarchBusinessHoursExceptionError) -> String)? = nil, defaultTitle: String? = nil, defaultDescription: String? = nil, endOfDay: String? = nil, chooseDate: String? = nil, clearDate: String? = nil, clearDateItem: ((String) -> String)? = nil, noDate: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "value",
+      "type": "Binding<MonarchBusinessHoursValue>",
+      "default": "required",
+      "description": "The calendar: zone (an IANA id), weekly hours, holidays and special dates, name, default flag and effective days (the start of the day in UTC). Every change writes the whole value."
+    },
+    {
+      "name": "showsName",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the name field."
+    },
+    {
+      "name": "showsDefault",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the Default switch."
+    },
+    {
+      "name": "showsEffectiveDates",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows Effective from and Effective until, each with a clear button."
+    },
+    {
+      "name": "allowsSpecialHours",
+      "type": "Bool",
+      "default": "true",
+      "description": "Lets a date be open at other times, not only closed all day."
+    },
+    {
+      "name": "isNameRequired",
+      "type": "Bool",
+      "default": "false",
+      "description": "An empty name is a problem (the web's validation.requireName)."
+    },
+    {
+      "name": "isOpenRequired",
+      "type": "Bool",
+      "default": "false",
+      "description": "A week without an open interval is a problem (the web's validation.requireOpen)."
+    },
+    {
+      "name": "showsErrors",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows every problem now, for example after a save attempt; otherwise each shows once its part is changed."
+    },
+    {
+      "name": "pinnedTimeZones",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Zones listed first in the time zone picker."
+    },
+    {
+      "name": "firstWeekday",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The first weekday of the weekly hours, as a Calendar weekday (1 Sunday … 7 Saturday); nil follows the environment calendar."
+    },
+    {
+      "name": "uses24HourClock",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Shows times on a 24-hour clock; nil follows the locale."
+    },
+    {
+      "name": "step",
+      "type": "Int",
+      "default": "15",
+      "description": "Minutes between time options, 1 to 60; zero or less falls back to 15."
+    },
+    {
+      "name": "isReadOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows everything as text, without add or remove buttons."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchBusinessHoursEditorLabels",
+      "default": "MonarchBusinessHoursEditorLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "weeklyHoursLabels",
+      "type": "MonarchWeeklyHoursEditorLabels",
+      "default": "MonarchWeeklyHoursEditorLabels()",
+      "description": "Replacements for the strings of the weekly hours."
+    },
+    {
+      "name": "content",
+      "type": "@ViewBuilder () -> Content",
+      "default": "EmptyView",
+      "description": "Sections added at the end, for example product-specific settings."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "No weekly hours and the note No holidays or exceptions."
+    },
+    {
+      "name": "closed date",
+      "description": "A section headed by the date's name with its date, name field and the menu set to Closed all day."
+    },
+    {
+      "name": "special hours",
+      "description": "Open at other times adds opening and closing menus, 10:00 to 16:00 to start."
+    },
+    {
+      "name": "date not chosen",
+      "description": "A new date has a Choose a date button, which picks today (or the earliest allowed day) and shows the compact date picker."
+    },
+    {
+      "name": "errors",
+      "description": "A missing name, no open interval, a date without a day or name, a day listed twice, special hours that close before they open, and an end day before the start day show in the section footer as danger text with an icon."
+    },
+    {
+      "name": "disabled",
+      "description": "Under .disabled(true) every control is disabled."
+    },
+    {
+      "name": "read-only",
+      "description": "The name, days, zone and hours are text; there are no add or remove buttons, and the Default switch is disabled."
+    }
+  ],
+  "appearance": "System form sections on the grouped form background, with system controls, Monarch buttons, notes and read-only values in the muted text role and problems in the danger strong role with an icon. Light, dark and both high-contrast themes follow the theme roles and the system form colours.",
+  "platformNotes": "On iOS the editor is a series of Form sections (one per date, swipe to remove), the phone's settings layout; the web lays the name and dates out in a grid and each exception as one row of inline controls, and Android stacks the same controls in a Column. The value is a Binding, not value plus onValueChange; the web's onValueChange(value, errors) becomes MonarchBusinessHoursValue.validate, which the app calls when saving, as on Android. Names follow Swift: the web's isDefault and Android's default are isDefault; showName, showDefault, showEffectiveDates, allowSpecialHours and showErrors are showsName, showsDefault, showsEffectiveDates, allowsSpecialHours and showsErrors; requireName and requireOpen are isNameRequired and isOpenRequired; Android's errors nameRequired, noOpenHours, effectiveOrder and valid are isNameMissing, isOpenIntervalMissing, isEffectiveOrderInvalid and isValid; is24Hour is uses24HourClock; firstDayOfWeek (and the web's weekStartsOn) is firstWeekday and follows the environment calendar when nil; enabled is the SwiftUI .disabled modifier; the label default is defaultTitle; addIcon and removeIcon are fixed SF Symbols. Dates are Date values at midnight UTC (the same instant as Android's UTC-midnight epoch milliseconds, the web's YYYY-MM-DD); the compact DatePicker runs in UTC so the chosen day is the stored day. A date not yet chosen is a Choose a date button, because DatePicker cannot be empty; the Android confirm and cancel labels have no use because the compact picker needs no dialog. The time zone is an IANA id String; MonarchTimezoneSelect has no read-only mode, so read-only shows the id as text. The default is a Toggle (the iOS switch) where the web and Android use a checkbox. After a date is removed the web moves focus to the next remove button; iOS leaves focus to the system. The parity map lists time-off-panel and text-field as dependencies; the editor does not embed MonarchTimeOffPanel, because a calendar's holidays are dates of the calendar, not people's time off, and it uses the system TextField in its form sections instead of MonarchTextField, whose own label and border would repeat the section's.",
+  "accessibility": [
+    "Section headings (Name, Holidays and exceptions, each date's name) are read as headers by the system form.",
+    "Each date's controls are named by its position: Date 1, Name of date 1, Hours on date 1, Date 1 opens and Date 1 closes.",
+    "A date not chosen yet is a button read as its label with the value Choose a date.",
+    "The remove button is read as Remove Christmas Day, or Remove date 1 without a name; the trailing swipe action is also offered as a VoiceOver action.",
+    "Each effective day's clear button is read as Clear Effective from.",
+    "Problems are text with an icon in the danger colour, and each new problem is announced once.",
+    "Fields, menus and buttons have touch targets of at least 44 points."
+  ],
+  "edgeCases": [
+    "A new date has no day and no name; its problems wait until the row is changed or showsErrors is set.",
+    "A saved time off the step grid stays selectable.",
+    "A date may hold several intervals in the data; the editor edits the first and keeps the rest, and the read-only view lists them all.",
+    "Days are compared in UTC: any time on 25 December UTC is the same day as midnight, so two such rows are a duplicate.",
+    "Names are cut at 100 characters, as on the web.",
+    "The editor is many sections long and does not scroll by itself: put it in a Form."
+  ],
+  "tests": [
+    "MonarchBusinessHoursEditorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Support calendar with validation",
+      "fixture": "business-hours-editor",
+      "webExample": "Support calendar with validation",
+      "template": "Form {\n    MonarchBusinessHoursEditor(\n        value: $hours,\n        showsDefault: true,\n        isNameRequired: true,\n        isOpenRequired: true,\n        showsErrors: saveTried,\n        pinnedTimeZones: [{{pinnedTimeZones.0}}, {{pinnedTimeZones.1}}, {{pinnedTimeZones.2}}],\n        firstWeekday: {{firstWeekday}},\n        uses24HourClock: {{twentyFourHour}}\n    ) {\n        Section {\n            Button({{save}}) {\n                saveTried = true\n                if hours.validate(isNameRequired: true, isOpenRequired: true).isValid { /* Save hours. */ }\n            }\n            .buttonStyle(.monarch(.primary))\n        }\n    }\n}\n.monarchCanvas()\n.environment(\\.locale, Locale(identifier: {{locale}}))",
+      "setupTemplate": "@State private var hours = MonarchBusinessHoursValue(\n    timeZone: {{timeZone}},\n    hours: [{{weekdays.0}}, {{weekdays.1}}, {{weekdays.2}}, {{weekdays.3}}, {{weekdays.4}}].map {\n        MonarchWeeklyHoursInterval(day: $0, start: {{start}}, end: {{end}})\n    },\n    exceptions: [\n        MonarchBusinessHoursException(date: {{exceptions.0.date|date}}, name: {{exceptions.0.name}}),\n        MonarchBusinessHoursException(\n            date: {{exceptions.1.date|date}},\n            name: {{exceptions.1.name}},\n            intervals: [MonarchBusinessHoursInterval(start: {{exceptions.1.start}}, end: {{exceptions.1.end}})]\n        ),\n    ],\n    name: {{name}}\n)\n@State private var saveTried = false",
+      "setup": "@State private var hours = MonarchBusinessHoursValue(\n    timeZone: \"Europe/London\",\n    hours: [1, 2, 3, 4, 5].map {\n        MonarchWeeklyHoursInterval(day: $0, start: 540, end: 1050)\n    },\n    exceptions: [\n        MonarchBusinessHoursException(date: Date(timeIntervalSince1970: 1_798_156_800), name: \"Christmas Day\"),\n        MonarchBusinessHoursException(\n            date: Date(timeIntervalSince1970: 1_798_675_200),\n            name: \"New Year’s Eve\",\n            intervals: [MonarchBusinessHoursInterval(start: 540, end: 780)]\n        ),\n    ],\n    name: \"Support hours\"\n)\n@State private var saveTried = false",
+      "code": "Form {\n    MonarchBusinessHoursEditor(\n        value: $hours,\n        showsDefault: true,\n        isNameRequired: true,\n        isOpenRequired: true,\n        showsErrors: saveTried,\n        pinnedTimeZones: [\"Europe/London\", \"America/New_York\", \"Asia/Kolkata\"],\n        firstWeekday: 2,\n        uses24HourClock: true\n    ) {\n        Section {\n            Button(\"Save\") {\n                saveTried = true\n                if hours.validate(isNameRequired: true, isOpenRequired: true).isValid { /* Save hours. */ }\n            }\n            .buttonStyle(.monarch(.primary))\n        }\n    }\n}\n.monarchCanvas()\n.environment(\\.locale, Locale(identifier: \"en-GB\"))"
+    },
+    {
+      "title": "An availability schedule with effective dates, closed dates only",
+      "setup": "@State private var schedule = MonarchBusinessHoursValue(\n    timeZone: \"America/New_York\",\n    hours: [MonarchWeeklyHoursInterval(day: 1, start: 600, end: 960)],\n    effectiveFrom: Date(timeIntervalSince1970: 1_798_156_800)\n)",
+      "code": "Form {\n    MonarchBusinessHoursEditor(\n        value: $schedule,\n        showsEffectiveDates: true,\n        allowsSpecialHours: false,\n        uses24HourClock: true,\n        step: 30\n    )\n}\n.monarchCanvas()"
+    }
+  ],
+  "webEquivalent": "BusinessHoursEditor",
+  "dependsOn": [
+    "weekly-hours-editor",
+    "timezone-select",
+    "inline-notice",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web writes a holiday date as a DD/MM/YYYY text field; on iPhone the date is the system compact DatePicker, whose written form (for example 25 Dec 2026) is drawn by iOS and cannot be set.",
+      "convention": "HIG: system menus and date pickers keep the system's own look"
+    }
+  ]
+}

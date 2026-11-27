@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { ChartLegend, LineChart } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './chart-legend.fixture.json';
 
 const REGIONS = [
   { key: 'north', label: 'North' },
@@ -172,14 +174,7 @@ export default {
         {
           title: 'Plain legend with values',
           render: () => (
-            <ChartLegend
-              items={[
-                { key: 'web', label: 'Web', value: '12,480' },
-                { key: 'ios', label: 'iOS', value: '8,210' },
-                { key: 'android', label: 'Android', value: '6,975' },
-              ]}
-              marker="square"
-            />
+            <ChartLegend items={fixture.data.items} marker={fixture.data.marker as 'square'} />
           ),
         },
         {

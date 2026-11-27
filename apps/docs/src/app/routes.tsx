@@ -10,7 +10,7 @@
  */
 import { lazy, type ComponentType, type ReactElement } from 'react';
 import { ROUTE_ALIASES, docsPages, hasDocs, loadDetails, loadDocs, pageById } from '../lib/docs.js';
-import { navItem } from './navigation.js';
+import { NAV, navItem } from './navigation.js';
 
 type PageModule = Record<string, ComponentType<never>>;
 const modules = import.meta.glob<PageModule>([
@@ -86,6 +86,40 @@ export interface ResolvedRoute {
   notFound?: boolean;
 }
 
+/**
+ * The iOS and Android pages, from their navigation groups, by convention:
+ * `/android/components` is `AndroidComponentsPage` in
+ * `../pages/android/android-components-page.tsx`, and a native guide
+ * `/native/<id>` is `<Id>Page` in `../pages/native/<id>-page.tsx`. A guide
+ * whose file does not exist is not in the groups, so it has no route. The
+ * guides are listed in both groups and routed once.
+ */
+const platformPages = [
+  ...new Set(
+    NAV.filter((g) => g.id === 'ios' || g.id === 'android').flatMap((g) =>
+      g.items.map((i) => i.path),
+    ),
+  ),
+].map((path) => {
+  const [dir = '', page] = path.slice(1).split('/');
+  const name = dir === 'native' ? (page ?? '') : page ? `${dir}-${page}` : dir;
+  const file = `../pages/${dir}/${name}-page.tsx`;
+  const Page = named(
+    file,
+    `${name.replace(/(^|-)(\w)/g, (_, _dash, c: string) => c.toUpperCase())}Page`,
+  );
+  return [path, { file, render: () => <Page /> }] as const;
+});
+
+/**
+ * The platform landing pages: full width like the home page, with a title of
+ * their own (the navigation label is "Overview").
+ */
+const LANDINGS: Readonly<Record<string, string>> = {
+  '/ios': 'Monarch for iOS · SwiftUI components',
+  '/android': 'Monarch for Android · Jetpack Compose components',
+};
+
 const guide = (guideId: string, eyebrow: string) => <GuidePage guide={guideId} eyebrow={eyebrow} />;
 
 const STATIC: Record<string, { file: string; render: () => ReactElement }> = {
@@ -95,6 +129,7 @@ const STATIC: Record<string, { file: string; render: () => ReactElement }> = {
   '/typography': { file: TYPOGRAPHY, render: () => <TypographyPage /> },
   '/tokens': { file: TOKENS, render: () => <TokensPage /> },
   '/theming': { file: GUIDE, render: () => guide('theming', 'Foundations') },
+  ...Object.fromEntries(platformPages),
   '/components': { file: OVERVIEW, render: () => <OverviewPage layer="all" /> },
   '/patterns': { file: OVERVIEW, render: () => <OverviewPage layer="patterns" /> },
   '/patterns/guide': { file: GUIDE, render: () => guide('patterns', 'Patterns') },
@@ -122,11 +157,21 @@ export function resolveRoute(raw: string): ResolvedRoute {
       files: [HOME],
     };
   const page = STATIC[path];
+  const landing = LANDINGS[path];
+  if (page && landing)
+    return { title: landing, fullWidth: true, element: page.render(), files: [page.file] };
   if (page) {
     const item = navItem(path);
     const label = item ? (item.label === 'Overview' ? item.group.heading : item.label) : 'Monarch';
+    // "Get started" or "Components" alone would not say which platform.
+    const platform =
+      item &&
+      (item.group.id === 'ios' || item.group.id === 'android') &&
+      !path.startsWith('/native/')
+        ? item.group.heading
+        : null;
     return {
-      title: `${label} · Monarch`,
+      title: platform ? `${label} · Monarch for ${platform}` : `${label} · Monarch`,
       fullWidth: false,
       element: page.render(),
       files: [page.file],

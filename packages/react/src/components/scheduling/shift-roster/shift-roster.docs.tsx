@@ -6,30 +6,29 @@ import {
   type ShiftRosterValue,
 } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './shift-roster.fixture.json';
 
-const SHIFTS: ShiftRosterShift[] = [
-  { id: 'm', name: 'Morning', shortName: 'Morning', start: 360, end: 840, color: '#2f7d6d' },
-  { id: 'e', name: 'Evening', start: 840, end: 1320, color: '#7a5bb5' },
-  { id: 'n', name: 'Night', start: 1320, end: 360, color: '#3b5b8f' },
-];
+const rgb = (c: { r: number; g: number; b: number }) =>
+  `#${[c.r, c.g, c.b].map((n) => n.toString(16).padStart(2, '0')).join('')}`;
 
-const MEMBERS: ShiftRosterMember[] = [
-  { id: 'a', name: 'Alex Kim', description: 'Support' },
-  { id: 'b', name: 'Sam Lee', description: 'Support' },
-  { id: 'c', name: 'Priya Nair', description: 'Operations' },
-];
+const data = fixture.data;
 
-const START: ShiftRosterValue = {
-  a: {
-    '2026-11-02': 'm',
-    '2026-11-03': 'm',
-    '2026-11-04': 'm',
-    '2026-11-07': null,
-    '2026-11-08': null,
-  },
-  b: { '2026-11-02': 'e', '2026-11-03': 'e', '2026-11-05': 'n', '2026-11-06': 'n' },
-  c: { '2026-11-04': 'n', '2026-11-05': null },
-};
+const SHIFTS: ShiftRosterShift[] = (
+  data.shifts as unknown as readonly (Omit<ShiftRosterShift, 'color'> & {
+    color: { r: number; g: number; b: number };
+  })[]
+).map((s) => ({ ...s, color: rgb(s.color) }));
+
+const MEMBERS: ShiftRosterMember[] = data.members;
+
+// A shift of "off" is a day off, which the roster stores as null.
+const START: ShiftRosterValue = Object.fromEntries(
+  data.roster.map(({ member, days }) => [
+    member,
+    Object.fromEntries(days.map(({ day, shift }) => [day, shift === 'off' ? null : shift])),
+  ]),
+);
 
 function Demo() {
   const [value, setValue] = useState<ShiftRosterValue>(START);
@@ -39,9 +38,9 @@ function Demo() {
       <ShiftRoster
         members={MEMBERS}
         shifts={SHIFTS}
-        from="2026-11-02"
-        today="2026-11-04"
-        locale="en-GB"
+        from={data.from}
+        today={data.today}
+        locale={data.locale}
         value={value}
         onValueChange={(next: ShiftRosterValue, change: { memberId: string; day: string }) => {
           setValue(next);
@@ -173,10 +172,10 @@ export default {
             <ShiftRoster
               members={MEMBERS}
               shifts={SHIFTS}
-              from="2026-11-02"
+              from={data.from}
               days={3}
               defaultValue={START}
-              locale="en-GB"
+              locale={data.locale}
               readOnly
               showTotals={false}
             />

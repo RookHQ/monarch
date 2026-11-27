@@ -1,0 +1,182 @@
+{
+  "id": "payment-method-card",
+  "name": "MonarchPaymentMethodCard",
+  "title": "PaymentMethodCard",
+  "family": "billing",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchCard with MonarchBadge, MonarchButton and MonarchInlineErrorRetry; alert(_:isPresented:actions:message:) for the removal confirmation",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A saved payment card: network, last four digits, expiry and holder, a Default badge, and actions to make it the default or remove it after a confirmation.",
+  "whenToUse": "On a billing or payment methods screen, to list the cards a customer has saved with the payment provider.",
+  "whenNotToUse": "Never to enter or show a full card number: adding a card belongs to the payment provider's own SDK or hosted form. For a plan or an invoice, use MonarchPlanCard or MonarchReceiptPreview.",
+  "api": [
+    "init(brand: String, last4: String, expiryMonth: Int? = nil, expiryYear: Int? = nil, holderName: String? = nil, brandImage: Image? = nil, expiry: MonarchPaymentMethodCardExpiry? = nil, now: Date = .now, isDefault: Bool = false, isRemoveDisabled: Bool = false, labels: MonarchPaymentMethodCardLabels = MonarchPaymentMethodCardLabels(), onMakeDefault: (@MainActor () async throws -> Void)? = nil, onRemove: (@MainActor () async throws -> Void)? = nil, @ViewBuilder actions: () -> Actions)",
+    "init(brand: String, last4: String, expiryMonth: Int? = nil, expiryYear: Int? = nil, holderName: String? = nil, brandImage: Image? = nil, expiry: MonarchPaymentMethodCardExpiry? = nil, now: Date = .now, isDefault: Bool = false, isRemoveDisabled: Bool = false, labels: MonarchPaymentMethodCardLabels = MonarchPaymentMethodCardLabels(), onMakeDefault: (@MainActor () async throws -> Void)? = nil, onRemove: (@MainActor () async throws -> Void)? = nil) where Actions == EmptyView",
+    "enum MonarchPaymentMethodCardExpiry { case valid, expiring, expired; static func status(month: Int, year: Int, now: Date = .now, soonMonths: Int = 1, calendar: Calendar = Calendar(identifier: .gregorian)) -> MonarchPaymentMethodCardExpiry }",
+    "struct MonarchPaymentMethodCardLabels { init(name:expires:expiredOn:defaultBadge:expiringBadge:expiredBadge:makeDefault:remove:actionLabel:removeTitle:removeMessage:removeConfirm:cancel:failed:) }  // every parameter optional"
+  ],
+  "options": [
+    {
+      "name": "brand",
+      "type": "String",
+      "default": "required",
+      "description": "A network id (visa, mastercard, amex, rupay, discover, diners, jcb, unionpay, maestro) shown by its display name, or any display name."
+    },
+    {
+      "name": "last4",
+      "type": "String",
+      "default": "required",
+      "description": "The last four digits, exactly as the payment provider returns them."
+    },
+    {
+      "name": "expiryMonth",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The expiry month, 1 to 12."
+    },
+    {
+      "name": "expiryYear",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The expiry year, two or four digits."
+    },
+    {
+      "name": "holderName",
+      "type": "String?",
+      "default": "nil",
+      "description": "The cardholder's name, shown before the expiry."
+    },
+    {
+      "name": "brandImage",
+      "type": "Image?",
+      "default": "nil",
+      "description": "The network's logo. Default: the creditcard symbol. Always decorative."
+    },
+    {
+      "name": "expiry",
+      "type": "MonarchPaymentMethodCardExpiry?",
+      "default": "nil",
+      "description": "Replaces the status worked out from the date, when the payment provider already reports it."
+    },
+    {
+      "name": "now",
+      "type": "Date",
+      "default": ".now",
+      "description": "Today, for working out the status."
+    },
+    {
+      "name": "isDefault",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the Default badge and hides Make default."
+    },
+    {
+      "name": "isRemoveDisabled",
+      "type": "Bool",
+      "default": "false",
+      "description": "Disables Remove, for example on the only method of an active subscription."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchPaymentMethodCardLabels",
+      "default": "MonarchPaymentMethodCardLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onMakeDefault",
+      "type": "(@MainActor () async throws -> Void)?",
+      "default": "nil",
+      "description": "Shows Make default on a card that is not the default. Progress shows on the button while it runs; a thrown error is shown with Try again."
+    },
+    {
+      "name": "onRemove",
+      "type": "(@MainActor () async throws -> Void)?",
+      "default": "nil",
+      "description": "Shows Remove, which asks for confirmation in an alert first. Progress shows on the button while it runs; a thrown error is shown with Try again."
+    },
+    {
+      "name": "actions",
+      "type": "@ViewBuilder () -> Actions",
+      "default": "EmptyView",
+      "description": "Further buttons after Make default and Remove. Pass it labelled (actions:) after the closures."
+    }
+  ],
+  "states": [
+    {
+      "name": "valid",
+      "description": "No expiry badge; the expiry line reads \"Expires MM/YY\"."
+    },
+    {
+      "name": "expiring",
+      "description": "A warning badge \"Expires soon\" with a warning icon, this month or next."
+    },
+    {
+      "name": "expired",
+      "description": "A danger badge \"Expired\" with an icon, the line reads \"Expired MM/YY\", and Make default is disabled."
+    },
+    {
+      "name": "default",
+      "description": "A Default badge in the accent colours; Make default is hidden."
+    },
+    {
+      "name": "working",
+      "description": "The button of the running action shows progress and reads \"Loading\" as its value; a second action does not start."
+    },
+    {
+      "name": "failed",
+      "description": "An inline error with Try again under the card; the failure is announced."
+    },
+    {
+      "name": "remove disabled",
+      "description": "Remove uses the disabled colours and cannot be activated."
+    }
+  ],
+  "appearance": "A Monarch card (surface fill, default border, extra-small shadow) with the network image in the muted text colour, the name in the subheading role, holder and expiry in the caption role and muted text colour. The Default badge uses the accent subtle fill and accent strong text; expiry badges use the warning and danger tone palettes. Correct in light, dark and both high-contrast themes.",
+  "platformNotes": "The web card shows a removal ConfirmDialog that stays open while removal runs and shows a rejection inside the dialog. A system alert cannot show progress, so on iOS the alert closes, the Remove button shows progress and a failure appears under the card with Try again. The web onMakeDefaultError callback is replaced by the same inline error. The heading level option has no iOS equivalent; the name is a heading. The web uses an accent badge tone; MonarchTone has no accent case, so the Default badge draws the accent roles itself. Android ships MonarchPaymentMethodCard. Several closures are optional (onMakeDefault, onRemove). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onMakeDefault.",
+  "accessibility": [
+    "The network image is hidden; the name, badges, holder and expiry are combined into one element with the header trait.",
+    "Expiry states are badges with text and an icon, never colour alone.",
+    "Make default and Remove are read as their title and the card, for example \"Remove, Visa ending in 4242\".",
+    "Removal is confirmed in a system alert with a destructive and a cancel button.",
+    "A failed action is announced with AccessibilityNotification.Announcement.",
+    "Action buttons keep 44-point touch targets; the badges and the actions wrap onto new rows at large text sizes."
+  ],
+  "edgeCases": [
+    "Two-digit years are read as 20YY.",
+    "A card is valid to the end of its expiry month, in the Gregorian calendar.",
+    "Without a month and a year the status is valid unless expiry is given.",
+    "Retrying a failed removal does not ask for confirmation again.",
+    "An unknown network id is shown as given, so pass a localised display name.",
+    "Changes in onMakeDefault or onRemove that remove the card from the list end the card's view; that is expected."
+  ],
+  "tests": [
+    "MonarchPaymentMethodCardTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "A list of saved cards",
+      "fixture": "payment-method-card",
+      "webExample": "A list of saved cards",
+      "template": "VStack(spacing: 12) {\n    MonarchPaymentMethodCard(\n        brand: {{cards.0.brand}},\n        last4: {{cards.0.last4}},\n        expiryMonth: {{cards.0.expiryMonth}},\n        expiryYear: {{cards.0.expiryYear}},\n        holderName: {{cards.0.holderName}},\n        brandImage: Image(systemName: \"creditcard\"),\n        now: {{now|date}},\n        isDefault: {{cards.0.isDefault}},\n        isRemoveDisabled: {{cards.0.removeDisabled}},\n        onRemove: {}\n    )\n    MonarchPaymentMethodCard(\n        brand: {{cards.1.brand}},\n        last4: {{cards.1.last4}},\n        expiryMonth: {{cards.1.expiryMonth}},\n        expiryYear: {{cards.1.expiryYear}},\n        brandImage: Image(systemName: \"creditcard\"),\n        now: {{now|date}},\n        onMakeDefault: {},\n        onRemove: {}\n    )\n    MonarchPaymentMethodCard(\n        brand: {{cards.2.brand}},\n        last4: {{cards.2.last4}},\n        expiryMonth: {{cards.2.expiryMonth}},\n        expiryYear: {{cards.2.expiryYear}},\n        brandImage: Image(systemName: \"creditcard\"),\n        now: {{now|date}},\n        onMakeDefault: {},\n        onRemove: {}\n    )\n}",
+      "code": "VStack(spacing: 12) {\n    MonarchPaymentMethodCard(\n        brand: \"visa\",\n        last4: \"4242\",\n        expiryMonth: 8,\n        expiryYear: 2028,\n        holderName: \"Account holder\",\n        brandImage: Image(systemName: \"creditcard\"),\n        now: Date(timeIntervalSince1970: 1_781_524_800),\n        isDefault: true,\n        isRemoveDisabled: true,\n        onRemove: {}\n    )\n    MonarchPaymentMethodCard(\n        brand: \"mastercard\",\n        last4: \"4444\",\n        expiryMonth: 7,\n        expiryYear: 2026,\n        brandImage: Image(systemName: \"creditcard\"),\n        now: Date(timeIntervalSince1970: 1_781_524_800),\n        onMakeDefault: {},\n        onRemove: {}\n    )\n    MonarchPaymentMethodCard(\n        brand: \"rupay\",\n        last4: \"0005\",\n        expiryMonth: 1,\n        expiryYear: 2026,\n        brandImage: Image(systemName: \"creditcard\"),\n        now: Date(timeIntervalSince1970: 1_781_524_800),\n        onMakeDefault: {},\n        onRemove: {}\n    )\n}"
+    },
+    {
+      "title": "An expired card with an action of the app's own",
+      "code": "MonarchPaymentMethodCard(\n    brand: \"amex\",\n    last4: \"0005\",\n    expiryMonth: 1,\n    expiryYear: 2_025,\n    onMakeDefault: {},\n    actions: {\n        MonarchButton(\"Update expiry\", variant: .ghost, size: .sm) {}\n    }\n)"
+    }
+  ],
+  "webEquivalent": "PaymentMethodCard",
+  "dependsOn": [
+    "card",
+    "badge",
+    "confirm-dialog",
+    "button",
+    "inline-error-retry"
+  ]
+}

@@ -5,54 +5,25 @@ import {
   type DependencyLink,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './dependency-picker.fixture.json';
 
-const ITEMS: DependencyItem[] = [
-  {
-    id: '11',
-    key: 'APP-11',
-    title: 'Agree the data model',
-    status: { id: 'done', name: 'Done', category: 'completed' },
-  },
-  {
-    id: '12',
-    key: 'APP-12',
-    title: 'Build the import endpoint',
-    status: { id: 'doing', name: 'In progress', category: 'started' },
-  },
-  {
-    id: '13',
-    key: 'APP-13',
-    title: 'Write the migration guide',
-    status: { id: 'todo', name: 'Todo', category: 'unstarted' },
-  },
-  {
-    id: '14',
-    key: 'APP-14',
-    title: 'Add import to settings',
-    status: { id: 'todo', name: 'Todo', category: 'unstarted' },
-  },
-  {
-    id: '15',
-    key: 'APP-15',
-    title: 'Import from spreadsheets',
-    status: { id: 'backlog', name: 'Backlog', category: 'backlog' },
-  },
-];
-
-const DATA_MODEL: DependencyItem = ITEMS[0] ?? { id: '11', title: 'Agree the data model' };
-const SETTINGS: DependencyItem = ITEMS[3] ?? { id: '14', title: 'Add import to settings' };
+const ITEMS = fixture.data.items as DependencyItem[];
 
 function DependenciesDemo() {
-  const [links, setLinks] = useState<DependencyLink[]>([
-    { id: 'a', relation: 'blocked-by', item: DATA_MODEL },
-    { id: 'b', relation: 'blocks', item: SETTINGS },
-  ]);
+  const [links, setLinks] = useState<DependencyLink[]>(
+    fixture.data.links.map((link) => ({
+      id: link.id,
+      relation: link.relation as DependencyLink['relation'],
+      item: ITEMS.find((item) => item.id === link.itemId) as DependencyItem,
+    })),
+  );
   return (
     <div style={{ width: '100%', maxWidth: 480 }}>
       <DependencyPicker
         value={links}
         items={ITEMS}
-        excludeIds={['12']}
+        excludeIds={fixture.data.excludeIds}
         onAdd={(relation, item) =>
           setLinks((l) => [...l, { id: `${relation}-${item.id}`, relation, item }])
         }

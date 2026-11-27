@@ -163,7 +163,7 @@ export default {
     },
     responsive: {
       items: [
-        'One card per row at 390px, two from 640px, three or four from 1024px.',
+        'Columns follow the section’s own width, not the window’s: one card per row below 40rem (640px), two from 40rem, three or four from 56rem (896px). The comparison table switches to compact columns below 44rem of its own width and scrolls sideways only when the plans still do not fit.',
         'The comparison table scrolls inside its own area; the page never scrolls sideways.',
         'Toggle items are 44px tall on coarse pointers.',
       ],

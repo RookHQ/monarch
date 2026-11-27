@@ -1,0 +1,149 @@
+{
+  "id": "copy-field",
+  "name": "MonarchCopyField",
+  "title": "CopyField",
+  "family": "actions",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Text with .textSelection(.enabled) and .truncationMode(.middle), MonarchCopyButton (Button, UIPasteboard)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A read-only value in a field-shaped box with a copy button beside it, for links, records, keys and snippets.",
+  "whenToUse": "When people need to see a value and take it elsewhere, for example a webhook URL or a DNS record while they configure another service. Use isMultiline for certificates, JSON and snippets.",
+  "whenNotToUse": "Not for values people edit (use MonarchTextField) and not for secrets that must stay masked. When the value is already shown elsewhere, use MonarchCopyButton on its own.",
+  "api": [
+    "init(_ label: String, value: String, size: MonarchButtonSize = .md, isMultiline: Bool = false, isMonospaced: Bool = true, isIconOnly: Bool = false, isLabelHidden: Bool = false, copyTitle: String? = nil, copiedTitle: String? = nil, resetAfter: Duration = .seconds(2), onCopy: (@MainActor (String) -> Void)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "What the value is, such as \"Webhook URL\". Shown above the box and added to the button's spoken name."
+    },
+    {
+      "name": "value",
+      "type": "String",
+      "default": "required",
+      "description": "The read-only text shown and copied."
+    },
+    {
+      "name": "size",
+      "type": "MonarchButtonSize",
+      "default": ".md",
+      "description": "sm, md or lg: the least height of the box and the size of the button."
+    },
+    {
+      "name": "isMultiline",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether the whole value wraps over several lines. A single-line field shortens the middle of a long value."
+    },
+    {
+      "name": "isMonospaced",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the value uses the code type role."
+    },
+    {
+      "name": "isIconOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether the button shows only the copy icon. Its spoken name stays \"Copy\" and the label."
+    },
+    {
+      "name": "isLabelHidden",
+      "type": "Bool",
+      "default": "false",
+      "description": "Hides the label above the box. The box and the button still speak it."
+    },
+    {
+      "name": "copyTitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the button's built-in title \"Copy\"."
+    },
+    {
+      "name": "copiedTitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the button's built-in title \"Copied\"."
+    },
+    {
+      "name": "resetAfter",
+      "type": "Duration",
+      "default": ".seconds(2)",
+      "description": "How long the copied state lasts; zero keeps it."
+    },
+    {
+      "name": "onCopy",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Runs with the copied text after each copy."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "The value in the box and the button titled \"Copy\"."
+    },
+    {
+      "name": "copied",
+      "description": "The button shows a checkmark and \"Copied\" for resetAfter, plays the success haptic and announces \"Copied to clipboard\"."
+    },
+    {
+      "name": "disabled",
+      "description": "Set with disabled(_:). The label and value use the disabled text colour, the box the muted fill and the subtle border, and the button does not respond."
+    }
+  ],
+  "appearance": "The box uses the subtle background fill with the input border and the control corner radius; the value uses the default text colour in the code type role. Disabled uses the muted fill, the subtle border and the disabled text colour. The button is the secondary Monarch button. Colours come from theme roles in light, dark and both high-contrast themes.",
+  "platformNotes": "The web CopyField renders a read-only input or textarea, selects the value on focus and selects it again if the clipboard write fails. On iOS the pasteboard write does not fail, so there is no onCopyError; the value can be selected by touch and hold instead (textSelection). A multi-line field shows the whole value instead of a fixed number of rows that scroll. The web copyButtonProps pass-through is not offered; the button is always the secondary variant. Android ships the same MonarchCopyField.",
+  "accessibility": [
+    "The box is one element: its label is the label and its value is the whole value, also when the visible text is shortened in the middle.",
+    "The copy button is a separate standard button named \"Copy\" and the label, such as \"Copy Webhook URL\", with \"Copied\" while confirmed.",
+    "After a copy VoiceOver announces \"Copied to clipboard\" and the success haptic plays.",
+    "The visible label is hidden from VoiceOver because the box already speaks it.",
+    "The value and the label scale with Dynamic Type; the button keeps a 44-point touch target."
+  ],
+  "edgeCases": [
+    "A long single-line value is shortened in the middle; VoiceOver, selection and the copy still use the whole value.",
+    "An empty value keeps the box one line high and copies an empty string.",
+    "A multi-line value with many lines grows the field; put it in a scroll view.",
+    "Text selection inside the box was checked only by compiling; selection behaviour was not tried on a device."
+  ],
+  "tests": [
+    "MonarchCopyFieldTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "One-line values",
+      "fixture": "copy-field",
+      "webExample": "One-line values",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    MonarchCopyField({{fields.0.label}}, value: {{fields.0.value}}, isLabelHidden: true)\n    MonarchCopyField(\n        {{fields.1.label}},\n        value: {{fields.1.value}},\n        size: .{{fields.1.size|raw}},\n        isIconOnly: {{fields.1.iconOnly}},\n        isLabelHidden: true\n    )\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme",
+      "setup": "@Environment(\\.monarchTheme) private var theme",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    MonarchCopyField(\"Webhook URL\", value: \"https://example.com/hooks/inbound/7f3a2c\", isLabelHidden: true)\n    MonarchCopyField(\n        \"TXT record\",\n        value: \"verify=c41e9b20d7\",\n        size: .sm,\n        isIconOnly: true,\n        isLabelHidden: true\n    )\n}"
+    },
+    {
+      "title": "A snippet over several lines",
+      "code": "MonarchCopyField(\n    \"Embed code\",\n    value: \"<script src=\\\"https://example.com/widget.js\\\" async></script>\",\n    isMultiline: true\n)"
+    },
+    {
+      "title": "Small, icon-only button, with a callback",
+      "setup": "@State private var lastCopied = \"\"",
+      "code": "MonarchCopyField(\"SPF record\", value: \"v=spf1 include:_spf.example.com ~all\", size: .sm, isIconOnly: true) { copied in\n    lastCopied = copied\n}"
+    }
+  ],
+  "webEquivalent": "CopyField",
+  "dependsOn": [
+    "copy-button",
+    "text-field"
+  ],
+  "icons": {
+    "copy": "CopyGlyph"
+  }
+}

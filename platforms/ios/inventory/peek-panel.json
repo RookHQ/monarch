@@ -1,0 +1,73 @@
+{
+  "id": "peek-panel",
+  "name": null,
+  "title": "PeekPanel",
+  "family": "overlays",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "inspector(isPresented:content:) with inspectorColumnWidth(min:ideal:max:); presentationDetents inside it for compact widths",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A side panel that previews a record next to its list is the SwiftUI inspector: a trailing column at regular width and a sheet on a phone. Monarch ships nothing.",
+  "whenToUse": "To read records one after another without leaving the list: the inspector shows the selected record, with previous and next buttons, and the list stays usable beside it at regular width.",
+  "whenNotToUse": "Not for editing that must be finished or cancelled (use sheet). For a list whose detail is the main content, use NavigationSplitView, which gives the detail the larger column.",
+  "api": [
+    "func inspector<V: View>(isPresented: Binding<Bool>, content: () -> V) -> some View",
+    "func inspectorColumnWidth(min: CGFloat? = nil, ideal: CGFloat, max: CGFloat? = nil) -> some View",
+    "func presentationDetents(_ detents: Set<PresentationDetent>) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "regular width",
+      "description": "A trailing column beside the content. The content stays interactive; nothing is dimmed."
+    },
+    {
+      "name": "compact width",
+      "description": "The system presents the same content as a sheet. With presentationDetents it can rest at medium height so the list stays visible."
+    },
+    {
+      "name": "closed",
+      "description": "isPresented is false. The column or sheet is removed."
+    }
+  ],
+  "appearance": "The system draws the column, its separator and the sheet in every theme. The content inside uses Monarch components and the theme's colours.",
+  "platformNotes": "The web PeekPanel draws its own header (title, position, previous, next, open full record, close), sizes and keyboard shortcuts. On iOS the container is the inspector and the header is ordinary content: a title, MonarchButton or toolbar items for previous and next, and a NavigationLink or button for the full record. The web's size is inspectorColumnWidth, placement inline or overlay is decided by the system from the width, and its J and K shortcuts are keyboardShortcut on the two buttons. On a phone the panel is a sheet, so it covers part of the list. Android uses a supporting pane or a bottom sheet in the same way.",
+  "accessibility": [
+    "System behaviour: at regular width the inspector is a column in the same window, so VoiceOver and the keyboard move between the list and the panel freely.",
+    "System behaviour: at compact width it is a sheet, which confines focus until it is dismissed with a swipe, the escape gesture or a close button.",
+    "Give the previous and next buttons labels, and disable them at the ends rather than hiding them.",
+    "Announce the new record when stepping, or move VoiceOver focus to the title with AccessibilityFocusState."
+  ],
+  "edgeCases": [
+    "The sheet form has no close button of its own; add one for people who do not swipe.",
+    "Without presentationDetents the sheet is full height and hides the list.",
+    "Stepping past the first or last record must be prevented by the app; the inspector knows nothing about the list."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Preview orders from a list",
+      "fixture": "peek-panel",
+      "webExample": "Preview orders from a list",
+      "template": "List(orders.indices, id: \\.self) { index in\n    Button(orders[index].id) { selected = index }\n        .listRowBackground(Color.clear)\n}\n.inspector(isPresented: isShown) {\n    if let index = selected {\n        VStack(alignment: .leading, spacing: 0) {\n            HStack(spacing: MonarchTokens.Space.space2) {\n                MonarchButton(\"Previous\", systemImage: \"chevron.up\", variant: .ghost, size: .sm, isIconOnly: true) { selected = index - 1 }\n                    .disabled(index == 0)\n                MonarchButton(\"Next\", systemImage: \"chevron.down\", variant: .ghost, size: .sm, isIconOnly: true) { selected = index + 1 }\n                    .disabled(index == orders.count - 1)\n                Text(\"\\(index + 1) of \\(orders.count)\")\n                    .monarchTextStyle(.caption)\n                    .foregroundStyle(theme.colors.textMuted)\n                Spacer(minLength: 0)\n                Button(\"Open full record\") {}\n                    .buttonStyle(.monarchLink(.inline))\n                    .monarchTextStyle(.bodySmall)\n                MonarchButton(\"Close\", systemImage: \"xmark\", variant: .ghost, size: .sm, isIconOnly: true) { selected = nil }\n            }\n            .padding(MonarchTokens.Space.space3)\n            MonarchDivider()\n            VStack(alignment: .leading, spacing: MonarchTokens.Space.space1) {\n                Text(orders[index].id).monarchTextStyle(.heading).foregroundStyle(theme.colors.textDefault)\n                Text(orders[index].status).monarchTextStyle(.body).foregroundStyle(theme.colors.textMuted)\n                Text(\"Total \" + orders[index].total)\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textDefault)\n                    .padding(.top, MonarchTokens.Space.space4)\n            }\n            .frame(maxWidth: .infinity, alignment: .leading)\n            .padding(MonarchTokens.Space.space4)\n            Spacer(minLength: 0)\n            MonarchDivider()\n            HStack {\n                Spacer(minLength: 0)\n                MonarchButton({{footer}}, variant: .primary) {}\n            }\n            .padding(MonarchTokens.Space.space3)\n            .background(theme.colors.bgSubtle)\n        }\n        .presentationDetents([.medium, .large])\n        .inspectorColumnWidth(min: 280, ideal: 360, max: 480)\n    }\n}\n.listStyle(.plain)\n.scrollContentBackground(.hidden)\n.monarchCanvas()",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\nstruct Order {\n    let id: String\n    let status: String\n    let total: String\n}\n\n@State private var selected: Int? = {{selected}}\n\nprivate let orders = [\n    Order(id: {{orders.0.id}}, status: {{orders.0.status}}, total: {{orders.0.total}}),\n    Order(id: {{orders.1.id}}, status: {{orders.1.status}}, total: {{orders.1.total}}),\n    Order(id: {{orders.2.id}}, status: {{orders.2.status}}, total: {{orders.2.total}}),\n]\n\nprivate var isShown: Binding<Bool> {\n    Binding(get: { selected != nil }, set: { if !$0 { selected = nil } })\n}",
+      "previewScreen": true,
+      "setup": "@Environment(\\.monarchTheme) private var theme\nstruct Order {\n    let id: String\n    let status: String\n    let total: String\n}\n\n@State private var selected: Int? = 1\n\nprivate let orders = [\n    Order(id: \"Order 1001\", status: \"Paid\", total: \"€120.00\"),\n    Order(id: \"Order 1002\", status: \"Awaiting payment\", total: \"€48.50\"),\n    Order(id: \"Order 1003\", status: \"Refunded\", total: \"€15.00\"),\n]\n\nprivate var isShown: Binding<Bool> {\n    Binding(get: { selected != nil }, set: { if !$0 { selected = nil } })\n}",
+      "code": "List(orders.indices, id: \\.self) { index in\n    Button(orders[index].id) { selected = index }\n        .listRowBackground(Color.clear)\n}\n.inspector(isPresented: isShown) {\n    if let index = selected {\n        VStack(alignment: .leading, spacing: 0) {\n            HStack(spacing: MonarchTokens.Space.space2) {\n                MonarchButton(\"Previous\", systemImage: \"chevron.up\", variant: .ghost, size: .sm, isIconOnly: true) { selected = index - 1 }\n                    .disabled(index == 0)\n                MonarchButton(\"Next\", systemImage: \"chevron.down\", variant: .ghost, size: .sm, isIconOnly: true) { selected = index + 1 }\n                    .disabled(index == orders.count - 1)\n                Text(\"\\(index + 1) of \\(orders.count)\")\n                    .monarchTextStyle(.caption)\n                    .foregroundStyle(theme.colors.textMuted)\n                Spacer(minLength: 0)\n                Button(\"Open full record\") {}\n                    .buttonStyle(.monarchLink(.inline))\n                    .monarchTextStyle(.bodySmall)\n                MonarchButton(\"Close\", systemImage: \"xmark\", variant: .ghost, size: .sm, isIconOnly: true) { selected = nil }\n            }\n            .padding(MonarchTokens.Space.space3)\n            MonarchDivider()\n            VStack(alignment: .leading, spacing: MonarchTokens.Space.space1) {\n                Text(orders[index].id).monarchTextStyle(.heading).foregroundStyle(theme.colors.textDefault)\n                Text(orders[index].status).monarchTextStyle(.body).foregroundStyle(theme.colors.textMuted)\n                Text(\"Total \" + orders[index].total)\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textDefault)\n                    .padding(.top, MonarchTokens.Space.space4)\n            }\n            .frame(maxWidth: .infinity, alignment: .leading)\n            .padding(MonarchTokens.Space.space4)\n            Spacer(minLength: 0)\n            MonarchDivider()\n            HStack {\n                Spacer(minLength: 0)\n                MonarchButton(\"Send receipt\", variant: .primary) {}\n            }\n            .padding(MonarchTokens.Space.space3)\n            .background(theme.colors.bgSubtle)\n        }\n        .presentationDetents([.medium, .large])\n        .inspectorColumnWidth(min: 280, ideal: 360, max: 480)\n    }\n}\n.listStyle(.plain)\n.scrollContentBackground(.hidden)\n.monarchCanvas()"
+    }
+  ],
+  "webEquivalent": "PeekPanel",
+  "dependsOn": [
+    "button"
+  ],
+  "icons": {
+    "previous": "ChevronDownGlyph",
+    "next": "ChevronDownGlyph",
+    "close": "CloseGlyph"
+  }
+}

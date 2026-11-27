@@ -1,0 +1,184 @@
+{
+  "id": "media-upload",
+  "name": "MonarchMediaUpload",
+  "title": "MediaUpload",
+  "family": "files",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchFileUpload (fileImporter and PhotosPicker), ProgressView with .monarchLinear, AsyncImage for the image preview, MonarchVideoThumbnail with AVKit VideoPlayer for the video preview, AVURLAsset.load(.duration) for the length check",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A field that holds one image or video: pick it from Photos or Files, see it checked and uploaded, then preview it with Replace and Remove.",
+  "whenToUse": "For a record's single picture or clip, such as a cover, a tile or a banner, when the app needs size or length limits and a preview before saving.",
+  "whenNotToUse": "Not for several files or attachments (use MonarchFileUpload with MonarchUploadQueue), and not for a profile picture with cropping (use MonarchAvatarUpload).",
+  "api": [
+    "init(_ label: String, url: Binding<URL?>, kind: MonarchMediaUploadKind? = nil, helper: String? = nil, kinds: Set<MonarchMediaUploadKind> = [.image], maxImageSize: Int64? = nil, maxVideoSize: Int64? = nil, maxVideoDuration: TimeInterval? = nil, videoUnavailable: String? = nil, previewLabel: String? = nil, labels: MonarchMediaUploadLabels = MonarchMediaUploadLabels(), onUpload: @escaping @MainActor (MonarchFileUploadFile, MonarchMediaUploadContext) async throws -> MonarchMediaUploadResult)",
+    "enum MonarchMediaUploadKind { case image, video }",
+    "struct MonarchMediaUploadResult: Hashable, Sendable { init(url: URL, warnings: [String] = []) }",
+    "struct MonarchMediaUploadContext: Sendable { let kind: MonarchMediaUploadKind; init(kind: MonarchMediaUploadKind, progress: @escaping @Sendable (Double) -> Void); func reportProgress(_ fraction: Double) }",
+    "struct MonarchMediaUploadLabels: Sendable { init(addImage:addMedia:uploadFailed:cancel:cancelled:imageUploaded:videoUploaded:replaceImage:replaceVideo:removeImage:removeVideo:imageRemoved:videoRemoved:previewImage:previewVideo:warnings:close: String? = nil, imageHint: (@Sendable (String?) -> String)? = nil, videoHint: (@Sendable (String?, String?) -> String)? = nil, videoNotAllowed: (@Sendable (String) -> String)? = nil, tooLarge: (@Sendable (String, String) -> String)? = nil, tooLong: (@Sendable (String, String) -> String)? = nil, durationUnreadable: (@Sendable (String) -> String)? = nil, checking: (@Sendable (String) -> String)? = nil, uploading: (@Sendable (String) -> String)? = nil, fileUpload: MonarchFileUploadLabels = MonarchFileUploadLabels()) }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The visible label, already localised. It is a header."
+    },
+    {
+      "name": "url",
+      "type": "Binding<URL?>",
+      "default": "required",
+      "description": "The address of the stored file, or nil when empty. An upload sets it; Remove sets it to nil."
+    },
+    {
+      "name": "kind",
+      "type": "MonarchMediaUploadKind?",
+      "default": "nil",
+      "description": "The kind of the current file. When nil, the kind of the latest upload, or a guess from the address's extension."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Help text under the label."
+    },
+    {
+      "name": "kinds",
+      "type": "Set<MonarchMediaUploadKind>",
+      "default": "[.image]",
+      "description": "The kinds that are taken."
+    },
+    {
+      "name": "maxImageSize",
+      "type": "Int64?",
+      "default": "nil",
+      "description": "The largest image, in bytes. Larger images are refused with the file name and the limit."
+    },
+    {
+      "name": "maxVideoSize",
+      "type": "Int64?",
+      "default": "nil",
+      "description": "The largest video, in bytes."
+    },
+    {
+      "name": "maxVideoDuration",
+      "type": "TimeInterval?",
+      "default": "nil",
+      "description": "The longest video, in seconds, read from the file's metadata before upload."
+    },
+    {
+      "name": "videoUnavailable",
+      "type": "String?",
+      "default": "nil",
+      "description": "Why videos cannot be added, in the product's words. Shown in the hint when kinds has no video, and videos can then be picked so the refusal explains itself."
+    },
+    {
+      "name": "previewLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "The spoken name of the image preview. \"Uploaded image\" when nil."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchMediaUploadLabels",
+      "default": "MonarchMediaUploadLabels()",
+      "description": "Replacements for the built-in strings, and for the file picker area's strings."
+    },
+    {
+      "name": "onUpload",
+      "type": "@MainActor (MonarchFileUploadFile, MonarchMediaUploadContext) async throws -> MonarchMediaUploadResult",
+      "default": "required",
+      "description": "Stores the file, reports progress through the context and returns the stored address and any warnings. Cancel cancels its task. Throw to show an error."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "A dashed area with the title, the hint lines and Browse and Photos buttons."
+    },
+    {
+      "name": "checking",
+      "description": "An indeterminate progress bar with \"Checking clip.mov…\" and Cancel upload."
+    },
+    {
+      "name": "uploading",
+      "description": "A progress bar, indeterminate until the first report, with \"Uploading photo.jpg · 40%\" and Cancel upload."
+    },
+    {
+      "name": "filled",
+      "description": "The image preview or the video poster, a compact Replace area and Remove."
+    },
+    {
+      "name": "refused",
+      "description": "The file picker area shows the refusal as a danger notice with an icon."
+    },
+    {
+      "name": "failed",
+      "description": "A danger notice with the error's description, or \"The upload failed. Try again.\"; the field returns to empty or to the previous file."
+    },
+    {
+      "name": "warnings",
+      "description": "A warning notice led by \"Uploaded with warnings.\" with one line per warning."
+    },
+    {
+      "name": "disabled",
+      "description": "The pickers and buttons do nothing and take the disabled colours."
+    }
+  ],
+  "appearance": "The empty field is the file upload area with its dashed border. The image preview is a 16 to 9 rounded frame on the muted background with a subtle border; the video preview is the video thumbnail with a play mark. Remove is a small danger button. Dark and high-contrast themes resolve the same roles.",
+  "platformNotes": "The web has a drop zone and a hidden file input; on iPhone the pickers are the system photo picker and document picker (drag and drop also works on iPad), through MonarchFileUpload. The web's transform callback is not offered: an app shrinks or converts the file inside onUpload. Cancellation is Swift task cancellation instead of an AbortSignal, and progress is a fraction from 0 to 1 instead of a percentage. The value is the stored file's address only; an app with its own image pipeline previews the stored image elsewhere. Android uses the same name.",
+  "accessibility": [
+    "The label is a header and the help text follows it.",
+    "Browse, Photos, Cancel upload, Replace and Remove are standard buttons with 44-point touch targets.",
+    "Progress is a standard progress view whose label is the file name and whose value is the percentage when known.",
+    "Refusals and upload errors are announced and shown with an icon and text, not colour alone.",
+    "\"Image uploaded\" or \"Video uploaded\", \"Upload cancelled\" and \"Image removed\" are announced.",
+    "The image preview is one image element named \"Uploaded image\" or previewLabel; the video preview is a \"Play\" button that opens the system player."
+  ],
+  "edgeCases": [
+    "A file without a size is not checked for size.",
+    "Starting a new pick while one uploads cancels the earlier one; its late answer and progress are ignored.",
+    "A video's length is read only when maxVideoDuration is set.",
+    "A remote video's poster is captured with AVFoundation and may take a moment; the thumbnail placeholder shows until then."
+  ],
+  "tests": [
+    "MonarchMediaUploadTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Image with a size limit, videos unavailable",
+      "fixture": "media-upload",
+      "webExample": "Image with a size limit, videos unavailable",
+      "template": "MonarchMediaUpload({{label}}, url: $cover, helper: {{description}}, maxImageSize: {{maxImageSize}}, videoUnavailable: {{videoUnavailable}}, labels: MonarchMediaUploadLabels(addImage: \"Drop an image here\", imageHint: { _ in \"PNG, JPG, GIF or WebP up to 10 MB\" })) { file, context in\n    context.reportProgress(1)\n    return MonarchMediaUploadResult(url: file.url)\n}",
+      "setupTemplate": "@State private var cover: URL?",
+      "setup": "@State private var cover: URL?",
+      "code": "MonarchMediaUpload(\"Cover image\", url: $cover, helper: \"Shown at the top of the page.\", maxImageSize: 10_485_760, videoUnavailable: \"Videos can’t be added to this item.\", labels: MonarchMediaUploadLabels(addImage: \"Drop an image here\", imageHint: { _ in \"PNG, JPG, GIF or WebP up to 10 MB\" })) { file, context in\n    context.reportProgress(1)\n    return MonarchMediaUploadResult(url: file.url)\n}"
+    },
+    {
+      "title": "An image or a video with limits",
+      "setup": "@State private var tile: URL?",
+      "code": "MonarchMediaUpload(\n    \"Tile media\",\n    url: $tile,\n    kinds: [.image, .video],\n    maxVideoSize: 20_000_000,\n    maxVideoDuration: 90\n) { file, _ in\n    MonarchMediaUploadResult(url: file.url, warnings: [\"The video was shortened to 90 seconds.\"])\n}"
+    }
+  ],
+  "webEquivalent": "MediaUpload",
+  "dependsOn": [
+    "file-upload",
+    "progress-bar",
+    "button",
+    "inline-notice",
+    "video-thumbnail"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web zone has one Choose image button, because a browser has one file picker. iOS has two separate sources for an image, the Photos library and the Files app, so the zone offers Browse files and Choose photos side by side.",
+      "convention": "HIG: choose photos from the Photos library with PhotosPicker, other files with the document picker"
+    }
+  ]
+}

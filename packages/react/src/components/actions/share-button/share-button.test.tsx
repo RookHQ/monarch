@@ -26,6 +26,14 @@ function removeShare() {
 afterEach(removeShare);
 
 describe('ShareButton', () => {
+  it('shows the panel from the controlled open prop', async () => {
+    const onOpenChange = vi.fn();
+    render(<ShareButton url={URL_} title="Report" open onOpenChange={onOpenChange} />);
+    expect(await screen.findByRole('textbox')).toHaveValue(URL_);
+    await userEvent.keyboard('{Escape}');
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
   it('never shares on render and uses the system share sheet on click', async () => {
     const user = userEvent.setup();
     const share = mockShare();

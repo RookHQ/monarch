@@ -1,0 +1,161 @@
+{
+  "id": "page-tree",
+  "name": "MonarchPageTree",
+  "title": "PageTree",
+  "family": "files",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "List(selection:) with a Section per group, ForEach.onMove(perform:) in EditMode, contextMenu, swipeActions, Menu, accessibilityActions, and alert(_:isPresented:presenting:actions:message:) with a TextField",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The pages of a multi-page document in named groups, with running page numbers; read only it is navigation, with editing handlers it organises pages and groups.",
+  "whenToUse": "In the sidebar of a document, handbook or course with several pages in sections, where people open pages and, when allowed, reorder, move, add, rename and delete them.",
+  "whenNotToUse": "Not for the headings inside one page (use MonarchPageOutline), not for a general hierarchy of any depth (use List with children, the tree-view entry), and not for a flat reorderable list (use List with onMove).",
+  "api": [
+    "init(_ groups: [MonarchPageTreeGroup], selection: Binding<String?>, isNumbered: Bool = true, labels: MonarchPageTreeLabels = MonarchPageTreeLabels(), onReorder: (@MainActor ([MonarchPageTreeGroup], MonarchPageTreeMove) -> Void)? = nil, onAddPage: (@MainActor (String) -> Void)? = nil, onAddGroup: (@MainActor (String) -> Void)? = nil, onRenameGroup: (@MainActor (String, String) -> Void)? = nil, onDeleteGroup: (@MainActor (String) -> Void)? = nil, onDeletePage: (@MainActor (String) -> Void)? = nil)",
+    "struct MonarchPageTreeGroup: Identifiable, Hashable, Sendable { init(id: String, label: String, pages: [MonarchPageTreePage]) }",
+    "struct MonarchPageTreePage: Identifiable, Hashable, Sendable { init(id: String, title: String) }",
+    "struct MonarchPageTreeMove: Hashable, Sendable { let kind: MonarchPageTreeMoveKind; let id: String; let fromGroupID: String?; let toGroupID: String?; let toIndex: Int }",
+    "enum MonarchPageTreeMoveKind { case page, group }",
+    "struct MonarchPageTreeLabels { init(label:untitled:noPages:addPage:addGroup:groupActions:renameGroup:moveGroupUp:moveGroupDown:deleteGroup:moveTo:movePageUp:movePageDown:deletePage:addGroupTitle:groupName:newGroupName:renameSubmit:cancel:deleteGroupTitle:deleteGroupConsequence:typeToConfirm:deletePageTitle:cannotUndo:moved:movedTo:), every parameter optional }"
+  ],
+  "options": [
+    {
+      "name": "groups",
+      "type": "[MonarchPageTreeGroup]",
+      "default": "required",
+      "description": "The groups and their pages, in order."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<String?>",
+      "default": "required",
+      "description": "The id of the page being viewed; choosing a row sets it."
+    },
+    {
+      "name": "isNumbered",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows page numbers (01, 02, …) running across groups, in the locale's digits."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchPageTreeLabels",
+      "default": "MonarchPageTreeLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onReorder",
+      "type": "(@MainActor ([MonarchPageTreeGroup], MonarchPageTreeMove) -> Void)?",
+      "default": "nil",
+      "description": "Makes the order editable: drag in edit mode within a group, \"Move to\" another group from a page's context menu, Move group up and down from a group's menu, and Move up and down accessibility actions. Receives the new groups and what moved."
+    },
+    {
+      "name": "onAddPage",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Shows an add button on each group heading. Receives the group id; the app adds the page."
+    },
+    {
+      "name": "onAddGroup",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Shows \"Add group\" at the end, which asks for a name in an alert."
+    },
+    {
+      "name": "onRenameGroup",
+      "type": "(@MainActor (String, String) -> Void)?",
+      "default": "nil",
+      "description": "Shows \"Rename group\" in the group menu, which asks for the new name. Called only when the name changed."
+    },
+    {
+      "name": "onDeleteGroup",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Shows \"Delete group\" while there is more than one group, behind a confirmation that asks for the group's name when it has pages."
+    },
+    {
+      "name": "onDeletePage",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Shows \"Delete page\" in the context menu and as a swipe action while there is more than one page, behind a confirmation."
+    }
+  ],
+  "states": [
+    {
+      "name": "navigation",
+      "description": "Without handlers: the groups as section headings and the pages as rows; the open page is the selected row."
+    },
+    {
+      "name": "editing",
+      "description": "In edit mode with onReorder, each page has the system reorder control."
+    },
+    {
+      "name": "empty group",
+      "description": "\"No pages yet.\" in the muted role under the heading."
+    },
+    {
+      "name": "dialog",
+      "description": "An alert asks for a name (rename, add) or confirms a delete; the confirm button stays disabled until the input is valid."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true): the disabled text roles, and nothing can be chosen or edited."
+    }
+  ],
+  "appearance": "A system list: group names in the label style and muted role as section headings, page numbers in the caption style, tabular digits and subtle role, titles in the body style and default role. The selection highlight, reorder controls, menus and alerts are the system's, tinted by the theme. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "The web PageTree is a nav with links and a drag-and-keyboard ReorderableList; on iOS it is a List with selection, so it belongs in the sidebar of a NavigationSplitView and the app navigates when the selection changes. The web's href and renderLink are replaced by the selection binding. The web's collapse toggle is not offered: the split view's sidebar button hides the sidebar. The footer slot is not offered: put content after the list. Page menus on the web are a button per row; here they are the row's context menu (long press) and a swipe action, as iOS lists do, with VoiceOver actions for moving. The web's prompt and confirm dialogs become alerts with a TextField. Pages move between groups only through \"Move to\", because List's onMove reorders within one section. The parity map named List(children:); a two-level grouping reads better as Sections, which also give headings to VoiceOver.",
+  "accessibility": [
+    "The list is named \"Pages\"; group names are headings.",
+    "Each page row is read by its title; the number is hidden from VoiceOver. The open page has the system's selected trait.",
+    "With onReorder each page has \"Move up\" and \"Move down\" accessibility actions, and every move is announced, such as \"Welcome moved to position 2 of 4.\" or \"Welcome moved to Guides.\"",
+    "The add button and the group menu are named with the group (\"Add page to Basics\", \"Actions for Basics\") and have 44-point touch targets.",
+    "Delete actions use the destructive role; deleting a group with pages requires typing its name, so it is not done by one tap."
+  ],
+  "edgeCases": [
+    "A blank title is shown and announced as \"Untitled page\".",
+    "The last page and the last group cannot be deleted: their delete actions are hidden.",
+    "Page numbers run across groups and are padded to two digits; past 99 they grow.",
+    "The tree does not change groups itself: the app updates them in the handlers, so a handler that does nothing leaves the order as it was."
+  ],
+  "tests": [
+    "MonarchPageTreeTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Navigation",
+      "fixture": "page-tree",
+      "webExample": "Navigation",
+      "template": "VStack(alignment: .center, spacing: 8) {\n    MonarchPageTree(groups, selection: $page)\n        .frame(height: 540)\n    Divider()\n    MonarchButton({{footer}}, variant: .ghost, size: .sm) {}\n        .frame(maxWidth: .infinity)\n}",
+      "setupTemplate": "@State private var page: String? = {{active}}\nprivate let groups = [\n    MonarchPageTreeGroup(id: {{groups.0.id}}, label: {{groups.0.label}}, pages: [MonarchPageTreePage(id: {{groups.0.pages.0.id}}, title: {{groups.0.pages.0.title}}), MonarchPageTreePage(id: {{groups.0.pages.1.id}}, title: {{groups.0.pages.1.title}})]),\n    MonarchPageTreeGroup(id: {{groups.1.id}}, label: {{groups.1.label}}, pages: [MonarchPageTreePage(id: {{groups.1.pages.0.id}}, title: {{groups.1.pages.0.title}}), MonarchPageTreePage(id: {{groups.1.pages.1.id}}, title: {{groups.1.pages.1.title}}), MonarchPageTreePage(id: {{groups.1.pages.2.id}}, title: {{groups.1.pages.2.title}})]),\n    MonarchPageTreeGroup(id: {{groups.2.id}}, label: {{groups.2.label}}, pages: [MonarchPageTreePage(id: {{groups.2.pages.0.id}}, title: {{groups.2.pages.0.title}})]),\n]",
+      "setup": "@State private var page: String? = \"setup\"\nprivate let groups = [\n    MonarchPageTreeGroup(id: \"start\", label: \"Getting started\", pages: [MonarchPageTreePage(id: \"welcome\", title: \"Welcome\"), MonarchPageTreePage(id: \"setup\", title: \"Set up your account\")]),\n    MonarchPageTreeGroup(id: \"guides\", label: \"Guides\", pages: [MonarchPageTreePage(id: \"invite\", title: \"Invite your team\"), MonarchPageTreePage(id: \"import\", title: \"Import data\"), MonarchPageTreePage(id: \"reports\", title: \"Build a report\")]),\n    MonarchPageTreeGroup(id: \"reference\", label: \"Reference\", pages: [MonarchPageTreePage(id: \"glossary\", title: \"Glossary\")]),\n]",
+      "code": "VStack(alignment: .center, spacing: 8) {\n    MonarchPageTree(groups, selection: $page)\n        .frame(height: 540)\n    Divider()\n    MonarchButton(\"All documents\", variant: .ghost, size: .sm) {}\n        .frame(maxWidth: .infinity)\n}"
+    },
+    {
+      "title": "An organiser",
+      "setup": "@State private var page: String?\n@State private var groups = [\n    MonarchPageTreeGroup(id: \"basics\", label: \"Basics\", pages: [\n        MonarchPageTreePage(id: \"welcome\", title: \"Welcome\"),\n        MonarchPageTreePage(id: \"setup\", title: \"Set up\"),\n    ]),\n    MonarchPageTreeGroup(id: \"guides\", label: \"Guides\", pages: []),\n]",
+      "code": "MonarchPageTree(\n    groups,\n    selection: $page,\n    onReorder: { newGroups, _ in groups = newGroups },\n    onAddGroup: { name in groups.append(MonarchPageTreeGroup(id: name, label: name, pages: [])) },\n    onDeletePage: { id in\n        for index in groups.indices { groups[index].pages.removeAll { $0.id == id } }\n    }\n)\n.frame(minHeight: 320)"
+    }
+  ],
+  "webEquivalent": "PageTree",
+  "dependsOn": [
+    "tree-view",
+    "reorderable-list",
+    "dropdown-menu",
+    "confirm-dialog",
+    "prompt-dialog",
+    "type-to-confirm-input"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "Page rows keep a 44-point touch target, so the list is looser than the web's 32-pixel rows. The group headings, numbers, active row, and the All documents footer are as on the web.",
+      "convention": "HIG: controls are at least 44 points tall"
+    }
+  ]
+}

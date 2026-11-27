@@ -1,0 +1,73 @@
+{
+  "id": "priority-picker",
+  "name": null,
+  "title": "PriorityPicker",
+  "family": "workflow",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "A Button trigger and a popover of Buttons in a VStack, with the level's own tone on each icon (a system Menu draws every icon in the tint); Picker with .pickerStyle(.menu) and a Label per level remains the choice for the system menu",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Shows and changes how urgent an issue is, on the urgent, high, medium, low and no-priority scale, with the standard menu picker. Monarch ships no type.",
+  "whenToUse": "In issue rows, cards and detail screens where the priority can be changed. Give every level its own SF Symbol and name, as in the examples.",
+  "whenNotToUse": "For a read-only priority, show the Label without a menu. For the severity of incidents or alerts, use MonarchStatusBadge or a tone.",
+  "api": [
+    "Picker(_ title: String, selection: Binding<SelectionValue>, content: () -> Content)",
+    "func pickerStyle(_ style: MenuPickerStyle) -> some View",
+    "Label(_ title: String, systemImage: String)",
+    "Menu(content: () -> Content, label: () -> Label)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "selected",
+      "description": "The menu shows a checkmark next to the current level; the trigger shows its name (and, in the Menu form, its symbol)."
+    },
+    {
+      "name": "disabled",
+      "description": "System dimming, with disabled(_:)."
+    }
+  ],
+  "appearance": "System menu in every theme. In the Menu form the trigger takes the Monarch button style and the symbol takes a theme role: the strong danger colour for urgent, the strong warning colour for high, the default text colour for medium and low, and the muted text colour for no priority. Inside the system menu the symbols take the menu's own colour, so the shape and the name carry the level.",
+  "platformNotes": "The web ships PriorityPicker with drawn glyphs (an exclamation tile, three, two or one bars, dashes) and Android builds MonarchPriorityPicker. On iOS the standard menu picker already gives the menu, the checkmark, keyboard and VoiceOver behaviour, so Monarch ships no type. A system menu shows SF Symbols, not custom drawings, so the levels use distinct symbols: exclamationmark.square.fill, chevron.up, equal, chevron.down and minus (chevron.up.2 needs iOS 18). The web's priorityFromNumber and priorityToNumber (0 none, 1 urgent, 2 high, 3 medium, 4 low) belong in the app's model. The web's level none is called unset in the examples, because none reads as Optional.none in Swift.",
+  "accessibility": [
+    "System behaviour: the picker is read as a pop-up button with the current level as its value; the menu items are read by name with the selected one marked.",
+    "In the Menu form, accessibilityLabel(\"Priority: High\") names the trigger with the current level, as the web does.",
+    "Every level has its own symbol and its own name, so the level never depends on colour.",
+    "A symbol-only trigger needs monarchMinimumHitTarget() for a 44-point touch target."
+  ],
+  "edgeCases": [
+    "Offer a subset of levels by listing fewer cases in the ForEach.",
+    "A long translated level name wraps in the trigger at large text sizes; the menu truncates as the system does."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Priority picker",
+      "fixture": "priority-picker",
+      "webExample": "Priority picker",
+      "template": "Button {\n    isOpen = true\n} label: {\n    HStack(spacing: theme.spacing.space2) {\n        priority.icon.foregroundStyle(theme.colors[role: priority.role])\n        Text(priority.name)\n        Image(systemName: \"chevron.down\")\n            .imageScale(.small)\n    }\n}\n.buttonStyle(.monarch(.secondary, size: .sm))\n.onAppear { if startsPresented { isOpen = true } }\n.popover(isPresented: $isOpen, arrowEdge: .top) {\n    VStack(alignment: .leading, spacing: 0) {\n        ForEach(Priority.allCases) { level in\n            Button {\n                priority = level\n                isOpen = false\n            } label: {\n                HStack(spacing: theme.spacing.space2) {\n                    level.icon.foregroundStyle(theme.colors[role: level.role]).frame(width: 20)\n                    Text(level.name).monarchTextStyle(.body)\n                    Spacer(minLength: theme.spacing.space4)\n                    if priority == level {\n                        Circle().fill(theme.colors.accentSolid).frame(width: 6, height: 6)\n                    }\n                }\n                .foregroundStyle(theme.colors.textDefault)\n                .padding(.horizontal, theme.spacing.space3)\n                .frame(minHeight: 44)\n                .contentShape(Rectangle())\n            }\n            .buttonStyle(.plain)\n            .accessibilityAddTraits(priority == level ? .isSelected : [])\n        }\n    }\n    .padding(.vertical, theme.spacing.space1)\n    .frame(minWidth: 200)\n    .presentationCompactAdaptation(.popover)\n    .presentationBackground(theme.colors.bgSurface)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@Environment(\\.monarchStartsPresented) private var startsPresented\n@State private var isOpen = false\n@State private var priority = Priority.{{value|raw}}\n\nprivate enum Priority: CaseIterable, Identifiable {\n    case urgent, high, medium, low, unset\n\n    var id: Self { self }\n\n    var name: String {\n        switch self {\n        case .urgent: \"Urgent\"\n        case .high: \"High\"\n        case .medium: \"Medium\"\n        case .low: \"Low\"\n        case .unset: \"No priority\"\n        }\n    }\n\n    var role: MonarchColorRole {\n        switch self {\n        case .urgent: \\.dangerSolid\n        case .high: \\.warningStrong\n        case .medium: \\.textDefault\n        case .low, .unset: \\.textSubtle\n        }\n    }\n\n    /// Signal bars for high, medium and low (three, two or one lit), as the web draws them.\n    @ViewBuilder var icon: some View {\n        switch self {\n        case .urgent: Image(systemName: \"exclamationmark.square.fill\")\n        case .high: SignalBars(lit: 3)\n        case .medium: SignalBars(lit: 2)\n        case .low: SignalBars(lit: 1)\n        case .unset: Image(systemName: \"minus\")\n        }\n    }\n}\n\n/// Three signal bars, the first `lit` filled and the rest outlined, as the web draws them.\nprivate struct SignalBars: View {\n    let lit: Int\n\n    var body: some View {\n        HStack(alignment: .bottom, spacing: 2) {\n            ForEach(0..<3, id: \\.self) { index in\n                RoundedRectangle(cornerRadius: 1)\n                    .fill(index < lit ? AnyShapeStyle(.foreground) : AnyShapeStyle(.clear))\n                    .overlay(RoundedRectangle(cornerRadius: 1).strokeBorder(.foreground, lineWidth: 1))\n                    .frame(width: 4, height: CGFloat(6 + index * 3))\n            }\n        }\n        .accessibilityHidden(true)\n    }\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@Environment(\\.monarchStartsPresented) private var startsPresented\n@State private var isOpen = false\n@State private var priority = Priority.medium\n\nprivate enum Priority: CaseIterable, Identifiable {\n    case urgent, high, medium, low, unset\n\n    var id: Self { self }\n\n    var name: String {\n        switch self {\n        case .urgent: \"Urgent\"\n        case .high: \"High\"\n        case .medium: \"Medium\"\n        case .low: \"Low\"\n        case .unset: \"No priority\"\n        }\n    }\n\n    var role: MonarchColorRole {\n        switch self {\n        case .urgent: \\.dangerSolid\n        case .high: \\.warningStrong\n        case .medium: \\.textDefault\n        case .low, .unset: \\.textSubtle\n        }\n    }\n\n    /// Signal bars for high, medium and low (three, two or one lit), as the web draws them.\n    @ViewBuilder var icon: some View {\n        switch self {\n        case .urgent: Image(systemName: \"exclamationmark.square.fill\")\n        case .high: SignalBars(lit: 3)\n        case .medium: SignalBars(lit: 2)\n        case .low: SignalBars(lit: 1)\n        case .unset: Image(systemName: \"minus\")\n        }\n    }\n}\n\n/// Three signal bars, the first `lit` filled and the rest outlined, as the web draws them.\nprivate struct SignalBars: View {\n    let lit: Int\n\n    var body: some View {\n        HStack(alignment: .bottom, spacing: 2) {\n            ForEach(0..<3, id: \\.self) { index in\n                RoundedRectangle(cornerRadius: 1)\n                    .fill(index < lit ? AnyShapeStyle(.foreground) : AnyShapeStyle(.clear))\n                    .overlay(RoundedRectangle(cornerRadius: 1).strokeBorder(.foreground, lineWidth: 1))\n                    .frame(width: 4, height: CGFloat(6 + index * 3))\n            }\n        }\n        .accessibilityHidden(true)\n    }\n}",
+      "code": "Button {\n    isOpen = true\n} label: {\n    HStack(spacing: theme.spacing.space2) {\n        priority.icon.foregroundStyle(theme.colors[role: priority.role])\n        Text(priority.name)\n        Image(systemName: \"chevron.down\")\n            .imageScale(.small)\n    }\n}\n.buttonStyle(.monarch(.secondary, size: .sm))\n.onAppear { if startsPresented { isOpen = true } }\n.popover(isPresented: $isOpen, arrowEdge: .top) {\n    VStack(alignment: .leading, spacing: 0) {\n        ForEach(Priority.allCases) { level in\n            Button {\n                priority = level\n                isOpen = false\n            } label: {\n                HStack(spacing: theme.spacing.space2) {\n                    level.icon.foregroundStyle(theme.colors[role: level.role]).frame(width: 20)\n                    Text(level.name).monarchTextStyle(.body)\n                    Spacer(minLength: theme.spacing.space4)\n                    if priority == level {\n                        Circle().fill(theme.colors.accentSolid).frame(width: 6, height: 6)\n                    }\n                }\n                .foregroundStyle(theme.colors.textDefault)\n                .padding(.horizontal, theme.spacing.space3)\n                .frame(minHeight: 44)\n                .contentShape(Rectangle())\n            }\n            .buttonStyle(.plain)\n            .accessibilityAddTraits(priority == level ? .isSelected : [])\n        }\n    }\n    .padding(.vertical, theme.spacing.space1)\n    .frame(minWidth: 200)\n    .presentationCompactAdaptation(.popover)\n    .presentationBackground(theme.colors.bgSurface)\n}",
+      "previewTap": true
+    },
+    {
+      "title": "A Monarch trigger that shows the level's symbol",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var priority = Priority.medium\n\nprivate enum Priority: CaseIterable, Identifiable {\n    case urgent, high, medium, low, unset\n\n    var id: Self { self }\n\n    var name: String {\n        switch self {\n        case .urgent: \"Urgent\"\n        case .high: \"High\"\n        case .medium: \"Medium\"\n        case .low: \"Low\"\n        case .unset: \"No priority\"\n        }\n    }\n\n    var systemImage: String {\n        switch self {\n        case .urgent: \"exclamationmark.square.fill\"\n        case .high: \"chevron.up\"\n        case .medium: \"equal\"\n        case .low: \"chevron.down\"\n        case .unset: \"minus\"\n        }\n    }\n\n    var role: MonarchColorRole {\n        switch self {\n        case .urgent: \\.dangerStrong\n        case .high: \\.warningStrong\n        case .medium, .low: \\.textDefault\n        case .unset: \\.textMuted\n        }\n    }\n}",
+      "code": "Menu {\n    Picker(\"Priority\", selection: $priority) {\n        ForEach(Priority.allCases) { level in\n            Label(level.name, systemImage: level.systemImage).tag(level)\n        }\n    }\n} label: {\n    Label {\n        Text(priority.name)\n    } icon: {\n        Image(systemName: priority.systemImage)\n            .foregroundStyle(theme.colors[role: priority.role])\n    }\n}\n.buttonStyle(.monarch(.secondary, size: .sm))\n.accessibilityLabel(\"Priority: \\(priority.name)\")"
+    }
+  ],
+  "webEquivalent": "PriorityPicker",
+  "dependsOn": [
+    "dropdown-menu",
+    "button"
+  ],
+  "icons": {
+    "chevron": "ChevronDownGlyph"
+  }
+}

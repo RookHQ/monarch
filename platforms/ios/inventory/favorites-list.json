@@ -1,0 +1,146 @@
+{
+  "id": "favorites-list",
+  "name": "MonarchFavoritesList",
+  "title": "FavoritesList",
+  "family": "navigation",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Section in a List, ForEach with .onMove(perform:) and .onDelete(perform:), .environment(\\.editMode, …) on the section, MonarchButton (ghost) as the Edit button",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A sidebar section of pinned destinations with a starred heading, the current destination marked, and an Edit button that turns on reorder and delete for that section.",
+  "whenToUse": "In a sidebar or navigation list where people pin projects, views or documents and want to reorder or unpin them.",
+  "whenNotToUse": "For the app's fixed destinations, use a plain List section or a TabView. For reordering arbitrary content, use a List with onMove (see reorderable-list).",
+  "api": [
+    "init(items: [MonarchFavoriteItem], isEditing: Binding<Bool>? = nil, showsIcon: Bool = true, emptyMessage: String? = nil, labels: MonarchFavoritesListLabels = MonarchFavoritesListLabels(), onRemove: (@MainActor (MonarchFavoriteItem) -> Void)? = nil, onReorder: (@MainActor ([MonarchFavoriteItem]) -> Void)? = nil, onSelect: @escaping @MainActor (MonarchFavoriteItem) -> Void)",
+    "struct MonarchFavoriteItem: Identifiable { init(_ title: String, id: String, systemImage: String? = nil, isCurrent: Bool = false) }",
+    "struct MonarchFavoritesListLabels { var title, edit, editLabel, done, removed, moveUp, moveDown: String? }"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "[MonarchFavoriteItem]",
+      "default": "required",
+      "description": "The pinned destinations, in order. isCurrent marks the screen the person is on."
+    },
+    {
+      "name": "isEditing",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Edit mode controlled by the app. Without it the Edit button keeps its own state."
+    },
+    {
+      "name": "showsIcon",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether a star comes before the heading."
+    },
+    {
+      "name": "emptyMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Shown when there are no items. Without it the section is left out when empty."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchFavoritesListLabels",
+      "default": "MonarchFavoritesListLabels()",
+      "description": "Replacements for Favorites, Edit, Edit favorites, Done, the removal announcement and the move actions."
+    },
+    {
+      "name": "onRemove",
+      "type": "(@MainActor (MonarchFavoriteItem) -> Void)?",
+      "default": "nil",
+      "description": "Removes an item. With it rows can be deleted, by swipe or in edit mode."
+    },
+    {
+      "name": "onReorder",
+      "type": "(@MainActor ([MonarchFavoriteItem]) -> Void)?",
+      "default": "nil",
+      "description": "Receives the new order. With it rows show a reorder handle in edit mode."
+    },
+    {
+      "name": "onSelect",
+      "type": "@MainActor (MonarchFavoriteItem) -> Void",
+      "default": "required",
+      "description": "Opens a destination when its row is tapped outside edit mode."
+    }
+  ],
+  "states": [
+    {
+      "name": "browsing",
+      "description": "Rows are buttons with an optional icon and the name; the Edit button shows when onRemove or onReorder is given."
+    },
+    {
+      "name": "current",
+      "description": "The current destination is semibold in the accent's strong text on its subtle fill, with the selected trait."
+    },
+    {
+      "name": "editing",
+      "description": "The section's rows show the system delete control and, with onReorder, the reorder handle; rows stop opening their destination; the button reads Done."
+    },
+    {
+      "name": "empty",
+      "description": "With emptyMessage, the heading and the message in muted text; without it nothing is drawn."
+    }
+  ],
+  "appearance": "A list section whose heading is a star and a label in the muted text role. Rows use the default text role with muted icons; the current row uses the accent's subtle fill and strong text, which keep their contrast in light, dark and both high-contrast themes.",
+  "platformNotes": "The web FavoritesList is a nav of links with its own remove buttons and a ReorderableList. On iOS the section sits in the app's List and uses the system's edit mode, delete control and reorder handle, and rows report a selection instead of following an href. Swipe to delete also works outside edit mode, as everywhere in iOS. The web's FavoriteToggle (the star button that pins a page) is not a separate type: use Toggle with .toggleStyle(.monarchButton()) and a star symbol, shown in the examples. Edit mode is set with .environment(\\.editMode, …) on this section only, which exists on iOS alone; on the macOS host build the section has no edit mode. Android has the same parameters.",
+  "accessibility": [
+    "The heading (star and title) is one element with the header trait; the star is decorative.",
+    "Rows are buttons named by the destination; the current one has the selected trait and is also set in a semibold weight, so it is not shown by colour alone.",
+    "The Edit button is named Edit favorites and reads Done while editing.",
+    "In edit mode each row has Move up and Move down accessibility actions (when onReorder is given), and the system delete control.",
+    "After a removal, \"Roadmap removed from favorites.\" is announced.",
+    "Rows are at least 44 points tall and the names wrap and scale with Dynamic Type."
+  ],
+  "edgeCases": [
+    "With neither onRemove nor onReorder there is no Edit button and no swipe to delete.",
+    "Removing the last item ends edit mode; with no emptyMessage the section then disappears.",
+    "Long names wrap; the heading's Edit button stays at the trailing edge.",
+    "Edit mode controls are drawn by the system List, so they need a device or simulator to see; outside a List the section is a plain stack."
+  ],
+  "tests": [
+    "MonarchFavoritesListTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Read-only sidebar section",
+      "fixture": "favorites-list",
+      "webExample": "Read-only sidebar section",
+      "template": "List {\n    MonarchFavoritesList(\n        items: [\n        MonarchFavoriteItem({{items.0.label}}, id: {{items.0.id}}, systemImage: \"rectangle.3.group\", isCurrent: {{items.0.current}}),\n        MonarchFavoriteItem({{items.1.label}}, id: {{items.1.id}}, systemImage: \"list.bullet\"),\n        MonarchFavoriteItem({{items.2.label}}, id: {{items.2.id}}, systemImage: \"tray\"),\n        ],\n        onSelect: { _ in }\n    )\n}\n.listStyle(.plain)\n.monarchCanvas()\n.frame(maxWidth: 256, minHeight: MonarchAccessibility.minimumHitTarget * 7)",
+      "code": "List {\n    MonarchFavoritesList(\n        items: [\n        MonarchFavoriteItem(\"Website refresh\", id: \"project:1\", systemImage: \"rectangle.3.group\", isCurrent: true),\n        MonarchFavoriteItem(\"My open tasks\", id: \"view:2\", systemImage: \"list.bullet\"),\n        MonarchFavoriteItem(\"Launch checklist\", id: \"doc:3\", systemImage: \"tray\"),\n        ],\n        onSelect: { _ in }\n    )\n}\n.listStyle(.plain)\n.monarchCanvas()\n.frame(maxWidth: 256, minHeight: MonarchAccessibility.minimumHitTarget * 7)"
+    },
+    {
+      "title": "Read-only, with an empty message",
+      "code": "List {\n    MonarchFavoritesList(items: [], emptyMessage: \"Star a page to pin it here.\") { _ in }\n}\n.listStyle(.plain)\n.monarchCanvas()\n.frame(minHeight: MonarchAccessibility.minimumHitTarget * 3)"
+    },
+    {
+      "title": "The star toggle that pins a page",
+      "setup": "@State private var isPinned = false",
+      "code": "Toggle(\"Favorite\", systemImage: isPinned ? \"star.fill\" : \"star\", isOn: $isPinned)\n    .labelStyle(.iconOnly)\n    .toggleStyle(.monarchButton())"
+    }
+  ],
+  "webEquivalent": "FavoritesList",
+  "dependsOn": [
+    "reorderable-list",
+    "toggle-button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "items.0.icon",
+        "items.1.icon",
+        "items.2.icon"
+      ],
+      "reason": "The web icon names (board, list, inbox) are drawn as SF Symbols here; the template passes rectangle.3.group, list.bullet and tray.",
+      "convention": "Apple SF Symbols: system icons are named by SF Symbol, not by the web icon set."
+    }
+  ]
+}

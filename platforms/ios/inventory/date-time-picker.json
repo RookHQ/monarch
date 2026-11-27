@@ -1,0 +1,105 @@
+{
+  "id": "date-time-picker",
+  "name": null,
+  "title": "DateTimePicker",
+  "family": "scheduling",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "DatePicker(_:selection:in:displayedComponents: [.date, .hourAndMinute]) with the default .compact style, inside MonarchFormField; .environment(\\.timeZone, zone) for the zone the wall-clock time belongs to, shown beside it or chosen with MonarchTimezoneSelect",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The standard SwiftUI date picker with displayedComponents: [.date, .hourAndMinute], a date button and a time button in one row, shown in a MonarchFormField and tinted by the theme. Monarch ships nothing.",
+  "whenToUse": "For a moment in a form, a meeting, an interview, a scheduled send: a day and a wall-clock time. Show the zone the time belongs to next to it, and set the picker's time zone to that zone.",
+  "whenNotToUse": "For a day only, use the date picker with displayedComponents: .date. For a length of time, use MonarchDurationInput. For a choice among a few fixed slots, use a Picker or MonarchRadioCardGroup.",
+  "api": [
+    "DatePicker(_ title: String, selection: Binding<Date>, in range: ClosedRange<Date>, displayedComponents: DatePickerComponents)  // [.date, .hourAndMinute]",
+    "DatePicker(_ title: String, selection: Binding<Date>, displayedComponents: DatePickerComponents)",
+    "func environment(_ keyPath: WritableKeyPath<EnvironmentValues, TimeZone>, _ value: TimeZone) -> some View",
+    "MonarchFormField.init(_ label: String, helper: String? = nil, error: String? = nil, …, @ViewBuilder control: () -> Control)",
+    "MonarchTimezoneSelect.init(_ label: String, selection: Binding<String?>, …)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "set",
+      "description": "Two compact buttons show the date and the time in the locale's formats and 12- or 24-hour clock; each opens the system calendar or time wheel."
+    },
+    {
+      "name": "limited",
+      "description": "Moments outside the `in:` range cannot be chosen: earlier days are dimmed and earlier times on the first day are refused by the picker."
+    },
+    {
+      "name": "zone",
+      "description": "With .environment(\\.timeZone, zone) the picker shows and edits the wall-clock time in that zone; the zone's name is shown as the field's helper or with MonarchTimezoneSelect."
+    },
+    {
+      "name": "optional",
+      "description": "The app keeps a Date? and shows Set and Clear buttons around the picker (the system picker always has a value)."
+    },
+    {
+      "name": "invalid",
+      "description": "MonarchFormField shows the app's error under the row with its icon."
+    },
+    {
+      "name": "disabled",
+      "description": "System dimming, with disabled(_:)."
+    }
+  ],
+  "appearance": "The system compact picker: two rounded buttons in the system fill, the selected day and the time wheel tinted with the theme's accent. The label, helper and error come from MonarchFormField in the theme's text and danger roles, in light, dark and both high-contrast themes.",
+  "platformNotes": "The web DateTimePicker is a DatePicker plus a typed time field, with a YYYY-MM-DDTHH:mm wall-clock string, a 15-minute arrow step, an hourCycle override, a defaultTime for a date picked first, presets, isDateDisabled and a timeZone slot. On iOS the system picker is the expected control: it parses and formats in the person's locale and clock, so there is no typed time to validate. The value is a Date, an instant; the zone the wall-clock time means is the picker's .environment(\\.timeZone), so set it to the event's zone and store the zone with the date (or convert to DateComponents for a pure wall-clock value). min and max become the `in:` range. SwiftUI offers no minute step (UIDatePicker.minuteInterval is UIKit only) and no per-day disabling; validate the step or refuse disabled days with MonarchFormField's error, or offer MonarchMiniMonth in a sheet for days plus a time-only picker. Presets are a Menu that keeps the time. Android uses Material 3 DatePicker and TimePicker.",
+  "accessibility": [
+    "System behaviour: the date and the time are two buttons, each read with the picker's title and its value; the calendar and the time wheels are navigable by VoiceOver.",
+    "With .labelsHidden() the visible label comes from MonarchFormField; the picker keeps its title for VoiceOver.",
+    "The zone is text in the helper, not only implied, so VoiceOver reads which zone the time belongs to.",
+    "Dynamic Type, the 12- or 24-hour clock and right-to-left layout are handled by the system."
+  ],
+  "edgeCases": [
+    "A Date is an instant: the same value shows a different wall-clock time in another zone. Keep the zone with the value.",
+    "Daylight-saving gaps: a time that does not exist on that day in the zone is moved by the system to a valid one.",
+    "A selection outside the `in:` range is clamped by the picker.",
+    "Choosing a new day keeps the time; a preset should also keep it (combine the preset's day with the current hour and minute)."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Interview time with a time zone",
+      "fixture": "date-time-picker",
+      "webExample": "Interview time with a time zone",
+      "template": "MonarchFormField({{label}}, helper: \"Value: \" + Self.iso.string(from: start)) {\n    HStack(spacing: theme.spacing.space2) {\n        MonarchPickerField(Self.text(start, \"dd/MM/yyyy\", {{locale}})) {\n            EmptyView()\n        } control: {\n            DatePicker({{label}}, selection: $start, in: earliest..., displayedComponents: .date)\n        } trailing: {\n            HStack(spacing: theme.spacing.space2) {\n                Button { start = earliest } label: {\n                    MonarchIcon(systemName: \"xmark\", size: .sm).frame(width: 32, height: 32).contentShape(Rectangle())\n                }\n                .buttonStyle(.plain)\n                .accessibilityLabel(\"Reset\")\n                MonarchIcon(systemName: \"calendar\", size: .sm)\n            }\n        }\n        MonarchPickerField(Self.text(start, \"HH:mm\", {{locale}})) {\n            MonarchIcon(systemName: \"clock\", size: .sm)\n        } control: {\n            DatePicker({{label}}, selection: $start, in: earliest..., displayedComponents: .hourAndMinute)\n        } trailing: {\n            EmptyView()\n        }\n        Text({{timeZone}}).monarchTextStyle(.body).foregroundStyle(theme.colors.textMuted)\n    }\n    .environment(\\.timeZone, TimeZone(identifier: \"UTC\") ?? .gmt)\n    .environment(\\.locale, Locale(identifier: {{locale}}))\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var start = {{value|date}}\nprivate let earliest = {{min|date}}\nprivate static let iso: DateFormatter = {\n    let formatter = DateFormatter()\n    formatter.dateFormat = \"yyyy-MM-dd'T'HH:mm\"\n    formatter.locale = Locale(identifier: \"en_US_POSIX\")\n    formatter.timeZone = TimeZone(identifier: \"UTC\")\n    return formatter\n}()\n\nprivate static func text(_ date: Date, _ format: String, _ locale: String) -> String {\n    let formatter = DateFormatter()\n    formatter.dateFormat = format\n    formatter.locale = Locale(identifier: locale)\n    formatter.timeZone = TimeZone(identifier: \"UTC\")\n    return formatter.string(from: date)\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var start = Date(timeIntervalSince1970: 1_794_321_000)\nprivate let earliest = Date(timeIntervalSince1970: 1_793_782_800)\nprivate static let iso: DateFormatter = {\n    let formatter = DateFormatter()\n    formatter.dateFormat = \"yyyy-MM-dd'T'HH:mm\"\n    formatter.locale = Locale(identifier: \"en_US_POSIX\")\n    formatter.timeZone = TimeZone(identifier: \"UTC\")\n    return formatter\n}()\n\nprivate static func text(_ date: Date, _ format: String, _ locale: String) -> String {\n    let formatter = DateFormatter()\n    formatter.dateFormat = format\n    formatter.locale = Locale(identifier: locale)\n    formatter.timeZone = TimeZone(identifier: \"UTC\")\n    return formatter.string(from: date)\n}",
+      "code": "MonarchFormField(\"Interview\", helper: \"Value: \" + Self.iso.string(from: start)) {\n    HStack(spacing: theme.spacing.space2) {\n        MonarchPickerField(Self.text(start, \"dd/MM/yyyy\", \"en-GB\")) {\n            EmptyView()\n        } control: {\n            DatePicker(\"Interview\", selection: $start, in: earliest..., displayedComponents: .date)\n        } trailing: {\n            HStack(spacing: theme.spacing.space2) {\n                Button { start = earliest } label: {\n                    MonarchIcon(systemName: \"xmark\", size: .sm).frame(width: 32, height: 32).contentShape(Rectangle())\n                }\n                .buttonStyle(.plain)\n                .accessibilityLabel(\"Reset\")\n                MonarchIcon(systemName: \"calendar\", size: .sm)\n            }\n        }\n        MonarchPickerField(Self.text(start, \"HH:mm\", \"en-GB\")) {\n            MonarchIcon(systemName: \"clock\", size: .sm)\n        } control: {\n            DatePicker(\"Interview\", selection: $start, in: earliest..., displayedComponents: .hourAndMinute)\n        } trailing: {\n            EmptyView()\n        }\n        Text(\"IST\").monarchTextStyle(.body).foregroundStyle(theme.colors.textMuted)\n    }\n    .environment(\\.timeZone, TimeZone(identifier: \"UTC\") ?? .gmt)\n    .environment(\\.locale, Locale(identifier: \"en-GB\"))\n}"
+    },
+    {
+      "title": "With a time zone select and a preset that keeps the time",
+      "setup": "@State private var send = Date(timeIntervalSince1970: 1_794_666_600)\n@State private var zoneID: String? = \"Europe/London\"",
+      "code": "VStack(alignment: .leading) {\n    MonarchFormField(\"Send at\") {\n        HStack {\n            DatePicker(\"Send at\", selection: $send, displayedComponents: [.date, .hourAndMinute])\n                .labelsHidden()\n                .environment(\\.timeZone, zoneID.flatMap(TimeZone.init(identifier:)) ?? .gmt)\n            Menu(\"Quick picks\") {\n                Button(\"Tomorrow, same time\") { send = send.addingTimeInterval(86_400) }\n            }\n            .monarchTextStyle(.body)\n        }\n    }\n    MonarchTimezoneSelect(\"Time zone\", selection: $zoneID)\n}"
+    }
+  ],
+  "webEquivalent": "DateTimePicker",
+  "dependsOn": [
+    "date-picker",
+    "form-field",
+    "timezone-select"
+  ],
+  "icons": {
+    "clear": "CloseGlyph",
+    "calendar": "CalendarGlyph",
+    "time": "ClockGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "step"
+      ],
+      "reason": "The system DatePicker has no minute interval parameter on iOS; the wheel and compact styles step by one minute.",
+      "convention": "HIG: system DatePicker"
+    }
+  ]
+}

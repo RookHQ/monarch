@@ -1,0 +1,159 @@
+{
+  "id": "otp-pin-input",
+  "name": "MonarchOtpPinInput",
+  "title": "OTPPinInput",
+  "family": "forms",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "TextField or SecureField with .textContentType(.oneTimeCode), drawn as cells",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A one-time code or PIN drawn as one cell per character, over a single standard text field with the one-time-code content type.",
+  "whenToUse": "For a verification code sent by message or email, or a short PIN.",
+  "whenNotToUse": "For a password use MonarchPasswordInput. For free text use MonarchTextField.",
+  "api": [
+    "init(_ label: String, text: Binding<String>, length: Int = 6, helper: String? = nil, error: String? = nil, mode: MonarchOtpPinInputMode = .numeric, size: MonarchOtpPinInputSize = .md, isMasked: Bool = false, lengthHint: String? = nil, groupSize: Int? = nil, onComplete: (@MainActor (String) -> Void)? = nil)",
+    "enum MonarchOtpPinInputMode { case numeric, alphanumeric }",
+    "enum MonarchOtpPinInputSize { case md, lg }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The visible label, already localised."
+    },
+    {
+      "name": "text",
+      "type": "Binding<String>",
+      "default": "required",
+      "description": "The code. It receives only cleaned text: digits, or digits and A to Z in upper case, never longer than length."
+    },
+    {
+      "name": "length",
+      "type": "Int",
+      "default": "6",
+      "description": "The number of characters. Values under 1 count as 1."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Supporting text under the cells."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "Error message; replaces the helper while present."
+    },
+    {
+      "name": "mode",
+      "type": "MonarchOtpPinInputMode",
+      "default": ".numeric",
+      "description": "numeric accepts digits and opens the number pad; alphanumeric accepts A to Z and digits."
+    },
+    {
+      "name": "size",
+      "type": "MonarchOtpPinInputSize",
+      "default": ".md",
+      "description": "md cells are 44 by 44 points, lg cells 52 by 48."
+    },
+    {
+      "name": "isMasked",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows dots instead of the characters and uses a SecureField."
+    },
+    {
+      "name": "lengthHint",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in spoken \"Code length: 6\"."
+    },
+    {
+      "name": "groupSize",
+      "type": "Int?",
+      "default": "nil",
+      "description": "Draws a wider gap after every this many cells. Visual only."
+    },
+    {
+      "name": "onComplete",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Runs each time the code reaches length characters."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "Empty cells with the input border."
+    },
+    {
+      "name": "focused",
+      "description": "The cell that takes the next character has the theme's focus ring and, while empty, a caret."
+    },
+    {
+      "name": "filled",
+      "description": "Each typed character is shown in its cell, or as a dot when masked."
+    },
+    {
+      "name": "error",
+      "description": "Danger border on every cell, and an icon and message under the cells."
+    },
+    {
+      "name": "disabled",
+      "description": "Subtle background and the disabled text colour, set with disabled(_:)."
+    }
+  ],
+  "appearance": "Surface-coloured cells with an input border and 8-point corners. The active cell has the theme's focus ring, which is wider and in the text colour in the high-contrast themes.",
+  "platformNotes": "The same single-field design as the web, where one input sits under drawn slots. iOS uses the system one-time-code content type for autofill from Messages instead of autocomplete=\"one-time-code\". The caret does not blink. The web's hover state and readOnly have no counterpart here.",
+  "accessibility": [
+    "One VoiceOver element, the real text field: label, then the code as its value (hidden by the system when masked).",
+    "The hint is the code length, then the error (spoken as \"Error: …\") or else the helper text.",
+    "A new error message is announced when it appears.",
+    "The error is shown with an icon and text, not colour alone.",
+    "Cells are at least 44 points high and the whole row focuses the field.",
+    "The cells keep left-to-right order in right-to-left layouts, because a code is read left to right.",
+    "Cells and characters scale with Dynamic Type; cells shrink in width to fit the available width."
+  ],
+  "edgeCases": [
+    "Digits from any script (Arabic-Indic, full-width) are stored as ASCII digits.",
+    "A binding set from outside to text that is not clean is shown cleaned; the binding is rewritten only on the next edit.",
+    "onComplete also runs when an edit replaces one complete code with another.",
+    "A masked input uses SecureField, which the system may clear when editing starts again.",
+    "With many cells at the largest text sizes, characters scale down to half size before they clip."
+  ],
+  "tests": [
+    "MonarchOtpPinInputTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Verify a code",
+      "fixture": "otp-pin-input",
+      "webExample": "Verify a code",
+      "template": "VStack(alignment: .leading, spacing: 12) {\n    MonarchOtpPinInput({{label}}, text: $code, length: {{length}}, helper: {{description}})\n    MonarchButton({{confirm}}, variant: .primary) {}\n        .disabled(code.count != {{length}})\n}",
+      "setupTemplate": "@State private var code = \"\"",
+      "setup": "@State private var code = \"\"",
+      "code": "VStack(alignment: .leading, spacing: 12) {\n    MonarchOtpPinInput(\"Verification code\", text: $code, length: 6, helper: \"Try 123456.\")\n    MonarchButton(\"Confirm\", variant: .primary) {}\n        .disabled(code.count != 6)\n}"
+    },
+    {
+      "title": "A masked four-digit PIN",
+      "code": "MonarchOtpPinInput(\"PIN\", text: $pin, length: 4, size: .lg, isMasked: true)",
+      "setup": "@State private var pin = \"\""
+    },
+    {
+      "title": "Grouped, with an error",
+      "code": "MonarchOtpPinInput(\n    \"Code\",\n    text: $code,\n    error: \"That code has expired.\",\n    groupSize: 3\n)",
+      "setup": "@State private var code = \"482913\""
+    }
+  ],
+  "webEquivalent": "OTPPinInput",
+  "dependsOn": [
+    "text-field"
+  ]
+}

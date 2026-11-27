@@ -6,14 +6,28 @@ import {
   type BusinessHoursValue,
 } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './business-hours-editor.fixture.json';
 
+const [christmas, newYear] = fixture.data.exceptions as unknown as readonly [
+  { date: string; name: string },
+  { date: string; name: string; start: number; end: number },
+];
 const START: BusinessHoursValue = {
-  name: 'Support hours',
-  timeZone: 'Europe/London',
-  hours: [1, 2, 3, 4, 5].map((day) => ({ day, start: 540, end: 1050 })),
+  name: fixture.data.name,
+  timeZone: fixture.data.timeZone,
+  hours: fixture.data.weekdays.map((day) => ({
+    day,
+    start: fixture.data.start,
+    end: fixture.data.end,
+  })),
   exceptions: [
-    { date: '2026-12-25', name: 'Christmas Day' },
-    { date: '2026-12-31', name: 'New Year’s Eve', intervals: [{ start: 540, end: 780 }] },
+    { date: christmas.date.slice(0, 10), name: christmas.name },
+    {
+      date: newYear.date.slice(0, 10),
+      name: newYear.name,
+      intervals: [{ start: newYear.start, end: newYear.end }],
+    },
   ],
 };
 
@@ -30,12 +44,12 @@ function Demo() {
         validation={{ requireName: true, requireOpen: true }}
         showErrors={tried}
         showDefault
-        locale="en-GB"
-        pinnedTimeZones={['Europe/London', 'America/New_York', 'Asia/Kolkata']}
+        locale={fixture.data.locale}
+        pinnedTimeZones={fixture.data.pinnedTimeZones}
       />
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <Button variant="primary" onClick={() => setTried(true)}>
-          Save
+          {fixture.data.save}
         </Button>
         <span style={{ fontSize: 13 }} aria-live="polite">
           {tried ? (ok ? 'Saved.' : 'Fix the highlighted fields.') : ''}

@@ -1,0 +1,72 @@
+{
+  "id": "confirm-dialog",
+  "name": null,
+  "title": "ConfirmDialog",
+  "family": "overlays",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "alert(_:isPresented:actions:message:), or confirmationDialog(_:isPresented:titleVisibility:actions:message:), with Button(role: .destructive) and Button(role: .cancel)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Confirmation of a consequential action is the system alert, or the confirmation dialog, with a destructive button and Cancel. Monarch ships nothing.",
+  "whenToUse": "Before an action that deletes or cannot be undone. Use confirmationDialog when the person started the action from a control on screen, and alert when the question interrupts. Say in the message what will change.",
+  "whenNotToUse": "Do not confirm actions that are easy to undo; offer undo. For a choice between several options see choice-dialog.",
+  "api": [
+    "func alert(_ title: String, isPresented: Binding<Bool>, actions: () -> some View, message: () -> some View) -> some View",
+    "func confirmationDialog(_ title: String, isPresented: Binding<Bool>, titleVisibility: Visibility = .automatic, actions: () -> some View, message: () -> some View) -> some View",
+    "Button(_ title: String, role: ButtonRole?, action: () -> Void)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "presented",
+      "description": "The alert is centred over a dimmed screen; the confirmation dialog rises from the bottom on iPhone and is a popover on iPad."
+    },
+    {
+      "name": "destructive",
+      "description": "A button with the destructive role is drawn in red."
+    },
+    {
+      "name": "type to confirm",
+      "description": "An alert may contain a TextField; disable the destructive button until the text matches."
+    }
+  ],
+  "appearance": "The system draws both in every theme, following the light or dark appearance. Destructive buttons are the system's red, not the theme's danger colour. Monarch does not colour the buttons.",
+  "platformNotes": "The web ConfirmDialog stays open while the action runs and shows pending and error states, and has a consequences list, a confirm phrase, an acknowledgement checkbox and a reason field. The system alert closes when a button is tapped, so run the action afterwards and show progress and failure on the screen (a loading MonarchButton, a MonarchBanner). The confirm phrase is a TextField in the alert with the destructive button disabled until it matches. The acknowledgement checkbox and the reason field with validation need a sheet of your own. Android uses a Material AlertDialog.",
+  "accessibility": [
+    "System behaviour: the alert is modal, VoiceOver reads the title and message, and focus returns to the presenting control afterwards.",
+    "System behaviour: the escape gesture chooses the button with the cancel role.",
+    "The destructive role is also spoken by its title, so name the button after the action (\"Delete\"), not \"OK\"."
+  ],
+  "edgeCases": [
+    "An alert with no buttons gets a system OK button.",
+    "Only one alert or dialog is presented at a time; a second one waits or is dropped.",
+    "With a hardware keyboard, Return activates the default action. Do not make a destructive button the default."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Type to confirm, with consequences",
+      "fixture": "confirm-dialog",
+      "webExample": "Type to confirm, with consequences",
+      "template": "MonarchButton({{trigger}}, variant: .danger) { isConfirming = true }\n    .sheet(isPresented: $isConfirming) {\n        VStack(alignment: .leading, spacing: 0) {\n            VStack(alignment: .leading, spacing: theme.spacing.space3) {\n                Image(systemName: \"exclamationmark.triangle\")\n                    .foregroundStyle(theme.colors.dangerStrong)\n                    .frame(width: 40, height: 40)\n                    .background(theme.colors.dangerSubtle, in: Circle())\n                    .accessibilityHidden(true)\n                Text({{title}}).monarchTextStyle(.heading).accessibilityAddTraits(.isHeader)\n                Text({{description}}).monarchTextStyle(.body).foregroundStyle(theme.colors.textMuted)\n                VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                    ForEach(consequences, id: \\.self) { line in\n                        HStack(alignment: .firstTextBaseline, spacing: theme.spacing.space2) {\n                            Text(\"\\u{2022}\")\n                            Text(line)\n                        }\n                        .monarchTextStyle(.body)\n                    }\n                }\n                .padding(.vertical, theme.spacing.space2)\n                MonarchTextField(\"Type \\({{confirmPhrase}}) to confirm\", text: $typed)\n            }\n            .padding(theme.spacing.space6)\n            Divider()\n            HStack(spacing: theme.spacing.space2) {\n                Spacer()\n                MonarchButton({{cancelLabel}}, variant: .secondary) { isConfirming = false }\n                MonarchButton({{confirmLabel}}, variant: .danger) { isDeleted = true; isConfirming = false }\n                    .disabled(typed != {{confirmPhrase}})\n            }\n            .padding(theme.spacing.space4)\n            .background(theme.colors.bgSubtle)\n        }\n        .presentationDetents([.height(540)])\n    }",
+      "previewPresented": [
+        "isConfirming"
+      ],
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isConfirming = false\n@State private var isDeleted = false\n@State private var typed = \"\"\nprivate let consequences = [{{consequences.0}}, {{consequences.1}}, {{consequences.2}}]",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isConfirming = false\n@State private var isDeleted = false\n@State private var typed = \"\"\nprivate let consequences = [\"48 tasks and their comments are deleted\", \"6 people lose access\", \"Shared links stop working\"]",
+      "code": "MonarchButton(\"Delete project\", variant: .danger) { isConfirming = true }\n    .sheet(isPresented: $isConfirming) {\n        VStack(alignment: .leading, spacing: 0) {\n            VStack(alignment: .leading, spacing: theme.spacing.space3) {\n                Image(systemName: \"exclamationmark.triangle\")\n                    .foregroundStyle(theme.colors.dangerStrong)\n                    .frame(width: 40, height: 40)\n                    .background(theme.colors.dangerSubtle, in: Circle())\n                    .accessibilityHidden(true)\n                Text(\"Delete this project?\").monarchTextStyle(.heading).accessibilityAddTraits(.isHeader)\n                Text(\"This cannot be undone.\").monarchTextStyle(.body).foregroundStyle(theme.colors.textMuted)\n                VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                    ForEach(consequences, id: \\.self) { line in\n                        HStack(alignment: .firstTextBaseline, spacing: theme.spacing.space2) {\n                            Text(\"\\u{2022}\")\n                            Text(line)\n                        }\n                        .monarchTextStyle(.body)\n                    }\n                }\n                .padding(.vertical, theme.spacing.space2)\n                MonarchTextField(\"Type \\(\"q3-launch\") to confirm\", text: $typed)\n            }\n            .padding(theme.spacing.space6)\n            Divider()\n            HStack(spacing: theme.spacing.space2) {\n                Spacer()\n                MonarchButton(\"Cancel\", variant: .secondary) { isConfirming = false }\n                MonarchButton(\"Delete project\", variant: .danger) { isDeleted = true; isConfirming = false }\n                    .disabled(typed != \"q3-launch\")\n            }\n            .padding(theme.spacing.space4)\n            .background(theme.colors.bgSubtle)\n        }\n        .presentationDetents([.height(540)])\n    }"
+    },
+    {
+      "title": "Type a phrase to confirm",
+      "code": "MonarchButton(\"Delete workspace\", variant: .danger) { isConfirming = true }\n    .alert(\n        \"Type DELETE to confirm\",\n        isPresented: $isConfirming,\n        actions: {\n            TextField(\"DELETE\", text: $phrase)\n            Button(\"Delete\", role: .destructive) { isDeleted = true }\n                .disabled(phrase != \"DELETE\")\n            Button(\"Cancel\", role: .cancel) {}\n        },\n        message: {\n            Text(\"The workspace and everything in it are deleted.\")\n        }\n    )",
+      "setup": "@State private var isConfirming = false\n@State private var isDeleted = false\n@State private var phrase = \"\""
+    }
+  ],
+  "webEquivalent": "ConfirmDialog",
+  "dependsOn": []
+}

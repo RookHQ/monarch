@@ -12,6 +12,8 @@ import {
   type AiCanvasArtifact,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-chat-page.fixture.json';
 
 const transport = mockTransport({
   delayMs: 40,
@@ -38,12 +40,17 @@ const day = 24 * 60 * 60 * 1000;
 
 function Demo() {
   const chat = useAiConversation({ transport });
+  const [c1, c2, c3] = fixture.data.conversations as [
+    { id: string; title: string },
+    { id: string; title: string; pinned: boolean },
+    { id: string; title: string },
+  ];
   const [conversations, setConversations] = useState([
-    { id: 'c1', title: 'Weekly summary', updatedAt: new Date(now - 2 * 60 * 60 * 1000) },
-    { id: 'c2', title: 'Release checklist', updatedAt: new Date(now - 2 * day), pinned: true },
-    { id: 'c3', title: 'Interview questions', updatedAt: new Date(now - 20 * day) },
+    { ...c1, updatedAt: new Date(now - 2 * 60 * 60 * 1000) },
+    { ...c2, updatedAt: new Date(now - 2 * day) },
+    { ...c3, updatedAt: new Date(now - 20 * day) },
   ]);
-  const [active, setActive] = useState('c1');
+  const [active, setActive] = useState(fixture.data.activeId);
   const [showArtifact, setShowArtifact] = useState(false);
   const title = conversations.find((c) => c.id === active)?.title ?? '';
   return (
@@ -89,16 +96,10 @@ function Demo() {
         }}
         empty={
           <AiWelcome
-            title="What can I help with?"
-            description="Ask about your workspace, or start from a suggestion."
+            title={fixture.data.welcome.title}
+            description={fixture.data.welcome.description}
             starters={
-              <AiStarterPrompts
-                prompts={[
-                  { id: 's1', title: 'Summarise my week', prompt: 'Summarise my week' },
-                  { id: 's2', title: 'Draft a status update', prompt: 'Draft a status update' },
-                ]}
-                onSelect={(p) => chat.send(p)}
-              />
+              <AiStarterPrompts prompts={fixture.data.starters} onSelect={(p) => chat.send(p)} />
             }
           />
         }

@@ -1,0 +1,186 @@
+{
+  "id": "ai-tool-approval",
+  "name": "MonarchAiToolApproval",
+  "title": "AiToolApproval",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchCard with MonarchBadge, MonarchButton, MonarchTextField (androidx.compose.material3.OutlinedTextField) and MonarchCheckboxRow (androidx.compose.material3.Checkbox), laid out with androidx.compose.foundation.layout.Column and FlowRow",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The approval gate for a tool call the assistant wants to run: what it will do, its arguments, the risk, and Approve and Deny, with editable arguments, a reason and Always allow.",
+  "whenToUse": "In an AI conversation, for a tool call in the PendingApproval state that a person must approve before it runs (MonarchAiConversation's approveTool and denyTool).",
+  "whenNotToUse": "To show a tool call that runs or ran without approval use MonarchAiToolCall; for a destructive action the person started themselves use a confirmation dialog.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchAiToolApproval(part: MonarchAiToolCallPart, onApprove: (input: MonarchAiJSON?) -> Unit, onDeny: (reason: String?) -> Unit, modifier: Modifier = Modifier, risk: MonarchAiToolCallRisk = part.risk ?: MonarchAiToolCallRisk.Medium, consequence: String? = null, toolLabels: Map<String, String> = emptyMap(), argumentLabels: Map<String, String> = emptyMap(), editable: Boolean = true, onAlwaysAllow: ((toolName: String) -> Unit)? = null, icon: (@Composable () -> Unit)? = null, labels: MonarchAiToolApprovalLabels = MonarchAiToolApprovalLabels(), describeTool: ((MonarchAiToolCallPart) -> String?)? = null)",
+    "class MonarchAiToolApprovalLabels(eyebrow: String? = null, risk: ((MonarchAiToolCallRisk) -> String)? = null, consequence: ((MonarchAiToolCallRisk) -> String?)? = null, details: String? = null, noArguments: String? = null, approve: String? = null, deny: String? = null, editArguments: String? = null, discardEdits: String? = null, argumentsJson: String? = null, invalidJson: String? = null, addReason: String? = null, reason: String? = null, alwaysAllow: String? = null, approved: String? = null, denied: String? = null, cancelled: String? = null, announce: ((title: String) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "part",
+      "type": "MonarchAiToolCallPart",
+      "default": "required",
+      "description": "The tool call waiting for a decision. A call in another state shows its outcome instead of the buttons."
+    },
+    {
+      "name": "onApprove",
+      "type": "(MonarchAiJSON?) -> Unit",
+      "default": "required",
+      "description": "Called on Approve with the edited arguments, or null when they were not edited."
+    },
+    {
+      "name": "onDeny",
+      "type": "(String?) -> Unit",
+      "default": "required",
+      "description": "Called on Deny with the trimmed reason, or null."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the card."
+    },
+    {
+      "name": "risk",
+      "type": "MonarchAiToolCallRisk",
+      "default": "part.risk ?: MonarchAiToolCallRisk.Medium",
+      "description": "Low (neutral), Medium and High (warning), Destructive (danger, consequence line, danger Approve, no Always allow)."
+    },
+    {
+      "name": "consequence",
+      "type": "String?",
+      "default": "null",
+      "description": "What happens if this is approved; null uses the risk's default line (only destructive has one)."
+    },
+    {
+      "name": "toolLabels",
+      "type": "Map<String, String>",
+      "default": "emptyMap()",
+      "description": "Display names per tool name; others are humanized (send_email gives \"Send email\")."
+    },
+    {
+      "name": "argumentLabels",
+      "type": "Map<String, String>",
+      "default": "emptyMap()",
+      "description": "Labels per argument key; others are humanized (sendAt gives \"Send at\")."
+    },
+    {
+      "name": "editable",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Offers Edit arguments, a JSON editor that must parse before Approve."
+    },
+    {
+      "name": "onAlwaysAllow",
+      "type": "((String) -> Unit)?",
+      "default": "null",
+      "description": "Shows the Always allow this tool checkbox; called with the tool name just before onApprove when ticked."
+    },
+    {
+      "name": "icon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "A decorative icon before the eyebrow. Monarch bundles no icons."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiToolApprovalLabels",
+      "default": "MonarchAiToolApprovalLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "describeTool",
+      "type": "((MonarchAiToolCallPart) -> String?)?",
+      "default": "null",
+      "description": "The title in plain words, such as \"Send email to 3 people\"; null uses the tool's display name."
+    }
+  ],
+  "states": [
+    {
+      "name": "pending",
+      "description": "Approve and Deny with Add a reason and, when editable, Edit arguments."
+    },
+    {
+      "name": "editing",
+      "description": "A multi-line field with the arguments as JSON; invalid JSON shows \"Fix the JSON before approving.\" and Approve does nothing."
+    },
+    {
+      "name": "reason",
+      "description": "A reason field above the buttons; its trimmed text is sent with Deny."
+    },
+    {
+      "name": "approved, denied, cancelled",
+      "description": "The buttons are replaced by the outcome in the success, danger or muted color."
+    },
+    {
+      "name": "destructive",
+      "description": "The danger badge \"Can’t be undone\", the consequence line and a danger Approve button; Always allow is not offered."
+    }
+  ],
+  "appearance": "MonarchCard's surface with the subtle border. The eyebrow and argument keys are muted captions, the title is strong body text, the risk is a subtle MonarchBadge in its tone, the consequence uses the strong color of the risk's tone, and the outcome uses the success strong, danger strong or muted text color. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web AiToolApproval is announced with an assertive alert and can move focus to Deny or Approve (focusOnMount). On Android the card is announced through a polite live region on an always-present node, because an assertive announcement is reserved for blocking errors and no announce API exists in Compose; focus is never moved. Arguments are stacked label-over-value rows instead of a two-column list, for narrow screens. onApprove receives MonarchAiJSON? and onDeny String?, instead of optional arguments. The web's describe returns a node; here describeTool returns a String, as in MonarchAiToolCall. Experimental until a Rook app adopts it. No iOS entry exists yet.",
+  "accessibility": [
+    "The card is a traversal group; the title and the Details label are headings.",
+    "When the card appears, \"Approval needed: title\" is announced through a polite live region.",
+    "The risk is written in words in a badge, and a destructive call also states its consequence in words.",
+    "Each argument is read as its label and value together.",
+    "The outcome (Approved, Denied, Cancelled) is a polite live region, so the decision is announced.",
+    "Every button and the Always allow row have a 48dp touch target."
+  ],
+  "edgeCases": [
+    "Arguments that are not an object are shown as text; no arguments show \"No arguments.\".",
+    "Edited arguments equal to the original (ignoring surrounding spaces) are sent as null.",
+    "A new part id resets the decision, the editor, the reason and Always allow.",
+    "A list of plain values is joined with commas; nested values are shown as indented JSON."
+  ],
+  "tests": [
+    "MonarchAiToolApprovalTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Send an email",
+      "fixture": "ai-tool-approval",
+      "webExample": "Send an email",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiToolApproval(\n    part = part,\n    onApprove = {},\n    onDeny = {},\n    onAlwaysAllow = {},\n    icon = { MonarchIcon(SampleIcons.Warning, contentDescription = null) },\n    describeTool = { {{summary}} },\n)",
+      "setupTemplate": "val part = MonarchAiToolCallPart(\n    id = {{call.id}},\n    name = {{call.name}},\n    input = MonarchAiJSON.Object(\n        mapOf(\n            \"to\" to MonarchAiJSON.Array(\n                listOf(\n                    MonarchAiJSON.Text({{call.to.0}}),\n                    MonarchAiJSON.Text({{call.to.1}}),\n                    MonarchAiJSON.Text({{call.to.2}}),\n                ),\n            ),\n            \"subject\" to MonarchAiJSON.Text({{call.subject}}),\n            \"body\" to MonarchAiJSON.Text({{call.body}}),\n        ),\n    ),\n    state = MonarchAiToolCallState.PendingApproval,\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.components.intelligence.aiconversation.*",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "val part = MonarchAiToolCallPart(\n    id = \"send-1\",\n    name = \"send_email\",\n    input = MonarchAiJSON.Object(\n        mapOf(\n            \"to\" to MonarchAiJSON.Array(\n                listOf(\n                    MonarchAiJSON.Text(\"alex@example.test\"),\n                    MonarchAiJSON.Text(\"kim@example.test\"),\n                    MonarchAiJSON.Text(\"sam@example.test\"),\n                ),\n            ),\n            \"subject\" to MonarchAiJSON.Text(\"Weekly update\"),\n            \"body\" to MonarchAiJSON.Text(\"Hi all, the weekly update is attached.\"),\n        ),\n    ),\n    state = MonarchAiToolCallState.PendingApproval,\n)",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiToolApproval(\n    part = part,\n    onApprove = {},\n    onDeny = {},\n    onAlwaysAllow = {},\n    icon = { MonarchIcon(SampleIcons.Warning, contentDescription = null) },\n    describeTool = { \"Send email to 3 people\" },\n)"
+    },
+    {
+      "title": "A destructive call",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiToolApproval(\n    part = MonarchAiToolCallPart(\n        id = \"call-2\",\n        name = \"delete_records\",\n        input = MonarchAiJSON.Object(mapOf(\"count\" to MonarchAiJSON.Number(12.0))),\n        state = MonarchAiToolCallState.PendingApproval,\n        risk = MonarchAiToolCallRisk.Destructive,\n    ),\n    onApprove = {},\n    onDeny = {},\n    describeTool = { \"Delete 12 records\" },\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.components.intelligence.aiconversation.*"
+      ]
+    }
+  ],
+  "webEquivalent": "AiToolApproval",
+  "dependsOn": [
+    "card",
+    "button",
+    "ai-tool-call",
+    "checkbox"
+  ],
+  "icons": {
+    "header": "WarningGlyph"
+  },
+  "toneMap": {
+    "RISK_TONE": {
+      "low": "neutral",
+      "medium": "warning",
+      "high": "warning",
+      "destructive": "danger"
+    }
+  }
+}

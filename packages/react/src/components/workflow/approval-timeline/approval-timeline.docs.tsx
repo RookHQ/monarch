@@ -1,7 +1,9 @@
-import { ApprovalTimeline } from '@rookcom/monarch-react/patterns';
+import { ApprovalTimeline, type ApprovalTimelineStep } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './approval-timeline.fixture.json';
 
-const NOW = '2026-03-10T12:00:00Z';
+const NOW = fixture.data.now;
 
 export default {
   id: 'approval-timeline',
@@ -124,39 +126,7 @@ export default {
           title: 'Waiting on a step',
           stack: true,
           render: () => (
-            <ApprovalTimeline
-              now={NOW}
-              steps={[
-                {
-                  id: 's',
-                  label: 'Request',
-                  status: 'submitted',
-                  actor: { name: 'Alex Morgan' },
-                  at: '2026-03-09T09:00:00Z',
-                },
-                {
-                  id: '1',
-                  label: 'Reporting manager',
-                  status: 'approved',
-                  actor: { name: 'Sam Lee' },
-                  at: '2026-03-10T08:30:00Z',
-                  comment: 'Matches the receipts.',
-                },
-                {
-                  id: '2',
-                  label: 'Department head',
-                  status: 'skipped',
-                  note: 'Same person as the requester.',
-                },
-                {
-                  id: '3',
-                  label: 'Finance check',
-                  status: 'pending',
-                  approvers: [{ name: 'Jo Park' }, { name: 'Ana Ruiz' }],
-                },
-                { id: '4', label: 'Final sign-off', status: 'waiting' },
-              ]}
-            />
+            <ApprovalTimeline now={NOW} steps={fixture.data.steps as ApprovalTimelineStep[]} />
           ),
         },
         {

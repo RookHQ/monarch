@@ -1,6 +1,8 @@
 import { Button, ButtonGroup, IconButton } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { MoreIcon, PlusIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './button-group.fixture.json';
 
 export default {
   id: 'button-group',
@@ -105,9 +107,9 @@ export default {
         {
           title: 'Joined',
           render: () => (
-            <ButtonGroup aria-label="Pages">
-              <Button>Previous</Button>
-              <Button>Next</Button>
+            <ButtonGroup aria-label={fixture.data.label}>
+              <Button>{fixture.data.buttons[0]}</Button>
+              <Button>{fixture.data.buttons[1]}</Button>
             </ButtonGroup>
           ),
         },

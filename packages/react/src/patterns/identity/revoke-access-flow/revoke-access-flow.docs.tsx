@@ -1,6 +1,8 @@
 import { Button, DangerZone, DangerZoneItem } from '@rookcom/monarch-react';
 import { RevokeAccessFlow } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './revoke-access-flow.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000);
@@ -8,17 +10,18 @@ const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000);
 function RevokeKey() {
   return (
     <RevokeAccessFlow
-      trigger={<Button variant="danger">Revoke key</Button>}
+      trigger={<Button variant="danger">{fixture.data.trigger}</Button>}
+      defaultOpen
       kind="api-key"
       items={[
         {
           id: 'key-1',
-          label: 'Build server',
-          detail: 'sk_live_…4f2a · read and write',
-          lastUsed: hoursAgo(3),
+          label: fixture.data.item.label,
+          detail: fixture.data.item.detail,
+          lastUsed: hoursAgo(fixture.data.item.lastUsedHoursAgo),
         },
       ]}
-      requireConfirmPhrase="Build server"
+      requireConfirmPhrase={fixture.data.item.label}
       stepUp={{
         methods: ['password', 'totp'],
         onVerify: async () => {
@@ -197,7 +200,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'API key with type-to-confirm and step-up', render: () => <RevokeKey /> },
+        {
+          title: 'API key with type-to-confirm and step-up',
+          stage: { align: 'center' },
+          render: () => <RevokeKey />,
+        },
         { title: 'Sign out several sessions', render: () => <SignOutSessions /> },
         { title: 'OAuth client from a danger zone', render: () => <FromDangerZone /> },
       ],

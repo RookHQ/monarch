@@ -1,0 +1,80 @@
+{
+  "id": "message-timeline",
+  "name": null,
+  "title": "MessageTimeline",
+  "family": "collaboration",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchVirtualMessageList (ScrollView with LazyVStack and .defaultScrollAnchor(.bottom)) with MonarchMessageRow rows, and MonarchReadReceipt and MonarchTypingIndicator in its footer",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a conversation's messages grouped by day, with a New messages divider, older history loaded at the top, who has seen the last message and who is typing under it.",
+  "whenToUse": "For the message area of a chat, a channel or a support conversation: MonarchVirtualMessageList draws the day separators, the unread divider, grouping and Jump to latest; the rows are MonarchMessageRows.",
+  "whenNotToUse": "For the replies to one message, use MonarchThreadPanel. For comments anchored to a document, use MonarchCommentThread. For a feed of events rather than messages, use MonarchActivityTimeline.",
+  "api": [
+    "MonarchVirtualMessageList.init(_ items: [Item], firstUnreadID: Item.ID? = nil, highlightedID: Item.ID? = nil, scrollToID: Item.ID? = nil, hasOlder: Bool = false, isLoadingOlder: Bool = false, isOlderFailed: Bool = false, isLoading: Bool = false, errorMessage: String? = nil, groupWindow: TimeInterval = 300, now: Date? = nil, …, onLoadOlder: (@MainActor () -> Void)? = nil, …, @ViewBuilder header: () -> Header, @ViewBuilder footer: () -> Footer, @ViewBuilder row: @escaping (Item, MonarchVirtualMessageListContext<Item>) -> Row)",
+    "MonarchMessageRow.init(_ author: MonarchMessageRowAuthor, time: Date, now: Date? = nil, …, isGrouped: Bool = false, …, @ViewBuilder content: () -> Content)",
+    "MonarchTypingIndicator.init(_ names: [String], text: String? = nil, reservesSpace: Bool = true, announcesChanges: Bool = true)",
+    "MonarchReadReceipt.init(_ readers: [MonarchReadReceiptReader], display: MonarchReadReceiptDisplay = .text, maxAvatars: Int = 3, labels: MonarchReadReceiptLabels = MonarchReadReceiptLabels(), onShowReaders: (@MainActor () -> Void)? = nil)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "grouped by day",
+      "description": "A Today, Yesterday or full date separator before the first message of each day, in the environment's locale and calendar."
+    },
+    {
+      "name": "unread",
+      "description": "With firstUnreadID, a New messages divider above the first unread message, in the accent roles."
+    },
+    {
+      "name": "grouped",
+      "description": "Consecutive messages by one author within groupWindow (five minutes) get context.isGrouped, drawn without a repeated name and avatar."
+    },
+    {
+      "name": "older history",
+      "description": "With hasOlder and onLoadOlder, older messages load when the top comes into view; isLoadingOlder and isOlderFailed show progress or a retry."
+    },
+    {
+      "name": "seen and typing",
+      "description": "MonarchReadReceipt after the last message and MonarchTypingIndicator under it, both in the list's footer."
+    }
+  ],
+  "appearance": "The separators use the muted text role with subtle border lines, and the New messages divider the accent strong text and accent border roles. The rows, read receipt and typing indicator keep their own roles. The same roles adapt to dark and both high-contrast themes.",
+  "platformNotes": "The web's MessageTimeline is one component with exported helpers (shouldGroupMessages, formatMessageDay, the separators) for products that virtualise rows themselves. On iOS, as on Android, MonarchVirtualMessageList already builds only the rows near the screen and draws the day separators, the unread divider, grouping and the jump button, so the timeline is this recipe and there is no separate type. The web's imperative handle (scrollToBottom, scrollToItem) is the list's scrollToID and its Jump to latest button. Android puts the typing indicator in a status slot; the iOS list has a footer, which holds both the receipt and the indicator. Day separators follow the environment's locale and calendar, including its time zone.",
+  "accessibility": [
+    "MonarchVirtualMessageList is a container named Messages and announces messages that arrive; scrolling stays quiet.",
+    "Day separators and the New messages divider are headers, so the VoiceOver rotor moves between days.",
+    "Each MonarchMessageRow reads its author, full date and body as one element.",
+    "MonarchTypingIndicator announces who starts typing; MonarchReadReceipt reads who has seen the message."
+  ],
+  "edgeCases": [
+    "Keep firstUnreadID fixed while the conversation is open, so the divider does not move as the reader catches up.",
+    "Pass now and set the locale and calendar in the environment for output that does not depend on the device, for example in screenshots.",
+    "The list scrolls itself: give it the full screen or a bounded height and do not put it in a vertically scrolling parent.",
+    "The header shows only once all history is loaded (hasOlder is false)."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Conversation with older history",
+      "fixture": "message-timeline",
+      "webExample": "Conversation with older history",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n    MonarchVirtualMessageList(\n        messages,\n        firstUnreadID: {{firstUnreadId}},\n        hasOlder: {{hasOlder}},\n        now: now,\n        header: { EmptyView() },\n        footer: {\n            MonarchTypingIndicator([{{typing}}])\n                .frame(maxWidth: .infinity, alignment: .leading)\n                .padding(.horizontal)\n        },\n        row: { message, context in\n            MonarchMessageRow(\n                MonarchMessageRowAuthor(message.author),\n                time: message.time,\n                now: now,\n                timeStyle: .clock,\n                isGrouped: context.isGrouped\n            ) {\n                Text(message.text)\n            }\n        }\n    )\n    .frame(height: 690)\n    MonarchButton({{addLabel}}, variant: .secondary, size: .sm) {}\n}\n.environment(\\.calendar, timelineCalendar)",
+      "setupTemplate": "struct Message: MonarchVirtualMessageListItem {\n    let id: String\n    let time: Date\n    let authorID: String?\n    let author: String\n    let text: String\n}\nprivate let now = {{now|date}}\nprivate let messages = [\n    Message(id: {{messages.0.id}}, time: {{messages.0.time|date}}, authorID: {{messages.0.authorId}}, author: {{messages.0.author}}, text: {{messages.0.text}}),\n    Message(id: {{messages.1.id}}, time: {{messages.1.time|date}}, authorID: {{messages.1.authorId}}, author: {{messages.1.author}}, text: {{messages.1.text}}),\n    Message(id: {{messages.2.id}}, time: {{messages.2.time|date}}, authorID: {{messages.2.authorId}}, author: {{messages.2.author}}, text: {{messages.2.text}}),\n    Message(id: {{messages.3.id}}, time: {{messages.3.time|date}}, authorID: {{messages.3.authorId}}, author: {{messages.3.author}}, text: {{messages.3.text}}),\n    Message(id: {{messages.4.id}}, time: {{messages.4.time|date}}, authorID: {{messages.4.authorId}}, author: {{messages.4.author}}, text: {{messages.4.text}}),\n    Message(id: {{messages.5.id}}, time: {{messages.5.time|date}}, authorID: {{messages.5.authorId}}, author: {{messages.5.author}}, text: {{messages.5.text}}),\n    Message(id: {{messages.6.id}}, time: {{messages.6.time|date}}, authorID: {{messages.6.authorId}}, author: {{messages.6.author}}, text: {{messages.6.text}}),\n    Message(id: {{messages.7.id}}, time: {{messages.7.time|date}}, authorID: {{messages.7.authorId}}, author: {{messages.7.author}}, text: {{messages.7.text}}),\n]\n\n/// Clock times and day separators follow the calendar's time zone, so the example pins it.\nprivate var timelineCalendar: Calendar {\n    var calendar = Calendar(identifier: .gregorian)\n    calendar.timeZone = TimeZone(identifier: {{timeZone}}) ?? .gmt\n    return calendar\n}",
+      "setup": "struct Message: MonarchVirtualMessageListItem {\n    let id: String\n    let time: Date\n    let authorID: String?\n    let author: String\n    let text: String\n}\nprivate let now = Date(timeIntervalSince1970: 1_772_452_800)\nprivate let messages = [\n    Message(id: \"m1\", time: Date(timeIntervalSince1970: 1_772_393_400), authorID: \"ana\", author: \"Ana Lopez\", text: \"Morning! Is the launch checklist up to date?\"),\n    Message(id: \"m2\", time: Date(timeIntervalSince1970: 1_772_393_580), authorID: \"ana\", author: \"Ana Lopez\", text: \"Mostly. Legal sign-off is still open.\"),\n    Message(id: \"m3\", time: Date(timeIntervalSince1970: 1_772_433_000), authorID: \"ben\", author: \"Ben Okafor\", text: \"I’ll chase it after standup.\"),\n    Message(id: \"m4\", time: Date(timeIntervalSince1970: 1_772_436_600), authorID: \"chloe\", author: \"Chloé Martin\", text: \"Thanks. The press kit is in the shared folder.\"),\n    Message(id: \"m5\", time: Date(timeIntervalSince1970: 1_772_436_720), authorID: \"chloe\", author: \"Chloé Martin\", text: \"Looks good. One typo on page two.\"),\n    Message(id: \"m6\", time: Date(timeIntervalSince1970: 1_772_443_800), authorID: \"ana\", author: \"Ana Lopez\", text: \"Fixed, and the screenshots are refreshed.\"),\n    Message(id: \"m7\", time: Date(timeIntervalSince1970: 1_772_449_200), authorID: \"ben\", author: \"Ben Okafor\", text: \"Great. Shall we freeze copy at 15:00?\"),\n    Message(id: \"m8\", time: Date(timeIntervalSince1970: 1_772_449_320), authorID: \"ben\", author: \"Ben Okafor\", text: \"Works for me.\"),\n]\n\n/// Clock times and day separators follow the calendar's time zone, so the example pins it.\nprivate var timelineCalendar: Calendar {\n    var calendar = Calendar(identifier: .gregorian)\n    calendar.timeZone = TimeZone(identifier: \"UTC\") ?? .gmt\n    return calendar\n}",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n    MonarchVirtualMessageList(\n        messages,\n        firstUnreadID: \"m7\",\n        hasOlder: true,\n        now: now,\n        header: { EmptyView() },\n        footer: {\n            MonarchTypingIndicator([\"Ben Okafor\"])\n                .frame(maxWidth: .infinity, alignment: .leading)\n                .padding(.horizontal)\n        },\n        row: { message, context in\n            MonarchMessageRow(\n                MonarchMessageRowAuthor(message.author),\n                time: message.time,\n                now: now,\n                timeStyle: .clock,\n                isGrouped: context.isGrouped\n            ) {\n                Text(message.text)\n            }\n        }\n    )\n    .frame(height: 690)\n    MonarchButton(\"Add a message\", variant: .secondary, size: .sm) {}\n}\n.environment(\\.calendar, timelineCalendar)"
+    }
+  ],
+  "webEquivalent": "MessageTimeline",
+  "dependsOn": [
+    "message-row",
+    "virtual-message-list",
+    "typing-indicator",
+    "read-receipt"
+  ]
+}

@@ -5,77 +5,36 @@ import {
   type OtlpTraceData,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-trace-view.fixture.json';
 
-const RUN: AiTraceSpan[] = [
-  { id: 'run', kind: 'agent', name: 'Answer question', status: 'ok', startMs: 0, endMs: 6100 },
-  {
-    id: 'guard',
-    parentId: 'run',
-    kind: 'guardrail',
-    name: 'Check request',
-    status: 'ok',
-    startMs: 0,
-    endMs: 120,
-  },
-  {
-    id: 'plan',
-    parentId: 'run',
-    kind: 'model',
-    name: 'Plan the answer',
-    status: 'ok',
-    startMs: 120,
-    endMs: 1400,
-    inputTokens: 1850,
-    outputTokens: 240,
-    costMicros: 3100,
+// The spans of the primary example come from the fixture; the rest (the hidden tool call, previews and
+// attributes shown only in the details) is web-only and stays here.
+const SPAN_DETAILS: Record<string, Partial<AiTraceSpan>> = {
+  plan: {
     model: 'large-model',
     input: 'Which renewals are due this quarter?',
     output: '1. Search records\n2. Hand over to the analysis agent\n3. Summarise',
   },
-  {
-    id: 'search',
-    parentId: 'run',
-    kind: 'retrieval',
-    name: 'Search records',
-    status: 'ok',
-    startMs: 1400,
-    endMs: 2600,
-    attributes: { index: 'renewals', hits: 14, cached: false },
-  },
-  {
-    id: 'analysis',
-    parentId: 'run',
-    kind: 'agent',
-    name: 'Analysis agent',
-    status: 'ok',
-    startMs: 2600,
-    endMs: 6100,
-  },
-  {
-    id: 'analysis-tool',
-    parentId: 'analysis',
-    kind: 'tool',
-    name: 'sum_amounts',
-    status: 'ok',
-    startMs: 2700,
-    endMs: 2900,
-    input: '{ "column": "amount", "rows": 14 }',
-    output: '{ "total": 48200 }',
-  },
-  {
-    id: 'analysis-model',
-    parentId: 'analysis',
-    kind: 'model',
-    name: 'Write the summary',
-    status: 'ok',
-    startMs: 2900,
-    endMs: 6100,
-    inputTokens: 4200,
-    outputTokens: 910,
-    costMicros: 9800,
-    model: 'large-model',
-  },
-];
+  search: { attributes: { index: 'renewals', hits: 14, cached: false } },
+  'analysis-model': { model: 'large-model' },
+};
+
+const RUN: AiTraceSpan[] = (fixture.data.spans as AiTraceSpan[]).map((span) => ({
+  ...span,
+  ...SPAN_DETAILS[span.id],
+}));
+RUN.splice(5, 0, {
+  id: 'analysis-tool',
+  parentId: 'analysis',
+  kind: 'tool',
+  name: 'sum_amounts',
+  status: 'ok',
+  startMs: 2700,
+  endMs: 2900,
+  input: '{ "column": "amount", "rows": 14 }',
+  output: '{ "total": 48200 }',
+});
 
 const FAILED: AiTraceSpan[] = [
   { id: 'run', kind: 'agent', name: 'Answer question', status: 'error', startMs: 0, endMs: 7600 },
@@ -344,7 +303,13 @@ export default {
         {
           title: 'A finished run',
           stack: true,
-          render: () => <AiTraceView spans={RUN} currency="EUR" locale="en-GB" />,
+          render: () => (
+            <AiTraceView
+              spans={RUN}
+              currency={fixture.data.currency}
+              locale={fixture.data.locale}
+            />
+          ),
         },
         {
           title: 'A failed tool call, with its details open',

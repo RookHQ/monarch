@@ -10,15 +10,17 @@ import {
   type AiToolCallPart,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-tool-approval.fixture.json';
 
 const EMAIL: AiToolCallPart = {
   type: 'tool-call',
-  id: 'send-1',
-  name: 'send_email',
+  id: fixture.data.call.id,
+  name: fixture.data.call.name,
   input: {
-    to: ['alex@example.test', 'kim@example.test', 'sam@example.test'],
-    subject: 'Weekly update',
-    body: 'Hi all, the weekly update is attached.',
+    to: fixture.data.call.to,
+    subject: fixture.data.call.subject,
+    body: fixture.data.call.body,
   },
   state: 'pending-approval',
 };
@@ -246,6 +248,19 @@ export default {
     },
     examples: {
       items: [
+        {
+          title: 'Send an email',
+          stack: true,
+          render: () => (
+            <AiToolApproval
+              part={EMAIL}
+              describe={describeEmail}
+              onApprove={() => {}}
+              onDeny={() => {}}
+              onAlwaysAllow={() => {}}
+            />
+          ),
+        },
         {
           title: 'In a conversation (approve continues the reply)',
           stack: true,

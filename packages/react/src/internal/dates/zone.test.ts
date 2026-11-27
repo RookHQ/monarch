@@ -105,6 +105,9 @@ describe('zone helpers', () => {
       '3:00 PM',
     );
     expect(formatInstantTime('2026-11-04T09:30:00Z', 'Asia/Kolkata', 'en-GB', '24')).toBe('15:00');
+    // The locale's own clock: en-GB is 24-hour and pads the hour, en-US is not.
+    expect(formatInstantTime('2026-11-05T09:00:00Z', 'Europe/London', 'en-GB')).toBe('09:00');
+    expect(formatInstantTime('2026-11-05T09:00:00Z', 'Europe/London', 'en-US')).toBe('9:00 AM');
     expect(formatZonedTime('2026-11-04T09:30:00Z', 'Asia/Kolkata', 'en-GB', 'h23')).toBe('15:00');
     expect(formatZonedTime('2026-11-04T09:30:00Z', 'UTC', 'en-US', 'h12')).toBe('9:30 AM');
     expect(formatZonedTime('2026-11-04T09:30:00Z', 'Not/AZone', 'en-GB', 'h23')).toBe('09:30');

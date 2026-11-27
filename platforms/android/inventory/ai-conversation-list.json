@@ -1,0 +1,214 @@
+{
+  "id": "ai-conversation-list",
+  "name": "MonarchAiConversationList",
+  "title": "AiConversationList",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyColumn with stickyHeader per group, androidx.compose.foundation.combinedClickable rows, androidx.compose.material3.DropdownMenu, androidx.compose.material3.AlertDialog (rename and delete), MonarchSearchBar, MonarchEmptyState and MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The history of an AI chat: conversations grouped into Pinned, Today, Previous 7 days and Older, with search, the open conversation marked, and Rename, Pin and Delete on each row.",
+  "whenToUse": "In the navigation drawer or the list pane of an AI chat, to reopen, find, rename, pin and delete earlier conversations.",
+  "whenNotToUse": "For the messages of one conversation, use MonarchAiConversation. For a generic list of records, use a LazyColumn of MonarchSearchResultItem or Material 3 ListItem.",
+  "api": [
+    "@Composable fun MonarchAiConversationList(conversations: List<MonarchAiConversationSummary>, onSelect: (String) -> Unit, modifier: Modifier = Modifier, activeId: String? = null, searchable: Boolean = true, visibleCount: Int = 200, nowMillis: Long? = null, timeZone: String? = null, onSearch: ((String) -> Unit)? = null, onNew: (() -> Unit)? = null, onRename: ((id: String, title: String) -> Unit)? = null, onPin: ((id: String, pinned: Boolean) -> Unit)? = null, onDelete: ((id: String) -> Unit)? = null, menuIcon: (@Composable () -> Unit)? = null, labels: MonarchAiConversationListLabels = MonarchAiConversationListLabels())",
+    "data class MonarchAiConversationSummary(id: String, title: String, updatedAtMillis: Long, pinned: Boolean = false, preview: String? = null) { constructor(id: String, title: String, messages: List<MonarchAiConversationMessage>, pinned: Boolean = false) }",
+    "enum class MonarchAiConversationGroup { Pinned, Today, Previous7Days, Older }",
+    "class MonarchAiConversationListLabels(label: String? = null, group: ((MonarchAiConversationGroup) -> String)? = null, untitled: String? = null, newConversation: String? = null, search: String? = null, empty: String? = null, noResults: ((query: String) -> String)? = null, results: ((count: Int) -> String)? = null, rename: String? = null, pin: String? = null, unpin: String? = null, delete: String? = null, moreActions: ((title: String) -> String)? = null, renameTitle: String? = null, renameField: String? = null, save: String? = null, cancel: String? = null, deleteTitle: ((title: String) -> String)? = null, deleteMessage: String? = null, deleteConfirm: String? = null, showMore: ((count: Int) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "conversations",
+      "type": "List<MonarchAiConversationSummary>",
+      "default": "required",
+      "description": "The history, in any order. A summary can be made from the conversation's MonarchAiConversationMessage values."
+    },
+    {
+      "name": "onSelect",
+      "type": "(String) -> Unit",
+      "default": "required",
+      "description": "Opens a conversation, given its id."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the list. Give it a bounded height: it is a LazyColumn."
+    },
+    {
+      "name": "activeId",
+      "type": "String?",
+      "default": "null",
+      "description": "The open conversation, marked with a start bar, a bold title, a subtle fill and the selected state."
+    },
+    {
+      "name": "searchable",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows a MonarchSearchBar at the top of the list."
+    },
+    {
+      "name": "visibleCount",
+      "type": "Int",
+      "default": "200",
+      "description": "How many rows are shown at first, and how many Show more adds."
+    },
+    {
+      "name": "nowMillis",
+      "type": "Long?",
+      "default": "null",
+      "description": "The time the groups are counted from, in epoch milliseconds (UTC); the clock when null. Pass a fixed time in tests and previews."
+    },
+    {
+      "name": "timeZone",
+      "type": "String?",
+      "default": "null",
+      "description": "The time zone that decides the day boundaries. An IANA id such as Europe/Berlin; null, or an id the device does not know, is the device's zone."
+    },
+    {
+      "name": "onSearch",
+      "type": "((String) -> Unit)?",
+      "default": "null",
+      "description": "Runs the search in the app; the list then shows conversations as given instead of filtering them."
+    },
+    {
+      "name": "onNew",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Adds a New conversation button at the top."
+    },
+    {
+      "name": "onRename",
+      "type": "((id: String, title: String) -> Unit)?",
+      "default": "null",
+      "description": "Offers Rename; receives the trimmed new title, never an empty or unchanged one."
+    },
+    {
+      "name": "onPin",
+      "type": "((id: String, pinned: Boolean) -> Unit)?",
+      "default": "null",
+      "description": "Offers Pin or Unpin."
+    },
+    {
+      "name": "onDelete",
+      "type": "((id: String) -> Unit)?",
+      "default": "null",
+      "description": "Offers Delete, after a confirmation dialog."
+    },
+    {
+      "name": "menuIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The icon of a menu button at the end of each row, such as a vertical ellipsis. Without it the menu opens on a long press and from the TalkBack actions."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiConversationListLabels",
+      "default": "MonarchAiConversationListLabels()",
+      "description": "Replaces every built-in string."
+    }
+  ],
+  "states": [
+    {
+      "name": "grouped",
+      "description": "Pinned, Today, Previous 7 days and Older sections with sticky headings, newest first in each; empty groups are left out."
+    },
+    {
+      "name": "active",
+      "description": "The open row has a start bar in the accent color, a bold title, the subtle background and the selected state."
+    },
+    {
+      "name": "empty",
+      "description": "A small first-run MonarchEmptyState: \"No conversations yet\"."
+    },
+    {
+      "name": "no results",
+      "description": "A filtered MonarchEmptyState naming the search, with Clear filters, which clears the search."
+    },
+    {
+      "name": "long history",
+      "description": "Only visibleCount rows, then a Show more button naming how many are hidden."
+    },
+    {
+      "name": "menu",
+      "description": "A long press, the menu button or a TalkBack action offers Rename, Pin or Unpin and Delete in a DropdownMenu."
+    },
+    {
+      "name": "renaming",
+      "description": "An AlertDialog with the title in a MonarchTextField; Save stays disabled until the title is new and not empty."
+    },
+    {
+      "name": "deleting",
+      "description": "An AlertDialog asking Delete “title”?, with Delete conversation in the strong danger color and Cancel."
+    }
+  ],
+  "appearance": "Group headings in the label style in the muted text color on the surface background, titles in the body style (strong for the open one) and previews in the caption style in the muted text color. The open row has the subtle background and an accent start bar. Dialogs are Material 3 on the raised background. All colors are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "Same names as iOS, except that the time is nowMillis with an IANA zone id instead of a Date with a Calendar, and isSearchable is searchable. Search is a MonarchSearchBar at the top of the list instead of the system search field of a NavigationStack. iOS swipe actions and the context menu become a long press, an optional menu button (Monarch bundles no icons, so its icon is the app's) and TalkBack custom actions. Rename uses a Material 3 AlertDialog with a text field instead of the web's inline field; the web's arrow keys, F2 and Delete key are not offered. onDelete is synchronous; the web can keep its dialog open on a promise.",
+  "accessibility": [
+    "The list is named \"Conversation history\"; group headings have the heading semantics.",
+    "Each row is one element with the button role, read as its title and preview; the open conversation also has the selected state.",
+    "The open row is marked by a start bar, a bold title and a fill as well as the selected state, not by color alone.",
+    "Rename, Pin or Unpin and Delete are TalkBack custom actions on the row, and a long press opens them in a menu.",
+    "The optional menu button is named \"More actions for <title>\" and has a 48dp target.",
+    "After a local search changes, the number of matching conversations is announced through a polite live region.",
+    "Rows are at least 48dp high."
+  ],
+  "edgeCases": [
+    "An empty or white-space title shows \"New conversation\".",
+    "Days are counted in the time zone given; anything dated in the future is Today, and seven days before the start of today is still Previous 7 days.",
+    "A summary made from messages uses the last message's time and the text of the last message that has text, on one line; without messages it is dated at the epoch (Older).",
+    "Long titles wrap to two lines and previews to one, with an ellipsis.",
+    "A rename or delete dialog closes on its own if its conversation disappears from the list."
+  ],
+  "tests": [
+    "MonarchAiConversationListTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "History with rename, pin and delete",
+      "fixture": "ai-conversation-list",
+      "webExample": "History with rename, pin and delete",
+      "template": "MonarchAiConversationList(\n    conversations = listOf(\n        MonarchAiConversationSummary({{conversations.0.id}}, {{conversations.0.title}}, updatedAtMillis = now - {{conversations.0.ageHours}} * 3_600_000L, pinned = {{conversations.0.pinned}}),\n        MonarchAiConversationSummary({{conversations.1.id}}, {{conversations.1.title}}, updatedAtMillis = now - {{conversations.1.ageHours}} * 3_600_000L, preview = {{conversations.1.preview}}),\n        MonarchAiConversationSummary({{conversations.2.id}}, {{conversations.2.title}}, updatedAtMillis = now - {{conversations.2.ageHours}} * 3_600_000L),\n        MonarchAiConversationSummary({{conversations.3.id}}, {{conversations.3.title}}, updatedAtMillis = now - {{conversations.3.ageHours}} * 3_600_000L, preview = {{conversations.3.preview}}),\n        MonarchAiConversationSummary({{conversations.4.id}}, {{conversations.4.title}}, updatedAtMillis = now - {{conversations.4.ageHours}} * 3_600_000L),\n        MonarchAiConversationSummary({{conversations.5.id}}, {{conversations.5.title}}, updatedAtMillis = now - {{conversations.5.ageHours}} * 3_600_000L),\n    ),\n    onSelect = { active = it },\n    modifier = Modifier.fillMaxWidth().height(MonarchTheme.spacing.space24 * 7),\n    activeId = active,\n    nowMillis = now,\n    labels = MonarchAiConversationListLabels(newConversation = {{newLabel}}, search = \"Search\"),\n    onNew = {},\n    onRename = { _, _ -> },\n    onPin = { _, _ -> },\n    onDelete = { _ -> },\n)",
+      "setupTemplate": "val now = remember {\n    LocalDate.now().atTime(12, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()\n}\nvar active by rememberSaveable { mutableStateOf<String?>({{activeId}}) }",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "java.time.LocalDate",
+        "java.time.ZoneId"
+      ],
+      "setup": "val now = remember {\n    LocalDate.now().atTime(12, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()\n}\nvar active by rememberSaveable { mutableStateOf<String?>(\"1\") }",
+      "code": "MonarchAiConversationList(\n    conversations = listOf(\n        MonarchAiConversationSummary(\"5\", \"Quarterly goals\", updatedAtMillis = now - 960 * 3_600_000L, pinned = true),\n        MonarchAiConversationSummary(\"1\", \"Launch checklist\", updatedAtMillis = now - 1 * 3_600_000L, preview = \"Week 9 is confirmed.\"),\n        MonarchAiConversationSummary(\"2\", \"Hiring plan\", updatedAtMillis = now - 2 * 3_600_000L),\n        MonarchAiConversationSummary(\"3\", \"Budget review\", updatedAtMillis = now - 72 * 3_600_000L, preview = \"Travel is 12% over.\"),\n        MonarchAiConversationSummary(\"4\", \"Team offsite agenda\", updatedAtMillis = now - 120 * 3_600_000L),\n        MonarchAiConversationSummary(\"6\", \"Release notes draft\", updatedAtMillis = now - 1440 * 3_600_000L),\n    ),\n    onSelect = { active = it },\n    modifier = Modifier.fillMaxWidth().height(MonarchTheme.spacing.space24 * 7),\n    activeId = active,\n    nowMillis = now,\n    labels = MonarchAiConversationListLabels(newConversation = \"New conversation\", search = \"Search\"),\n    onNew = {},\n    onRename = { _, _ -> },\n    onPin = { _, _ -> },\n    onDelete = { _ -> },\n)"
+    },
+    {
+      "title": "A summary from the conversation model",
+      "setup": "val messages = listOf(\n    MonarchAiConversationMessage(\n        id = \"m1\",\n        role = MonarchAiRole.User,\n        parts = listOf(MonarchAiTextPart(\"Plan a trip to Lisbon\")),\n        createdAt = \"2025-11-14T10:00:00.000Z\",\n    ),\n)",
+      "code": "MonarchAiConversationList(\n    conversations = listOf(MonarchAiConversationSummary(\"trip\", \"Trip\", messages)),\n    onSelect = {},\n    modifier = Modifier.height(MonarchTheme.spacing.space24 * 2),\n    searchable = false,\n)",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.components.intelligence.aiconversation.MonarchAiConversationMessage",
+        "com.rookhq.monarch.components.intelligence.aiconversation.MonarchAiRole",
+        "com.rookhq.monarch.components.intelligence.aiconversation.MonarchAiTextPart"
+      ]
+    }
+  ],
+  "webEquivalent": "AiConversationList",
+  "dependsOn": [
+    "search-input",
+    "dropdown-menu",
+    "confirm-dialog",
+    "empty-state"
+  ],
+  "icons": {
+    "new": "PlusGlyph",
+    "pinned": "StarGlyph",
+    "more": "MoreGlyph",
+    "rename": "PencilGlyph",
+    "delete": "CloseGlyph"
+  }
+}

@@ -1,0 +1,48 @@
+@file:OptIn(ExperimentalMonarchApi::class)
+
+package com.rookhq.monarch.sample.sections.intelligence
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.rookhq.monarch.ExperimentalMonarchApi
+import com.rookhq.monarch.components.actions.button.MonarchButton
+import com.rookhq.monarch.components.actions.button.MonarchButtonSize
+import com.rookhq.monarch.components.intelligence.aiinlinediff.MonarchAiDiffSegment
+import com.rookhq.monarch.components.intelligence.aiinlinediff.MonarchAiInlineDiff
+import com.rookhq.monarch.sample.CatalogueCaption
+import com.rookhq.monarch.sample.CataloguePage
+
+private const val Before =
+    "Our team meets every week to review the plan. We will ship the new flow in May, and collect feedback after."
+private const val After =
+    "Our team meets every Monday to review the roadmap. We will ship the redesigned flow in June, and collect " +
+        "feedback after launch."
+
+/** The catalogue page of AiInlineDiff. */
+object MonarchAiInlineDiffSection : CataloguePage {
+    override val title = "AiInlineDiff"
+
+    @Composable
+    override fun Content() {
+        CatalogueCaption("Step through the suggestions and accept or reject each one")
+        var segments by remember { mutableStateOf(MonarchAiDiffSegment.diffWords(Before, After)) }
+        MonarchAiInlineDiff(
+            segments = segments,
+            onAccept = { id -> segments = MonarchAiDiffSegment.resolve(segments, id, accept = true) },
+            onReject = { id -> segments = MonarchAiDiffSegment.resolve(segments, id, accept = false) },
+        )
+        MonarchButton(
+            text = "Reset",
+            onClick = { segments = MonarchAiDiffSegment.diffWords(Before, After) },
+            size = MonarchButtonSize.Sm,
+        )
+        CatalogueCaption("Read only, without the bar")
+        MonarchAiInlineDiff(
+            segments = MonarchAiDiffSegment.diffWords("Ships on Friday.", "Ships on Monday."),
+            showNavigation = false,
+        )
+    }
+}

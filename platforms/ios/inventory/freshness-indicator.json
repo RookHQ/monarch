@@ -1,0 +1,162 @@
+{
+  "id": "freshness-indicator",
+  "name": "MonarchFreshnessIndicator",
+  "title": "FreshnessIndicator",
+  "family": "data-display",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "HStack of Text and MonarchButton, redrawn by TimelineView",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "How fresh a data set or a sync is (\"Updated 3 minutes ago\"), turning to warning and danger as it ages, with an optional refresh button.",
+  "whenToUse": "Above a table, a dashboard or a synced list whose data can age, so people know whether to trust it and can refresh it.",
+  "whenNotToUse": "For where one value came from, use MonarchProvenance. For whether the person's own edits are saved, use MonarchSaveStatusIndicator.",
+  "api": [
+    "init(updatedAt: Date?, source: String? = nil, details: [String] = [], error: String? = nil, status: MonarchFreshnessStatus? = nil, staleAfter: Duration? = nil, expiredAfter: Duration? = nil, variant: MonarchFreshnessIndicatorVariant = .inline, isRefreshing: Bool = false, labels: MonarchFreshnessIndicatorLabels = MonarchFreshnessIndicatorLabels(), onRefresh: (@MainActor () async throws -> Void)? = nil)",
+    "enum MonarchFreshnessStatus { case fresh, stale, expired, never, checking, error }",
+    "enum MonarchFreshnessIndicatorVariant { case inline, banner }",
+    "struct MonarchFreshnessIndicatorLabels { var updated: (@Sendable (String) -> String)?; var never, checking, stale, expired, error, refresh, refreshing, refreshed, refreshFailed: String? }"
+  ],
+  "options": [
+    {
+      "name": "updatedAt",
+      "type": "Date?",
+      "default": "required",
+      "description": "When the data was last updated or synced. nil means never."
+    },
+    {
+      "name": "source",
+      "type": "String?",
+      "default": "nil",
+      "description": "Names the data or its source, shown first."
+    },
+    {
+      "name": "details",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Further facts appended with middle dots. Empty strings are skipped."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "The error text for the error status. Without it \"Status unavailable\" is shown."
+    },
+    {
+      "name": "status",
+      "type": "MonarchFreshnessStatus?",
+      "default": "nil",
+      "description": "Overrides the status worked out from the age, for example checking or error."
+    },
+    {
+      "name": "staleAfter",
+      "type": "Duration?",
+      "default": "nil",
+      "description": "The age after which the data is stale (warning). nil never turns stale."
+    },
+    {
+      "name": "expiredAfter",
+      "type": "Duration?",
+      "default": "nil",
+      "description": "The age after which the data is expired (danger). nil never expires."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchFreshnessIndicatorVariant",
+      "default": ".inline",
+      "description": "inline is a line of muted text; banner is a bordered bar."
+    },
+    {
+      "name": "isRefreshing",
+      "type": "Bool",
+      "default": "false",
+      "description": "A refresh the app tracks is running; the button shows progress."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchFreshnessIndicatorLabels",
+      "default": "MonarchFreshnessIndicatorLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "onRefresh",
+      "type": "(@MainActor () async throws -> Void)?",
+      "default": "nil",
+      "description": "Adds a refresh button. The button is busy until the function returns; a thrown error is announced as \"Refresh failed.\""
+    }
+  ],
+  "states": [
+    {
+      "name": "fresh",
+      "description": "Success-coloured dot and \"Updated 3 minutes ago\"."
+    },
+    {
+      "name": "stale",
+      "description": "Warning-coloured dot, and \"Out of date\" in bold warning text after the time."
+    },
+    {
+      "name": "expired",
+      "description": "Danger-coloured dot, and \"Very out of date\" in bold danger text after the time."
+    },
+    {
+      "name": "never",
+      "description": "Subtle grey dot and \"Never updated\"."
+    },
+    {
+      "name": "checking",
+      "description": "Info-coloured dot and \"Checking…\" in place of the time."
+    },
+    {
+      "name": "error",
+      "description": "Danger-coloured dot and the error text, after the time when there is one."
+    },
+    {
+      "name": "refreshing",
+      "description": "The refresh button shows a progress indicator and the title \"Refreshing…\", and ignores further taps."
+    }
+  ],
+  "appearance": "Caption text in the muted text colour with a dot in the solid colour of the status tone (subtle text colour for never). Status words are bold, in the strong colour of the tone. The banner adds the subtle background and a subtle border with the control corner radius. The refresh button is a small ghost MonarchButton.",
+  "platformNotes": "The web component also takes an actions slot for further controls and a live flag to stop the clock; here the line always redraws every minute and the app places other controls beside the view. The web treats onRefresh returning a promise as busy; here onRefresh is an async function. Pull to refresh with refreshable(action:) is the usual companion on iOS. Android shares the name and the statuses.",
+  "accessibility": [
+    "The dot is decorative; stale, expired and error are also written as words, so colour is never the only signal.",
+    "The line is one element whose label is the source and the parts joined with pauses, for example \"Directory, Updated 2 hours ago, Out of date\".",
+    "When the status turns stale, expired or error after the first draw, the status words are announced.",
+    "The refresh button is a separate standard button with a 44-point touch target; while it runs its value is \"Refreshing…\", and \"Refreshed.\" or \"Refresh failed.\" is announced at the end.",
+    "The text and the dot scale with Dynamic Type; the button moves under the text when they do not fit on one line."
+  ],
+  "edgeCases": [
+    "An update time in the future reads \"Updated in 2 minutes\" and counts as fresh.",
+    "The line is redrawn every 60 seconds and one second after each limit, so the status changes on time without a timer in the app.",
+    "A long source or many details wrap onto further lines; the dot stays on the first line."
+  ],
+  "tests": [
+    "MonarchFreshnessIndicatorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Banner with refresh",
+      "fixture": "freshness-indicator",
+      "webExample": "Banner with refresh",
+      "template": "VStack(alignment: .leading, spacing: 8) {\n    MonarchFreshnessIndicator(\n        updatedAt: lastSync,\n        source: {{source}},\n        details: [{{details.0}}],\n        staleAfter: .seconds({{staleAfterSeconds}}),\n        expiredAfter: .seconds({{expiredAfterSeconds}}),\n        variant: {{variant|case}}\n    ) {\n        lastSync = .now\n    }\n    MonarchButton({{manageSource}}, variant: .ghost, size: .sm) {}\n}",
+      "setupTemplate": "@State private var lastSync = Date.now.addingTimeInterval(-{{updatedHoursAgo}} * 3600)",
+      "setup": "@State private var lastSync = Date.now.addingTimeInterval(-5 * 3600)",
+      "code": "VStack(alignment: .leading, spacing: 8) {\n    MonarchFreshnessIndicator(\n        updatedAt: lastSync,\n        source: \"Directory\",\n        details: [\"Live updates on\"],\n        staleAfter: .seconds(3600),\n        expiredAfter: .seconds(86_400),\n        variant: .banner\n    ) {\n        lastSync = .now\n    }\n    MonarchButton(\"Manage source\", variant: .ghost, size: .sm) {}\n}"
+    },
+    {
+      "title": "A banner that has never synced",
+      "code": "MonarchFreshnessIndicator(updatedAt: nil, source: \"Registry\", variant: .banner)"
+    }
+  ],
+  "webEquivalent": "FreshnessIndicator",
+  "dependsOn": [
+    "relative-time",
+    "button"
+  ],
+  "icons": {
+    "refresh": "RetryGlyph"
+  }
+}

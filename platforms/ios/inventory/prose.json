@@ -1,0 +1,98 @@
+{
+  "id": "prose",
+  "name": "MonarchProseStyle",
+  "title": "Prose",
+  "family": "typography",
+  "category": "B",
+  "coverage": "style",
+  "kind": "style",
+  "wrapsNative": "Text with AttributedString (inline Markdown runs styled through an AttributeContainer), a custom Layout with a LayoutValueKey for block spacing, ScrollView(.horizontal) for code blocks",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Type styles for long-form content (help articles, release notes, Markdown comments and documents): a base size, a reading measure, the look of each kind of block and the styling of links and code inside text.",
+  "whenToUse": "When you show content you do not lay out element by element, such as Markdown from a server or a help article, and want the Monarch type scale and rhythm for it.",
+  "whenNotToUse": "Not for interface text you build with components; use monarchTextStyle(_:) on Text. Not for model output with tables, task lists and footnotes; use MonarchAiMarkdown when it is available. Not for code with copy and wrap controls; use MonarchCodeBlock.",
+  "api": [
+    "struct MonarchProseStyle { init(size: MonarchProseSize = .md, limitsLineLength: Bool = true) }",
+    "func inline(_ text: AttributedString, in theme: MonarchTheme) -> AttributedString",
+    "func markdown(_ markdown: String, in theme: MonarchTheme) -> AttributedString",
+    "func key(_ key: String, in theme: MonarchTheme) -> AttributedString",
+    "func highlight(_ text: String, in theme: MonarchTheme) -> AttributedString",
+    "struct MonarchProseTable: View { init(columns: [String], rows: [[String]]) }",
+    "enum MonarchProseSize { case sm, md, lg }",
+    "enum MonarchProseBlock { case paragraph, heading(_ level: Int), listItem(marker: String, depth: Int = 0), quote, code, caption, rule }",
+    "struct MonarchProse<Content: View>: View { init(_ style: MonarchProseStyle = MonarchProseStyle(), @ViewBuilder content: () -> Content) }",
+    "func monarchProseBlock(_ block: MonarchProseBlock) -> some View"
+  ],
+  "options": [
+    {
+      "name": "size",
+      "type": "MonarchProseSize",
+      "default": ".md",
+      "description": "The base size: sm (14 points) for comments, chat and side panels, md (16 points) for documents, lg (18 points) for long reads. Headings, code and spacing are multiples of it."
+    },
+    {
+      "name": "limitsLineLength",
+      "type": "Bool",
+      "default": "true",
+      "description": "Limits the column to the reading measure, 42 base sizes (672 points at md and the default text size), at the leading edge. Turn it off when the container already sets the width."
+    },
+    {
+      "name": "block",
+      "type": "MonarchProseBlock",
+      "default": "required",
+      "description": "Given to a child of MonarchProse with monarchProseBlock(_:). A child without a kind is a paragraph."
+    }
+  ],
+  "states": [
+    {
+      "name": "default",
+      "description": "Prose has no states of its own. Links keep the standard behaviour of Text: they open with the environment's openURL."
+    }
+  ],
+  "appearance": "Body text in the default text colour; headings semibold at 1.875, 1.5, 1.25, 1.125 and 1 times the base size; quotations and captions in the muted text colour, quotations after a bar in the strong border colour; code blocks monospaced on the subtle background with the subtle border; thematic breaks in the default border colour; links in the link colour and underlined. Every colour is a theme role, so the dark and high-contrast themes need nothing else.",
+  "platformNotes": "The parity map named an attribute container for long-form content. An attribute container covers only the inline part: SwiftUI's Text ignores the block intents of AttributedString(markdown:), so it cannot space headings, indent lists and quotations or put code on a panel, and one Text cannot give each heading its header trait. Prose therefore ships the style value (with the inline styling through an AttributeContainer), a column view, MonarchProse, that spaces blocks with the web's rhythm, and the block modifier. The web Prose styles HTML elements by tag; on iOS the renderer (or the app) says which kind each block is. The web's base size is called md here, following the shared size vocabulary. Not offered: tables, images, figures, definition lists, details and keyboard keys inside prose (use Grid, Image, MonarchKbd and DisclosureGroup directly), ProseExclude (a view without monarchProseBlock is a plain paragraph slot and keeps its own styles), and the as parameter (there are no element types). Strong emphasis is drawn bold by SwiftUI, where the web uses semibold.",
+  "accessibility": [
+    "A heading block has the header trait and its heading level (h1 to h6), so the VoiceOver rotor lists the headings.",
+    "Links are underlined as well as coloured.",
+    "A bullet marker is hidden from VoiceOver; a numbered or lettered marker (\"2.\", \"b)\") is read before the item.",
+    "The quotation bar and thematic breaks are hidden from VoiceOver.",
+    "Every size follows Dynamic Type through a scaled metric relative to body text, and text wraps; code blocks scroll sideways instead.",
+    "Code blocks read left to right in a right-to-left layout; everything else follows the layout direction."
+  ],
+  "edgeCases": [
+    "Heading levels outside 1 to 6 are clamped.",
+    "Long words wrap inside the column; long code lines scroll inside their block.",
+    "A child without monarchProseBlock is spaced as a paragraph and keeps its own fonts and colours, apart from the default text colour it inherits.",
+    "monarchProseBlock outside MonarchProse uses the default style (md) and adds no spacing.",
+    "Text that is not valid Markdown is shown as it is by markdown(_:in:)."
+  ],
+  "tests": [
+    "MonarchProseStyleTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Rendered article",
+      "fixture": "prose",
+      "webExample": "Rendered article",
+      "template": "MonarchProse(style) {\n    Text({{heading}}).monarchProseBlock(.heading(2))\n    Text(style.markdown({{intro.before}} + \"[\" + {{intro.link}} + \"](https://example.com)\" + {{intro.between}} + \"`\" + {{intro.code}} + \"`\" + {{intro.after}}, in: theme))\n    Text({{list.0.text}}).monarchProseBlock(.listItem(marker: \"•\"))\n    Text({{list.1.text}}).monarchProseBlock(.listItem(marker: \"•\"))\n    Text({{list.2.text}}).monarchProseBlock(.listItem(marker: \"•\"))\n    Text({{list.2.items.0}}).monarchProseBlock(.listItem(marker: \"•\", depth: 1))\n    Text({{list.2.items.1}}).monarchProseBlock(.listItem(marker: \"•\", depth: 1))\n    Text({{quote}}).monarchProseBlock(.quote)\n    Text({{code}}).monarchProseBlock(.code)\n    Text({{subheading}}).monarchProseBlock(.heading(3))\n    MonarchProseTable(\n        columns: [{{table.columns.0}}, {{table.columns.1}}, {{table.columns.2}}],\n        rows: [\n            [{{table.rows.0.option}}, {{table.rows.0.default}}, {{table.rows.0.description}}],\n            [{{table.rows.1.option}}, {{table.rows.1.default}}, {{table.rows.1.description}}],\n        ]\n    )\n    Divider().monarchProseBlock(.rule)\n    Text(\n        AttributedString({{outro.before}}) + style.key({{outro.key}}, in: theme) + AttributedString({{outro.middle}})\n            + style.highlight({{outro.mark}}, in: theme) + AttributedString({{outro.after}})\n    )\n    .monarchProseBlock(.paragraph)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\nprivate let style = MonarchProseStyle()",
+      "setup": "@Environment(\\.monarchTheme) private var theme\nprivate let style = MonarchProseStyle()",
+      "code": "MonarchProse(style) {\n    Text(\"Getting started\").monarchProseBlock(.heading(2))\n    Text(style.markdown(\"This guide covers the basics. Read the \" + \"[\" + \"overview\" + \"](https://example.com)\" + \" first, then run \" + \"`\" + \"npm install\" + \"`\" + \".\", in: theme))\n    Text(\"Create a project\").monarchProseBlock(.listItem(marker: \"•\"))\n    Text(\"Invite your team\").monarchProseBlock(.listItem(marker: \"•\"))\n    Text(\"Set up notifications\").monarchProseBlock(.listItem(marker: \"•\"))\n    Text(\"Email\").monarchProseBlock(.listItem(marker: \"•\", depth: 1))\n    Text(\"Mobile\").monarchProseBlock(.listItem(marker: \"•\", depth: 1))\n    Text(\"Small steps every day add up.\").monarchProseBlock(.quote)\n    Text(\"const total = items.reduce((sum, i) => sum + i.price, 0);\").monarchProseBlock(.code)\n    Text(\"Options\").monarchProseBlock(.heading(3))\n    MonarchProseTable(\n        columns: [\"Option\", \"Default\", \"Description\"],\n        rows: [\n            [\"size\", \"base\", \"Base font size of the content.\"],\n            [\"measure\", \"true\", \"Limit the line length.\"],\n        ]\n    )\n    Divider().monarchProseBlock(.rule)\n    Text(\n        AttributedString(\"Press \") + style.key(\"Enter\", in: theme) + AttributedString(\" to save. \")\n            + style.highlight(\"Highlighted\", in: theme) + AttributedString(\" text stands out.\")\n    )\n    .monarchProseBlock(.paragraph)\n}"
+    },
+    {
+      "title": "A comment at the small size",
+      "setup": "@Environment(\\.monarchTheme) private var theme\nprivate let style = MonarchProseStyle(size: .sm, limitsLineLength: false)",
+      "code": "MonarchProse(style) {\n    Text(style.markdown(\"Looks good. One question about the **second step**.\", in: theme))\n    Text(\"Check the file\").monarchProseBlock(.listItem(marker: \"1.\"))\n    Text(\"Import it\").monarchProseBlock(.listItem(marker: \"2.\"))\n}"
+    }
+  ],
+  "webEquivalent": "Prose",
+  "dependsOn": [
+    "text",
+    "link",
+    "inline-code"
+  ]
+}

@@ -1,0 +1,161 @@
+{
+  "id": "ai-structured-answer",
+  "name": "MonarchAiStructuredAnswer",
+  "title": "AiStructuredAnswer",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of LabeledContent with MonarchLabeledContentStyle, Grid with GridRow and gridCellColumns for the grid layout, MonarchBadge in MonarchFlowLayout, MonarchAiMarkdown, MonarchAiGeneratedBadge and redacted(reason: .placeholder)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A model's structured output shown as labelled fields (text, lists, numbers, badges or Markdown) instead of prose, filling in as it streams with placeholders for the fields still to come.",
+  "whenToUse": "When the model returns structured data that follows a schema, such as an interview brief, a lead summary or fields extracted from a document, and people compare such answers.",
+  "whenNotToUse": "For free-form answers use MonarchAiMarkdown or MonarchAiStreamingText. For many rows of the same shape use MonarchAiTableAnswer. For facts the app already knows, not generated, use LabeledContent with the Monarch style.",
+  "api": [
+    "init(_ schema: [MonarchAiStructuredField], data: [String: MonarchAiJSON], title: String? = nil, layout: MonarchAiStructuredAnswerLayout = .list, isStreaming: Bool = false, labels: MonarchAiStructuredAnswerLabels = MonarchAiStructuredAnswerLabels(), onOpenLink: (@MainActor (URL) -> Void)? = nil, @ViewBuilder actions: () -> Actions)",
+    "init(_ schema:, data:, title:, layout:, isStreaming:, labels:, onOpenLink:)  // Actions == EmptyView",
+    "struct MonarchAiStructuredField { init(_ key: String, label: String, type: MonarchAiStructuredFieldType = .text, format: MonarchMetricFormat = .number, tone: MonarchTone = .neutral, toneForValue: (@Sendable (String) -> MonarchTone)? = nil, isWide: Bool? = nil) }",
+    "enum MonarchAiStructuredFieldType { case text, list, number, badge, markdown }",
+    "enum MonarchAiStructuredAnswerLayout { case list, grid }",
+    "struct MonarchAiStructuredAnswerLabels { init(aiAnswer: String? = nil, pending: String? = nil, empty: String? = nil, complete: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "schema",
+      "type": "[MonarchAiStructuredField]",
+      "default": "required",
+      "description": "The fields in order: key, label, type, number format, badge tone and width. Values whose key is not in the schema are ignored."
+    },
+    {
+      "name": "data",
+      "type": "[String: MonarchAiJSON]",
+      "default": "required",
+      "description": "The values by key, usually parsed from the model's structured output. Treated as untrusted."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "A title under the AI answer label, such as Interview brief."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchAiStructuredAnswerLayout",
+      "default": ".list",
+      "description": ".list: one field per row, the label beside a short value and above a long one. .grid: each field as a small card, two to a row, one to a row at accessibility text sizes; wide fields span the row."
+    },
+    {
+      "name": "isStreaming",
+      "type": "Bool",
+      "default": "false",
+      "description": "The answer is still arriving: missing fields show placeholders read as Still generating."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiStructuredAnswerLabels",
+      "default": "MonarchAiStructuredAnswerLabels()",
+      "description": "Replaces AI answer, Still generating, Not provided and Response complete."
+    },
+    {
+      "name": "onOpenLink",
+      "type": "(@MainActor (URL) -> Void)?",
+      "default": "nil",
+      "description": "Opens links of Markdown fields in the app."
+    },
+    {
+      "name": "actions",
+      "type": "@ViewBuilder () -> Actions",
+      "default": "none",
+      "description": "Views after the fields, such as a copy button or feedback buttons; they wrap onto more lines when they do not fit."
+    },
+    {
+      "name": "MonarchAiStructuredField.type",
+      "type": "MonarchAiStructuredFieldType",
+      "default": ".text",
+      "description": "text: plain text. list: an array as a bulleted list. number: written with format in the reader's locale. badge: one MonarchBadge per value. markdown: rendered by MonarchAiMarkdown."
+    },
+    {
+      "name": "MonarchAiStructuredField.format",
+      "type": "MonarchMetricFormat",
+      "default": ".number",
+      "description": "How a number field is written: a number, a percentage of a ratio or a currency, as MonarchMetric writes it."
+    },
+    {
+      "name": "MonarchAiStructuredField.tone / toneForValue",
+      "type": "MonarchTone / (@Sendable (String) -> MonarchTone)?",
+      "default": ".neutral / nil",
+      "description": "The tone of a badge field's badges, fixed or from each value."
+    },
+    {
+      "name": "MonarchAiStructuredField.isWide",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Spans the full width; nil makes list and markdown fields wide."
+    }
+  ],
+  "states": [
+    {
+      "name": "complete",
+      "description": "Every field shows its value; a field without one shows a dash read as Not provided."
+    },
+    {
+      "name": "streaming",
+      "description": "Fields that have not arrived show a static placeholder bar read as Still generating, so the layout does not jump as they arrive."
+    },
+    {
+      "name": "streaming ended",
+      "description": "Response complete. is announced once."
+    }
+  ],
+  "appearance": "A card on the surface role with the default border and a large radius. The AI answer label is MonarchAiGeneratedBadge in the AI roles; the title is strong body text. Labels are muted captions, values default body text, empty values a dash in the subtle role, bullets muted. In the grid layout each field is a card on the subtle background with a subtle border. Every role follows light, dark and both high-contrast themes.",
+  "platformNotes": "The web builds on DescriptionList; iOS uses LabeledContent with MonarchLabeledContentStyle, the iOS description list. The web's Intl.NumberFormat options become MonarchMetricFormat (number, percent, currency), the format MonarchMetric uses; numeric text such as 1,200 is read as a number and text ending in % stays as written. The web's grid layout uses responsive auto columns; on iPhone it is a SwiftUI Grid of two columns, one at accessibility text sizes. The web's shimmer placeholder is a static redacted placeholder here, so there is nothing to stop for Reduce Motion. The web's headingLevel and locale props are not offered: VoiceOver gives the title the header trait, and the locale comes from the environment. Values are MonarchAiJSON, the conversation model's JSON type. Android has not covered this entry yet.",
+  "accessibility": [
+    "The AI answer label and the title are one element with the header trait, so the provenance is spoken with the title.",
+    "Each field is one element read as its label and then its value; list and badge items are read separated by commas.",
+    "A field still to come is read as Still generating, and an empty one as Not provided, not as a dash.",
+    "A Markdown field keeps its own elements, so its headings and links stay reachable.",
+    "Response complete. is announced once when streaming ends, never per field.",
+    "Badges carry their value as text, so their tone is never the only signal."
+  ],
+  "edgeCases": [
+    "HTML in a value is shown as text; Markdown fields go through MonarchAiMarkdown, which never renders HTML.",
+    "Empty text, null and empty arrays count as missing; a single value in a list field is a one-item list.",
+    "Objects and arrays in a text field are shown as compact JSON.",
+    "An odd number of narrow fields in the grid leaves the last row half filled.",
+    "Long values wrap; nothing scrolls sideways."
+  ],
+  "tests": [
+    "MonarchAiStructuredAnswerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Interview brief",
+      "fixture": "ai-structured-answer",
+      "webExample": "Interview brief",
+      "template": "MonarchAiStructuredAnswer(\n    [\n        MonarchAiStructuredField({{schema.0.key}}, label: {{schema.0.label}}, type: {{schema.0.type|case}}),\n        MonarchAiStructuredField({{schema.1.key}}, label: {{schema.1.label}}, type: {{schema.1.type|case}}),\n        MonarchAiStructuredField({{schema.2.key}}, label: {{schema.2.label}}, type: {{schema.2.type|case}}, tone: {{schema.2.tone|tone}}),\n        MonarchAiStructuredField({{schema.3.key}}, label: {{schema.3.label}}, type: {{schema.3.type|case}}),\n        MonarchAiStructuredField({{schema.4.key}}, label: {{schema.4.label}}, type: {{schema.4.type|case}}),\n        MonarchAiStructuredField({{schema.5.key}}, label: {{schema.5.label}}, type: {{schema.5.type|case}}),\n        MonarchAiStructuredField({{schema.6.key}}, label: {{schema.6.label}}, type: {{schema.6.type|case}}),\n    ],\n    data: [\n        {{schema.0.key}}: {{brief.candidate}},\n        {{schema.1.key}}: {{brief.role}},\n        {{schema.2.key}}: {{brief.stage}},\n        {{schema.3.key}}: {{brief.score}},\n        {{schema.4.key}}: [{{brief.strengths.0}}, {{brief.strengths.1}}],\n        {{schema.5.key}}: [{{brief.risks.0}}],\n        {{schema.6.key}}: {{brief.summary}},\n    ],\n    title: {{title}}\n)",
+      "code": "MonarchAiStructuredAnswer(\n    [\n        MonarchAiStructuredField(\"candidate\", label: \"Candidate\", type: .text),\n        MonarchAiStructuredField(\"role\", label: \"Role\", type: .text),\n        MonarchAiStructuredField(\"stage\", label: \"Stage\", type: .badge, tone: .info),\n        MonarchAiStructuredField(\"score\", label: \"Overall score\", type: .number),\n        MonarchAiStructuredField(\"strengths\", label: \"Strengths\", type: .list),\n        MonarchAiStructuredField(\"risks\", label: \"Open questions\", type: .list),\n        MonarchAiStructuredField(\"summary\", label: \"Summary\", type: .markdown),\n    ],\n    data: [\n        \"candidate\": \"Alex Morgan\",\n        \"role\": \"Senior engineer\",\n        \"stage\": \"Final interview\",\n        \"score\": 4.2,\n        \"strengths\": [\"Clear system design reasoning\", \"Strong written communication\"],\n        \"risks\": [\"Limited on-call experience\"],\n        \"summary\": \"Interviewers agree on **technical depth**. Confirm availability for the start date.\",\n    ],\n    title: \"Interview brief\"\n)"
+    },
+    {
+      "title": "Grid layout with tones by value and an action",
+      "setup": "@State private var copied = false",
+      "code": "MonarchAiStructuredAnswer(\n    [\n        MonarchAiStructuredField(\n            \"health\",\n            label: \"Health\",\n            type: .badge,\n            toneForValue: { $0 == \"At risk\" ? .warning : .success }\n        ),\n        MonarchAiStructuredField(\"usage\", label: \"Seat usage\", type: .number, format: .percent),\n        MonarchAiStructuredField(\"renewal\", label: \"Renewal\"),\n    ],\n    data: [\"health\": \"At risk\", \"usage\": 0.62],\n    title: \"Account health\",\n    layout: .grid,\n    isStreaming: true\n) {\n    MonarchButton(copied ? \"Copied\" : \"Copy\", variant: .ghost, size: .sm) { copied = true }\n}"
+    }
+  ],
+  "webEquivalent": "AiStructuredAnswer",
+  "dependsOn": [
+    "ai-markdown",
+    "description-list",
+    "badge",
+    "ai-generated-badge",
+    "inline",
+    "ai-conversation",
+    "metric"
+  ],
+  "icons": {
+    "ai": "BotGlyph"
+  }
+}

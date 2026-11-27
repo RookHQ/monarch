@@ -1,0 +1,154 @@
+{
+  "id": "period-selector",
+  "name": "MonarchPeriodSelector",
+  "title": "PeriodSelector",
+  "family": "data-display",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Picker with .pickerStyle(.segmented), inside ViewThatFits(in: .horizontal) with a Picker with .pickerStyle(.menu) fallback; MonarchDateRangePicker (two DatePicker rows) for the custom period; Date.IntervalFormatStyle for the resolved dates",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Picks the period a dashboard or report covers, from presets such as today, the last 7 or 30 days and this quarter, or a custom date range, and gives the app the resolved first and last day.",
+  "whenToUse": "When a dashboard, report or chart can be scoped to a period and every app should name and compute periods the same way.",
+  "whenNotToUse": "For a single date, use DatePicker. For any range without presets, use MonarchDateRangePicker directly.",
+  "api": [
+    "init(_ label: String? = nil, selection: Binding<MonarchPeriod>, presets: [MonarchPeriodPreset] = [.today, .last7Days, .last30Days, .thisQuarter, .custom], variant: MonarchPeriodSelectorVariant = .segmented, showsRange: Bool = false, today: Date = Date(), minimumDate: Date? = nil, maximumDate: Date? = nil, maximumDays: Int? = nil, labels: MonarchPeriodSelectorLabels = MonarchPeriodSelectorLabels())",
+    "struct MonarchPeriod { init(_ preset: MonarchPeriodPreset, range: ClosedRange<Date>? = nil); var preset: MonarchPeriodPreset; var range: ClosedRange<Date>?; func resolved(today: Date, calendar: Calendar) -> ClosedRange<Date>? }",
+    "enum MonarchPeriodPreset: String { case today, yesterday, last7Days = \"7d\", last14Days = \"14d\", last30Days = \"30d\", last90Days = \"90d\", last180Days = \"180d\", last365Days = \"365d\", thisWeek = \"this-week\", thisMonth = \"this-month\", lastMonth = \"last-month\", thisQuarter = \"this-quarter\", lastQuarter = \"last-quarter\", thisYear = \"this-year\", custom }",
+    "enum MonarchPeriodSelectorVariant { case segmented, menu }",
+    "MonarchPeriodSelectorLabels.init(presets: [MonarchPeriodPreset: String] = [:], customRange: String? = nil, dateRange: MonarchDateRangePickerLabels = MonarchDateRangePickerLabels())"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "nil",
+      "description": "The name of the control, read by VoiceOver. Built in: \"Period\"."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<MonarchPeriod>",
+      "default": "required",
+      "description": "The chosen preset, and the days of a custom period."
+    },
+    {
+      "name": "presets",
+      "type": "[MonarchPeriodPreset]",
+      "default": "[.today, .last7Days, .last30Days, .thisQuarter, .custom]",
+      "description": "The presets offered, in order."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchPeriodSelectorVariant",
+      "default": ".segmented",
+      "description": "Segments, which become a menu when they do not fit or at the accessibility text sizes, or a pop-up menu."
+    },
+    {
+      "name": "showsRange",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the resolved dates under the control, such as \"Oct 9 – Nov 7, 2026\"."
+    },
+    {
+      "name": "today",
+      "type": "Date",
+      "default": "Date()",
+      "description": "The day presets count from. Pass the workspace's day to match the server."
+    },
+    {
+      "name": "minimumDate",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The earliest day a custom period can start."
+    },
+    {
+      "name": "maximumDate",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The latest day a custom period can end. By default today."
+    },
+    {
+      "name": "maximumDays",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The longest custom period in days, such as 366 for reports."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchPeriodSelectorLabels",
+      "default": "MonarchPeriodSelectorLabels()",
+      "description": "Preset names merged per preset, the custom range label, and the date range picker's strings."
+    }
+  ],
+  "states": [
+    {
+      "name": "preset",
+      "description": "The chosen preset is the selected segment or the menu's title; with showsRange its first and last day are written under it."
+    },
+    {
+      "name": "custom",
+      "description": "A MonarchDateRangePicker labelled \"Custom period\" appears under the presets, starting from the dates shown before; its end is limited to maximumDate (today by default) and its length to maximumDays."
+    },
+    {
+      "name": "custom without dates",
+      "description": "With no range yet, the picker shows its Choose dates button and resolved(today:calendar:) returns nil."
+    },
+    {
+      "name": "menu",
+      "description": "The menu variant, and the segmented variant when its segments do not fit or at the accessibility text sizes, is a system pop-up button showing the chosen preset."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true) the picker and the date pickers are the system's disabled controls."
+    }
+  ],
+  "appearance": "The system segmented control or pop-up button in the app's tint, the custom range in MonarchDateRangePicker's look, and the resolved dates in the caption style with the muted text role. The controls follow the system's light, dark and increased-contrast appearance.",
+  "platformNotes": "iOS uses the system segmented control and pop-up menu instead of the web's SegmentedControl and Select; segments that do not fit become the menu instead of scrolling sideways as on the web, because a segmented control does not scroll and does not grow with Dynamic Type. The web's size (sm, md) is not offered: the system controls have one height that follows Dynamic Type. The value is a MonarchPeriod holding Date values, and resolved(today:calendar:) plays the web's resolvePeriod: rolling presets end today and count today, this week starts on the calendar's first weekday (the web's weekStartsOn), and dates are the first moment of each day in the calendar's time zone. The raw values of MonarchPeriodPreset are the web's preset names. The binding replaces the web's onValueChange; read the resolved dates in onChange. Android has no PeriodSelector yet.",
+  "accessibility": [
+    "The picker is named by label (\"Period\") and keeps the system's segmented control or pop-up button role, with the chosen preset as its value.",
+    "The custom range is a MonarchDateRangePicker named \"Custom period\": its pickers read \"Custom period, Start\" and \"Custom period, End\".",
+    "The resolved dates are static text written in the locale.",
+    "Segments become a menu at the accessibility text sizes, so every preset name stays readable."
+  ],
+  "edgeCases": [
+    "Choosing the preset already chosen changes nothing.",
+    "Choosing Custom starts from the dates already shown, so nothing jumps; the custom dates are kept while another preset is chosen and come back with Custom.",
+    "A custom range is never cleared from the selector; it has no clear button.",
+    "Last month and last quarter are whole months, including February in a leap year and the last quarter of the previous year in January.",
+    "Presets resolve against today and the environment's calendar; pass both to match a server in another time zone."
+  ],
+  "tests": [
+    "MonarchPeriodSelectorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Report periods with a custom range",
+      "fixture": "period-selector",
+      "webExample": "Report periods with a custom range",
+      "template": "VStack(alignment: .leading, spacing: 8) {\n    MonarchPeriodSelector(\n        selection: $period,\n        presets: [{{presets.0}}, {{presets.1}}, {{presets.2}}, {{presets.3}}, {{presets.4}}, {{presets.5}}]\n            .compactMap { MonarchPeriodPreset(rawValue: $0) },\n        today: {{today|date}},\n        maximumDays: {{maxDays}}\n    )\n    Text(verbatim: query)\n        .monarchTextStyle(.caption)\n}",
+      "setupTemplate": "@State private var period = MonarchPeriod(MonarchPeriodPreset(rawValue: {{selected}}) ?? .last30Days)\n\n/// The range the period resolves to, written as the web example's query line does.\nprivate var query: String {\n    var calendar = Calendar(identifier: .gregorian)\n    calendar.timeZone = TimeZone(identifier: \"UTC\") ?? .gmt\n    guard let range = period.resolved(today: {{today|date}}, calendar: calendar) else { return \"\" }\n    let format = Date.ISO8601FormatStyle(timeZone: calendar.timeZone).year().month().day()\n    return \"Query: \\(range.lowerBound.formatted(format)) – \\(range.upperBound.formatted(format))\"\n}",
+      "setup": "@State private var period = MonarchPeriod(MonarchPeriodPreset(rawValue: \"30d\") ?? .last30Days)\n\n/// The range the period resolves to, written as the web example's query line does.\nprivate var query: String {\n    var calendar = Calendar(identifier: .gregorian)\n    calendar.timeZone = TimeZone(identifier: \"UTC\") ?? .gmt\n    guard let range = period.resolved(today: Date(timeIntervalSince1970: 1_794_009_600), calendar: calendar) else { return \"\" }\n    let format = Date.ISO8601FormatStyle(timeZone: calendar.timeZone).year().month().day()\n    return \"Query: \\(range.lowerBound.formatted(format)) – \\(range.upperBound.formatted(format))\"\n}",
+      "code": "VStack(alignment: .leading, spacing: 8) {\n    MonarchPeriodSelector(\n        selection: $period,\n        presets: [\"7d\", \"30d\", \"90d\", \"this-month\", \"last-month\", \"custom\"]\n            .compactMap { MonarchPeriodPreset(rawValue: $0) },\n        today: Date(timeIntervalSince1970: 1_794_009_600),\n        maximumDays: 366\n    )\n    Text(verbatim: query)\n        .monarchTextStyle(.caption)\n}"
+    },
+    {
+      "title": "Report presets in a menu, with a custom range of at most 366 days",
+      "setup": "@State private var period = MonarchPeriod(.last90Days)",
+      "code": "MonarchPeriodSelector(\n    \"Report period\",\n    selection: $period,\n    presets: [.last7Days, .last30Days, .last90Days, .thisMonth, .lastMonth, .custom],\n    variant: .menu,\n    maximumDays: 366\n)"
+    },
+    {
+      "title": "Reading the dates for a query",
+      "setup": "@State private var period = MonarchPeriod(.thisQuarter)\n@State private var query = \"\"\n@Environment(\\.calendar) private var calendar",
+      "code": "VStack(alignment: .leading) {\n    MonarchPeriodSelector(selection: $period)\n    Text(query)\n}\n.onChange(of: period, initial: true) { _, period in\n    if let days = period.resolved(today: .now, calendar: calendar) {\n        query = \"\\(days.lowerBound.formatted(date: .numeric, time: .omitted)) to \\(days.upperBound.formatted(date: .numeric, time: .omitted))\"\n    }\n}"
+    }
+  ],
+  "webEquivalent": "PeriodSelector",
+  "dependsOn": [
+    "segmented-control",
+    "date-range-picker",
+    "dropdown-menu"
+  ]
+}

@@ -1,14 +1,23 @@
 import { useState } from 'react';
 import { Field, FieldDescription, FieldLabel, Slider } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './slider.fixture.json';
 
 function VolumeDemo() {
-  const [volume, setVolume] = useState(60);
-  const [saved, setSaved] = useState(60);
+  const [volume, setVolume] = useState(fixture.data.value);
+  const [saved, setSaved] = useState(fixture.data.value);
   return (
     <Field style={{ width: '100%', maxWidth: 360 }}>
-      <FieldLabel>Notification volume</FieldLabel>
-      <Slider value={volume} onValueChange={setVolume} onValueCommit={setSaved} showValue />
+      <FieldLabel>{fixture.data.label}</FieldLabel>
+      <Slider
+        value={volume}
+        min={fixture.data.min}
+        max={fixture.data.max}
+        onValueChange={setVolume}
+        onValueCommit={setSaved}
+        showValue
+      />
       <FieldDescription>Saved at {saved}.</FieldDescription>
     </Field>
   );

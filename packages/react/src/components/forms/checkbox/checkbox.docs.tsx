@@ -1,5 +1,13 @@
 import { Checkbox } from '@rookcom/monarch-react';
 import { incomplete, type ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './checkbox.fixture.json';
+
+const [updates, selectAll, unavailable] = fixture.data.items as unknown as readonly [
+  { label: string; description: string; checked: boolean },
+  { label: string; indeterminate: boolean },
+  { label: string; disabled: boolean },
+];
 
 export default {
   id: 'checkbox',
@@ -86,9 +94,16 @@ export default {
           stack: true,
           render: () => (
             <>
-              <Checkbox label="Email me updates" description="About once a month." defaultChecked />
-              <Checkbox label="Select all" checked="indeterminate" />
-              <Checkbox label="Unavailable" disabled />
+              <Checkbox
+                label={updates.label}
+                description={updates.description}
+                defaultChecked={updates.checked}
+              />
+              <Checkbox
+                label={selectAll.label}
+                checked={selectAll.indeterminate ? 'indeterminate' : false}
+              />
+              <Checkbox label={unavailable.label} disabled={unavailable.disabled} />
             </>
           ),
         },

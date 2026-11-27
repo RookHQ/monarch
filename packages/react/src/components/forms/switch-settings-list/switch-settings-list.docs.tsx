@@ -1,37 +1,46 @@
 import { useState } from 'react';
 import { SwitchSettingsItem, SwitchSettingsList } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './switch-settings-list.fixture.json';
+
+const items = fixture.data.items as unknown as readonly [
+  { label: string; description: string; checked: boolean },
+  { label: string; description: string; checked: boolean },
+  { label: string; checked: boolean },
+];
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
 function NotificationsDemo() {
-  const [prefs, setPrefs] = useState({ alerts: true, devices: true, digest: false });
+  const [prefs, setPrefs] = useState({
+    alerts: items[0].checked,
+    devices: items[1].checked,
+    digest: items[2].checked,
+  });
   const save = (key: keyof typeof prefs) => async (next: boolean) => {
-    await wait(700);
+    await wait(fixture.data.saveMillis);
     setPrefs((p) => ({ ...p, [key]: next }));
   };
   return (
     <div style={{ width: '100%', maxWidth: 560 }}>
-      <SwitchSettingsList
-        title="Security notifications"
-        description="Emails about activity on your account."
-      >
+      <SwitchSettingsList title={fixture.data.title} description={fixture.data.description}>
         <SwitchSettingsItem
-          label="Security alerts"
-          description="Password changes and new recovery methods."
+          label={items[0].label}
+          description={items[0].description}
           checked={prefs.alerts}
           onCheckedChange={save('alerts')}
         />
         <SwitchSettingsItem
-          label="New device sign-in"
-          description="When your account is used on a device for the first time."
+          label={items[1].label}
+          description={items[1].description}
           checked={prefs.devices}
           onCheckedChange={save('devices')}
         />
         <SwitchSettingsItem
-          label="Weekly summary"
+          label={items[2].label}
           checked={prefs.digest}
           onCheckedChange={save('digest')}
         />

@@ -1,0 +1,190 @@
+{
+  "id": "ai-shared-session",
+  "name": "MonarchAiSharedSession",
+  "title": "AiSharedSession",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack with ViewThatFits; MonarchAvatarGroup of MonarchAvatar and MonarchAiAgentAvatar in a Button that presents a .sheet with a List; MonarchButton; Toggle with MonarchToggleButtonStyle; ListFormatter; AccessibilityNotification.Announcement",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The presence and turn-taking bar of an AI conversation shared by several people and agents: who is here, who is typing, whose request is being answered, what waits, and whether you may send.",
+  "whenToUse": "Above a shared AI conversation where several people send requests to the same assistant and take turns.",
+  "whenNotToUse": "For presence alone in a document or page use MonarchPresenceAvatars. For agents working on one task use MonarchAiMultiAgentRoster.",
+  "api": [
+    "init(_ participants: [MonarchAiSharedSessionParticipant], answering: MonarchAiSharedSessionAnswering? = nil, queue: [MonarchAiSharedSessionRequest] = [], maxVisible: Int = 4, following: Binding<Set<String>>? = nil, isQueueExpanded: Binding<Bool>? = nil, isAccessRequested: Bool = false, announcesChanges: Bool = true, labels: MonarchAiSharedSessionLabels = MonarchAiSharedSessionLabels(), onWithdraw: (@MainActor (String) -> Void)? = nil, onReorder: (@MainActor ([String], MonarchAiSharedSessionMove) -> Void)? = nil, onRemove: (@MainActor (String) -> Void)? = nil, onInvite: (@MainActor () -> Void)? = nil, onRequestAccess: (@MainActor () -> Void)? = nil)",
+    "struct MonarchAiSharedSessionParticipant: Identifiable { var id, name: String; var avatarURL: URL?; var kind: MonarchAiSharedSessionKind; var role: MonarchAiSharedSessionRole; var presence: MonarchAiSharedSessionPresence; var activity: MonarchAiSharedSessionActivity?; var isYou: Bool }",
+    "enum MonarchAiSharedSessionKind: String { case person, agent }",
+    "enum MonarchAiSharedSessionRole: String { case owner, editor, viewer }",
+    "enum MonarchAiSharedSessionPresence: String { case active, idle, away }",
+    "enum MonarchAiSharedSessionActivity: String { case typing, speaking, reviewing }",
+    "struct MonarchAiSharedSessionAnswering { var participantID, forParticipantID: String; var label: String? }",
+    "struct MonarchAiSharedSessionRequest: Identifiable { var id, participantID, preview: String }",
+    "struct MonarchAiSharedSessionMove { var id: String; var from, to: Int }",
+    "struct MonarchAiSharedSessionLabels { var label, listTitle, people, agents, agentKind, assistant, someone, quiet, queueTitle, withdraw, remove, moveUp, moveDown, invite, follow, viewerNotice, requestAccess, accessRequested, done: String?; var here: (@Sendable (Int, Int) -> String)?; var showAll, several, queueCount, queueToggle: (@Sendable (Int) -> String)?; var nameWithYou, followLabel: (@Sendable (String) -> String)?; var role, presence, activity: per-enum (@Sendable (…) -> String)?; var activityLine: (@Sendable (MonarchAiSharedSessionActivity, String, Int) -> String)?; var answering: (@Sendable (String, String, String?) -> String)?; var answeringYou: (@Sendable (String, String?) -> String)?; var requestAction, moved: three-argument closures }"
+  ],
+  "options": [
+    {
+      "name": "participants",
+      "type": "[MonarchAiSharedSessionParticipant]",
+      "default": "required",
+      "description": "Everyone in the session, people and agents, in display order. Mark one person isYou; their role decides what they can do."
+    },
+    {
+      "name": "answering",
+      "type": "MonarchAiSharedSessionAnswering?",
+      "default": "nil",
+      "description": "The answer in progress: which agent, whose request and an optional short label."
+    },
+    {
+      "name": "queue",
+      "type": "[MonarchAiSharedSessionRequest]",
+      "default": "[]",
+      "description": "Requests waiting for their turn, first in line first."
+    },
+    {
+      "name": "maxVisible",
+      "type": "Int",
+      "default": "4",
+      "description": "The avatars shown before \"+N\". At least one."
+    },
+    {
+      "name": "following",
+      "type": "Binding<Set<String>>?",
+      "default": "nil",
+      "description": "The ids of the people you follow. Shows a Follow toggle beside every other person in the list."
+    },
+    {
+      "name": "isQueueExpanded",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Whether the queue is shown, when the app owns it. nil lets the Queue button own it."
+    },
+    {
+      "name": "isAccessRequested",
+      "type": "Bool",
+      "default": "false",
+      "description": "Replaces a viewer's Request access button with \"Access requested\"."
+    },
+    {
+      "name": "announcesChanges",
+      "type": "Bool",
+      "default": "true",
+      "description": "Announces status changes and queue moves to VoiceOver."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiSharedSessionLabels",
+      "default": "MonarchAiSharedSessionLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onWithdraw",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Shows Withdraw on your own requests."
+    },
+    {
+      "name": "onReorder",
+      "type": "(@MainActor ([String], MonarchAiSharedSessionMove) -> Void)?",
+      "default": "nil",
+      "description": "Shows Move up and Move down to an owner; receives the request ids in their new order and the move."
+    },
+    {
+      "name": "onRemove",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Shows Remove on other people's requests to an owner."
+    },
+    {
+      "name": "onInvite",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows an Invite button; the product opens its own invite flow."
+    },
+    {
+      "name": "onRequestAccess",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows Request access in a viewer's notice."
+    }
+  ],
+  "states": [
+    {
+      "name": "quiet",
+      "description": "\"No requests in progress\" in subtle text."
+    },
+    {
+      "name": "answering",
+      "description": "The answering agent's avatar turns (still with Reduce Motion) and the status starts with whose request it answers, \"your request\" when it is yours."
+    },
+    {
+      "name": "activity",
+      "description": "Other people typing, speaking or reviewing are named, two at most, else counted."
+    },
+    {
+      "name": "queue",
+      "description": "\"Queue (2)\" shows or hides the waiting requests; your own requests are tinted with the subtle AI fill."
+    },
+    {
+      "name": "owner",
+      "description": "Move up, Move down and Remove on requests when the closures are given; the ends' moves are disabled."
+    },
+    {
+      "name": "viewer",
+      "description": "A notice \"You can watch but not send\" with Request access, or \"Access requested\"."
+    },
+    {
+      "name": "empty",
+      "description": "No avatars; only the status line."
+    }
+  ],
+  "appearance": "A plain bar: overlapping avatars with presence dots, the status line in muted text, ghost and secondary small buttons, the viewer notice and requests on the subtle background. Agents use the square AI agent avatar. All roles come from the theme.",
+  "platformNotes": "The web opens the participant list in a popover; iOS presents it in a sheet, and the whole stack is one button because single overlapping avatars are too small to tap. The web throttles announcements with announceInterval; iOS announces each change of the announced clauses, and typing and speaking are never announced, so there is no interval. The open state of the participant list is not controllable. Follows are a Binding<Set<String>> instead of following, defaultFollowing and onFollowChange. Presence is drawn with the avatar's presence dot (active online, idle away, away offline) and always written as a word in the list. The queue toggle has the selected trait while open, because SwiftUI has no expanded trait. The parity map listed presence-avatars; its stack is MonarchAvatarGroup, which this bar uses directly because it mixes people and agents.",
+  "accessibility": [
+    "The bar is a container named \"Shared session\".",
+    "The avatar stack is one button named \"3 people and 1 agent here\"; its value names each visible participant with role or \"AI agent\", presence and activity, and its hint is \"Shows all 5 participants.\"",
+    "In the list each participant is one element with name, \"(you)\", role, presence and what they are doing; Follow toggles are named \"Follow Sam Lee\".",
+    "Changes of who is being answered, of who is reviewing and of the queue length are announced; typing and speaking are not, and the first status is not.",
+    "Queue buttons are named with the request, for example \"Move up: request 2, from Sam Lee\", and a move is announced.",
+    "Presence is always a word as well as a dot; every button has a 44-point touch target and text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "An answering agent or requester that is not a participant reads as \"Assistant\" or \"Someone\".",
+    "Your own activity is left out of the status line.",
+    "A \"+1\" tile is never shown: with one participant too many all are shown.",
+    "Without a person marked isYou there is no role, so no owner actions and no viewer notice.",
+    "Request previews are cut to one line."
+  ],
+  "tests": [
+    "MonarchAiSharedSessionTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Owner: answering, typing and a queue to manage",
+      "fixture": "ai-shared-session",
+      "webExample": "Owner: answering, typing and a queue to manage",
+      "template": "MonarchAiSharedSession(\n    [\n        MonarchAiSharedSessionParticipant(id: {{participants.0.id}}, name: {{participants.0.name}}, kind: {{participants.0.kind|case}}, role: {{participants.0.role|case}}, presence: {{participants.0.presence|case}}, isYou: {{participants.0.you}}),\n        MonarchAiSharedSessionParticipant(id: {{participants.1.id}}, name: {{participants.1.name}}, kind: {{participants.1.kind|case}}, role: {{participants.1.role|case}}, presence: {{participants.1.presence|case}}, activity: {{participants.1.activity|case}}),\n        MonarchAiSharedSessionParticipant(id: {{participants.2.id}}, name: {{participants.2.name}}, kind: {{participants.2.kind|case}}, role: {{participants.2.role|case}}, presence: {{participants.2.presence|case}}),\n        MonarchAiSharedSessionParticipant(id: {{participants.3.id}}, name: {{participants.3.name}}, kind: {{participants.3.kind|case}}, role: {{participants.3.role|case}}, presence: {{participants.3.presence|case}}),\n        MonarchAiSharedSessionParticipant(id: {{participants.4.id}}, name: {{participants.4.name}}, kind: {{participants.4.kind|case}}, presence: {{participants.4.presence|case}}),\n        MonarchAiSharedSessionParticipant(id: {{participants.5.id}}, name: {{participants.5.name}}, kind: {{participants.5.kind|case}}, presence: {{participants.5.presence|case}}),\n    ],\n    answering: MonarchAiSharedSessionAnswering(participantID: {{answering.participantId}}, forParticipantID: {{answering.forParticipantId}}),\n    queue: [\n        MonarchAiSharedSessionRequest(id: {{queue.0.id}}, participantID: {{queue.0.participantId}}, preview: {{queue.0.preview}}),\n        MonarchAiSharedSessionRequest(id: {{queue.1.id}}, participantID: {{queue.1.participantId}}, preview: {{queue.1.preview}}),\n        MonarchAiSharedSessionRequest(id: {{queue.2.id}}, participantID: {{queue.2.participantId}}, preview: {{queue.2.preview}}),\n    ],\n    isQueueExpanded: $queueOpen,\n    onWithdraw: { _ in },\n    onReorder: { _, _ in },\n    onRemove: { _ in },\n    onInvite: {}\n)",
+      "setupTemplate": "@State private var queueOpen = true",
+      "setup": "@State private var queueOpen = true",
+      "code": "MonarchAiSharedSession(\n    [\n        MonarchAiSharedSessionParticipant(id: \"maya\", name: \"Maya Chen\", kind: .person, role: .owner, presence: .active, isYou: true),\n        MonarchAiSharedSessionParticipant(id: \"leo\", name: \"Leo Park\", kind: .person, role: .editor, presence: .active, activity: .typing),\n        MonarchAiSharedSessionParticipant(id: \"ana\", name: \"Ana Ruiz\", kind: .person, role: .viewer, presence: .away),\n        MonarchAiSharedSessionParticipant(id: \"sam\", name: \"Sam Okoro\", kind: .person, role: .editor, presence: .idle),\n        MonarchAiSharedSessionParticipant(id: \"assistant\", name: \"Assistant\", kind: .agent, presence: .active),\n        MonarchAiSharedSessionParticipant(id: \"research\", name: \"Research agent\", kind: .agent, presence: .idle),\n    ],\n    answering: MonarchAiSharedSessionAnswering(participantID: \"assistant\", forParticipantID: \"sam\"),\n    queue: [\n        MonarchAiSharedSessionRequest(id: \"r1\", participantID: \"leo\", preview: \"Compare the two drafts and list what changed\"),\n        MonarchAiSharedSessionRequest(id: \"r2\", participantID: \"maya\", preview: \"Summarise the meeting notes\"),\n        MonarchAiSharedSessionRequest(id: \"r3\", participantID: \"sam\", preview: \"List the open questions\"),\n    ],\n    isQueueExpanded: $queueOpen,\n    onWithdraw: { _ in },\n    onReorder: { _, _ in },\n    onRemove: { _ in },\n    onInvite: {}\n)"
+    },
+    {
+      "title": "A viewer",
+      "code": "MonarchAiSharedSession(\n    [MonarchAiSharedSessionParticipant(id: \"alex\", name: \"Alex\", role: .viewer, isYou: true)],\n    onRequestAccess: {}\n)"
+    }
+  ],
+  "webEquivalent": "AiSharedSession",
+  "dependsOn": [
+    "avatar",
+    "ai-agent-avatar",
+    "button",
+    "toggle-button",
+    "sheet",
+    "inline"
+  ]
+}

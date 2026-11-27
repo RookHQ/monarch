@@ -2,21 +2,19 @@ import { useState } from 'react';
 import { Badge } from '@rookcom/monarch-react';
 import { MemberList, MemberRow } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './member-row.fixture.json';
 
-const ROLES = [
-  { value: 'owner', label: 'Owner' },
-  { value: 'admin', label: 'Admin' },
-  { value: 'member', label: 'Member' },
-];
+const ROLES = fixture.data.roles;
 
 const wait = () => new Promise((r) => setTimeout(r, 700));
 
 function TeamDemo() {
-  const [people, setPeople] = useState([
-    { id: '1', name: 'Priya Raman', email: 'priya@example.com', role: 'owner', self: true },
-    { id: '2', name: 'Jonas Weber', email: 'jonas@example.com', role: 'admin' },
-    { id: '3', name: 'Amara Okafor', email: 'amara@example.com', role: 'member' },
-  ]);
+  const [people, setPeople] = useState(
+    (fixture.data.people as { name: string; email: string; role: string; self?: boolean }[]).map(
+      (p) => ({ ...p, id: p.email }),
+    ),
+  );
   return (
     <MemberList aria-label="Workspace members" style={{ width: '100%' }}>
       {people.map((p) => (

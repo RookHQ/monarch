@@ -1,0 +1,187 @@
+{
+  "id": "pending-invites-list",
+  "name": "MonarchPendingInvitesList",
+  "title": "PendingInvitesList",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchSectionCard holding an androidx.compose.foundation.layout.Column of MonarchMemberRow (a Material 3 ListItem with MonarchButton actions and an androidx.compose.material3.AlertDialog confirmation) separated by Material 3 HorizontalDivider, with MonarchCopyButton; android.icu.text.RelativeDateTimeFormatter for the times",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Invitations that have not been accepted yet: the email, the role, who sent it, when it was sent and when it expires, with Resend, Copy link and Revoke behind a confirmation.",
+  "whenToUse": "On a workspace or team members screen, under the member list, so admins can see who has not joined yet and resend, share or withdraw the invitation.",
+  "whenNotToUse": "For people who have joined, use MonarchMemberRow rows in the member list. For sending a new invitation, use a form with an email field.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchPendingInvitesList(invites: List<MonarchPendingInvite>, modifier: Modifier = Modifier, title: String? = null, description: String? = null, state: MonarchSectionCardState = MonarchSectionCardState.Ready, retrying: Boolean = false, now: Long? = null, locale: Locale? = null, onRetry: (() -> Unit)? = null, onResend: (suspend (id: String) -> Unit)? = null, onRevoke: (suspend (id: String) -> Unit)? = null, labels: MonarchPendingInvitesListLabels = MonarchPendingInvitesListLabels())",
+    "data class MonarchPendingInvite(id: String, email: String, role: String? = null, invitedBy: String? = null, sentAt: Long? = null, expiresAt: Long? = null, expired: Boolean? = null, link: String? = null)",
+    "class MonarchPendingInvitesListLabels(title: String? = null, listLabel: String? = null, invitedBy: ((name: String) -> String)? = null, sent: ((relativeTime: String) -> String)? = null, expires: ((relativeTime: String) -> String)? = null, expired: String? = null, copyLink: String? = null, copyTarget: ((email: String) -> String)? = null, revoked: ((email: String) -> String)? = null, loading: String? = null, emptyTitle: String? = null, errorTitle: String? = null, row: MonarchMemberRowLabels = MonarchMemberRowLabels())"
+  ],
+  "options": [
+    {
+      "name": "invites",
+      "type": "List<MonarchPendingInvite>",
+      "default": "required",
+      "description": "The invitations, shown in the order given: id, email, role, sender, sent and expiry times (epoch milliseconds), whether it has expired and the link to copy."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the list."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "null",
+      "description": "Replaces the built-in title \"Pending invitations\"."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "null",
+      "description": "A line under the title."
+    },
+    {
+      "name": "state",
+      "type": "MonarchSectionCardState",
+      "default": "MonarchSectionCardState.Ready",
+      "description": "Ready, loading, empty or error, as in MonarchSectionCard. A ready empty list shows the empty state."
+    },
+    {
+      "name": "retrying",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows the retry button busy in the error state."
+    },
+    {
+      "name": "now",
+      "type": "Long?",
+      "default": "null",
+      "description": "The reference time for relative times and expiry, in epoch milliseconds. null follows the clock, refreshed every minute."
+    },
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "null",
+      "description": "The locale of the relative times. null uses the first locale of the configuration."
+    },
+    {
+      "name": "onRetry",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Retries loading. Shows a retry button in the error state."
+    },
+    {
+      "name": "onResend",
+      "type": "(suspend (id: String) -> Unit)?",
+      "default": "null",
+      "description": "Sends the invitation again, given its id. Without it rows have no Resend invite. Throwing shows the error in the row."
+    },
+    {
+      "name": "onRevoke",
+      "type": "(suspend (id: String) -> Unit)?",
+      "default": "null",
+      "description": "Revokes the invitation, given its id, after a confirmation. Without it rows have no Revoke. The app removes the invitation from invites on success; throwing shows the error in the row."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchPendingInvitesListLabels",
+      "default": "MonarchPendingInvitesListLabels()",
+      "description": "Replacements for every built-in string, including the member row strings in row."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "One member row per invitation, separated by dividers, each with an info Invited badge and the detail line \"Invited by Sam Rivera · Sent 2 days ago · Expires in 5 days\"."
+    },
+    {
+      "name": "expired",
+      "description": "The status badge reads Expired, the expiry is left out of the detail line and Copy link is hidden; Resend and Revoke stay."
+    },
+    {
+      "name": "resending",
+      "description": "The row's Resend invite button shows its spinner; on success the row shows and announces \"Invite sent again.\"."
+    },
+    {
+      "name": "revoke confirmation",
+      "description": "A Material 3 dialog titled \"Revoke the invite for <email>?\" with Revoke invite and Cancel."
+    },
+    {
+      "name": "revoking",
+      "description": "The row's revoke button shows progress until onRevoke returns; success is announced as \"Invitation to <email> revoked\"."
+    },
+    {
+      "name": "failed",
+      "description": "The row shows the error under the identity in the danger color and announces it."
+    },
+    {
+      "name": "loading",
+      "description": "The section card's skeleton rows, read as \"Loading invitations\"."
+    },
+    {
+      "name": "empty",
+      "description": "The section card's empty state, \"No pending invitations\"."
+    },
+    {
+      "name": "error",
+      "description": "The section card's error state, \"Couldn’t load invitations\", with Try again when onRetry is given."
+    }
+  ],
+  "appearance": "MonarchSectionCard's surface and border with the title in the heading style, rows without padding of their own separated by subtle dividers, each member row with its initials avatar, the email in the strong body style, the info Invited (or Expired) badge, the role and detail in muted caption text, and secondary and danger buttons. The same roles in dark and both high-contrast themes.",
+  "platformNotes": "A product pattern, experimental until a Rook app adopts it, built only from Monarch parts. Names and parameters follow iOS; isRetrying is retrying, isExpired is expired, and onResend and onRevoke are suspending functions, Compose's equivalent of async throws. Each invitation is a MonarchMemberRow in its invited status, which brings Resend invite, Revoke and its Material 3 confirmation dialog, progress and errors; the rows are a Column inside a MonarchSectionCard, not a lazy list, so the card can sit under the member list on a screen that scrolls. The web's async getInviteLink is the link field on each invitation, copied with MonarchCopyButton, which leaves the copy confirmation to the system on Android 13 and later. Because the member row runs the revoke after the dialog closes, the pending state and a failure show in the row instead of inside the dialog, as on iOS. The web's Resend \"Sent\" label for three seconds is the member row's \"Invite sent again.\" note. The Expired badge reuses the member row's invited badge, so it keeps the info tone; the word, not the color, says it has expired. The web's detail slot (for example an app access summary) and headingLevel are not offered. Relative times use android.icu.text.RelativeDateTimeFormatter in the given or configured locale.",
+  "accessibility": [
+    "The title is a heading (MonarchSectionCard).",
+    "The rows are a traversal group named \"Pending invitations\".",
+    "Each invitation is one TalkBack element read as the email, with Invited or Expired, the role and the detail line as its state, so expiry never depends on color.",
+    "The detail line is built by a tested pure function: \"Invited by Sam Rivera · Sent 2 days ago · Expires in 5 days\".",
+    "Resend invite, Copy link and Revoke are separate buttons named after the email: \"Resend invite, ana@example.com\", \"Copy link for ana@example.com\", \"Revoke invite for ana@example.com\", each with a 48dp touch target.",
+    "\"Invite sent again.\" and a failure are announced by the row; a revoke is announced as \"Invitation to ana@example.com revoked\" from a polite live region that stays when the row goes away."
+  ],
+  "edgeCases": [
+    "expired = null works the expiry out from expiresAt and now; an explicit false wins over a past expiresAt.",
+    "An invitation without a sender, times or role shows only its email and status.",
+    "A long email is shown in full on several lines at font scale 2.0.",
+    "A ready list with no invitations shows the empty state; loading and error ignore invites.",
+    "Times in the future read \"in 5 days\"; past ones \"2 days ago\"; less than a minute away reads \"now\"."
+  ],
+  "tests": [
+    "MonarchPendingInvitesListTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Resend, copy and revoke",
+      "fixture": "pending-invites-list",
+      "webExample": "Resend, copy and revoke",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchPendingInvitesList(\n    invites = invites,\n    now = now,\n    onResend = {\n        // Send the invitation with the id `it` again; throw to show the error.\n    },\n    onRevoke = { id ->\n        invites = invites.filter { it.id != id }\n    },\n)",
+      "setupTemplate": "val now = System.currentTimeMillis()\nval day = 86_400_000L\nvar invites by remember {\n    mutableStateOf(\n        listOf(\n            MonarchPendingInvite(\n                id = {{invites.0.id}},\n                email = {{invites.0.email}},\n                role = {{invites.0.role}},\n                invitedBy = {{invites.0.invitedBy}},\n                sentAt = now + ({{invites.0.sentDays}}) * day,\n                expiresAt = now + ({{invites.0.expiresDays}}) * day,\n                link = \"https://example.com/join/\" + {{invites.0.id}},\n            ),\n            MonarchPendingInvite(\n                id = {{invites.1.id}},\n                email = {{invites.1.email}},\n                role = {{invites.1.role}},\n                invitedBy = {{invites.1.invitedBy}},\n                sentAt = now + ({{invites.1.sentDays}}) * day,\n                expiresAt = now + ({{invites.1.expiresDays}}) * day,\n                link = \"https://example.com/join/\" + {{invites.1.id}},\n            ),\n        ),\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ],
+      "setup": "val now = System.currentTimeMillis()\nval day = 86_400_000L\nvar invites by remember {\n    mutableStateOf(\n        listOf(\n            MonarchPendingInvite(\n                id = \"inv-1\",\n                email = \"ana@example.com\",\n                role = \"Member\",\n                invitedBy = \"Sam Rivera\",\n                sentAt = now + (-2) * day,\n                expiresAt = now + (5) * day,\n                link = \"https://example.com/join/\" + \"inv-1\",\n            ),\n            MonarchPendingInvite(\n                id = \"inv-2\",\n                email = \"bo@example.com\",\n                role = \"Admin\",\n                invitedBy = \"Sam Rivera\",\n                sentAt = now + (-9) * day,\n                expiresAt = now + (-2) * day,\n                link = \"https://example.com/join/\" + \"inv-2\",\n            ),\n        ),\n    )\n}",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchPendingInvitesList(\n    invites = invites,\n    now = now,\n    onResend = {\n        // Send the invitation with the id `it` again; throw to show the error.\n    },\n    onRevoke = { id ->\n        invites = invites.filter { it.id != id }\n    },\n)"
+    },
+    {
+      "title": "Loading failed",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchPendingInvitesList(\n    invites = emptyList(),\n    state = MonarchSectionCardState.Error,\n    onRetry = {},\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ]
+    }
+  ],
+  "webEquivalent": "PendingInvitesList",
+  "dependsOn": [
+    "member-row",
+    "copy-button",
+    "button",
+    "section-card"
+  ],
+  "icons": {
+    "copyLink": "CopyGlyph"
+  }
+}

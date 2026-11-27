@@ -1,0 +1,186 @@
+{
+  "id": "kanban-board",
+  "name": "MonarchKanbanBoard",
+  "title": "KanbanBoard",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Horizontal ScrollView with scrollTargetLayout(), .scrollTargetBehavior(.viewAligned), containerRelativeFrame(.horizontal, count:span:spacing:) and scrollPosition(id:); a vertical ScrollView with LazyVStack per column; draggable(_:) cards with dropDestination(for: String.self, action:isTargeted:) on each card, the end of each column and each column tab; spring-loaded column tabs (springLoadingBehavior(.enabled)); a Menu per card with the other columns, Move up and Move down and the same moves as accessibilityActions; sensoryFeedback for pick-up, target changes and drops; AccessibilityNotification.Announcement",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A board of columns of cards where people move cards within and between columns by dragging, a Move menu or VoiceOver actions, with counts against work-in-progress limits.",
+  "whenToUse": "For work that moves through stages, such as To do, Doing and Done, or a sales pipeline.",
+  "whenNotToUse": "For planning work into sprints or releases with points and capacity, use MonarchBacklogPlanner. For ordering one list, use a List with onMove; for a grid of tiles, MonarchSortableGrid.",
+  "api": [
+    "init(columns: Binding<[MonarchKanbanColumn<Item>]>, itemLabel: @escaping (Item) -> String, canMove: ((_ item: Item, _ toColumnID: String, _ fromColumnID: String) -> Bool)? = nil, isWipLimitEnforced: Bool = false, isItemEnabled: ((Item) -> Bool)? = nil, isReadOnly: Bool = false, minimumColumnWidth: CGFloat? = nil, scrollPosition: Binding<String?>? = nil, labels: MonarchKanbanBoardLabels = MonarchKanbanBoardLabels(), onMove: (@MainActor (_ move: MonarchKanbanMove<Item.ID>, _ columns: [MonarchKanbanColumn<Item>]) async throws -> Void)? = nil, @ViewBuilder card: @escaping (Item, MonarchKanbanCardState) -> Card)",
+    "struct MonarchKanbanColumn<Item: Identifiable>: Identifiable { init(id: String, title: String, items: [Item], wipLimit: Int? = nil, emptyText: String? = nil, systemImage: String? = nil); func withItems(_ items: [Item]) -> MonarchKanbanColumn<Item> }",
+    "struct MonarchKanbanMove<ItemID: Hashable>: Hashable { let itemID: ItemID; let fromColumnID: String; let fromIndex: Int; let toColumnID: String; let toIndex: Int }",
+    "struct MonarchKanbanCardState: Hashable, Sendable { let columnID: String; let index: Int; let isDropTarget: Bool; let isPending: Bool; let isEnabled: Bool }",
+    "struct MonarchKanbanBoardLabels: Sendable { var moveToSection, moveUp, moveDown, empty, columns: String?; var moveMenu: (@Sendable (String) -> String)?; var moveTo: (@Sendable (String) -> String)?; var countText, count: (@Sendable (Int, Int?) -> String)?; var moved, dropped: (@Sendable (String, String, Int, Int) -> String)?; var notAllowed, failed: (@Sendable (String, String) -> String)? }"
+  ],
+  "options": [
+    {
+      "name": "columns",
+      "type": "Binding<[MonarchKanbanColumn<Item>]>",
+      "default": "required",
+      "description": "The columns leading to trailing, each with an id, a title, its cards and an optional wipLimit, emptyText and systemImage. Updated at once on every move."
+    },
+    {
+      "name": "itemLabel",
+      "type": "(Item) -> String",
+      "default": "required",
+      "description": "The plain-text name of a card, such as its key, used in the Move menu's name and in announcements."
+    },
+    {
+      "name": "canMove",
+      "type": "((Item, String, String) -> Bool)?",
+      "default": "nil",
+      "description": "Whether a card may go to another column (card, to, from). Its own column always takes it. Refused columns are disabled in the menu, left out of the VoiceOver actions and refuse drops."
+    },
+    {
+      "name": "isWipLimitEnforced",
+      "type": "Bool",
+      "default": "false",
+      "description": "A column at or over its wipLimit refuses cards from other columns."
+    },
+    {
+      "name": "isItemEnabled",
+      "type": "((Item) -> Bool)?",
+      "default": "nil",
+      "description": "Whether a card can be moved, such as one the person may not edit. Every card when nil."
+    },
+    {
+      "name": "isReadOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Turns off dragging, the Move menu and the VoiceOver move actions. The environment's isEnabled (.disabled(true)) does the same."
+    },
+    {
+      "name": "minimumColumnWidth",
+      "type": "CGFloat?",
+      "default": "nil (288 points)",
+      "description": "The narrowest a column gets, scaled with Dynamic Type. A phone shows one column per page; wider screens as many as fit."
+    },
+    {
+      "name": "scrollPosition",
+      "type": "Binding<String?>?",
+      "default": "nil",
+      "description": "The id of the first column in view, to choose the column shown or follow it. Kept inside when nil."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchKanbanBoardLabels",
+      "default": "MonarchKanbanBoardLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "onMove",
+      "type": "(@MainActor (MonarchKanbanMove<Item.ID>, [MonarchKanbanColumn<Item>]) async throws -> Void)?",
+      "default": "nil",
+      "description": "Saves a finished move with the columns after it. While it runs the card's state has isPending; throwing puts the card back and announces it."
+    },
+    {
+      "name": "card",
+      "type": "@ViewBuilder (Item, MonarchKanbanCardState) -> Card",
+      "default": "required",
+      "description": "The content of a card, such as a MonarchIssueCard. The Move menu is added after it."
+    }
+  ],
+  "states": [
+    {
+      "name": "default",
+      "description": "Columns are panels with a header (optional symbol, title as a heading, count) and their cards; each movable card has a Move menu button at its trailing edge."
+    },
+    {
+      "name": "paged",
+      "description": "When not every column fits, one column (on a phone) or as many as fit fill the width, a swipe snaps to the next, and a row of column tabs above shows the column in view with an accent underline."
+    },
+    {
+      "name": "dragging",
+      "description": "Touch and hold a card for the system drag preview. The column under the finger gets the accent border and an accent line shows where the card will land: above the card it is over, or after the last card. Pick-up plays an impact haptic and each change of target a selection haptic."
+    },
+    {
+      "name": "turning the page",
+      "description": "Holding a dragged card over a column tab spring-loads the tab and shows that column; dropping on the tab puts the card at the end of that column."
+    },
+    {
+      "name": "dropped",
+      "description": "The card moves, the drop is announced and a success haptic plays."
+    },
+    {
+      "name": "refused",
+      "description": "A drop on a column canMove refuses, or a full one with isWipLimitEnforced, is refused, announced (\"ENG-101 cannot move to Done.\") and plays an error haptic. In the Move menu the column is disabled."
+    },
+    {
+      "name": "at and over the limit",
+      "description": "The count reads \"2 / 2\" with a warning symbol, in the strong warning colour at the limit and the strong danger colour over it; VoiceOver reads \"2 cards, limit 2, at the limit\"."
+    },
+    {
+      "name": "pending",
+      "description": "While onMove runs the card stays in its new place and its state has isPending true."
+    },
+    {
+      "name": "failed",
+      "description": "When onMove throws, the card goes back to its column and position and \"Could not move ENG-101. It is back in To do.\" is announced."
+    },
+    {
+      "name": "locked and read only",
+      "description": "A card isItemEnabled refuses, and every card with isReadOnly or a disabled environment, has no Move menu, no move actions and cannot be dragged."
+    },
+    {
+      "name": "empty",
+      "description": "A column with no cards shows its emptyText, or \"No cards\", in the muted text colour; the area is still a drop target."
+    }
+  ],
+  "appearance": "Columns are panels in the subtle background colour with a subtle border and the large radius; the column a card is dragged over gets a thicker accent border. Column titles use the subheading style in the default text colour; counts use the caption style in the muted text colour, the strong warning colour at the limit and the strong danger colour over it. Tabs use the label style, muted when not selected and accent with an accent underline when selected. The insertion line is the strong accent colour. The same roles adapt to dark and both high-contrast themes.",
+  "platformNotes": "The web lays all columns side by side and scrolls the board sideways; on iOS the board is a horizontal ScrollView with view-aligned snapping, one column per page on a phone and as many as fit minimumColumnWidth on wider screens, with a row of column tabs when not every column is in view (Android uses a HorizontalPager with a Material tab row). Dragging is the system drag and drop (draggable and dropDestination with String payloads, which are Transferable) started by a touch and hold anywhere on the card, so there is no drag handle; Android uses a long press and its own drag overlay. Dropping on a card takes its place; the board does not reorder cards during the drag. Moving to another column during a drag is done by holding the card over the spring-loaded column tab instead of Android's 600 millisecond edge hold; a column does not scroll itself when the card nears its top or bottom edge. Because SwiftUI's drop API does not say which card is being dragged before the drop, a refused column is refused and announced on drop, not marked \"Not allowed here\" while the card is over it, and picked-up and cancelled announcements are not made (the system plays its own lift; Monarch adds an impact haptic when the drag first reaches a target). The Move menu is always on for movable cards (Android has moveMenu, on by default; the web has it off by default) and replaces the handle's actions: Move up and Move down within the column and Move to another column, which puts the card at its end (Android's Move backward and Move forward keep the position). Swift idiom renames: key is the Item's Identifiable id, itemEnabled is isItemEnabled, enforceWipLimits is isWipLimitEnforced, enabled is the environment's isEnabled plus isReadOnly, pagerState is scrollPosition, minColumnWidth is minimumColumnWidth, cardContent is card, and columns is a Binding instead of a value with onMove updating it. onMove is async throws where Android's is a suspend function. Column icons are SF Symbol names, not view slots; column actions and footers, menuIcon, the card state's dragging and overlay flags, and the labels handle, move, blocked, pickedUp and cancelled are not offered. Columns cannot collapse. Several closures are optional (canMove, isItemEnabled, onMove). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is canMove.",
+  "accessibility": [
+    "Each column title has the header trait; its count is read in words, such as \"1 card, limit 2\", and at or over the limit it is also a symbol, not only a colour.",
+    "Column tabs are buttons named by the column title with the count as their value and the selected trait on the column in view; the row is named \"Columns\".",
+    "Each movable card's Move menu is named \"Move ENG-101 to…\" and lists the other columns, Move up and Move down; refused columns are disabled and moves that cannot happen are disabled.",
+    "The Move menu also carries Move up, Move down and \"Move to Doing\" for every column that takes the card as VoiceOver actions.",
+    "Moves are announced (\"ENG-101: Doing, position 1 of 2.\"), as are drops (\"ENG-101 dropped in Doing, position 1 of 2.\"), refused drops and failed saves.",
+    "Pick-up, a change of target and the drop play system haptics through sensoryFeedback; a refused drop plays the error haptic.",
+    "The insertion line and the drop-target border are hidden from VoiceOver.",
+    "Tabs and Move menu buttons have touch targets of at least 44 points."
+  ],
+  "edgeCases": [
+    "The binding updates at once; if onMove throws, the card goes back to its old column and position even if other cards moved meanwhile, clamped to the end of that column.",
+    "Dropping a card where it was, or choosing a move that changes nothing, does not call onMove.",
+    "Moving to a column from the menu or the VoiceOver actions puts the card at its end.",
+    "Give the board a bounded height: each column scrolls vertically inside it.",
+    "With isWipLimitEnforced a column already over its limit keeps its cards and still lets them move within it.",
+    "Drag payloads are the board's own namespace and the card's id as text; ids must be unique across columns, and drops from another board or app are ignored.",
+    "Long titles and card text wrap; at the largest text sizes columns get wider because minimumColumnWidth scales with Dynamic Type."
+  ],
+  "tests": [
+    "MonarchKanbanBoardTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Board with a WIP limit",
+      "fixture": "kanban-board",
+      "webExample": "Board with a WIP limit",
+      "template": "MonarchKanbanBoard(\n    columns: $columns,\n    itemLabel: { $0.title },\n    onMove: { _, _ in\n        // The app saves the move on its server here; throwing puts the card back.\n    },\n    card: { ticket, _ in\n        VStack(alignment: .leading, spacing: theme.spacing.space1_5) {\n            Text(ticket.title).monarchTextStyle(.bodyStrong)\n            MonarchBadge(ticket.tag, tone: ticket.tone)\n        }\n    }\n)\n.frame(height: 480)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n\nprivate struct Ticket: Identifiable {\n    let id: String\n    let title: String\n    let tag: String\n    let tone: MonarchTone\n}\n\n@State private var columns = [\n    MonarchKanbanColumn(id: {{columns.0.id}}, title: {{columns.0.title}}, items: [\n        Ticket(id: {{columns.0.items.0.id}}, title: {{columns.0.items.0.title}}, tag: {{columns.0.items.0.tag}}, tone: {{columns.0.items.0.tone|tone}}),\n        Ticket(id: {{columns.0.items.1.id}}, title: {{columns.0.items.1.title}}, tag: {{columns.0.items.1.tag}}, tone: {{columns.0.items.1.tone|tone}}),\n        Ticket(id: {{columns.0.items.2.id}}, title: {{columns.0.items.2.title}}, tag: {{columns.0.items.2.tag}}, tone: {{columns.0.items.2.tone|tone}}),\n    ]),\n    MonarchKanbanColumn(id: {{columns.1.id}}, title: {{columns.1.title}}, items: [\n        Ticket(id: {{columns.1.items.0.id}}, title: {{columns.1.items.0.title}}, tag: {{columns.1.items.0.tag}}, tone: {{columns.1.items.0.tone|tone}}),\n        Ticket(id: {{columns.1.items.1.id}}, title: {{columns.1.items.1.title}}, tag: {{columns.1.items.1.tag}}, tone: {{columns.1.items.1.tone|tone}}),\n        Ticket(id: {{columns.1.items.2.id}}, title: {{columns.1.items.2.title}}, tag: {{columns.1.items.2.tag}}, tone: {{columns.1.items.2.tone|tone}}),\n    ], wipLimit: {{columns.1.wipLimit}}),\n    MonarchKanbanColumn(id: {{columns.2.id}}, title: {{columns.2.title}}, items: [\n        Ticket(id: {{columns.2.items.0.id}}, title: {{columns.2.items.0.title}}, tag: {{columns.2.items.0.tag}}, tone: {{columns.2.items.0.tone|tone}}),\n    ]),\n    MonarchKanbanColumn(id: {{columns.3.id}}, title: {{columns.3.title}}, items: [Ticket]()),\n]",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n\nprivate struct Ticket: Identifiable {\n    let id: String\n    let title: String\n    let tag: String\n    let tone: MonarchTone\n}\n\n@State private var columns = [\n    MonarchKanbanColumn(id: \"backlog\", title: \"Backlog\", items: [\n        Ticket(id: \"k1\", title: \"Draft release notes\", tag: \"Docs\", tone: .neutral),\n        Ticket(id: \"k2\", title: \"Audit colour contrast\", tag: \"Design\", tone: .info),\n        Ticket(id: \"k3\", title: \"Plan onboarding survey\", tag: \"Research\", tone: .neutral),\n    ]),\n    MonarchKanbanColumn(id: \"doing\", title: \"In progress\", items: [\n        Ticket(id: \"k4\", title: \"Fix export timeout\", tag: \"Bug\", tone: .warning),\n        Ticket(id: \"k5\", title: \"Billing settings page\", tag: \"Feature\", tone: .info),\n        Ticket(id: \"k6\", title: \"Update help articles\", tag: \"Docs\", tone: .neutral),\n    ], wipLimit: 2),\n    MonarchKanbanColumn(id: \"review\", title: \"Review\", items: [\n        Ticket(id: \"k7\", title: \"Keyboard shortcuts\", tag: \"Feature\", tone: .info),\n    ]),\n    MonarchKanbanColumn(id: \"done\", title: \"Done\", items: [Ticket]()),\n]",
+      "code": "MonarchKanbanBoard(\n    columns: $columns,\n    itemLabel: { $0.title },\n    onMove: { _, _ in\n        // The app saves the move on its server here; throwing puts the card back.\n    },\n    card: { ticket, _ in\n        VStack(alignment: .leading, spacing: theme.spacing.space1_5) {\n            Text(ticket.title).monarchTextStyle(.bodyStrong)\n            MonarchBadge(ticket.tag, tone: ticket.tone)\n        }\n    }\n)\n.frame(height: 480)"
+    },
+    {
+      "title": "Issue cards, a column that takes no cards and a locked card",
+      "experimental": true,
+      "setup": "private struct Issue: Identifiable {\n    let id: String\n    let title: String\n}\n\n@State private var columns = [\n    MonarchKanbanColumn(id: \"review\", title: \"In review\", items: [Issue(id: \"ABC-7\", title: \"Payment retries\")]),\n    MonarchKanbanColumn(id: \"released\", title: \"Released\", items: [Issue(id: \"ABC-2\", title: \"Passkeys\")]),\n]",
+      "code": "MonarchKanbanBoard(\n    columns: $columns,\n    itemLabel: { $0.id },\n    canMove: { _, to, _ in to != \"released\" },\n    isItemEnabled: { $0.id != \"ABC-2\" },\n    card: { issue, state in\n        MonarchIssueCard(issue.title, key: issue.id, isDragging: state.isPending)\n    }\n)\n.frame(height: 400)"
+    }
+  ],
+  "webEquivalent": "KanbanBoard",
+  "dependsOn": [
+    "issue-card",
+    "sortable-grid",
+    "dropdown-menu"
+  ]
+}

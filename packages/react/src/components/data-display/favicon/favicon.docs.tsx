@@ -1,7 +1,9 @@
 import { Favicon } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './favicon.fixture.json';
 
-const SITES = ['example.com', 'docs.example.org', 'northwind.test', 'contoso.test'];
+const SITES = fixture.data.sites;
 
 const DOT =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';

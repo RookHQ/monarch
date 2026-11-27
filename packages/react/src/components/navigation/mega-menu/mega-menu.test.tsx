@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToString } from 'react-dom/server';
@@ -282,5 +284,11 @@ describe('MegaMenu', () => {
     const html = renderToString(<MegaMenu items={items} aria-label="Site" />);
     expect(html).toContain('mn-mega-menu');
     expect(html).toContain('aria-label="Site"');
+  });
+
+  it('wraps the featured card under the sections when the panel is narrow', () => {
+    // In a 620px column the three columns squeezed descriptions to a word per line.
+    const css = readFileSync(join(dirname(__filename), 'mega-menu.css'), 'utf8');
+    expect(css).toMatch(/\.mn-mega-menu__panel:not\(\[hidden\]\) \{[^}]*flex-wrap: wrap/);
   });
 });

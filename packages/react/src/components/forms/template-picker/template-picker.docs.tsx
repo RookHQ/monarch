@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { TemplatePicker, type TemplatePickerTemplate } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './template-picker.fixture.json';
 
 type Layout = 'sidebar' | 'hero' | 'grid' | 'list' | 'split' | 'form';
 
@@ -110,68 +112,46 @@ function Thumb({ layout }: { layout: Layout }) {
   );
 }
 
-/** Built lazily: docs files cannot create JSX at module scope. */
-const pages = (): TemplatePickerTemplate[] => [
-  {
-    id: 'classic',
-    name: 'Classic',
-    description: 'Navigation on the side, content on the right.',
-    category: 'pages',
-    preview: <Thumb layout="sidebar" />,
-    badge: 'Built-in',
-  },
-  {
-    id: 'banner',
-    name: 'Banner',
-    description: 'A large header, then a list.',
-    category: 'pages',
-    preview: <Thumb layout="hero" />,
-  },
-  {
-    id: 'gallery',
-    name: 'Gallery',
-    description: 'Cards in a grid.',
-    category: 'pages',
-    preview: <Thumb layout="grid" />,
-  },
-  {
-    id: 'split',
-    name: 'Split',
-    description: 'Image beside text.',
-    category: 'pages',
-    preview: <Thumb layout="split" />,
-  },
-  {
-    id: 'article',
-    name: 'Article',
-    description: 'One readable column.',
-    category: 'docs',
-    preview: <Thumb layout="list" />,
-    keywords: ['blog', 'post'],
-  },
-  {
-    id: 'intake',
-    name: 'Intake form',
-    description: 'Collect details before a call.',
-    category: 'forms',
-    preview: <Thumb layout="form" />,
-  },
-];
+const LAYOUTS: Record<string, Layout> = {
+  classic: 'sidebar',
+  banner: 'hero',
+  gallery: 'grid',
+  split: 'split',
+  article: 'list',
+  intake: 'form',
+};
 
-const CATEGORIES = [
-  { id: 'pages', label: 'Pages' },
-  { id: 'docs', label: 'Articles' },
-  { id: 'forms', label: 'Forms' },
-];
+type FixtureTemplate = {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  badge?: string;
+  keywords?: string[];
+};
+
+/** Built lazily: docs files cannot create JSX at module scope. */
+const pages = (): TemplatePickerTemplate[] =>
+  (fixture.data.templates as FixtureTemplate[]).map((t) => ({
+    id: t.id,
+    name: t.name,
+    description: t.description,
+    category: t.category,
+    preview: <Thumb layout={LAYOUTS[t.id] ?? 'list'} />,
+    ...(t.badge !== undefined && { badge: t.badge }),
+    ...(t.keywords !== undefined && { keywords: t.keywords }),
+  }));
+
+const CATEGORIES = fixture.data.categories;
 
 function GalleryDemo() {
-  const [value, setValue] = useState<string | null>('classic');
+  const [value, setValue] = useState<string | null>(fixture.data.selected);
   return (
     <TemplatePicker
-      aria-label="Page template"
+      aria-label={fixture.data.label}
       templates={pages()}
       categories={CATEGORIES}
-      blank={{ description: 'Start from an empty page.' }}
+      blank={{ description: fixture.data.blank.description }}
       value={value}
       onValueChange={(id) => setValue(id)}
       renderPreview={(t) => (
@@ -190,7 +170,7 @@ function GalleryDemo() {
           </div>
           <strong>{t ? t.name : 'Blank'}</strong>
           <span style={{ color: 'var(--mn-color-text-muted)', fontSize: 13 }}>
-            {t ? t.description : 'Start from an empty page.'}
+            {t ? t.description : fixture.data.blank.description}
           </span>
         </div>
       )}

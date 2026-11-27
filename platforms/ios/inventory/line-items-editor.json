@@ -1,0 +1,196 @@
+{
+  "id": "line-items-editor",
+  "name": "MonarchLineItemsEditor",
+  "title": "LineItemsEditor",
+  "family": "billing",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Two List/Form Sections: ForEach rows with .swipeActions(edge: .trailing) to remove, MonarchTextField, MonarchNumberInput (TextField(value:format:)) and MonarchCurrencyInput fields, MonarchMoney amounts, Picker (.segmented, .menu) for discount type and tax rate, AccessibilityNotification.Announcement",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Editable invoice, quote or proposal rows (description, quantity, unit price) with each row's amount and an optional discount, tax and total computed exactly in Decimal.",
+  "whenToUse": "To create or edit the billable rows of an invoice, quote, proposal or purchase order inside a Form or List, or to show the rows of a sent document read-only with the same totals.",
+  "whenNotToUse": "For a finished invoice laid out as a document, use MonarchInvoiceView. For payroll lines that are calculated, not typed, use MonarchPayslipView. For editable tables of non-monetary data, use MonarchDataTable.",
+  "api": [
+    "MonarchLineItemsEditor.init(items: Binding<[MonarchLineItem]>, currencyCode: String, taxRate: Binding<Decimal>? = nil, taxRateOptions: [MonarchLineItemsTaxRateOption] = [], discount: Binding<MonarchLineItemsDiscount>? = nil, error: String? = nil, minimumItems: Int = 0, isRequired: Bool = false, isReadOnly: Bool = false, isTaxRateEditable: Bool = false, isDiscountEditable: Bool = false, showsTotals: Bool = true, labels: MonarchLineItemsEditorLabels = MonarchLineItemsEditorLabels(), makeItem: (@MainActor () -> MonarchLineItem)? = nil)",
+    "MonarchLineItem.init(id: String = UUID().uuidString, description: String = \"\", quantity: Decimal? = 1, unitPrice: Decimal? = nil)",
+    "MonarchLineItemsDiscount.init(_ kind: MonarchLineItemsDiscountKind, value: Decimal)",
+    "enum MonarchLineItemsDiscountKind { case percent, amount }",
+    "MonarchLineItemsTaxRateOption.init(_ value: Decimal, label: String)",
+    "MonarchLineItemsTotals.init(_ items: [MonarchLineItem], currencyCode: String, taxRate: Decimal? = nil, discount: MonarchLineItemsDiscount? = nil)",
+    "MonarchLineItemsTotals.lines: [Int], .subtotal: Int, .discount: Int, .tax: Int, .total: Int (minor units)",
+    "MonarchLineItemsEditorLabels.init(label:item:description:quantity:unitPrice:amount:descriptionPlaceholder:addItem:remove:removeItem:empty:added:removed:subtotal:discount:discountType:percentOption:tax:taxRate:total:required:quantityTimesPrice:), every parameter optional"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "Binding<[MonarchLineItem]>",
+      "default": "required",
+      "description": "The rows. Each has an id, a description and a Decimal quantity and unit price (nil while the field is empty, counted as zero). Every edit, addition and removal writes a new array."
+    },
+    {
+      "name": "currencyCode",
+      "type": "String",
+      "default": "required",
+      "description": "The ISO 4217 code of the document. Sets the symbol, the unit price heading and the minor unit (USD 2, JPY 0, KWD 3). The editor never converts."
+    },
+    {
+      "name": "taxRate",
+      "type": "Binding<Decimal>?",
+      "default": "nil",
+      "description": "The tax as a percentage of the discounted subtotal (18 for 18%). nil for no tax row. Pass .constant(18) for a fixed rate."
+    },
+    {
+      "name": "taxRateOptions",
+      "type": "[MonarchLineItemsTaxRateOption]",
+      "default": "[]",
+      "description": "Preset rates offered in a menu picker when the tax rate is editable. Empty for a typed percentage."
+    },
+    {
+      "name": "discount",
+      "type": "Binding<MonarchLineItemsDiscount>?",
+      "default": "nil",
+      "description": "A percentage or amount off the subtotal, capped at it. nil for no discount row."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "An error for the whole list, such as \"Add at least one item\", shown under the rows with an icon and announced."
+    },
+    {
+      "name": "minimumItems",
+      "type": "Int",
+      "default": "0",
+      "description": "Rows cannot be removed below this count."
+    },
+    {
+      "name": "isRequired",
+      "type": "Bool",
+      "default": "false",
+      "description": "A marker after the heading, spoken as \"Required\"."
+    },
+    {
+      "name": "isReadOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Rows as text (description and \"12 × $95.00\") without fields, buttons or swipe actions, for a sent document."
+    },
+    {
+      "name": "isTaxRateEditable",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether the tax rate can be changed in the totals: a menu of taxRateOptions or a percent field."
+    },
+    {
+      "name": "isDiscountEditable",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether the discount value (percent or currency field) and kind (segmented picker) can be changed."
+    },
+    {
+      "name": "showsTotals",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the totals section (subtotal, discount, tax, total) is shown."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchLineItemsEditorLabels",
+      "default": "MonarchLineItemsEditorLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "makeItem",
+      "type": "(@MainActor () -> MonarchLineItem)?",
+      "default": "nil",
+      "description": "Builds the row added by Add item. Default: an empty row with one unit and a new UUID."
+    }
+  ],
+  "states": [
+    {
+      "name": "editing",
+      "description": "Each row has a header (Item n and its amount), a remove button, the description field, and the quantity and unit price fields side by side (stacked at accessibility text sizes). Add item follows the rows."
+    },
+    {
+      "name": "empty",
+      "description": "\"No items yet. Add one to start.\" in place of the rows; totals are zero."
+    },
+    {
+      "name": "error",
+      "description": "The error under the rows in the danger text colour with an icon; a new error is announced."
+    },
+    {
+      "name": "read-only",
+      "description": "Rows are text; no fields, add or remove; the discount and tax rates are written in their titles (\"Tax (18%)\")."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true), every field and button is disabled, swipe actions are not offered and the rate editors are hidden."
+    },
+    {
+      "name": "at the minimum",
+      "description": "Remove buttons are disabled and swipe actions are not offered."
+    }
+  ],
+  "appearance": "Rows and totals use the list's own section background. Row headers are the muted label style with the amount in the default text colour; fields are the Monarch field surface and border; the required marker and the error are the danger text colour; the total row is the strong body style above a divider. Light, dark and both high-contrast themes follow the same roles.",
+  "platformNotes": "On iOS the editor is two Sections for the app's Form or List instead of a table, so it sits among the app's own sections; rows are removed by the standard swipe action or a remove button. Numbers are typed in standard number fields, which commit on submit or when the field loses focus and refuse text that is not a number, so there is no invalid-number state and no parseDecimal; values are Decimal rather than strings. A unit price is rounded to the currency's decimals by MonarchCurrencyInput. Enter does not add a row and focus does not move to a new row (the Monarch fields keep their focus private); the addition is announced instead. The web locale prop is the environment locale. computeLineItemTotals is MonarchLineItemsTotals. Android uses the same names.",
+  "accessibility": [
+    "The heading is a header, read as \"Line items, Required\" when required.",
+    "Each row starts with a header read as \"Item 2, Amount $1,140.00\".",
+    "The description, quantity and unit price fields are named by their visible labels and keep the behaviour of MonarchTextField, MonarchNumberInput and MonarchCurrencyInput.",
+    "The remove button is read as \"Remove item 2: Design hours\" and has a 44-point target; the swipe action is also in the VoiceOver actions rotor.",
+    "Adding and removing a row is announced (\"Item 3 added\", \"Item 2 removed\"), and so is a new error.",
+    "Each totals row is one element read as its title and amount, such as \"Total, $2,257.13\"."
+  ],
+  "edgeCases": [
+    "Each row is rounded to the minor unit half away from zero (1 × 1.005 USD is $1.01) and totals are sums of whole minor units, so the total equals the rows shown.",
+    "A discount larger than the subtotal, or over 100%, is capped at the subtotal; a negative discount is ignored; a negative subtotal gets no discount.",
+    "Empty quantity or price fields count as zero.",
+    "A long description wraps.",
+    "The swipe action only works inside a List or Form; outside one, the remove button still works.",
+    "Rows are matched by id: give every row a unique, stable id."
+  ],
+  "tests": [
+    "MonarchLineItemsEditorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Invoice with discount and preset tax rates",
+      "fixture": "line-items-editor",
+      "webExample": "Invoice with discount and preset tax rates",
+      "template": "Form {\n    MonarchLineItemsEditor(\n        items: $items,\n        currencyCode: {{currency}},\n        taxRate: $taxRate,\n        taxRateOptions: [\n            MonarchLineItemsTaxRateOption({{taxRateOptions.0.value}}, label: {{taxRateOptions.0.label}}),\n            MonarchLineItemsTaxRateOption({{taxRateOptions.1.value}}, label: {{taxRateOptions.1.label}}),\n            MonarchLineItemsTaxRateOption({{taxRateOptions.2.value}}, label: {{taxRateOptions.2.label}}),\n            MonarchLineItemsTaxRateOption({{taxRateOptions.3.value}}, label: {{taxRateOptions.3.label}}),\n        ],\n        discount: $discount,\n        isRequired: true,\n        isTaxRateEditable: true,\n        isDiscountEditable: true\n    )\n}\n.monarchCanvas()\n.frame(height: 1250)\n.environment(\\.locale, Locale(identifier: \"en_US\"))",
+      "setupTemplate": "@State private var items = [\n    MonarchLineItem(id: {{items.0.id}}, description: {{items.0.description}}, quantity: {{items.0.quantity}}, unitPrice: {{items.0.unitPrice}}),\n    MonarchLineItem(id: {{items.1.id}}, description: {{items.1.description}}, quantity: {{items.1.quantity}}, unitPrice: {{items.1.unitPrice}}),\n    MonarchLineItem(id: {{items.2.id}}, description: {{items.2.description}}, quantity: {{items.2.quantity}}, unitPrice: {{items.2.unitPrice}}),\n]\n@State private var taxRate: Decimal = {{taxRate}}\n@State private var discount = MonarchLineItemsDiscount({{discount.type|case}}, value: {{discount.value}})",
+      "setup": "@State private var items = [\n    MonarchLineItem(id: \"r1\", description: \"Discovery workshop\", quantity: 1, unitPrice: 800),\n    MonarchLineItem(id: \"r2\", description: \"Design hours\", quantity: 12, unitPrice: 95),\n    MonarchLineItem(id: \"r3\", description: \"Hosting (monthly)\", quantity: 3, unitPrice: 24.5),\n]\n@State private var taxRate: Decimal = 18\n@State private var discount = MonarchLineItemsDiscount(.percent, value: 5)",
+      "code": "Form {\n    MonarchLineItemsEditor(\n        items: $items,\n        currencyCode: \"USD\",\n        taxRate: $taxRate,\n        taxRateOptions: [\n            MonarchLineItemsTaxRateOption(0, label: \"No tax\"),\n            MonarchLineItemsTaxRateOption(5, label: \"5%\"),\n            MonarchLineItemsTaxRateOption(12, label: \"12%\"),\n            MonarchLineItemsTaxRateOption(18, label: \"18%\"),\n        ],\n        discount: $discount,\n        isRequired: true,\n        isTaxRateEditable: true,\n        isDiscountEditable: true\n    )\n}\n.monarchCanvas()\n.frame(height: 1250)\n.environment(\\.locale, Locale(identifier: \"en_US\"))"
+    },
+    {
+      "title": "A sent invoice, read-only",
+      "code": "List {\n    MonarchLineItemsEditor(\n        items: .constant([MonarchLineItem(id: \"1\", description: \"Hosting\", quantity: 3, unitPrice: 24.5)]),\n        currencyCode: \"EUR\",\n        taxRate: .constant(19),\n        isReadOnly: true\n    )\n}\n.listStyle(.plain)\n.monarchCanvas()\n.frame(height: 400)"
+    },
+    {
+      "title": "Totals for saving",
+      "code": "let totals = MonarchLineItemsTotals(\n    [MonarchLineItem(quantity: 3, unitPrice: Decimal(string: \"24.50\"))],\n    currencyCode: \"USD\",\n    taxRate: 18\n)\nText(\"Total in cents: \\(totals.total)\")"
+    }
+  ],
+  "webEquivalent": "LineItemsEditor",
+  "dependsOn": [
+    "currency-input",
+    "number-input",
+    "text-field",
+    "money",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web draws five columns (description, quantity, unit price, amount, remove) in about 620 points; a phone column has 306, and the fields keep 44-point touch targets, so the table scrolls sideways and shows the amount and remove button after the price. The totals block, the add button and every value are as on the web.",
+      "convention": "HIG: a table wider than the screen scrolls horizontally; touch targets stay at 44 points"
+    }
+  ]
+}

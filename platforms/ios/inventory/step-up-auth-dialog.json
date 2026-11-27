@@ -1,0 +1,157 @@
+{
+  "id": "step-up-auth-dialog",
+  "name": "MonarchStepUpAuthDialog",
+  "title": "StepUpAuthDialog",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Content for sheet(isPresented:content:) with presentationDetents, interactiveDismissDisabled and Environment(\\.dismiss); Picker with .pickerStyle(.segmented) (or .menu when it does not fit); MonarchPasswordInput, MonarchOtpPinInput; LocalAuthentication LAContext.evaluatePolicy(.deviceOwnerAuthentication) for the device owner check",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Asks a signed-in person to confirm it is still them, with their password, an authenticator code, a passkey or Face ID, Touch ID or the device passcode, before a high-risk action.",
+  "whenToUse": "Before deleting or transferring a workspace or account, erasing personal data, revoking keys or revealing a secret.",
+  "whenNotToUse": "To sign in, use the sign-in form recipe. To confirm an action that is not sensitive, use a confirmation alert (confirm-dialog). Do not use the device owner check alone where the server must know who is acting: it only proves who holds the device.",
+  "api": [
+    "init(_ title: String? = nil, description: String? = nil, methods: [MonarchStepUpMethod] = [.password], labels: MonarchStepUpAuthDialogLabels = MonarchStepUpAuthDialogLabels(), errorMessage: (@MainActor (any Error) -> String?)? = nil, onForgot: (@MainActor () -> Void)? = nil, onCancel: (@MainActor () -> Void)? = nil, onVerified: (@MainActor () -> Void)? = nil, onVerify: @escaping @MainActor (MonarchStepUpCredential) async throws -> Void)",
+    "enum MonarchStepUpMethod: String { case password, code, passkey, deviceOwner }",
+    "enum MonarchStepUpCredential { case password(String), code(String), passkey, deviceOwner; var method: MonarchStepUpMethod }",
+    "enum MonarchStepUpBiometry { case faceID, touchID, opticID, passcode }",
+    "struct MonarchStepUpAuthDialogLabels { init(title:, description:, methodPicker:, methodName:, passwordLabel:, passwordRequired:, codeLabel:, codeHelper:, codeIncomplete:, passkeyDescription:, passkeyButton:, deviceOwnerDescription:, deviceOwnerButton:, deviceOwnerUnavailable:, submit:, cancel:, forgot:, genericError:) }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in title \"Confirm it’s you\"."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "Why the person is asked, such as \"Deleting a workspace needs your password.\" Also the reason the system shows with Face ID."
+    },
+    {
+      "name": "methods",
+      "type": "[MonarchStepUpMethod]",
+      "default": "[.password]",
+      "description": "The methods offered, most preferred first; the first is shown first. Repeats are dropped; empty means the password. With more than one, a picker switches between them."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchStepUpAuthDialogLabels",
+      "default": "MonarchStepUpAuthDialogLabels()",
+      "description": "Replacements for every built-in string, including method names and the Face ID, Touch ID, Optic ID and passcode button titles."
+    },
+    {
+      "name": "errorMessage",
+      "type": "(@MainActor (any Error) -> String?)?",
+      "default": "nil",
+      "description": "Turns a thrown error into a message. Without it, or when it returns nil, the error's LocalizedError description or \"That did not work. Try again.\" is shown."
+    },
+    {
+      "name": "onForgot",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Starts password recovery. Shows a Forgot your password? link-style button under the password field."
+    },
+    {
+      "name": "onCancel",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Called when the sheet closes without verifying, by Cancel or by swiping it down."
+    },
+    {
+      "name": "onVerified",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Called after onVerify succeeds, just before the sheet closes itself. Run the protected action here."
+    },
+    {
+      "name": "onVerify",
+      "type": "@MainActor (MonarchStepUpCredential) async throws -> Void",
+      "default": "required",
+      "description": "Checks the credential with the server. Return when accepted; throw to show the failure. For .passkey run ASAuthorizationController here. For .deviceOwner the system check has already passed."
+    }
+  ],
+  "states": [
+    {
+      "name": "password",
+      "description": "The password field with show and hide, and the forgot button when onForgot is given."
+    },
+    {
+      "name": "code",
+      "description": "Six code cells in two groups of three; the code submits itself when complete and is cleared after a failure."
+    },
+    {
+      "name": "passkey",
+      "description": "A line of text and a Use passkey primary button."
+    },
+    {
+      "name": "device owner",
+      "description": "A line of text and a primary button named after the device's check: Use Face ID, Use Touch ID, Use Optic ID or Use passcode."
+    },
+    {
+      "name": "missing entry",
+      "description": "Confirm with an empty password or fewer than 6 digits shows \"Enter your password.\" or \"Enter all 6 digits.\" on the field, announced."
+    },
+    {
+      "name": "verifying",
+      "description": "The primary button shows its spinner; the fields, picker and Cancel are disabled and the sheet cannot be swiped away."
+    },
+    {
+      "name": "failed",
+      "description": "The message is shown on the password or code field, or in a danger notice for passkey and device owner, and announced. A cancelled system sheet shows nothing."
+    }
+  ],
+  "appearance": "The surface background, a lock shield symbol in the strong accent colour, the heading style title and a body line in the muted text colour, then the method picker, the field and full-width primary and ghost buttons. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web dialog becomes the content of a SwiftUI sheet: the app presents it with .sheet(isPresented:) and the sheet closes itself on success through the dismiss action, at medium and large detents. The web's open, defaultOpen, onOpenChange and trigger are the sheet's binding. iOS adds the deviceOwner method, which uses LocalAuthentication (Face ID, Touch ID, Optic ID or the passcode); the app needs NSFaceIDUsageDescription in its Info.plist. The web's totp method is called code. forgotHref is replaced by onForgot, because a link out of a sheet is the app's navigation. Focus does not move into the field on open: SwiftUI gives VoiceOver the sheet's first element, and the keyboard opens when the person taps the field. The system Face ID and passkey sheets are the system's and cannot be styled. Android builds the same component with BiometricPrompt. Several closures are optional (errorMessage, onForgot, onCancel, onVerified). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is errorMessage.",
+  "accessibility": [
+    "The title has the header trait.",
+    "The password and code fields are MonarchPasswordInput and MonarchOtpPinInput, so their labels, the show-password toggle, the one-time-code content type and the field errors come from those components.",
+    "Missing entries and failures are written in words and posted as announcements.",
+    "The method picker is a standard segmented Picker named \"Verification method\", or a menu Picker when the segments do not fit at large text sizes.",
+    "The primary button names what happens (Confirm, Use passkey, Use Face ID), and every button has a 44-point touch target.",
+    "The sheet cannot be dismissed by a swipe while verifying, so an announcement is not lost."
+  ],
+  "edgeCases": [
+    "Each presentation starts clean, on the first method, because the sheet content is created anew.",
+    "Changing the method clears the errors.",
+    "On a device without a passcode the device owner method shows \"Set a passcode on this device to use it to confirm.\"",
+    "Cancelling Face ID, the passcode or the passkey sheet leaves the dialog open with no error."
+  ],
+  "tests": [
+    "MonarchStepUpAuthDialogTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Password with a forgot link",
+      "fixture": "step-up-auth-dialog",
+      "webExample": "Password with a forgot link",
+      "template": "MonarchButton({{trigger}}, variant: .danger) { isConfirming = true }\n    .sheet(isPresented: $isConfirming) {\n        MonarchStepUpAuthDialog(\n            description: {{description}},\n            methods: [.password],\n            onForgot: {},\n            onCancel: { isConfirming = false },\n            onVerified: {\n                isConfirming = false\n            },\n            onVerify: { credential in\n                // Send the credential to the server; throw if it is refused.\n                try await Task.sleep(for: .milliseconds(300))\n            }\n        )\n    }",
+      "setupTemplate": "@State private var isConfirming = false",
+      "previewPresented": [
+        "isConfirming"
+      ],
+      "setup": "@State private var isConfirming = false",
+      "code": "MonarchButton(\"Delete workspace\", variant: .danger) { isConfirming = true }\n    .sheet(isPresented: $isConfirming) {\n        MonarchStepUpAuthDialog(\n            description: \"Deleting a workspace needs your password. Try “correct”.\",\n            methods: [.password],\n            onForgot: {},\n            onCancel: { isConfirming = false },\n            onVerified: {\n                isConfirming = false\n            },\n            onVerify: { credential in\n                // Send the credential to the server; throw if it is refused.\n                try await Task.sleep(for: .milliseconds(300))\n            }\n        )\n    }"
+    },
+    {
+      "title": "The dialog content",
+      "code": "MonarchStepUpAuthDialog(methods: [.code, .password]) { _ in\n    try await Task.sleep(for: .milliseconds(300))\n}"
+    }
+  ],
+  "webEquivalent": "StepUpAuthDialog",
+  "dependsOn": [
+    "sheet",
+    "password-input",
+    "otp-pin-input",
+    "button",
+    "inline-notice",
+    "link"
+  ]
+}

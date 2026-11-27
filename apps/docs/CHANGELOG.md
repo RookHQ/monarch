@@ -6,7 +6,7 @@
 
 - d54a464: **New**
 
-  - `@rookcom/monarch-react/rook`: every Rook-specific export (RookBar, RookRail, SignInWithRookButton, the Rook Intelligence transport, the `ROOK_*` constants) now has its own entry and `styles/rook.css`. The old paths in `/shell`, `/patterns` and `/ai` still work and are deprecated until 0.15.0; `monarch check --fix` rewrites the imports.
+  - `@rookcom/monarch-react/rook`: every Rook-specific export (RookBar, RookRail, SignInWithRookButton, the Rook Intelligence transport, the `ROOK_*` constants) now has its own entry and `styles/rook.css`. The old paths in `/shell`, `/patterns` and `/ai` still work and are deprecated, and are removed no earlier than 2027-02-11 (90-day window); `monarch check --fix` rewrites the imports.
   - Realtime voice: `createRealtimeVoiceSession` (WebRTC, caller-supplied signalling, reconnect, barge-in), `createPcmAudioPlayer` for streamed audio and `createVoiceActivityDetector`.
   - `AiGhostText`, `useAiCompletion` and `useAiRewrite`: inline completion with Tab to accept, word-by-word accept and screen-reader announcements.
   - `otelSpansToAiTrace`: OpenTelemetry GenAI spans for AiTraceView (which now windows long traces), AiAgentRunTimeline and AiSubagentTree, with links to conversation parts.

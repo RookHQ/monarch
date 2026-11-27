@@ -1,0 +1,121 @@
+{
+  "id": "rule-builder",
+  "name": null,
+  "title": "RuleBuilder",
+  "family": "workflow",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.layout.Column with androidx.compose.foundation.verticalScroll holding MonarchTextField, MonarchCheckboxGroup, MonarchConditionEditor, MonarchActionEditor, MonarchSwitchRow, MonarchBanner and MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a complete when-if-then rule form on one scrolling screen (name, triggers, conditions, ordered actions, options) with validation that says what is missing before saving.",
+  "whenToUse": "When admins create automation or routing rules of the form when this happens, if these hold, do these things, and the product's rule engine takes triggers, conditions and actions as data.",
+  "whenNotToUse": "For conditions only (show this question when) use MonarchConditionEditor; for a list of steps only use MonarchActionEditor; for a formula keep a dedicated formula editor.",
+  "api": [
+    "Column(Modifier.verticalScroll(rememberScrollState())) { MonarchBanner(…, title = \"Not saved yet\") when blocked; MonarchTextField(value = name, label = \"Name\", errorText = …); MonarchCheckboxGroup(options = triggers, value = chosen, label = \"Trigger\"); MonarchConditionEditor(value = conditions, fields = …, match = …, showErrors = submitted); MonarchActionEditor(value = actions, actionTypes = …, showErrors = submitted); MonarchSwitchRow(label = \"Rule is on\"); MonarchSwitchRow(label = \"Stop processing\"); MonarchButton(text = \"Save rule\", …) }",
+    "MonarchCondition.problems(conditions, fields): Map<String, MonarchConditionProblem>",
+    "MonarchRuleAction.problems(actions, actionTypes): Map<String, List<MonarchActionProblem>>"
+  ],
+  "options": [
+    {
+      "name": "name",
+      "type": "String",
+      "default": "\"\"",
+      "description": "Required; a MonarchTextField with an error after a blocked save."
+    },
+    {
+      "name": "triggers",
+      "type": "List<MonarchCheckboxGroupOption<String>>",
+      "default": "required",
+      "description": "The events that check the rule; at least one must be chosen. With many triggers use MonarchMultiSelect."
+    },
+    {
+      "name": "conditions / match",
+      "type": "List<MonarchCondition> / MonarchConditionMatch",
+      "default": "empty / All",
+      "description": "The If section in MonarchConditionEditor; empty applies the rule every time it is checked."
+    },
+    {
+      "name": "actions",
+      "type": "List<MonarchRuleAction>",
+      "default": "required",
+      "description": "The Then section in MonarchActionEditor, run in order; at least one."
+    },
+    {
+      "name": "on / stop processing",
+      "type": "Boolean",
+      "default": "true / false",
+      "description": "Options as MonarchSwitchRows; products add their own options here."
+    },
+    {
+      "name": "submitted",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Set by the first save; shows the summary banner and the errors of each part until fixed."
+    }
+  ],
+  "states": [
+    {
+      "name": "editing",
+      "description": "The parts without errors."
+    },
+    {
+      "name": "blocked",
+      "description": "After a save with problems: a danger banner titled Not saved yet lists them, announced assertively, and each part shows its own error."
+    },
+    {
+      "name": "saving",
+      "description": "Pass loading = true to the Save button while the app saves; a failure belongs in the banner."
+    }
+  ],
+  "appearance": "Section labels as subheadings, Monarch fields, editors and switch rows in the theme, and a danger banner for a blocked save. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web RuleBuilder is one form component with built-in validation, focus moved to the summary, a submit promise, cancel and an options slot. On Android it is a recipe on one scrolling screen, which is the phone pattern for a long form; the Save and Cancel actions can also live in the screen's TopAppBar. The validation is the app's: MonarchCondition.problems and MonarchRuleAction.problems give the incomplete parts. MonarchConditionEditor and MonarchActionEditor are experimental, so the example opts in at each call. Reordering actions uses MonarchActionEditor's move buttons, which TalkBack reaches directly. iOS has no entry yet; its plan is also a recipe.",
+  "accessibility": [
+    "When, If and Then are headings, so TalkBack users can jump between the parts.",
+    "A blocked save shows a danger banner announced assertively and listing what is missing; each field also shows its own error in words.",
+    "Triggers are checkbox rows with the checkbox role; options are switch rows with their state.",
+    "The editors name each condition and action by position and move actions with buttons, never only by dragging."
+  ],
+  "edgeCases": [
+    "Never put the editors in a lazy list; the form scrolls as one Column.",
+    "Empty conditions are allowed: the rule then applies whenever it is checked.",
+    "Keep the problems list in the order of the form so the banner reads top to bottom."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Scheduled rule with an extra option",
+      "fixture": "rule-builder",
+      "webExample": "Scheduled rule with an extra option",
+      "template": "// The form is a scrolling screen: the editors are not lazy.\nColumn(\n    modifier = Modifier.verticalScroll(rememberScrollState()),\n    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n) {\n    // Name and Description one under the other: side by side they would cut the name on a phone.\n    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n        MonarchTextField(value = name, onValueChange = { name = it }, modifier = Modifier.fillMaxWidth(), label = \"Name\", required = true)\n        MonarchTextField(value = description, onValueChange = { description = it }, modifier = Modifier.fillMaxWidth(), label = \"Description (optional)\")\n    }\n    MonarchSectionCard(title = \"When\", description = \"The rule is checked whenever any of these happen.\") {\n        MonarchCheckboxGroup(\n            options = triggers,\n            value = chosen,\n            onValueChange = { chosen = it },\n        )\n    }\n    MonarchSectionCard(title = \"If\", description = \"Leave empty to apply every time the rule is checked.\") {\n        MonarchConditionEditor(\n            value = conditions,\n            onValueChange = { conditions = it },\n            fields = fields,\n            match = match,\n            onMatchChange = { match = it },\n            showErrors = submitted,\n        )\n    }\n    MonarchSectionCard(title = \"Then\", description = \"Actions run in this order.\") {\n        MonarchActionEditor(\n            value = actions,\n            onValueChange = { actions = it },\n            actionTypes = types,\n            showErrors = submitted,\n        )\n    }\n    MonarchSectionCard(title = \"Options\") {\n        MonarchCheckboxRow(\n            checked = on,\n            onCheckedChange = { on = it },\n            label = \"Rule is on\",\n            description = \"Rules that are off are kept but never run.\",\n        )\n        MonarchCheckboxRow(\n            checked = stop,\n            onCheckedChange = { stop = it },\n            label = \"Stop processing\",\n            description = \"When this rule matches, later rules are skipped for the same event.\",\n        )\n    }\n    MonarchTextField(value = priority, onValueChange = { priority = it }, label = {{extra.label}}, required = true)\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n        MonarchButton(text = \"Cancel\", onClick = { submitted = false }, variant = MonarchButtonVariant.Secondary)\n        MonarchButton(text = \"Save rule\", onClick = { submitted = true }, variant = MonarchButtonVariant.Primary)\n    }\n}",
+      "setupTemplate": "val fields = listOf(\n    MonarchConditionField(\n        key = {{fields.0.value}},\n        label = {{fields.0.label}},\n        type = MonarchConditionFieldType.Select,\n        options = listOf(\n            MonarchSelectOption({{fields.0.options.0.value}}, {{fields.0.options.0.label}}),\n            MonarchSelectOption({{fields.0.options.1.value}}, {{fields.0.options.1.label}}),\n            MonarchSelectOption({{fields.0.options.2.value}}, {{fields.0.options.2.label}}),\n        ),\n    ),\n    MonarchConditionField(key = {{fields.1.value}}, label = {{fields.1.label}}, type = MonarchConditionFieldType.Text),\n    MonarchConditionField(\n        key = {{fields.2.value}},\n        label = {{fields.2.label}},\n        type = MonarchConditionFieldType.Number,\n        placeholder = {{fields.2.placeholder}},\n    ),\n    MonarchConditionField(key = {{fields.3.value}}, label = {{fields.3.label}}, type = MonarchConditionFieldType.Tags),\n)\nval types = listOf(\n    MonarchActionType(\n        key = {{actionTypes.0.value}},\n        label = {{actionTypes.0.label}},\n        parameters = listOf(\n            MonarchActionParameter(\n                key = {{action.param.key}},\n                label = {{action.param.label}},\n                kind = MonarchActionParameterKind.Select,\n                options = listOf(\n                    MonarchSelectOption({{action.options.0.value}}, {{action.options.0.label}}),\n                    MonarchSelectOption({{action.options.1.value}}, {{action.options.1.label}}),\n                ),\n                required = true,\n            ),\n        ),\n    ),\n    MonarchActionType(\n        key = {{actionTypes.1.value}},\n        label = {{actionTypes.1.label}},\n        parameters = listOf(\n            MonarchActionParameter(key = \"tags\", label = \"Tags\", kind = MonarchActionParameterKind.Tags, required = true),\n        ),\n    ),\n    MonarchActionType(\n        key = {{actionTypes.2.value}},\n        label = {{actionTypes.2.label}},\n        parameters = listOf(\n            MonarchActionParameter(key = \"message\", label = \"Message\", kind = MonarchActionParameterKind.TextArea, required = true),\n        ),\n    ),\n)\nval triggers = listOf(\n    MonarchCheckboxGroupOption({{triggers.0.value}}, {{triggers.0.label}}),\n    MonarchCheckboxGroupOption({{triggers.1.value}}, {{triggers.1.label}}),\n    MonarchCheckboxGroupOption({{triggers.2.value}}, {{triggers.2.label}}),\n    MonarchCheckboxGroupOption({{triggers.3.value}}, {{triggers.3.label}}, description = {{triggers.3.description}}),\n)\nvar name by rememberSaveable { mutableStateOf({{name}}) }\nvar description by rememberSaveable { mutableStateOf(\"\") }\nvar on by rememberSaveable { mutableStateOf(true) }\nvar stop by rememberSaveable { mutableStateOf(false) }\nvar priority by rememberSaveable { mutableStateOf({{extra.value}}) }\nvar chosen by remember { mutableStateOf(listOf({{checkedTrigger}})) }\nvar conditions by remember {\n    mutableStateOf(\n        listOf(\n            MonarchCondition(\n                id = \"c1\",\n                field = {{condition.field}},\n                operator = MonarchConditionOperator.{{condition.operator|pascal}},\n                value = MonarchConditionValue.Number({{condition.value|double}}),\n            ),\n        ),\n    )\n}\nvar match by remember { mutableStateOf(MonarchConditionMatch.All) }\nvar actions by remember {\n    mutableStateOf(\n        listOf(MonarchRuleAction(\"a1\", {{action.type}}, mapOf({{action.param.key}} to MonarchActionValue.Text({{action.value}})))),\n    )\n}\nvar submitted by rememberSaveable { mutableStateOf(false) }",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "val fields = listOf(\n    MonarchConditionField(\n        key = \"priority\",\n        label = \"Priority\",\n        type = MonarchConditionFieldType.Select,\n        options = listOf(\n            MonarchSelectOption(\"low\", \"Low\"),\n            MonarchSelectOption(\"normal\", \"Normal\"),\n            MonarchSelectOption(\"high\", \"High\"),\n        ),\n    ),\n    MonarchConditionField(key = \"subject\", label = \"Subject\", type = MonarchConditionFieldType.Text),\n    MonarchConditionField(\n        key = \"hoursOpen\",\n        label = \"Hours since created\",\n        type = MonarchConditionFieldType.Number,\n        placeholder = \"Hours\",\n    ),\n    MonarchConditionField(key = \"tags\", label = \"Tags\", type = MonarchConditionFieldType.Tags),\n)\nval types = listOf(\n    MonarchActionType(\n        key = \"set_priority\",\n        label = \"Set priority\",\n        parameters = listOf(\n            MonarchActionParameter(\n                key = \"priority\",\n                label = \"Priority\",\n                kind = MonarchActionParameterKind.Select,\n                options = listOf(\n                    MonarchSelectOption(\"normal\", \"Normal\"),\n                    MonarchSelectOption(\"high\", \"High\"),\n                ),\n                required = true,\n            ),\n        ),\n    ),\n    MonarchActionType(\n        key = \"add_tags\",\n        label = \"Add tags\",\n        parameters = listOf(\n            MonarchActionParameter(key = \"tags\", label = \"Tags\", kind = MonarchActionParameterKind.Tags, required = true),\n        ),\n    ),\n    MonarchActionType(\n        key = \"notify\",\n        label = \"Notify the team\",\n        parameters = listOf(\n            MonarchActionParameter(key = \"message\", label = \"Message\", kind = MonarchActionParameterKind.TextArea, required = true),\n        ),\n    ),\n)\nval triggers = listOf(\n    MonarchCheckboxGroupOption(\"created\", \"Request created\"),\n    MonarchCheckboxGroupOption(\"updated\", \"Request updated\"),\n    MonarchCheckboxGroupOption(\"replied\", \"Requester replied\"),\n    MonarchCheckboxGroupOption(\"hourly\", \"Every hour\", description = \"Checks open requests on a schedule.\"),\n)\nvar name by rememberSaveable { mutableStateOf(\"Raise priority of old requests\") }\nvar description by rememberSaveable { mutableStateOf(\"\") }\nvar on by rememberSaveable { mutableStateOf(true) }\nvar stop by rememberSaveable { mutableStateOf(false) }\nvar priority by rememberSaveable { mutableStateOf(\"10\") }\nvar chosen by remember { mutableStateOf(listOf(\"hourly\")) }\nvar conditions by remember {\n    mutableStateOf(\n        listOf(\n            MonarchCondition(\n                id = \"c1\",\n                field = \"hoursOpen\",\n                operator = MonarchConditionOperator.Gt,\n                value = MonarchConditionValue.Number(24.0),\n            ),\n        ),\n    )\n}\nvar match by remember { mutableStateOf(MonarchConditionMatch.All) }\nvar actions by remember {\n    mutableStateOf(\n        listOf(MonarchRuleAction(\"a1\", \"set_priority\", mapOf(\"priority\" to MonarchActionValue.Text(\"high\")))),\n    )\n}\nvar submitted by rememberSaveable { mutableStateOf(false) }",
+      "code": "// The form is a scrolling screen: the editors are not lazy.\nColumn(\n    modifier = Modifier.verticalScroll(rememberScrollState()),\n    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n) {\n    // Name and Description one under the other: side by side they would cut the name on a phone.\n    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n        MonarchTextField(value = name, onValueChange = { name = it }, modifier = Modifier.fillMaxWidth(), label = \"Name\", required = true)\n        MonarchTextField(value = description, onValueChange = { description = it }, modifier = Modifier.fillMaxWidth(), label = \"Description (optional)\")\n    }\n    MonarchSectionCard(title = \"When\", description = \"The rule is checked whenever any of these happen.\") {\n        MonarchCheckboxGroup(\n            options = triggers,\n            value = chosen,\n            onValueChange = { chosen = it },\n        )\n    }\n    MonarchSectionCard(title = \"If\", description = \"Leave empty to apply every time the rule is checked.\") {\n        MonarchConditionEditor(\n            value = conditions,\n            onValueChange = { conditions = it },\n            fields = fields,\n            match = match,\n            onMatchChange = { match = it },\n            showErrors = submitted,\n        )\n    }\n    MonarchSectionCard(title = \"Then\", description = \"Actions run in this order.\") {\n        MonarchActionEditor(\n            value = actions,\n            onValueChange = { actions = it },\n            actionTypes = types,\n            showErrors = submitted,\n        )\n    }\n    MonarchSectionCard(title = \"Options\") {\n        MonarchCheckboxRow(\n            checked = on,\n            onCheckedChange = { on = it },\n            label = \"Rule is on\",\n            description = \"Rules that are off are kept but never run.\",\n        )\n        MonarchCheckboxRow(\n            checked = stop,\n            onCheckedChange = { stop = it },\n            label = \"Stop processing\",\n            description = \"When this rule matches, later rules are skipped for the same event.\",\n        )\n    }\n    MonarchTextField(value = priority, onValueChange = { priority = it }, label = \"Priority (higher runs first)\", required = true)\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n        MonarchButton(text = \"Cancel\", onClick = { submitted = false }, variant = MonarchButtonVariant.Secondary)\n        MonarchButton(text = \"Save rule\", onClick = { submitted = true }, variant = MonarchButtonVariant.Primary)\n    }\n}"
+    }
+  ],
+  "webEquivalent": "RuleBuilder",
+  "dependsOn": [
+    "condition-editor",
+    "action-editor",
+    "checkbox-group",
+    "text-field",
+    "switch",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "layout",
+      "platform": "android",
+      "reason": "The web draws a condition as one row: field, operator, value and remove, about 520px wide in the docs window. A phone window of 392dp leaves 320dp for the row (24dp margins, and 12dp card padding). One row needs the field picker at 120dp, the operator picker at 120dp, the value at 96dp, the remove button at 48dp and three 8dp gaps, 408dp, which does not fit. The row therefore stacks in the web's order (field, operator, value) with the remove button at the top right.",
+      "convention": "Material text fields keep a 48dp touch height and a readable width; three pickers and a button do not share one line on a compact window"
+    }
+  ]
+}

@@ -7,21 +7,12 @@ import {
   type ConsequenceItem,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './consequence-list.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
-const projectImpact: ConsequenceItem[] = [
-  { id: 'tasks', kind: 'removed', count: 48, label: 'tasks and their comments will be deleted' },
-  { id: 'files', kind: 'removed', count: 1312, label: 'files will be deleted' },
-  { id: 'access', kind: 'changed', count: 6, label: 'people lose access immediately' },
-  {
-    id: 'invoices',
-    kind: 'kept',
-    label: 'Invoices are kept for 7 years',
-    detail: 'They stay available to workspace owners under Billing.',
-  },
-  { id: 'links', kind: 'warning', label: 'Shared links stop working' },
-];
+const projectImpact = fixture.data.items as ConsequenceItem[];
 
 function DeleteProject() {
   return (
@@ -185,7 +176,7 @@ export default {
         {
           title: 'Mixed consequences',
           stack: true,
-          render: () => <ConsequenceList heading="What happens" items={projectImpact} />,
+          render: () => <ConsequenceList heading={fixture.data.heading} items={projectImpact} />,
         },
         {
           title: 'Grouped by kind',

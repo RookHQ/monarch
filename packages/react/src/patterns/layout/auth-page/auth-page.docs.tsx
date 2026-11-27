@@ -1,6 +1,8 @@
 import { Button, Field, FieldLabel, Input } from '@rookcom/monarch-react';
 import { AuthPage } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './auth-page.fixture.json';
 
 const sampleLinks = [
   { label: 'Terms', href: '#terms' },
@@ -8,11 +10,11 @@ const sampleLinks = [
   { label: 'Help', href: '#help' },
 ];
 
-function SampleForm({ submit }: { submit: string }) {
+function SampleForm({ submit, label = 'Email' }: { submit: string; label?: string }) {
   return (
     <form onSubmit={(e) => e.preventDefault()} style={{ display: 'grid', gap: 16 }}>
       <Field>
-        <FieldLabel>Email</FieldLabel>
+        <FieldLabel>{label}</FieldLabel>
         <Input type="email" autoComplete="email" />
       </Field>
       <Button type="submit" variant="primary" block>
@@ -147,15 +149,18 @@ export default {
           render: () => (
             <AuthPage
               style={{ minHeight: 0 }}
-              brand={<strong>Product</strong>}
+              brand={<strong>{fixture.data.brand}</strong>}
               brandHref="#home"
-              title="Sign in"
+              title={fixture.data.title}
               headingLevel="h2"
-              description="Use your work email to continue."
-              footer={<span>No account yet? Create one.</span>}
-              links={sampleLinks}
+              description={fixture.data.description}
+              footer={<span>{fixture.data.footer}</span>}
+              links={sampleLinks.map((link, i) => ({
+                ...link,
+                label: fixture.data.links[i] ?? link.label,
+              }))}
             >
-              <SampleForm submit="Continue" />
+              <SampleForm submit={fixture.data.submit} label={fixture.data.field} />
             </AuthPage>
           ),
         },

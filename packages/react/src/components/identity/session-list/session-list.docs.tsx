@@ -1,35 +1,59 @@
 import { useState } from 'react';
-import {
-  SessionList,
-  describeUserAgent,
-  type SessionListItem,
-} from '@rookcom/monarch-react/patterns';
+import { SessionList, type SessionListItem } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './session-list.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000);
 
+const [current, mobile, desktop] = fixture.data.sessions as unknown as readonly [
+  {
+    id: string;
+    label: string;
+    current: boolean;
+    signedInHoursAgo: number;
+    lastActiveHoursAgo: number;
+  },
+  {
+    id: string;
+    label: string;
+    kind: NonNullable<SessionListItem['kind']>;
+    detail: string;
+    signedInHoursAgo: number;
+    lastActiveHoursAgo: number;
+  },
+  {
+    id: string;
+    label: string;
+    kind: NonNullable<SessionListItem['kind']>;
+    signedInHoursAgo: number;
+    lastActiveHoursAgo: number;
+  },
+];
+
 const SAMPLE: SessionListItem[] = [
   {
-    id: 's-1',
-    label: 'Chrome on macOS',
-    current: true,
-    signedInAt: hoursAgo(30),
+    id: current.id,
+    label: current.label,
+    current: current.current,
+    signedInAt: hoursAgo(current.signedInHoursAgo),
     lastActiveAt: new Date(),
   },
   {
-    id: 's-2',
-    label: 'Safari on iPhone',
-    kind: 'mobile',
-    detail: 'Lisbon, Portugal',
-    signedInAt: hoursAgo(200),
-    lastActiveAt: hoursAgo(3),
+    id: mobile.id,
+    label: mobile.label,
+    kind: mobile.kind,
+    detail: mobile.detail,
+    signedInAt: hoursAgo(mobile.signedInHoursAgo),
+    lastActiveAt: hoursAgo(mobile.lastActiveHoursAgo),
   },
   {
-    id: 's-3',
-    ...describeUserAgent('Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0'),
-    signedInAt: hoursAgo(500),
-    lastActiveAt: hoursAgo(72),
+    id: desktop.id,
+    label: desktop.label,
+    kind: desktop.kind,
+    signedInAt: hoursAgo(desktop.signedInHoursAgo),
+    lastActiveAt: hoursAgo(desktop.lastActiveHoursAgo),
   },
 ];
 
@@ -46,7 +70,7 @@ function Interactive() {
         await wait(600);
         setSessions((all) => all.filter((s) => !ids.includes(s.id)));
       }}
-      footnote="Apps already open on a device you sign out can stay signed in for a few minutes."
+      footnote={fixture.data.footnote}
     />
   );
 }

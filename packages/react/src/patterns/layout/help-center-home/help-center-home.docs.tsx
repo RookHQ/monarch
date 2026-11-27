@@ -1,55 +1,27 @@
 import { Button } from '@rookcom/monarch-react';
 import { HelpCenterHome, type HelpArticle } from '@rookcom/monarch-react/marketing';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './help-center-home.fixture.json';
 
-const articles: HelpArticle[] = [
-  {
-    id: 'a1',
-    title: 'Reset your password',
-    category: 'Account',
-    href: '#reset',
-    updated: 'Mar 2, 2026',
-  },
-  {
-    id: 'a2',
-    title: 'Change the email on your account',
-    category: 'Account',
-    href: '#email',
-    updated: 'Feb 11, 2026',
-  },
-  {
-    id: 'a3',
-    title: 'Turn on two-step sign-in',
-    category: 'Account',
-    href: '#two-step',
-    updated: 'Jan 28, 2026',
-  },
-  {
-    id: 'a4',
-    title: 'Download an invoice',
-    category: 'Billing',
-    href: '#invoice',
-    updated: 'Mar 1, 2026',
-  },
-  {
-    id: 'a5',
-    title: 'Update your payment card',
-    category: 'Billing',
-    href: '#card',
-    updated: 'Feb 20, 2026',
-  },
-  {
-    id: 'a6',
-    title: 'Invite people to your team',
-    category: 'Teams',
-    href: '#invite',
-    updated: 'Feb 2, 2026',
-  },
+// The page address and update date of each article stay with the docs.
+const extras = [
+  { href: '#reset', updated: 'Mar 2, 2026' },
+  { href: '#email', updated: 'Feb 11, 2026' },
+  { href: '#two-step', updated: 'Jan 28, 2026' },
+  { href: '#invoice', updated: 'Mar 1, 2026' },
+  { href: '#card', updated: 'Feb 20, 2026' },
+  { href: '#invite', updated: 'Feb 2, 2026' },
 ];
+const articles: HelpArticle[] = fixture.data.articles.map((article, i) => ({
+  ...article,
+  href: extras[i]?.href ?? '',
+  updated: extras[i]?.updated ?? '',
+}));
 
 const contact = (
   <Button variant="secondary" asChild>
-    <a href="#new-request">Submit a request</a>
+    <a href="#new-request">{fixture.data.contact}</a>
   </Button>
 );
 
@@ -165,7 +137,18 @@ export default {
         {
           title: 'Columns with a contact action',
           stack: true,
-          render: () => <HelpCenterHome articles={articles} headingAs="h2" contact={contact} />,
+          render: () => (
+            <HelpCenterHome
+              articles={articles}
+              headingAs="h2"
+              contact={contact}
+              messages={{
+                title: fixture.data.title,
+                description: fixture.data.description,
+                search: fixture.data.search,
+              }}
+            />
+          ),
         },
         {
           title: 'Rows',

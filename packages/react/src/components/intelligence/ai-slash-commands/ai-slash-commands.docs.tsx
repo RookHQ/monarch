@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import {
   AiPromptInput,
   AiSlashCommands,
@@ -7,38 +7,49 @@ import {
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { CalendarIcon, ListIcon, PencilIcon, SearchIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-slash-commands.fixture.json';
 
 /** Built on demand: JSX at module scope would run when the docs index is read. */
-const makeCommands = (): AiSlashCommand[] => [
-  {
-    id: 'summarize',
-    name: 'summarize',
-    description: 'Summarize the open document',
-    icon: <ListIcon />,
-    keywords: ['shorten', 'recap'],
-  },
-  {
-    id: 'rewrite',
-    name: 'rewrite',
-    description: 'Rewrite the selection in a different tone',
-    icon: <PencilIcon />,
-  },
-  {
-    id: 'search',
-    name: 'search',
-    description: 'Search connected documents',
-    icon: <SearchIcon />,
-  },
-  {
-    id: 'schedule',
-    name: 'schedule',
-    description: 'Needs a calendar connection',
-    icon: <CalendarIcon />,
-    disabled: true,
-  },
-];
+const makeCommands = (): AiSlashCommand[] => {
+  const icons: Record<string, ReactNode> = {
+    summarize: <ListIcon />,
+    rewrite: <PencilIcon />,
+    search: <SearchIcon />,
+    schedule: <CalendarIcon />,
+  };
+  const keywords: Record<string, string[]> = { summarize: ['shorten', 'recap'] };
+  return (
+    fixture.data.commands as {
+      id: string;
+      name: string;
+      description: string;
+      disabled?: boolean;
+    }[]
+  ).map(({ id, name, description, disabled }) => ({
+    id,
+    name,
+    description,
+    icon: icons[id],
+    ...(keywords[id] !== undefined && { keywords: keywords[id] }),
+    ...(disabled !== undefined && { disabled }),
+  }));
+};
+
+/** Types `text` into the prompt once, as a person would, so the page opens on its menu. */
+function useTypedOnce(prompt: RefObject<HTMLDivElement | null>, text: string) {
+  useEffect(() => {
+    const area = prompt.current?.querySelector('textarea');
+    if (!area) return;
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set?.call(area, text);
+    area.setSelectionRange(text.length, text.length);
+    area.dispatchEvent(new Event('input', { bubbles: true }));
+  }, [prompt, text]);
+}
 
 function SlashDemo() {
+  const prompt = useRef<HTMLDivElement>(null);
+  useTypedOnce(prompt, fixture.data.typed);
   const [sent, setSent] = useState('');
   const commands = useMemo(makeCommands, []);
   const slash = useAiSlashCommands(commands, (command) => `/${command.name} `);
@@ -53,8 +64,9 @@ function SlashDemo() {
       }}
     >
       <AiPromptInput
-        label="Message the assistant"
-        placeholder="Type / for commands"
+        ref={prompt}
+        label={fixture.data.label}
+        placeholder={fixture.data.placeholder}
         onSubmit={(text) => setSent(text)}
         {...slash}
       />

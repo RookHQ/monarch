@@ -6,49 +6,40 @@ import {
   type TeamCalendarMember,
 } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './team-calendar.fixture.json';
 
-const MEMBERS: TeamCalendarMember[] = [
-  { id: 'a', name: 'Alex Kim', description: 'Design' },
-  { id: 'b', name: 'Sam Lee', description: 'Engineering' },
-  { id: 'c', name: 'Priya Nair', description: 'Engineering' },
-  { id: 'd', name: 'Jordan Park', description: 'Support' },
-];
+const day = (iso: string) => iso.slice(0, 10);
 
-const ENTRIES: TeamCalendarEntry[] = [
-  {
-    id: '1',
-    memberId: 'a',
-    start: '2026-11-09',
-    end: '2026-11-13',
-    label: 'Annual leave',
-    color: '#2f7d6d',
-  },
-  {
-    id: '2',
-    memberId: 'b',
-    start: '2026-11-04',
-    label: 'Sick leave',
-    color: '#b54a3a',
-    portion: 'first-half',
-  },
-  {
-    id: '3',
-    memberId: 'c',
-    start: '2026-11-18',
-    end: '2026-11-20',
-    label: 'Annual leave',
-    color: '#2f7d6d',
-    pending: true,
-  },
-  { id: '4', memberId: 'd', start: '2026-11-25', end: '2026-11-26', label: 'Away' },
-];
+const MEMBERS: TeamCalendarMember[] = fixture.data.members;
 
-const MONTHS = ['2026-10-01', '2026-11-01', '2026-12-01'];
+const ENTRIES: TeamCalendarEntry[] = (
+  fixture.data.entries as readonly {
+    memberId: string;
+    start: string;
+    end?: string;
+    label: string;
+    color?: string;
+    portion?: NonNullable<TeamCalendarEntry['portion']>;
+    pending?: boolean;
+  }[]
+).map((entry, i) => ({
+  id: String(i + 1),
+  memberId: entry.memberId,
+  start: day(entry.start),
+  ...(entry.end !== undefined && { end: day(entry.end) }),
+  label: entry.label,
+  ...(entry.color !== undefined && { color: entry.color }),
+  ...(entry.portion !== undefined && { portion: entry.portion }),
+  ...(entry.pending && { pending: true }),
+}));
+
+const MONTHS = ['2026-10-01', day(fixture.data.month), '2026-12-01'];
 
 function Demo() {
   const [i, setI] = useState(1);
   const [picked, setPicked] = useState('');
-  const month = MONTHS[i] ?? '2026-11-01';
+  const month = MONTHS[i] ?? day(fixture.data.month);
   return (
     <div style={{ display: 'grid', gap: 12, width: '100%' }}>
       <CalendarToolbar
@@ -66,9 +57,9 @@ function Demo() {
         members={MEMBERS}
         entries={ENTRIES}
         month={month}
-        today="2026-11-04"
-        locale="en-GB"
-        holidays={[{ date: '2026-11-11', name: 'Company holiday' }]}
+        today={day(fixture.data.today)}
+        locale={fixture.data.locale}
+        holidays={fixture.data.holidays.map((h) => ({ date: day(h.date), name: h.name }))}
         onEntryClick={(e: TeamCalendarEntry, m: TeamCalendarMember, d: string) =>
           setPicked(`${m.name}: ${e.label} on ${d}`)
         }

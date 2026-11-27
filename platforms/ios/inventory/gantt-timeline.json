@@ -1,0 +1,212 @@
+{
+  "id": "gantt-timeline",
+  "name": "MonarchGanttTimeline",
+  "title": "GanttTimeline",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "ScrollView(.horizontal) with anchorPreference, backgroundPreferenceValue and overlayPreferenceValue Canvas drawing (gridlines, weekends, spans, today line, dependency arrows); LongPressGesture sequenced before DragGesture with sensoryFeedback for moving and resizing; accessibilityActions, focusable and onKeyPress; Form with DatePicker in a sheet (Change dates); Menu with an inline Picker (zoom) and Picker with .pickerStyle(.segmented) (chart or list); DisclosureGroup with .monarch (unscheduled); help(_:) on lane milestones; MonarchCalendarToolbar, MonarchButton, MonarchDivider, MonarchIcon; Date.FormatStyle",
+  "status": "experimental",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Items as bars on a calendar from their first to their last day, with dependency arrows, milestones, a today line, zoom from weeks to years and a list view that writes every date in words and changes dates with the system date pickers.",
+  "whenToUse": "To plan and reschedule dated work where overlaps and dependencies matter: tasks, phases or issues with start and due dates, in a project or roadmap screen. Save each onChange as it arrives and pass the new items back.",
+  "whenNotToUse": "For work that moves through statuses without dates use a board or MonarchStepper. For events at times of day use MonarchAgendaList or a calendar. For one date use DatePicker (see date-picker).",
+  "api": [
+    "init(_ items: [MonarchGanttTimelineItem], state: Binding<MonarchGanttTimelineState>? = nil, groups: [MonarchGanttTimelineGroup] = [], dependencies: [MonarchGanttTimelineDependency] = [], milestones: [MonarchGanttTimelineMilestone] = [], zoomLevels: [MonarchGanttTimelineZoom] = [.month, .quarter, .year], undated: MonarchGanttTimelineUndated = .list, today: Date? = Date(), showsToolbar: Bool = true, labels: MonarchGanttTimelineLabels = MonarchGanttTimelineLabels(), onChange: (@MainActor (MonarchGanttTimelineItem, MonarchGanttTimelineDates) -> Void)? = nil, onOpen: (@MainActor (MonarchGanttTimelineItem) -> Void)? = nil, itemMeta: (@MainActor (MonarchGanttTimelineItem) -> AnyView)? = nil, groupMeta: (@MainActor (MonarchGanttTimelineGroup) -> AnyView)? = nil, @ViewBuilder toolbarActions: () -> ToolbarActions)",
+    "init(_ items: [MonarchGanttTimelineItem], state: Binding<MonarchGanttTimelineState>? = nil, groups: [MonarchGanttTimelineGroup] = [], dependencies: [MonarchGanttTimelineDependency] = [], milestones: [MonarchGanttTimelineMilestone] = [], zoomLevels: [MonarchGanttTimelineZoom] = [.month, .quarter, .year], undated: MonarchGanttTimelineUndated = .list, today: Date? = Date(), showsToolbar: Bool = true, labels: MonarchGanttTimelineLabels = MonarchGanttTimelineLabels(), onChange: (@MainActor (MonarchGanttTimelineItem, MonarchGanttTimelineDates) -> Void)? = nil, onOpen: (@MainActor (MonarchGanttTimelineItem) -> Void)? = nil, itemMeta: (@MainActor (MonarchGanttTimelineItem) -> AnyView)? = nil, groupMeta: (@MainActor (MonarchGanttTimelineGroup) -> AnyView)? = nil) where ToolbarActions == EmptyView",
+    "struct MonarchGanttTimelineItem: Identifiable, Hashable, Sendable { init(id: String, label: String, start: Date? = nil, end: Date? = nil, parentID: String? = nil, groupID: String? = nil, progress: Double? = nil, tone: MonarchTone? = nil, isEditable: Bool = true, conflict: String? = nil, meta: String? = nil); var dates: MonarchGanttTimelineDates { get } }",
+    "struct MonarchGanttTimelineGroup: Identifiable, Hashable, Sendable { init(id: String, label: String, start: Date? = nil, end: Date? = nil, meta: String? = nil) }",
+    "struct MonarchGanttTimelineDependency: Identifiable, Hashable, Sendable { init(id: String, from: String, to: String, kind: MonarchGanttTimelineDependencyKind = .finishToStart, isConflict: Bool = false) }",
+    "enum MonarchGanttTimelineDependencyKind: String, Sendable, Hashable, CaseIterable { case finishToStart, startToStart, finishToFinish }",
+    "struct MonarchGanttTimelineMilestone: Identifiable, Hashable, Sendable { init(id: String, label: String, date: Date, isDone: Bool = false, itemID: String? = nil) }",
+    "struct MonarchGanttTimelineDates: Hashable, Sendable { init(start: Date?, end: Date?); func shifted(_ shift: MonarchGanttTimelineShift, by days: Int, in calendar: Calendar = .current) -> MonarchGanttTimelineDates }",
+    "enum MonarchGanttTimelineShift: String, Sendable, Hashable, CaseIterable { case move, start, end }",
+    "enum MonarchGanttTimelineZoom: String, Sendable, Hashable, CaseIterable { case week, month, quarter, year }",
+    "enum MonarchGanttTimelineView: String, Sendable, Hashable, CaseIterable { case chart, list }",
+    "enum MonarchGanttTimelineUndated: String, Sendable, Hashable, CaseIterable { case list, row }",
+    "struct MonarchGanttTimelineState: Hashable, Sendable { init(start: Date? = nil, zoom: MonarchGanttTimelineZoom = .month, view: MonarchGanttTimelineView = .chart, collapsed: Set<String> = []); var start: Date?; var zoom: MonarchGanttTimelineZoom; var view: MonarchGanttTimelineView; var collapsed: Set<String>; mutating func toggle(_ id: String) }",
+    "struct MonarchGanttTimelineLabels: Sendable { init(timeline: String? = nil, rowHeader: String? = nil, zoom: String? = nil, zoomName: (@Sendable (MonarchGanttTimelineZoom) -> String)? = nil, earlier: String? = nil, later: String? = nil, today: String? = nil, view: String? = nil, chart: String? = nil, list: String? = nil, milestones: String? = nil, hint: String? = nil, bar: (@Sendable (_ label: String, _ start: String, _ end: String, _ progress: String?) -> String)? = nil, conflict: (@Sendable (String) -> String)? = nil, milestone: (@Sendable (_ label: String, _ date: String, _ isDone: Bool) -> String)? = nil, ended: (@Sendable (String) -> String)? = nil, starts: (@Sendable (String) -> String)? = nil, noDates: String? = nil, unscheduled: (@Sendable (Int) -> String)? = nil, changed: (@Sendable (_ label: String, _ start: String, _ end: String) -> String)? = nil, changeDates: String? = nil, startDate: String? = nil, endDate: String? = nil, save: String? = nil, cancel: String? = nil, duration: (@Sendable (Int) -> String)? = nil, progress: (@Sendable (String) -> String)? = nil, dependsOn: (@Sendable (String) -> String)? = nil, expanded: String? = nil, collapsed: String? = nil, children: (@Sendable (_ count: Int, _ isExpanded: Bool) -> String)? = nil, moveEarlier: String? = nil, moveLater: String? = nil, startEarlier: String? = nil, startLater: String? = nil, endEarlier: String? = nil, endLater: String? = nil, range: (@Sendable (_ from: String, _ to: String) -> String)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "[MonarchGanttTimelineItem]",
+      "default": "required",
+      "description": "The rows: id, label, start and end dates (one of them makes a one-day marker, neither makes it unscheduled), parentID for sub-tasks, groupID, progress from 0 to 1, tone (nil is the accent), isEditable, conflict text and a short meta text."
+    },
+    {
+      "name": "state",
+      "type": "Binding<MonarchGanttTimelineState>?",
+      "default": "nil",
+      "description": "The first visible day, the zoom, chart or list, and the collapsed parents. nil keeps the state inside the timeline; with a binding the app reads and sets every value."
+    },
+    {
+      "name": "groups",
+      "type": "[MonarchGanttTimelineGroup]",
+      "default": "[]",
+      "description": "Heading rows; items with a matching groupID are listed under them. A group with dates shows a thin span on its row."
+    },
+    {
+      "name": "dependencies",
+      "type": "[MonarchGanttTimelineDependency]",
+      "default": "[]",
+      "description": "Links between items, drawn as arrows (finish to start, start to start or finish to finish) and written as \"Depends on\" in the list. isConflict draws the arrow dashed in the strong danger colour."
+    },
+    {
+      "name": "milestones",
+      "type": "[MonarchGanttTimelineMilestone]",
+      "default": "[]",
+      "description": "Dated checkpoints drawn as diamonds: on their item's row with itemID, otherwise in a lane under the header with their name."
+    },
+    {
+      "name": "zoomLevels",
+      "type": "[MonarchGanttTimelineZoom]",
+      "default": "[.month, .quarter, .year]",
+      "description": "The zoom levels offered in the toolbar's zoom menu. With one level or none there is no menu."
+    },
+    {
+      "name": "undated",
+      "type": "MonarchGanttTimelineUndated",
+      "default": ".list",
+      "description": "Top-level items without dates go in an Unscheduled disclosure group under the chart (.list) or stay as chart rows that say \"No dates\" (.row)."
+    },
+    {
+      "name": "today",
+      "type": "Date?",
+      "default": "Date()",
+      "description": "Any time on the day of the today line, read in the environment's calendar. nil hides the line and disables Today. Pass a fixed date in tests and previews."
+    },
+    {
+      "name": "showsToolbar",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the toolbar: Today, Earlier, Later, the visible range, the zoom menu, the chart and list switch and toolbarActions."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchGanttTimelineLabels",
+      "default": "MonarchGanttTimelineLabels()",
+      "description": "Replacements for every built-in string, including the bar description, the VoiceOver action names, the date sheet and the announcement after a change."
+    },
+    {
+      "name": "onChange",
+      "type": "(@MainActor (MonarchGanttTimelineItem, MonarchGanttTimelineDates) -> Void)?",
+      "default": "nil",
+      "description": "Called once per finished drag, arrow key, VoiceOver action or date sheet save, with the item and its new dates at the start of their days. Without it the timeline is read-only. The timeline never changes items itself."
+    },
+    {
+      "name": "onOpen",
+      "type": "(@MainActor (MonarchGanttTimelineItem) -> Void)?",
+      "default": "nil",
+      "description": "Makes each bar and the name of each list row a button that opens the item."
+    },
+    {
+      "name": "toolbarActions",
+      "type": "@ViewBuilder () -> ToolbarActions",
+      "default": "EmptyView",
+      "description": "Extra controls at the end of the toolbar, such as a filter or a New item button."
+    },
+    {
+      "name": "itemMeta",
+      "type": "(@MainActor (MonarchGanttTimelineItem) -> AnyView)?",
+      "default": "nil",
+      "description": "Extra content under an item's name, after its meta text, in the chart's row labels and the list, such as a status badge or an assignee avatar. VoiceOver reads it where it is drawn."
+    },
+    {
+      "name": "groupMeta",
+      "type": "(@MainActor (MonarchGanttTimelineGroup) -> AnyView)?",
+      "default": "nil",
+      "description": "Extra content under a group's heading, after its meta text."
+    }
+  ],
+  "states": [
+    {
+      "name": "read only",
+      "description": "Without onChange bars have no drag, no key handling and no VoiceOver actions; with onOpen they are still buttons."
+    },
+    {
+      "name": "editable",
+      "description": "A visible hint above the chart; each bar moves by touch and hold then drag, its ends by holding within 12 points of an end, by the arrow keys of a hardware keyboard and by six VoiceOver actions. The list shows Change dates, which opens a sheet with two system date pickers."
+    },
+    {
+      "name": "dragging",
+      "description": "The bar follows the finger by whole days with a large shadow, the dependency arrows follow it, a haptic tick marks each day and the pick-up has an impact haptic. Release reports the change once."
+    },
+    {
+      "name": "conflict",
+      "description": "The bar uses the danger tone with a dashed 2-point outline; the conflict text is read with the bar and written in the list in the strong danger colour."
+    },
+    {
+      "name": "one-day marker",
+      "description": "An item with only a start or an end is a small diamond centred on its day; it can only be moved."
+    },
+    {
+      "name": "parent",
+      "description": "The row label is a button that reads Expanded or Collapsed and shows a Hide or Show caption; a parent without dates shows a bracket over its children's span."
+    },
+    {
+      "name": "outside the window",
+      "description": "The row says \"Ended Jan 9, 2026\" or \"Starts Mar 2, 2026\" instead of a bar."
+    },
+    {
+      "name": "unscheduled",
+      "description": "Items without dates are listed in an Unscheduled disclosure group under the chart, or as rows saying \"No dates\"."
+    },
+    {
+      "name": "list",
+      "description": "A row per group and item with the dates, length, progress, dependencies and conflict in words, then the unscheduled items and the milestones."
+    }
+  ],
+  "appearance": "The chart sits on the surface colour with a subtle outline; the header, weekends (week and month zoom) and group rows use the subtle background, gridlines and row lines the subtle border. A bar is a light tint of its tone with an outline and a bottom progress strip in the tone's solid fill (accent by default; neutral uses the muted background and the strong border) and its label in the default text colour. The today line and its label use the accent fill with accent-on-solid text. Arrows use the subtle text colour, or the strong danger colour dashed when broken. Done milestones are filled with the accent; open ones are the surface with a muted outline. Every colour is a theme role, so dark and both high-contrast themes follow.",
+  "platformNotes": "Matches Android's MonarchGanttTimeline names and options, in Swift form: dates are Date values read as calendar days in the environment's calendar and time zone (Android uses UTC day keys in epoch milliseconds, the web ISO strings), the state is a Binding<MonarchGanttTimelineState> (nil keeps it inside) instead of a remembered state object, Booleans are isEditable, isDone, isConflict and showsToolbar, and the toolbar arrows come from MonarchCalendarToolbar's SF Symbols, so there are no icon parameters. The web table view becomes a list of rows, the phone and VoiceOver pattern; its date inputs become one Change dates button that opens a sheet with two system DatePickers in a Form (SwiftUI has no date range picker). Web pointer drag becomes touch and hold then drag, so a plain swipe still scrolls the calendar; web keyboard moves stay for hardware keyboards (arrow keys, Shift for the end, Option for the start, without the web's Up and Down jumps between bars) and are also VoiceOver actions. The chart scrolls sideways only, not in two axes as the plan said: it does not scroll vertically, so put it in a scrolling screen, and a drag does not scroll the calendar at its edge. The time axis runs left to right in every layout direction, as on the web and Android; the row labels stay at the leading edge. Weeks start on the calendar's firstWeekday (Android always uses Monday). onChange returns nothing: the web's promise with a saving state and rollback is replaced by the app passing new items (or the old ones) back. Tones are MonarchTone with nil for the web's accent tone, because MonarchTone has no accent. Title and meta are plain strings, not view slots, and the conflict has no warning glyph: the dashed outline and the words carry it. Lane milestones use help(_:), the native tooltip, which iOS exposes as the accessibility hint. Experimental because it is a product pattern not yet adopted by a Rook iOS app. Several closures are optional (onChange, onOpen, itemMeta, groupMeta). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onChange.",
+  "accessibility": [
+    "Each bar is one element read as \"<label>, <first day> to <last day>, <n>% complete\", with \". Conflict: <message>\" when there is a conflict; a one-day marker reads one date.",
+    "Every bar has a touch area at least 44 points wide and as tall as the row, around a narrower visible bar; rows are at least 44 points tall.",
+    "With onOpen a bar has the button trait and a default action, and the name of a list row is a button.",
+    "Editable bars offer VoiceOver actions: Move a day earlier, Move a day later, Start a day earlier, Start a day later, End a day earlier, End a day later (markers only the first two). Locked items and read-only timelines offer none.",
+    "After a change the new dates are announced: \"Design: Jan 12, 2026 to Jan 24, 2026\".",
+    "A parent's row label is a button whose value is Expanded or Collapsed, with a visible Hide or Show caption.",
+    "The chart and the list are containers named \"Timeline\"; group labels and list headings have the header trait; header ticks, the today label, gridlines and arrows are hidden from VoiceOver.",
+    "Milestones are images read as \"Milestone <name>, <date>\" with \", done\" when reached.",
+    "The list writes every date, length, progress, dependency and conflict, so nothing in the chart depends on dragging, colour or position alone.",
+    "Rows grow with their label at every Dynamic Type size, so labels wrap instead of being cut; a drag gives a haptic tick per day."
+  ],
+  "edgeCases": [
+    "Start after end is swapped; dates at any time of day are read as their calendar day.",
+    "A drag, key press or action never lets the first day pass the last when changing one end.",
+    "Unknown parent ids, self-parents and parent cycles are ignored; items of groups that are not listed go at the end.",
+    "Bars narrower than five edge zones (60 points) hide their label; every bar is at least 6 points wide on screen.",
+    "Items outside the visible window show \"Ended …\" or \"Starts …\" in their row.",
+    "A dependency to an item that is not shown (collapsed or unscheduled) is not drawn.",
+    "Long labels wrap and make their row taller; the label inside a bar is cut with an ellipsis but read in full.",
+    "The year zoom spans 730 days at 1.6 points a day; the week zoom 28 days at 40 points a day."
+  ],
+  "tests": [
+    "MonarchGanttTimelineTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Editable plan with dependencies and milestones",
+      "fixture": "gantt-timeline",
+      "webExample": "Editable plan with dependencies and milestones",
+      "template": "MonarchGanttTimeline(\n    items,\n    state: $state,\n    dependencies: [\n        MonarchGanttTimelineDependency(id: {{dependencies.0.id}}, from: {{dependencies.0.from}}, to: {{dependencies.0.to}}),\n        MonarchGanttTimelineDependency(id: {{dependencies.1.id}}, from: {{dependencies.1.from}}, to: {{dependencies.1.to}}, isConflict: {{dependencies.1.conflict}}),\n        MonarchGanttTimelineDependency(id: {{dependencies.2.id}}, from: {{dependencies.2.from}}, to: {{dependencies.2.to}}, kind: {{dependencies.2.kind|case}}),\n    ],\n    milestones: [\n        MonarchGanttTimelineMilestone(id: {{milestones.0.id}}, label: {{milestones.0.label}}, date: {{milestones.0.date|date}}),\n        MonarchGanttTimelineMilestone(id: {{milestones.1.id}}, label: {{milestones.1.label}}, date: {{milestones.1.date|date}}),\n    ],\n    today: {{today|date}},\n    onChange: { item, dates in\n        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }\n        items[index].start = dates.start\n        items[index].end = dates.end\n        // The app saves item.id with dates.start and dates.end here.\n    },\n    onOpen: { _ in /* The app opens the item here. */ }\n)\n.environment(\\.calendar, Self.calendar)",
+      "setupTemplate": "private static let calendar: Calendar = {\n    var calendar = Calendar(identifier: .gregorian)\n    calendar.timeZone = TimeZone(identifier: \"UTC\") ?? .gmt\n    calendar.firstWeekday = 2\n    return calendar\n}()\n\n@State private var items = [\n    MonarchGanttTimelineItem(id: {{tasks.0.id}}, label: {{tasks.0.label}}, start: {{tasks.0.start|date}}, end: {{tasks.0.end|date}}, progress: {{tasks.0.progress|double}} / 100, tone: {{tasks.0.tone|tone}}),\n    MonarchGanttTimelineItem(id: {{tasks.1.id}}, label: {{tasks.1.label}}, start: {{tasks.1.start|date}}, end: {{tasks.1.end|date}}, progress: {{tasks.1.progress|double}} / 100),\n    MonarchGanttTimelineItem(id: {{tasks.2.id}}, label: {{tasks.2.label}}, start: {{tasks.2.start|date}}, end: {{tasks.2.end|date}}, conflict: {{tasks.2.conflict}}),\n    MonarchGanttTimelineItem(id: {{tasks.3.id}}, label: {{tasks.3.label}}, start: {{tasks.3.start|date}}, end: {{tasks.3.end|date}}, parentID: {{tasks.3.parentId}}),\n    MonarchGanttTimelineItem(id: {{tasks.4.id}}, label: {{tasks.4.label}}, start: {{tasks.4.start|date}}, end: {{tasks.4.end|date}}, parentID: {{tasks.4.parentId}}),\n    MonarchGanttTimelineItem(id: {{tasks.5.id}}, label: {{tasks.5.label}}, end: {{tasks.5.end|date}}, meta: {{tasks.5.meta}}),\n    MonarchGanttTimelineItem(id: {{tasks.6.id}}, label: {{tasks.6.label}}),\n]\n@State private var state = MonarchGanttTimelineState(start: {{defaultStart|date}})",
+      "setup": "private static let calendar: Calendar = {\n    var calendar = Calendar(identifier: .gregorian)\n    calendar.timeZone = TimeZone(identifier: \"UTC\") ?? .gmt\n    calendar.firstWeekday = 2\n    return calendar\n}()\n\n@State private var items = [\n    MonarchGanttTimelineItem(id: \"brief\", label: \"Write the brief\", start: Date(timeIntervalSince1970: 1_767_571_200), end: Date(timeIntervalSince1970: 1_767_916_800), progress: 100.0 / 100, tone: .success),\n    MonarchGanttTimelineItem(id: \"design\", label: \"Design\", start: Date(timeIntervalSince1970: 1_768_176_000), end: Date(timeIntervalSince1970: 1_769_126_400), progress: 60.0 / 100),\n    MonarchGanttTimelineItem(id: \"build\", label: \"Build\", start: Date(timeIntervalSince1970: 1_768_953_600), end: Date(timeIntervalSince1970: 1_770_940_800), conflict: \"Starts before Design ends\"),\n    MonarchGanttTimelineItem(id: \"api\", label: \"API changes\", start: Date(timeIntervalSince1970: 1_769_385_600), end: Date(timeIntervalSince1970: 1_770_163_200), parentID: \"build\"),\n    MonarchGanttTimelineItem(id: \"ui\", label: \"Screens\", start: Date(timeIntervalSince1970: 1_769_990_400), end: Date(timeIntervalSince1970: 1_770_940_800), parentID: \"build\"),\n    MonarchGanttTimelineItem(id: \"launch\", label: \"Launch\", end: Date(timeIntervalSince1970: 1_771_545_600), meta: \"Fixed date\"),\n    MonarchGanttTimelineItem(id: \"research\", label: \"Pricing research\"),\n]\n@State private var state = MonarchGanttTimelineState(start: Date(timeIntervalSince1970: 1_767_571_200))",
+      "code": "MonarchGanttTimeline(\n    items,\n    state: $state,\n    dependencies: [\n        MonarchGanttTimelineDependency(id: \"l1\", from: \"brief\", to: \"design\"),\n        MonarchGanttTimelineDependency(id: \"l2\", from: \"design\", to: \"build\", isConflict: true),\n        MonarchGanttTimelineDependency(id: \"l3\", from: \"api\", to: \"ui\", kind: .startToStart),\n    ],\n    milestones: [\n        MonarchGanttTimelineMilestone(id: \"m1\", label: \"Design review\", date: Date(timeIntervalSince1970: 1_769_126_400)),\n        MonarchGanttTimelineMilestone(id: \"m2\", label: \"Beta\", date: Date(timeIntervalSince1970: 1_770_595_200)),\n    ],\n    today: Date(timeIntervalSince1970: 1_768_348_800),\n    onChange: { item, dates in\n        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }\n        items[index].start = dates.start\n        items[index].end = dates.end\n        // The app saves item.id with dates.start and dates.end here.\n    },\n    onOpen: { _ in /* The app opens the item here. */ }\n)\n.environment(\\.calendar, Self.calendar)"
+    },
+    {
+      "title": "A read-only plan as a list, with sub-tasks",
+      "setup": "private static let calendar = Calendar(identifier: .gregorian)\nprivate static let jan5 = calendar.date(from: DateComponents(year: 2026, month: 1, day: 5)) ?? .distantPast\nprivate static func day(_ offset: Int) -> Date {\n    calendar.date(byAdding: .day, value: offset, to: jan5) ?? jan5\n}",
+      "code": "MonarchGanttTimeline(\n    [\n        MonarchGanttTimelineItem(id: \"build\", label: \"Build\", start: Self.day(16), end: Self.day(39)),\n        MonarchGanttTimelineItem(id: \"api\", label: \"API changes\", start: Self.day(21), end: Self.day(30), parentID: \"build\"),\n        MonarchGanttTimelineItem(id: \"launch\", label: \"Launch\", end: Self.day(46)),\n    ],\n    state: .constant(MonarchGanttTimelineState(view: .list)),\n    today: nil,\n    showsToolbar: false\n)\n.environment(\\.calendar, Self.calendar)"
+    }
+  ],
+  "webEquivalent": "GanttTimeline",
+  "dependsOn": [
+    "calendar-toolbar",
+    "tooltip"
+  ]
+}

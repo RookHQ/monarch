@@ -1,5 +1,23 @@
-import { Alert, Button } from '@rookcom/monarch-react';
+import { Alert, Button, type AlertProps, type ButtonProps } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './alert.fixture.json';
+
+type Tone = NonNullable<AlertProps['tone']>;
+const items = fixture.data.items as unknown as readonly [
+  { tone: Tone; title: string; body: string },
+  { tone: Tone; title: string },
+  {
+    tone: Tone;
+    title: string;
+    action: {
+      label: string;
+      variant: NonNullable<ButtonProps['variant']>;
+      size: NonNullable<ButtonProps['size']>;
+    };
+  },
+  { tone: Tone; title: string; body: string; live: NonNullable<AlertProps['live']> },
+];
 
 export default {
   id: 'alert',
@@ -74,17 +92,21 @@ export default {
           stack: true,
           render: () => (
             <>
-              <Alert tone="info" title="Sync scheduled">
-                Rook ID members refresh every 15 minutes.
+              <Alert tone={items[0].tone} title={items[0].title}>
+                {items[0].body}
               </Alert>
-              <Alert tone="success" title="Saved" />
+              <Alert tone={items[1].tone} title={items[1].title} />
               <Alert
-                tone="warning"
-                title="Domain not verified"
-                actions={<Button size="sm">Verify</Button>}
+                tone={items[2].tone}
+                title={items[2].title}
+                actions={
+                  <Button variant={items[2].action.variant} size={items[2].action.size}>
+                    {items[2].action.label}
+                  </Button>
+                }
               />
-              <Alert tone="danger" title="Payment failed" live="assertive">
-                Update the card to keep the workspace active.
+              <Alert tone={items[3].tone} title={items[3].title} live={items[3].live}>
+                {items[3].body}
               </Alert>
             </>
           ),

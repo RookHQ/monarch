@@ -28,6 +28,19 @@ function round1(n: number): number {
   return Math.round(n * 10) / 10;
 }
 
+/**
+ * The colour exactly as the CSS prints it: each channel rounded to one decimal.
+ *
+ * Contrast guarantees must hold for the emitted value, not for the unrounded
+ * one: a fill at 24.66% lightness passes 7:1 in floating point and fails as the
+ * `24.7%` the stylesheet ships. The derivation engine works on emitted colours
+ * only, so every ratio it measures is the ratio a browser (and the native
+ * ports) will paint.
+ */
+export function emitted(c: Hsl): Hsl {
+  return hsl(round1(c.h), round1(c.s), round1(c.l));
+}
+
 /** `354 71% 52%`, the channel format shadcn-style `hsl(var(--x) / a)` expects. */
 export function toChannels(c: Hsl): string {
   return `${round1(c.h)} ${round1(c.s)}% ${round1(c.l)}%`;
@@ -139,7 +152,8 @@ export function contrast(a: Hsl, b: Hsl): number {
  * Moves lightness in `direction` until `color` reaches `minRatio` against every
  * colour in `against`. Hue and saturation are preserved so the brand stays
  * recognisable. Throws if no lightness satisfies the target, so an impossible
- * theme fails the build instead of shipping silently.
+ * theme fails the build instead of shipping silently. The result is already
+ * in emitted precision (see `emitted`).
  */
 export function ensureContrast(
   color: Hsl,
@@ -148,10 +162,11 @@ export function ensureContrast(
   direction: 'darken' | 'lighten',
 ): Hsl {
   const step = direction === 'darken' ? -0.5 : 0.5;
-  let current = color;
+  // Measured and returned as emitted, so the guarantee survives the CSS rounding.
+  let current = emitted(color);
   for (let i = 0; i < 220; i++) {
     if (against.every((bg) => contrast(current, bg) >= minRatio)) return current;
-    const next = hsl(current.h, current.s, current.l + step);
+    const next = emitted(hsl(current.h, current.s, current.l + step));
     if (next.l === current.l) break;
     current = next;
   }

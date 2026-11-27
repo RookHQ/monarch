@@ -1,0 +1,75 @@
+{
+  "id": "app-shell",
+  "name": null,
+  "title": "AppShell",
+  "family": "layout",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "TabView with tabItem(_:) and, from iOS 18, tabViewStyle(.sidebarAdaptable) behind an availability check; NavigationSplitView for an app with many destinations",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The system's adaptive navigation container is the app shell: a TabView (a tab bar on iPhone, and on iPadOS 18 a tab bar that can become a sidebar) or a NavigationSplitView. Monarch ships nothing.",
+  "whenToUse": "As the root of a signed-in app: TabView for three to five top-level areas, NavigationSplitView when there are more destinations or a list and detail.",
+  "whenNotToUse": "Not inside another screen. For navigation within one area, use a NavigationStack inside a tab.",
+  "api": [
+    "TabView(selection: Binding<SelectionValue>) { … .tabItem { Label(_:systemImage:) } .tag(_:) }",
+    "static var sidebarAdaptable: SidebarAdaptableTabViewStyle (iOS 18.0 and later)",
+    "NavigationSplitView(sidebar:detail:)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "compact width",
+      "description": "TabView shows the bottom tab bar; NavigationSplitView shows one column with back navigation."
+    },
+    {
+      "name": "regular width",
+      "description": "With sidebarAdaptable on iPadOS 18 the tabs sit at the top and can become a sidebar; NavigationSplitView shows the sidebar and the detail side by side."
+    }
+  ],
+  "appearance": "System bars and sidebar. The selected tab and the sidebar selection take the theme's accent through the tint; the content uses Monarch components.",
+  "platformNotes": "The web AppShell lays out a rail, an identity bar and the main region, and adds a skip link, landmarks and contained scrolling. On iOS the system container does all of that: there are no landmarks or skip links to add, VoiceOver's rotor moves between the tab bar and content, and each tab or column scrolls on its own. The parity map named tabViewStyle(.sidebarAdaptable); that is iOS 18 API, so with the iOS 17 deployment target it is applied inside if #available. Android uses the Material navigation suite, which also adapts to the window. The web's identity bar becomes toolbar items, such as an account menu, on each screen.",
+  "accessibility": [
+    "System behaviour: the tab bar is a tab bar with selected states, badges are read with the tab, and the sidebar is a list with selection.",
+    "Large Content Viewer shows tab titles when the text size is too large for the bar."
+  ],
+  "edgeCases": [
+    "Each tab keeps its own NavigationStack and its own scroll position.",
+    "More than five tabs on iPhone go into the system More tab; prefer a sidebar for that many destinations.",
+    "tabViewStyle(.sidebarAdaptable) without the availability check does not compile for iOS 17."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Rail, identity bar and a scrolling main region",
+      "fixture": "app-shell",
+      "webExample": "Rail, identity bar and a scrolling main region",
+      "template": "let tabs = TabView(selection: $tab) {\n    NavigationStack {\n        Color.clear\n            .monarchCanvas()\n            .navigationTitle({{nav.0.label}})\n            #if os(iOS)\n            .navigationBarTitleDisplayMode(.inline)\n            #endif\n    }\n    .tabItem { Label({{nav.0.label}}, systemImage: \"house\") }\n    .tag({{nav.0.key}})\n    NavigationStack {\n        List {\n            Section {\n                    Text({{conversations.0}})\n                    Text({{conversations.1}})\n                    Text({{conversations.2}})\n                    Text({{conversations.3}})\n                    Text({{conversations.4}})\n                    Text({{conversations.5}})\n                    Text({{conversations.6}})\n                    Text({{conversations.7}})\n                    Text({{conversations.8}})\n                    Text({{conversations.9}})\n                    Text({{conversations.10}})\n                    Text({{conversations.11}})\n            } header: {\n                Text({{header.description}})\n            }\n        }\n        .listStyle(.plain)\n        .monarchCanvas()\n        .navigationTitle({{header.title}})\n        #if os(iOS)\n        .navigationBarTitleDisplayMode(.inline)\n        #endif\n        #if os(iOS)\n        .toolbar {\n            // The product name and the signed-in person, as the identity bar of the web shell.\n            ToolbarItem(placement: .topBarLeading) {\n                Text({{product}}).monarchTextStyle(.bodyStrong).fixedSize()\n            }\n            .monarchFlat()\n            ToolbarItem(placement: .topBarTrailing) {\n                MonarchAvatar(url: nil, name: {{account.name}}, size: .sm, isDecorative: true)\n            }\n            .monarchFlat()\n        }\n        #endif\n    }\n    .tabItem { Label({{nav.1.label}}, systemImage: \"tray\") }\n    .badge({{nav.1.badge}})\n    .tag({{nav.1.key}})\n    NavigationStack {\n        Color.clear\n            .monarchCanvas()\n            .navigationTitle({{nav.2.label}})\n            #if os(iOS)\n            .navigationBarTitleDisplayMode(.inline)\n            #endif\n    }\n    .tabItem { Label({{nav.2.label}}, systemImage: \"calendar\") }\n    .tag({{nav.2.key}})\n}\nGroup {\n    if #available(iOS 18.0, macOS 15.0, *) {\n        tabs.tabViewStyle(.sidebarAdaptable)\n    } else {\n        tabs\n    }\n}\n.frame(minHeight: theme.spacing.space24 * 3)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var tab = {{current}}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var tab = \"inbox\"",
+      "code": "let tabs = TabView(selection: $tab) {\n    NavigationStack {\n        Color.clear\n            .monarchCanvas()\n            .navigationTitle(\"Home\")\n            #if os(iOS)\n            .navigationBarTitleDisplayMode(.inline)\n            #endif\n    }\n    .tabItem { Label(\"Home\", systemImage: \"house\") }\n    .tag(\"home\")\n    NavigationStack {\n        List {\n            Section {\n                    Text(\"Printer offline on floor 3\")\n                    Text(\"Invoice shows the wrong address\")\n                    Text(\"Reset two-factor for a new phone\")\n                    Text(\"Export stops after page one\")\n                    Text(\"Add a second admin\")\n                    Text(\"Card declined at renewal\")\n                    Text(\"Refund not received\")\n                    Text(\"Change the billing contact\")\n                    Text(\"Calendar invites arrive late\")\n                    Text(\"Cannot upload files over 20 MB\")\n                    Text(\"Move the workspace to the EU region\")\n                    Text(\"Close the old London office account\")\n            } header: {\n                Text(\"12 open conversations\")\n            }\n        }\n        .listStyle(.plain)\n        .monarchCanvas()\n        .navigationTitle(\"Inbox\")\n        #if os(iOS)\n        .navigationBarTitleDisplayMode(.inline)\n        #endif\n        #if os(iOS)\n        .toolbar {\n            // The product name and the signed-in person, as the identity bar of the web shell.\n            ToolbarItem(placement: .topBarLeading) {\n                Text(\"Acme Desk\").monarchTextStyle(.bodyStrong).fixedSize()\n            }\n            .monarchFlat()\n            ToolbarItem(placement: .topBarTrailing) {\n                MonarchAvatar(url: nil, name: \"Ada Lovelace\", size: .sm, isDecorative: true)\n            }\n            .monarchFlat()\n        }\n        #endif\n    }\n    .tabItem { Label(\"Inbox\", systemImage: \"tray\") }\n    .badge(12)\n    .tag(\"inbox\")\n    NavigationStack {\n        Color.clear\n            .monarchCanvas()\n            .navigationTitle(\"Calendar\")\n            #if os(iOS)\n            .navigationBarTitleDisplayMode(.inline)\n            #endif\n    }\n    .tabItem { Label(\"Calendar\", systemImage: \"calendar\") }\n    .tag(\"calendar\")\n}\nGroup {\n    if #available(iOS 18.0, macOS 15.0, *) {\n        tabs.tabViewStyle(.sidebarAdaptable)\n    } else {\n        tabs\n    }\n}\n.frame(minHeight: theme.spacing.space24 * 3)"
+    },
+    {
+      "title": "A sidebar shell for many destinations",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var area: String? = \"Tickets\"\nprivate let areas = [\"Tickets\", \"Customers\", \"Reports\", \"Automations\", \"Settings\"]",
+      "code": "NavigationSplitView(\n    sidebar: {\n        List(areas, id: \\.self, selection: $area) { name in\n            Text(name).monarchTextStyle(.body)\n        }\n        .navigationTitle(\"Acme\")\n    },\n    detail: {\n        Text(area ?? \"Choose an area\")\n            .monarchTextStyle(.title)\n            .foregroundStyle(theme.colors.textDefault)\n    }\n)\n.frame(minHeight: theme.spacing.space24 * 3)"
+    }
+  ],
+  "webEquivalent": "AppShell",
+  "dependsOn": [
+    "sidebar-nav",
+    "bottom-tab-bar"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web shell is a left icon rail with an identity bar and a link list inside a card. On iPhone the destinations are the system tab bar (a sidebar on iPad), which is the platform's primary navigation; the product name and the account are drawn in the top bar of the screen. The title, description and conversations match the web.",
+      "convention": "HIG: TabView for top-level destinations"
+    }
+  ]
+}

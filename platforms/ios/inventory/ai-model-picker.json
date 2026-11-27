@@ -1,0 +1,141 @@
+{
+  "id": "ai-model-picker",
+  "name": "MonarchAiModelPicker",
+  "title": "AiModelPicker",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Button with MonarchButtonStyle that presents a .sheet with a NavigationStack and a List of Sections, MonarchBadge, MonarchFlowLayout",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A button showing the current AI model that opens a list of models grouped by provider, with capabilities, context size, speed, cost and provider key state.",
+  "whenToUse": "When people may choose which model answers, for example in a prompt toolbar or a conversation's settings.",
+  "whenNotToUse": "For a short list of plain choices without details use a Picker with the menu style. For the assistant's mode (chat, research, agent) use MonarchAiModeSwitcher.",
+  "api": [
+    "init(selection: Binding<String?>, models: [MonarchAiModelOption], size: MonarchButtonSize = .md, startsOpen: Bool = false, labels: MonarchAiModelPickerLabels = MonarchAiModelPickerLabels(), onConfigureKey: (@MainActor (MonarchAiModelOption) -> Void)? = nil)",
+    "struct MonarchAiModelOption: Identifiable { var id, provider, name: String; var description: String?; var capabilities: [MonarchAiModelCapability]; var contextTokens: Int?; var speed: MonarchAiModelSpeed?; var costTier: Int?; var requiresKey, isKeyConfigured, isDisabled: Bool }",
+    "enum MonarchAiModelCapability: String { case vision, tools, reasoning, web }",
+    "enum MonarchAiModelSpeed: String { case fast, balanced, slow }",
+    "struct MonarchAiModelPickerLabels { var label, placeholder: String?; var capability: (@Sendable (MonarchAiModelCapability) -> String)?; var context: (@Sendable (String) -> String)?; var speed: (@Sendable (MonarchAiModelSpeed) -> String)?; var cost: (@Sendable (Int) -> String)?; var ownKey, keyNeeded, addKeyHint, unavailable, done: String? }"
+  ],
+  "options": [
+    {
+      "name": "selection",
+      "type": "Binding<String?>",
+      "default": "required",
+      "description": "The id of the selected model, nil for none. Set when a model is chosen."
+    },
+    {
+      "name": "models",
+      "type": "[MonarchAiModelOption]",
+      "default": "required",
+      "description": "The models in display order, grouped by provider in first-seen order."
+    },
+    {
+      "name": "size",
+      "type": "MonarchButtonSize",
+      "default": ".md",
+      "description": "The height and padding of the button."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiModelPickerLabels",
+      "default": "MonarchAiModelPickerLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onConfigureKey",
+      "type": "(@MainActor (MonarchAiModelOption) -> Void)?",
+      "default": "nil",
+      "description": "Runs when a model whose key is missing is chosen, to add the key. Without it such models cannot be chosen."
+    },
+    {
+      "name": "startsOpen",
+      "type": "Bool",
+      "default": "false",
+      "description": "Presents the model list when the view appears."
+    }
+  ],
+  "states": [
+    {
+      "name": "placeholder",
+      "description": "No model selected: the button reads \"Choose a model\" in muted text."
+    },
+    {
+      "name": "selected",
+      "description": "The button shows the model and its provider; the row has a check mark and the selected trait."
+    },
+    {
+      "name": "your key",
+      "description": "A model on a configured workspace key shows a success \"Your key\" badge with a key."
+    },
+    {
+      "name": "key needed",
+      "description": "A model whose key is missing shows a warning \"Key needed\" badge with a lock; choosing it calls onConfigureKey."
+    },
+    {
+      "name": "unavailable",
+      "description": "A disabled model, or one whose key cannot be added, is dimmed and cannot be chosen."
+    },
+    {
+      "name": "disabled",
+      "description": "The button uses the disabled colours and does not open."
+    }
+  ],
+  "appearance": "The button is the secondary Monarch button with the name in default text and the provider in muted text. In the list, names are default text, details muted, capabilities info badges, key badges success or warning; unavailable rows use the disabled text role. The selected check uses the strong accent role.",
+  "platformNotes": "The web opens a popover listbox with arrow-key navigation and typeahead; iOS opens a List in a sheet, because a Menu cannot show badges and several lines per model. The web's controlled open state is not offered; the button owns the sheet. The selection is a Binding<String?> instead of value and onChange. A cost tier outside 1 to 3 is clamped.",
+  "accessibility": [
+    "The button is named \"Model\" and its value is the selected model and provider, or \"Choose a model\".",
+    "Each model is one button named by the model and its key badge; its value lists the description, capabilities, context, speed and the cost in words (\"Cost: high\"), never the dollar signs.",
+    "The selected model has the selected trait and a check mark, so selection is not colour alone.",
+    "A model whose key is missing has the hint \"Select to add an API key.\"; one that cannot be chosen is disabled and reads \"Unavailable\".",
+    "Rows are at least 44 points high; badges wrap and text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "A selection id that matches no model shows the placeholder.",
+    "Without onConfigureKey a model needing a key is shown but disabled.",
+    "Context sizes are formatted in the environment locale with at most one decimal: 32 768 tokens is \"32.8K\".",
+    "Empty models give an empty list."
+  ],
+  "tests": [
+    "MonarchAiModelPickerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Models with bring-your-own keys",
+      "fixture": "ai-model-picker",
+      "webExample": "Models with bring-your-own keys",
+      "template": "MonarchAiModelPicker(\n    selection: $modelID,\n    models: [\n        MonarchAiModelOption(\n            id: {{models.0.id}},\n            provider: {{models.0.provider}},\n            name: {{models.0.name}},\n            description: {{models.0.description}},\n            capabilities: [{{models.0.capabilities.0|case}}, {{models.0.capabilities.1|case}}],\n            contextTokens: {{models.0.contextTokens}},\n            speed: {{models.0.speed|case}},\n            costTier: {{models.0.costTier}}\n        ),\n        MonarchAiModelOption(\n            id: {{models.1.id}},\n            provider: {{models.1.provider}},\n            name: {{models.1.name}},\n            description: {{models.1.description}},\n            capabilities: [{{models.1.capabilities.0|case}}, {{models.1.capabilities.1|case}}, {{models.1.capabilities.2|case}}, {{models.1.capabilities.3|case}}],\n            contextTokens: {{models.1.contextTokens}},\n            speed: {{models.1.speed|case}},\n            costTier: {{models.1.costTier}}\n        ),\n        MonarchAiModelOption(\n            id: {{models.2.id}},\n            provider: {{models.2.provider}},\n            name: {{models.2.name}},\n            capabilities: [{{models.2.capabilities.0|case}}, {{models.2.capabilities.1|case}}],\n            contextTokens: {{models.2.contextTokens}},\n            speed: {{models.2.speed|case}},\n            costTier: {{models.2.costTier}},\n            requiresKey: {{models.2.requiresKey}},\n            isKeyConfigured: {{models.2.keyConfigured}}\n        ),\n        MonarchAiModelOption(\n            id: {{models.3.id}},\n            provider: {{models.3.provider}},\n            name: {{models.3.name}},\n            capabilities: [{{models.3.capabilities.0|case}}],\n            contextTokens: {{models.3.contextTokens}},\n            speed: {{models.3.speed|case}},\n            costTier: {{models.3.costTier}},\n            requiresKey: {{models.3.requiresKey}},\n            isKeyConfigured: {{models.3.keyConfigured}}\n        ),\n    ],\n    startsOpen: opened\n)",
+      "setupTemplate": "@State private var modelID: String? = {{selected}}\n@State private var opened = false",
+      "setup": "@State private var modelID: String? = \"standard\"\n@State private var opened = false",
+      "code": "MonarchAiModelPicker(\n    selection: $modelID,\n    models: [\n        MonarchAiModelOption(\n            id: \"standard\",\n            provider: \"Workspace models\",\n            name: \"Standard\",\n            description: \"Everyday questions and drafts\",\n            capabilities: [.tools, .web],\n            contextTokens: 128_000,\n            speed: .fast,\n            costTier: 1\n        ),\n        MonarchAiModelOption(\n            id: \"advanced\",\n            provider: \"Workspace models\",\n            name: \"Advanced\",\n            description: \"Long documents and careful analysis\",\n            capabilities: [.vision, .tools, .reasoning, .web],\n            contextTokens: 200_000,\n            speed: .slow,\n            costTier: 3\n        ),\n        MonarchAiModelOption(\n            id: \"own-large\",\n            provider: \"Your provider\",\n            name: \"Large (your key)\",\n            capabilities: [.vision, .tools],\n            contextTokens: 1_000_000,\n            speed: .balanced,\n            costTier: 2,\n            requiresKey: true,\n            isKeyConfigured: false\n        ),\n        MonarchAiModelOption(\n            id: \"own-small\",\n            provider: \"Your provider\",\n            name: \"Small (your key)\",\n            capabilities: [.tools],\n            contextTokens: 32_000,\n            speed: .fast,\n            costTier: 1,\n            requiresKey: true,\n            isKeyConfigured: true\n        ),\n    ],\n    startsOpen: opened\n)",
+      "previewPresented": [
+        "opened"
+      ]
+    },
+    {
+      "title": "Bring your own key",
+      "setup": "@State private var modelID: String?\n@State private var needsKey: MonarchAiModelOption?",
+      "code": "MonarchAiModelPicker(\n    selection: $modelID,\n    models: [\n        MonarchAiModelOption(id: \"hosted\", provider: \"Workspace\", name: \"Hosted model\", requiresKey: true)\n    ],\n    size: .sm\n) { model in\n    needsKey = model\n}"
+    }
+  ],
+  "webEquivalent": "AiModelPicker",
+  "dependsOn": [
+    "button",
+    "badge",
+    "sheet",
+    "inline"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "phone-width",
+      "platform": "ios",
+      "reason": "On an iPhone the model list opens in the system popover, which is capped at the screen height and scrolls; the web list is as tall as its content. The static image therefore shows the first groups and the rest by scrolling. Groups, rows, tags and order are the same.",
+      "convention": "a popover on iPhone scrolls inside the screen (HIG: Popovers)"
+    }
+  ]
+}

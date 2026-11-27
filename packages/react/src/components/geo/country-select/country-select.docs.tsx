@@ -2,17 +2,20 @@ import { useState } from 'react';
 import { Field, FieldDescription, FieldLabel } from '@rookcom/monarch-react';
 import { CountrySelect } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './country-select.fixture.json';
 
 function BillingCountry() {
-  const [country, setCountry] = useState<string | null>('PT');
+  const [country, setCountry] = useState<string | null>(fixture.data.value);
   return (
     <Field style={{ width: '100%', maxWidth: 320 }}>
-      <FieldLabel>Billing country</FieldLabel>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
       <CountrySelect
+        defaultOpen
         value={country}
         onValueChange={setCountry}
-        priority={['GB', 'IN', 'US']}
-        placeholder="Search by name or code"
+        priority={fixture.data.priority}
+        placeholder={fixture.data.placeholder}
       />
       <FieldDescription>Stored as {country ?? 'nothing yet'}.</FieldDescription>
     </Field>
@@ -131,7 +134,12 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Suggested countries first', stack: true, render: () => <BillingCountry /> },
+        {
+          title: 'Suggested countries first',
+          stack: true,
+          stage: true,
+          render: () => <BillingCountry />,
+        },
         {
           title: 'Localised, no flags, limited list',
           stack: true,

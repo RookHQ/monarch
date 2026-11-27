@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToString } from 'react-dom/server';
 import { expectNoA11yViolations } from '../../../../test/a11y.js';
+import { OverlayStage } from '../../../internal/overlay-stage.js';
 import { PeekPanel, type PeekPanelProps } from './index.js';
 
 const RECORDS = ['Order 1001', 'Order 1002', 'Order 1003'];
@@ -166,5 +167,17 @@ describe('PeekPanel', () => {
     );
     expect(html).toContain('mn-peek-panel');
     expect(html).toContain('Order 1001');
+  });
+
+  it('does not take focus when it mounts open in an overlay stage', () => {
+    render(
+      <OverlayStage>
+        <PeekPanel open onOpenChange={() => {}} title="Order 1002">
+          Total €48.50
+        </PeekPanel>
+      </OverlayStage>,
+    );
+    expect(screen.getByText('Total €48.50')).toBeTruthy();
+    expect(document.activeElement).toBe(document.body);
   });
 });

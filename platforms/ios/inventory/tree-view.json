@@ -1,0 +1,77 @@
+{
+  "id": "tree-view",
+  "name": null,
+  "title": "TreeView",
+  "family": "data-display",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "Buttons in a VStack: a leading chevron, the name over its detail and an edit button per row, nested by depth; List(_:children:selection:rowContent:) remains the choice for the system outline",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A hierarchical list with expand and collapse and optional selection is the standard SwiftUI List with a children key path. Monarch ships nothing.",
+  "whenToUse": "For folders, an org chart, categories or a document outline that people expand level by level. Use List(_:children:) for a whole tree, OutlineGroup to mix a tree with other rows in one List, and a recursive DisclosureGroup when children load on demand.",
+  "whenNotToUse": "For one folding section, use DisclosureGroup with .disclosureGroupStyle(.monarch) or MonarchToggleBlock. For drilling into a deep hierarchy on a phone, use NavigationStack with one list per level, which reads better than deep indentation.",
+  "api": [
+    "List(_ data: Data, children: KeyPath<Data.Element, Data?>, selection: Binding<SelectionValue?>?, rowContent: (Data.Element) -> RowContent)",
+    "List(_ data: Data, children: KeyPath<Data.Element, Data?>, selection: Binding<Set<SelectionValue>>?, rowContent: (Data.Element) -> RowContent)",
+    "OutlineGroup(_ data: Data, children: KeyPath<Data.Element, Data?>, content: (Data.Element) -> Leaf)",
+    "DisclosureGroup(isExpanded: Binding<Bool>, content: () -> Content, label: () -> Label)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "collapsed and expanded",
+      "description": "System disclosure indicator on each parent row; children are indented under it."
+    },
+    {
+      "name": "selected",
+      "description": "System row highlight with selection; multiple selection uses a Set binding and edit mode on iPhone."
+    },
+    {
+      "name": "loading children",
+      "description": "With a recursive DisclosureGroup, show a ProgressView row while the app loads the children of an expanded node."
+    }
+  ],
+  "appearance": "System list rows in every theme. Row content takes Monarch type through monarchTextStyle and colours from the theme; the disclosure indicator and the selection highlight are the system's, tinted by the theme's accent.",
+  "platformNotes": "The web TreeView implements the APG tree pattern by hand: roving focus, arrow keys, typeahead, single or multiple selection, aria-current, lazy children with a spinner and row actions. On iOS the system list already gives expand and collapse, selection, VoiceOver navigation and hardware keyboard support, so Monarch does not re-implement it. Android builds MonarchTreeView because Compose has no tree list. Not covered natively: typeahead to a row and an outline variant with indentation guides. Row actions belong in swipeActions or contextMenu on the row.",
+  "accessibility": [
+    "System behaviour: parent rows are read with their expanded or collapsed state and can be toggled with VoiceOver; children are announced at their level.",
+    "Selection is read as the selected trait.",
+    "Give each row a text label (Label or Text); icons in Label are read with the title."
+  ],
+  "edgeCases": [
+    "A children array that is empty is a parent with nothing in it; nil is a leaf.",
+    "On iPhone, List selection is shown in edit mode or when the list drives a NavigationSplitView; outside them, use a NavigationLink or a button per row.",
+    "Deep trees indent further at each level; past three levels prefer drilling down with NavigationStack."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Departments with actions",
+      "fixture": "tree-view",
+      "webExample": "Departments with actions",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    VStack(alignment: .leading, spacing: 0) {\n        ForEach(nodes) { node in row(node) }\n    }\n    .accessibilityElement(children: .contain)\n    .accessibilityLabel({{label}})\n    Text(\"Selected: \\(selection ?? \"nobody\")\")\n        .monarchTextStyle(.body)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\nstruct Node: Identifiable, Hashable {\n    let id: String\n    let name: String\n    let detail: String\n    var children: [Node]?\n}\n@State private var selection: String? = {{selected.0}}\n@State private var expanded: Set<String> = [{{expanded.0}}, {{expanded.1}}]\n\n/// One node and, when it is open, its children: a leading chevron for a node with children, the name over its detail,\n/// the edit button at the end, and the selected row in the accent tint with an accent edge.\nprivate func row(_ node: Node, depth: Int = 0) -> AnyView {\n    let hasChildren = !(node.children ?? []).isEmpty\n    let isOpen = expanded.contains(node.id)\n    let isSelected = selection == node.id\n    let line = HStack(spacing: theme.spacing.space1) {\n        if hasChildren {\n            Button {\n                if isOpen { expanded.remove(node.id) } else { expanded.insert(node.id) }\n            } label: {\n                Image(systemName: isOpen ? \"chevron.down\" : \"chevron.right\")\n                    .foregroundStyle(theme.colors.textMuted)\n                    .frame(width: 24, height: 44)\n            }\n            .buttonStyle(.plain)\n            .accessibilityLabel(node.name)\n            .accessibilityValue(isOpen ? \"Expanded\" : \"Collapsed\")\n        } else {\n            Color.clear.frame(width: 24, height: 44)\n        }\n        Button {\n            selection = node.id\n        } label: {\n            VStack(alignment: .leading) {\n                Text(node.name).monarchTextStyle(.body)\n                Text(node.detail).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n            }\n            .frame(maxWidth: .infinity, alignment: .leading)\n            .contentShape(Rectangle())\n        }\n        .buttonStyle(.plain)\n        .accessibilityAddTraits(isSelected ? .isSelected : [])\n        MonarchButton(\"\\({{editLabel}}) \\(node.name)\", systemImage: \"pencil\", variant: .ghost, size: .sm, isIconOnly: true) {}\n    }\n    .padding(.leading, CGFloat(depth) * theme.spacing.space5)\n    .background(isSelected ? theme.colors.accentSubtle : Color.clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))\n    .overlay(alignment: .leading) {\n        if isSelected {\n            Capsule().fill(theme.colors.accentSolid).frame(width: 2)\n        }\n    }\n    return AnyView(\n        VStack(alignment: .leading, spacing: 0) {\n            line\n            if hasChildren && isOpen {\n                ForEach(node.children ?? []) { child in row(child, depth: depth + 1) }\n            }\n        }\n    )\n}\nprivate let nodes = [\n    Node(id: {{items.0.id}}, name: {{items.0.label}}, detail: {{items.0.description}}, children: [\n        Node(id: {{items.0.children.0.id}}, name: {{items.0.children.0.label}}, detail: {{items.0.children.0.description}}, children: []),\n        Node(id: {{items.0.children.1.id}}, name: {{items.0.children.1.label}}, detail: {{items.0.children.1.description}}),\n        Node(id: {{items.0.children.2.id}}, name: {{items.0.children.2.label}}, detail: {{items.0.children.2.description}}, children: [\n            Node(id: {{items.0.children.2.children.0.id}}, name: {{items.0.children.2.children.0.label}}, detail: {{items.0.children.2.children.0.description}}),\n            Node(id: {{items.0.children.2.children.1.id}}, name: {{items.0.children.2.children.1.label}}, detail: {{items.0.children.2.children.1.description}}),\n        ]),\n    ]),\n    Node(id: {{items.1.id}}, name: {{items.1.label}}, detail: {{items.1.description}}, children: [\n        Node(id: {{items.1.children.0.id}}, name: {{items.1.children.0.label}}, detail: {{items.1.children.0.description}}),\n        Node(id: {{items.1.children.1.id}}, name: {{items.1.children.1.label}}, detail: {{items.1.children.1.description}}),\n    ]),\n]",
+      "setup": "@Environment(\\.monarchTheme) private var theme\nstruct Node: Identifiable, Hashable {\n    let id: String\n    let name: String\n    let detail: String\n    var children: [Node]?\n}\n@State private var selection: String? = \"eng\"\n@State private var expanded: Set<String> = [\"ops\", \"product\"]\n\n/// One node and, when it is open, its children: a leading chevron for a node with children, the name over its detail,\n/// the edit button at the end, and the selected row in the accent tint with an accent edge.\nprivate func row(_ node: Node, depth: Int = 0) -> AnyView {\n    let hasChildren = !(node.children ?? []).isEmpty\n    let isOpen = expanded.contains(node.id)\n    let isSelected = selection == node.id\n    let line = HStack(spacing: theme.spacing.space1) {\n        if hasChildren {\n            Button {\n                if isOpen { expanded.remove(node.id) } else { expanded.insert(node.id) }\n            } label: {\n                Image(systemName: isOpen ? \"chevron.down\" : \"chevron.right\")\n                    .foregroundStyle(theme.colors.textMuted)\n                    .frame(width: 24, height: 44)\n            }\n            .buttonStyle(.plain)\n            .accessibilityLabel(node.name)\n            .accessibilityValue(isOpen ? \"Expanded\" : \"Collapsed\")\n        } else {\n            Color.clear.frame(width: 24, height: 44)\n        }\n        Button {\n            selection = node.id\n        } label: {\n            VStack(alignment: .leading) {\n                Text(node.name).monarchTextStyle(.body)\n                Text(node.detail).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n            }\n            .frame(maxWidth: .infinity, alignment: .leading)\n            .contentShape(Rectangle())\n        }\n        .buttonStyle(.plain)\n        .accessibilityAddTraits(isSelected ? .isSelected : [])\n        MonarchButton(\"\\(\"Edit\") \\(node.name)\", systemImage: \"pencil\", variant: .ghost, size: .sm, isIconOnly: true) {}\n    }\n    .padding(.leading, CGFloat(depth) * theme.spacing.space5)\n    .background(isSelected ? theme.colors.accentSubtle : Color.clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))\n    .overlay(alignment: .leading) {\n        if isSelected {\n            Capsule().fill(theme.colors.accentSolid).frame(width: 2)\n        }\n    }\n    return AnyView(\n        VStack(alignment: .leading, spacing: 0) {\n            line\n            if hasChildren && isOpen {\n                ForEach(node.children ?? []) { child in row(child, depth: depth + 1) }\n            }\n        }\n    )\n}\nprivate let nodes = [\n    Node(id: \"ops\", name: \"Operations\", detail: \"Business unit · 42 people\", children: [\n        Node(id: \"finance\", name: \"Finance\", detail: \"Department · 12 people\", children: []),\n        Node(id: \"legal\", name: \"Legal\", detail: \"Department · 4 people\"),\n        Node(id: \"facilities\", name: \"Facilities\", detail: \"Division · 26 people\", children: [\n            Node(id: \"workplace\", name: \"Workplace\", detail: \"Department · 18 people\"),\n            Node(id: \"security\", name: \"Security\", detail: \"Department · 8 people\"),\n        ]),\n    ]),\n    Node(id: \"product\", name: \"Product\", detail: \"Business unit · 64 people\", children: [\n        Node(id: \"design\", name: \"Design\", detail: \"Department · 14 people\"),\n        Node(id: \"eng\", name: \"Engineering\", detail: \"Department · 50 people\"),\n    ]),\n]",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    VStack(alignment: .leading, spacing: 0) {\n        ForEach(nodes) { node in row(node) }\n    }\n    .accessibilityElement(children: .contain)\n    .accessibilityLabel(\"Departments\")\n    Text(\"Selected: \\(selection ?? \"nobody\")\")\n        .monarchTextStyle(.body)\n}"
+    },
+    {
+      "title": "Children loaded when a node opens",
+      "setup": "@State private var isExpanded = false\n@State private var children: [String]?",
+      "code": "List {\n    DisclosureGroup(isExpanded: $isExpanded) {\n        if let children {\n            ForEach(children, id: \\.self) { Text($0).monarchTextStyle(.body) }\n        } else {\n            ProgressView().accessibilityLabel(\"Loading\")\n        }\n    } label: {\n        Label(\"Archive\", systemImage: \"folder\").monarchTextStyle(.body)\n    }\n    .onChange(of: isExpanded) {\n        if isExpanded && children == nil {\n            children = [\"2024\", \"2025\"]\n        }\n    }\n}\n.listStyle(.plain)\n.monarchCanvas()\n.frame(minHeight: 200)"
+    }
+  ],
+  "webEquivalent": "TreeView",
+  "dependsOn": [
+    "collapsible",
+    "checkbox"
+  ],
+  "icons": {
+    "actions.edit": "PencilGlyph",
+    "expand": "ChevronRightGlyph"
+  }
+}

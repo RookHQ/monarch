@@ -1,6 +1,6 @@
 /**
  * The client-side search index: one entry per page in the navigation
- * (foundations, every component and pattern, marketing, guides), built from
+ * (foundations, platforms, every component and pattern, marketing, guides), built from
  * the docs index, plus each component's summary and export names from the
  * page details. CommandPalette's default filter ranks label matches above
  * description and keyword matches (export names, family).
@@ -10,6 +10,7 @@
  */
 import { details } from 'virtual:monarch-docs-details';
 import { NAV } from '../../app/navigation.js';
+import { NATIVE_NAV_DETAILS } from '../../app/native-nav-details.js';
 
 export interface SearchEntry {
   id: string;
@@ -30,7 +31,8 @@ export function searchItems(): SearchEntry[] {
       const page = item.path.startsWith('/components/')
         ? details[item.path.slice('/components/'.length)]
         : undefined;
-      const description = item.description ?? page?.summary;
+      const native = NATIVE_NAV_DETAILS[item.path];
+      const description = item.description ?? native?.description ?? page?.summary;
       out.push({
         id: item.path,
         path: item.path,
@@ -43,6 +45,7 @@ export function searchItems(): SearchEntry[] {
         keywords: [
           ...(page?.exports ?? []),
           ...(item.keywords ?? []),
+          ...(native?.keywords ?? []),
           ...(description ? [description] : []),
         ],
       });

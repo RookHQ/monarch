@@ -1,0 +1,130 @@
+{
+  "id": "column-chooser",
+  "name": "MonarchColumnChooser",
+  "title": "ColumnChooser",
+  "family": "data-grid",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "List with a Section, Toggle per column and ForEach.onMove(perform:); accessibilityActions for Move up and Move down; a TextField search row",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A panel to show, hide, find and reorder the columns of a table, for a sheet, a settings screen or a saved-view editor.",
+  "whenToUse": "To let people choose which columns a MonarchDataTable shows and in what order, usually in a sheet opened from a Columns button.",
+  "whenNotToUse": "For a short list of on/off settings, use Toggles in a Form. For reordering other things, use a List with onMove (reorderable-list).",
+  "api": [
+    "init(_ columns: [MonarchColumnChooserColumn], hiddenColumns: Binding<Set<String>>, order: Binding<[String]>? = nil, searchThreshold: Int = 8, minimumVisible: Int = 1, labels: MonarchColumnChooserLabels = MonarchColumnChooserLabels(), onReset: (@MainActor () -> Void)? = nil)",
+    "MonarchColumnChooserColumn.init(_ label: String, id: String? = nil, isHideable: Bool = true)",
+    "struct MonarchColumnChooserLabels { var title, search, noMatches, required, showAll, reset: String?; var shownCount: (@Sendable (Int, Int) -> String)?; var moveUp, moveDown: (@Sendable (String) -> String)?; var moved: (@Sendable (String, Int, Int) -> String)? }"
+  ],
+  "options": [
+    {
+      "name": "columns",
+      "type": "[MonarchColumnChooserColumn]",
+      "default": "required",
+      "description": "The columns in their default order. MonarchDataTableColumn.chooserColumn gives one."
+    },
+    {
+      "name": "hiddenColumns",
+      "type": "Binding<Set<String>>",
+      "default": "required",
+      "description": "The ids of hidden columns, the same set MonarchDataTable takes."
+    },
+    {
+      "name": "order",
+      "type": "Binding<[String]>?",
+      "default": "nil",
+      "description": "Column ids in display order. With it, rows reorder with onMove and accessibility actions; ids missing from it follow in their default order."
+    },
+    {
+      "name": "searchThreshold",
+      "type": "Int",
+      "default": "8",
+      "description": "Offers the search field from this many columns. Pass Int.max for never."
+    },
+    {
+      "name": "minimumVisible",
+      "type": "Int",
+      "default": "1",
+      "description": "The fewest columns that must stay shown; the last ones cannot be switched off."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchColumnChooserLabels",
+      "default": "MonarchColumnChooserLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "onReset",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds a Reset button that runs this, to restore the app's default columns."
+    }
+  ],
+  "states": [
+    {
+      "name": "default",
+      "description": "A switch per column, on when it is shown, with \"5 of 8 shown\" under the title."
+    },
+    {
+      "name": "required column",
+      "description": "Always on and disabled, with \"Always shown\" under its name."
+    },
+    {
+      "name": "minimum reached",
+      "description": "The switches of the last shown columns are disabled."
+    },
+    {
+      "name": "searching",
+      "description": "Only matching columns are listed, reordering is off, and \"No columns match.\" is shown when nothing matches."
+    },
+    {
+      "name": "some hidden",
+      "description": "A Show all button appears under the list."
+    }
+  ],
+  "appearance": "A system list. The title is subheading text in the default role and the count caption text in the muted role; notes, the search icon and the no-match text use the muted role. Switches are the system's and take the theme's accent tint. Show all and Reset are small ghost MonarchButtons. Light, dark and both high-contrast themes come from these roles.",
+  "platformNotes": "The web panel moves columns with Move up and Move down icon buttons; on iOS rows reorder with List.onMove (drag a row, or the reorder controls when the app puts the list in edit mode), and VoiceOver users get Move up and Move down as accessibility actions. The web uses checkboxes; iOS uses the platform switch. The web takes a visibility record; on iOS it is the set of hidden ids. The search is a field inside the list rather than .searchable, so it works without a navigation container. The web headingLevel has no equivalent; the title has the header trait. Android uses the same name and options.",
+  "accessibility": [
+    "The title and count are one header element: \"Columns, 5 of 8 shown\".",
+    "Each column is a standard switch read with its name, its note and its state.",
+    "Columns that cannot be hidden and the last shown columns are disabled switches.",
+    "With order, each row has the accessibility actions \"Move Status up\" and \"Move Status down\" (only where the move is possible), and every move is announced.",
+    "The clear-search button is named \"Clear search\" and has a 44-point touch target."
+  ],
+  "edgeCases": [
+    "Ids in order that no longer exist are skipped; new columns follow in their default order.",
+    "Search ignores case and diacritics and trims spaces.",
+    "Show all also clears hidden ids of columns that are not listed.",
+    "The panel is a List and fills its space; present it in a sheet or give it a frame."
+  ],
+  "tests": [
+    "MonarchColumnChooserTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Next to a DataTable",
+      "fixture": "column-chooser",
+      "webExample": "Next to a DataTable",
+      "template": "VStack(spacing: 16) {\n    MonarchColumnChooser(\n        columns.map(\\.chooserColumn),\n        hiddenColumns: $hidden,\n        order: $order,\n        onReset: { hidden = [{{hidden.0}}]; order = [] }\n    )\n    .frame(height: 440)\n    MonarchDataTable(\n        {{caption}},\n        rows: records,\n        columns: columns,\n        hiddenColumns: hidden,\n        columnOrder: order\n    )\n    .frame(height: 300)\n}",
+      "setupTemplate": "struct Record: Identifiable, Sendable {\n    let id: String\n    let name: String\n    let status: String\n    let owner: String\n    let region: String\n    let renews: String\n}\n\nprivate let records = [\n    Record(id: {{rows.0.id}}, name: {{rows.0.name}}, status: {{rows.0.status}}, owner: {{rows.0.owner}}, region: {{rows.0.region}}, renews: {{rows.0.renews}}),\n    Record(id: {{rows.1.id}}, name: {{rows.1.name}}, status: {{rows.1.status}}, owner: {{rows.1.owner}}, region: {{rows.1.region}}, renews: {{rows.1.renews}}),\n    Record(id: {{rows.2.id}}, name: {{rows.2.name}}, status: {{rows.2.status}}, owner: {{rows.2.owner}}, region: {{rows.2.region}}, renews: {{rows.2.renews}}),\n]\nprivate let columns: [MonarchDataTableColumn<Record>] = [\n    MonarchDataTableColumn({{columns.0.header}}, id: {{columns.0.id}}, isHideable: {{columns.0.hideable}}, value: { $0.name }),\n    MonarchDataTableColumn({{columns.1.header}}, id: {{columns.1.id}}, value: { $0.status }),\n    MonarchDataTableColumn({{columns.2.header}}, id: {{columns.2.id}}, value: { $0.owner }),\n    MonarchDataTableColumn({{columns.3.header}}, id: {{columns.3.id}}, value: { $0.region }),\n    MonarchDataTableColumn({{columns.4.header}}, id: {{columns.4.id}}, value: { $0.renews }),\n]\n@State private var hidden: Set<String> = [{{hidden.0}}]\n@State private var order: [String] = []",
+      "setup": "struct Record: Identifiable, Sendable {\n    let id: String\n    let name: String\n    let status: String\n    let owner: String\n    let region: String\n    let renews: String\n}\n\nprivate let records = [\n    Record(id: \"1\", name: \"Alpha\", status: \"Active\", owner: \"Sam Lee\", region: \"EU\", renews: \"2027-02-01\"),\n    Record(id: \"2\", name: \"Bravo\", status: \"Paused\", owner: \"Ana Ruiz\", region: \"US\", renews: \"2026-11-30\"),\n    Record(id: \"3\", name: \"Charlie\", status: \"Active\", owner: \"Kim Park\", region: \"APAC\", renews: \"2027-06-15\"),\n]\nprivate let columns: [MonarchDataTableColumn<Record>] = [\n    MonarchDataTableColumn(\"Name\", id: \"name\", isHideable: false, value: { $0.name }),\n    MonarchDataTableColumn(\"Status\", id: \"status\", value: { $0.status }),\n    MonarchDataTableColumn(\"Owner\", id: \"owner\", value: { $0.owner }),\n    MonarchDataTableColumn(\"Region\", id: \"region\", value: { $0.region }),\n    MonarchDataTableColumn(\"Renews\", id: \"renews\", value: { $0.renews }),\n]\n@State private var hidden: Set<String> = [\"region\"]\n@State private var order: [String] = []",
+      "code": "VStack(spacing: 16) {\n    MonarchColumnChooser(\n        columns.map(\\.chooserColumn),\n        hiddenColumns: $hidden,\n        order: $order,\n        onReset: { hidden = [\"region\"]; order = [] }\n    )\n    .frame(height: 440)\n    MonarchDataTable(\n        \"Records\",\n        rows: records,\n        columns: columns,\n        hiddenColumns: hidden,\n        columnOrder: order\n    )\n    .frame(height: 300)\n}"
+    }
+  ],
+  "webEquivalent": "ColumnChooser",
+  "dependsOn": [
+    "reorderable-list",
+    "switch",
+    "search-input",
+    "button"
+  ],
+  "icons": {
+    "checked": "CheckGlyph",
+    "moveUp": "ChevronDownGlyph",
+    "moveDown": "ChevronDownGlyph"
+  }
+}

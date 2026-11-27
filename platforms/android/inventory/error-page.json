@@ -1,0 +1,118 @@
+{
+  "id": "error-page",
+  "name": null,
+  "title": "ErrorPage",
+  "family": "feedback",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.layout.Box (fillMaxSize, background) with MonarchErrorState",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A whole screen that failed (not found, forbidden, server error, offline or maintenance): MonarchErrorState at the large size, centered on the canvas color.",
+  "whenToUse": "As the content of a screen the app navigated to that cannot be shown at all: a record that does not exist, no access, the service down, no connection.",
+  "whenNotToUse": "When only part of a screen failed, use MonarchErrorState in that region or MonarchInlineErrorRetry. For a failure the user can fix in a form, use field errors.",
+  "api": [
+    "Box(Modifier.fillMaxSize().background(MonarchTheme.colors.bgCanvas), contentAlignment = Alignment.Center) { MonarchErrorState(title, kind = MonarchErrorStateKind.NotFound, size = MonarchEmptyStateSize.Lg, message = …, requestId = …, onRetry = …, actions = { … }) }"
+  ],
+  "options": [
+    {
+      "name": "kind",
+      "type": "MonarchErrorStateKind",
+      "default": "MonarchErrorStateKind.Error",
+      "description": "NotFound, Forbidden, Server, Offline or Maintenance; sets the default wording of the state."
+    },
+    {
+      "name": "size",
+      "type": "MonarchEmptyStateSize",
+      "default": "MonarchEmptyStateSize.Lg",
+      "description": "Lg for a whole screen."
+    },
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "What happened, in plain words, supplied by the app."
+    },
+    {
+      "name": "message",
+      "type": "String?",
+      "default": "null",
+      "description": "What the person can do next. Never a raw error."
+    },
+    {
+      "name": "requestId",
+      "type": "String?",
+      "default": "null",
+      "description": "The id of the failed request, for support."
+    },
+    {
+      "name": "onRetry",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "A retry button, for Server, Offline and Maintenance."
+    },
+    {
+      "name": "actions",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The app's way out, such as \"Go to projects\"."
+    }
+  ],
+  "states": [
+    {
+      "name": "not found, forbidden",
+      "description": "The title, message and a way out; no retry."
+    },
+    {
+      "name": "server, offline, maintenance",
+      "description": "The same with a retry button; retrying shows the button as busy."
+    }
+  ],
+  "appearance": "MonarchErrorState at its large size, centered on the canvas background color that fills the screen. The same roles in every theme, including both high-contrast themes.",
+  "platformNotes": "The web ErrorPage is a component with a large faint numeral (404, 403, 500), an optional brand, a support slot and a retry when the browser comes back online, and it can render without the app shell. On Android a destination that fails is a screen inside the app's navigation, so the recipe fills it with MonarchErrorState; the numeral is left out because it means little in an app, and the title says what happened. To retry when the network returns, register a ConnectivityManager.NetworkCallback in the app and call the same retry. focusOnMount has no equivalent: TalkBack reads the new screen from the top. iOS shares the recipe approach.",
+  "accessibility": [
+    "MonarchErrorState marks its title as a heading and reads the message after it.",
+    "Retry and the actions are buttons with 48dp touch targets.",
+    "The screen keeps the app's top app bar, so back and navigation still work."
+  ],
+  "edgeCases": [
+    "Use fillMaxSize inside a scrolling container only with a bounded height; the catalogue uses fillMaxWidth.",
+    "Offline: do not retry in a loop; retry once when the connection returns."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Not found, inside the shell",
+      "fixture": "error-page",
+      "webExample": "Not found, inside the shell",
+      "template": "Box(contentAlignment = Alignment.TopCenter) {\n    // The faint status numeral behind the icon, as the web page draws it.\n    Text(\n        text = \"404\",\n        modifier = Modifier.padding(top = MonarchTheme.spacing.space2).clearAndSetSemantics { },\n        color = MonarchTheme.colors.bgEmphasis,\n        fontSize = 96.sp,\n        fontWeight = FontWeight.SemiBold,\n    )\n    MonarchErrorState(\n        title = {{title}},\n        kind = MonarchErrorStateKind.{{kind|pascal}},\n        size = MonarchEmptyStateSize.Lg,\n        pageTile = true,\n        message = {{description}},\n        icon = { MonarchIcon(SampleIcons.Search, contentDescription = null) },\n        actions = {\n            MonarchButton(text = {{primaryAction}}, onClick = {}, variant = MonarchButtonVariant.Primary)\n            MonarchButton(text = {{secondaryAction}}, onClick = {})\n        },\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.semantics.clearAndSetSemantics",
+        "androidx.compose.ui.unit.sp",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.material3.Text",
+        "androidx.compose.ui.text.font.FontWeight"
+      ],
+      "code": "Box(contentAlignment = Alignment.TopCenter) {\n    // The faint status numeral behind the icon, as the web page draws it.\n    Text(\n        text = \"404\",\n        modifier = Modifier.padding(top = MonarchTheme.spacing.space2).clearAndSetSemantics { },\n        color = MonarchTheme.colors.bgEmphasis,\n        fontSize = 96.sp,\n        fontWeight = FontWeight.SemiBold,\n    )\n    MonarchErrorState(\n        title = \"Page not found\",\n        kind = MonarchErrorStateKind.NotFound,\n        size = MonarchEmptyStateSize.Lg,\n        pageTile = true,\n        message = \"The link may be broken, or the page may have moved.\",\n        icon = { MonarchIcon(SampleIcons.Search, contentDescription = null) },\n        actions = {\n            MonarchButton(text = \"Go to dashboard\", onClick = {}, variant = MonarchButtonVariant.Primary)\n            MonarchButton(text = \"Go back\", onClick = {})\n        },\n    )\n}"
+    },
+    {
+      "title": "Offline with retry",
+      "code": "Box(\n    modifier = Modifier.fillMaxSize().background(MonarchTheme.colors.bgCanvas),\n    contentAlignment = Alignment.Center,\n) {\n    MonarchErrorState(\n        title = \"You are offline\",\n        kind = MonarchErrorStateKind.Offline,\n        size = MonarchEmptyStateSize.Lg,\n        retrying = retrying,\n        message = \"Check your connection and try again.\",\n        onRetry = { retrying = true },\n    )\n}",
+      "setup": "var retrying by remember { mutableStateOf(false) }"
+    }
+  ],
+  "webEquivalent": "ErrorPage",
+  "dependsOn": [
+    "error-state",
+    "button"
+  ]
+}

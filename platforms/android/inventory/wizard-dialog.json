@@ -1,0 +1,79 @@
+{
+  "id": "wizard-dialog",
+  "name": null,
+  "title": "WizardDialog",
+  "family": "overlays",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet holding MonarchStepper, MonarchText with a polite live region, the step's content and MonarchButton for Back and Continue in a androidx.compose.foundation.layout.Row",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a task of a few steps in a bottom sheet, with a stepper showing progress, the current step's content, Back and Continue, and a danger last step.",
+  "whenToUse": "For a short task of two to four steps that should not leave the current screen, such as moving a project or setting up an integration.",
+  "whenNotToUse": "For a long or resumable flow, use full screens with their own back stack. For one question, use a dialog.",
+  "api": [
+    "@Composable fun MonarchStepper(steps: List<MonarchStepperStep>, current: Int, modifier: Modifier = Modifier, furthest: Int? = null, orientation: MonarchStepperOrientation = MonarchStepperOrientation.Horizontal, compact: MonarchStepperCompactMode = MonarchStepperCompactMode.Automatic, onSelect: ((step: MonarchStepperStep, index: Int) -> Unit)? = null, labels: MonarchStepperLabels = MonarchStepperLabels())",
+    "@Composable fun MonarchBottomSheet(onDismissRequest: () -> Unit, modifier: Modifier = Modifier, title: String? = null, description: String? = null, dismissible: Boolean = true, showHandle: Boolean = true, fullyExpanded: Boolean = true, fullWidthContent: Boolean = false, content: @Composable MonarchBottomSheetScope.() -> Unit)",
+    "@Composable fun MonarchButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, variant: MonarchButtonVariant = MonarchButtonVariant.Secondary, …, enabled: Boolean = true, loading: Boolean = false, …)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "first step",
+      "description": "The stepper at step 1, the step's content and Continue; no Back."
+    },
+    {
+      "name": "middle step",
+      "description": "Back and Continue."
+    },
+    {
+      "name": "last step",
+      "description": "The main action is a danger MonarchButton named for what it does, such as \"Move project\"."
+    },
+    {
+      "name": "blocked",
+      "description": "Continue is disabled until the step is valid; say why in the step's content."
+    },
+    {
+      "name": "working",
+      "description": "Pass loading to the main action while a step's work runs; show a failure with MonarchInlineNotice and stay on the step."
+    }
+  ],
+  "appearance": "A Material 3 bottom sheet on the raised surface Monarch maps to it, with MonarchStepper (accent marks for the current and completed steps), the step title in the heading style, a ghost Back and a primary Continue, or a danger last action. The same roles in light, dark and both high-contrast themes.",
+  "platformNotes": "The web WizardDialog is a component that takes steps with content, canContinue, blockedReason, a per-step async onContinue with pending and error states, and a done step. On Android the app holds the step index and composes MonarchStepper and MonarchButton in a MonarchBottomSheet. The web moves focus to the step heading; on Android the step title is a polite live region, so TalkBack announces each new step, and the app can move focus with a FocusRequester. Back within the wizard is the Back button; the system back closes the sheet, or add a BackHandler that goes to the previous step. iOS uses the same recipe.",
+  "accessibility": [
+    "MonarchStepper reads the progress (\"Step 2 of 3\") and each step's state.",
+    "The step title is a polite live region, so TalkBack announces the new step after Continue or Back.",
+    "The last action is named for what it does, so it does not depend on its danger color.",
+    "Back and Continue have 48dp touch targets; a disabled Continue is announced as disabled."
+  ],
+  "edgeCases": [
+    "Keep entered values when going Back.",
+    "If the sheet is dismissed half way, decide whether to keep the draft; reset the step when it opens again."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Review, export, confirm, done",
+      "fixture": "wizard-dialog",
+      "webExample": "Review, export, confirm, done",
+      "template": "MonarchButton(\n    text = {{trigger}},\n    onClick = {\n        step = 0\n        open = true\n    },\n    variant = MonarchButtonVariant.Danger,\n)\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }, title = {{title}}, description = {{description}}) {\n        Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n            if (step < steps.size) {\n                MonarchText(text = \"Step ${step + 1} of ${steps.size}\", style = MonarchTextStyle.Caption)\n                MonarchProgress(progress = (step + 1) / steps.size.toFloat(), size = MonarchProgressSize.Sm)\n            }\n            MonarchText(\n                text = if (step < steps.size) steps[step].label else {{done.title}},\n                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },\n                style = MonarchTextStyle.Heading,\n            )\n            when (step) {\n                0 -> {\n                    MonarchText(text = {{review.items.0}})\n                    MonarchText(text = {{review.items.1}})\n                }\n                1 -> {\n                    MonarchText(text = {{export.description}})\n                    MonarchCheckboxRow(checked = exported, onCheckedChange = { exported = it }, label = {{export.label}})\n                    if (!exported) MonarchText(text = {{export.blocked}}, style = MonarchTextStyle.Caption)\n                }\n                2 -> MonarchText(text = {{confirm.content}})\n                else -> MonarchText(text = {{done.content}})\n            }\n            Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                if (step in 1 until steps.size) {\n                    MonarchButton(text = \"Back\", onClick = { step-- }, variant = MonarchButtonVariant.Ghost)\n                } else if (step == 0) {\n                    MonarchButton(text = \"Cancel\", onClick = { open = false }, variant = MonarchButtonVariant.Ghost)\n                }\n                Spacer(Modifier.weight(1f))\n                if (step < steps.size) {\n                    val last = step == steps.lastIndex\n                    MonarchButton(\n                        text = if (last) {{confirm.continueLabel}} else \"Continue\",\n                        onClick = { step++ },\n                        variant = if (last) MonarchButtonVariant.Danger else MonarchButtonVariant.Primary,\n                        enabled = step != 1 || exported,\n                    )\n                } else {\n                    MonarchButton(text = \"Close\", onClick = { open = false })\n                }\n            }\n        }\n    }\n}",
+      "setupTemplate": "var open by remember { mutableStateOf(true) }\nvar step by remember { mutableIntStateOf(0) }\nvar exported by remember { mutableStateOf(false) }\nval steps = listOf(\n    MonarchStepperStep(id = \"review\", label = {{review.title}}),\n    MonarchStepperStep(id = \"export\", label = {{export.title}}),\n    MonarchStepperStep(id = \"confirm\", label = {{confirm.title}}),\n)",
+      "setup": "var open by remember { mutableStateOf(true) }\nvar step by remember { mutableIntStateOf(0) }\nvar exported by remember { mutableStateOf(false) }\nval steps = listOf(\n    MonarchStepperStep(id = \"review\", label = \"What happens\"),\n    MonarchStepperStep(id = \"export\", label = \"Keep a copy\"),\n    MonarchStepperStep(id = \"confirm\", label = \"Close the project\"),\n)",
+      "code": "MonarchButton(\n    text = \"Close project\",\n    onClick = {\n        step = 0\n        open = true\n    },\n    variant = MonarchButtonVariant.Danger,\n)\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }, title = \"Close project\", description = \"Closing removes the project for everyone.\") {\n        Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n            if (step < steps.size) {\n                MonarchText(text = \"Step ${step + 1} of ${steps.size}\", style = MonarchTextStyle.Caption)\n                MonarchProgress(progress = (step + 1) / steps.size.toFloat(), size = MonarchProgressSize.Sm)\n            }\n            MonarchText(\n                text = if (step < steps.size) steps[step].label else \"Project closed\",\n                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },\n                style = MonarchTextStyle.Heading,\n            )\n            when (step) {\n                0 -> {\n                    MonarchText(text = \"48 tasks are archived\")\n                    MonarchText(text = \"6 people lose access\")\n                }\n                1 -> {\n                    MonarchText(text = \"Download the tasks and comments before you continue.\")\n                    MonarchCheckboxRow(checked = exported, onCheckedChange = { exported = it }, label = \"I have downloaded a copy, or I do not need one\")\n                    if (!exported) MonarchText(text = \"Tick the box to continue.\", style = MonarchTextStyle.Caption)\n                }\n                2 -> MonarchText(text = \"You can reopen it from Archive for 30 days.\")\n                else -> MonarchText(text = \"It is in Archive.\")\n            }\n            Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                if (step in 1 until steps.size) {\n                    MonarchButton(text = \"Back\", onClick = { step-- }, variant = MonarchButtonVariant.Ghost)\n                } else if (step == 0) {\n                    MonarchButton(text = \"Cancel\", onClick = { open = false }, variant = MonarchButtonVariant.Ghost)\n                }\n                Spacer(Modifier.weight(1f))\n                if (step < steps.size) {\n                    val last = step == steps.lastIndex\n                    MonarchButton(\n                        text = if (last) \"Close project\" else \"Continue\",\n                        onClick = { step++ },\n                        variant = if (last) MonarchButtonVariant.Danger else MonarchButtonVariant.Primary,\n                        enabled = step != 1 || exported,\n                    )\n                } else {\n                    MonarchButton(text = \"Close\", onClick = { open = false })\n                }\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "WizardDialog",
+  "dependsOn": [
+    "sheet",
+    "stepper",
+    "button",
+    "text",
+    "text-field"
+  ]
+}

@@ -1,5 +1,7 @@
 import { AiSafetyNotice } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-safety-notice.fixture.json';
 
 export default {
   id: 'ai-safety-notice',
@@ -100,13 +102,11 @@ export default {
           stack: true,
           render: () => (
             <AiSafetyNotice
-              kind="blocked"
-              reason="The request asked for someone’s home address."
-              nextSteps={
-                <p>Ask about public information instead, such as a company’s office location.</p>
-              }
+              kind={fixture.data.kind as 'blocked'}
+              reason={fixture.data.reason}
+              nextSteps={<p>{fixture.data.nextSteps}</p>}
               onEditPrompt={() => {}}
-              learnMoreHref="https://example.com/guidelines"
+              learnMoreHref={fixture.data.learnMoreHref}
             />
           ),
         },

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Field, FieldLabel, Input } from '@rookcom/monarch-react';
 import { AiAutofillField, type AiAutofillState } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-autofill-field.fixture.json';
 
 function AutofilledField({
   label,
@@ -41,19 +43,15 @@ function AutofilledField({
 function FormDemo() {
   return (
     <div style={{ display: 'grid', gap: 'var(--mn-space-4)', width: '100%', maxWidth: '26rem' }}>
-      <AutofilledField
-        label="Company"
-        suggestion="Northwind Ltd"
-        confidence={0.93}
-        source="invoice-0412.pdf"
-      />
-      <AutofilledField
-        label="Invoice total"
-        suggestion="1,240.00"
-        confidence={0.71}
-        source="invoice-0412.pdf"
-      />
-      <AutofilledField label="Due date" suggestion="2026-05-30" confidence={0.38} />
+      {fixture.data.fields.map((field) => (
+        <AutofilledField
+          key={field.label}
+          label={field.label}
+          suggestion={field.suggestion}
+          confidence={field.confidence}
+          {...('source' in field ? { source: field.source } : {})}
+        />
+      ))}
     </div>
   );
 }

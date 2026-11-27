@@ -1,11 +1,14 @@
 import { Gauge } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './gauge.fixture.json';
 
-const LOAD_BANDS = [
-  { from: 0, to: 70, tone: 'success' as const, label: 'Healthy' },
-  { from: 70, to: 90, tone: 'warning' as const, label: 'High' },
-  { from: 90, to: 100, tone: 'danger' as const, label: 'Critical' },
-];
+const LOAD_BANDS = fixture.data.bands as readonly {
+  from: number;
+  to: number;
+  tone: 'success' | 'warning' | 'danger';
+  label: string;
+}[];
 
 export default {
   id: 'gauge',
@@ -121,12 +124,12 @@ export default {
           title: 'With bands',
           render: () => (
             <Gauge
-              value={76}
+              value={fixture.data.value}
               bands={LOAD_BANDS}
-              label="CPU load"
-              description="Average over 5 minutes"
-              valueFormat={{ style: 'unit', unit: 'percent', maximumFractionDigits: 0 }}
-              locale="en-US"
+              label={fixture.data.label}
+              description={fixture.data.description}
+              valueFormat={fixture.data.valueFormat as Intl.NumberFormatOptions}
+              locale={fixture.data.locale}
             />
           ),
         },

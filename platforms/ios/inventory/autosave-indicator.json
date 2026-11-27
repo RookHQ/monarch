@@ -1,0 +1,161 @@
+{
+  "id": "autosave-indicator",
+  "name": "MonarchAutosaveIndicator",
+  "title": "AutosaveIndicator",
+  "family": "forms",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "An @Observable MonarchAutosave that runs saves in Tasks and waits on an injectable Clock, shown by MonarchSaveStatusIndicator",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Saves a value automatically after the person stops changing it (MonarchAutosave) and shows where saving stands (MonarchAutosaveIndicator).",
+  "whenToUse": "For editors and settings forms that save without a Save button: debounced, one save at a time, retried on failure, and flushed before leaving.",
+  "whenNotToUse": "Not when the app already tracks its own save status (use MonarchSaveStatusIndicator directly), and not for forms with an explicit Save button.",
+  "api": [
+    "MonarchAutosaveIndicator.init(_ autosave: MonarchAutosave<Value>, errorMessage: ((any Error) -> String)? = nil, announcesSaving: Bool = false, labels: MonarchSaveStatusIndicatorLabels = MonarchSaveStatusIndicatorLabels())",
+    "@MainActor @Observable final class MonarchAutosave<Value: Equatable & Sendable> { init(_ value: Value, delay: Duration = .seconds(1), retries: Int = 2, retryDelay: Duration = .seconds(2), savedAt: Date? = nil, clock: any Clock<Duration> = ContinuousClock(), now: @escaping @Sendable () -> Date = { Date() }, save: @escaping @MainActor (Value) async throws -> Void) }",
+    "MonarchAutosave: var status: MonarchSaveStatus { get }; var savedAt: Date? { get }; var value: Value { get }; var error: (any Error)? { get }; var isDirty: Bool { get }; var isEnabled: Bool { get set }",
+    "MonarchAutosave: func update(_ value: Value); func retry(); @discardableResult func flush() async -> Bool"
+  ],
+  "options": [
+    {
+      "name": "autosave",
+      "type": "MonarchAutosave<Value>",
+      "default": "required",
+      "description": "The autosave to show. Keep it in @State and call update(_:) from onChange of the edited value."
+    },
+    {
+      "name": "errorMessage",
+      "type": "((any Error) -> String)?",
+      "default": "nil",
+      "description": "Turns the save error into the visible message, such as \"You are offline\". Without it, \"Couldn't save\"."
+    },
+    {
+      "name": "announcesSaving",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether \"Saving…\" is announced too. Off so frequent autosaves stay quiet."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSaveStatusIndicatorLabels",
+      "default": "MonarchSaveStatusIndicatorLabels()",
+      "description": "Replacements for \"Unsaved changes\", \"Saving…\", \"Saved\", \"Couldn't save\" and \"Retry\"."
+    },
+    {
+      "name": "MonarchAutosave value",
+      "type": "Value",
+      "default": "required",
+      "description": "The current value, taken as saved."
+    },
+    {
+      "name": "MonarchAutosave delay",
+      "type": "Duration",
+      "default": ".seconds(1)",
+      "description": "How long to wait after the last change before saving."
+    },
+    {
+      "name": "MonarchAutosave retries",
+      "type": "Int",
+      "default": "2",
+      "description": "Automatic retries after a failed save before the status becomes error."
+    },
+    {
+      "name": "MonarchAutosave retryDelay",
+      "type": "Duration",
+      "default": ".seconds(2)",
+      "description": "The wait before the first automatic retry; it doubles each time."
+    },
+    {
+      "name": "MonarchAutosave savedAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the value was last saved, if known; the status then starts as saved."
+    },
+    {
+      "name": "MonarchAutosave clock",
+      "type": "any Clock<Duration>",
+      "default": "ContinuousClock()",
+      "description": "The clock the waits are measured on. Tests pass a clock they advance by hand."
+    },
+    {
+      "name": "MonarchAutosave now",
+      "type": "@Sendable () -> Date",
+      "default": "{ Date() }",
+      "description": "The current date, recorded as savedAt when a save finishes."
+    },
+    {
+      "name": "MonarchAutosave save",
+      "type": "@MainActor (Value) async throws -> Void",
+      "default": "required",
+      "description": "Saves a value. Throwing reports a failure."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "Nothing edited and no save time known: nothing is drawn."
+    },
+    {
+      "name": "unsaved",
+      "description": "A change is waiting for the delay, or saving is paused with isEnabled false."
+    },
+    {
+      "name": "saving",
+      "description": "A save is in flight, or an automatic retry is waiting."
+    },
+    {
+      "name": "saved",
+      "description": "The last save finished: \"Saved · 2 minutes ago\"."
+    },
+    {
+      "name": "error",
+      "description": "The retries are used up: \"Couldn't save\" or the app's message, with a Retry button that saves at once."
+    }
+  ],
+  "appearance": "As MonarchSaveStatusIndicator: caption text in the muted role, the success role for saved and the danger role for error, each with an icon. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "The web's useAutosave hook becomes the MonarchAutosave class, because SwiftUI keeps long-lived state in an @Observable object rather than a hook. The app reports changes with update(_:) (usually from onChange). Values are compared with Equatable rather than JSON equality. The clock and the date source are parameters so tests and previews never wait for real time. Saves run on the main actor; an app that saves on another actor awaits it inside save.",
+  "accessibility": [
+    "The status is one element: the words and the relative time; the icon is decorative.",
+    "Saved and error outcomes are announced; \"Saving…\" is announced only with announcesSaving.",
+    "The Retry button is a separate standard button with a 44-point touch target.",
+    "Each status has words and an icon, not colour alone."
+  ],
+  "edgeCases": [
+    "A change back to the saved value cancels the wait and returns to saved (or idle).",
+    "Edits during a save are saved after it; flush() during a save waits for it and then saves the newest value at once.",
+    "flush() returns true at once when nothing is unsaved, and false when the save fails even if an automatic retry is scheduled.",
+    "While an automatic retry waits the status stays saving; after the last retry it becomes error.",
+    "An edit after an error keeps the error shown until the next save starts."
+  ],
+  "tests": [
+    "MonarchAutosaveIndicatorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Autosaving field (type \"fail\" to see the error)",
+      "fixture": "autosave-indicator",
+      "webExample": "Autosaving field (type \"fail\" to see the error)",
+      "template": "VStack(alignment: .leading, spacing: 8) {\n    MonarchTextField({{label}}, text: $draft)\n        .onChange(of: draft) { autosave.update(draft) }\n    MonarchAutosaveIndicator(autosave)\n}",
+      "setupTemplate": "@State private var draft = {{value}}\n@State private var autosave = MonarchAutosave(\n    {{value}},\n    savedAt: Date()\n) { _ in\n    // Send the text to the server here.\n}",
+      "setup": "@State private var draft = \"Weekly notes\"\n@State private var autosave = MonarchAutosave(\n    \"Weekly notes\",\n    savedAt: Date()\n) { _ in\n    // Send the text to the server here.\n}",
+      "code": "VStack(alignment: .leading, spacing: 8) {\n    MonarchTextField(\"Title\", text: $draft)\n        .onChange(of: draft) { autosave.update(draft) }\n    MonarchAutosaveIndicator(autosave)\n}"
+    },
+    {
+      "title": "Pause while invalid and explain failures",
+      "setup": "@State private var autosave = MonarchAutosave(\"Ada\", retries: 1) { _ in }",
+      "code": "MonarchAutosaveIndicator(\n    autosave,\n    errorMessage: { _ in \"You are offline\" },\n    labels: MonarchSaveStatusIndicatorLabels(unsaved: \"Changes not saved\")\n)\n.onAppear { autosave.isEnabled = false }"
+    }
+  ],
+  "webEquivalent": "AutosaveIndicator",
+  "dependsOn": [
+    "save-status-indicator"
+  ],
+  "icons": {
+    "saved": "CheckGlyph"
+  }
+}

@@ -1,5 +1,7 @@
 import { AiConfidenceMeter } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-confidence-meter.fixture.json';
 
 export default {
   id: 'ai-confidence-meter',
@@ -117,9 +119,13 @@ export default {
           title: 'Badges',
           render: () => (
             <>
-              <AiConfidenceMeter value={0.42} />
-              <AiConfidenceMeter value={0.72} />
-              <AiConfidenceMeter value={0.93} showValue />
+              {fixture.data.meters.map((meter) => (
+                <AiConfidenceMeter
+                  key={meter.value}
+                  value={meter.value}
+                  {...('showValue' in meter ? { showValue: meter.showValue } : {})}
+                />
+              ))}
             </>
           ),
         },

@@ -1,0 +1,154 @@
+{
+  "id": "pricing-table",
+  "name": "MonarchPricingTable",
+  "title": "PricingTable",
+  "family": "billing",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Picker with .pickerStyle(.segmented) for periods and plans; ScrollView(.horizontal) with .scrollTargetBehavior(.paging), .containerRelativeFrame and .scrollPosition(id:) for pages; Grid and GridRow for the comparison",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Plans compared feature by feature with a billing period picker: one plan per page with its features below on a phone, plans as columns and features as rows on a wide screen. Prices are shown exactly as given.",
+  "whenToUse": "When people need to see which plan includes which feature, and prices may differ by billing period.",
+  "whenNotToUse": "For two to four plans with short feature lists, a row or stack of MonarchPlanCard reads faster. For purchases that must use the store's billing, present StoreKit's SubscriptionStoreView or your StoreKit flow from the action. For tabular data that is not plans, use Table or Grid.",
+  "api": [
+    "init(plans: [MonarchPricingPlan], features: [MonarchPricingFeature], periods: [MonarchPricingPeriod] = [], period: Binding<String>? = nil, layout: MonarchPricingTableLayout = .automatic, isPriceShown: Bool = true, isPeriodPickerShown: Bool = true, labels: MonarchPricingTableLabels = MonarchPricingTableLabels(), @ViewBuilder action: @escaping (MonarchPricingPlan) -> Action)",
+    "init(plans: [MonarchPricingPlan], features: [MonarchPricingFeature], periods: [MonarchPricingPeriod] = [], period: Binding<String>? = nil, layout: MonarchPricingTableLayout = .automatic, isPriceShown: Bool = true, isPeriodPickerShown: Bool = true, labels: MonarchPricingTableLabels = MonarchPricingTableLabels())  // where Action == EmptyView",
+    "MonarchPricingPlan.init(_ id: String, name: String, description: String? = nil, prices: [String: String] = [:], price: String? = nil, priceSuffix: String? = nil, badge: String? = nil, isHighlighted: Bool = false, isCurrent: Bool = false)",
+    "MonarchPricingFeature.init(_ id: String, label: String, description: String? = nil, group: String? = nil, values: [String: MonarchPricingFeatureValue])",
+    "enum MonarchPricingFeatureValue: ExpressibleByBooleanLiteral, ExpressibleByStringLiteral { case included, notIncluded, text(String) }",
+    "MonarchPricingPeriod.init(_ id: String, label: String, suffix: String? = nil, priceSuffix: String? = nil, priceNote: String? = nil)",
+    "enum MonarchPricingTableLayout { case automatic, paged, grid }",
+    "MonarchPricingTableLabels.init(caption: String? = nil, included: String? = nil, notIncluded: String? = nil, currentPlan: String? = nil, billingPeriod: String? = nil, plan: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "plans",
+      "type": "[MonarchPricingPlan]",
+      "default": "required",
+      "description": "The plans in display order: id, name, description, prices per period, fallback price, price suffix, badge, highlighted and current flags."
+    },
+    {
+      "name": "features",
+      "type": "[MonarchPricingFeature]",
+      "default": "required",
+      "description": "The rows: id, label, description, group and a value per plan id (true, false or text)."
+    },
+    {
+      "name": "periods",
+      "type": "[MonarchPricingPeriod]",
+      "default": "[]",
+      "description": "Billing periods. With two or more a segmented picker is shown."
+    },
+    {
+      "name": "period",
+      "type": "Binding<String>?",
+      "default": "nil",
+      "description": "The selected period id. Without it the table keeps its own, starting with the first period."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchPricingTableLayout",
+      "default": ".automatic",
+      "description": "automatic (grid at regular width below accessibility sizes, pages otherwise), paged or grid."
+    },
+    {
+      "name": "isPriceShown",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether prices are shown; off for comparisons without prices."
+    },
+    {
+      "name": "isPeriodPickerShown",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the period picker is shown; off when the screen shows its own."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchPricingTableLabels",
+      "default": "MonarchPricingTableLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "action",
+      "type": "@ViewBuilder (MonarchPricingPlan) -> Action",
+      "default": "none",
+      "description": "The call to action of each plan, normally one MonarchButton."
+    }
+  ],
+  "states": [
+    {
+      "name": "paged",
+      "description": "A plan picker, then one page per plan: a MonarchPlanCard with price, badges and action, and the plan's features grouped below with a check, a dash or the text."
+    },
+    {
+      "name": "grid",
+      "description": "A header row of plans with price, badges, description and action, then group titles and feature rows with a check, a dash or text per plan."
+    },
+    {
+      "name": "highlighted plan",
+      "description": "A solid badge, a raised plan card or a thicker accent border around the grid header."
+    },
+    {
+      "name": "current plan",
+      "description": "An outlined \"Current plan\" badge."
+    },
+    {
+      "name": "fallback price",
+      "description": "A plan without a price for the period shows its price, such as \"Contact us\", without the period's suffix and note."
+    }
+  ],
+  "appearance": "Checks use the strong success colour and dashes the subtle text colour; not-included feature names on a page use the muted text colour. Plan names are subheading text, prices title text, suffixes, notes and descriptions caption text in the muted colour. A highlighted grid header has an accent border; rows are separated by MonarchDivider. Colours come from theme roles in every theme.",
+  "platformNotes": "The web PricingTable is one real table that scrolls sideways on narrow screens with the feature column pinned, and also exports BillingPeriodToggle and helper functions. On iOS a phone shows one plan per page instead (the plan comparison stays readable at large text sizes), the grid is used at regular width, and the period picker is a standard segmented Picker; the picker's suffix is shown as a caption under it rather than inside the segment. hideCaption has no meaning: the caption is the spoken name of the container. Android ships the same MonarchPricingTable.",
+  "accessibility": [
+    "The table is a container labelled \"Plan comparison\" (or labels.caption).",
+    "Plan names and group titles have the header trait.",
+    "In the grid each cell is one element read as the plan, the feature and \"Included\", \"Not included\" or the text, such as \"Team, Single sign-on: Included\".",
+    "On a page each feature is one element read as its name, its value and its description.",
+    "Checks and dashes are hidden from VoiceOver; the words carry the value, so nothing depends on colour or shape alone.",
+    "The billing period and plan pickers are standard segmented Pickers with their own names.",
+    "The price and its suffix are read together."
+  ],
+  "edgeCases": [
+    "More than five plans make grid columns narrow; use pages or fewer plans.",
+    "Long feature names and values wrap; grid columns share the width.",
+    "At accessibility text sizes automatic uses pages even on a wide screen.",
+    "The pages scroll sideways with paging; the plan picker follows the visible page. Swiping between pages with VoiceOver was not tried on a device.",
+    "Segmented pickers shorten long period or plan names; keep them short."
+  ],
+  "tests": [
+    "MonarchPricingTableTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Plans with a billing-period toggle",
+      "fixture": "pricing-table",
+      "webExample": "Plans with a billing-period toggle",
+      "template": "MonarchPricingTable(\n    plans: [\n        MonarchPricingPlan({{plans.0.id}}, name: {{plans.0.name}}, description: {{plans.0.description}}, prices: [{{periods.0.value}}: {{plans.0.prices.monthly}}, {{periods.1.value}}: {{plans.0.prices.yearly}}]),\n        MonarchPricingPlan({{plans.1.id}}, name: {{plans.1.name}}, description: {{plans.1.description}}, prices: [{{periods.0.value}}: {{plans.1.prices.monthly}}, {{periods.1.value}}: {{plans.1.prices.yearly}}], badge: {{plans.1.badge}}, isHighlighted: {{plans.1.highlighted}}),\n        MonarchPricingPlan({{plans.2.id}}, name: {{plans.2.name}}, description: {{plans.2.description}}, price: {{plans.2.price}}),\n    ],\n    features: [\n        MonarchPricingFeature({{features.0.id}}, label: {{features.0.label}}, values: [{{plans.0.id}}: {{features.0.values.starter}}, {{plans.1.id}}: {{features.0.values.team}}, {{plans.2.id}}: {{features.0.values.enterprise}}]),\n        MonarchPricingFeature({{features.1.id}}, label: {{features.1.label}}, values: [{{plans.0.id}}: {{features.1.values.starter}}, {{plans.1.id}}: {{features.1.values.team}}, {{plans.2.id}}: {{features.1.values.enterprise}}]),\n        MonarchPricingFeature({{features.2.id}}, label: {{features.2.label}}, description: {{features.2.description}}, group: {{features.2.group}}, values: [{{plans.0.id}}: {{features.2.values.starter}}, {{plans.1.id}}: {{features.2.values.team}}, {{plans.2.id}}: {{features.2.values.enterprise}}]),\n        MonarchPricingFeature({{features.3.id}}, label: {{features.3.label}}, group: {{features.3.group}}, values: [{{plans.2.id}}: {{features.3.values.enterprise}}]),\n    ],\n    periods: [\n        MonarchPricingPeriod({{periods.0.value}}, label: {{periods.0.label}}, priceSuffix: {{periods.0.priceSuffix}}),\n        MonarchPricingPeriod({{periods.1.value}}, label: {{periods.1.label}}, priceSuffix: {{periods.1.priceSuffix}}, priceNote: {{periods.1.priceNote}}),\n    ],\n    period: $period,\n    layout: .grid,\n    labels: MonarchPricingTableLabels(caption: {{caption}})\n) { plan in\n    switch plan.id {\n    case {{plans.0.id}}:\n        MonarchButton(\n            {{plans.0.action.label}},\n            variant: {{plans.0.action.variant|case}},\n            size: {{plans.0.action.size|case}},\n            fullWidth: true\n        ) { chosen = plan.id }\n    case {{plans.1.id}}:\n        MonarchButton(\n            {{plans.1.action.label}},\n            variant: {{plans.1.action.variant|case}},\n            size: {{plans.1.action.size|case}},\n            fullWidth: true\n        ) { chosen = plan.id }\n    case {{plans.2.id}}:\n        MonarchButton(\n            {{plans.2.action.label}},\n            variant: {{plans.2.action.variant|case}},\n            size: {{plans.2.action.size|case}},\n            fullWidth: true\n        ) { chosen = plan.id }\n    default:\n        EmptyView()\n    }\n}",
+      "setupTemplate": "@State private var period = {{periods.0.value}}\n@State private var chosen = \"\"",
+      "setup": "@State private var period = \"monthly\"\n@State private var chosen = \"\"",
+      "code": "MonarchPricingTable(\n    plans: [\n        MonarchPricingPlan(\"starter\", name: \"Starter\", description: \"For individuals.\", prices: [\"monthly\": \"₹A\", \"yearly\": \"₹B\"]),\n        MonarchPricingPlan(\"team\", name: \"Team\", description: \"For small teams.\", prices: [\"monthly\": \"₹C\", \"yearly\": \"₹D\"], badge: \"Recommended\", isHighlighted: true),\n        MonarchPricingPlan(\"enterprise\", name: \"Enterprise\", description: \"For larger organisations.\", price: \"Contact us\"),\n    ],\n    features: [\n        MonarchPricingFeature(\"projects\", label: \"Projects\", values: [\"starter\": \"Up to 3\", \"team\": true, \"enterprise\": true]),\n        MonarchPricingFeature(\"members\", label: \"Members\", values: [\"starter\": \"1\", \"team\": \"Up to 25\", \"enterprise\": true]),\n        MonarchPricingFeature(\"sso\", label: \"Single sign-on\", description: \"SAML and OIDC\", group: \"Security\", values: [\"starter\": false, \"team\": true, \"enterprise\": true]),\n        MonarchPricingFeature(\"audit\", label: \"Audit log\", group: \"Security\", values: [\"enterprise\": true]),\n    ],\n    periods: [\n        MonarchPricingPeriod(\"monthly\", label: \"Monthly\", priceSuffix: \"/ month\"),\n        MonarchPricingPeriod(\"yearly\", label: \"Yearly\", priceSuffix: \"/ year\", priceNote: \"Billed yearly\"),\n    ],\n    period: $period,\n    layout: .grid,\n    labels: MonarchPricingTableLabels(caption: \"Compare plans\")\n) { plan in\n    switch plan.id {\n    case \"starter\":\n        MonarchButton(\n            \"Choose Starter\",\n            variant: .secondary,\n            size: .md,\n            fullWidth: true\n        ) { chosen = plan.id }\n    case \"team\":\n        MonarchButton(\n            \"Choose Team\",\n            variant: .primary,\n            size: .md,\n            fullWidth: true\n        ) { chosen = plan.id }\n    case \"enterprise\":\n        MonarchButton(\n            \"Talk to sales\",\n            variant: .secondary,\n            size: .md,\n            fullWidth: true\n        ) { chosen = plan.id }\n    default:\n        EmptyView()\n    }\n}"
+    },
+    {
+      "title": "A comparison without prices, as a grid",
+      "code": "MonarchPricingTable(\n    plans: [\n        MonarchPricingPlan(\"basic\", name: \"Basic\"),\n        MonarchPricingPlan(\"pro\", name: \"Pro\", isCurrent: true),\n    ],\n    features: [\n        MonarchPricingFeature(\"export\", label: \"Export\", values: [\"basic\": \"CSV\", \"pro\": \"CSV and PDF\"]),\n        MonarchPricingFeature(\"api\", label: \"API access\", values: [\"pro\": true]),\n    ],\n    layout: .grid,\n    isPriceShown: false\n)"
+    }
+  ],
+  "webEquivalent": "PricingTable",
+  "dependsOn": [
+    "plan-card",
+    "segmented-control",
+    "badge",
+    "separator"
+  ],
+  "icons": {
+    "included": "CheckGlyph",
+    "notIncluded": "DashGlyph"
+  },
+  "parityExceptions": []
+}

@@ -7,6 +7,8 @@ import {
   type DataTableColumn,
 } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './table-toolbar.fixture.json';
 
 interface Row {
   id: string;
@@ -15,16 +17,13 @@ interface Row {
   owner: string;
 }
 
-const ROWS: Row[] = [
-  { id: '1', name: 'example.com', status: 'Active', owner: 'Sam Lee' },
-  { id: '2', name: 'example.org', status: 'Expiring', owner: 'Ana Ruiz' },
-  { id: '3', name: 'example.net', status: 'Active', owner: 'Kai Moreau' },
-];
+const ROWS: Row[] = fixture.data.rows.map((row, i) => ({ id: String(i + 1), ...row }));
 
+const [NAME, STATUS, OWNER] = fixture.data.columns as [string, string, string];
 const COLUMNS: DataTableColumn<Row>[] = [
-  { id: 'name', header: 'Name', hideable: false },
-  { id: 'status', header: 'Status' },
-  { id: 'owner', header: 'Owner' },
+  { id: 'name', header: NAME, hideable: false },
+  { id: 'status', header: STATUS },
+  { id: 'owner', header: OWNER },
 ];
 
 function Demo() {
@@ -39,20 +38,20 @@ function Demo() {
         search={{ value: query, onValueChange: setQuery }}
         filters={
           <Button size="sm" variant="secondary">
-            Status
+            {fixture.data.filter}
           </Button>
         }
         resultCount={rows.length}
-        view={{ value: view, onValueChange: setView, views: ['table', 'board'] }}
+        view={{ value: view, onValueChange: setView, views: fixture.data.views }}
         columns={{ ...cols.chooserProps, showAll: true }}
-        actions={<Button size="sm">New domain</Button>}
+        actions={<Button size="sm">{fixture.data.action}</Button>}
         selectedCount={selected.length}
         totalCount={rows.length}
         onClearSelection={() => setSelected([])}
         bulkActions={[{ id: 'renew', label: 'Renew', onSelect: () => setSelected([]) }]}
       />
       <DataTable
-        caption="Domains"
+        caption={fixture.data.caption}
         columns={COLUMNS}
         rows={rows}
         getRowId={(r) => r.id}

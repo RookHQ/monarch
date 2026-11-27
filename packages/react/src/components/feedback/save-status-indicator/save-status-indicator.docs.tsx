@@ -1,5 +1,16 @@
+import type { ComponentProps } from 'react';
 import { SaveStatusIndicator } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './save-status-indicator.fixture.json';
+
+type Status = NonNullable<ComponentProps<typeof SaveStatusIndicator>['status']>;
+const [unsaved, saving, saved, failed] = fixture.data.states as unknown as readonly [
+  Status,
+  Status,
+  Status,
+  Status,
+];
 
 export default {
   id: 'save-status-indicator',
@@ -118,10 +129,13 @@ export default {
           stack: true,
           render: () => (
             <>
-              <SaveStatusIndicator status="unsaved" />
-              <SaveStatusIndicator status="saving" />
-              <SaveStatusIndicator status="saved" savedAt={Date.now() - 120_000} />
-              <SaveStatusIndicator status="error" onRetry={() => {}} />
+              <SaveStatusIndicator status={unsaved} />
+              <SaveStatusIndicator status={saving} />
+              <SaveStatusIndicator
+                status={saved}
+                savedAt={Date.now() - fixture.data.savedAgoSeconds * 1000}
+              />
+              <SaveStatusIndicator status={failed} onRetry={() => {}} />
             </>
           ),
         },

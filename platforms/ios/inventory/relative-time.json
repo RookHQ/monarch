@@ -1,0 +1,69 @@
+{
+  "id": "relative-time",
+  "name": null,
+  "title": "RelativeTime",
+  "family": "data-display",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "Text(date.formatted(.relative(presentation: .named))) with Date.RelativeFormatStyle, or Text(date, style: .relative)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Relative times such as \"3 hours ago\" come from the platform's formatters. Monarch ships nothing; the text takes a Monarch type role and colour.",
+  "whenToUse": "For timestamps in lists, comments and activity. Use Date.RelativeFormatStyle for \"3 hours ago\" and \"yesterday\", and Text(date, style: .relative) for a value that counts by itself.",
+  "whenNotToUse": "When the exact time matters more than the age, show the absolute date with Date.FormatStyle.",
+  "api": [
+    "Text(date.formatted(.relative(presentation: .named, unitsStyle: .wide)))",
+    "Text(_ date: Date, style: .relative)",
+    "TimelineView(.everyMinute) { _ in … }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "past",
+      "description": "\"3 hours ago\", \"yesterday\"."
+    },
+    {
+      "name": "future",
+      "description": "\"in 2 days\", \"tomorrow\"."
+    },
+    {
+      "name": "live",
+      "description": "Inside TimelineView(.everyMinute) the formatted text is redrawn every minute; Text(date, style: .relative) updates by itself."
+    }
+  ],
+  "appearance": "Plain text. Apply monarchTextStyle and a text colour from the theme, usually caption and the muted text colour.",
+  "platformNotes": "The web RelativeTime is a component with a tooltip for the absolute time and its own tick logic; Android uses its platform formatter. iOS has no hover tooltip, so the absolute time goes in the accessibility label. Text(date, style: .relative) writes \"3 hr, 2 min\" without \"ago\"; use the format style when the sentence form is wanted. The web absoluteAfter threshold is an if in the app.",
+  "accessibility": [
+    "Set the absolute date and time as the accessibility label, so VoiceOver reads a time that does not go stale.",
+    "The formatters use the user's locale and calendar.",
+    "The text scales with Dynamic Type when a Monarch type role is applied."
+  ],
+  "edgeCases": [
+    "date.formatted(.relative…) is computed when the view is drawn and does not update by itself; wrap it in TimelineView.",
+    "Text(date, style: .relative) updates every second and changes width; add monospacedDigit().",
+    "Date.RelativeFormatStyle is always relative to now; for a fixed reference date use RelativeDateTimeFormatter."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Relative and absolute",
+      "fixture": "relative-time",
+      "webExample": "Relative and absolute",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space1) {\n    Text(\"{{lines.0.prefix|raw}} \\(Text(relative({{lines.0.date|date}})).underline(pattern: .dot))\")\n    Text(\"{{lines.1.prefix|raw}} \\(Text(relative({{lines.1.date|date}})).underline(pattern: .dot))\")\n    Text(\"{{lines.2.prefix|raw}} \\(Text(relative({{lines.2.date|date}})).underline(pattern: .dot))\")\n    Text(\"{{lines.3.prefix|raw}} \\({{lines.3.date|date}}.formatted(absolute))\")\n}\n.monarchTextStyle(.body)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\nprivate let now = {{now|date}}\nprivate let locale = Locale(identifier: {{locale}})\nprivate func relative(_ date: Date) -> String {\n    let formatter = RelativeDateTimeFormatter()\n    formatter.locale = locale\n    formatter.unitsStyle = .full\n    return formatter.localizedString(for: date, relativeTo: now)\n}\nprivate var absolute: Date.FormatStyle {\n    Date.FormatStyle(date: .abbreviated, time: .omitted, locale: locale, timeZone: TimeZone(identifier: {{timeZone}}) ?? .gmt)\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\nprivate let now = Date(timeIntervalSince1970: 1_793_707_200)\nprivate let locale = Locale(identifier: \"en-GB\")\nprivate func relative(_ date: Date) -> String {\n    let formatter = RelativeDateTimeFormatter()\n    formatter.locale = locale\n    formatter.unitsStyle = .full\n    return formatter.localizedString(for: date, relativeTo: now)\n}\nprivate var absolute: Date.FormatStyle {\n    Date.FormatStyle(date: .abbreviated, time: .omitted, locale: locale, timeZone: TimeZone(identifier: \"UTC\") ?? .gmt)\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space1) {\n    Text(\"Edited \\(Text(relative(Date(timeIntervalSince1970: 1_793_707_020))).underline(pattern: .dot))\")\n    Text(\"Synced \\(Text(relative(Date(timeIntervalSince1970: 1_793_689_200))).underline(pattern: .dot))\")\n    Text(\"Renews \\(Text(relative(Date(timeIntervalSince1970: 1_793_880_000))).underline(pattern: .dot))\")\n    Text(\"Created \\(Date(timeIntervalSince1970: 1_790_251_200).formatted(absolute))\")\n}\n.monarchTextStyle(.body)"
+    },
+    {
+      "title": "A value that counts by itself",
+      "setup": "private let startedAt = Date.now.addingTimeInterval(-95)",
+      "code": "Text(startedAt, style: .relative)\n    .monarchTextStyle(.body)\n    .monospacedDigit()"
+    }
+  ],
+  "webEquivalent": "RelativeTime",
+  "dependsOn": []
+}

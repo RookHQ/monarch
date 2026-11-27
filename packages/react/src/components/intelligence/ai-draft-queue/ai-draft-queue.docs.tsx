@@ -1,34 +1,14 @@
 import { useState } from 'react';
 import { AiDraftQueue, type AiDraft } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-draft-queue.fixture.json';
 
-const DRAFTS: AiDraft[] = [
-  {
-    id: '1',
-    title: 'Reply to Alex Morgan',
-    context: 'Could we move Thursday’s review to the afternoon?',
-    body: 'Hi Alex,\n\nThursday afternoon works. Shall we say 2 pm?\n\nThanks',
-    status: 'draft',
-  },
-  {
-    id: '2',
-    title: 'Reply to Sam Lee',
-    context: 'Is the updated report ready to share?',
-    body: 'Hi Sam,\n\nYes, the updated report is attached. Let me know if anything needs changing.',
-    status: 'draft',
-  },
-  {
-    id: '3',
-    title: 'Reply to Kim Park',
-    context: 'Thanks for the notes from yesterday.',
-    body: 'You are welcome. Glad they helped.',
-    status: 'regenerating',
-  },
-];
+const DRAFTS = fixture.data.drafts as unknown as AiDraft[];
 
 function QueueDemo({
   shortcuts = false,
-  title = 'Replies to review',
+  title = fixture.data.title,
 }: {
   shortcuts?: boolean;
   title?: string;

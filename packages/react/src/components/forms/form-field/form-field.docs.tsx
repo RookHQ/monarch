@@ -9,20 +9,22 @@ import {
   Switch,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './form-field.fixture.json';
 
 function EmailField({ initial = '' }: { initial?: string }) {
   const [v, setV] = useState(initial);
-  const error = v.length > 0 && !v.includes('@') ? 'Enter a valid email address.' : null;
+  const error = v.length > 0 && !v.includes('@') ? fixture.data.error : null;
   return (
     <Field invalid={!!error} required>
-      <FieldLabel>Email</FieldLabel>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
       <Input
         type="email"
         value={v}
         onChange={(e) => setV(e.target.value)}
-        placeholder="you@example.com"
+        placeholder={fixture.data.placeholder}
       />
-      <FieldDescription>Used for sign-in codes only.</FieldDescription>
+      <FieldDescription>{fixture.data.description}</FieldDescription>
       <FieldError>{error}</FieldError>
     </Field>
   );
@@ -204,7 +206,7 @@ export default {
         {
           title: 'Validation wiring',
           stack: true,
-          render: () => <EmailField initial="not-an-email" />,
+          render: () => <EmailField initial={fixture.data.value} />,
         },
         {
           title: 'Native select',

@@ -1,0 +1,136 @@
+{
+  "id": "email-verification-banner",
+  "name": "MonarchEmailVerificationBanner",
+  "title": "EmailVerificationBanner",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "The MonarchCalloutBanner surface and tokens with MonarchButton actions in a MonarchFlowLayout, a task(id:) countdown and AccessibilityNotification.Announcement",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A notice that the email address is not verified yet, with the address, a Resend button that waits out a cooldown, and an optional Change email button.",
+  "whenToUse": "While a signed-in person has not verified their email address, or after they changed it and the new one is not verified.",
+  "whenNotToUse": "On the verification screen itself, where entering a code is the task, use MonarchOtpPinInput. For general notices, use MonarchCalloutBanner.",
+  "api": [
+    "init(email: String, tone: MonarchTone = .warning, placement: MonarchCalloutBannerPlacement = .section, cooldownSeconds: Int = 60, initialCooldown: Int = 0, labels: MonarchEmailVerificationBannerLabels = MonarchEmailVerificationBannerLabels(), onChangeEmail: (@MainActor () -> Void)? = nil, onDismiss: (@MainActor () -> Void)? = nil, onResend: @escaping @MainActor () async throws -> Void)",
+    "struct MonarchEmailVerificationBannerLabels { init(title: String? = nil, message: (@Sendable (String) -> String)? = nil, resend: String? = nil, resendIn: (@Sendable (Int) -> String)? = nil, sent: String? = nil, changeEmail: String? = nil, dismiss: String? = nil, error: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "email",
+      "type": "String",
+      "default": "required",
+      "description": "The address waiting for verification, shown in the message."
+    },
+    {
+      "name": "tone",
+      "type": "MonarchTone",
+      "default": ".warning",
+      "description": "warning when features are locked until verified; info when nothing is blocked yet. Other tones draw as warning."
+    },
+    {
+      "name": "placement",
+      "type": "MonarchCalloutBannerPlacement",
+      "default": ".section",
+      "description": "A rounded callout in the content, or a full-width strip for safeAreaInset(edge: .top)."
+    },
+    {
+      "name": "cooldownSeconds",
+      "type": "Int",
+      "default": "60",
+      "description": "Seconds before another send after a successful one."
+    },
+    {
+      "name": "initialCooldown",
+      "type": "Int",
+      "default": "0",
+      "description": "Seconds already remaining when the banner appears, for example right after sign-up sent the first email."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchEmailVerificationBannerLabels",
+      "default": "MonarchEmailVerificationBannerLabels()",
+      "description": "Replacements for the title, message, button titles, the sent line, the dismiss name and the fallback error."
+    },
+    {
+      "name": "onChangeEmail",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows a Change email button."
+    },
+    {
+      "name": "onDismiss",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows a dismiss button. The banner does not hide itself; remove it here."
+    },
+    {
+      "name": "onResend",
+      "type": "@MainActor () async throws -> Void",
+      "default": "required",
+      "description": "Sends the email again. Throwing shows the error's description (or the fallback) and starts no cooldown."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "Resend email can be used."
+    },
+    {
+      "name": "sending",
+      "description": "The resend button shows its spinner; taps do nothing."
+    },
+    {
+      "name": "sent",
+      "description": "A check and \"Verification email sent\" in the strong success colour, announced; the cooldown starts."
+    },
+    {
+      "name": "cooldown",
+      "description": "The button reads \"Resend in 42s\", counts down every second and is disabled until 0."
+    },
+    {
+      "name": "error",
+      "description": "An icon and the failure in the strong danger colour, announced; Resend is available at once."
+    }
+  ],
+  "appearance": "The same surface as MonarchCalloutBanner: the subtle fill and border of the warning or info tone with its icon in the strong colour, rounded in a section, a strip with a line below on a page. Resend is a small secondary button, Change email a small ghost button.",
+  "platformNotes": "The web also exports useResendCooldown for other resend controls; on iOS the cooldown logic is internal (MonarchResendCooldownState) and should be promoted if another component needs it. On the web the cooldown button keeps focus with aria-disabled; on iOS it is disabled, which VoiceOver still reaches and reads as dimmed. The web's landmark and actionPlacement props have no iOS equivalent. The parity map names MonarchBanner; the component reuses MonarchCalloutBanner's tokens instead, because MonarchBanner and MonarchCalloutBanner have one action and this banner needs two. Android builds the same component. Several closures are optional (onChangeEmail, onDismiss). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onChangeEmail.",
+  "accessibility": [
+    "The icon, title and message are one element read as the tone name, the title and the message with the address.",
+    "Resend, Change email and Dismiss are separate buttons with 44-point touch targets.",
+    "During the cooldown the resend button is disabled; VoiceOver reads it as dimmed with the seconds left in its title.",
+    "\"Verification email sent\" and failures are posted as announcements; both have an icon and text.",
+    "The address is part of the message text, not only shown visually."
+  ],
+  "edgeCases": [
+    "Long addresses wrap inside the message.",
+    "The countdown runs while the banner is on screen; a banner removed and shown again starts from initialCooldown.",
+    "An error without a LocalizedError description shows the fallback text."
+  ],
+  "tests": [
+    "MonarchEmailVerificationBannerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Resend with a cooldown",
+      "fixture": "email-verification-banner",
+      "webExample": "Resend with a cooldown",
+      "template": "MonarchEmailVerificationBanner(\n    email: {{email}},\n    cooldownSeconds: {{cooldownSeconds}},\n    onChangeEmail: {},\n    onResend: { try await Task.sleep(for: .milliseconds(700)) }\n)",
+      "code": "MonarchEmailVerificationBanner(\n    email: \"sam@example.com\",\n    cooldownSeconds: 20,\n    onChangeEmail: {},\n    onResend: { try await Task.sleep(for: .milliseconds(700)) }\n)"
+    },
+    {
+      "title": "Across the top of a screen",
+      "code": "List {\n    Text(\"Inbox\")\n}\n.listStyle(.plain)\n.monarchCanvas()\n.frame(minHeight: 200)\n.safeAreaInset(edge: .top, spacing: 0) {\n    MonarchEmailVerificationBanner(email: \"ana@example.com\", tone: .info, placement: .page) {\n        try await Task.sleep(for: .milliseconds(300))\n    }\n}"
+    }
+  ],
+  "webEquivalent": "EmailVerificationBanner",
+  "dependsOn": [
+    "callout-banner",
+    "button",
+    "icon"
+  ]
+}

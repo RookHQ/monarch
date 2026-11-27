@@ -1,0 +1,85 @@
+{
+  "id": "activity-widget",
+  "name": null,
+  "title": "ActivityWidget",
+  "family": "data-display",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchWidget (a Monarch card on androidx.compose.foundation.layout.Column with a Material 3 DropdownMenu and a View all button) holding a compact MonarchActivityTimeline (an androidx.compose.foundation.lazy.LazyColumn of event rows) with a bounded height",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the recent-activity card of a dashboard, a MonarchWidget around a compact MonarchActivityTimeline of the latest few events, with View all leading to the full log.",
+  "whenToUse": "On a dashboard or a home screen that shows what changed recently, when the full activity log is another screen.",
+  "whenNotToUse": "For the full log or an audit trail, open a screen with MonarchActivityTimeline on its own. For the person's own notifications, use the notification center pattern.",
+  "api": [
+    "MonarchWidget(title = …, onViewAll = …) { MonarchActivityTimeline(events = events.take(6), modifier = Modifier.heightIn(max = …), groupByDay = false, density = MonarchActivityTimelineDensity.Compact, loading = …, now = …, labels = MonarchActivityTimelineLabels(list = …, empty = …)) }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The first events, newest first. Pass only the latest few (the web default is 6); View all opens the rest."
+    },
+    {
+      "name": "loading",
+      "description": "Pass loading = true to the timeline so the card shows the timeline's own placeholder rows under the widget's title."
+    },
+    {
+      "name": "empty",
+      "description": "The timeline shows its empty text; set labels.empty to \"No activity yet\" or the product's wording."
+    },
+    {
+      "name": "failed",
+      "description": "Set the widget's state to MonarchWidgetState.Failed() with onRetry: the card shows the error with Try again instead of the timeline."
+    }
+  ],
+  "appearance": "The widget's surface and subtle border with its title row, then the compact timeline: tone-coloured dots or avatars, the sentence in the default text color and the time in the muted text color. The same roles change with dark and both high-contrast themes.",
+  "platformNotes": "The web ActivityWidget is a component with a limit prop and its own \"Recent activity\" and \"No activity yet\" strings. On Android, as on iOS, it is a recipe of MonarchWidget and MonarchActivityTimeline: the app passes the first events (events.take(6)) and its own title, already localised, so Monarch ships no strings for it. The web view-all link is an href; on Android onViewAll is a callback the app uses to navigate to the full log. The Android timeline is a LazyColumn, unlike the iOS VStack, so inside a scrolling dashboard it needs a bounded height (Modifier.heightIn(max = …)); in a widget of a non-scrolling grid it can fill the space it is given. The web timeZone prop is the timeline's timeZone parameter.",
+  "accessibility": [
+    "The widget title is a TalkBack heading, then each event is read as one sentence: actor, verb, target and time.",
+    "Automated actors carry the visible \"Automated\" tag from the timeline, so people and rules are told apart without color.",
+    "View all and Try again are Material 3 buttons with 48dp touch targets."
+  ],
+  "edgeCases": [
+    "Keep the list short: pass five or six events and lead to the full log; more scroll inside the bounded height.",
+    "Pass now and timeZone from a fixed clock in tests and previews so relative times and day groups do not change between runs.",
+    "Ungrouped (groupByDay = false) reads better in a short card; grouped by day suits a taller widget."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Recent activity with a view-all link",
+      "fixture": "activity-widget",
+      "webExample": "Recent activity with a view-all link",
+      "template": "MonarchWidget(title = {{title}}, onViewAll = {}) {\n    MonarchActivityTimeline(\n        events = listOf(\n            MonarchActivityTimelineEvent(\n                id = {{events.0.id}},\n                verb = {{events.0.verb}},\n                time = {{events.0.time|millis}},\n                actor = MonarchActivityTimelineActor({{events.0.actor}}),\n                target = {{events.0.object}},\n        ),\n        MonarchActivityTimelineEvent(\n            id = {{events.1.id}},\n            verb = {{events.1.verb}},\n            time = {{events.1.time|millis}},\n            actor = MonarchActivityTimelineActor({{events.1.actor}}, kind = MonarchActivityTimelineActorKind.{{events.1.kind|pascal}}),\n            target = {{events.1.object}},\n            tone = {{events.1.tone|tone}},\n        ),\n        MonarchActivityTimelineEvent(\n            id = {{events.2.id}},\n            verb = {{events.2.verb}},\n            time = {{events.2.time|millis}},\n            actor = MonarchActivityTimelineActor({{events.2.actor}}),\n            target = {{events.2.object}},\n        ),\n        MonarchActivityTimelineEvent(\n            id = {{events.3.id}},\n            verb = {{events.3.verb}},\n            time = {{events.3.time|millis}},\n            actor = MonarchActivityTimelineActor({{events.3.actor}}),\n            target = {{events.3.object}},\n        ),\n        ),\n        modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp),\n        groupByDay = false,\n        density = MonarchActivityTimelineDensity.Compact,\n        now = {{now|millis}},\n        timeZone = {{timeZone}},\n        labels = MonarchActivityTimelineLabels(list = {{title}}),\n    )\n}",
+      "imports": [
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.unit.dp"
+      ],
+      "code": "MonarchWidget(title = \"Recent activity\", onViewAll = {}) {\n    MonarchActivityTimeline(\n        events = listOf(\n            MonarchActivityTimelineEvent(\n                id = \"1\",\n                verb = \"closed\",\n                time = 1_794_051_600_000L,\n                actor = MonarchActivityTimelineActor(\"Ada Moss\"),\n                target = \"Request 1042\",\n        ),\n        MonarchActivityTimelineEvent(\n            id = \"2\",\n            verb = \"flagged\",\n            time = 1_794_045_900_000L,\n            actor = MonarchActivityTimelineActor(\"Renewal rule\", kind = MonarchActivityTimelineActorKind.Automation),\n            target = \"Contract 88\",\n            tone = MonarchTone.Warning,\n        ),\n        MonarchActivityTimelineEvent(\n            id = \"3\",\n            verb = \"commented on\",\n            time = 1_794_039_300_000L,\n            actor = MonarchActivityTimelineActor(\"Bea Lund\"),\n            target = \"Request 1039\",\n        ),\n        MonarchActivityTimelineEvent(\n            id = \"4\",\n            verb = \"created\",\n            time = 1_793_980_800_000L,\n            actor = MonarchActivityTimelineActor(\"Cal Ortiz\"),\n            target = \"Project Atlas\",\n        ),\n        ),\n        modifier = Modifier.fillMaxWidth().heightIn(max = 320.dp),\n        groupByDay = false,\n        density = MonarchActivityTimelineDensity.Compact,\n        now = 1_794_052_800_000L,\n        timeZone = \"UTC\",\n        labels = MonarchActivityTimelineLabels(list = \"Recent activity\"),\n    )\n}"
+    },
+    {
+      "title": "Loading, empty and failed",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "var retrying by remember { mutableStateOf(false) }",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    MonarchWidget(title = \"Recent activity\") {\n        MonarchActivityTimeline(\n            events = emptyList(),\n            groupByDay = false,\n            density = MonarchActivityTimelineDensity.Compact,\n            loading = true,\n        )\n    }\n    MonarchWidget(title = \"Recent activity\") {\n        MonarchActivityTimeline(\n            events = emptyList(),\n            modifier = Modifier.heightIn(max = 320.dp),\n            groupByDay = false,\n            density = MonarchActivityTimelineDensity.Compact,\n            labels = MonarchActivityTimelineLabels(empty = \"No activity yet\"),\n        )\n    }\n    MonarchWidget(\n        title = \"Recent activity\",\n        state = MonarchWidgetState.Failed(),\n        retrying = retrying,\n        onRetry = { retrying = true },\n    ) {}\n}"
+    }
+  ],
+  "webEquivalent": "ActivityWidget",
+  "dependsOn": [
+    "widget",
+    "activity-timeline"
+  ],
+  "icons": {
+    "viewAll": "ChevronRightGlyph"
+  }
+}

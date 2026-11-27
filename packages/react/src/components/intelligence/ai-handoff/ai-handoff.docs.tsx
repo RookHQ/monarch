@@ -1,9 +1,11 @@
 import { AiHandoff } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-handoff.fixture.json';
 
-const research = { id: 'research', name: 'Research agent' };
-const writer = { id: 'writer', name: 'Writing agent' };
-const now = new Date('2026-03-02T12:00:00Z');
+const research = fixture.data.from;
+const writer = fixture.data.to;
+const now = new Date(fixture.data.now);
 
 export default {
   id: 'ai-handoff',
@@ -90,8 +92,8 @@ export default {
             <AiHandoff
               from={research}
               to={writer}
-              reason="Sources are ready to draft from"
-              at={new Date('2026-03-02T11:57:00Z')}
+              reason={fixture.data.reason}
+              at={new Date(fixture.data.at)}
               now={now}
             />
           ),

@@ -1,5 +1,7 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger, Link } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './hover-card.fixture.json';
 
 const muted = { margin: 0, color: 'var(--mn-color-text-muted)', fontSize: 'var(--mn-text-sm)' };
 
@@ -110,23 +112,24 @@ export default {
       items: [
         {
           title: 'Page preview',
+          stage: true,
           render: () => (
-            <p style={{ margin: 0 }}>
-              See the{' '}
-              <HoverCard>
+            <HoverCard defaultOpen>
+              <p style={{ margin: 0 }}>
+                {fixture.data.before}{' '}
                 <HoverCardTrigger>
-                  <Link href="#onboarding">Onboarding checklist</Link>
-                </HoverCardTrigger>
-                <HoverCardContent>
-                  <div style={{ display: 'grid', gap: '0.375rem' }}>
-                    <strong>Onboarding checklist</strong>
-                    <p style={muted}>12 steps for a new team member’s first week.</p>
-                    <p style={muted}>Updated 3 days ago</p>
-                  </div>
-                </HoverCardContent>
-              </HoverCard>{' '}
-              before Monday.
-            </p>
+                  <Link href="#onboarding">{fixture.data.link}</Link>
+                </HoverCardTrigger>{' '}
+                {fixture.data.after}
+              </p>
+              <HoverCardContent>
+                <div style={{ display: 'grid', gap: '0.375rem' }}>
+                  <strong>{fixture.data.card.title}</strong>
+                  <p style={muted}>{fixture.data.card.summary}</p>
+                  <p style={muted}>{fixture.data.card.updated}</p>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
           ),
         },
         {

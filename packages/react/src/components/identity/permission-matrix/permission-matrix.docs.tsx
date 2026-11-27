@@ -5,47 +5,26 @@ import {
   type PermissionMatrixRole,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './permission-matrix.fixture.json';
 
-const ROLES: PermissionMatrixRole[] = [
-  { id: 'viewer', label: 'Viewer' },
-  { id: 'member', label: 'Member' },
-  { id: 'admin', label: 'Admin' },
-  { id: 'owner', label: 'Owner' },
-];
+const ROLES = fixture.data.roles as PermissionMatrixRole[];
 
-const PERMISSIONS: PermissionMatrixPermission[] = [
-  { id: 'records.view', label: 'View records', group: 'Records' },
-  { id: 'records.edit', label: 'Create and edit records', group: 'Records' },
-  { id: 'records.delete', label: 'Delete records', group: 'Records' },
-  {
-    id: 'members.invite',
-    label: 'Invite members',
-    description: 'Send invitations by email.',
-    group: 'Members',
-  },
-  { id: 'members.remove', label: 'Remove members', group: 'Members' },
-  { id: 'billing.manage', label: 'Manage billing', group: 'Workspace' },
-];
+const PERMISSIONS = fixture.data.permissions as unknown as PermissionMatrixPermission[];
 
-const ALL = PERMISSIONS.map((p) => p.id);
-const INITIAL: Record<string, string[]> = {
-  viewer: ['records.view'],
-  member: ['records.view', 'records.edit'],
-  admin: ['records.view', 'records.edit', 'records.delete', 'members.invite', 'members.remove'],
-  owner: ALL,
-};
+const INITIAL: Record<string, string[]> = fixture.data.grants;
 
 function Editable() {
   const [value, setValue] = useState(INITIAL);
   return (
     <PermissionMatrix
-      caption="What each role can do"
+      caption={fixture.data.caption}
       roles={ROLES}
       permissions={PERMISSIONS}
       value={value}
       onValueChange={setValue}
       isLocked={(roleId) =>
-        roleId === 'owner' ? 'Owners always have every permission.' : undefined
+        roleId === fixture.data.lockedRole ? fixture.data.lockReason : undefined
       }
     />
   );

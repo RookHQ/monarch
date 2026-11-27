@@ -1,0 +1,93 @@
+{
+  "id": "undo-toast",
+  "name": null,
+  "title": "UndoToast",
+  "family": "feedback",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "androidx.compose.material3.SnackbarHostState.showSnackbar(message, actionLabel, withDismissAction, duration) returning androidx.compose.material3.SnackbarResult",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "\"Note deleted. Undo\": a snackbar with an Undo action for a change the app already applied, whose result decides between undoing it and committing it.",
+  "whenToUse": "For reversible, low-stakes actions the app applies at once, such as deleting or archiving one item, where a confirmation dialog would slow people down.",
+  "whenNotToUse": "For destructive actions that cannot be reversed, confirm first with a dialog. For a message without an action, use a plain snackbar.",
+  "api": [
+    "suspend fun SnackbarHostState.showSnackbar(message: String, actionLabel: String? = null, withDismissAction: Boolean = false, duration: SnackbarDuration = if (actionLabel == null) SnackbarDuration.Short else SnackbarDuration.Indefinite): SnackbarResult",
+    "enum class SnackbarResult { Dismissed, ActionPerformed }",
+    "@Composable fun MonarchSnackbarHost(hostState: SnackbarHostState, modifier: Modifier = Modifier)"
+  ],
+  "options": [
+    {
+      "name": "message",
+      "type": "String",
+      "default": "required",
+      "description": "What just happened, in the past tense: \"Note deleted\"."
+    },
+    {
+      "name": "actionLabel",
+      "type": "String?",
+      "default": "null",
+      "description": "\"Undo\", in the app's strings."
+    },
+    {
+      "name": "duration",
+      "type": "SnackbarDuration",
+      "default": "SnackbarDuration.Indefinite with an action",
+      "description": "Use SnackbarDuration.Long (about 10 seconds) so the snackbar closes and the change commits; Material 3 extends it when an accessibility service needs more time."
+    }
+  ],
+  "states": [
+    {
+      "name": "ActionPerformed",
+      "description": "The person pressed Undo: revert the change, then show a short \"Restored\" snackbar."
+    },
+    {
+      "name": "Dismissed",
+      "description": "The snackbar timed out, was swiped away or dismissed: commit, for example run the deferred server delete."
+    }
+  ],
+  "appearance": "A Material 3 snackbar in MonarchSnackbarHost: the inverse surface with the Undo action in the accent color for the inverse surface, 8dp corners. The same mapping in every theme, including both high-contrast themes.",
+  "platformNotes": "The web useUndoToast is a hook that commits when the toast closes for any reason and calls onUndo and onCommit at most once. On Android showSnackbar already suspends until the snackbar closes and says how: ActionPerformed or Dismissed, so the recipe is a when on the result and Monarch ships no API. The web countdown bar and undoAltText are not offered: a Material snackbar has no progress and its action is named by its label. A snackbar queued behind another waits rather than pushing it out; commit before showing the next one when that matters. When the coroutine is cancelled (the screen leaves), showSnackbar throws CancellationException; commit in the view model in that case. iOS composes MonarchToast with its own timer.",
+  "accessibility": [
+    "The snackbar is a polite live region: TalkBack reads the message and the action when it appears.",
+    "The Undo action is a button with a 48dp touch target, and TalkBack offers it in the actions menu.",
+    "Material 3 keeps the snackbar on screen longer when an accessibility service asks for a longer timeout."
+  ],
+  "edgeCases": [
+    "Showing a second undo snackbar while one is open queues it; the first still commits on its own result.",
+    "The person can swipe the snackbar away; that is Dismissed and commits."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Delete with undo",
+      "fixture": "undo-toast",
+      "webExample": "Delete with undo",
+      "template": "Scaffold(\n    modifier = Modifier.height(MonarchTheme.spacing.space24 * 3),\n    containerColor = MonarchTheme.colors.bgCanvas,\n    snackbarHost = { MonarchSnackbarHost(hostState = snackbars) },\n) { padding ->\n    Column(modifier = Modifier.padding(padding), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n        notes.forEach { note ->\n            Row(verticalAlignment = Alignment.CenterVertically) {\n                MonarchText(text = note, modifier = Modifier.weight(1f))\n                MonarchIconButton(label = \"Delete $note\", onClick = { delete(note) }) {\n                    MonarchIcon(SampleIcons.Trash, contentDescription = null)\n                }\n            }\n        }\n    }\n}",
+      "setupTemplate": "val snackbars = remember { SnackbarHostState() }\nval scope = rememberCoroutineScope()\nvar notes by remember { mutableStateOf(listOf({{notes.0}}, {{notes.1}}, {{notes.2}})) }\nval delete: (String) -> Unit = { note ->\n    val index = notes.indexOf(note)\n    notes = notes - note\n    scope.launch {\n        val result = snackbars.showSnackbar(\n            message = {{toast.title}} + \"\\n\" + note,\n            actionLabel = {{toast.action}},\n            duration = SnackbarDuration.Long,\n        )\n        when (result) {\n            SnackbarResult.ActionPerformed -> {\n                notes = notes.toMutableList().apply { add(index.coerceAtMost(size), note) }\n                snackbars.showSnackbar(message = \"Restored\")\n            }\n            SnackbarResult.Dismissed -> Unit // Delete on the server here.\n        }\n    }\n}\n// The first note has just been deleted: the toast offers Undo until it goes away.\nLaunchedEffect(Unit) { delete({{notes.0}}) }",
+      "imports": [
+        "kotlinx.coroutines.launch",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.foundation.icon.MonarchIcon",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "val snackbars = remember { SnackbarHostState() }\nval scope = rememberCoroutineScope()\nvar notes by remember { mutableStateOf(listOf(\"Agenda for Monday\", \"Questions for the review\", \"Ideas for the next sprint\")) }\nval delete: (String) -> Unit = { note ->\n    val index = notes.indexOf(note)\n    notes = notes - note\n    scope.launch {\n        val result = snackbars.showSnackbar(\n            message = \"Note deleted\" + \"\\n\" + note,\n            actionLabel = \"Undo\",\n            duration = SnackbarDuration.Long,\n        )\n        when (result) {\n            SnackbarResult.ActionPerformed -> {\n                notes = notes.toMutableList().apply { add(index.coerceAtMost(size), note) }\n                snackbars.showSnackbar(message = \"Restored\")\n            }\n            SnackbarResult.Dismissed -> Unit // Delete on the server here.\n        }\n    }\n}\n// The first note has just been deleted: the toast offers Undo until it goes away.\nLaunchedEffect(Unit) { delete(\"Agenda for Monday\") }",
+      "code": "Scaffold(\n    modifier = Modifier.height(MonarchTheme.spacing.space24 * 3),\n    containerColor = MonarchTheme.colors.bgCanvas,\n    snackbarHost = { MonarchSnackbarHost(hostState = snackbars) },\n) { padding ->\n    Column(modifier = Modifier.padding(padding), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n        notes.forEach { note ->\n            Row(verticalAlignment = Alignment.CenterVertically) {\n                MonarchText(text = note, modifier = Modifier.weight(1f))\n                MonarchIconButton(label = \"Delete $note\", onClick = { delete(note) }) {\n                    MonarchIcon(SampleIcons.Trash, contentDescription = null)\n                }\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "useUndoToast",
+  "dependsOn": [
+    "toast"
+  ]
+}

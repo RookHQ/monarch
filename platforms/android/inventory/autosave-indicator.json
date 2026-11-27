@@ -1,0 +1,173 @@
+{
+  "id": "autosave-indicator",
+  "name": "MonarchAutosaveIndicator",
+  "title": "AutosaveIndicator",
+  "family": "forms",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "kotlinx.coroutines (delay, Job, sync.Mutex), MonarchSaveStatusIndicator",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Saves a value automatically after the person stops changing it (debounced, one save at a time, retried, flushable) and shows where saving stands.",
+  "whenToUse": "For drafts and settings that save without a Save button: notes, descriptions, document content, preferences edited in place.",
+  "whenNotToUse": "When people must confirm before anything is stored, use a Save button with MonarchFormActionsBar. To show a status your own code computes, use MonarchSaveStatusIndicator directly.",
+  "api": [
+    "@Composable fun MonarchAutosaveIndicator(state: MonarchAutosaveState<*>, modifier: Modifier = Modifier, announceSaving: Boolean = false, errorMessage: ((Throwable) -> String)? = null, icon: (@Composable (MonarchSaveStatus) -> Unit)? = null, labels: MonarchSaveStatusIndicatorLabels = MonarchSaveStatusIndicatorLabels())",
+    "class MonarchAutosaveState<T>(initialValue: T, scope: CoroutineScope, onSave: suspend (T) -> Unit, delayMillis: Long = 1000L, retries: Int = 2, retryDelayMillis: Long = 2000L, initialSavedAt: Long? = null, isEqual: (T, T) -> Boolean = { a, b -> a == b }, clock: () -> Long = System::currentTimeMillis) { var onSave: suspend (T) -> Unit; val status: MonarchSaveStatus; val savedAt: Long?; val error: Throwable?; val dirty: Boolean; val value: T; var enabled: Boolean; fun update(value: T); fun retry(); suspend fun flush(): Boolean }",
+    "@Composable fun <T> rememberMonarchAutosaveState(value: T, onSave: suspend (T) -> Unit, enabled: Boolean = true, delayMillis: Long = 1000L, retries: Int = 2, retryDelayMillis: Long = 2000L, initialSavedAt: Long? = null, isEqual: (T, T) -> Boolean = { a, b -> a == b }): MonarchAutosaveState<T>"
+  ],
+  "options": [
+    {
+      "name": "state",
+      "type": "MonarchAutosaveState<*>",
+      "default": "required",
+      "description": "The autosave state, from rememberMonarchAutosaveState or created in a ViewModel with viewModelScope."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the indicator."
+    },
+    {
+      "name": "announceSaving",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Also announces \"Saving…\". Saved and the error are always announced."
+    },
+    {
+      "name": "errorMessage",
+      "type": "((Throwable) -> String)?",
+      "default": "null",
+      "description": "Turns the failure into the visible message. null shows \"Couldn't save\"."
+    },
+    {
+      "name": "icon",
+      "type": "(@Composable (MonarchSaveStatus) -> Unit)?",
+      "default": "null",
+      "description": "Replaces the status dot, as in MonarchSaveStatusIndicator."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSaveStatusIndicatorLabels",
+      "default": "MonarchSaveStatusIndicatorLabels()",
+      "description": "Replacements for the strings monarch_savestatusindicator_*."
+    },
+    {
+      "name": "MonarchAutosaveState.onSave",
+      "type": "suspend (T) -> Unit",
+      "default": "required",
+      "description": "Stores a value. Suspend until it is stored; throw to report a failure."
+    },
+    {
+      "name": "MonarchAutosaveState.delayMillis",
+      "type": "Long",
+      "default": "1000L",
+      "description": "Milliseconds to wait after the last change before saving."
+    },
+    {
+      "name": "MonarchAutosaveState.retries",
+      "type": "Int",
+      "default": "2",
+      "description": "Automatic retries after a failed save before the status becomes Error."
+    },
+    {
+      "name": "MonarchAutosaveState.retryDelayMillis",
+      "type": "Long",
+      "default": "2000L",
+      "description": "Milliseconds before the first automatic retry; doubled for each further one."
+    },
+    {
+      "name": "MonarchAutosaveState.initialSavedAt",
+      "type": "Long?",
+      "default": "null",
+      "description": "When the first value was last saved, in epoch milliseconds (UTC). Starts the status at Saved with the time."
+    },
+    {
+      "name": "MonarchAutosaveState.isEqual",
+      "type": "(T, T) -> Boolean",
+      "default": "{ a, b -> a == b }",
+      "description": "Decides whether two values are the same, so an equal value is not saved again."
+    },
+    {
+      "name": "MonarchAutosaveState.clock",
+      "type": "() -> Long",
+      "default": "System::currentTimeMillis",
+      "description": "The current time for savedAt. Replace it in tests."
+    },
+    {
+      "name": "MonarchAutosaveState.enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "While false, changes only mark the value unsaved; flush and retry still save."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "Nothing changed since the start and no save time is known: nothing is drawn."
+    },
+    {
+      "name": "unsaved",
+      "description": "A change waits for the delay, or saving is disabled: \"Unsaved changes\"."
+    },
+    {
+      "name": "saving",
+      "description": "A save runs, or an automatic retry waits: a small progress ring and \"Saving…\"."
+    },
+    {
+      "name": "saved",
+      "description": "\"Saved · 2 minutes ago\"; announced."
+    },
+    {
+      "name": "error",
+      "description": "The retries are used up: \"Couldn't save\" (or errorMessage) and a Retry button; announced."
+    }
+  ],
+  "appearance": "Exactly MonarchSaveStatusIndicator: a dot or progress ring in the status color, caption text in muted or danger colors by role, and a ghost Retry button. The same roles in light, dark and both high-contrast themes.",
+  "platformNotes": "The web splits this into a useAutosave hook and an AutosaveIndicator; on Android the hook is MonarchAutosaveState (a state holder on coroutines that can live in a ViewModel) with rememberMonarchAutosaveState for screens, and the indicator takes the state. The web compares values with Object.is then JSON; Android uses == (data classes compare by content) or isEqual. The web flush returns a promise; on Android it is a suspend function. Dates are epoch milliseconds. iOS has no entry yet; the names follow the web.",
+  "accessibility": [
+    "The status is read as one element, \"Saved, 2 minutes ago\", from MonarchSaveStatusIndicator.",
+    "Saved and the error are announced through a polite live region; Saving only with announceSaving, so frequent autosaves stay quiet.",
+    "Retry is a MonarchButton with a 48dp touch target.",
+    "The status is always written in words; color is never the only signal."
+  ],
+  "edgeCases": [
+    "An edit during a save is saved after it, once the delay has passed again; two saves never overlap.",
+    "Changing the value back to the saved one cancels the pending save.",
+    "During automatic retries the status stays Saving; only after the last retry it becomes Error.",
+    "rememberMonarchAutosaveState stops when it leaves the composition: call flush before navigating away, or keep the state in a ViewModel.",
+    "delayMillis, retries, retryDelayMillis and isEqual are read once when the state is created."
+  ],
+  "tests": [
+    "MonarchAutosaveIndicatorTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Autosaving field (type \"fail\" to see the error)",
+      "fixture": "autosave-indicator",
+      "webExample": "Autosaving field (type \"fail\" to see the error)",
+      "template": "Column {\n    MonarchTextField(value = note, onValueChange = { note = it }, label = {{label}})\n    MonarchAutosaveIndicator(state = autosave)\n}",
+      "setupTemplate": "var note by remember { mutableStateOf({{value}}) }\nval autosave = rememberMonarchAutosaveState(\n    value = note,\n    onSave = { /* repository.saveNote(it) */ },\n    initialSavedAt = System.currentTimeMillis(),\n)",
+      "setup": "var note by remember { mutableStateOf(\"Weekly notes\") }\nval autosave = rememberMonarchAutosaveState(\n    value = note,\n    onSave = { /* repository.saveNote(it) */ },\n    initialSavedAt = System.currentTimeMillis(),\n)",
+      "code": "Column {\n    MonarchTextField(value = note, onValueChange = { note = it }, label = \"Title\")\n    MonarchAutosaveIndicator(state = autosave)\n}"
+    },
+    {
+      "title": "Paused while the form is invalid, with the reason of a failure",
+      "setup": "var title by remember { mutableStateOf(\"Quarterly plan\") }\nval autosave = rememberMonarchAutosaveState(\n    value = title,\n    onSave = { /* repository.rename(it) */ },\n    enabled = title.isNotBlank(),\n)",
+      "code": "MonarchAutosaveIndicator(\n    state = autosave,\n    errorMessage = { \"Couldn't save: ${it.message}\" },\n)"
+    }
+  ],
+  "webEquivalent": "AutosaveIndicator",
+  "dependsOn": [
+    "save-status-indicator"
+  ],
+  "icons": {
+    "saved": "CheckGlyph"
+  }
+}

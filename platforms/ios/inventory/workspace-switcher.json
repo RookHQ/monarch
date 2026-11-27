@@ -1,0 +1,141 @@
+{
+  "id": "workspace-switcher",
+  "name": "MonarchWorkspaceSwitcher",
+  "title": "WorkspaceSwitcher",
+  "family": "identity",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Button presenting a .popover (kept a popover on iPhone with presentationCompactAdaptation) with a search field, avatar rows with the @handle, Create workspace and All workspaces; MonarchButtonStyle (.ghost), MonarchAvatar, Link",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Switches between the workspaces a person belongs to from a button with the workspace's logo, name and handle, which opens a popover with a search field, the workspaces with their @handles, Create workspace and All workspaces.",
+  "whenToUse": "In an app used across several workspaces: in the navigation bar, a sidebar header or the account screen, wherever the current workspace is switched.",
+  "whenNotToUse": "To narrow a workspace to one of its Spaces use MonarchSpaceSwitcher. To pick a workspace inside a form use MonarchCombobox.",
+  "api": [
+    "init(selection: Binding<String?>, workspaces: [MonarchWorkspaceOption], size: MonarchButtonSize = .md, isLoading: Bool = false, isIconOnly: Bool = false, manageURL: URL? = nil, labels: MonarchWorkspaceSwitcherLabels = MonarchWorkspaceSwitcherLabels(), onCreate: (@MainActor () -> Void)? = nil)",
+    "struct MonarchWorkspaceOption { init(id: String, name: String, handle: String? = nil, avatarURL: URL? = nil, keywords: String? = nil) }",
+    "struct MonarchWorkspaceSwitcherLabels { init(label:, placeholder:, search:, empty:, loading:, create:, manage:, cancel:) }"
+  ],
+  "options": [
+    {
+      "name": "selection",
+      "type": "Binding<String?>",
+      "default": "required",
+      "description": "The current workspace id, nil when none is chosen. The app switches when it changes."
+    },
+    {
+      "name": "workspaces",
+      "type": "[MonarchWorkspaceOption]",
+      "default": "required",
+      "description": "The workspaces this person belongs to, in display order."
+    },
+    {
+      "name": "size",
+      "type": "MonarchButtonSize",
+      "default": ".md",
+      "description": "The height and padding of the button."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "The workspaces are still loading: the button opens the sheet, which shows a progress indicator with Loading workspaces."
+    },
+    {
+      "name": "isIconOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows only the logo and the chevron, for a narrow bar. The name stays the spoken value."
+    },
+    {
+      "name": "manageURL",
+      "type": "URL?",
+      "default": "nil",
+      "description": "Adds All workspaces, a Link that opens this URL."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchWorkspaceSwitcherLabels",
+      "default": "MonarchWorkspaceSwitcherLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onCreate",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds Create workspace, which runs this (after closing the sheet)."
+    }
+  ],
+  "states": [
+    {
+      "name": "menu",
+      "description": "Up to five loaded workspaces: a system menu with the workspaces as an inline picker (the current one checked), then a divider and the actions."
+    },
+    {
+      "name": "sheet",
+      "description": "More than five workspaces, or loading: a sheet with a searchable list of logos, names and handles, the current one checked."
+    },
+    {
+      "name": "nothing chosen",
+      "description": "The button shows a building symbol and Choose a workspace."
+    },
+    {
+      "name": "searching",
+      "description": "The sheet keeps the workspaces whose name, handle or keywords contain the text; with no match it reads No workspaces match."
+    },
+    {
+      "name": "loading",
+      "description": "The sheet ends with a progress indicator and Loading workspaces."
+    },
+    {
+      "name": "disabled",
+      "description": "Through disabled(_:), the ghost button style's disabled colours; the menu or sheet cannot open."
+    }
+  ],
+  "appearance": "A ghost MonarchButtonStyle button: a small square MonarchAvatar (logo or initials), the name in the default text colour, the handle and an up-down chevron in the muted text colour. The menu is the system menu; the sheet is a system inset List with avatars, caption handles in the muted text colour and an accent check mark. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The popover is drawn by Monarch, as the web's, so the search field, the avatars and the @handle column are inside it; the system menu cannot hold them. On iPhone it stays a popover from the button (presentationCompactAdaptation) and the same view serves a long list: it filters as the person types and shows a loading row while the list loads. VoiceOver reads each row as the workspace name with its handle and whether it is current.",
+  "accessibility": [
+    "The button is one element named \"Workspace\" whose value is the workspace's name and handle (\"Acme, @acme\"), built by a tested pure function, also when only the logo shows.",
+    "In the menu the workspaces are a system Picker, so VoiceOver reads the chosen one as selected.",
+    "In the sheet each row is a button named by the name and handle; the chosen row has the selected trait and a check mark.",
+    "Logos are decorative MonarchAvatar views.",
+    "Rows and actions keep a 44-point touch target.",
+    "Choosing the current workspace again changes nothing."
+  ],
+  "edgeCases": [
+    "A selected id that is not in workspaces reads Choose a workspace.",
+    "A handle given with or without its @ is shown with one @.",
+    "Search also matches keywords, which are never shown, such as an old name.",
+    "With no workspaces and nothing loading the menu holds only the actions."
+  ],
+  "tests": [
+    "MonarchWorkspaceSwitcherTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Switch, create and manage",
+      "fixture": "workspace-switcher",
+      "webExample": "Switch, create and manage",
+      "template": "MonarchWorkspaceSwitcher(\n    selection: $workspace,\n    workspaces: [\n        MonarchWorkspaceOption(id: {{workspaces.0.id}}, name: {{workspaces.0.name}}, handle: {{workspaces.0.handle}}),\n        MonarchWorkspaceOption(id: {{workspaces.1.id}}, name: {{workspaces.1.name}}, handle: {{workspaces.1.handle}}),\n        MonarchWorkspaceOption(id: {{workspaces.2.id}}, name: {{workspaces.2.name}}, handle: {{workspaces.2.handle}}, keywords: {{workspaces.2.keywords}}),\n    ],\n    manageURL: URL(string: {{manageHref}}),\n    onCreate: {\n        // The app opens its Create workspace screen.\n    }\n)\n.frame(width: 240)",
+      "setupTemplate": "@State private var workspace: String? = {{value}}",
+      "setup": "@State private var workspace: String? = \"w1\"",
+      "code": "MonarchWorkspaceSwitcher(\n    selection: $workspace,\n    workspaces: [\n        MonarchWorkspaceOption(id: \"w1\", name: \"Acme\", handle: \"acme\"),\n        MonarchWorkspaceOption(id: \"w2\", name: \"Northfield Traders\", handle: \"northwind\"),\n        MonarchWorkspaceOption(id: \"w3\", name: \"Globex\", handle: \"globex\", keywords: \"globex corporation\"),\n    ],\n    manageURL: URL(string: \"https://id.example.com/workspaces\"),\n    onCreate: {\n        // The app opens its Create workspace screen.\n    }\n)\n.frame(width: 240)",
+      "previewTap": true
+    },
+    {
+      "title": "A long list in a searchable sheet",
+      "setup": "@State private var workspace: String? = \"w1\"\nprivate let workspaces = (1...8).map {\n    MonarchWorkspaceOption(id: \"w\\($0)\", name: \"Client \\($0)\", handle: \"client\\($0)\")\n}",
+      "code": "MonarchWorkspaceSwitcher(selection: $workspace, workspaces: workspaces, size: .sm)"
+    }
+  ],
+  "webEquivalent": "WorkspaceSwitcher",
+  "dependsOn": [
+    "avatar",
+    "button"
+  ],
+  "parityExceptions": []
+}

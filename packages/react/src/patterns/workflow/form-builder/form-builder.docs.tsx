@@ -1,27 +1,30 @@
 import { useState } from 'react';
 import { FormBuilder, type FormFieldDefinition } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './form-builder.fixture.json';
 
-const START: FormFieldDefinition[] = [
-  { id: 'intro', type: 'section', label: 'About your visit' },
-  {
-    id: 'where',
-    type: 'radio',
-    label: 'Where will you join from?',
-    required: true,
-    options: [
-      { value: 'remote', label: 'Remote' },
-      { value: 'office', label: 'Office' },
+const START: FormFieldDefinition[] = (
+  fixture.data.fields as {
+    id: string;
+    type: FormFieldDefinition['type'];
+    label: string;
+    required?: boolean;
+    options?: { value: string; label: string }[];
+    condition?: { id: string; field: string; value: string };
+  }[]
+).map(({ id, type, label, required, options, condition }) => ({
+  id,
+  type,
+  label,
+  ...(required !== undefined && { required }),
+  ...(options !== undefined && { options }),
+  ...(condition !== undefined && {
+    conditions: [
+      { id: condition.id, field: condition.field, operator: 'eq', value: condition.value },
     ],
-  },
-  {
-    id: 'desk',
-    type: 'short-text',
-    label: 'Desk number',
-    conditions: [{ id: 'c1', field: 'where', operator: 'eq', value: 'office' }],
-  },
-  { id: 'notes', type: 'long-text', label: 'Anything we should know?' },
-];
+  }),
+}));
 
 function BuilderDemo() {
   const [fields, setFields] = useState(START);
@@ -143,7 +146,7 @@ export default {
     },
     responsive: {
       items: [
-        'Three columns on wide screens, two (palette on top) on tablets and one column on phones. Works at 320px.',
+        'The grid follows the builder’s own width (a container query): three columns from 72rem, two (palette on top) from 48rem, one column below. Works at 320px.',
         'On coarse pointers, rows, handles, inputs and buttons are at least 44px.',
       ],
     },

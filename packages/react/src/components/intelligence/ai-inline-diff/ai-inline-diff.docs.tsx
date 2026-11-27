@@ -7,11 +7,11 @@ import {
   type AiDiffSegment,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-inline-diff.fixture.json';
 
-const BEFORE =
-  'Our team meets every week to review the plan. We will ship the new flow in May, and collect feedback after.';
-const AFTER =
-  'Our team meets every Monday to review the roadmap. We will ship the redesigned flow in June, and collect feedback after launch.';
+const BEFORE = fixture.data.before;
+const AFTER = fixture.data.after;
 
 function ReviewDemo() {
   const [segments, setSegments] = useState<AiDiffSegment[]>(() => diffWords(BEFORE, AFTER));

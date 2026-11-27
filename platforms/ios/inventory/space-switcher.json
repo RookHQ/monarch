@@ -1,0 +1,163 @@
+{
+  "id": "space-switcher",
+  "name": "MonarchSpaceSwitcher",
+  "title": "SpaceSwitcher",
+  "family": "identity",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Button with MonarchButtonStyle (.ghost) presenting .sheet with NavigationStack, List, .searchable(text:prompt:), Link and presentationDetents([.medium, .large])",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Chooses which Space of the workspace the app shows, \"All spaces\" or one Space, from a button that opens a sheet with a searchable list, New Space and Manage Spaces.",
+  "whenToUse": "In an app that scopes its content by Space: in the navigation bar, a sidebar header or a screen header, wherever the current Space is chosen.",
+  "whenNotToUse": "To switch workspace use MonarchWorkspaceSwitcher. To filter one list by team or department use a filter in the list's own toolbar, such as a menu Picker.",
+  "api": [
+    "init(selection: Binding<String?>, spaces: [MonarchSpaceOption], size: MonarchButtonSize = .md, allowsAll: Bool = true, isLoading: Bool = false, isIconOnly: Bool = false, hidesWhenEmpty: Bool = true, manageURL: URL? = nil, labels: MonarchSpaceSwitcherLabels = MonarchSpaceSwitcherLabels(), onCreate: (@MainActor () -> Void)? = nil)",
+    "struct MonarchSpaceOption { init(id: String, name: String, description: String? = nil, systemImage: String? = nil) }",
+    "struct MonarchSpaceSwitcherLabels { init(label:, all:, placeholder:, search:, empty:, loading:, create:, manage:, cancel:) }"
+  ],
+  "options": [
+    {
+      "name": "selection",
+      "type": "Binding<String?>",
+      "default": "required",
+      "description": "The chosen Space id, nil for All spaces."
+    },
+    {
+      "name": "spaces",
+      "type": "[MonarchSpaceOption]",
+      "default": "required",
+      "description": "The Spaces this person can open, in display order."
+    },
+    {
+      "name": "size",
+      "type": "MonarchButtonSize",
+      "default": ".md",
+      "description": "The height and padding of the button."
+    },
+    {
+      "name": "allowsAll",
+      "type": "Bool",
+      "default": "true",
+      "description": "Offers All spaces first. Without it a Space must stay chosen and the button reads Choose a Space until one is."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "The Spaces are still loading; the list shows a progress indicator with Loading spaces."
+    },
+    {
+      "name": "isIconOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows only the Space's symbol and the chevron, for a narrow bar. The name stays the spoken value."
+    },
+    {
+      "name": "hidesWhenEmpty",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows nothing when there are no Spaces and nothing is loading."
+    },
+    {
+      "name": "manageURL",
+      "type": "URL?",
+      "default": "nil",
+      "description": "Adds Manage Spaces, a Link that opens this URL."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSpaceSwitcherLabels",
+      "default": "MonarchSpaceSwitcherLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onCreate",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds New Space, which closes the sheet and runs this."
+    }
+  ],
+  "states": [
+    {
+      "name": "all spaces",
+      "description": "Nothing chosen: the button shows the layers symbol and All spaces; All spaces is checked in the list."
+    },
+    {
+      "name": "one space",
+      "description": "The button shows the Space's symbol and name; its row is checked and has the selected trait."
+    },
+    {
+      "name": "no choice",
+      "description": "With allowsAll false and nothing chosen the button reads Choose a Space."
+    },
+    {
+      "name": "searching",
+      "description": "The list keeps the Spaces whose name or description contains the text; All spaces is hidden; with no match it reads No spaces match."
+    },
+    {
+      "name": "loading",
+      "description": "The list ends with a progress indicator and Loading spaces."
+    },
+    {
+      "name": "empty",
+      "description": "With no Spaces and nothing loading nothing is shown, unless hidesWhenEmpty is false."
+    },
+    {
+      "name": "disabled",
+      "description": "Through disabled(_:), the ghost button style's disabled colours; the sheet cannot open."
+    }
+  ],
+  "appearance": "A ghost MonarchButtonStyle button: the Space's symbol, the name in the default text colour and an up-down chevron in the muted text colour. The sheet is a system inset List; rows have a muted symbol, the name, a caption description in the muted text colour and an accent check mark; the actions are accent-tinted. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The parity map lists combobox as a dependency; MonarchCombobox is a labelled form field, so the switcher uses its own button and the same system sheet, List and search field that the combobox uses. The web opens a popover with a listbox (arrow keys, Home and End, type to search) from EntityPicker; on iPhone the same choice is a sheet with a system List and the system search field, as the plan names, and keyboard navigation is the system's. The web's tooltip on the collapsed trigger is the spoken value here, since a phone has no hover. Manage Spaces opens the URL with the environment's openURL, which leaves the app, so the web's \"opens in a new tab\" text and manageExternal have no counterpart; createHref is onCreate. The web's controlled open state and align are not offered. A Space id that is no longer in the list reads as All spaces, as on the web. Android builds the same component.",
+  "accessibility": [
+    "The button is one element named \"Space\" whose value is the current Space or All spaces, also when only the icon shows.",
+    "Each row is a button named by the Space and its description (\"Engineering, 18 members\"), built by a tested pure function.",
+    "The chosen row has the selected trait and a check mark, so the choice does not depend on colour.",
+    "Symbols are decorative and hidden.",
+    "Rows, New Space and Manage Spaces keep a 44-point touch target.",
+    "Search is the system search field; Cancel closes the sheet without a change."
+  ],
+  "edgeCases": [
+    "A selected id that is not in spaces reads as All spaces (or Choose a Space when All spaces is not offered).",
+    "Choosing All spaces when allowsAll is false does nothing.",
+    "Long Space names stay on one line on the button and wrap in the list.",
+    "The switcher never stores the choice; the app keeps selection."
+  ],
+  "tests": [
+    "MonarchSpaceSwitcherTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "All spaces, with New and Manage",
+      "fixture": "space-switcher",
+      "webExample": "All spaces, with New and Manage",
+      "template": "MonarchSpaceSwitcher(\n    selection: $space,\n    spaces: spaces,\n    manageURL: URL(string: {{manageHref}}),\n    onCreate: {\n        // The app opens its New Space screen.\n    }\n)",
+      "setupTemplate": "@State private var space: String?\nprivate let spaces = [\n    MonarchSpaceOption(id: {{spaces.0.id}}, name: {{spaces.0.name}}, description: {{spaces.0.description}}),\n    MonarchSpaceOption(id: {{spaces.1.id}}, name: {{spaces.1.name}}, description: {{spaces.1.description}}),\n    MonarchSpaceOption(id: {{spaces.2.id}}, name: {{spaces.2.name}}, description: {{spaces.2.description}}),\n    MonarchSpaceOption(id: {{spaces.3.id}}, name: {{spaces.3.name}}, description: {{spaces.3.description}}),\n]",
+      "setup": "@State private var space: String?\nprivate let spaces = [\n    MonarchSpaceOption(id: \"s-eng\", name: \"Engineering\", description: \"18 members\"),\n    MonarchSpaceOption(id: \"s-mkt\", name: \"Marketing\", description: \"9 members\"),\n    MonarchSpaceOption(id: \"s-ops\", name: \"Operations\", description: \"6 members\"),\n    MonarchSpaceOption(id: \"s-sales\", name: \"Sales\", description: \"12 members\"),\n]",
+      "code": "MonarchSpaceSwitcher(\n    selection: $space,\n    spaces: spaces,\n    manageURL: URL(string: \"https://id.example.com/spaces\"),\n    onCreate: {\n        // The app opens its New Space screen.\n    }\n)",
+      "previewTap": true
+    },
+    {
+      "title": "A Space must stay chosen, icon only",
+      "setup": "@State private var space: String? = \"mkt\"",
+      "code": "MonarchSpaceSwitcher(\n    selection: $space,\n    spaces: [\n        MonarchSpaceOption(id: \"eng\", name: \"Engineering\"),\n        MonarchSpaceOption(id: \"mkt\", name: \"Marketing\", systemImage: \"megaphone\"),\n    ],\n    allowsAll: false,\n    isIconOnly: true\n)"
+    }
+  ],
+  "webEquivalent": "SpaceSwitcher",
+  "dependsOn": [
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web opens the list as a popover under the trigger, so the trigger and the list show together. On iPhone the same choice is a medium or large sheet over the screen, with the system search field and Cancel; the trigger sits behind the sheet. The spaces, descriptions, check mark, search prompt, New Space and Manage Spaces match the web.",
+      "convention": "HIG: a popover from a control becomes a sheet on iPhone"
+    }
+  ]
+}

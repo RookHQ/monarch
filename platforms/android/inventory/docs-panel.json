@@ -1,0 +1,105 @@
+{
+  "id": "docs-panel",
+  "name": null,
+  "title": "DocsPanel",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchLinkedDocsPanel, which is a MonarchSectionCard, optionally inside MonarchCollapsible so the panel is composed only while open",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the record-page block for linked docs and links, as MonarchLinkedDocsPanel in its card, optionally behind a \"Docs\" toggle that composes the panel only when opened.",
+  "whenToUse": "On a record's detail screen, to show and manage the docs and links attached to the record; behind a toggle in long lists of records so docs load only for the record that is opened.",
+  "whenNotToUse": "For files uploaded to the record, use the file list components. To pick one doc, use a select or a combobox.",
+  "api": [
+    "MonarchLinkedDocsPanel(items = items, onOpen = …, onLinkDoc = …, onAddLink = …, onUnlink = …)",
+    "MonarchCollapsible(expanded = expanded, onExpandedChange = …, label = \"Docs, 3 linked\") { LaunchedEffect(Unit) { /* load */ }; MonarchLinkedDocsPanel(…) }"
+  ],
+  "options": [
+    {
+      "name": "frame",
+      "type": "card or none",
+      "default": "card",
+      "description": "MonarchLinkedDocsPanel already draws the section card; for a stacked side panel put a HorizontalDivider under it."
+    },
+    {
+      "name": "collapsible",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Wrap the panel in MonarchCollapsible; its content is composed only while expanded, so load the items there."
+    },
+    {
+      "name": "count",
+      "type": "Int?",
+      "default": "null",
+      "description": "When the app already knows the linked count, put it in the toggle's label: \"Docs, 3 linked\"."
+    }
+  ],
+  "states": [
+    {
+      "name": "open",
+      "description": "The panel with its items, actions and space filter, from MonarchLinkedDocsPanel."
+    },
+    {
+      "name": "closed",
+      "description": "Only the \"Docs\" toggle, read as collapsed; nothing is composed or loaded."
+    },
+    {
+      "name": "loading",
+      "description": "items = null: the panel's loading state while the app fetches."
+    },
+    {
+      "name": "read only",
+      "description": "readOnly = true: the items without link, add or unlink actions."
+    }
+  ],
+  "appearance": "MonarchLinkedDocsPanel's section card, and MonarchCollapsible's header row when collapsible. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships DocsPanel with a frame prop (card, divider, none) and a collapsible mode with its own disclosure button and toggle strings. On Android MonarchLinkedDocsPanel is already a MonarchSectionCard, and MonarchCollapsible is the disclosure, so DocsPanel is a recipe: the toggle text and count are the collapsible's label, and loading on open is a LaunchedEffect inside the collapsible's content, which leaves the composition while closed. The web's doc icon and chevron are left out (Monarch bundles no icons; MonarchCollapsible takes a trailingIcon slot). iOS has not covered this entry yet.",
+  "accessibility": [
+    "The toggle is one button with the state Expanded or Collapsed and the TalkBack expand and collapse actions, from MonarchCollapsible.",
+    "The count is part of the toggle's label, so it is read with it.",
+    "Inside, the panel's title is a heading and its actions are MonarchButtons with 48dp targets, from MonarchLinkedDocsPanel."
+  ],
+  "edgeCases": [
+    "Closing the toggle removes the panel from the composition: hoist any state, such as the items, above it.",
+    "Without a known count, label the toggle \"Docs\" only.",
+    "Items that fail to load: pass errorMessage and onRetry to the panel."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "On a record page",
+      "fixture": "docs-panel",
+      "webExample": "On a record page",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "template": "// The app loads the docs here.\nLaunchedEffect(Unit) {\n    items = listOf(\n        MonarchLinkedDocsPanelItem(\n            id = {{items.0.id}},\n            title = {{items.0.title}},\n            kind = MonarchLinkedDocsPanelKind.{{items.0.kind|pascal}},\n            url = {{items.0.href}},\n            docId = {{items.0.docId}},\n            meta = {{items.0.meta}},\n            status = {{items.0.status}},\n            spaceId = {{items.0.space.id}},\n            spaceName = {{items.0.space.name}},\n        ),\n        MonarchLinkedDocsPanelItem(\n            id = {{items.1.id}},\n            title = {{items.1.title}},\n            kind = MonarchLinkedDocsPanelKind.{{items.1.kind|pascal}},\n            url = {{items.1.href}},\n        ),\n    )\n}\n@OptIn(ExperimentalMonarchApi::class)\nMonarchLinkedDocsPanel(\n    items = items,\n    onOpen = { /* Open the doc or the link. */ },\n    onUnlink = { item -> items = items?.minus(item) },\n    onAddLink = { _, _ -> },\n    unlinkIcon = { MonarchIcon(SampleIcons.Close, contentDescription = null) },\n    labels = MonarchLinkedDocsPanelLabels(title = {{heading}}),\n)",
+      "setupTemplate": "var expanded by remember { mutableStateOf(true) }\nvar items by remember { mutableStateOf<List<MonarchLinkedDocsPanelItem>?>(null) }",
+      "setup": "var expanded by remember { mutableStateOf(true) }\nvar items by remember { mutableStateOf<List<MonarchLinkedDocsPanelItem>?>(null) }",
+      "code": "// The app loads the docs here.\nLaunchedEffect(Unit) {\n    items = listOf(\n        MonarchLinkedDocsPanelItem(\n            id = \"l1\",\n            title = \"Release runbook\",\n            kind = MonarchLinkedDocsPanelKind.Doc,\n            url = \"#doc-release-runbook\",\n            docId = \"d1\",\n            meta = \"Updated 2 hours ago\",\n            status = \"Published\",\n            spaceId = \"s-eng\",\n            spaceName = \"Engineering\",\n        ),\n        MonarchLinkedDocsPanelItem(\n            id = \"l2\",\n            title = \"Design file\",\n            kind = MonarchLinkedDocsPanelKind.Link,\n            url = \"https://design.example.com/file/123\",\n        ),\n    )\n}\n@OptIn(ExperimentalMonarchApi::class)\nMonarchLinkedDocsPanel(\n    items = items,\n    onOpen = { /* Open the doc or the link. */ },\n    onUnlink = { item -> items = items?.minus(item) },\n    onAddLink = { _, _ -> },\n    unlinkIcon = { MonarchIcon(SampleIcons.Close, contentDescription = null) },\n    labels = MonarchLinkedDocsPanelLabels(title = \"Docs\"),\n)"
+    },
+    {
+      "title": "Docs in a record column",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchLinkedDocsPanel(\n    items = listOf(\n        MonarchLinkedDocsPanelItem(id = \"l1\", title = \"Customer contract\", docId = \"d7\", meta = \"Legal\"),\n    ),\n    onOpen = {},\n    readOnly = true,\n)"
+    }
+  ],
+  "webEquivalent": "DocsPanel",
+  "dependsOn": [
+    "linked-docs-panel",
+    "section-card",
+    "collapsible"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "layout",
+      "platform": "android",
+      "reason": "The web shows the count as a rounded badge beside the title and the unlink button as a close mark at the end of each row. Android's section card shows the count as its secondary line under the title, because the card's header keeps one line for the title. The panel, its Add link action, the Space chips, the two rows with their icons, statuses and unlink buttons are the web's.",
+      "convention": "Material card header with a supporting line"
+    }
+  ]
+}

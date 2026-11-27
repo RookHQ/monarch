@@ -1,22 +1,22 @@
 import { useState } from 'react';
 import { Button, RovingFocusGroup } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './roving-focus-group.fixture.json';
 
 function ToolbarDemo() {
   return (
-    <RovingFocusGroup role="toolbar" aria-label="Text formatting">
-      <Button variant="ghost" size="sm">
-        Bold
-      </Button>
-      <Button variant="ghost" size="sm">
-        Italic
-      </Button>
-      <Button variant="ghost" size="sm" disabled>
-        Strikethrough
-      </Button>
-      <Button variant="ghost" size="sm">
-        Link
-      </Button>
+    <RovingFocusGroup role="toolbar" aria-label={fixture.data.label}>
+      {fixture.data.buttons.map((button) => (
+        <Button
+          key={button.label}
+          variant="ghost"
+          size="sm"
+          {...('disabled' in button && { disabled: button.disabled })}
+        >
+          {button.label}
+        </Button>
+      ))}
     </RovingFocusGroup>
   );
 }
