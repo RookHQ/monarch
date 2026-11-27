@@ -12,6 +12,11 @@ name: Update visual baselines
 # copies images by hand. docs/guides/visual-testing.md describes the flow.
 on:
   workflow_dispatch:
+    inputs:
+      ios_snapshot_ids:
+        description: iOS components whose screenshot baselines to record on the macOS runner (comma-separated inventory ids; empty records none)
+        required: false
+        default: ''
 permissions:
   contents: read
 concurrency:
@@ -78,10 +83,38 @@ jobs:
           name: android-baselines
           path: platforms/android/monarch-compose/src/test/screenshots/**/*.png
           retention-days: 3
+  ios:
+    # Records the named iOS screenshot baselines on the same runner image and Xcode as Native / ios,
+    # so they match what CI compares (a Mac with another region or macOS draws some of them differently).
+    if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main' && inputs.ios_snapshot_ids != ''
+    runs-on: macos-26
+    timeout-minutes: 150
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      MONARCH_IOS_DESTINATION: platform=iOS Simulator,name=iPhone 17 Pro,OS=latest
+      MONARCH_SNAPSHOT_RECORD: '1'
+      IDS: ${{ inputs.ios_snapshot_ids }}
+    defaults:
+      run:
+        working-directory: platforms/ios
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Record iOS baselines
+        run: |
+          [[ "$IDS" =~ ^[a-z0-9,-]+$ ]] || { echo "ios_snapshot_ids must be comma-separated inventory ids" >&2; exit 1; }
+          Scripts/verify.sh --snapshots "$IDS"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ios-baselines
+          path: platforms/ios/Tests/Snapshots/**/*.png
+          retention-days: 3
   commit:
     # Never executes the branch's code: it only copies PNG files and runs git.
-    needs: [render, android]
-    if: github.event_name == 'workflow_dispatch'
+    needs: [render, android, ios]
+    if: >
+      github.event_name == 'workflow_dispatch' && !cancelled() &&
+      needs.render.result == 'success' && needs.android.result == 'success' &&
+      (needs.ios.result == 'success' || needs.ios.result == 'skipped')
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -96,12 +129,19 @@ jobs:
         with: { name: visual-baselines, path: /tmp/baselines }
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with: { name: android-baselines, path: /tmp/android-baselines }
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        if: needs.ios.result == 'success'
+        with: { name: ios-baselines, path: /tmp/ios-baselines }
       - name: Accept only Linux PNG baselines
         run: |
           bad=$(find /tmp/baselines \( -type l -o \( -type f ! -name '*-linux.png' \) \))
           if [ -n "$bad" ]; then echo "Unexpected files in the artifact:"; echo "$bad"; exit 1; fi
           bad=$(find /tmp/android-baselines \( -type l -o \( -type f ! -name '*.png' \) \))
           if [ -n "$bad" ]; then echo "Unexpected files in the Android artifact:"; echo "$bad"; exit 1; fi
+          if [ -d /tmp/ios-baselines ]; then
+            bad=$(find /tmp/ios-baselines \( -type l -o \( -type f ! -name '*.png' \) \))
+            if [ -n "$bad" ]; then echo "Unexpected files in the iOS artifact:"; echo "$bad"; exit 1; fi
+          fi
       - name: Copy baselines and commit what changed
         run: |
           dest=apps/docs/tests/__screenshots__/visual
@@ -110,6 +150,11 @@ jobs:
           android=platforms/android/monarch-compose/src/test/screenshots
           cp -R /tmp/android-baselines/. "$android"/
           git add "$android"
+          if [ -d /tmp/ios-baselines ]; then
+            ios=platforms/ios/Tests/Snapshots
+            cp -R /tmp/ios-baselines/. "$ios"/
+            git add "$ios"
+          fi
           if git diff --cached --quiet; then
             echo "Baselines are already up to date."
             exit 0

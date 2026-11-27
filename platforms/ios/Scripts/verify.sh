@@ -324,6 +324,11 @@ for runtime in sorted((r for r in runtimes if ".iOS-" in r), key=lambda r: [int(
     [[ -n "$udid" ]] || return 0
     step "Booting $name ($udid)"
     xcrun simctl bootstatus "$udid" -b
+    # Foundation formatters inside components follow the device's region, so the simulator gets the
+    # same region on every machine (the hosted runners use en_US); a Mac set to another region would
+    # otherwise record numbers and dates that CI draws differently.
+    xcrun simctl spawn "$udid" defaults write -g AppleLocale -string en_US
+    xcrun simctl spawn "$udid" defaults write -g AppleLanguages -array en-US
 }
 
 build_sample() {
