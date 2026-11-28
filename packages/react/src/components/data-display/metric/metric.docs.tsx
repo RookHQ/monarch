@@ -1,5 +1,7 @@
 import { Metric } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './metric.fixture.json';
 
 export default {
   id: 'metric',
@@ -119,10 +121,14 @@ export default {
           title: 'Number, unit and change',
           render: () => (
             <Metric
-              label="Median response"
-              value={182}
-              unit="ms"
-              change={{ value: -0.08, goodDirection: 'down', comparison: 'vs last week' }}
+              label={fixture.data.label}
+              value={fixture.data.value}
+              unit={fixture.data.unit}
+              change={{
+                value: fixture.data.change.value,
+                goodDirection: fixture.data.change.goodDirection as 'down',
+                comparison: fixture.data.change.comparison,
+              }}
             />
           ),
         },

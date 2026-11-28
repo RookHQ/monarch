@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { DevicePicker, type MediaDeviceOption } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './device-picker.fixture.json';
 
 const sampleDevices: MediaDeviceOption[] = [
   { deviceId: 'mic-desk', kind: 'audioinput', label: 'Desk microphone' },
@@ -54,11 +56,28 @@ function NoNamesYet() {
     <div style={{ maxWidth: 360 }}>
       <DevicePicker
         devices={[
-          { deviceId: 'a', kind: 'audioinput', label: '' },
-          { deviceId: 'b', kind: 'audioinput', label: '' },
+          ...fixture.data.microphones.map(({ id, label }): MediaDeviceOption => ({
+            deviceId: id,
+            kind: 'audioinput',
+            label,
+          })),
+          ...fixture.data.cameras.map(({ id, label }): MediaDeviceOption => ({
+            deviceId: id,
+            kind: 'videoinput',
+            label,
+          })),
+          ...fixture.data.speakers.map(({ id, label }): MediaDeviceOption => ({
+            deviceId: id,
+            kind: 'audiooutput',
+            label,
+          })),
         ]}
         audioInputId={null}
         onAudioInputChange={() => {}}
+        videoInputId={null}
+        onVideoInputChange={() => {}}
+        audioOutputId={null}
+        onAudioOutputChange={() => {}}
         onRequestAccess={() => new Promise((resolve) => window.setTimeout(resolve, 800))}
       />
     </div>
@@ -175,9 +194,9 @@ export default {
     },
     examples: {
       items: [
+        { title: 'Before access is allowed', render: () => <NoNamesYet /> },
         { title: 'This browser’s devices', render: () => <ThisBrowser /> },
         { title: 'Given devices, compact', render: () => <GivenDevices /> },
-        { title: 'Before access is allowed', render: () => <NoNamesYet /> },
       ],
     },
     doDont: {

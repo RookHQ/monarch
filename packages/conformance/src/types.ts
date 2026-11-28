@@ -70,7 +70,7 @@ export interface Deprecation {
 
 /**
  * Exports that moved to another entry of the same package. The old path keeps
- * working until `removeIn`; `api/deprecated` reports an import of one of
+ * working until `removeNoEarlierThan`; `api/deprecated` reports an import of one of
  * `names` (or of a name matching `pattern`, which also covers their types)
  * from `from` and rewrites it to `to`.
  */
@@ -83,8 +83,8 @@ export interface ImportPathDeprecation {
   /** The module to import from instead, `@rookcom/monarch-react/rook`. */
   readonly to: string;
   readonly since: string;
-  /** The version that removes the old path. */
-  readonly removeIn?: string;
+  /** The date (YYYY-MM-DD) before which the old path is not removed: `since` plus the 90-day window. */
+  readonly removeNoEarlierThan?: string;
   readonly message?: string;
 }
 

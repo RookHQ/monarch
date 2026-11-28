@@ -1,18 +1,20 @@
 import { useState } from 'react';
 import { Field, FieldLabel, SearchInput } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './search-input.fixture.json';
 
-const FRUIT = ['Apple', 'Apricot', 'Banana', 'Blueberry', 'Cherry', 'Grape', 'Mango', 'Peach'];
+const FRUIT = fixture.data.fruit;
 
 function DebouncedDemo() {
   const [query, setQuery] = useState('');
   const [pending, setPending] = useState(false);
   const results = FRUIT.filter((f) => f.toLowerCase().includes(query.toLowerCase()));
   return (
-    <div style={{ display: 'grid', gap: 8, width: '100%', maxWidth: 300 }}>
+    <div style={{ display: 'grid', gap: 8, width: '100%', maxWidth: fixture.data.maxWidth }}>
       <SearchInput
-        aria-label="Search fruit"
-        placeholder="Search fruit"
+        aria-label={fixture.data.placeholder}
+        placeholder={fixture.data.placeholder}
         debounce={300}
         pending={pending}
         onValueChange={() => setPending(true)}

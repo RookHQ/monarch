@@ -1,5 +1,7 @@
-import { Spinner } from '@rookcom/monarch-react';
+import { Spinner, type SpinnerProps } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './spinner.fixture.json';
 
 export default {
   id: 'spinner',
@@ -54,9 +56,13 @@ export default {
           title: 'Sizes',
           render: () => (
             <>
-              <Spinner size="sm" label="Loading small" />
-              <Spinner label="Loading" />
-              <Spinner size="lg" label="Loading large" />
+              {fixture.data.spinners.map((s) => (
+                <Spinner
+                  key={s.size}
+                  size={s.size as NonNullable<SpinnerProps['size']>}
+                  label={s.label}
+                />
+              ))}
             </>
           ),
         },

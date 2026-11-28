@@ -1,37 +1,12 @@
 import { useState } from 'react';
 import { AiSuggestedActions, type AiSuggestedAction } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-suggested-actions.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
-const ACTIONS: AiSuggestedAction[] = [
-  {
-    id: 'reminder',
-    label: 'Send the renewal reminder',
-    description: 'The contract ends in 14 days and no renewal is recorded.',
-  },
-  {
-    id: 'task',
-    label: 'Create a follow-up task for next Monday',
-    risk: 'medium',
-  },
-  {
-    id: 'email',
-    label: 'Email the account team a status update',
-    description: 'Goes to 3 people.',
-    requiresApproval: true,
-    consequences: ['3 people will get an email', 'The email is logged on the account'],
-    confirmLabel: 'Send email',
-  },
-  {
-    id: 'close',
-    label: 'Close 4 stale tickets',
-    description: 'No reply in 60 days.',
-    risk: 'destructive',
-    consequences: ['4 tickets will be closed', 'Requesters are notified'],
-    confirmLabel: 'Close tickets',
-  },
-];
+const ACTIONS = fixture.data.actions as AiSuggestedAction[];
 
 function Demo() {
   const [actions, setActions] = useState(ACTIONS);

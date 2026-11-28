@@ -1,0 +1,143 @@
+{
+  "id": "ai-usage-meter",
+  "name": "MonarchAiUsageMeter",
+  "title": "AiUsageMeter",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchUsageMeter (ProgressView with a ProgressViewStyle per item)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "How much AI the person has used against their quotas: one meter per scope (this turn, this conversation, this month) in tokens or credits, with a written warning near the limit and over it.",
+  "whenToUse": "In an assistant panel, settings or billing screen where people need to see how close they are to their AI quotas.",
+  "whenNotToUse": "For quotas that are not AI tokens or credits (seats, storage, requests) use MonarchUsageMeter. For the cost of one message use the message metadata.",
+  "api": [
+    "MonarchAiUsageMeter.init(_ title: String? = nil, scopes: [MonarchAiUsageScope], period: String? = nil, resetsAt: Date? = nil, warningAt: Double = 0.8, isLoading: Bool = false, error: String? = nil, labels: MonarchAiUsageMeterLabels = MonarchAiUsageMeterLabels(), onRetry: (@MainActor () -> Void)? = nil)",
+    "MonarchAiUsageScope.init(_ label: String, id: String? = nil, used: Double, limit: Double? = nil, unit: MonarchAiUsageUnit = .tokens)",
+    "enum MonarchAiUsageUnit { case tokens, credits }",
+    "MonarchAiUsageMeterLabels.init(label: String? = nil, unit: (@Sendable (_ unit: MonarchAiUsageUnit, _ count: Double) -> String)? = nil, meter: MonarchUsageMeterLabels = MonarchUsageMeterLabels())"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "A visible heading. Without it the group is named \"AI usage\" for VoiceOver."
+    },
+    {
+      "name": "scopes",
+      "type": "[MonarchAiUsageScope]",
+      "default": "required",
+      "description": "The quotas in order, each with a label, the amount used, an optional limit and a unit (tokens or credits)."
+    },
+    {
+      "name": "period",
+      "type": "String?",
+      "default": "nil",
+      "description": "The period measured, shown under the title."
+    },
+    {
+      "name": "resetsAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the quotas reset, shown under the title."
+    },
+    {
+      "name": "warningAt",
+      "type": "Double",
+      "default": "0.8",
+      "description": "The share of a limit at which a scope is near the limit."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows a spinner instead of the scopes."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "An error message shown instead of the scopes."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiUsageMeterLabels",
+      "default": "MonarchAiUsageMeterLabels()",
+      "description": "Replaces the group name, the unit names and the strings of the underlying usage meter."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds a retry button under the error."
+    }
+  ],
+  "states": [
+    {
+      "name": "normal",
+      "description": "Below the warning share: the meter uses the accent fill and the share in muted text."
+    },
+    {
+      "name": "near the limit",
+      "description": "At or above warningAt: warning fill, a warning icon and \"Near the limit\"."
+    },
+    {
+      "name": "over the limit",
+      "description": "Above the limit: danger fill, a danger icon and \"Over the limit\"."
+    },
+    {
+      "name": "no limit",
+      "description": "The amount alone, with no meter."
+    },
+    {
+      "name": "loading",
+      "description": "A spinner and \"Loading usage\"."
+    },
+    {
+      "name": "error",
+      "description": "The message with an icon, and a retry button with onRetry."
+    }
+  ],
+  "appearance": "The look of MonarchUsageMeter: muted labels, strong figures, a muted track with the accent, warning or danger fill, and warning or danger status text. The high-contrast themes resolve the same roles to stronger colours.",
+  "platformNotes": "A preset of MonarchUsageMeter, so it also offers a title, a period, a reset date, loading and error, which the web does not. The web calls a scope exceeded when it reaches its limit; the shared iOS meter calls a scope over the limit only above it and near the limit at exactly 100%. The web's number and percent formatters are replaced by the meter's locale-aware formatting. Android uses the same names.",
+  "accessibility": [
+    "The meter is a group named by the title, or by \"AI usage\".",
+    "Each scope is one element read as its label, with the figures, the level and the percentage as its value.",
+    "Near and over the limit are written and have an icon, so they do not depend on colour.",
+    "When a scope reaches near or over the limit while the view is on screen, VoiceOver announces it once."
+  ],
+  "edgeCases": [
+    "A negative amount counts as zero; a limit of zero or less is no limit.",
+    "Scopes are identified by position unless they have an id, so labels may repeat.",
+    "The unit is singular only for exactly one (the limit, or the amount when there is no limit)."
+  ],
+  "tests": [
+    "MonarchAiUsageMeterTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Turn, conversation and month",
+      "fixture": "ai-usage-meter",
+      "webExample": "Turn, conversation and month",
+      "template": "MonarchAiUsageMeter(scopes: [\n    MonarchAiUsageScope({{scopes.0.label}}, used: {{scopes.0.used|double}}, unit: {{scopes.0.unit|case}}),\n    MonarchAiUsageScope({{scopes.1.label}}, used: {{scopes.1.used|double}}, limit: {{scopes.1.limit|double}}, unit: {{scopes.1.unit|case}}),\n    MonarchAiUsageScope({{scopes.2.label}}, used: {{scopes.2.used|double}}, limit: {{scopes.2.limit|double}}, unit: {{scopes.2.unit|case}}),\n])",
+      "code": "MonarchAiUsageMeter(scopes: [\n    MonarchAiUsageScope(\"This turn\", used: 1840.0, unit: .tokens),\n    MonarchAiUsageScope(\"Conversation\", used: 42_000.0, limit: 200_000.0, unit: .tokens),\n    MonarchAiUsageScope(\"This month\", used: 870.0, limit: 1000.0, unit: .credits),\n])"
+    },
+    {
+      "title": "Titled, with a period",
+      "code": "MonarchAiUsageMeter(\n    \"AI usage\",\n    scopes: [MonarchAiUsageScope(\"Image generation\", used: 32, limit: 100, unit: .credits)],\n    period: \"November\"\n)"
+    }
+  ],
+  "webEquivalent": "AiUsageMeter",
+  "dependsOn": [
+    "usage-meter"
+  ],
+  "icons": {
+    "state.warning": "WarningGlyph",
+    "state.exceeded": "ErrorGlyph"
+  }
+}

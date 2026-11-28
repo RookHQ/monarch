@@ -1,42 +1,13 @@
 import { useState } from 'react';
 import { AiSourceList, AiSourcePreview, type AiSourceListItem } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-source-list.fixture.json';
 
-const sources: AiSourceListItem[] = [
-  {
-    type: 'source',
-    id: 's1',
-    title: 'Team handbook',
-    url: 'https://example.com/handbook',
-    kind: 'doc',
-    product: 'Docs',
-    snippet: 'Requests are answered within two working days.',
-  },
-  {
-    type: 'source',
-    id: 's2',
-    title: 'Support policy',
-    url: 'https://example.com/support-policy',
-    kind: 'web',
-    snippet: 'Urgent issues go to the on-call queue.',
-  },
-  {
-    type: 'source',
-    id: 's3',
-    title: 'Ticket 1042',
-    kind: 'record',
-    product: 'Helpdesk',
-    used: false,
-  },
-  {
-    type: 'source',
-    id: 's4',
-    title: 'Onboarding checklist.pdf',
-    kind: 'file',
-    used: false,
-    snippet: 'A list of first-week tasks.',
-  },
-];
+const sources = fixture.data.sources.map((source) => ({
+  type: 'source' as const,
+  ...source,
+})) as AiSourceListItem[];
 
 function PreviewDemo() {
   const [open, setOpen] = useState<AiSourceListItem | null>(null);

@@ -8,6 +8,14 @@ import {
   Switch,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './settings-section.fixture.json';
+
+const profile = fixture.data;
+const [displayName, status] = profile.rows as [
+  { label: string; description: string; required: boolean; value: string },
+  { label: string; on: boolean },
+];
 
 function DirtyDemo() {
   const [saved, setSaved] = useState({ name: 'Northfield', digest: true });
@@ -157,7 +165,7 @@ export default {
     responsive: {
       items: [
         'From 1024px the section header sits beside the card (18rem column); below, it stacks above.',
-        'From 768px each row puts its text and control side by side (control column up to 20rem); below, they stack.',
+        'Where the card is at least 36rem wide (its own width, not the screen) each row puts its text and control side by side (control column up to 20rem); narrower, they stack, left-aligned.',
         'The footer wraps: the status line takes its own line on narrow screens and the buttons stay together.',
       ],
     },
@@ -173,19 +181,19 @@ export default {
           stack: true,
           render: () => (
             <SettingsSection
-              title="Profile"
-              description="How you appear to your teammates."
-              actions={<Button variant="primary">Save</Button>}
+              title={profile.title}
+              description={profile.description}
+              actions={<Button variant="primary">{profile.action}</Button>}
             >
               <SettingsRow
-                label="Display name"
-                description="Shown on comments and assignments."
-                required
+                label={displayName.label}
+                description={displayName.description}
+                required={displayName.required}
               >
-                <Input defaultValue="Ada Lovelace" />
+                <Input defaultValue={displayName.value} />
               </SettingsRow>
-              <SettingsRow label="Show my status">
-                <Switch defaultChecked />
+              <SettingsRow label={status.label}>
+                <Switch defaultChecked={status.on} />
               </SettingsRow>
             </SettingsSection>
           ),

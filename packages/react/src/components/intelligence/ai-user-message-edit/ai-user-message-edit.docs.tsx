@@ -2,16 +2,21 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiUserMessageEdit } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-user-message-edit.fixture.json';
 
 function Demo() {
-  const [sent, setSent] = useState(['List the open tasks for the launch.']);
-  const [editing, setEditing] = useState(false);
+  const [sent, setSent] = useState([fixture.data.original]);
+  // Opens in the editor; it takes focus only when someone chooses Edit, not on page load.
+  const [editing, setEditing] = useState(true);
+  const [chosen, setChosen] = useState(false);
   const current = sent[sent.length - 1] ?? '';
   return (
     <div style={{ display: 'grid', gap: 'var(--mn-space-2)', width: '100%', maxWidth: '36rem' }}>
       {editing ? (
         <AiUserMessageEdit
           defaultValue={current}
+          focusOnMount={chosen}
           onSubmit={(text) => {
             setSent((list) => [...list, text]);
             setEditing(false);
@@ -21,7 +26,13 @@ function Demo() {
       ) : (
         <div style={{ display: 'flex', gap: 'var(--mn-space-2)', alignItems: 'center' }}>
           <p style={{ margin: 0, flex: 1 }}>{current}</p>
-          <Button size="sm" onClick={() => setEditing(true)}>
+          <Button
+            size="sm"
+            onClick={() => {
+              setChosen(true);
+              setEditing(true);
+            }}
+          >
             Edit
           </Button>
         </div>

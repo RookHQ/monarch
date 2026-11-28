@@ -8,14 +8,10 @@ import {
   type RatingOption,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './rating-picker.fixture.json';
 
-const reviewScale: RatingOption[] = [
-  { value: 1, label: 'Below' },
-  { value: 2, label: 'Partly meets' },
-  { value: 3, label: 'Meets' },
-  { value: 4, label: 'Exceeds' },
-  { value: 5, label: 'Outstanding' },
-];
+const reviewScale: RatingOption[] = fixture.data.options;
 
 function ReviewQuestion() {
   const [value, setValue] = useState<number | null>(null);
@@ -179,7 +175,11 @@ export default {
         {
           title: 'Labelled scale',
           render: () => (
-            <RatingPicker aria-label="Overall rating" options={reviewScale} defaultValue={3} />
+            <RatingPicker
+              aria-label={fixture.data.label}
+              options={reviewScale}
+              defaultValue={fixture.data.value}
+            />
           ),
         },
         {

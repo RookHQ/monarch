@@ -6,18 +6,18 @@ import {
   type AccountMenuWorkspace,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './account-menu.fixture.json';
 
-const PERSON = { id: 'person-1', name: 'Sam Rivera', email: 'sam@example.com' };
-const WORKSPACES: AccountMenuWorkspace[] = [
-  { id: 'ws-1', name: 'Northwind' },
-  { id: 'ws-2', name: 'Harbor Labs' },
-];
+const PERSON = { id: 'person-1', ...fixture.data.user };
+const WORKSPACES: AccountMenuWorkspace[] = fixture.data.workspaces;
 
 function Interactive() {
-  const [workspace, setWorkspace] = useState('ws-1');
-  const [theme, setTheme] = useState<AccountMenuTheme>('system');
+  const [workspace, setWorkspace] = useState(fixture.data.workspace);
+  const [theme, setTheme] = useState(fixture.data.theme as AccountMenuTheme);
   return (
     <AccountMenu
+      defaultOpen
       user={PERSON}
       profileHref="#profile"
       settingsHref="#settings"
@@ -26,7 +26,7 @@ function Interactive() {
       onWorkspaceChange={setWorkspace}
       theme={theme}
       onThemeChange={setTheme}
-      items={<DropdownMenuItem>Keyboard shortcuts</DropdownMenuItem>}
+      items={<DropdownMenuItem>{fixture.data.extraItem}</DropdownMenuItem>}
       onSignOut={() => undefined}
     />
   );
@@ -141,7 +141,7 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Workspaces, theme and sign out', render: () => <Interactive /> },
+        { title: 'Workspaces, theme and sign out', stage: true, render: () => <Interactive /> },
         {
           title: 'With the name in the trigger',
           render: () => (

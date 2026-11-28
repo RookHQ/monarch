@@ -1,5 +1,9 @@
 import { Prose, ProseExclude, Text } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './prose.fixture.json';
+
+const article = fixture.data;
 
 export default {
   id: 'prose',
@@ -109,57 +113,64 @@ export default {
           stack: true,
           render: () => (
             <Prose>
-              <h2>Getting started</h2>
+              <h2>{article.heading}</h2>
               <p>
-                This guide covers the basics. Read the <a href="#/components/prose">overview</a>{' '}
-                first, then run <code>npm install</code>.
+                {article.intro.before}
+                <a href="#/components/prose">{article.intro.link}</a>
+                {article.intro.between}
+                <code>{article.intro.code}</code>
+                {article.intro.after}
               </p>
               <ul>
-                <li>Create a project</li>
-                <li>Invite your team</li>
-                <li>
-                  Set up notifications
-                  <ul>
-                    <li>Email</li>
-                    <li>Mobile</li>
-                  </ul>
-                </li>
+                {article.list.map((item) => (
+                  <li key={item.text}>
+                    {item.text}
+                    {'items' in item ? (
+                      <ul>
+                        {item.items.map((sub) => (
+                          <li key={sub}>{sub}</li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </li>
+                ))}
               </ul>
               <blockquote>
-                <p>Small steps every day add up.</p>
+                <p>{article.quote}</p>
               </blockquote>
               <pre>
-                <code>{'const total = items.reduce((sum, i) => sum + i.price, 0);'}</code>
+                <code>{article.code}</code>
               </pre>
-              <h3>Options</h3>
+              <h3>{article.subheading}</h3>
               <table>
                 <thead>
                   <tr>
-                    <th scope="col">Option</th>
-                    <th scope="col">Default</th>
-                    <th scope="col">Description</th>
+                    {article.table.columns.map((column) => (
+                      <th key={column} scope="col">
+                        {column}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>
-                      <code>size</code>
-                    </td>
-                    <td>base</td>
-                    <td>Base font size of the content.</td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <code>measure</code>
-                    </td>
-                    <td>true</td>
-                    <td>Limit the line length.</td>
-                  </tr>
+                  {article.table.rows.map((row) => (
+                    <tr key={row.option}>
+                      <td>
+                        <code>{row.option}</code>
+                      </td>
+                      <td>{row.default}</td>
+                      <td>{row.description}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
               <hr />
               <p>
-                Press <kbd>Enter</kbd> to save. <mark>Highlighted</mark> text stands out.
+                {article.outro.before}
+                <kbd>{article.outro.key}</kbd>
+                {article.outro.middle}
+                <mark>{article.outro.mark}</mark>
+                {article.outro.after}
               </p>
             </Prose>
           ),

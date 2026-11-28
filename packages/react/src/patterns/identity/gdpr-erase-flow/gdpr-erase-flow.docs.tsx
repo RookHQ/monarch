@@ -1,36 +1,28 @@
 import { Button } from '@rookcom/monarch-react';
 import { GdprEraseFlow } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './gdpr-erase-flow.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
-const erased = [
-  { label: 'Profile, name and contact details' },
-  { label: 'messages and comments', count: 214 },
-  { label: 'uploaded files', count: 37 },
-  { label: 'Sign-in history and device records' },
-];
+const erased = fixture.data.erased;
 
-const retained = [
-  {
-    label: 'Invoices and payment records',
-    reason: 'Kept for the retention period your policy sets, then deleted',
-  },
-  { label: 'Audit log entries', detail: 'With the name replaced by a reference' },
-];
+const retained = fixture.data.retained;
 
 function EraseSubject() {
   return (
     <GdprEraseFlow
-      trigger={<Button variant="danger">Erase personal data</Button>}
-      subjectName="Alex Kim"
-      confirmPhrase="alex@example.com"
+      trigger={<Button variant="danger">{fixture.data.trigger}</Button>}
+      defaultOpen
+      subjectName={fixture.data.subjectName}
+      confirmPhrase={fixture.data.confirmPhrase}
       erased={erased}
       retained={retained}
       stepUp={{ methods: ['password'], onVerify: () => wait(600) }}
       onErase={async () => {
         await wait(1200);
-        return { auditId: 'evt_7Q2K9X' };
+        return { auditId: fixture.data.auditId };
       }}
     />
   );
@@ -186,6 +178,7 @@ export default {
       items: [
         {
           title: 'Erase with retained records, step-up and audit reference',
+          stage: { align: 'center' },
           render: () => <EraseSubject />,
         },
         { title: 'Lists still loading', render: () => <Loading /> },

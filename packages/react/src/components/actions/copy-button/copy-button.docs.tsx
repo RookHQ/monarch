@@ -1,6 +1,13 @@
 import { useState } from 'react';
-import { CopyButton, useCopyToClipboard, Button } from '@rookcom/monarch-react';
+import {
+  CopyButton,
+  useCopyToClipboard,
+  Button,
+  type CopyButtonProps,
+} from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './copy-button.fixture.json';
 
 function WithErrorReport() {
   const [problem, setProblem] = useState<string | null>(null);
@@ -156,14 +163,27 @@ export default {
           title: 'Labels and icon-only',
           render: () => (
             <>
-              <CopyButton value="https://example.com/hooks/inbound" target="webhook URL" />
               <CopyButton
-                value="https://example.com/s/q3-plan"
-                label="Copy link"
-                copiedLabel="Link copied"
-                variant="primary"
+                value={fixture.data.buttons[0]?.value ?? ''}
+                target={fixture.data.buttons[0]?.target as NonNullable<CopyButtonProps['target']>}
               />
-              <CopyButton value="ws_01HZX4" label="Copy workspace ID" iconOnly size="sm" />
+              <CopyButton
+                value={fixture.data.buttons[1]?.value ?? ''}
+                label={fixture.data.buttons[1]?.label as string}
+                copiedLabel={fixture.data.buttons[1]?.copiedLabel as string}
+                variant={
+                  fixture.data.buttons[1]?.variant as NonNullable<CopyButtonProps['variant']>
+                }
+              />
+              <CopyButton
+                value={fixture.data.buttons[2]?.value ?? ''}
+                label={fixture.data.buttons[2]?.label as string}
+                iconOnly={fixture.data.buttons[2]?.iconOnly as boolean}
+                variant={
+                  fixture.data.buttons[2]?.variant as NonNullable<CopyButtonProps['variant']>
+                }
+                size={fixture.data.buttons[2]?.size as NonNullable<CopyButtonProps['size']>}
+              />
             </>
           ),
         },

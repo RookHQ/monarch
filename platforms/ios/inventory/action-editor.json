@@ -1,0 +1,167 @@
+{
+  "id": "action-editor",
+  "name": "MonarchActionEditor",
+  "title": "ActionEditor",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of MonarchCard per action, with a Picker(.menu) sectioned by group for the type, inputs from MonarchTextField, MonarchNumberInput, MonarchTagInput, MonarchFormField with Picker(.menu), Menu of Toggles with menuActionDismissBehavior(.disabled), and Toggle with .toggleStyle(.monarchCheckbox); reorder through a Menu and accessibilityActions",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Edits the ordered list of actions a rule runs; each action has a type and the labelled inputs that type defines, with validation and accessible reordering.",
+  "whenToUse": "In routing rules, automations and macros, where the same editor serves many kinds of action defined as data (set team, set priority, add tags, send a message).",
+  "whenNotToUse": "For the conditions of a rule use MonarchQueryBuilder; for a plain reorderable list use List with onMove (see reorderable-list); for a fixed form use MonarchFormField fields directly.",
+  "api": [
+    "MonarchActionEditor.init(actions: Binding<[MonarchRuleAction]>, types: [MonarchActionType], isOrdered: Bool = true, maxActions: Int = 20, showsErrors: Bool = false, defaultType: String? = nil, labels: MonarchActionEditorLabels = MonarchActionEditorLabels(), makeID: @escaping @MainActor () -> String = { UUID().uuidString })",
+    "static func MonarchActionEditor.problems(of action: MonarchRuleAction, types: [MonarchActionType]) -> [MonarchActionProblem]",
+    "static func MonarchActionEditor.problems(of actions: [MonarchRuleAction], types: [MonarchActionType]) -> [String: [MonarchActionProblem]]",
+    "static func MonarchActionEditor.message(for problem: MonarchActionProblem, in type: MonarchActionType, labels: MonarchActionEditorLabels = MonarchActionEditorLabels()) -> String",
+    "enum MonarchActionProblem: Hashable, Sendable { case missing(parameter: String), outOfRange(parameter: String), invalid(message: String) }",
+    "MonarchRuleAction.init(id: String, type: String, parameters: [String: MonarchActionValue] = [:])",
+    "MonarchRuleAction.init(id: String, type: MonarchActionType?)",
+    "MonarchActionType.init(id: String, label: String, description: String? = nil, group: String? = nil, parameters: [MonarchActionParameter] = [], defaults: [String: MonarchActionValue] = [:], isDisabled: Bool = false, disabledReason: String? = nil, validate: (@Sendable ([String: MonarchActionValue]) -> String?)? = nil)",
+    "MonarchActionParameter.init(key: String, label: String, kind: MonarchActionParameterKind, isRequired: Bool = false, description: String? = nil, prompt: String? = nil, emptyLabel: String? = nil, visibleWhen: (@Sendable ([String: MonarchActionValue]) -> Bool)? = nil)",
+    "var MonarchActionParameter.blankValue: MonarchActionValue",
+    "enum MonarchActionParameterKind { case text, multilineText, number(minimum: Double?, maximum: Double?), select([MonarchComboboxOption]), multiSelect([MonarchComboboxOption]), tags(suggestions: [String]), boolean }",
+    "enum MonarchActionValue { case text(String), number(Double?), boolean(Bool), option(String?), list([String]); var isEmpty: Bool }",
+    "MonarchActionEditorLabels.init(label:action:type:remove:add:empty:choose:required:outOfRange:unknownType:unavailable:maxReached:reorder:moveUp:moveDown:moved:chosen:), every parameter optional"
+  ],
+  "options": [
+    {
+      "name": "actions",
+      "type": "Binding<[MonarchRuleAction]>",
+      "default": "required",
+      "description": "The actions in the order they run, each an id, a type id and parameter values by key."
+    },
+    {
+      "name": "types",
+      "type": "[MonarchActionType]",
+      "default": "required",
+      "description": "The kinds of action: a name, description, menu group, inputs, defaults, a disabled state with a reason and an optional extra check."
+    },
+    {
+      "name": "isOrdered",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether actions run in order; adds a reorder menu and Move up / Move down accessibility actions."
+    },
+    {
+      "name": "maxActions",
+      "type": "Int",
+      "default": "20",
+      "description": "The most actions; the add button is replaced by a note at this count."
+    },
+    {
+      "name": "showsErrors",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows \"Fill in “Team”.\" under empty required inputs, \"“Delay” is out of range.\" under a number outside its range, and the type's own check, for example after a save attempt."
+    },
+    {
+      "name": "defaultType",
+      "type": "String?",
+      "default": "nil",
+      "description": "The type new actions start as; the first type that is not disabled when nil or unknown."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchActionEditorLabels",
+      "default": "MonarchActionEditorLabels()",
+      "description": "Replacements for every built-in string, including the action titles, the required and out-of-range messages, the reorder items and the move announcement."
+    },
+    {
+      "name": "makeID",
+      "type": "@MainActor () -> String",
+      "default": "{ UUID().uuidString }",
+      "description": "Makes the id of a new action."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "\"No actions yet.\" above Add action."
+    },
+    {
+      "name": "editing",
+      "description": "Each action is a card titled \"Action 1\" with a reorder menu, a remove button, the type menu with the type's description, and its inputs."
+    },
+    {
+      "name": "conditional input",
+      "description": "An input with visibleWhen appears only while its condition holds, such as Message after Notify is checked."
+    },
+    {
+      "name": "errors shown",
+      "description": "Empty required inputs show \"Fill in “Message”.\" with an icon; the type's own check shows under the card."
+    },
+    {
+      "name": "unavailable type",
+      "description": "An action of a disabled type shows a warning banner with the reason; the type is disabled in the menu for other actions."
+    },
+    {
+      "name": "unknown type",
+      "description": "A stored type no longer offered reads \"escalate (not available)\" in the menu and shows no inputs."
+    },
+    {
+      "name": "full",
+      "description": "At maxActions, \"You can add up to 20 actions.\" replaces Add action."
+    },
+    {
+      "name": "disabled",
+      "description": "disabled(_:) on the editor disables every menu, input and button."
+    }
+  ],
+  "appearance": "Each action is a MonarchCard on the surface role with its title in the default text role; inputs are Monarch fields; errors use the danger strong role with an icon; the unavailable warning is a warning MonarchBanner. All roles adapt to the dark and high-contrast themes.",
+  "platformNotes": "The web ActionEditor uses a ReorderableList with drag handles and move buttons and supports a custom render function per type. On iOS each action is a card in a stacked list for the phone; moving is a reorder Menu (Move up, Move down) and the same two accessibility actions, announced after the move, instead of drag. A custom parameter editor is not offered: compose MonarchActionEditor's model with your own view for types the input kinds cannot express. Multi-select is a Menu of Toggles that stays open while choosing; multi-line text is a vertical TextField. Focus after removing an action is left to the system. Android builds the same component with the same name.",
+  "accessibility": [
+    "The list is a container named \"Actions\"; each card is a container named \"Action 1, Set team\" and its visible title has the header trait.",
+    "When ordered, each card has Move up and Move down accessibility actions, and \"Moved to position 2.\" is announced after a move.",
+    "The reorder menu and the remove button are icon-only with spoken names (\"Reorder action 1\", \"Remove action 1\").",
+    "Every input is labelled; required inputs add \"Required\" to the hint and their error is spoken as a hint and announced by the field.",
+    "A multi-select menu reads the chosen labels as its value; disabled types and options are disabled menu items, not only grey.",
+    "Every control has a touch target of at least 44 points and the text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Changing an action's type replaces its parameters with the new type's defaults.",
+    "Required inputs that are hidden by visibleWhen are not reported as missing.",
+    "Multi-select keeps the options' order and keeps stored ids that are no longer options.",
+    "A number outside the minimum and maximum is reported by MonarchNumberInput.",
+    "Actions of an unknown type are kept and can be changed to a known type or removed."
+  ],
+  "tests": [
+    "MonarchActionEditorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Routing actions with errors shown",
+      "fixture": "action-editor",
+      "webExample": "Routing actions with errors shown",
+      "template": "MonarchActionEditor(actions: $actions, types: types, showsErrors: true)",
+      "setupTemplate": "@State private var actions = [\n    MonarchRuleAction(id: {{actions.0.id}}, type: {{actions.0.type}}, parameters: [\"teamId\": .option({{actions.0.teamId}})]),\n    MonarchRuleAction(id: {{actions.1.id}}, type: {{actions.1.type}}, parameters: [\"to\": .option({{actions.1.to}}), \"message\": .text({{actions.1.message}})]),\n]\nprivate let types = [\n    MonarchActionType(id: {{types.0.value}}, label: {{types.0.label}}, group: {{types.0.group}}, parameters: [\n        MonarchActionParameter(key: \"teamId\", label: {{labels.team}}, kind: .select([\n            MonarchComboboxOption(id: {{teams.0.value}}, label: {{teams.0.label}}),\n            MonarchComboboxOption(id: {{teams.1.value}}, label: {{teams.1.label}}),\n        ]), isRequired: true),\n    ]),\n    MonarchActionType(id: {{types.1.value}}, label: {{types.1.label}}, description: {{labels.roundRobinDescription}}, group: {{types.1.group}}, parameters: [\n        MonarchActionParameter(key: \"teamId\", label: {{labels.team}}, kind: .select([\n            MonarchComboboxOption(id: {{teams.0.value}}, label: {{teams.0.label}}),\n            MonarchComboboxOption(id: {{teams.1.value}}, label: {{teams.1.label}}),\n        ]), emptyLabel: {{labels.currentTeam}}),\n    ]),\n    MonarchActionType(id: {{types.2.value}}, label: {{types.2.label}}, group: {{types.2.group}}, parameters: [\n        MonarchActionParameter(key: \"priority\", label: {{labels.priority}}, kind: .select([\n            MonarchComboboxOption(id: {{priorities.0.value}}, label: {{priorities.0.label}}),\n            MonarchComboboxOption(id: {{priorities.1.value}}, label: {{priorities.1.label}}),\n        ]), isRequired: true),\n    ]),\n    MonarchActionType(id: {{types.3.value}}, label: {{types.3.label}}, group: {{types.3.group}}, parameters: [\n        MonarchActionParameter(key: \"tags\", label: {{labels.tags}}, kind: .tags(suggestions: []), isRequired: true, prompt: {{labels.tagsPrompt}}),\n    ], defaults: [\"tags\": .list([])]),\n    MonarchActionType(id: {{types.4.value}}, label: {{types.4.label}}, group: {{types.4.group}}, parameters: [\n        MonarchActionParameter(key: \"to\", label: {{labels.notify}}, kind: .select([\n            MonarchComboboxOption(id: {{recipients.0.value}}, label: {{recipients.0.label}}),\n            MonarchComboboxOption(id: {{recipients.1.value}}, label: {{recipients.1.label}}),\n            MonarchComboboxOption(id: {{recipients.2.value}}, label: {{recipients.2.label}}),\n        ]), isRequired: true),\n        MonarchActionParameter(key: \"personId\", label: {{labels.person}}, kind: .select([\n            MonarchComboboxOption(id: {{people.0.value}}, label: {{people.0.label}}),\n            MonarchComboboxOption(id: {{people.1.value}}, label: {{people.1.label}}),\n        ]), isRequired: true, visibleWhen: { $0[\"to\"] == .option({{recipients.2.value}}) }),\n        MonarchActionParameter(key: \"message\", label: {{labels.message}}, kind: .multilineText, isRequired: true),\n    ], defaults: [\"to\": .option({{recipients.0.value}}), \"message\": .text(\"\")]),\n    MonarchActionType(id: {{types.5.value}}, label: {{types.5.label}}, group: {{types.5.group}}, isDisabled: true, disabledReason: {{labels.disabledReason}}),\n]",
+      "setup": "@State private var actions = [\n    MonarchRuleAction(id: \"1\", type: \"set_team\", parameters: [\"teamId\": .option(\"billing\")]),\n    MonarchRuleAction(id: \"2\", type: \"notify\", parameters: [\"to\": .option(\"person\"), \"message\": .text(\"\")]),\n]\nprivate let types = [\n    MonarchActionType(id: \"set_team\", label: \"Set team\", group: \"Routing\", parameters: [\n        MonarchActionParameter(key: \"teamId\", label: \"Team\", kind: .select([\n            MonarchComboboxOption(id: \"support\", label: \"Support\"),\n            MonarchComboboxOption(id: \"billing\", label: \"Billing\"),\n        ]), isRequired: true),\n    ]),\n    MonarchActionType(id: \"assign_round_robin\", label: \"Assign in turn\", description: \"The next available person in the team, in turn.\", group: \"Routing\", parameters: [\n        MonarchActionParameter(key: \"teamId\", label: \"Team\", kind: .select([\n            MonarchComboboxOption(id: \"support\", label: \"Support\"),\n            MonarchComboboxOption(id: \"billing\", label: \"Billing\"),\n        ]), emptyLabel: \"The current team\"),\n    ]),\n    MonarchActionType(id: \"set_priority\", label: \"Set priority\", group: \"Fields\", parameters: [\n        MonarchActionParameter(key: \"priority\", label: \"Priority\", kind: .select([\n            MonarchComboboxOption(id: \"low\", label: \"Low\"),\n            MonarchComboboxOption(id: \"high\", label: \"High\"),\n        ]), isRequired: true),\n    ]),\n    MonarchActionType(id: \"add_tags\", label: \"Add tags\", group: \"Fields\", parameters: [\n        MonarchActionParameter(key: \"tags\", label: \"Tags\", kind: .tags(suggestions: []), isRequired: true, prompt: \"Type a tag and press Enter\"),\n    ], defaults: [\"tags\": .list([])]),\n    MonarchActionType(id: \"notify\", label: \"Notify people\", group: \"Messages\", parameters: [\n        MonarchActionParameter(key: \"to\", label: \"Notify\", kind: .select([\n            MonarchComboboxOption(id: \"assignee\", label: \"Assignee\"),\n            MonarchComboboxOption(id: \"team\", label: \"Everyone in the team\"),\n            MonarchComboboxOption(id: \"person\", label: \"A specific person\"),\n        ]), isRequired: true),\n        MonarchActionParameter(key: \"personId\", label: \"Person\", kind: .select([\n            MonarchComboboxOption(id: \"p1\", label: \"Jo Park\"),\n            MonarchComboboxOption(id: \"p2\", label: \"Ana Ruiz\"),\n        ]), isRequired: true, visibleWhen: { $0[\"to\"] == .option(\"person\") }),\n        MonarchActionParameter(key: \"message\", label: \"Message\", kind: .multilineText, isRequired: true),\n    ], defaults: [\"to\": .option(\"assignee\"), \"message\": .text(\"\")]),\n    MonarchActionType(id: \"external_issue\", label: \"Create an issue in another app\", group: \"Messages\", isDisabled: true, disabledReason: \"The connection is not set up.\"),\n]",
+      "code": "MonarchActionEditor(actions: $actions, types: types, showsErrors: true)"
+    },
+    {
+      "title": "Validate before saving",
+      "setup": "@State private var actions = [MonarchRuleAction(id: \"a1\", type: \"note\")]\n@State private var showsErrors = false\nprivate let types = [\n    MonarchActionType(id: \"note\", label: \"Add a note\", parameters: [\n        MonarchActionParameter(key: \"text\", label: \"Note\", kind: .multilineText, isRequired: true),\n    ]),\n]",
+      "code": "VStack(alignment: .leading) {\n    MonarchActionEditor(actions: $actions, types: types, showsErrors: showsErrors)\n    MonarchButton(\"Save\", variant: .primary) {\n        showsErrors = !MonarchActionEditor.problems(of: actions, types: types).isEmpty\n    }\n}"
+    }
+  ],
+  "webEquivalent": "ActionEditor",
+  "dependsOn": [
+    "select",
+    "text-field",
+    "button",
+    "card",
+    "number-input",
+    "tag-input",
+    "form-field"
+  ],
+  "icons": {
+    "remove": "CloseGlyph",
+    "add": "PlusGlyph"
+  }
+}

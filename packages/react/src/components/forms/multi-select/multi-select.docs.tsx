@@ -1,27 +1,22 @@
 import { useState } from 'react';
 import { Field, FieldDescription, FieldLabel, MultiSelect } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './multi-select.fixture.json';
 
-const labels = [
-  { value: 'bug', label: 'Bug' },
-  { value: 'design', label: 'Design' },
-  { value: 'docs', label: 'Documentation' },
-  { value: 'perf', label: 'Performance' },
-  { value: 'security', label: 'Security' },
-  { value: 'support', label: 'Support' },
-];
+const labels = fixture.data.options;
 
 function Controlled() {
-  const [value, setValue] = useState<string[]>(['design']);
+  const [value, setValue] = useState<string[]>(fixture.data.value);
   return (
     <Field>
-      <FieldLabel>Labels</FieldLabel>
-      <FieldDescription>Type to filter. Picked labels show as chips.</FieldDescription>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
+      <FieldDescription>{fixture.data.description}</FieldDescription>
       <MultiSelect
         options={labels}
         value={value}
         onValueChange={setValue}
-        placeholder="Add labels"
+        placeholder={fixture.data.placeholder}
       />
     </Field>
   );

@@ -1,0 +1,105 @@
+{
+  "id": "leave-workspace-flow",
+  "name": null,
+  "title": "LeaveWorkspaceFlow",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchDialog for the blocked case, or a warning MonarchBanner on the screen; MonarchBottomSheet with dismissible = false while leaving for the confirmation, holding MonarchConsequenceList, MonarchInlineNotice and MonarchButtons",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a member leaves a workspace after a confirmation that lists what they lose and what stays, or learns why they cannot leave yet and how to fix it.",
+  "whenToUse": "On a workspace's settings screen, for a member who wants to leave a shared workspace.",
+  "whenNotToUse": "To remove someone else, use the members screen's own remove action. To delete the workspace, use a confirm dialog with MonarchTypeToConfirmInput. For a pause that keeps the membership, use the deactivate recipe.",
+  "api": [
+    "MonarchButton(text = \"Leave workspace\", onClick = { if (isLastOwner) blocked = true else confirming = true }, variant = MonarchButtonVariant.Danger)",
+    "MonarchDialog(onDismissRequest = …, title = \"You can’t leave yet\", description = reason, actions = { MonarchButton(\"Close\", …, variant = MonarchButtonVariant.Ghost); MonarchButton(\"Transfer ownership\", …) })",
+    "MonarchBottomSheet(onDismissRequest = { confirming = false }, title = \"Leave Acme?\", dismissible = !leaving) { MonarchConsequenceList(…); MonarchButton(\"Leave workspace\", …, variant = MonarchButtonVariant.Danger, loading = leaving) }",
+    "MonarchBanner(message = reason, tone = MonarchTone.Warning, title = \"You can’t leave yet\", action = { … })"
+  ],
+  "options": [
+    {
+      "name": "isLastOwner",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The app's check, or any other reason leaving is blocked: the button opens the explanation instead of the confirmation."
+    },
+    {
+      "name": "leaving",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Passed to the danger button's loading while the request runs; it also disables Cancel and stops the sheet from being dismissed."
+    },
+    {
+      "name": "failure",
+      "type": "String?",
+      "default": "null",
+      "description": "A failed request, shown in a danger MonarchInlineNotice in the sheet."
+    }
+  ],
+  "states": [
+    {
+      "name": "confirm",
+      "description": "A sheet with the title naming the workspace, a line saying it happens at once, the consequence list and a danger Leave workspace button with Cancel."
+    },
+    {
+      "name": "leaving",
+      "description": "Leave workspace shows its progress indicator; Cancel is disabled and the sheet cannot be swiped or backed away."
+    },
+    {
+      "name": "failed",
+      "description": "A danger MonarchInlineNotice in the sheet; the person can try again."
+    },
+    {
+      "name": "blocked",
+      "description": "When the person is the last owner, or the app has another reason, the button opens an alert dialog that says why and offers the fix (Transfer ownership) instead of leaving. A warning MonarchBanner can say the same on the screen before the button is pressed."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component in the theme on the Material 3 sheet and dialog surfaces: the title in the title style, the consequence list with its kind marks, a full-width danger button over a ghost Cancel, and the warning banner's subtle warning fill. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web's LeaveWorkspaceFlow is one component built on ConfirmDialog and Dialog. On Android it is a recipe, as on iOS: the confirmation, with a consequence list and the pending and error states, is a MonarchBottomSheet, and the blocked case, which only needs a sentence and two buttons, is a MonarchDialog. The parity map lists alert (MonarchBanner on Android): the second example shows the blocked reason as a warning MonarchBanner with the fix as its action, for screens that know beforehand that leaving is blocked; iOS uses only the system alert. The web's default consequences and messages are written in the app here. dismissible = !leaving keeps the sheet open while leaving, where iOS uses interactiveDismissDisabled.",
+  "accessibility": [
+    "The sheet's title uses the title style, which MonarchText marks as a heading.",
+    "MonarchConsequenceList reads each consequence with its kind, so removed, kept and warning do not depend on the mark.",
+    "The blocked explanation is a Material 3 alert dialog, read in full by TalkBack with its buttons, or a MonarchBanner read with its tone.",
+    "Buttons are MonarchButtons with 48dp touch targets and a busy state while leaving.",
+    "The sheet cannot be dismissed while leaving, so the result is not lost."
+  ],
+  "edgeCases": [
+    "Check whether the person is the last owner on the server as well; the recipe's check only decides which dialog opens.",
+    "After leaving, navigate away from the workspace: its screens are no longer available.",
+    "List the apps the person loses by name when the workspace has several."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Leave from a danger zone",
+      "fixture": "leave-workspace-flow",
+      "webExample": "Leave from a danger zone",
+      "template": "MonarchSectionCard(title = {{heading}}, tone = MonarchTone.Danger) {\n    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n        MonarchText(text = {{title}}, style = MonarchTextStyle.BodyStrong, heading = true)\n        MonarchText(\n            text = {{description}},\n            style = MonarchTextStyle.Caption,\n            color = MonarchTheme.colors.textMuted,\n        )\n        MonarchButton(\n            text = {{action}},\n            onClick = { if (isLastOwner) blocked = true else confirming = true },\n            variant = MonarchButtonVariant.Danger,\n        )\n    }\n}\nif (blocked) {\n    MonarchDialog(\n        onDismissRequest = { blocked = false },\n        title = \"You can’t leave yet\",\n        description = \"You are the only owner. Transfer ownership to another member before you leave.\",\n        actions = {\n            MonarchButton(text = \"Close\", onClick = { blocked = false }, variant = MonarchButtonVariant.Ghost)\n            MonarchButton(\n                text = \"Transfer ownership\",\n                onClick = {\n                    blocked = false\n                    // Open the app's transfer ownership screen here.\n                },\n                variant = MonarchButtonVariant.Primary,\n            )\n        },\n    )\n}\nif (confirming) {\n    MonarchBottomSheet(\n        onDismissRequest = { confirming = false },\n        title = \"Leave \" + {{workspaceName}} + \"?\",\n        description = \"You are removed from the workspace straight away.\",\n        dismissible = !leaving,\n    ) {\n        val sheet = this\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            MonarchConsequenceList(\n                items = listOf(\n                    MonarchConsequence(MonarchConsequenceKind.Removed, \"You lose access to \" + apps.joinToString(\", \")),\n                    MonarchConsequence(\n                        MonarchConsequenceKind.Kept,\n                        \"What you created stays in the workspace for the other members\",\n                    ),\n                    MonarchConsequence(MonarchConsequenceKind.Warning, \"You need a new invite to come back\"),\n                ),\n            )\n            failure?.let { MonarchInlineNotice(message = it, tone = MonarchTone.Danger) }\n            MonarchButton(\n                text = \"Leave workspace\",\n                onClick = {\n                    leaving = true\n                    failure = null\n                    scope.launch {\n                        // The app removes the membership on its server here.\n                        // On failure: failure = \"Couldn’t leave the workspace. Try again.\"\n                        leaving = false\n                        sheet.dismiss()\n                        // Then navigate away from the workspace.\n                    }\n                },\n                modifier = Modifier.fillMaxWidth(),\n                variant = MonarchButtonVariant.Danger,\n                loading = leaving,\n            )\n            MonarchButton(\n                text = \"Cancel\",\n                onClick = { confirming = false },\n                modifier = Modifier.fillMaxWidth(),\n                variant = MonarchButtonVariant.Ghost,\n                enabled = !leaving,\n            )\n        }\n    }\n}",
+      "setupTemplate": "val scope = rememberCoroutineScope()\nval isLastOwner = false\nval apps = listOf({{apps.0}}, {{apps.1}}, {{apps.2}})\nvar blocked by remember { mutableStateOf(false) }\nvar confirming by remember { mutableStateOf(false) }\nvar leaving by remember { mutableStateOf(false) }\nvar failure by remember { mutableStateOf<String?>(null) }",
+      "imports": [
+        "kotlinx.coroutines.launch",
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "val scope = rememberCoroutineScope()\nval isLastOwner = false\nval apps = listOf(\"Projects\", \"Docs\", \"Calendar\")\nvar blocked by remember { mutableStateOf(false) }\nvar confirming by remember { mutableStateOf(false) }\nvar leaving by remember { mutableStateOf(false) }\nvar failure by remember { mutableStateOf<String?>(null) }",
+      "code": "MonarchSectionCard(title = \"Danger zone\", tone = MonarchTone.Danger) {\n    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n        MonarchText(text = \"Leave this workspace\", style = MonarchTextStyle.BodyStrong, heading = true)\n        MonarchText(\n            text = \"You lose access to its projects and documents.\",\n            style = MonarchTextStyle.Caption,\n            color = MonarchTheme.colors.textMuted,\n        )\n        MonarchButton(\n            text = \"Leave workspace\",\n            onClick = { if (isLastOwner) blocked = true else confirming = true },\n            variant = MonarchButtonVariant.Danger,\n        )\n    }\n}\nif (blocked) {\n    MonarchDialog(\n        onDismissRequest = { blocked = false },\n        title = \"You can’t leave yet\",\n        description = \"You are the only owner. Transfer ownership to another member before you leave.\",\n        actions = {\n            MonarchButton(text = \"Close\", onClick = { blocked = false }, variant = MonarchButtonVariant.Ghost)\n            MonarchButton(\n                text = \"Transfer ownership\",\n                onClick = {\n                    blocked = false\n                    // Open the app's transfer ownership screen here.\n                },\n                variant = MonarchButtonVariant.Primary,\n            )\n        },\n    )\n}\nif (confirming) {\n    MonarchBottomSheet(\n        onDismissRequest = { confirming = false },\n        title = \"Leave \" + \"Northfield\" + \"?\",\n        description = \"You are removed from the workspace straight away.\",\n        dismissible = !leaving,\n    ) {\n        val sheet = this\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            MonarchConsequenceList(\n                items = listOf(\n                    MonarchConsequence(MonarchConsequenceKind.Removed, \"You lose access to \" + apps.joinToString(\", \")),\n                    MonarchConsequence(\n                        MonarchConsequenceKind.Kept,\n                        \"What you created stays in the workspace for the other members\",\n                    ),\n                    MonarchConsequence(MonarchConsequenceKind.Warning, \"You need a new invite to come back\"),\n                ),\n            )\n            failure?.let { MonarchInlineNotice(message = it, tone = MonarchTone.Danger) }\n            MonarchButton(\n                text = \"Leave workspace\",\n                onClick = {\n                    leaving = true\n                    failure = null\n                    scope.launch {\n                        // The app removes the membership on its server here.\n                        // On failure: failure = \"Couldn’t leave the workspace. Try again.\"\n                        leaving = false\n                        sheet.dismiss()\n                        // Then navigate away from the workspace.\n                    }\n                },\n                modifier = Modifier.fillMaxWidth(),\n                variant = MonarchButtonVariant.Danger,\n                loading = leaving,\n            )\n            MonarchButton(\n                text = \"Cancel\",\n                onClick = { confirming = false },\n                modifier = Modifier.fillMaxWidth(),\n                variant = MonarchButtonVariant.Ghost,\n                enabled = !leaving,\n            )\n        }\n    }\n}"
+    },
+    {
+      "title": "The blocked reason on the screen",
+      "code": "MonarchBanner(\n    message = \"You are the only owner. Transfer ownership to another member before you leave.\",\n    tone = MonarchTone.Warning,\n    title = \"You can’t leave yet\",\n    action = {\n        MonarchButton(\n            text = \"Transfer ownership\",\n            onClick = { /* open the transfer screen */ },\n            size = MonarchButtonSize.Sm,\n        )\n    },\n)"
+    }
+  ],
+  "webEquivalent": "LeaveWorkspaceFlow",
+  "dependsOn": [
+    "confirm-dialog",
+    "alert",
+    "consequence-list",
+    "button",
+    "inline-notice",
+    "sheet"
+  ]
+}

@@ -1,63 +1,10 @@
 import { useState } from 'react';
 import { AiSubagentTree, type AiSubagentNode } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-subagent-tree.fixture.json';
 
-const RUN: AiSubagentNode[] = [
-  {
-    id: 'lead',
-    name: 'Lead',
-    role: 'Plans the quarterly report and hands out the work',
-    status: 'working',
-    activity: 'Waiting for two sub-agents',
-    stepsDone: 2,
-    stepsTotal: 5,
-    startedAt: '2026-01-01T12:00:00Z',
-    children: [
-      {
-        id: 'research',
-        name: 'Researcher',
-        role: 'Collect the figures for each region',
-        status: 'working',
-        activity: 'Reading the sales export',
-        stepsDone: 3,
-        stepsTotal: 7,
-        toolCalls: 12,
-        startedAt: '2026-01-01T12:01:00Z',
-        children: [
-          {
-            id: 'fetch',
-            name: 'Fetcher',
-            role: 'Download the exports',
-            status: 'done',
-            toolCalls: 4,
-            startedAt: '2026-01-01T12:01:00Z',
-            endedAt: '2026-01-01T12:03:00Z',
-            summary: 'Downloaded 4 exports',
-          },
-          { id: 'parse', name: 'Parser', role: 'Turn the exports into tables', status: 'waiting' },
-        ],
-      },
-      {
-        id: 'write',
-        name: 'Writer',
-        role: 'Draft the summary',
-        status: 'needs-input',
-        startedAt: '2026-01-01T12:02:00Z',
-      },
-      {
-        id: 'check',
-        name: 'Checker',
-        role: 'Compare the totals with last quarter',
-        status: 'done',
-        stepsDone: 4,
-        stepsTotal: 4,
-        startedAt: '2026-01-01T12:01:00Z',
-        endedAt: '2026-01-01T12:04:00Z',
-        summary: 'All totals match',
-      },
-    ],
-  },
-];
+const RUN = fixture.data.agents as AiSubagentNode[];
 
 const ENDED: AiSubagentNode[] = [
   {
@@ -259,7 +206,13 @@ export default {
         {
           title: 'A run in progress',
           stack: true,
-          render: () => <AiSubagentTree agents={RUN} locale="en-GB" timeZone="UTC" />,
+          render: () => (
+            <AiSubagentTree
+              agents={RUN}
+              locale={fixture.data.locale}
+              timeZone={fixture.data.timeZone}
+            />
+          ),
         },
         {
           title: 'Select, stop, open and respond',

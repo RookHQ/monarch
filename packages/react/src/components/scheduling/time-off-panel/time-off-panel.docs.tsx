@@ -5,50 +5,34 @@ import {
   type TimeOffEntry,
 } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './time-off-panel.fixture.json';
 
-const NOW = new Date('2026-11-04T12:00:00Z');
+const NOW = new Date(fixture.data.now);
+const day = (iso: string) => iso.slice(0, 10);
 
-const START: TimeOffEntry[] = [
-  {
-    id: '1',
-    personId: 'p1',
-    personName: 'Alex Kim',
-    allDay: true,
-    start: '2026-11-09',
-    end: '2026-11-13',
-    type: 'Annual leave',
-  },
-  {
-    id: '2',
-    personId: null,
-    allDay: true,
-    start: '2026-12-25',
-    end: '2026-12-26',
-    reason: 'Office closed',
-  },
-  {
-    id: '3',
-    personId: 'p2',
-    personName: 'Sam Lee',
-    allDay: false,
-    start: '2026-11-05T09:00:00Z',
-    end: '2026-11-05T13:00:00Z',
-    reason: 'Training',
-  },
-  {
-    id: '4',
-    personId: 'p2',
-    personName: 'Sam Lee',
-    allDay: true,
-    start: '2026-10-12',
-    end: '2026-10-12',
-  },
-];
+type FixtureEntry = {
+  personId?: string;
+  personName?: string;
+  allDay: boolean;
+  start: string;
+  end: string;
+  type?: string;
+  reason?: string;
+};
 
-const PEOPLE = [
-  { value: 'p1', label: 'Alex Kim' },
-  { value: 'p2', label: 'Sam Lee' },
-];
+const START: TimeOffEntry[] = (fixture.data.entries as FixtureEntry[]).map((entry, i) => ({
+  id: String(i + 1),
+  personId: entry.personId ?? null,
+  ...(entry.personName !== undefined && { personName: entry.personName }),
+  allDay: entry.allDay,
+  start: entry.allDay ? day(entry.start) : entry.start,
+  end: entry.allDay ? day(entry.end) : entry.end,
+  ...(entry.type !== undefined && { type: entry.type }),
+  ...(entry.reason !== undefined && { reason: entry.reason }),
+}));
+
+const PEOPLE = fixture.data.people;
 
 function Demo() {
   const [entries, setEntries] = useState<TimeOffEntry[]>(START);
@@ -56,8 +40,8 @@ function Demo() {
     <div style={{ width: '100%', maxWidth: 640 }}>
       <TimeOffPanel
         entries={entries}
-        timeZone="Europe/London"
-        locale="en-GB"
+        timeZone={fixture.data.timeZone}
+        locale={fixture.data.locale}
         now={NOW}
         people={PEOPLE}
         allowClosure

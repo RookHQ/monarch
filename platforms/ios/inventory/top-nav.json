@@ -1,0 +1,73 @@
+{
+  "id": "top-nav",
+  "name": null,
+  "title": "TopNav",
+  "family": "navigation",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "TabView with tabItem(_:); from iOS 18 also tabViewStyle(.sidebarAdaptable), behind an availability check",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A row of top-level destinations is the app's TabView, which the system places for the device: the tab bar on iOS 17, and from iPadOS 18 a bar at the top that can become a sidebar. Monarch ships nothing.",
+  "whenToUse": "For the few top-level areas of an app. Declare them once as tabs and let the system place them for the device and the OS version.",
+  "whenNotToUse": "Do not draw a horizontal row of links at the top of a screen as app navigation. For views of one screen's content use MonarchTabs; for many destinations use a sidebar (see sidebar-nav).",
+  "api": [
+    "TabView(selection: Binding<SelectionValue>?, content: () -> Content)",
+    "func tabItem(_ label: () -> some View) -> some View",
+    "func tabViewStyle(_ style: some TabViewStyle) -> some View",
+    "static var sidebarAdaptable: SidebarAdaptableTabViewStyle (iOS 18.0 and later)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "iPhone, and iPad on iOS 17",
+      "description": "The destinations are the tab bar at the bottom."
+    },
+    {
+      "name": "iPad on iPadOS 18 and later",
+      "description": "The destinations are a bar at the top; with sidebarAdaptable the person can turn it into a sidebar."
+    },
+    {
+      "name": "selected",
+      "description": "The selected destination takes the tint."
+    }
+  ],
+  "appearance": "The system draws the bar or the sidebar. The selected destination takes the tint, which monarchTheme sets to the theme's accent.",
+  "platformNotes": "The parity map named tabViewStyle(.sidebarAdaptable) alone. That style is iOS 18 API and does not compile against the iOS 17 deployment target, so the documented answer is TabView with tabItem, adding the style inside if #available(iOS 18.0, *). The web TopNav is a row of links in a header that moves the links that do not fit into a More menu, with start and end slots. On iOS overflow is the system's (the More tab, or the sidebar from iPadOS 18), the start and end slots are toolbar items of the navigation bar, and destinations are views, not links. Android uses the Material navigation suite, which also adapts to the window.",
+  "accessibility": [
+    "System behaviour: the destinations are a tab bar; each is read with its title, position and selected state.",
+    "System behaviour: on iPadOS 18 the top bar and the sidebar expose the same items.",
+    "Give every destination a title as well as a symbol."
+  ],
+  "edgeCases": [
+    "On iOS 17 an iPad shows the same bottom tab bar as an iPhone.",
+    "tabViewStyle(.sidebarAdaptable) without the availability check is a compile error for an iOS 17 target.",
+    "More than five destinations on a phone become a More tab."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Wide",
+      "fixture": "top-nav",
+      "webExample": "Wide",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space1) {\n    HStack(spacing: theme.spacing.space2) {\n        Text(\"R\")\n            .monarchTextStyle(.bodyStrong)\n            .foregroundStyle(theme.colors.textDefault)\n            .frame(width: 28, height: 28)\n            .background(theme.colors.bgMuted, in: RoundedRectangle(cornerRadius: 6, style: .continuous))\n            .accessibilityHidden(true)\n        ViewThatFits(in: .horizontal) {\n            links(showing: 4)\n            links(showing: 3)\n            links(showing: 2)\n            links(showing: 1)\n            links(showing: 0)\n        }\n        Spacer(minLength: 0)\n        MonarchButton({{end}}, variant: .secondary, size: .sm) {}\n    }\n    Text(\"Current: /\" + (tab == \"overview\" ? \"\" : tab)).monarchTextStyle(.caption)\n}\n.padding(.horizontal)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var tab = {{current}}\n\nprivate struct NavLink: Identifiable {\n    let key: String\n    let label: String\n    let badge: Int?\n    var id: String { key }\n}\n\nprivate static let links = [\n    NavLink(key: {{items.0.key}}, label: {{items.0.label}}, badge: nil),\n    NavLink(key: {{items.1.key}}, label: {{items.1.label}}, badge: {{items.1.badge}}),\n    NavLink(key: {{items.2.key}}, label: {{items.2.label}}, badge: nil),\n    NavLink(key: {{items.3.key}}, label: {{items.3.label}}, badge: nil),\n    NavLink(key: {{items.4.key}}, label: {{items.4.label}}, badge: nil),\n    NavLink(key: {{items.5.key}}, label: {{items.5.label}}, badge: nil),\n]\n\n/// The links that fit stay in the row; the rest are in the More menu, so no link is clipped.\n@ViewBuilder private func links(showing count: Int) -> some View {\n    HStack(spacing: theme.spacing.space1) {\n        ForEach(Self.links.prefix(count)) { link in\n            Button {\n                tab = link.key\n            } label: {\n                HStack(spacing: theme.spacing.space1_5) {\n                    Text(link.label)\n                    if let badge = link.badge {\n                        Text(verbatim: String(badge))\n                            .monarchTextStyle(.caption)\n                            .foregroundStyle(theme.colors.dangerOnSolid)\n                            .padding(.horizontal, 7)\n                            .background(theme.colors.dangerSolid, in: Capsule())\n                    }\n                }\n                .monarchTextStyle(.label)\n                .foregroundStyle(tab == link.key ? theme.colors.accentStrong : theme.colors.textMuted)\n                .padding(.horizontal, theme.spacing.space3)\n                .frame(minHeight: 44)\n                .background(tab == link.key ? theme.colors.accentSubtle : Color.clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))\n            }\n            .buttonStyle(.plain)\n            .accessibilityAddTraits(tab == link.key ? .isSelected : [])\n        }\n        Menu {\n            ForEach(Self.links.dropFirst(count)) { link in\n                Button(link.label) { tab = link.key }\n            }\n        } label: {\n            HStack(spacing: theme.spacing.space1) {\n                Text(\"More\")\n                Image(systemName: \"chevron.down\")\n            }\n            .monarchTextStyle(.label)\n            .foregroundStyle(theme.colors.textMuted)\n            .padding(.horizontal, theme.spacing.space3)\n            .frame(minHeight: 44)\n        }\n    }\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var tab = \"overview\"\n\nprivate struct NavLink: Identifiable {\n    let key: String\n    let label: String\n    let badge: Int?\n    var id: String { key }\n}\n\nprivate static let links = [\n    NavLink(key: \"overview\", label: \"Overview\", badge: nil),\n    NavLink(key: \"projects\", label: \"Projects\", badge: 3),\n    NavLink(key: \"calendar\", label: \"Calendar\", badge: nil),\n    NavLink(key: \"reports\", label: \"Reports\", badge: nil),\n    NavLink(key: \"people\", label: \"People\", badge: nil),\n    NavLink(key: \"settings\", label: \"Settings\", badge: nil),\n]\n\n/// The links that fit stay in the row; the rest are in the More menu, so no link is clipped.\n@ViewBuilder private func links(showing count: Int) -> some View {\n    HStack(spacing: theme.spacing.space1) {\n        ForEach(Self.links.prefix(count)) { link in\n            Button {\n                tab = link.key\n            } label: {\n                HStack(spacing: theme.spacing.space1_5) {\n                    Text(link.label)\n                    if let badge = link.badge {\n                        Text(verbatim: String(badge))\n                            .monarchTextStyle(.caption)\n                            .foregroundStyle(theme.colors.dangerOnSolid)\n                            .padding(.horizontal, 7)\n                            .background(theme.colors.dangerSolid, in: Capsule())\n                    }\n                }\n                .monarchTextStyle(.label)\n                .foregroundStyle(tab == link.key ? theme.colors.accentStrong : theme.colors.textMuted)\n                .padding(.horizontal, theme.spacing.space3)\n                .frame(minHeight: 44)\n                .background(tab == link.key ? theme.colors.accentSubtle : Color.clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))\n            }\n            .buttonStyle(.plain)\n            .accessibilityAddTraits(tab == link.key ? .isSelected : [])\n        }\n        Menu {\n            ForEach(Self.links.dropFirst(count)) { link in\n                Button(link.label) { tab = link.key }\n            }\n        } label: {\n            HStack(spacing: theme.spacing.space1) {\n                Text(\"More\")\n                Image(systemName: \"chevron.down\")\n            }\n            .monarchTextStyle(.label)\n            .foregroundStyle(theme.colors.textMuted)\n            .padding(.horizontal, theme.spacing.space3)\n            .frame(minHeight: 44)\n        }\n    }\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space1) {\n    HStack(spacing: theme.spacing.space2) {\n        Text(\"R\")\n            .monarchTextStyle(.bodyStrong)\n            .foregroundStyle(theme.colors.textDefault)\n            .frame(width: 28, height: 28)\n            .background(theme.colors.bgMuted, in: RoundedRectangle(cornerRadius: 6, style: .continuous))\n            .accessibilityHidden(true)\n        ViewThatFits(in: .horizontal) {\n            links(showing: 4)\n            links(showing: 3)\n            links(showing: 2)\n            links(showing: 1)\n            links(showing: 0)\n        }\n        Spacer(minLength: 0)\n        MonarchButton(\"Share\", variant: .secondary, size: .sm) {}\n    }\n    Text(\"Current: /\" + (tab == \"overview\" ? \"\" : tab)).monarchTextStyle(.caption)\n}\n.padding(.horizontal)"
+    }
+  ],
+  "webEquivalent": "TopNav",
+  "dependsOn": [],
+  "parityExceptions": [
+    {
+      "rule": "phone-width",
+      "platform": "ios",
+      "reason": "The web preview is 686 px wide, so Overview, Projects (with its badge 3), Calendar, Reports and More sit in one row. A phone column is 354 pt, which holds the logo tile, Overview, More and Share; the links that do not fit move into the More menu, in the same order, so none is clipped. Data, order and tones are the same.",
+      "convention": "adaptive overflow: a phone moves navigation links that do not fit into an overflow menu (HIG: Navigation and search)"
+    }
+  ]
+}

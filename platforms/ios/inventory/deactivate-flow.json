@@ -1,0 +1,82 @@
+{
+  "id": "deactivate-flow",
+  "name": null,
+  "title": "DeactivateFlow",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:content:) with presentationDetents and interactiveDismissDisabled, a ScrollView and VStack, Label",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: confirm a reversible pause (a partnership, a tracker, a person) in a sheet that says where to turn it back on, lists what changes meanwhile and can record a reason; the same sheet confirms reactivation.",
+  "whenToUse": "When an action stops something working but keeps its data, such as deactivating a user, pausing a partnership or turning off an integration, and when turning it back on.",
+  "whenNotToUse": "When the action deletes data or cannot be undone, use a destructive confirmationDialog or a delete flow with MonarchTypeToConfirmInput. When the change is trivial and instant to reverse, change it directly with a Toggle and no confirmation. With nothing to list and no reason to ask, a plain confirmationDialog is enough.",
+  "api": [
+    ".sheet(isPresented: $isPresented) { … }",
+    "MonarchConsequenceList(_ items: [MonarchConsequence], heading: String? = nil)",
+    "MonarchTextField(\"Reason (optional)\", text: $reason, helper: \"Kept with the change history.\")",
+    "MonarchButton(\"Deactivate\", variant: .primary, isLoading: isWorking, fullWidth: true, action: confirm)",
+    ".interactiveDismissDisabled(isWorking)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "deactivate",
+      "description": "Title \"Deactivate …?\", the description that nothing is deleted, the line saying where to reactivate, what changes while it is deactivated, the optional reason and Deactivate."
+    },
+    {
+      "name": "reactivate",
+      "description": "Title \"Reactivate …?\", what changes once it is back, and Reactivate; no reversibility line."
+    },
+    {
+      "name": "working",
+      "description": "The confirm button shows its spinner and the sheet cannot be swiped away."
+    },
+    {
+      "name": "failed",
+      "description": "A thrown error goes in a danger MonarchInlineNotice above the buttons; the sheet stays open so the person can retry."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component in the theme: the title style, body text, MonarchConsequenceList with its kind icons, MonarchTextField, a full-width primary MonarchButton and a ghost Cancel. Nothing uses the danger colours, because nothing is lost.",
+  "platformNotes": "The web DeactivateFlow is a warning-toned ConfirmDialog. The iOS system alert and confirmation dialog cannot hold a consequence list or a text field, so the recipe uses a sheet with a primary (not destructive) confirm button, since nothing is deleted; Monarch has no warning button variant. For a pause with no consequences and no reason, use confirmationDialog with a non-destructive button instead. The web's mode, subject and reactivateFrom props become the app's own state and strings in the recipe.",
+  "accessibility": [
+    "The title has the header trait.",
+    "The reversibility line is a Label whose icon is read with its text.",
+    "MonarchConsequenceList reads each consequence with its kind, not by icon colour alone.",
+    "The reason field is a MonarchTextField with its label and helper text.",
+    "Buttons are MonarchButtons with 44-point touch targets and a busy state while working; the sheet cannot be dismissed by swiping while the request runs."
+  ],
+  "edgeCases": [
+    "If the request fails, keep the sheet open with the error so the person can retry or cancel.",
+    "Send the reason with the request only when it is not empty.",
+    "Reactivation can be offered from the same place the line names, so the promise in the line is true."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Deactivate with consequences and a reason",
+      "fixture": "deactivate-flow",
+      "webExample": "Deactivate with consequences and a reason",
+      "template": "MonarchButton(isDeactivated ? \"Reactivate\" : {{trigger}}, variant: .warning) { isPresented = true }\n    .sheet(isPresented: $isPresented) {\n        ScrollView {\n            VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                Image(systemName: \"exclamationmark.triangle\")\n                    .font(.system(size: 20))\n                    .foregroundStyle(theme.colors.warningStrong)\n                    .frame(width: 40, height: 40)\n                    .background(theme.colors.warningSubtle, in: RoundedRectangle(cornerRadius: 10))\n                    .accessibilityHidden(true)\n                Text(isDeactivated ? \"Reactivate \\(subject)?\" : \"Deactivate \\(subject)?\")\n                    .monarchTextStyle(.title)\n                    .accessibilityAddTraits(.isHeader)\n                Text(\n                    isDeactivated\n                        ? \"It starts working again straight away.\"\n                        : \"It stops working until you turn it back on. Nothing is deleted.\"\n                )\n                .monarchTextStyle(.body)\n                if !isDeactivated {\n                    Label(\"You can reactivate it at any time from \\(reactivateFrom).\", systemImage: \"arrow.uturn.backward\")\n                        .monarchTextStyle(.body)\n                }\n                MonarchConsequenceList(\n                    isDeactivated\n                        ? [MonarchConsequence(.changed, \"Shared reports update again\")]\n                        : [\n                            MonarchConsequence(.{{consequences.0.kind|raw}}, {{consequences.0.label}}),\n                            MonarchConsequence(.{{consequences.1.kind|raw}}, {{consequences.1.label}}),\n                            MonarchConsequence(.{{consequences.2.kind|raw}}, {{consequences.2.label}}),\n                        ],\n                    heading: isDeactivated ? \"Once it is reactivated\" : \"While it is deactivated\"\n                )\n                if asksReason {\n                    MonarchTextField(\"Reason (optional)\", text: $reason, helper: \"Kept with the change history.\")\n                }\n                if let failure {\n                    MonarchInlineNotice(failure, tone: .danger)\n                }\n                MonarchButton(\n                    isDeactivated ? \"Reactivate\" : {{trigger}},\n                    variant: .primary,\n                    isLoading: isWorking,\n                    fullWidth: true,\n                    action: confirm\n                )\n                MonarchButton(\"Cancel\", variant: .ghost, fullWidth: true) { isPresented = false }\n            }\n            .padding(theme.spacing.space4)\n        }\n        .presentationDetents([.medium, .large])\n        .interactiveDismissDisabled(isWorking)\n    }",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isPresented = false\n@State private var isDeactivated = false\n@State private var reason = \"\"\n@State private var isWorking = false\n@State private var failure: String?\n\nprivate func confirm() {\n    isWorking = true\n    failure = nil\n    Task {\n        // The app's request, with reason. A thrown error goes in failure and the sheet stays open.\n        try? await Task.sleep(for: .milliseconds(300))\n        isWorking = false\n        isDeactivated.toggle()\n        isPresented = false\n    }\n}\nprivate let asksReason = {{reason}}\nprivate let subject = {{subject}}\nprivate let reactivateFrom = {{reactivateFrom}}",
+      "previewPresented": [
+        "isPresented"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isPresented = false\n@State private var isDeactivated = false\n@State private var reason = \"\"\n@State private var isWorking = false\n@State private var failure: String?\n\nprivate func confirm() {\n    isWorking = true\n    failure = nil\n    Task {\n        // The app's request, with reason. A thrown error goes in failure and the sheet stays open.\n        try? await Task.sleep(for: .milliseconds(300))\n        isWorking = false\n        isDeactivated.toggle()\n        isPresented = false\n    }\n}\nprivate let asksReason = true\nprivate let subject = \"this partnership\"\nprivate let reactivateFrom = \"Settings › Partners\"",
+      "code": "MonarchButton(isDeactivated ? \"Reactivate\" : \"Deactivate\", variant: .warning) { isPresented = true }\n    .sheet(isPresented: $isPresented) {\n        ScrollView {\n            VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                Image(systemName: \"exclamationmark.triangle\")\n                    .font(.system(size: 20))\n                    .foregroundStyle(theme.colors.warningStrong)\n                    .frame(width: 40, height: 40)\n                    .background(theme.colors.warningSubtle, in: RoundedRectangle(cornerRadius: 10))\n                    .accessibilityHidden(true)\n                Text(isDeactivated ? \"Reactivate \\(subject)?\" : \"Deactivate \\(subject)?\")\n                    .monarchTextStyle(.title)\n                    .accessibilityAddTraits(.isHeader)\n                Text(\n                    isDeactivated\n                        ? \"It starts working again straight away.\"\n                        : \"It stops working until you turn it back on. Nothing is deleted.\"\n                )\n                .monarchTextStyle(.body)\n                if !isDeactivated {\n                    Label(\"You can reactivate it at any time from \\(reactivateFrom).\", systemImage: \"arrow.uturn.backward\")\n                        .monarchTextStyle(.body)\n                }\n                MonarchConsequenceList(\n                    isDeactivated\n                        ? [MonarchConsequence(.changed, \"Shared reports update again\")]\n                        : [\n                            MonarchConsequence(.changed, \"New referrals are not tracked\"),\n                            MonarchConsequence(.changed, \"The partner cannot sign in to the portal\"),\n                            MonarchConsequence(.kept, \"Past referrals and payouts stay in reports\"),\n                        ],\n                    heading: isDeactivated ? \"Once it is reactivated\" : \"While it is deactivated\"\n                )\n                if asksReason {\n                    MonarchTextField(\"Reason (optional)\", text: $reason, helper: \"Kept with the change history.\")\n                }\n                if let failure {\n                    MonarchInlineNotice(failure, tone: .danger)\n                }\n                MonarchButton(\n                    isDeactivated ? \"Reactivate\" : \"Deactivate\",\n                    variant: .primary,\n                    isLoading: isWorking,\n                    fullWidth: true,\n                    action: confirm\n                )\n                MonarchButton(\"Cancel\", variant: .ghost, fullWidth: true) { isPresented = false }\n            }\n            .padding(theme.spacing.space4)\n        }\n        .presentationDetents([.medium, .large])\n        .interactiveDismissDisabled(isWorking)\n    }"
+    }
+  ],
+  "webEquivalent": "DeactivateFlow",
+  "dependsOn": [
+    "confirm-dialog",
+    "consequence-list",
+    "sheet",
+    "text-field",
+    "button",
+    "inline-notice"
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "id": "ai-action-log",
+  "name": "MonarchAiActionLog",
+  "title": "AiActionLog",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of rows (MonarchAiAgentAvatar, MonarchBadge, Text(AttributedString) with a link, RelativeDateTimeFormatter in a TimelineView(.everyMinute)), MonarchButton for Undo and Show more, accessibilityAction(named:), AccessibilityNotification.Announcement, MonarchEmptyState",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "An audit list of what AI agents did: the agent, marked as an AI agent, what it did and to what, when, and Undo for actions that can be reversed.",
+  "whenToUse": "When an agent acts on records, documents or schedules and people need a record of it, for example on an agent's settings screen or in an assistant panel that shows recent agent activity with Undo.",
+  "whenNotToUse": "For activity by people, or people and automations together, use an activity timeline. For Undo right after one AI edit use MonarchAiUndoBanner. For the steps of a run in progress use MonarchAiChainOfSteps or MonarchAiTaskProgress.",
+  "api": [
+    "init(_ entries: [MonarchAiActionLogEntry], now: Date? = nil, pageSize: Int = 200, labels: MonarchAiActionLogLabels = MonarchAiActionLogLabels(), onUndo: (@MainActor (String) async throws -> Void)? = nil)",
+    "struct MonarchAiActionLogEntry { init(id: String, date: Date, agent: MonarchAiAgentRef, action: String, target: String? = nil, url: URL? = nil, isUndoable: Bool = false, isUndone: Bool = false) }",
+    "struct MonarchAiActionLogLabels { init(label:, actorKind:, undo:, undoLabel:, undone:, undoneAnnouncement:, undoFailed:, openTarget:, empty:, showMore:) }"
+  ],
+  "options": [
+    {
+      "name": "entries",
+      "type": "[MonarchAiActionLogEntry]",
+      "default": "required",
+      "description": "The actions, in the order to show them, usually newest first."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for relative times. Without it they follow the clock, updated every minute."
+    },
+    {
+      "name": "pageSize",
+      "type": "Int",
+      "default": "200",
+      "description": "How many entries are shown at first and how many Show more adds; at least one."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiActionLogLabels",
+      "default": "MonarchAiActionLogLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onUndo",
+      "type": "(@MainActor (String) async throws -> Void)?",
+      "default": "nil",
+      "description": "Reverses an action, given its entry id. Shows Undo on entries with isUndoable. Throwing shows and announces the failure."
+    }
+  ],
+  "states": [
+    {
+      "name": "entry",
+      "description": "The decorative agent avatar, the agent's name in the strong body style with an \"AI agent\" badge, the action and target, and the relative time."
+    },
+    {
+      "name": "link",
+      "description": "A target with an http or https URL is a link in the accent colour; other URLs show as plain text."
+    },
+    {
+      "name": "undoing",
+      "description": "The entry's Undo button shows its spinner; pressing again does nothing."
+    },
+    {
+      "name": "undone",
+      "description": "The action text turns muted, the meta line adds \"Undone\" and Undo goes away; announced."
+    },
+    {
+      "name": "undo failed",
+      "description": "\"Could not undo: …\" under the entry in the strong danger colour with an icon; Undo stays; announced."
+    },
+    {
+      "name": "paged",
+      "description": "A secondary Show more button says how many entries it adds."
+    },
+    {
+      "name": "empty",
+      "description": "A small MonarchEmptyState, \"No AI activity yet.\"."
+    }
+  ],
+  "appearance": "Rows separated by dividers: a small agent avatar, the name in the default text colour with a subtle neutral badge, the action in the default text colour (muted once undone), the target link in the strong accent colour and a caption time in the muted text colour; Undo is a ghost button. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The parity map names List rows with Undo; the rows are a VStack so the log can sit inside an agent screen or assistant panel that scrolls, as on the web. The web's per-entry onUndo closure is one onUndo handler that receives the entry id, so entries stay plain values. The web's visibleEntries is pageSize; the web moves focus to the first revealed row after Show more, which iOS leaves to VoiceOver. The web marks the actor kind with visually hidden brackets; here the badge shows \"AI agent\" and VoiceOver reads it in brackets. A target link opens with the environment's openURL and is also a named VoiceOver action. A failed undo shows text in the entry as well as the announcement, where the web only announces it. The locale comes from the SwiftUI environment. Marked experimental as an AI product pattern until a Rook app adopts it. Android builds the same component.",
+  "accessibility": [
+    "Each entry is one element read as \"Research agent (AI agent) added a summary to Quarterly report\", built by a tested pure function, so the actor is never mistaken for a person.",
+    "The time, \"Undone\" and a failure are the entry's value.",
+    "A target link is a named accessibility action, \"Open Quarterly report\".",
+    "The agent avatar is decorative.",
+    "Undo buttons are named per entry (\"Undo: Research agent added a summary to Quarterly report\") and keep a 44-point touch target.",
+    "A successful undo and a failed undo are posted as announcements.",
+    "The list is a container named \"AI activity\"."
+  ],
+  "edgeCases": [
+    "A blank target is left out of the sentence and the spoken text.",
+    "Only http and https target URLs become links; others, such as javascript: or file:, show as text.",
+    "An entry with isUndone has no Undo even when isUndoable.",
+    "The log keeps the undone state of entries it reversed until the app passes entries with isUndone; it does not remove them.",
+    "A pageSize below one shows one entry at a time."
+  ],
+  "tests": [
+    "MonarchAiActionLogTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Log",
+      "fixture": "ai-action-log",
+      "webExample": "Log",
+      "template": "MonarchAiActionLog(\n    [\n        MonarchAiActionLogEntry(\n            id: {{entries.0.id}},\n            date: {{entries.0.at|date}},\n            agent: MonarchAiAgentRef(id: {{entries.0.agent.id}}, name: {{entries.0.agent.name}}),\n            action: {{entries.0.action}},\n            target: {{entries.0.target}},\n            url: URL(string: \"https://example.com/\" + {{entries.0.href}})\n        ),\n        MonarchAiActionLogEntry(\n            id: {{entries.1.id}},\n            date: {{entries.1.at|date}},\n            agent: MonarchAiAgentRef(id: {{entries.1.agent.id}}, name: {{entries.1.agent.name}}),\n            action: {{entries.1.action}}\n        ),\n        MonarchAiActionLogEntry(\n            id: {{entries.2.id}},\n            date: {{entries.2.at|date}},\n            agent: MonarchAiAgentRef(id: {{entries.2.agent.id}}, name: {{entries.2.agent.name}}),\n            action: {{entries.2.action}},\n            target: {{entries.2.target}},\n            isUndone: {{entries.2.undone}}\n        ),\n    ],\n    now: {{now|date}}\n)",
+      "code": "MonarchAiActionLog(\n    [\n        MonarchAiActionLogEntry(\n            id: \"1\",\n            date: Date(timeIntervalSince1970: 1_768_478_160),\n            agent: MonarchAiAgentRef(id: \"research\", name: \"Research agent\"),\n            action: \"added a summary to\",\n            target: \"Quarterly report\",\n            url: URL(string: \"https://example.com/\" + \"#quarterly-report\")\n        ),\n        MonarchAiActionLogEntry(\n            id: \"2\",\n            date: Date(timeIntervalSince1970: 1_768_475_400),\n            agent: MonarchAiAgentRef(id: \"scheduler\", name: \"Scheduling agent\"),\n            action: \"moved the team check-in to Friday\"\n        ),\n        MonarchAiActionLogEntry(\n            id: \"3\",\n            date: Date(timeIntervalSince1970: 1_768_467_600),\n            agent: MonarchAiAgentRef(id: \"research\", name: \"Research agent\"),\n            action: \"tagged\",\n            target: \"12 records\",\n            isUndone: true\n        ),\n    ],\n    now: Date(timeIntervalSince1970: 1_768_478_400)\n)"
+    },
+    {
+      "title": "Empty",
+      "code": "MonarchAiActionLog([])"
+    }
+  ],
+  "webEquivalent": "AiActionLog",
+  "dependsOn": [
+    "ai-agent-avatar",
+    "relative-time",
+    "button",
+    "badge",
+    "empty-state"
+  ],
+  "icons": {
+    "agent.badge": "BotGlyph"
+  }
+}

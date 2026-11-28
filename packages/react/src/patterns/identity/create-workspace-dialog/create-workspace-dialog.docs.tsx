@@ -1,17 +1,21 @@
 import { Button } from '@rookcom/monarch-react';
 import { CreateWorkspaceDialog } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './create-workspace-dialog.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
 function FromSwitcher() {
   return (
     <CreateWorkspaceDialog
-      trigger={<Button variant="primary">Create workspace</Button>}
+      trigger={<Button variant="primary">{fixture.data.trigger}</Button>}
+      defaultOpen
+      defaultValues={{ name: fixture.data.name.value, type: fixture.data.type.value }}
       checkUsername={async (username) => {
         await wait(400);
-        return username.toLowerCase() === 'acme'
-          ? { valid: false, message: 'That username is taken' }
+        return username.toLowerCase() === fixture.data.username.taken
+          ? { valid: false, message: fixture.data.username.takenMessage }
           : { valid: true };
       }}
       onSubmit={async () => {
@@ -29,7 +33,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'People who already have a workspace create another from the workspace switcher without leaving the page. CreateWorkspaceDialog puts WorkspaceOnboardingForm in a dialog with Cancel, keeps it open while the workspace is created and closes it when that succeeds. Needed by: App, Atlas, Base, Calendar, Chat, Developers, Dossier, Dots, Friends, GTM, Intellect, People, Pulse, Ranker, Recruit, Signal, Stride and Tickets (workspace switcher).',
+        'People who already have a workspace create another from the workspace switcher without leaving the page. CreateWorkspaceDialog puts WorkspaceOnboardingForm in a dialog with Cancel, keeps it open while the workspace is created and closes it when that succeeds. Needed by: App, Atlas, Base, Calendar, Chat, Developers, Dossier, Dots, GTM, Intellect, Partner, People, Pulse, Ranker, Recruit, Signal, Stride and Tickets (workspace switcher).',
       useWhen: ['"Create workspace" from a workspace switcher or account menu.'],
       avoidWhen: [
         'The first workspace during onboarding: put WorkspaceOnboardingForm on the page.',
@@ -115,7 +119,13 @@ export default {
       ],
     },
     examples: {
-      items: [{ title: 'From a workspace switcher', render: () => <FromSwitcher /> }],
+      items: [
+        {
+          title: 'From a workspace switcher',
+          stage: { align: 'center' },
+          render: () => <FromSwitcher />,
+        },
+      ],
     },
     doDont: {
       do: [

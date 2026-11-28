@@ -28,6 +28,22 @@ function Controlled(props: { onReset?: () => void; showAll?: boolean }) {
 }
 
 describe('ColumnMenu', () => {
+  it('opens from the controlled open prop and reports changes', async () => {
+    const onOpenChange = vi.fn();
+    render(
+      <ColumnMenu
+        columns={COLUMNS}
+        visibility={{}}
+        onVisibilityChange={() => {}}
+        open
+        onOpenChange={onOpenChange}
+      />,
+    );
+    expect(await screen.findByRole('menu')).toBeTruthy();
+    await userEvent.keyboard('{Escape}');
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
   it('opens from the keyboard and toggles columns while staying open', async () => {
     const user = userEvent.setup();
     render(<Controlled />);

@@ -4,6 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToString } from 'react-dom/server';
 import { expectNoA11yViolations } from '../../../../test/a11y.js';
+import { OverlayStage } from '../../../internal/overlay-stage.js';
 import {
   EditableCell,
   parseEditableCellDraft,
@@ -28,6 +29,24 @@ function Controlled(props: Partial<EditableCellProps> & { initial?: EditableCell
 }
 
 describe('EditableCell', () => {
+  it('starts in edit mode without taking focus inside a docs stage', async () => {
+    render(
+      <OverlayStage>
+        <EditableCell label="Title" value="Quarterly review" defaultEditing onCommit={() => {}} />
+      </OverlayStage>,
+    );
+    const input = screen.getByRole('textbox', { name: 'Title' });
+    expect((input as HTMLInputElement).value).toBe('Quarterly review');
+    expect(document.activeElement).not.toBe(input);
+  });
+
+  it('takes focus when it starts in edit mode outside a stage', () => {
+    render(
+      <EditableCell label="Title" value="Quarterly review" defaultEditing onCommit={() => {}} />,
+    );
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Title' }));
+  });
+
   it('opens with Enter, saves with Enter and returns focus to the cell', async () => {
     const user = userEvent.setup();
     const onCommit = vi.fn();

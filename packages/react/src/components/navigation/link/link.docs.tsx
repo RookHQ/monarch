@@ -1,5 +1,15 @@
 import { Link } from '@rookcom/monarch-react';
 import { incomplete, type ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './link.fixture.json';
+
+type Variant = 'inline' | 'standalone' | 'subtle';
+const links = fixture.data.links as unknown as readonly [
+  { label: string; variant: Variant },
+  { label: string; variant: Variant },
+  { label: string; variant: Variant },
+  { label: string; variant: Variant; href: string },
+];
 
 export default {
   id: 'link',
@@ -78,15 +88,17 @@ export default {
           title: 'Variants and external',
           render: () => (
             <>
-              <Link href="#/components/link">Inline link</Link>
-              <Link href="#/components/link" variant="standalone">
-                Standalone link
+              <Link href="#/components/link" variant={links[0].variant}>
+                {links[0].label}
               </Link>
-              <Link href="#/components/link" variant="subtle">
-                Subtle link
+              <Link href="#/components/link" variant={links[1].variant}>
+                {links[1].label}
               </Link>
-              <Link href="https://rookhq.com" target="_blank">
-                Rook website
+              <Link href="#/components/link" variant={links[2].variant}>
+                {links[2].label}
+              </Link>
+              <Link href={links[3].href} variant={links[3].variant} target="_blank">
+                {links[3].label}
               </Link>
             </>
           ),

@@ -20,6 +20,40 @@ export default {
 `;
 
 describe('extractExamples', () => {
+  it('writes the values of a parity fixture inline and drops the fixture import and aliases', () => {
+    const fixture = {
+      data: {
+        items: [
+          { tone: 'info', title: 'Sync scheduled', body: 'Refreshes every 15 minutes.' },
+          { tone: 'warning', title: 'Say "hi"' },
+        ],
+        rows: [{ id: 'a', spent: 2310 }],
+      },
+    };
+    const [ex] = extractExamples(
+      'demo.docs.tsx',
+      doc(
+        `{ items: [{ title: 'Fixture', render: () => (
+        <>
+          <Button data-tone={items[0].tone} title={items[0].title}>{items[0].body}</Button>
+          <Button title={items[1].title} value={fixture.data.rows} />
+        </>
+      ) }] }`,
+        "import fixture from './demo.fixture.json';\nconst items = fixture.data.items;",
+      ),
+      { readFixture: () => fixture },
+    );
+    expect(ex?.code).toBe(
+      [
+        "import { Button } from '@rookcom/monarch-react';",
+        [
+          '<Button data-tone="info" title="Sync scheduled">Refreshes every 15 minutes.</Button>',
+          `<Button title={'Say "hi"'} value={[\n  { id: 'a', spent: 2310 },\n]} />`,
+        ].join('\n'),
+      ].join('\n\n'),
+    );
+  });
+
   it('returns the render body with its imports, unwrapping a fragment', () => {
     const [ex] = extractExamples(
       'demo.docs.tsx',

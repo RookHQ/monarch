@@ -7,19 +7,13 @@ import {
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { PencilIcon, SearchIcon, GearIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-mode-switcher.fixture.json';
 
-const MODES: AiMode[] = [
-  { id: 'ask', label: 'Ask', description: 'Answers questions. Changes nothing.' },
-  { id: 'edit', label: 'Edit', description: 'Proposes edits you review before they apply.' },
-  {
-    id: 'agent',
-    label: 'Agent',
-    description: 'Works through steps and uses tools. Asks before anything risky.',
-  },
-];
+const MODES: AiMode[] = fixture.data.modes;
 
 function Demo() {
-  const [mode, setMode] = useState('ask');
+  const [mode, setMode] = useState(fixture.data.selected);
   return <AiModeSwitcher modes={MODES} value={mode} onChange={setMode} />;
 }
 

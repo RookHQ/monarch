@@ -146,6 +146,10 @@ export interface AiArtifactCanvasProps extends Omit<
   onVersionChange?: ((version: number) => void) | undefined;
   /** Shows "Compare with previous" in the stepper (see AiArtifactVersions). */
   onCompare?: ((from: number, to: number) => void) | undefined;
+  /** BCP 47 locale for the version dates. Default: the runtime locale. */
+  locale?: string | undefined;
+  /** IANA time zone for the version dates; pass it for identical server rendering. */
+  timeZone?: string | undefined;
   /** Whether the canvas is shown. */
   open: boolean;
   /** Called with `false` by the close button and by Escape. */
@@ -226,6 +230,8 @@ export const AiArtifactCanvas = forwardRef<HTMLElement, AiArtifactCanvasProps>(
       versions,
       onVersionChange,
       onCompare,
+      locale,
+      timeZone,
       open,
       onOpenChange,
       onCopy,
@@ -410,6 +416,8 @@ export const AiArtifactCanvas = forwardRef<HTMLElement, AiArtifactCanvasProps>(
             value={artifact.version}
             onChange={onVersionChange}
             onCompare={onCompare}
+            locale={locale}
+            timeZone={timeZone}
           />
         ) : null}
         <div className="mn-ai-artifact-canvas__actions">

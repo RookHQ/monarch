@@ -10,7 +10,7 @@ export interface MarketingHeroProps extends Omit<HTMLAttributes<HTMLElement>, 't
   lead?: ReactNode;
   /** One primary Button and at most one secondary action. */
   actions?: ReactNode;
-  /** Small reassurance under the actions, e.g. "Free for teams of five". */
+  /** Small reassurance under the actions, e.g. "Set up in under five minutes". */
   note?: ReactNode;
   /** Product illustration, normally a ProductFrame. */
   media?: ReactNode;

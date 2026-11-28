@@ -8,6 +8,8 @@ import {
   type AiAgentDefinition,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-agent-builder.fixture.json';
 
 const transport = mockTransport({
   delayMs: 40,
@@ -24,34 +26,29 @@ const transport = mockTransport({
   },
 });
 
-const TOOLS = [
-  { id: 'search', name: 'Search documents', description: 'Reads documents the agent can see.' },
-  { id: 'tasks', name: 'Create tasks', description: 'Asks before creating anything.' },
-  { id: 'email', name: 'Draft email', description: 'Drafts only; never sends.' },
-];
+const TOOLS = fixture.data.tools;
 
+const [handbook, tickets] = fixture.data.sources as [
+  {
+    id: string;
+    label: string;
+    children: [{ id: string; label: string }, { id: string; label: string }];
+  },
+  { id: string; label: string },
+];
 const SOURCES = [
   {
-    id: 'handbook',
-    label: 'Team handbook',
+    id: handbook.id,
+    label: handbook.label,
     kind: 'space' as const,
-    children: [
-      { id: 'onboarding', label: 'Onboarding guide', kind: 'doc' as const },
-      { id: 'policies', label: 'Policies', kind: 'doc' as const },
-    ],
+    children: handbook.children.map((c) => ({ id: c.id, label: c.label, kind: 'doc' as const })),
   },
-  { id: 'tickets', label: 'Support tickets', kind: 'app' as const },
+  { id: tickets.id, label: tickets.label, kind: 'app' as const },
 ];
 
 function Demo() {
   const chat = useAiConversation({ transport });
-  const [saved, setSaved] = useState<AiAgentDefinition>({
-    name: 'Onboarding guide',
-    role: 'Helps new teammates find answers',
-    instructions: 'Answer from the team handbook. Keep answers short and link the source.',
-    tools: ['search'],
-    knowledge: ['handbook'],
-  });
+  const [saved, setSaved] = useState<AiAgentDefinition>(fixture.data.agent);
   const [draft, setDraft] = useState(saved);
   return (
     <div style={{ width: '100%' }}>

@@ -1,5 +1,15 @@
 import { RelativeTime } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './relative-time.fixture.json';
+
+type Line = { prefix: string; date: string };
+const [edited, synced, renews, created] = fixture.data.lines as unknown as readonly [
+  Line,
+  Line,
+  Line,
+  Line,
+];
 
 // A fixed reference time keeps the examples (and their visual baselines) stable.
 const NOW = Date.UTC(2026, 10, 3, 12, 0, 0);
@@ -130,22 +140,39 @@ export default {
           render: () => (
             <>
               <div>
-                Edited <RelativeTime date={NOW - 3 * MIN} now={NOW} locale="en-GB" timeZone="UTC" />
-              </div>
-              <div>
-                Synced{' '}
-                <RelativeTime date={NOW - 5 * HOUR} now={NOW} locale="en-GB" timeZone="UTC" />
-              </div>
-              <div>
-                Renews <RelativeTime date={NOW + 2 * DAY} now={NOW} locale="en-GB" timeZone="UTC" />
-              </div>
-              <div>
-                Created{' '}
+                {edited.prefix}{' '}
                 <RelativeTime
-                  date={NOW - 40 * DAY}
-                  now={NOW}
-                  locale="en-GB"
-                  timeZone="UTC"
+                  date={Date.parse(edited.date)}
+                  now={Date.parse(fixture.data.now)}
+                  locale={fixture.data.locale}
+                  timeZone={fixture.data.timeZone}
+                />
+              </div>
+              <div>
+                {synced.prefix}{' '}
+                <RelativeTime
+                  date={Date.parse(synced.date)}
+                  now={Date.parse(fixture.data.now)}
+                  locale={fixture.data.locale}
+                  timeZone={fixture.data.timeZone}
+                />
+              </div>
+              <div>
+                {renews.prefix}{' '}
+                <RelativeTime
+                  date={Date.parse(renews.date)}
+                  now={Date.parse(fixture.data.now)}
+                  locale={fixture.data.locale}
+                  timeZone={fixture.data.timeZone}
+                />
+              </div>
+              <div>
+                {created.prefix}{' '}
+                <RelativeTime
+                  date={Date.parse(created.date)}
+                  now={Date.parse(fixture.data.now)}
+                  locale={fixture.data.locale}
+                  timeZone={fixture.data.timeZone}
                   absoluteAfter={7 * DAY}
                   absoluteFormat={{ dateStyle: 'medium' }}
                 />

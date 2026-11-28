@@ -9,6 +9,8 @@ import {
   InputGroupButton,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './input-group.fixture.json';
 
 function SearchDemo() {
   const [query, setQuery] = useState('quarterly report');
@@ -144,12 +146,12 @@ export default {
           stack: true,
           render: () => (
             <Field style={{ width: '100%', maxWidth: 360 }}>
-              <FieldLabel>Website</FieldLabel>
+              <FieldLabel>{fixture.data.label}</FieldLabel>
               <InputGroup>
-                <InputGroupAddon id="website-prefix">https://</InputGroupAddon>
-                <Input aria-describedby="website-prefix" placeholder="example.com" />
+                <InputGroupAddon id="website-prefix">{fixture.data.prefix}</InputGroupAddon>
+                <Input aria-describedby="website-prefix" placeholder={fixture.data.placeholder} />
               </InputGroup>
-              <FieldDescription>Without the protocol.</FieldDescription>
+              <FieldDescription>{fixture.data.description}</FieldDescription>
             </Field>
           ),
         },

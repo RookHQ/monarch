@@ -7,6 +7,8 @@ import {
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { GridIcon, ListIcon, SearchIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-prompt-toolbar.fixture.json';
 
 function InPromptDemo() {
   const [web, setWeb] = useState(false);
@@ -14,15 +16,15 @@ function InPromptDemo() {
   return (
     <div style={{ display: 'grid', gap: 'var(--mn-space-2)', width: '100%', maxWidth: '40rem' }}>
       <AiPromptInput
-        label="Message the assistant"
+        label={fixture.data.label}
         onSubmit={(text) => setSent(`${text}${web ? ' (web search on)' : ''}`)}
         toolbar={
           <AiPromptToolbar>
             <AiPromptToolbarToggle icon={<SearchIcon />} pressed={web} onPressedChange={setWeb}>
-              Search the web
+              {fixture.data.toggle}
             </AiPromptToolbarToggle>
             <AiPromptToolbarButton icon={<ListIcon />} onClick={() => setSent('Templates opened')}>
-              Templates
+              {fixture.data.button}
             </AiPromptToolbarButton>
           </AiPromptToolbar>
         }

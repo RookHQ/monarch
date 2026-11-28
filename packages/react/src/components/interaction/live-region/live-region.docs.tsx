@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { AnnouncerProvider, Button, LiveRegion, useAnnouncer } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './live-region.fixture.json';
 
 function CounterDemo() {
   const [count, setCount] = useState(0);
   return (
     <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-      <Button onClick={() => setCount((c) => c + 1)}>Add item</Button>
+      <Button onClick={() => setCount((c) => c + 1)}>{fixture.data.add}</Button>
       <LiveRegion visuallyHidden={false}>
-        {count === 0 ? 'No items yet.' : `${count} ${count === 1 ? 'item' : 'items'} in the list.`}
+        {count === 0
+          ? fixture.data.empty
+          : `${count} ${count === 1 ? 'item' : 'items'} in the list.`}
       </LiveRegion>
     </div>
   );
@@ -45,7 +49,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'Tells screen-reader users about changes they cannot see happen: results counts, saves, uploads, the steps of a drag. Every Rook app hand-rolls `aria-live` spans today (rook-support-chat, rookatlas, rookbase, rookcalendar, rookchat, rookdevelopers, rookdossier, rookdots, rookfriends, rookid, rookintellect, rookpeople, rookpulse, rookrecruit, rookstride and rooktickets frontends); this is the one shared way. Needed by: all of them, and by SortableGrid, ReorderableList-style widgets and filters.',
+        'Tells screen-reader users about changes they cannot see happen: results counts, saves, uploads, the steps of a drag. Every Rook app hand-rolls `aria-live` spans today (rook-support-chat, rookatlas, rookbase, rookcalendar, rookchat, rookdevelopers, rookdossier, rookdots, rookid, rookintellect, rookpartner, rookpeople, rookpulse, rookrecruit, rookstride and rooktickets frontends); this is the one shared way. Needed by: all of them, and by SortableGrid, ReorderableList-style widgets and filters.',
       useWhen: [
         'Something changed on the page without focus moving: a filter updated the results, an autosave finished, a background job completed.',
         'A widget needs to narrate a keyboard interaction, such as each step of a drag.',

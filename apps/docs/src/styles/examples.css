@@ -73,7 +73,16 @@
 /* Room for an open mega menu panel (the frame clips overflow), only while one is open. */
 .docs-example .docs-example__preview:has(.mn-mega-menu [aria-expanded='true']) {
   justify-content: flex-start;
-  min-height: calc(var(--mn-space-24) * 4 + var(--mn-space-4)); /* 25rem */
+  min-height: calc(
+    var(--mn-space-24) * 6
+  ); /* 36rem: the panel wraps its featured card in a preview */
+}
+/* The panel is sized for a full-width site header; in a preview it spans the preview. */
+.docs-example__preview .mn-mega-menu__panel:not([hidden]) {
+  left: 0;
+  box-sizing: border-box;
+  width: 100%;
+  transform: none;
 }
 .docs-example__bar {
   display: flex;
@@ -105,6 +114,154 @@
   .docs-example[data-size='lg'] .docs-example__preview {
     min-height: calc(var(--mn-space-24) * 2);
     padding: var(--mn-space-8) var(--mn-space-4);
+  }
+}
+
+/* Overlay stage ------------------------------------------------------------
+ * An example with `stage` shows its overlay open, as a picture in the page
+ * (packages/react/src/internal/overlay-stage.tsx): the trigger, then the
+ * floating surface in the flow below it (or above it, `side="top"`), lined up
+ * with the trigger's start, centre or end. Radix positions popups with inline
+ * styles, hence the !important on the popper wrapper.
+ */
+.mn-overlay-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--mn-space-1-5);
+  width: 100%;
+  min-width: 0;
+}
+.mn-overlay-stage[data-side='top'] {
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+}
+.mn-overlay-stage[data-align='center'] {
+  align-items: center;
+}
+.mn-overlay-stage[data-align='end'] {
+  align-items: flex-end;
+}
+.mn-overlay-stage [data-radix-popper-content-wrapper] {
+  /* In the flow the popup is as tall as its content, not the room left in the window. */
+  /* A length, not `none`: components cap lists with min(var(...), 20rem). */
+  --radix-popper-available-height: 100vh !important;
+  position: static !important;
+  min-width: 0 !important;
+  max-width: 100%;
+  transform: none !important;
+  z-index: auto !important;
+}
+/* A component that holds its own trigger and popup (an inline-flex root): stack them too. */
+.mn-overlay-stage :not([style*='flex-wrap: wrap']):has(> [data-radix-popper-content-wrapper]) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--mn-space-1-5);
+}
+/* Opened from one of several triggers in a wrapping row: a line of its own below them. */
+.mn-overlay-stage [style*='flex-wrap: wrap'] > [data-radix-popper-content-wrapper] {
+  order: 1;
+  flex-basis: 100%;
+}
+.mn-overlay-stage[data-align='end']
+  [style*='flex-wrap: wrap']
+  > [data-radix-popper-content-wrapper] {
+  display: flex;
+  justify-content: flex-end;
+}
+.mn-overlay-stage .mn-dialog,
+.mn-overlay-stage .mn-sheet,
+.mn-overlay-stage .mn-lightbox {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  max-width: 100%;
+  transform: none;
+  animation: none;
+}
+.mn-overlay-stage .mn-dialog {
+  max-height: none;
+}
+.mn-overlay-stage .mn-sheet {
+  max-height: none;
+  border-width: var(--mn-space-px);
+  border-radius: var(--mn-radius-xl);
+  box-shadow: var(--mn-shadow-lg);
+}
+.mn-overlay-stage .mn-sheet[data-side='bottom'],
+.mn-overlay-stage .mn-sheet[data-side='top'] {
+  align-self: stretch;
+}
+/* A peek panel floats at the inline end of the window; staged, it is a card in the flow. */
+.mn-overlay-stage .mn-peek-panel[data-placement='overlay'] {
+  position: relative;
+  inset: auto;
+  z-index: auto;
+  max-width: 100%;
+  border: var(--mn-space-px) solid var(--mn-color-border-subtle);
+  border-radius: var(--mn-radius-xl);
+  box-shadow: var(--mn-shadow-lg);
+  animation: none;
+}
+.mn-overlay-stage .mn-lightbox {
+  align-self: stretch;
+  height: calc(var(--mn-space-24) * 4); /* 24rem */
+  border-radius: var(--mn-radius-xl);
+  background: var(--mn-color-overlay-scrim);
+}
+.mn-overlay-stage .mn-popover,
+.mn-overlay-stage .mn-menu,
+.mn-overlay-stage .mn-tooltip {
+  animation: none;
+}
+/* An open Select drawn in place: the list is as wide as its trigger, as Radix sizes it. */
+.mn-overlay-stage:has(> [data-mn-select-picture]) {
+  align-items: stretch;
+  width: fit-content;
+  max-width: 100%;
+}
+/* The toast region sits in the flow; an empty one takes no room. */
+.mn-overlay-stage .mn-toast-viewport {
+  position: static;
+  max-width: 100%;
+  max-height: none;
+  padding: 0;
+}
+.mn-overlay-stage .mn-toast {
+  animation: none;
+}
+/*
+ * Surfaces cap their width at the window (100vw); staged, the preview is the window, so
+ * on a phone they cap at the stage instead: each layer down to the surface is held to it.
+ */
+/* `:where()`: a layer's own max-width (a surface's, a control's) still wins. */
+:where(
+  .mn-overlay-stage > *,
+  .mn-overlay-stage :not([style*='flex-wrap: wrap']):has(> [data-radix-popper-content-wrapper])
+) {
+  max-width: 100%;
+}
+/* A component holding its trigger and popup can shrink to the stage when it sits in a row. */
+.mn-overlay-stage :not([style*='flex-wrap: wrap']):has(> [data-radix-popper-content-wrapper]) {
+  min-width: 0;
+}
+.mn-overlay-stage [data-radix-popper-content-wrapper] > *,
+.mn-overlay-stage .mn-popover,
+.mn-overlay-stage .mn-toast,
+.mn-overlay-stage .mn-peek-panel,
+.mn-overlay-stage .mn-mention-picker {
+  max-width: 100%;
+}
+/* On a phone the cap includes the surface's padding and border, so nothing passes the stage. */
+@media (max-width: 639px) {
+  .mn-overlay-stage [data-radix-popper-content-wrapper] > *,
+  .mn-overlay-stage .mn-popover,
+  .mn-overlay-stage .mn-toast,
+  .mn-overlay-stage .mn-peek-panel,
+  .mn-overlay-stage .mn-mention-picker,
+  .mn-overlay-stage .mn-dialog {
+    box-sizing: border-box;
   }
 }
 

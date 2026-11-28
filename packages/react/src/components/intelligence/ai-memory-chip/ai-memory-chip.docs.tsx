@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { AiMemoryChip, type AiMemory } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-memory-chip.fixture.json';
 
 const sample: AiMemory = {
   id: 'm1',
-  text: 'Prefers summaries under 200 words',
-  entity: { kind: 'person', name: 'Ada Lovelace' },
+  text: fixture.data.text,
+  entity: { kind: 'person', name: fixture.data.entity },
 };
 
 function EditableDemo() {

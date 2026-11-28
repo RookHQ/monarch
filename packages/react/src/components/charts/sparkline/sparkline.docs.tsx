@@ -1,7 +1,14 @@
 import { Sparkline } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './sparkline.fixture.json';
 
-const VISITS = [32, 41, 38, 45, 52, 49, 61, 58, 66, 72];
+const VISITS = fixture.data.values;
+const [line, area, bar] = fixture.data.sparklines as unknown as readonly [
+  { variant: 'line' },
+  { variant: 'area'; color: 1 },
+  { variant: 'bar'; color: 2 },
+];
 const LATENCY = [180, 190, 210, null, 240, 260, 320, 410];
 const RANK = [14, 12, 12, 9, 7, 8, 5, 4];
 const ROW = { display: 'flex', alignItems: 'center', gap: 12, fontSize: 14 } as const;
@@ -134,9 +141,9 @@ export default {
           title: 'Line, area and sparkbar',
           render: () => (
             <>
-              <Sparkline values={VISITS} />
-              <Sparkline values={VISITS} variant="area" color={1} />
-              <Sparkline values={VISITS} variant="bar" color={2} />
+              <Sparkline values={VISITS} variant={line.variant} />
+              <Sparkline values={VISITS} variant={area.variant} color={area.color} />
+              <Sparkline values={VISITS} variant={bar.variant} color={bar.color} />
             </>
           ),
         },

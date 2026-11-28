@@ -3,8 +3,10 @@ import { Badge, Button, SectionHeaderLink } from '@rookcom/monarch-react';
 import { SectionCard, type SectionCardState } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { ClockIcon, PlusIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './section-card.fixture.json';
 
-const tasks = ['Draft the launch brief', 'Review pricing copy', 'Book the kickoff call'];
+const data = fixture.data;
 
 function StatesDemo() {
   const [state, setState] = useState<SectionCardState>('loading');
@@ -171,24 +173,24 @@ export default {
           stack: true,
           render: () => (
             <SectionCard
-              title="Open tasks"
-              description="Assigned to you this week."
-              meta={<Badge>3</Badge>}
+              title={data.title}
+              description={data.description}
+              meta={<Badge>{data.meta}</Badge>}
               icon={<ClockIcon />}
               actions={
                 <Button size="xs" leadingIcon={<PlusIcon />}>
-                  Add
+                  {data.addLabel}
                 </Button>
               }
               link={
                 <SectionHeaderLink href="#/components/section-card">
-                  View all tasks
+                  {data.linkLabel}
                 </SectionHeaderLink>
               }
-              footer={<span>Updated just now</span>}
+              footer={<span>{data.footer}</span>}
             >
               <ul style={{ margin: 0, paddingInlineStart: '1.25rem' }}>
-                {tasks.map((t) => (
+                {data.tasks.map((t) => (
                   <li key={t}>{t}</li>
                 ))}
               </ul>

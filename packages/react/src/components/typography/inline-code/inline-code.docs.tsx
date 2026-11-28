@@ -1,5 +1,14 @@
 import { InlineCode, Text } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './inline-code.fixture.json';
+
+/** Text with `code` spans written in backticks, as the native components read it. */
+function withCode(markdown: string) {
+  return markdown
+    .split('`')
+    .map((part, i) => (i % 2 === 1 ? <InlineCode key={i}>{part}</InlineCode> : part));
+}
 
 export default {
   id: 'inline-code',
@@ -8,7 +17,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'Marks a function name, path, command or value inside a sentence with a native `<code>` in the monospace font. Replaces the hand-styled `<code className="rounded bg-muted px-1 …">` found across the apps. Needed by: Rook Developers (API docs), Rook Tickets, Rook Recruit, Rook GTM, Rook Pulse, Rook People, Rook Friends, Rook Chat.',
+        'Marks a function name, path, command or value inside a sentence with a native `<code>` in the monospace font. Replaces the hand-styled `<code className="rounded bg-muted px-1 …">` found across the apps. Needed by: Rook Developers (API docs), Rook Tickets, Rook Recruit, Rook GTM, Rook Pulse, Rook People, Rook Partner, Rook Chat.',
       useWhen: [
         'A short piece of code, an identifier or a literal value appears inside a sentence or a table cell.',
         'Telling people exactly what to type: a command, a key name in a config, a template variable.',
@@ -78,12 +87,9 @@ export default {
           stack: true,
           render: () => (
             <>
-              <Text>
-                Set <InlineCode>timeout</InlineCode> to a number of seconds, then run{' '}
-                <InlineCode>npm run sync</InlineCode>.
-              </Text>
+              <Text>{withCode(fixture.data.lines[0] ?? '')}</Text>
               <Text size="sm" tone="muted">
-                The file is saved to <InlineCode>exports/2026/report.csv</InlineCode>.
+                {withCode(fixture.data.lines[1] ?? '')}
               </Text>
             </>
           ),

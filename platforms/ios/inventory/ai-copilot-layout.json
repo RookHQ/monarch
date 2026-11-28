@@ -1,0 +1,144 @@
+{
+  "id": "ai-copilot-layout",
+  "name": null,
+  "title": "AiCopilotLayout",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "View.monarchAiAssistantPanel(isPresented:panel:) on the app content, which presents MonarchAiAssistantPanel as an .inspector beside the content in a regular width and as a .sheet with .presentationDetents([.medium, .large]) in a compact width; MonarchAiLauncher in .safeAreaInset(edge: .bottom, alignment: .trailing) of the content, hidden while the inspector is shown (@Environment(\\.horizontalSizeClass)); the selection sent through MonarchAiConversation.body from .onChange(of:initial:)",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the app's content with an assistant docked beside it as an inspector on iPad and opened as a sheet on iPhone, where the assistant sees what the person selected on the page.",
+  "whenToUse": "An app screen where the assistant should act on the rows, text or records the person has selected, and the content should make room for the assistant on a wide window instead of being covered.",
+  "whenNotToUse": "A full-screen chat with history: use the ai-chat-page recipe. An assistant that never needs page context: MonarchAiAssistantPanel opened from MonarchAiLauncher with .monarchAiAssistantPanel(isPresented:panel:) is enough.",
+  "api": [
+    "content.monarchAiAssistantPanel(isPresented: $isAssistantOpen) { MonarchAiAssistantPanel(title, conversation: conversation, isPresented: $isAssistantOpen, prompt: $draft, context: page and selection chips, starters:, onRemoveContext: { id in if id == \"selection\" { selected = [] } }, headerActions: {}, toolbar: {}, footer: { MonarchAiDisclaimer() }) }",
+    ".safeAreaInset(edge: .bottom, alignment: .trailing) { if !(horizontalSizeClass == .regular && isAssistantOpen) { MonarchAiLauncher(isOpen: $isAssistantOpen) } } on the content",
+    ".onChange(of: selected, initial: true) { _, selection in conversation.body = [\"selection\": .array([.object([\"label\": .string(\"Selected\"), \"text\": .string(selection.joined(separator: \"; \"))])])] } so the selection is sent with the next prompt (an empty selection sets [:])"
+  ],
+  "options": [
+    {
+      "name": "conversation",
+      "type": "MonarchAiConversation",
+      "default": "required",
+      "description": "The conversation the assistant shows and sends to, held above the navigation so it survives moving between screens."
+    },
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The assistant's heading, such as \"Assistant\", passed to MonarchAiAssistantPanel."
+    },
+    {
+      "name": "isAssistantOpen",
+      "type": "Bool (app state)",
+      "default": "false",
+      "description": "Whether the assistant is shown; set by MonarchAiLauncher (and its Command-J shortcut), the panel's Close (and Escape), and a swipe down on the sheet."
+    },
+    {
+      "name": "draft",
+      "type": "String (app state)",
+      "default": "\"\"",
+      "description": "The prompt draft, hoisted because a sheet's content is rebuilt each time it opens and the panel moves between sheet and inspector when the width class changes."
+    },
+    {
+      "name": "content",
+      "type": "some View",
+      "default": "required",
+      "description": "The app screen. It writes the selection; the inspector sits beside it in a regular width and the sheet covers it in a compact width."
+    },
+    {
+      "name": "selected",
+      "type": "[String] (app state)",
+      "default": "[]",
+      "description": "What the person selected on the page. Shown as a Selection chip after the always-present chips and sent under the selection request field as label and text objects, as the web's body.selection is."
+    },
+    {
+      "name": "context",
+      "type": "[MonarchAiContextItem]",
+      "default": "[]",
+      "description": "Chips that always show, such as the current page (isRemovable: false); the selection chip follows them."
+    },
+    {
+      "name": "onRemoveContext",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Removing the selection chip clears the selection, so nothing is sent."
+    },
+    {
+      "name": "launcher",
+      "type": "MonarchAiLauncher",
+      "default": "shown",
+      "description": "Leave it out when the app opens the assistant from its own toolbar button (a subtle MonarchAiLauncher in a ToolbarItem)."
+    },
+    {
+      "name": "starters / headerActions / toolbar / footer",
+      "type": "MonarchAiAssistantPanel parameters",
+      "default": "none",
+      "description": "Passed straight to the panel, as the web's panelProps are."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "The content uses the full width; the launcher shows at the bottom trailing corner."
+    },
+    {
+      "name": "docked open",
+      "description": "In a regular width (iPad full screen and wide split views) the assistant is a system inspector column at the trailing edge and the content reflows beside it; the launcher hides; Close or Escape closes it."
+    },
+    {
+      "name": "sheet open",
+      "description": "In a compact width the assistant is a system sheet at the medium detent over the content, which the person can drag to large; a swipe down, Close or Escape closes it. The launcher stays under the sheet."
+    },
+    {
+      "name": "with selection",
+      "description": "A Selection chip with the count of selected rows shows above the prompt input, and the selection goes in the request body of the next prompt; removing the chip clears it."
+    }
+  ],
+  "appearance": "Every part is an existing component or system container: the system inspector or sheet, MonarchAiAssistantPanel on the surface colour, MonarchAiLauncher in its solid accent form, a system List with Monarch checkbox toggles, and the app's content in the Monarch theme. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships AiCopilotLayout as one component with a React selection context (useAiSelectionContext), a side option, a 24rem rail of at most 45%, a full-screen sheet under 640px and a launcher with Cmd+J or Ctrl+J. On iOS it is a recipe, as on Android: the selection is ordinary app state the screen writes, shown as a MonarchAiContextItem chip and sent by setting MonarchAiConversation.body, so no context object is needed. Android docks the assistant in the supporting pane of SupportingPaneScaffold from the expanded width class; iOS uses the system .inspector through .monarchAiAssistantPanel(isPresented:panel:), which is what Apple's apps use for supporting content: it sits at the trailing edge with a system width, so there is no side option, and it follows the regular horizontal size class rather than a width breakpoint (iPad full screen and wide split views dock; iPhone and narrow Slide Over or split views use the sheet). The phone form is the panel's sheet with the medium and large detents, where Android uses a full-height ModalBottomSheet. Android's BackHandler is not needed: the sheet closes with a swipe and the inspector with Close. The keyboard shortcut is offered because MonarchAiLauncher carries Command-J by default, so a hardware keyboard opens the assistant; while the inspector shows the launcher is hidden and Escape (Close's cancel shortcut) closes it, so Command-J does not toggle it closed as the web's does. The web moves focus to the input on open and back to the launcher on close; here the input is not focused on open (the panel's choice, as Android) and the system sheet and inspector manage focus on close. The web's clearSelectionOnSend and panelProps.onSend become app code: clear the selection after send, or use the panel initialiser that takes messages and onSend. The selection on the page uses Toggle with .monarchCheckbox in a List, as Android's MonarchCheckboxRow; a table with many rows can use List(selection:) with EditMode instead.",
+  "accessibility": [
+    "MonarchAiLauncher is a button named by its label that states whether the assistant is open, with Command-J as its keyboard shortcut.",
+    "MonarchAiAssistantPanel's title is a header (the navigation title of the sheet, or a heading of the inspector pane); its Close button is named \"Close assistant\" and carries the Escape shortcut while no reply runs.",
+    "What the assistant will receive is visible before sending: the Selection chip names the number of selected rows, reads the selected rows as its hint, and can be removed; the page chip cannot.",
+    "The selection on the page is made with Toggle and .monarchCheckbox, whose whole row toggles and reads its checked state.",
+    "The sheet closes with the system swipe down; the inspector closes with Close.",
+    "Replies, errors and the offline notice are announced by the panel's MonarchAiThread."
+  ],
+  "edgeCases": [
+    "The panel's thread scrolls itself: give the layout a bounded height (the screen, or a fixed height in a scrolling page) and never put it in a vertically scrolling parent. The content may scroll itself.",
+    "Setting conversation.body replaces the conversation's own request fields; an app that uses them merges its fields with the selection.",
+    "A prompt queued while offline is sent with the body at the moment it leaves the queue, so a selection changed in between goes with it.",
+    "Crossing the width class while open (rotating an iPad in a split view, resizing a window) moves the panel between the inspector and the sheet; the hoisted draft and the conversation keep the text and the messages.",
+    "An empty selection sends no selection field and shows no chip.",
+    "Hiding the launcher reads the environment's horizontal size class, which is the same signal .monarchAiAssistantPanel uses, so the two always agree."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Selection shared with the assistant",
+      "fixture": "ai-copilot-layout",
+      "webExample": "Selection shared with the assistant",
+      "template": "// The page and the assistant side by side, as the web draws them; on a width that cannot hold both, the\n// assistant sits under the page.\nViewThatFits(in: .horizontal) {\n    HStack(alignment: .top, spacing: theme.spacing.space3) {\n        page.frame(maxWidth: .infinity, alignment: .topLeading)\n        if isAssistantOpen {\n            panel.frame(width: 250)\n        } else {\n            MonarchAiLauncher(isOpen: $isAssistantOpen)\n        }\n    }\n    .frame(minWidth: 520, minHeight: 560, alignment: .top)\n    VStack(alignment: .leading, spacing: theme.spacing.space3) {\n        page\n        if isAssistantOpen {\n            panel.frame(height: 540)\n        } else {\n            MonarchAiLauncher(isOpen: $isAssistantOpen)\n        }\n    }\n}\n.padding(theme.spacing.space3)\n.overlay(RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous).stroke(theme.colors.borderSubtle))\n.onChange(of: selected, initial: true) { _, selection in\n    conversation.body = requestBody(for: selection)\n}\n.dynamicTypeSize(.xSmall)\n\n",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n\nprivate struct EchoTransport: MonarchAiTransport {\n    func stream(_ request: MonarchAiTransportRequest) -> MonarchAiEventStream {\n        MonarchAiEventStream { continuation in\n            continuation.yield(.textDelta(\"You asked: \" + (request.messages.last?.text ?? \"\")))\n            continuation.yield(.done())\n            continuation.finish()\n        }\n    }\n}\n\nprivate let rows = [{{rows.0}}, {{rows.1}}, {{rows.2}}, {{rows.3}}]\n\n// Hold the conversation above the navigation so it survives moving between screens.\n@State private var conversation = MonarchAiConversation(transport: EchoTransport())\n@State private var isAssistantOpen = {{assistant.open}}\n@State private var draft = \"\"\n// The page owns the selection; the recipe shows it as a chip and sends it with the next prompt.\n@State private var selected: [String] = []\n\nprivate var page: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space3) {\n        Text({{heading}})\n            .monarchTextStyle(.subheading)\n            .foregroundStyle(theme.colors.textDefault)\n            .accessibilityAddTraits(.isHeader)\n        Text({{description}})\n            .monarchTextStyle(.caption)\n            .foregroundStyle(theme.colors.textMuted)\n        ForEach(rows, id: \\.self) { row in\n            Toggle(row, isOn: isSelected(row))\n                .toggleStyle(.monarchCheckbox)\n        }\n    }\n}\n\nprivate var panel: some View {\n    MonarchAiAssistantPanel(\n            {{assistant.title}},\n            conversation: conversation,\n            isPresented: $isAssistantOpen,\n            prompt: $draft,\n            context: context,\n            starters: [\n                MonarchAiStarterPrompt(id: \"sum\", title: {{assistant.starters.0}}, prompt: {{assistant.starters.0}}),\n                MonarchAiStarterPrompt(id: \"risk\", title: {{assistant.starters.1}}, prompt: {{assistant.starters.1}}),\n            ],\n            onRemoveContext: { id in if id == \"selection\" { selected = [] } },\n            headerActions: {},\n            toolbar: {},\n            footer: {}\n        )\n        .overlay(RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous).stroke(theme.colors.borderSubtle))\n        .clipShape(RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous))\n}\n\nprivate var context: [MonarchAiContextItem] {\n    var items = [MonarchAiContextItem(id: \"page\", kind: .page, label: {{assistant.context}}, isRemovable: false, group: \"Page\")]\n    if !selected.isEmpty {\n        items.append(\n            MonarchAiContextItem(\n                id: \"selection\",\n                kind: .selection,\n                label: selected.count == 1 ? \"1 row\" : \"\\(selected.count) rows\",\n                description: selected.joined(separator: \"; \")\n            )\n        )\n    }\n    return items\n}\n\nprivate func isSelected(_ row: String) -> Binding<Bool> {\n    Binding(\n        get: { selected.contains(row) },\n        set: { isOn in selected = rows.filter { $0 == row ? isOn : selected.contains($0) } }\n    )\n}\n\n// The selection as label and text objects under the selection request field.\nprivate func requestBody(for selection: [String]) -> [String: MonarchAiJSON] {\n    guard !selection.isEmpty else { return [:] }\n    return [\"selection\": .array([.object([\"label\": .string(\"Selected\"), \"text\": .string(selection.joined(separator: \"; \"))])])]\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n\nprivate struct EchoTransport: MonarchAiTransport {\n    func stream(_ request: MonarchAiTransportRequest) -> MonarchAiEventStream {\n        MonarchAiEventStream { continuation in\n            continuation.yield(.textDelta(\"You asked: \" + (request.messages.last?.text ?? \"\")))\n            continuation.yield(.done())\n            continuation.finish()\n        }\n    }\n}\n\nprivate let rows = [\"Northwind renewal\", \"Harbor expansion\", \"Summit pilot\", \"Atlas migration\"]\n\n// Hold the conversation above the navigation so it survives moving between screens.\n@State private var conversation = MonarchAiConversation(transport: EchoTransport())\n@State private var isAssistantOpen = true\n@State private var draft = \"\"\n// The page owns the selection; the recipe shows it as a chip and sends it with the next prompt.\n@State private var selected: [String] = []\n\nprivate var page: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space3) {\n        Text(\"Opportunities\")\n            .monarchTextStyle(.subheading)\n            .foregroundStyle(theme.colors.textDefault)\n            .accessibilityAddTraits(.isHeader)\n        Text(\"Select rows, then ask the assistant about them.\")\n            .monarchTextStyle(.caption)\n            .foregroundStyle(theme.colors.textMuted)\n        ForEach(rows, id: \\.self) { row in\n            Toggle(row, isOn: isSelected(row))\n                .toggleStyle(.monarchCheckbox)\n        }\n    }\n}\n\nprivate var panel: some View {\n    MonarchAiAssistantPanel(\n            \"Assistant\",\n            conversation: conversation,\n            isPresented: $isAssistantOpen,\n            prompt: $draft,\n            context: context,\n            starters: [\n                MonarchAiStarterPrompt(id: \"sum\", title: \"Summarise the selection\", prompt: \"Summarise the selection\"),\n                MonarchAiStarterPrompt(id: \"risk\", title: \"Which one is most at risk?\", prompt: \"Which one is most at risk?\"),\n            ],\n            onRemoveContext: { id in if id == \"selection\" { selected = [] } },\n            headerActions: {},\n            toolbar: {},\n            footer: {}\n        )\n        .overlay(RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous).stroke(theme.colors.borderSubtle))\n        .clipShape(RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous))\n}\n\nprivate var context: [MonarchAiContextItem] {\n    var items = [MonarchAiContextItem(id: \"page\", kind: .page, label: \"Opportunities\", isRemovable: false, group: \"Page\")]\n    if !selected.isEmpty {\n        items.append(\n            MonarchAiContextItem(\n                id: \"selection\",\n                kind: .selection,\n                label: selected.count == 1 ? \"1 row\" : \"\\(selected.count) rows\",\n                description: selected.joined(separator: \"; \")\n            )\n        )\n    }\n    return items\n}\n\nprivate func isSelected(_ row: String) -> Binding<Bool> {\n    Binding(\n        get: { selected.contains(row) },\n        set: { isOn in selected = rows.filter { $0 == row ? isOn : selected.contains($0) } }\n    )\n}\n\n// The selection as label and text objects under the selection request field.\nprivate func requestBody(for selection: [String]) -> [String: MonarchAiJSON] {\n    guard !selection.isEmpty else { return [:] }\n    return [\"selection\": .array([.object([\"label\": .string(\"Selected\"), \"text\": .string(selection.joined(separator: \"; \"))])])]\n}",
+      "code": "// The page and the assistant side by side, as the web draws them; on a width that cannot hold both, the\n// assistant sits under the page.\nViewThatFits(in: .horizontal) {\n    HStack(alignment: .top, spacing: theme.spacing.space3) {\n        page.frame(maxWidth: .infinity, alignment: .topLeading)\n        if isAssistantOpen {\n            panel.frame(width: 250)\n        } else {\n            MonarchAiLauncher(isOpen: $isAssistantOpen)\n        }\n    }\n    .frame(minWidth: 520, minHeight: 560, alignment: .top)\n    VStack(alignment: .leading, spacing: theme.spacing.space3) {\n        page\n        if isAssistantOpen {\n            panel.frame(height: 540)\n        } else {\n            MonarchAiLauncher(isOpen: $isAssistantOpen)\n        }\n    }\n}\n.padding(theme.spacing.space3)\n.overlay(RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous).stroke(theme.colors.borderSubtle))\n.onChange(of: selected, initial: true) { _, selection in\n    conversation.body = requestBody(for: selection)\n}\n.dynamicTypeSize(.xSmall)\n\n"
+    }
+  ],
+  "webEquivalent": "AiCopilotLayout",
+  "dependsOn": [
+    "ai-assistant-panel",
+    "ai-launcher",
+    "peek-panel"
+  ],
+  "icons": {
+    "assistant": "BotGlyph",
+    "collapse": "ChevronRightGlyph",
+    "close": "CloseGlyph"
+  }
+}

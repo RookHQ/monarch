@@ -1,0 +1,73 @@
+{
+  "id": "dialog",
+  "name": null,
+  "title": "Dialog",
+  "family": "overlays",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "alert(_:isPresented:actions:message:) for a message; sheet(isPresented:onDismiss:content:) for content",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A modal is the system alert for a short message and the system sheet for content. Inside a Monarch theme the sheet's content uses Monarch components and colours. Monarch ships nothing.",
+  "whenToUse": "Use alert to tell the person something or ask a short question. Use sheet for a focused task with its own controls: a form, a picker, details. Put Cancel and the confirming action in the sheet's toolbar.",
+  "whenNotToUse": "Do not draw a centred dialog box over a dimmed screen yourself. For a short bottom panel see drawer; for a destructive confirmation see confirm-dialog.",
+  "api": [
+    "func alert(_ title: String, isPresented: Binding<Bool>, actions: () -> some View, message: () -> some View) -> some View",
+    "func sheet(isPresented: Binding<Bool>, onDismiss: (() -> Void)? = nil, content: @escaping () -> some View) -> some View",
+    "func interactiveDismissDisabled(_ isDisabled: Bool = true) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "alert",
+      "description": "Centred over a dimmed screen, with a title, a message and up to a few buttons."
+    },
+    {
+      "name": "sheet",
+      "description": "A card that covers most of the screen on iPhone and is a centred form sheet on iPad."
+    },
+    {
+      "name": "dismissal blocked",
+      "description": "With interactiveDismissDisabled the sheet does not close on a swipe; a button must close it."
+    }
+  ],
+  "appearance": "The system draws the alert and the sheet's card, corners and dimming. The sheet's content is the app's: give it a theme background such as bgCanvas and it follows the four themes, because a sheet inherits the environment of the view that presents it, including the Monarch theme.",
+  "platformNotes": "The web Dialog is one component with sizes, a footer, a close button with closeLabel, busy, closeOnOutsideClick, escapeGuard and fullScreenOnPhone. On iOS the size is the system's (presentationDetents changes a sheet's height, see drawer), the footer is the navigation toolbar of a NavigationStack inside the sheet, the close button is a toolbar button, escapeGuard is interactiveDismissDisabled, and fullScreenOnPhone is fullScreenCover. Focus trapping and focus return are the system's (see focus-trap). Android uses a Material Dialog or a full-screen dialog.",
+  "accessibility": [
+    "System behaviour: alerts and sheets are modal; VoiceOver, Switch Control and the keyboard are confined to them.",
+    "System behaviour: focus returns to the presenting screen on dismissal.",
+    "System behaviour: the escape gesture dismisses a sheet and chooses Cancel in an alert.",
+    "Give a sheet a navigation title so it is announced, and a visible button that closes it."
+  ],
+  "edgeCases": [
+    "A sheet presented from a sheet stacks; avoid more than two levels.",
+    "State changed in a sheet is not saved by dismissal; apply it in the confirming action or in onDismiss.",
+    "Alerts cannot contain custom views other than text fields and buttons."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Confirmation",
+      "fixture": "dialog",
+      "webExample": "Confirmation",
+      "template": "MonarchButton({{trigger}}, variant: .danger) { isShown = true }\n    .sheet(isPresented: $isShown) {\n        VStack(alignment: .leading, spacing: 0) {\n            VStack(alignment: .leading, spacing: theme.spacing.space3) {\n                HStack(alignment: .firstTextBaseline) {\n                    Text({{title}}).monarchTextStyle(.heading).accessibilityAddTraits(.isHeader)\n                    Spacer()\n                    Button { isShown = false } label: { Image(systemName: \"xmark\") }\n                        .buttonStyle(.plain)\n                        .foregroundStyle(theme.colors.textMuted)\n                        .accessibilityLabel(\"Close\")\n                }\n                Text({{description}}).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                Text({{body}}).monarchTextStyle(.body).padding(.top, theme.spacing.space2)\n            }\n            .padding(theme.spacing.space6)\n            Divider()\n            HStack(spacing: theme.spacing.space2) {\n                Spacer()\n                MonarchButton({{cancel}}, variant: .secondary) { isShown = false }\n                MonarchButton({{confirm}}, variant: .danger) { isShown = false }\n            }\n            .padding(theme.spacing.space4)\n            .background(theme.colors.bgSubtle.ignoresSafeArea(edges: .bottom))\n        }\n        .presentationDetents([.height(280)])\n        .presentationBackground(theme.colors.bgSurface)\n        .presentationCornerRadius(12)\n    }",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isShown = true",
+      "previewPresented": [
+        "isShown"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isShown = true",
+      "code": "MonarchButton(\"Delete project\", variant: .danger) { isShown = true }\n    .sheet(isPresented: $isShown) {\n        VStack(alignment: .leading, spacing: 0) {\n            VStack(alignment: .leading, spacing: theme.spacing.space3) {\n                HStack(alignment: .firstTextBaseline) {\n                    Text(\"Delete project?\").monarchTextStyle(.heading).accessibilityAddTraits(.isHeader)\n                    Spacer()\n                    Button { isShown = false } label: { Image(systemName: \"xmark\") }\n                        .buttonStyle(.plain)\n                        .foregroundStyle(theme.colors.textMuted)\n                        .accessibilityLabel(\"Close\")\n                }\n                Text(\"This removes all tasks and sprints. It cannot be undone.\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                Text(\"Type the project name to confirm.\").monarchTextStyle(.body).padding(.top, theme.spacing.space2)\n            }\n            .padding(theme.spacing.space6)\n            Divider()\n            HStack(spacing: theme.spacing.space2) {\n                Spacer()\n                MonarchButton(\"Cancel\", variant: .secondary) { isShown = false }\n                MonarchButton(\"Delete\", variant: .danger) { isShown = false }\n            }\n            .padding(theme.spacing.space4)\n            .background(theme.colors.bgSubtle.ignoresSafeArea(edges: .bottom))\n        }\n        .presentationDetents([.height(280)])\n        .presentationBackground(theme.colors.bgSurface)\n        .presentationCornerRadius(12)\n    }"
+    },
+    {
+      "title": "Content in a sheet, with Cancel and Save in the toolbar",
+      "code": "MonarchButton(\"Edit the profile\", variant: .primary) { isEditing = true }\n    .sheet(isPresented: $isEditing) {\n        NavigationStack {\n            VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                MonarchTextField(\"Name\", text: $name)\n                Spacer()\n            }\n            .padding(theme.spacing.space4)\n            .background(theme.colors.bgCanvas)\n            .navigationTitle(\"Edit profile\")\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button(\"Cancel\") { isEditing = false }\n                }\n                ToolbarItem(placement: .confirmationAction) {\n                    Button(\"Save\") { isEditing = false }\n                }\n            }\n        }\n    }",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isEditing = false\n@State private var name = \"Ada Lovelace\""
+    }
+  ],
+  "webEquivalent": "Dialog",
+  "dependsOn": []
+}

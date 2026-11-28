@@ -1,0 +1,164 @@
+{
+  "id": "connected-apps-list",
+  "name": "MonarchConnectedAppsList",
+  "title": "ConnectedAppsList",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of rows with dividers; alert(_:isPresented:presenting:actions:message:) with Button(role: .destructive) to confirm removal; RelativeDateTimeFormatter for times; redacted(reason: .placeholder) while loading",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The apps a person signed in to with their account: logo, name, domain, verified or suspended badges, when it was connected and last used, the workspace and what it can access, with Remove access behind a confirmation.",
+  "whenToUse": "On an account's security or privacy settings screen, so people can see which apps use their account and remove access.",
+  "whenNotToUse": "Not for the devices or browsers signed in to the account, and not for third-party integrations a workspace installs; use a plain List for those.",
+  "api": [
+    "init(_ apps: [MonarchConnectedApp], state: MonarchConnectedAppsListState = .ready, title: String? = nil, description: String? = nil, isRetrying: Bool = false, confirmsRevoke: Bool = true, now: Date? = nil, labels: MonarchConnectedAppsListLabels = MonarchConnectedAppsListLabels(), onRetry: (@MainActor () -> Void)? = nil, onRevoke: (@MainActor (MonarchConnectedApp) async throws -> Void)? = nil)",
+    "struct MonarchConnectedApp: Identifiable { init(id: String, name: String, logoURL: URL? = nil, domain: String? = nil, isVerified: Bool = false, isSuspended: Bool = false, workspace: String? = nil, scopes: [String] = [], connectedAt: Date? = nil, lastUsedAt: Date? = nil) }",
+    "enum MonarchConnectedAppsListState { case ready, loading, error }",
+    "struct MonarchConnectedAppsListLabels { init(verified:suspended:connected:lastUsed:workspace:scopes:revoke:revokeLabel:confirmTitle:confirmMessage:cancel:revoked:loading:emptyTitle:emptyMessage:errorTitle:), every parameter optional }"
+  ],
+  "options": [
+    {
+      "name": "apps",
+      "type": "[MonarchConnectedApp]",
+      "default": "required",
+      "description": "The connected apps, each with a name, optional logo URL, domain, verified and suspended flags, workspace, scopes in plain words, and connected and last-used dates."
+    },
+    {
+      "name": "state",
+      "type": "MonarchConnectedAppsListState",
+      "default": ".ready",
+      "description": "ready shows the rows, or the empty state when there are none; loading shows placeholder rows; error shows MonarchErrorState."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces \"Connected apps\". An empty string hides the header."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the line under the title."
+    },
+    {
+      "name": "isRetrying",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the retry in progress in the error state."
+    },
+    {
+      "name": "confirmsRevoke",
+      "type": "Bool",
+      "default": "true",
+      "description": "Asks before removing access. Turn it off when the app shows its own confirmation from onRevoke."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for \"3 days ago\". The current time by default."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchConnectedAppsListLabels",
+      "default": "MonarchConnectedAppsListLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Retries loading. Adds a retry button to the error state."
+    },
+    {
+      "name": "onRevoke",
+      "type": "(@MainActor (MonarchConnectedApp) async throws -> Void)?",
+      "default": "nil",
+      "description": "Removes an app's access and the app from apps. Adds Remove access to every row; the button shows progress while it runs. A thrown error's description is shown under the row and announced."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The rows on a surface with a subtle border, separated by dividers."
+    },
+    {
+      "name": "loading",
+      "description": "Two redacted placeholder rows, read as one \"Loading connected apps\" element."
+    },
+    {
+      "name": "empty",
+      "description": "A small MonarchEmptyState: \"No connected apps\"."
+    },
+    {
+      "name": "error",
+      "description": "A small MonarchErrorState with a retry button when onRetry is given."
+    },
+    {
+      "name": "removing",
+      "description": "The row's Remove access button shows progress."
+    },
+    {
+      "name": "removal failed",
+      "description": "An icon and the error's description in the danger strong colour under the row."
+    },
+    {
+      "name": "suspended app",
+      "description": "The name is muted and a warning Suspended badge follows it."
+    }
+  ],
+  "appearance": "Rows sit on the surface background with a subtle border. Logos are MonarchFavicons with a letter fallback. Names are body strong; domain and times are muted captions; scopes are captions with a check mark. Verified is a success badge with a check mark, Suspended a warning badge. Remove access is a small danger MonarchButton. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The confirmation is the system alert with a destructive button instead of the web's ConfirmDialog. The web's SectionCard is MonarchSectionHeader with a bordered surface. The web passes the id to onRevoke; iOS passes the whole app value. The logo is a URL only (no local Image), because the app value is Sendable data. The web's headingLevel has no equivalent: the title has the header trait. The web's danger-subtle button variant does not exist on iOS; the danger variant is used. Several closures are optional (onRetry, onRevoke). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onRetry.",
+  "accessibility": [
+    "The title is a header, from MonarchSectionHeader.",
+    "Each app's name, badges, domain, times and workspace are one element: the name as its label and the rest as its value.",
+    "Each scope list is a group named \"What Notes can access\".",
+    "The logo is decorative.",
+    "Remove access is a standard button named \"Remove access for Notes\" with a 44-point touch target; the confirmation is a system alert.",
+    "Removal and failures are announced; a failure is also shown with an icon and text.",
+    "Badges are words, so the verified and suspended states do not depend on colour."
+  ],
+  "edgeCases": [
+    "A logo that fails to load shows the first letter of the name.",
+    "An app with no dates, domain or scopes shows only its name and badges.",
+    "Two removals can run at once; each row tracks its own progress.",
+    "Long names wrap; badges move to the next line."
+  ],
+  "tests": [
+    "MonarchConnectedAppsListTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Remove access",
+      "fixture": "connected-apps-list",
+      "webExample": "Remove access",
+      "template": "MonarchConnectedAppsList(\n    apps,\n    title: {{title}},\n    description: {{description}},\n    onRevoke: { app in apps.removeAll { $0.id == app.id } }\n)",
+      "setupTemplate": "@State private var apps = [\n    MonarchConnectedApp(\n        id: {{apps.0.id}},\n        name: {{apps.0.name}},\n        domain: {{apps.0.domain}},\n        isVerified: {{apps.0.verified}},\n        workspace: {{apps.0.workspace}},\n        scopes: [{{apps.0.scopes.0}}, {{apps.0.scopes.1}}],\n        connectedAt: Date(timeIntervalSinceNow: -86_400 * {{apps.0.connectedDaysAgo}}),\n        lastUsedAt: Date(timeIntervalSinceNow: -86_400 * {{apps.0.lastUsedDaysAgo}})\n    ),\n    MonarchConnectedApp(\n        id: {{apps.1.id}},\n        name: {{apps.1.name}},\n        domain: {{apps.1.domain}},\n        scopes: [{{apps.1.scopes.0}}],\n        connectedAt: Date(timeIntervalSinceNow: -86_400 * {{apps.1.connectedDaysAgo}}),\n        lastUsedAt: Date(timeIntervalSinceNow: -86_400 * {{apps.1.lastUsedDaysAgo}})\n    ),\n    MonarchConnectedApp(\n        id: {{apps.2.id}},\n        name: {{apps.2.name}},\n        isSuspended: {{apps.2.suspended}},\n        connectedAt: Date(timeIntervalSinceNow: -86_400 * {{apps.2.connectedDaysAgo}})\n    ),\n]",
+      "setup": "@State private var apps = [\n    MonarchConnectedApp(\n        id: \"app-1\",\n        name: \"Notes\",\n        domain: \"notes.example.com\",\n        isVerified: true,\n        workspace: \"Design team\",\n        scopes: [\"See your name and profile picture\", \"See your email address\"],\n        connectedAt: Date(timeIntervalSinceNow: -86_400 * 40),\n        lastUsedAt: Date(timeIntervalSinceNow: -86_400 * 1)\n    ),\n    MonarchConnectedApp(\n        id: \"app-2\",\n        name: \"Planner\",\n        domain: \"planner.example.org\",\n        scopes: [\"See your name and profile picture\"],\n        connectedAt: Date(timeIntervalSinceNow: -86_400 * 200),\n        lastUsedAt: Date(timeIntervalSinceNow: -86_400 * 90)\n    ),\n    MonarchConnectedApp(\n        id: \"app-3\",\n        name: \"Survey tool\",\n        isSuspended: true,\n        connectedAt: Date(timeIntervalSinceNow: -86_400 * 12)\n    ),\n]",
+      "code": "MonarchConnectedAppsList(\n    apps,\n    title: \"Connected apps\",\n    description: \"Apps you signed in to with your account, and what they can see.\",\n    onRevoke: { app in apps.removeAll { $0.id == app.id } }\n)"
+    },
+    {
+      "title": "Loading and failed states",
+      "code": "VStack {\n    MonarchConnectedAppsList([], state: .loading)\n    MonarchConnectedAppsList([], state: .error, onRetry: {})\n}"
+    }
+  ],
+  "webEquivalent": "ConnectedAppsList",
+  "dependsOn": [
+    "favicon",
+    "confirm-dialog",
+    "button",
+    "badge",
+    "section-header",
+    "empty-state",
+    "error-state"
+  ],
+  "icons": {
+    "verified": "CheckGlyph"
+  }
+}

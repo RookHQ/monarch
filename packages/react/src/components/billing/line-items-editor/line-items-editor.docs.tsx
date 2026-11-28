@@ -5,32 +5,33 @@ import {
   type LineItemsDiscount,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './line-items-editor.fixture.json';
 
-const sample: LineItem[] = [
-  { id: 'r1', description: 'Discovery workshop', quantity: '1', unitPrice: '800.00' },
-  { id: 'r2', description: 'Design hours', quantity: '12', unitPrice: '95.00' },
-  { id: 'r3', description: 'Hosting (monthly)', quantity: '3', unitPrice: '24.50' },
-];
+const sample: LineItem[] = (
+  fixture.data.items as { id: string; description: string; quantity: number; unitPrice: number }[]
+).map(({ quantity, unitPrice, ...item }) => ({
+  ...item,
+  quantity: String(quantity),
+  unitPrice: unitPrice.toFixed(2),
+}));
 
 function InvoiceDemo() {
   const [items, setItems] = useState<LineItem[]>(sample);
-  const [taxRate, setTaxRate] = useState(18);
-  const [discount, setDiscount] = useState<LineItemsDiscount>({ type: 'percent', value: 5 });
+  const [taxRate, setTaxRate] = useState<number>(fixture.data.taxRate);
+  const [discount, setDiscount] = useState<LineItemsDiscount>(
+    fixture.data.discount as LineItemsDiscount,
+  );
   return (
     <LineItemsEditor
       items={items}
       onChange={setItems}
-      currency="USD"
+      currency={fixture.data.currency}
       locale="en-US"
       required
       taxRate={taxRate}
       onTaxRateChange={setTaxRate}
-      taxRateOptions={[
-        { value: 0, label: 'No tax' },
-        { value: 5, label: '5%' },
-        { value: 12, label: '12%' },
-        { value: 18, label: '18%' },
-      ]}
+      taxRateOptions={fixture.data.taxRateOptions}
       discount={discount}
       onDiscountChange={setDiscount}
     />

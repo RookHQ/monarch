@@ -1,0 +1,176 @@
+{
+  "id": "date-range-picker",
+  "name": "MonarchDateRangePicker",
+  "title": "DateRangePicker",
+  "family": "search",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Two DatePicker(selection:in:displayedComponents: .date) rows (the system compact date picker and its calendar), a Menu with an inline Picker for quick picks, MonarchButton for Choose dates and Clear",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Two dates that bound a period, as a Start row and an End row of system date pickers, with quick picks such as \"Last 7 days\", a clear button, earliest and latest days, and a shortest and longest length.",
+  "whenToUse": "For a period with a start and an end day: a report or filter period, leave, a booking, a trip.",
+  "whenNotToUse": "For one day use DatePicker; for a time as well as a date use two DatePickers with .hourAndMinute; for several separate days use MultiDatePicker.",
+  "api": [
+    "MonarchDateRangePicker.init(_ label: String, selection: Binding<ClosedRange<Date>?>, helper: String? = nil, minimumDate: Date? = nil, maximumDate: Date? = nil, minimumDays: Int = 1, maximumDays: Int? = nil, presets: [MonarchDateRangePreset] = [], today: Date = Date(), isRequired: Bool = false, isClearable: Bool = true, isDateDisabled: (@MainActor (Date) -> Bool)? = nil, labels: MonarchDateRangePickerLabels = MonarchDateRangePickerLabels())",
+    "struct MonarchDateRangePreset: Identifiable, Hashable, Sendable { let label: String; static func range(_ range: ClosedRange<Date>, label: String) -> MonarchDateRangePreset; static func lastDays(_ count: Int, label: String) -> MonarchDateRangePreset; static func nextDays(_ count: Int, label: String) -> MonarchDateRangePreset; static func month(_ offset: Int, label: String) -> MonarchDateRangePreset }",
+    "struct MonarchDateRangePickerLabels: Sendable { init(start: String? = nil, end: String? = nil, chooseDates: String? = nil, clear: String? = nil, presets: String? = nil, unavailable: String? = nil, dayCount: (@Sendable (Int) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The field's label, already localised. Read before each picker's own label."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<ClosedRange<Date>?>",
+      "default": "required",
+      "description": "The first and last day, both inclusive, as the first moment of each day in the environment's calendar; nil for none."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Help text under the label, also read as the pickers' hint."
+    },
+    {
+      "name": "minimumDate",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The earliest day that can be chosen."
+    },
+    {
+      "name": "maximumDate",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The latest day that can be chosen."
+    },
+    {
+      "name": "minimumDays",
+      "type": "Int",
+      "default": "1",
+      "description": "The shortest range in days, counting both ends."
+    },
+    {
+      "name": "maximumDays",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The longest range in days, counting both ends, such as 366 for a report."
+    },
+    {
+      "name": "presets",
+      "type": "[MonarchDateRangePreset]",
+      "default": "[]",
+      "description": "Quick picks in a menu under the pickers. A preset that breaks a bound or a length rule is disabled; the one matching the range has a checkmark."
+    },
+    {
+      "name": "today",
+      "type": "Date",
+      "default": "Date()",
+      "description": "The day relative presets and Choose dates start from. Inject it in tests."
+    },
+    {
+      "name": "isRequired",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the required mark and reads \"Required\" in the hint."
+    },
+    {
+      "name": "isClearable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows Clear dates while there is a range."
+    },
+    {
+      "name": "isDateDisabled",
+      "type": "(@MainActor (Date) -> Bool)?",
+      "default": "nil",
+      "description": "Returns true for a day that cannot be a first or last day. Such a range shows an error; the system calendar cannot grey these days out."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchDateRangePickerLabels",
+      "default": "MonarchDateRangePickerLabels()",
+      "description": "Replacements for the built-in strings."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "No range: a Choose dates button that sets the shortest range from today, inside the bounds."
+    },
+    {
+      "name": "chosen",
+      "description": "Start and End rows with the system date buttons, the number of days, and Quick picks and Clear dates under them."
+    },
+    {
+      "name": "start moved",
+      "description": "The end moves with it so the length is kept, then is held inside the length and latest-day bounds."
+    },
+    {
+      "name": "error",
+      "description": "A first or last day rejected by isDateDisabled shows \"That date is not available.\" with an icon in the danger colour, and is announced."
+    },
+    {
+      "name": "disabled",
+      "description": "With disabled(true) the pickers and buttons are disabled and the label takes the disabled text colour."
+    },
+    {
+      "name": "required",
+      "description": "An asterisk after the label and \"Required\" in the hint."
+    }
+  ],
+  "appearance": "The label, required mark, help and error use MonarchFormField's styles: label in the default text colour, help in the muted colour, error in the strong danger colour with an icon. The date buttons and calendar are the system's, tinted by the app; the day count is muted caption text. Buttons are Monarch secondary and ghost buttons.",
+  "platformNotes": "Planned as a custom range calendar; delivered as a wrapper over the system DatePicker instead, following the native-first rule: iOS has no range calendar (UICalendarView offers single, multiple and week selection, not a range), and Calendar, Reminders and Settings show a period as Start and End rows. The web DateRangePicker has typed inputs with a format hint, a one- or two-month calendar with a live preview of the range, week numbers, day dots and sizes; on iOS the system date button opens the system calendar, typing and the locale format are the system's, and day dots and sizes are not offered. The web's too-short, too-long and end-before-start errors cannot happen here because each picker only offers allowed days. The value is a ClosedRange<Date> rather than ISO strings. Android delivers the Material date range picker natively.",
+  "accessibility": [
+    "Each picker is the system DatePicker, read as \"Report period, Start\" or \"Report period, End\" with its date as the value, so both keep their role, value and adjustable behaviour.",
+    "The help text, the error (read as \"Error: …\") and \"Required\" are the hint of both pickers; the visible label and help are hidden so they are not read twice.",
+    "A new error is announced with AccessibilityNotification.Announcement; the error has an icon and text, not colour alone.",
+    "Quick picks are a system menu with a Picker, so the current choice is read as selected; disabled presets are dimmed and not selectable.",
+    "Choose dates, Clear dates and Quick picks keep a 44-point touch target.",
+    "Text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Bounds are whole days: times are dropped and the range holds the first moment of each day.",
+    "When the latest day leaves less room than minimumDays, the last possible start is pulled back so the shortest range still fits.",
+    "maximumDays below minimumDays is raised to minimumDays.",
+    "A month preset follows the calendar: \"month(-1)\" in March is all of February, 28 or 29 days.",
+    "isDateDisabled is checked for the first and last day only; a disabled day inside the range is allowed, as on the web.",
+    "The app decides whether to block a range with an error; the binding still holds it."
+  ],
+  "tests": [
+    "MonarchDateRangePickerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Report period with presets",
+      "fixture": "date-range-picker",
+      "webExample": "Report period with presets",
+      "template": "MonarchDateRangePicker(\n    {{label}},\n    selection: $period,\n    helper: (period.map { \"\\(Self.iso.string(from: $0.lowerBound)) to \\(Self.iso.string(from: $0.upperBound))\" } ?? \"No period\") + \"; at most {{maxDays}} days.\",\n    maximumDate: today,\n    maximumDays: {{maxDays}},\n    presets: [\n        .lastDays({{presets.0.lastDays}}, label: {{presets.0.label}}),\n        .lastDays({{presets.1.lastDays}}, label: {{presets.1.label}}),\n        .lastDays({{presets.2.lastDays}}, label: {{presets.2.label}}),\n        .month({{presets.3.months}}, label: {{presets.3.label}}),\n        .month({{presets.4.months}}, label: {{presets.4.label}}),\n    ],\n    today: today\n)\n.environment(\\.locale, Locale(identifier: {{locale}}))\n.environment(\\.timeZone, TimeZone(identifier: \"UTC\") ?? .gmt)",
+      "setupTemplate": "@State private var period: ClosedRange<Date>? = {{value.start|date}}...{{value.end|date}}\nprivate let today = {{today|date}}\nprivate static let iso: DateFormatter = {\n    let formatter = DateFormatter()\n    formatter.dateFormat = \"yyyy-MM-dd\"\n    formatter.locale = Locale(identifier: \"en_US_POSIX\")\n    formatter.timeZone = TimeZone(identifier: \"UTC\")\n    return formatter\n}()",
+      "setup": "@State private var period: ClosedRange<Date>? = Date(timeIntervalSince1970: 1_791_244_800)...Date(timeIntervalSince1970: 1_793_750_400)\nprivate let today = Date(timeIntervalSince1970: 1_793_750_400)\nprivate static let iso: DateFormatter = {\n    let formatter = DateFormatter()\n    formatter.dateFormat = \"yyyy-MM-dd\"\n    formatter.locale = Locale(identifier: \"en_US_POSIX\")\n    formatter.timeZone = TimeZone(identifier: \"UTC\")\n    return formatter\n}()",
+      "code": "MonarchDateRangePicker(\n    \"Report period\",\n    selection: $period,\n    helper: (period.map { \"\\(Self.iso.string(from: $0.lowerBound)) to \\(Self.iso.string(from: $0.upperBound))\" } ?? \"No period\") + \"; at most 366 days.\",\n    maximumDate: today,\n    maximumDays: 366,\n    presets: [\n        .lastDays(7, label: \"Last 7 days\"),\n        .lastDays(30, label: \"Last 30 days\"),\n        .lastDays(90, label: \"Last 90 days\"),\n        .month(0, label: \"This month\"),\n        .month(-1, label: \"Last month\"),\n    ],\n    today: today\n)\n.environment(\\.locale, Locale(identifier: \"en-GB\"))\n.environment(\\.timeZone, TimeZone(identifier: \"UTC\") ?? .gmt)"
+    },
+    {
+      "title": "Leave of at least two days, weekends excluded as ends",
+      "setup": "@State private var leave: ClosedRange<Date>?\nprivate let today = Date(timeIntervalSince1970: 1_794_614_400)",
+      "code": "MonarchDateRangePicker(\n    \"Leave\",\n    selection: $leave,\n    minimumDate: today,\n    minimumDays: 2,\n    today: today,\n    isRequired: true,\n    isDateDisabled: { Calendar.current.isDateInWeekend($0) }\n)"
+    }
+  ],
+  "webEquivalent": "DateRangePicker",
+  "dependsOn": [
+    "date-picker",
+    "button",
+    "form-field"
+  ],
+  "icons": {
+    "clear": "CloseGlyph",
+    "calendar": "CalendarGlyph"
+  }
+}

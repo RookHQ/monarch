@@ -1,33 +1,35 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- the fixture is a fixed JSON literal; the indices below exist. */
 import { useState } from 'react';
 import { AiActionLog, type AiActionLogEntry } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-action-log.fixture.json';
 
-const NOW = Date.UTC(2026, 0, 15, 12, 0);
-const RESEARCH = { id: 'research', name: 'Research agent' };
-const SCHEDULER = { id: 'scheduler', name: 'Scheduling agent' };
+const NOW = Date.parse(fixture.data.now);
+const E = fixture.data.entries;
 
 const ENTRIES: AiActionLogEntry[] = [
   {
-    id: '1',
-    at: NOW - 4 * 60_000,
-    agent: RESEARCH,
-    action: 'added a summary to',
-    target: 'Quarterly report',
-    href: '#quarterly-report',
+    id: E[0]!.id,
+    at: Date.parse(E[0]!.at),
+    agent: E[0]!.agent,
+    action: E[0]!.action,
+    target: E[0]!.target,
+    href: E[0]!.href,
   },
   {
-    id: '2',
-    at: NOW - 50 * 60_000,
-    agent: SCHEDULER,
-    action: 'moved the team check-in to Friday',
+    id: E[1]!.id,
+    at: Date.parse(E[1]!.at),
+    agent: E[1]!.agent,
+    action: E[1]!.action,
   },
   {
-    id: '3',
-    at: NOW - 3 * 3_600_000,
-    agent: RESEARCH,
-    action: 'tagged',
-    target: '12 records',
-    undone: true,
+    id: E[2]!.id,
+    at: Date.parse(E[2]!.at),
+    agent: E[2]!.agent,
+    action: E[2]!.action,
+    target: E[2]!.target,
+    undone: E[2]!.undone,
   },
 ];
 

@@ -1,0 +1,122 @@
+{
+  "id": "cookie-consent-banner",
+  "name": "MonarchCookieConsentBanner",
+  "title": "CookieConsentBanner",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "A card placed with .safeAreaInset(edge: .bottom): Text with an AttributedString link to the policy, MonarchButtons in a MonarchFlowLayout, AccessibilityNotification.Announcement when it appears",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The cookie or tracking notice of an app that shows web content or measures use: a card at the bottom of the screen with the regime's message, a link to the policy and equal choices.",
+  "whenToUse": "On first run of an app that sets optional cookies in its web views or measures use, where the law asks for consent or a notice.",
+  "whenNotToUse": "For the full per-category choices, use MonarchConsentPreferences in a sheet (the banner's Customize opens it). Tracking across other companies' apps and websites needs the system's App Tracking Transparency prompt, which this banner does not replace.",
+  "api": [
+    "init(regime: MonarchConsentRegime = .optIn, policyURL: URL? = nil, isGlobalPrivacyControl: Bool = false, labels: MonarchCookieConsentBannerLabels = MonarchCookieConsentBannerLabels(), onCustomize: (@MainActor () -> Void)? = nil, onDecide: @escaping @MainActor (MonarchCookieConsentChoice) -> Void)",
+    "enum MonarchCookieConsentChoice { case acceptAll, rejectAll, optOutOfSaleOrSharing, acknowledge }",
+    "MonarchCookieConsentBannerLabels.init(title: String? = nil, message: String? = nil, acceptAll: String? = nil, rejectAll: String? = nil, customize: String? = nil, acknowledge: String? = nil, doNotSell: String? = nil, globalPrivacyControl: String? = nil, policy: String? = nil, announcement: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "regime",
+      "type": "MonarchConsentRegime",
+      "default": ".optIn",
+      "description": "Ask first (Customize, Reject all, Accept all), opt out (Do not sell or share, OK) or a plain notice (OK)."
+    },
+    {
+      "name": "policyURL",
+      "type": "URL?",
+      "default": "nil",
+      "description": "The cookie policy, linked at the end of the message as \"Cookie policy\"."
+    },
+    {
+      "name": "isGlobalPrivacyControl",
+      "type": "Bool",
+      "default": "false",
+      "description": "In the opt-out regime, replaces the opt-out button with a line saying the signal was honoured."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchCookieConsentBannerLabels",
+      "default": "MonarchCookieConsentBannerLabels()",
+      "description": "Replacements for the built-in title, message, buttons, link and announcement."
+    },
+    {
+      "name": "onCustomize",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Opens the per-category choices; without it Customize is not shown."
+    },
+    {
+      "name": "onDecide",
+      "type": "@MainActor (MonarchCookieConsentChoice) -> Void",
+      "default": "required",
+      "description": "Records the choice; the app stores it and stops showing the banner."
+    }
+  ],
+  "states": [
+    {
+      "name": "opt-in",
+      "description": "Customize (ghost), then Reject all and Accept all as equal secondary buttons."
+    },
+    {
+      "name": "opt-out",
+      "description": "\"Do not sell or share my personal information\" and OK."
+    },
+    {
+      "name": "opt-out with Global Privacy Control",
+      "description": "The opt-out button is replaced by a line saying sale and sharing are off; OK stays."
+    },
+    {
+      "name": "notice",
+      "description": "The notice message and OK."
+    }
+  ],
+  "appearance": "A raised card with a large shadow and the subtle border; the title is bold body text, the message the muted text colour, the policy link the link colour, underlined. Colours come from theme roles in every theme.",
+  "platformNotes": "The web banner reads the visitor's regime and stored choice from ConsentProvider and opens ConsentPreferences itself. On iOS the app passes the regime, stores the choice from onDecide and presents MonarchConsentPreferences from onCustomize; there is no corner-card position, since the card spans the bottom of the screen. Android does not ship this component.",
+  "accessibility": [
+    "The card is a container named by its title, which has the header trait.",
+    "VoiceOver announces \"Cookie notice shown at the bottom of the screen.\" when it appears, without moving focus.",
+    "The policy link is a link inside the message.",
+    "Each choice is its own button; rejecting is as prominent as accepting."
+  ],
+  "edgeCases": [
+    "At large text sizes the buttons wrap onto further rows.",
+    "Without policyURL the message has no link."
+  ],
+  "tests": [
+    "MonarchCookieConsentBannerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Opt-in (ask first)",
+      "setup": "@State private var choice: MonarchCookieConsentChoice?\n@State private var showsChoices = false",
+      "code": "MonarchCookieConsentBanner(\n    policyURL: URL(string: \"https://example.com/cookie-policy\"),\n    onCustomize: { showsChoices = true }\n) { decision in\n    choice = decision\n}\n.sheet(isPresented: $showsChoices) {\n    ScrollView {\n        MonarchConsentPreferences(\n            categories: [\n                MonarchConsentPreferencesCategory(id: \"necessary\", label: \"Strictly necessary\", description: \"Keep the site working.\", isRequired: true),\n                MonarchConsentPreferencesCategory(id: \"analytics\", label: \"Analytics\", description: \"Measure use.\"),\n            ],\n            policyURL: URL(string: \"https://example.com/cookie-policy\")\n        ) { _, _ in\n            showsChoices = false\n        }\n        .padding()\n    }\n}"
+    },
+    {
+      "title": "Opt-out (sale or sharing)",
+      "code": "MonarchCookieConsentBanner(\n    regime: .optOut,\n    policyURL: URL(string: \"https://example.com/cookie-policy\"),\n    labels: MonarchCookieConsentBannerLabels(title: \"Your privacy choices\")\n) { _ in }"
+    },
+    {
+      "title": "Notice",
+      "code": "MonarchCookieConsentBanner(\n    regime: .notice,\n    policyURL: URL(string: \"https://example.com/cookie-policy\"),\n    labels: MonarchCookieConsentBannerLabels(title: \"About cookies\")\n) { _ in }"
+    }
+  ],
+  "webEquivalent": "CookieConsentBanner",
+  "dependsOn": [
+    "button",
+    "consent-preferences"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "no-fixture",
+      "platform": "ios",
+      "reason": "No shared scenario fixture exists for this component yet.",
+      "convention": "The iOS example uses the data and copy of the web primary example."
+    }
+  ]
+}

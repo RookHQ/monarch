@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { AiFeedback, type AiFeedbackSubmission } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-feedback.fixture.json';
 
 function Demo({ askDetails }: { askDetails?: 'down' | 'both' }) {
   const [value, setValue] = useState<AiFeedback | undefined>();
@@ -140,7 +142,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Default (details on thumbs down)', stack: true, render: () => <Demo /> },
+        {
+          title: 'Default (details on thumbs down)',
+          stack: true,
+          render: () => <Demo askDetails={fixture.data.askDetails as 'down'} />,
+        },
         { title: 'Details on both', stack: true, render: () => <Demo askDetails="both" /> },
       ],
     },

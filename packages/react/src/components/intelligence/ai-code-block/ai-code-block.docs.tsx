@@ -1,15 +1,10 @@
 import { useState } from 'react';
 import { AiCodeBlock } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-code-block.fixture.json';
 
-const SNIPPET = `import { formatDate } from './dates';
-
-// Show the due date in the reader's locale.
-export function dueLabel(task: { due: string }) {
-  const days = Math.round((Date.parse(task.due) - Date.now()) / 86_400_000);
-  return days < 0 ? 'Overdue' : \`Due \${formatDate(task.due)}\`;
-}
-`;
+const SNIPPET = fixture.data.code;
 
 const DIFF = `--- a/settings.json
 +++ b/settings.json
@@ -177,7 +172,12 @@ export default {
           title: 'Filename, line numbers',
           stack: true,
           render: () => (
-            <AiCodeBlock code={SNIPPET} language="ts" filename="due-label.ts" lineNumbers />
+            <AiCodeBlock
+              code={SNIPPET}
+              language={fixture.data.language}
+              filename={fixture.data.filename}
+              lineNumbers
+            />
           ),
         },
         {

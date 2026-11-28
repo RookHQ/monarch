@@ -8,8 +8,46 @@ import {
   useUnsavedChangesGuard,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './unsaved-changes-guard.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+
+function LeaveWithChanges() {
+  const [open, setOpen] = useState(true);
+  const [page, setPage] = useState(fixture.data.page);
+  return (
+    <>
+      <div style={{ display: 'grid', gap: 12, width: 360, maxWidth: '100%' }}>
+        <Field>
+          <FieldLabel>{fixture.data.fieldLabel}</FieldLabel>
+          <Input defaultValue={fixture.data.name} />
+        </Field>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button variant="primary">{fixture.data.save}</Button>
+          <Button onClick={() => setOpen(true)}>{fixture.data.leave}</Button>
+        </div>
+        <p style={{ margin: 0 }}>Current page: {page}</p>
+      </div>
+      <UnsavedChangesDialog
+        open={open}
+        onStay={() => setOpen(false)}
+        onLeave={() => {
+          setOpen(false);
+          setPage(fixture.data.leftPage);
+        }}
+        onSave={() => wait(600)}
+        messages={{
+          title: fixture.data.dialog.title,
+          description: fixture.data.dialog.message,
+          discard: fixture.data.dialog.discard,
+          keepEditing: fixture.data.dialog.keepEditing,
+          save: fixture.data.dialog.save,
+        }}
+      />
+    </>
+  );
+}
 
 function EditName() {
   const [saved, setSaved] = useState('Weekly planning');
@@ -252,6 +290,11 @@ export default {
     },
     examples: {
       items: [
+        {
+          title: 'Leaving with unsaved changes',
+          stage: true,
+          render: () => <LeaveWithChanges />,
+        },
         { title: 'Guard in-app navigation', render: () => <EditName /> },
         { title: 'Save and leave', render: () => <SaveAndLeave /> },
         { title: 'A failed save keeps you on the page', render: () => <SaveFails /> },

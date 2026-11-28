@@ -14,6 +14,7 @@ import {
   type SVGProps,
 } from 'react';
 import { cx } from '../../../internal/cx.js';
+import { hourStyle } from '../../../internal/dates/zone.js';
 import {
   CheckGlyph,
   ChevronRightGlyph,
@@ -255,6 +256,8 @@ export interface AiMessageViewProps extends Omit<
   showTimestamp?: boolean | undefined;
   /** BCP 47 locale for the timestamp and file sizes. */
   locale?: string | undefined;
+  /** IANA time zone for the timestamp; pass it for identical server rendering. */
+  timeZone?: string | undefined;
   /** Shows the action toolbar (hidden while the message streams). Default true. */
   showActions?: boolean | undefined;
   /** Toolbar visibility; see `AiMessageActions`. Default `hover`. */
@@ -365,10 +368,15 @@ function formatSize(bytes: number, locale?: string) {
   }).format(value);
 }
 
-function formatTime(iso: string, locale?: string) {
+function formatTime(iso: string, locale?: string, timeZone?: string) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  return new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(d);
+  // 24-hour clocks pad the hour ("09:30"); 12-hour clocks do not ("9:30 AM").
+  return new Intl.DateTimeFormat(locale, {
+    hour: hourStyle(locale),
+    minute: '2-digit',
+    ...(timeZone ? { timeZone } : {}),
+  }).format(d);
 }
 
 const LINK_REL = 'noopener noreferrer nofollow';
@@ -576,6 +584,7 @@ export const AiMessageView = memo(
       announce = true,
       showTimestamp = true,
       locale,
+      timeZone,
       showActions = true,
       actionsVisibility = 'hover',
       onCopy,
@@ -621,7 +630,7 @@ export const AiMessageView = memo(
     const text = messageText(message);
     const agent = message.agent ?? agentProp;
     const name = agent?.name ?? m.assistant;
-    const time = showTimestamp ? formatTime(message.createdAt, locale) : null;
+    const time = showTimestamp ? formatTime(message.createdAt, locale, timeZone) : null;
     const prefix = isUser ? m.youSaid : isAssistant ? m.assistantSaid : m.systemSaid;
 
     // The reply as a whole is finished: no text streams and no tool call is still going.

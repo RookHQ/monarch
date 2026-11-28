@@ -1,15 +1,30 @@
 import { useState, type KeyboardEvent } from 'react';
-import { DragHandle, type DragHandleState } from '@rookcom/monarch-react';
+import { DragHandle, type DragHandleProps, type DragHandleState } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './drag-handle.fixture.json';
+
+const handles = fixture.data.handles as readonly {
+  label: string;
+  state: string;
+  axis: string;
+  size: string;
+  disabled?: boolean;
+}[];
 
 function StatesDemo() {
   return (
     <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-      <DragHandle label="Reorder Idle item" />
-      <DragHandle label="Reorder Picked-up item" state="grabbed" />
-      <DragHandle label="Reorder Dropped item" state="dropped" />
-      <DragHandle label="Reorder Locked item" disabled />
-      <DragHandle label="Reorder Tile" axis="both" size="sm" />
+      {handles.map((handle) => (
+        <DragHandle
+          key={handle.label}
+          label={handle.label}
+          state={handle.state as DragHandleState}
+          axis={handle.axis as NonNullable<DragHandleProps['axis']>}
+          size={handle.size as NonNullable<DragHandleProps['size']>}
+          {...(handle.disabled && { disabled: true })}
+        />
+      ))}
     </div>
   );
 }

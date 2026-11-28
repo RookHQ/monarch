@@ -1,0 +1,62 @@
+{
+  "id": "slider",
+  "name": null,
+  "title": "Slider",
+  "family": "forms",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "Slider(value:in:step:) for the system control; the example draws the track and ring thumb of the web from the theme (a Capsule track, a ring Circle and a DragGesture), because SwiftUI has no style API for Slider",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "One number on a track uses the standard Slider. Inside a Monarch theme the filled part of the track takes the accent from the tint. Monarch ships nothing.",
+  "whenToUse": "For a value where the position matters more than the exact number, such as volume or a share.",
+  "whenNotToUse": "For an exact number use a text field or a Stepper. For a rating use MonarchRatingPicker. For two thumbs use MonarchRangeSlider.",
+  "api": [
+    "Slider(value: Binding<V>, in: ClosedRange<V>, step: V.Stride, label: () -> Label, minimumValueLabel: () -> ValueLabel, maximumValueLabel: () -> ValueLabel, onEditingChanged: (Bool) -> Void)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "value",
+      "description": "The track before the thumb is filled with the accent, from the theme's tint."
+    },
+    {
+      "name": "disabled",
+      "description": "System dimming, with disabled(_:)."
+    }
+  ],
+  "appearance": "System appearance in every theme; only the filled track comes from Monarch, through the tint.",
+  "platformNotes": "The web ships its own Slider with marks under the track, a value shown at the end and a large step for Page Up and Page Down. The system Slider has no marks: show the value in a Text beside it, and use minimumValueLabel and maximumValueLabel for the ends. onEditingChanged(false) is the counterpart of the web's onValueCommit. Android themes the Material 3 Slider.",
+  "accessibility": [
+    "System behaviour: an adjustable element whose value is read as a percentage of the range; swiping up or down changes it.",
+    "The label passed to the Slider is not drawn on iOS but is the spoken name, so always give one.",
+    "Set accessibilityValue when a percentage is not the meaningful reading, for example \"5 seats\"."
+  ],
+  "edgeCases": [
+    "Without a step the value is continuous; round it before showing it.",
+    "The thumb is the system's and does not change with Dynamic Type."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Stream and commit",
+      "fixture": "slider",
+      "webExample": "Stream and commit",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space1) {\n    Text({{label}}).monarchTextStyle(.label)\n    HStack {\n        RingSlider(\n            value: $volume,\n            range: {{min|double}}...{{max|double}},\n            label: {{label}},\n            onEditingChanged: { editing in\n                if !editing { saved = volume }\n            }\n        )\n        Text(\"\\(Int(volume))\").monarchTextStyle(.caption)\n    }\n    Text(\"Saved at \\(Int(saved)).\").monarchTextStyle(.caption)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var volume = {{value|double}}\n@State private var saved = {{value|double}}\n\n/// SwiftUI's Slider cannot be restyled, so the track and its ring thumb are drawn here from the theme.\nprivate struct RingSlider: View {\n    @Binding var value: Double\n    let range: ClosedRange<Double>\n    let label: String\n    let onEditingChanged: (Bool) -> Void\n\n    @Environment(\\.monarchTheme) private var theme\n    @State private var isDragging = false\n\n    var body: some View {\n        GeometryReader { proxy in\n            let thumb = theme.spacing.space5\n            let span = max(proxy.size.width - thumb, 1)\n            let fraction = (value - range.lowerBound) / (range.upperBound - range.lowerBound)\n            ZStack(alignment: .leading) {\n                Capsule().fill(theme.colors.bgEmphasis).frame(height: theme.spacing.space1_5)\n                Capsule().fill(theme.colors.accentSolid)\n                    .frame(width: thumb / 2 + span * fraction, height: theme.spacing.space1_5)\n                Circle().fill(theme.colors.bgSurface)\n                    .overlay(Circle().strokeBorder(theme.colors.accentSolid, lineWidth: theme.spacing.space0_5))\n                    .frame(width: thumb, height: thumb)\n                    .offset(x: span * fraction)\n            }\n            .frame(maxHeight: .infinity)\n            .contentShape(Rectangle())\n            .gesture(\n                DragGesture(minimumDistance: 0)\n                    .onChanged { drag in\n                        if !isDragging {\n                            isDragging = true\n                            onEditingChanged(true)\n                        }\n                        let share = min(max((drag.location.x - thumb / 2) / span, 0), 1)\n                        value = (range.lowerBound + share * (range.upperBound - range.lowerBound)).rounded()\n                    }\n                    .onEnded { _ in\n                        isDragging = false\n                        onEditingChanged(false)\n                    }\n            )\n        }\n        .frame(height: 44)\n        .accessibilityElement()\n        .accessibilityLabel(label)\n        .accessibilityValue(Text(Int(value), format: .number))\n        .accessibilityAdjustableAction { direction in\n            switch direction {\n            case .increment: value = min(value + 1, range.upperBound)\n            case .decrement: value = max(value - 1, range.lowerBound)\n            @unknown default: break\n            }\n            onEditingChanged(false)\n        }\n    }\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var volume = 60.0\n@State private var saved = 60.0\n\n/// SwiftUI's Slider cannot be restyled, so the track and its ring thumb are drawn here from the theme.\nprivate struct RingSlider: View {\n    @Binding var value: Double\n    let range: ClosedRange<Double>\n    let label: String\n    let onEditingChanged: (Bool) -> Void\n\n    @Environment(\\.monarchTheme) private var theme\n    @State private var isDragging = false\n\n    var body: some View {\n        GeometryReader { proxy in\n            let thumb = theme.spacing.space5\n            let span = max(proxy.size.width - thumb, 1)\n            let fraction = (value - range.lowerBound) / (range.upperBound - range.lowerBound)\n            ZStack(alignment: .leading) {\n                Capsule().fill(theme.colors.bgEmphasis).frame(height: theme.spacing.space1_5)\n                Capsule().fill(theme.colors.accentSolid)\n                    .frame(width: thumb / 2 + span * fraction, height: theme.spacing.space1_5)\n                Circle().fill(theme.colors.bgSurface)\n                    .overlay(Circle().strokeBorder(theme.colors.accentSolid, lineWidth: theme.spacing.space0_5))\n                    .frame(width: thumb, height: thumb)\n                    .offset(x: span * fraction)\n            }\n            .frame(maxHeight: .infinity)\n            .contentShape(Rectangle())\n            .gesture(\n                DragGesture(minimumDistance: 0)\n                    .onChanged { drag in\n                        if !isDragging {\n                            isDragging = true\n                            onEditingChanged(true)\n                        }\n                        let share = min(max((drag.location.x - thumb / 2) / span, 0), 1)\n                        value = (range.lowerBound + share * (range.upperBound - range.lowerBound)).rounded()\n                    }\n                    .onEnded { _ in\n                        isDragging = false\n                        onEditingChanged(false)\n                    }\n            )\n        }\n        .frame(height: 44)\n        .accessibilityElement()\n        .accessibilityLabel(label)\n        .accessibilityValue(Text(Int(value), format: .number))\n        .accessibilityAdjustableAction { direction in\n            switch direction {\n            case .increment: value = min(value + 1, range.upperBound)\n            case .decrement: value = max(value - 1, range.lowerBound)\n            @unknown default: break\n            }\n            onEditingChanged(false)\n        }\n    }\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space1) {\n    Text(\"Notification volume\").monarchTextStyle(.label)\n    HStack {\n        RingSlider(\n            value: $volume,\n            range: 0.0...100.0,\n            label: \"Notification volume\",\n            onEditingChanged: { editing in\n                if !editing { saved = volume }\n            }\n        )\n        Text(\"\\(Int(volume))\").monarchTextStyle(.caption)\n    }\n    Text(\"Saved at \\(Int(saved)).\").monarchTextStyle(.caption)\n}"
+    },
+    {
+      "title": "Steps with a spoken value",
+      "code": "Slider(value: $seats, in: 1...20, step: 1) {\n    Text(\"Seats\")\n}\n.accessibilityValue(\"\\(Int(seats)) seats\")",
+      "setup": "@State private var seats = 5.0"
+    }
+  ],
+  "webEquivalent": "Slider",
+  "dependsOn": []
+}

@@ -1,18 +1,14 @@
 import { StackedBarChart } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './stacked-bar-chart.fixture.json';
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+const { categories: MONTHS, series: STATUS_DATA } = fixture.data;
 const TICKETS = MONTHS.map((month, i) => ({
   month,
-  resolved: [120, 132, 101, 134, 190, 230][i] ?? 0,
-  pending: [22, 18, 30, 25, 19, 21][i] ?? 0,
-  escalated: [8, 6, 12, 9, 7, 5][i] ?? 0,
+  ...Object.fromEntries(STATUS_DATA.map((s) => [s.key, s.values[i] ?? 0])),
 }));
-const STATUS_SERIES = [
-  { key: 'resolved', label: 'Resolved' },
-  { key: 'pending', label: 'Pending' },
-  { key: 'escalated', label: 'Escalated' },
-];
+const STATUS_SERIES = STATUS_DATA.map(({ key, label }) => ({ key, label }));
 const TEAMS = [
   { team: 'Platform', done: 34, review: 6, todo: 10 },
   { team: 'Design systems', done: 21, review: 9, todo: 4 },
@@ -168,14 +164,14 @@ export default {
           stack: true,
           render: () => (
             <StackedBarChart
-              title="Tickets by status"
-              description="First half of the year"
+              title={fixture.data.title}
+              description={fixture.data.description}
               data={TICKETS}
               categoryKey="month"
-              categoryLabel="Month"
+              categoryLabel={fixture.data.categoryLabel}
               series={STATUS_SERIES}
               valueLabels
-              locale="en-US"
+              locale={fixture.data.locale}
             />
           ),
         },

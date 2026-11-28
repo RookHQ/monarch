@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { MegaMenu, type MegaMenuItem } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { CalendarIcon, GearIcon, GridIcon, UsersIcon } from '../../../internal/docs-demo.js';
@@ -72,6 +73,13 @@ const items: MegaMenuItem[] = [
   { id: 'support', label: 'Support', href: '#support' },
 ];
 
+function SiteHeader() {
+  const [openItem, setOpenItem] = useState<string | null>('product');
+  return (
+    <MegaMenu items={items} openItem={openItem} onOpenItemChange={setOpenItem} aria-label="Site" />
+  );
+}
+
 export default {
   id: 'mega-menu',
   title: 'MegaMenu',
@@ -80,7 +88,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'The top navigation of a marketing or public site whose sections have many destinations: each entry opens a panel of grouped links with descriptions and an optional featured card. It replaces the hand-built bento Navbar copied into every Rook app, with keyboard, screen-reader and touch support. Needed by: App, Atlas, Base, Calendar, Chat, Developers, Dossier, Dots, Friends, GTM, Intellect, People, Pulse, Ranker, Recruit, Signal, Stride, Tickets (public sites).',
+        'The top navigation of a marketing or public site whose sections have many destinations: each entry opens a panel of grouped links with descriptions and an optional featured card. It replaces the hand-built bento Navbar copied into every Rook app, with keyboard, screen-reader and touch support. Needed by: App, Atlas, Base, Calendar, Chat, Developers, Dossier, Dots, GTM, Intellect, Partner, People, Pulse, Ranker, Recruit, Signal, Stride, Tickets (public sites).',
       useWhen: [
         'A public or marketing header with several sections of 3–10 links each.',
         'Links benefit from a one-line description or icon.',
@@ -213,7 +221,7 @@ export default {
         {
           title: 'Product site header',
           stack: true,
-          render: () => <MegaMenu items={items} aria-label="Site" />,
+          render: () => <SiteHeader />,
         },
         {
           title: 'Click only',

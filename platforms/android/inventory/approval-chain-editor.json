@@ -1,0 +1,184 @@
+{
+  "id": "approval-chain-editor",
+  "name": "MonarchApprovalChainEditor",
+  "title": "ApprovalChainEditor",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchReorderableList (androidx.compose.foundation.lazy.LazyColumn with a long-press drag and TalkBack move actions) of steps built from MonarchSelect (androidx.compose.material3.ExposedDropdownMenuBox), MonarchEntityPicker (androidx.compose.material3.ModalBottomSheet) and MonarchTextField (androidx.compose.material3.OutlinedTextField)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Edits the ordered steps of an approval chain: who approves each step (a kind of approver, plus a role or person where the kind needs one), an optional label, and the order, with add, remove and accessible reordering.",
+  "whenToUse": "An admin sets up multi-step approval for requests such as leave, expenses, purchases or access, where each step names a kind of approver and sometimes a role or person.",
+  "whenNotToUse": "To show how one request moved through its chain, use MonarchApprovalTimeline. When conditions decide what happens, use MonarchConditionEditor with MonarchActionEditor.",
+  "api": [
+    "@Composable public fun MonarchApprovalChainEditor(value: List<MonarchApprovalChainStep>, onValueChange: (List<MonarchApprovalChainStep>) -> Unit, approverTypes: List<MonarchApprovalApproverType>, modifier: Modifier = Modifier, description: String? = null, minSteps: Int = 1, maxSteps: Int = 10, showLabels: Boolean = true, showErrors: Boolean = false, enabled: Boolean = true, createStep: (() -> MonarchApprovalChainStep)? = null, removeIcon: (@Composable () -> Unit)? = null, addIcon: (@Composable () -> Unit)? = null, state: LazyListState = rememberLazyListState(), labels: MonarchApprovalChainEditorLabels = MonarchApprovalChainEditorLabels())",
+    "public data class MonarchApprovalChainStep(id: String, approver: String, target: String? = null, label: String? = null) { companion object { fun validate(steps: List<MonarchApprovalChainStep>, approverTypes: List<MonarchApprovalApproverType>): Set<String>; fun summarize(steps: List<MonarchApprovalChainStep>, approverTypes: List<MonarchApprovalApproverType>, separator: String = \" → \"): String } }",
+    "public class MonarchApprovalApproverType(value: String, label: String, targets: List<MonarchEntityPickerEntity>? = null, targetLabel: String? = null)",
+    "public class MonarchApprovalChainEditorLabels(title: String? = null, step: ((position: Int) -> String)? = null, approver: String? = null, target: String? = null, targetPlaceholder: String? = null, label: String? = null, labelPlaceholder: String? = null, addStep: String? = null, remove: String? = null, removeStep: ((position: Int) -> String)? = null, targetRequired: String? = null, maxReached: ((max: Int) -> String)? = null, reorder: MonarchReorderableListLabels = MonarchReorderableListLabels())"
+  ],
+  "options": [
+    {
+      "name": "value",
+      "type": "List<MonarchApprovalChainStep>",
+      "default": "required",
+      "description": "The steps, in order. Ids must be unique."
+    },
+    {
+      "name": "onValueChange",
+      "type": "(List<MonarchApprovalChainStep>) -> Unit",
+      "default": "required",
+      "description": "Called with the whole new list after every edit, move, add or remove."
+    },
+    {
+      "name": "approverTypes",
+      "type": "List<MonarchApprovalApproverType>",
+      "default": "required",
+      "description": "The kinds of approver; the first is used for new steps. A kind with targets adds a MonarchEntityPicker to its steps."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the editor. Give it a bounded height."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "null",
+      "description": "Help under the heading, such as how skipped steps work."
+    },
+    {
+      "name": "minSteps",
+      "type": "Int",
+      "default": "1",
+      "description": "The fewest steps; the remove buttons are disabled at this count."
+    },
+    {
+      "name": "maxSteps",
+      "type": "Int",
+      "default": "10",
+      "description": "The most steps; the add button is replaced by a note at this count."
+    },
+    {
+      "name": "showLabels",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the optional label field (up to 60 characters) on each step."
+    },
+    {
+      "name": "showErrors",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows Choose who decides this step on steps without a target, for example after a save attempt."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the chain can be changed."
+    },
+    {
+      "name": "createStep",
+      "type": "(() -> MonarchApprovalChainStep)?",
+      "default": "null",
+      "description": "Makes a new step; by default the first kind with the first free step-<n> id."
+    },
+    {
+      "name": "removeIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The icon of each remove button; without it the button reads Remove."
+    },
+    {
+      "name": "addIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "An icon before the text of the add button."
+    },
+    {
+      "name": "state",
+      "type": "LazyListState",
+      "default": "rememberLazyListState()",
+      "description": "The scroll state of the list of steps."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchApprovalChainEditorLabels",
+      "default": "MonarchApprovalChainEditorLabels()",
+      "description": "Replacements for the built-in strings, including those of the reorderable list."
+    }
+  ],
+  "states": [
+    {
+      "name": "editing",
+      "description": "Each step shows its heading, remove button, approver menu, target picker when the kind has targets, and label field."
+    },
+    {
+      "name": "dragging",
+      "description": "A long press lifts a step; the other steps move out of its way and the new order is reported on drop."
+    },
+    {
+      "name": "incomplete",
+      "description": "With showErrors, a step without a target shows Choose who decides this step as the picker's error."
+    },
+    {
+      "name": "at the minimum",
+      "description": "The remove buttons are disabled."
+    },
+    {
+      "name": "at the limit",
+      "description": "The add button is replaced by A chain can have up to 10 steps."
+    },
+    {
+      "name": "disabled",
+      "description": "Every field and button is disabled and nothing can be moved."
+    }
+  ],
+  "appearance": "A Subheading heading, then the reorderable rows with their drag handles and Up and Down buttons from MonarchReorderableList; each step has a strong heading, outlined menus and fields with the input border, and the add button is a small secondary MonarchButton. The description and notes use the muted text color. Light, dark and both high-contrast themes follow from the color roles.",
+  "platformNotes": "Same data shape, defaults and checks as the web (validateApprovalChain and summarizeApprovalChain are MonarchApprovalChainStep.validate and summarize; validate returns the ids of incomplete steps). Targets are MonarchEntityPickerEntity values shown in MonarchEntityPicker, a searchable sheet with avatars, where the web uses a native select of options. The web's messages prop is labels, as in other Android components. The list is a LazyColumn (MonarchReorderableList), so the editor needs a bounded height and cannot sit in a vertically scrolling parent; the web's fieldset grows with the page. Focus after a remove is left to Compose. There is no iOS entry yet.",
+  "accessibility": [
+    "The list heading and each step's heading (Step 1) are headings; each step is read as a traversal group.",
+    "Each step's drag handle offers Move up and Move down as TalkBack custom actions, and Up and Down buttons are shown on every row, so no step needs a drag.",
+    "Every move, pick up, drop and cancel is announced through a polite live region, from MonarchReorderableList.",
+    "Remove buttons are named with the position (Remove step 1) and are 48dp targets; the add button is a 48dp MonarchButton.",
+    "A missing target is an error on the MonarchEntityPicker, read with the field and announced when it appears; it is text, not only color."
+  ],
+  "edgeCases": [
+    "A step whose kind is no longer in approverTypes keeps its stored value; its menu shows no choice until one is picked.",
+    "Changing the kind drops a target the new kind does not offer, and clearing the label stores null.",
+    "Labels longer than 60 characters are cut at 60, as the web's maxLength.",
+    "Put the editor in a screen or sheet with a bounded height: a vertically scrolling parent gives the lazy list an unbounded height and fails."
+  ],
+  "tests": [
+    "MonarchApprovalChainEditorTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Edit a chain",
+      "fixture": "approval-chain-editor",
+      "webExample": "Edit a chain",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {\n    MonarchApprovalChainEditor(\n        value = steps,\n        onValueChange = { steps = it },\n        approverTypes = listOf(\n            MonarchApprovalApproverType({{approverTypes.0.value}}, {{approverTypes.0.label}}),\n            MonarchApprovalApproverType({{approverTypes.1.value}}, {{approverTypes.1.label}}),\n            MonarchApprovalApproverType({{approverTypes.2.value}}, {{approverTypes.2.label}}),\n            MonarchApprovalApproverType(\n                {{approverTypes.3.value}},\n                {{approverTypes.3.label}},\n                targets = listOf(\n                    MonarchEntityPickerEntity({{approverTypes.3.targets.0.value}}, {{approverTypes.3.targets.0.label}}),\n                    MonarchEntityPickerEntity({{approverTypes.3.targets.1.value}}, {{approverTypes.3.targets.1.label}}),\n                ),\n                targetLabel = {{approverTypes.3.targetLabel}},\n            ),\n            MonarchApprovalApproverType(\n                {{approverTypes.4.value}},\n                {{approverTypes.4.label}},\n                targets = listOf(\n                    MonarchEntityPickerEntity({{approverTypes.4.targets.0.value}}, {{approverTypes.4.targets.0.label}}),\n                    MonarchEntityPickerEntity({{approverTypes.4.targets.1.value}}, {{approverTypes.4.targets.1.label}}),\n                ),\n                targetLabel = {{approverTypes.4.targetLabel}},\n            ),\n        ),\n        description = {{description}},\n        showErrors = tried,\n        removeIcon = { MonarchIcon(imageVector = SampleIcons.Close, contentDescription = null) },\n        addIcon = { MonarchIcon(imageVector = SampleIcons.Plus, contentDescription = null) },\n    )\n    MonarchButton(\n        text = {{saveLabel}},\n        onClick = { tried = true },\n        variant = MonarchButtonVariant.Primary,\n    )\n}",
+      "setupTemplate": "var steps by remember {\n    mutableStateOf(\n        listOf(\n            MonarchApprovalChainStep({{steps.0.id}}, {{steps.0.approver}}),\n            MonarchApprovalChainStep({{steps.1.id}}, {{steps.1.approver}}, label = {{steps.1.label}}),\n        ),\n    )\n}\nvar tried by remember { mutableStateOf(false) }",
+      "imports": [
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.ui.unit.dp",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "var steps by remember {\n    mutableStateOf(\n        listOf(\n            MonarchApprovalChainStep(\"1\", \"manager\"),\n            MonarchApprovalChainStep(\"2\", \"role\", label = \"Finance check\"),\n        ),\n    )\n}\nvar tried by remember { mutableStateOf(false) }",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {\n    MonarchApprovalChainEditor(\n        value = steps,\n        onValueChange = { steps = it },\n        approverTypes = listOf(\n            MonarchApprovalApproverType(\"manager\", \"Reporting manager\"),\n            MonarchApprovalApproverType(\"manager-2\", \"Manager’s manager\"),\n            MonarchApprovalApproverType(\"head\", \"Department head\"),\n            MonarchApprovalApproverType(\n                \"role\",\n                \"Anyone with a role\",\n                targets = listOf(\n                    MonarchEntityPickerEntity(\"finance\", \"Finance team\"),\n                    MonarchEntityPickerEntity(\"people\", \"People team\"),\n                ),\n                targetLabel = \"Role\",\n            ),\n            MonarchApprovalApproverType(\n                \"person\",\n                \"A named person\",\n                targets = listOf(\n                    MonarchEntityPickerEntity(\"p1\", \"Jo Park\"),\n                    MonarchEntityPickerEntity(\"p2\", \"Ana Ruiz\"),\n                ),\n                targetLabel = \"Person\",\n            ),\n        ),\n        description = \"Each step is decided by one of the people it names. A step whose approver is the requester is skipped.\",\n        showErrors = tried,\n        removeIcon = { MonarchIcon(imageVector = SampleIcons.Close, contentDescription = null) },\n        addIcon = { MonarchIcon(imageVector = SampleIcons.Plus, contentDescription = null) },\n    )\n    MonarchButton(\n        text = \"Save chain\",\n        onClick = { tried = true },\n        variant = MonarchButtonVariant.Primary,\n    )\n}"
+    }
+  ],
+  "webEquivalent": "ApprovalChainEditor",
+  "dependsOn": [
+    "reorderable-list",
+    "entity-picker",
+    "text-field"
+  ]
+}

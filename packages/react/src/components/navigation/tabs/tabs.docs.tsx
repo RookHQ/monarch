@@ -9,6 +9,15 @@ import {
   TabsTrigger,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './tabs.fixture.json';
+
+const groups = fixture.data.groups as readonly {
+  label: string;
+  variant: 'line' | 'pill';
+  selected: string;
+  tabs: readonly { value: string; label: string; content?: string; disabled?: boolean }[];
+}[];
 
 const STATUS = [
   { value: 'all', label: 'All', count: 24 },
@@ -211,27 +220,29 @@ export default {
           stack: true,
           render: () => (
             <>
-              <Tabs defaultValue="board">
-                <TabsList aria-label="Views">
-                  <TabsTrigger value="board">Board</TabsTrigger>
-                  <TabsTrigger value="list">List</TabsTrigger>
-                  <TabsTrigger value="timeline" disabled>
-                    Timeline
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="board">Board view</TabsContent>
-                <TabsContent value="list">List view</TabsContent>
-              </Tabs>
-              <Tabs defaultValue="week">
-                <TabsList variant="pill" aria-label="Range">
-                  <TabsTrigger value="day">Day</TabsTrigger>
-                  <TabsTrigger value="week">Week</TabsTrigger>
-                  <TabsTrigger value="month">Month</TabsTrigger>
-                </TabsList>
-                <TabsContent value="day">Day</TabsContent>
-                <TabsContent value="week">Week</TabsContent>
-                <TabsContent value="month">Month</TabsContent>
-              </Tabs>
+              {groups.map((group) => (
+                <Tabs key={group.label} defaultValue={group.selected}>
+                  <TabsList aria-label={group.label} variant={group.variant}>
+                    {group.tabs.map((tab) => (
+                      <TabsTrigger
+                        key={tab.value}
+                        value={tab.value}
+                        {...(tab.disabled && { disabled: true })}
+                      >
+                        {tab.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  {group.tabs.map(
+                    (tab) =>
+                      tab.content !== undefined && (
+                        <TabsContent key={tab.value} value={tab.value}>
+                          {tab.content}
+                        </TabsContent>
+                      ),
+                  )}
+                </Tabs>
+              ))}
             </>
           ),
         },

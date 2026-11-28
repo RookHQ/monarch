@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToString } from 'react-dom/server';
@@ -346,5 +348,14 @@ describe('VirtualMessageList with layout', () => {
     expect(row).toHaveAttribute('data-highlighted');
     // Scrolling away from the bottom stops following it and offers the way back.
     expect(screen.getByRole('button', { name: 'Jump to latest' })).toBeInTheDocument();
+  });
+
+  it('never transitions the spacer padding it reads back (no update loop under reduced motion)', () => {
+    // Monarch's base.css sets `transition-duration: 0.01ms` on every element for reduced
+    // motion, which makes every property transition. The window reads the spacer padding back
+    // in the same frame; a transition reported the old value and the window flipped forever.
+    const css = readFileSync(join(dirname(__filename), 'virtual-message-list.css'), 'utf8');
+    const rule = css.slice(css.indexOf('.mn-virtual-message-list__rows {'));
+    expect(rule.slice(0, rule.indexOf('\n}'))).toMatch(/^ {2}transition: none;/m);
   });
 });

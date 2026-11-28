@@ -72,6 +72,27 @@ const Inbox = forwardRef<
 });
 
 describe('SplitInboxLayout', () => {
+  it('makes the context a drawer when the layout itself is too narrow for three panes', () => {
+    // A wide window, but the layout sits in a 620px column: list + context + detail do not fit.
+    const width = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(620);
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      },
+    );
+    try {
+      render(<Inbox data-testid="root" />);
+      expect(screen.queryByRole('complementary', { name: 'Ticket details' })).toBeNull();
+      expect(screen.getAllByRole('separator')).toHaveLength(1);
+      expect(screen.getByRole('button', { name: /details/i })).toBeInTheDocument();
+    } finally {
+      width.mockRestore();
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('renders the three panes as labelled landmarks', async () => {
     const ref = createRef<HTMLDivElement>();
     render(<Inbox ref={ref} data-testid="root" />);

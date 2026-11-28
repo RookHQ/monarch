@@ -1,0 +1,75 @@
+{
+  "id": "activity-widget",
+  "name": null,
+  "title": "ActivityWidget",
+  "family": "data-display",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchWidget (a VStack card with a Menu and a View all Button) holding a compact MonarchActivityTimeline (a VStack of event rows)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the recent-activity card of a dashboard, a MonarchWidget around a compact MonarchActivityTimeline of the latest few events, with View all leading to the full log.",
+  "whenToUse": "On a dashboard or a Space home screen that shows what changed recently, when the full activity log is another screen.",
+  "whenNotToUse": "For the full log or an audit trail, push a screen with MonarchActivityTimeline on its own. For the person's own notifications, use the notification center pattern.",
+  "api": [
+    "MonarchWidget(_:systemImage:state:onRetry:onViewAll:content:) { MonarchActivityTimeline(_:isGroupedByDay:marker:density:isLoading:now:labels:) }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The first events, newest first. Pass only the latest few (the web default is 6); View all opens the rest."
+    },
+    {
+      "name": "loading",
+      "description": "Pass isLoading to the timeline so the card shows the timeline's own redacted placeholder rows."
+    },
+    {
+      "name": "empty",
+      "description": "The timeline shows its empty text; set labels.empty to \"No activity yet\" or the product's wording."
+    },
+    {
+      "name": "failed",
+      "description": "Set the widget's state to .failed with onRetry: the card shows the error with Try again instead of the timeline."
+    }
+  ],
+  "appearance": "The widget's surface and subtle border with its title row, then the compact timeline: tone-coloured dots or avatars, the sentence in the default text colour and the time in the muted text colour. The same roles change with dark and high-contrast themes.",
+  "platformNotes": "The web ActivityWidget is a component with a limit prop and its own \"Recent activity\" and \"No activity yet\" strings. On iOS it composes MonarchWidget and MonarchActivityTimeline: the app passes the first events (events.prefix(6)) and its own title, which it has already localised, so Monarch ships no strings for the recipe. The web view-all link is an href; on iOS onViewAll pushes the full log in the navigation stack. The web time zone prop has no counterpart: the timeline formats in the device time zone. Android uses the same recipe.",
+  "accessibility": [
+    "The widget title is read as a header, then each event as one sentence: actor, verb, object and time.",
+    "Automated actors carry the visible \"Automated\" tag from the timeline, so people and rules are told apart without colour.",
+    "View all and the retry button are standard buttons with 44-point touch targets."
+  ],
+  "edgeCases": [
+    "Keep the list short: the card does not scroll on its own, so pass five or six events and lead to the full log.",
+    "Pass now from a fixed clock in tests and previews so relative times do not change between runs.",
+    "Ungrouped (isGroupedByDay: false) reads better in a short card; grouped by day suits a taller widget."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Recent activity with a view-all link",
+      "fixture": "activity-widget",
+      "webExample": "Recent activity with a view-all link",
+      "template": "MonarchWidget({{title}}, onViewAll: {}) {\n    MonarchActivityTimeline(\n        [\n            MonarchActivityTimelineEvent(\n                id: {{events.0.id}},\n                actor: MonarchActivityTimelineActor({{events.0.actor}}),\n                verb: {{events.0.verb}},\n                object: {{events.0.object}},\n                time: {{events.0.time|date}}\n            ),\n            MonarchActivityTimelineEvent(\n                id: {{events.1.id}},\n                actor: MonarchActivityTimelineActor({{events.1.actor}}, kind: {{events.1.kind|case}}),\n                verb: {{events.1.verb}},\n                object: {{events.1.object}},\n                time: {{events.1.time|date}},\n                tone: {{events.1.tone|tone}}\n            ),\n            MonarchActivityTimelineEvent(\n                id: {{events.2.id}},\n                actor: MonarchActivityTimelineActor({{events.2.actor}}),\n                verb: {{events.2.verb}},\n                object: {{events.2.object}},\n                time: {{events.2.time|date}}\n            ),\n            MonarchActivityTimelineEvent(\n                id: {{events.3.id}},\n                actor: MonarchActivityTimelineActor({{events.3.actor}}),\n                verb: {{events.3.verb}},\n                object: {{events.3.object}},\n                time: {{events.3.time|date}}\n            ),\n        ],\n        isGroupedByDay: false,\n        density: .compact,\n        now: {{now|date}},\n        labels: MonarchActivityTimelineLabels(list: {{title}})\n    )\n}\n.environment(\\.timeZone, TimeZone(identifier: {{timeZone}}) ?? .gmt)",
+      "code": "MonarchWidget(\"Recent activity\", onViewAll: {}) {\n    MonarchActivityTimeline(\n        [\n            MonarchActivityTimelineEvent(\n                id: \"1\",\n                actor: MonarchActivityTimelineActor(\"Ada Moss\"),\n                verb: \"closed\",\n                object: \"Request 1042\",\n                time: Date(timeIntervalSince1970: 1_794_051_600)\n            ),\n            MonarchActivityTimelineEvent(\n                id: \"2\",\n                actor: MonarchActivityTimelineActor(\"Renewal rule\", kind: .automation),\n                verb: \"flagged\",\n                object: \"Contract 88\",\n                time: Date(timeIntervalSince1970: 1_794_045_900),\n                tone: .warning\n            ),\n            MonarchActivityTimelineEvent(\n                id: \"3\",\n                actor: MonarchActivityTimelineActor(\"Bea Lund\"),\n                verb: \"commented on\",\n                object: \"Request 1039\",\n                time: Date(timeIntervalSince1970: 1_794_039_300)\n            ),\n            MonarchActivityTimelineEvent(\n                id: \"4\",\n                actor: MonarchActivityTimelineActor(\"Cal Ortiz\"),\n                verb: \"created\",\n                object: \"Project Atlas\",\n                time: Date(timeIntervalSince1970: 1_793_980_800)\n            ),\n        ],\n        isGroupedByDay: false,\n        density: .compact,\n        now: Date(timeIntervalSince1970: 1_794_052_800),\n        labels: MonarchActivityTimelineLabels(list: \"Recent activity\")\n    )\n}\n.environment(\\.timeZone, TimeZone(identifier: \"UTC\") ?? .gmt)"
+    },
+    {
+      "title": "Loading, empty and failed",
+      "setup": "@State private var isRetrying = false",
+      "code": "VStack {\n    MonarchWidget(\"Recent activity\") {\n        MonarchActivityTimeline([], isGroupedByDay: false, density: .compact, isLoading: true)\n    }\n    MonarchWidget(\"Recent activity\") {\n        MonarchActivityTimeline(\n            [],\n            isGroupedByDay: false,\n            density: .compact,\n            labels: MonarchActivityTimelineLabels(empty: \"No activity yet\")\n        )\n    }\n    MonarchWidget(\"Recent activity\", state: .failed(), isRetrying: isRetrying, onRetry: { isRetrying = true }, content: {\n        EmptyView()\n    })\n}"
+    }
+  ],
+  "webEquivalent": "ActivityWidget",
+  "dependsOn": [
+    "widget",
+    "activity-timeline"
+  ],
+  "icons": {
+    "viewAll": "ChevronRightGlyph"
+  }
+}

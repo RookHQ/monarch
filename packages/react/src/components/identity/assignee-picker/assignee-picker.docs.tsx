@@ -1,39 +1,23 @@
 import { useState } from 'react';
 import { AssigneePicker, Field, FieldLabel, type AssigneePerson } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './assignee-picker.fixture.json';
 
-const members: AssigneePerson[] = [
-  {
-    id: 'm1',
-    name: 'Priya Raman',
-    email: 'priya@example.com',
-    hint: '4 open',
-    group: 'In this team',
-  },
-  {
-    id: 'm2',
-    name: 'Jonas Weber',
-    email: 'jonas@example.com',
-    status: 'online',
-    group: 'In this team',
-  },
-  { id: 'm3', name: 'Amara Okafor', email: 'amara@example.com', group: 'Everyone else' },
-  {
-    id: 'm4',
-    name: 'Lucas Martin',
-    email: 'lucas@example.com',
-    status: 'away',
-    group: 'Everyone else',
-  },
-  { id: 'm5', name: 'Mei Chen', email: 'mei@example.com', group: 'Everyone else' },
-];
+const members = fixture.data.people as unknown as AssigneePerson[];
 
 function SingleDemo() {
-  const [value, setValue] = useState<string | null>('m2');
+  const [value, setValue] = useState<string | null>(fixture.data.value);
   return (
     <Field style={{ width: '100%', maxWidth: 300 }}>
-      <FieldLabel>Assignee</FieldLabel>
-      <AssigneePicker people={members} currentUserId="m3" value={value} onValueChange={setValue} />
+      <FieldLabel>{fixture.data.label}</FieldLabel>
+      <AssigneePicker
+        defaultOpen
+        people={members}
+        currentUserId={fixture.data.currentUserId}
+        value={value}
+        onValueChange={setValue}
+      />
     </Field>
   );
 }
@@ -178,6 +162,7 @@ export default {
         {
           title: 'Assignee with you and Unassigned',
           stack: true,
+          stage: true,
           render: () => <SingleDemo />,
         },
         {

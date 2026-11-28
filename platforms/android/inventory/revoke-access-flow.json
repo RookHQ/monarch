@@ -1,0 +1,125 @@
+{
+  "id": "revoke-access-flow",
+  "name": null,
+  "title": "RevokeAccessFlow",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet (dismissible = false keeps it open while revoking) with androidx.compose.foundation.layout.Column, MonarchConsequenceList, MonarchTypeToConfirmInput, MonarchInlineNotice, MonarchButton and MonarchStepUpAuthDialog; android.text.format.DateUtils for the last-used time",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: confirm revoking an API key, an OAuth client, portal access, sessions or devices, listing what is revoked, when it was last used and what happens, with optional type-to-confirm and re-authentication.",
+  "whenToUse": "Behind every Revoke, Sign out or Remove action on keys, connected apps, sessions, devices or someone's portal access.",
+  "whenNotToUse": "For a simple sign-out of one session, a MonarchDialog (ConfirmDialog) is enough. For deleting a whole workspace, use the same pattern with the workspace's own wording.",
+  "api": [
+    "MonarchBottomSheet(onDismissRequest = { confirming = false }, title = \"Revoke “$keyName”?\", description = …, dismissible = !revoking) { … }",
+    "DateUtils.getRelativeTimeSpanString(lastUsedMillis, now, DateUtils.MINUTE_IN_MILLIS)",
+    "MonarchConsequenceList(items = listOf(MonarchConsequence(MonarchConsequenceKind.Removed, \"…\"), MonarchConsequence(MonarchConsequenceKind.Warning, \"…\")), heading = \"What happens\")",
+    "MonarchTypeToConfirmInput(phrase = keyName, value = typed, onValueChange = { typed = it })",
+    "MonarchButton(text = \"Revoke key\", onClick = …, modifier = Modifier.fillMaxWidth(), variant = MonarchButtonVariant.Danger, enabled = MonarchTypeToConfirmInputDefaults.matches(typed, keyName), loading = revoking)",
+    "MonarchStepUpAuthDialog(onVerify = …, description = \"Revoking access needs you to confirm it’s you.\", onVerified = …)"
+  ],
+  "options": [
+    {
+      "name": "keyName",
+      "type": "String",
+      "default": "required",
+      "description": "The name of what is revoked, written in the title and typed to confirm."
+    },
+    {
+      "name": "lastUsedMillis",
+      "type": "Long?",
+      "default": "null",
+      "description": "When it was last used, in epoch milliseconds; null reads \"Never used\"."
+    },
+    {
+      "name": "typeToConfirm",
+      "type": "Boolean",
+      "default": "true for keys and OAuth clients",
+      "description": "Whether the danger button waits for the name to be typed exactly."
+    },
+    {
+      "name": "needsStepUp",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Whether the server requires a recent confirmation; the sheet then shows MonarchStepUpAuthDialog and revokes after it verifies."
+    },
+    {
+      "name": "revoking",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The request is running: the danger button shows its progress indicator, Cancel is disabled and the sheet cannot be dismissed."
+    },
+    {
+      "name": "failure",
+      "type": "String?",
+      "default": "null",
+      "description": "A failed request, shown in a danger MonarchInlineNotice in the sheet."
+    }
+  ],
+  "states": [
+    {
+      "name": "confirm",
+      "description": "The question naming what is revoked, a line on what it means, the item with its prefix and last-used time, the consequence list, and the danger and Cancel buttons."
+    },
+    {
+      "name": "type to confirm",
+      "description": "For keys and OAuth clients, the danger button stays disabled until the name is typed exactly."
+    },
+    {
+      "name": "step-up",
+      "description": "When re-authentication is required, the sheet shows MonarchStepUpAuthDialog; the revocation runs after it verifies."
+    },
+    {
+      "name": "revoking",
+      "description": "The danger button shows its progress indicator; Cancel is disabled and the sheet cannot be swiped away."
+    },
+    {
+      "name": "failed",
+      "description": "A danger MonarchInlineNotice in the sheet; the person can try again."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component on the sheet's surface: a heading, body text, the consequence list with its marks, the type-to-confirm field and full-width danger and ghost buttons. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web's RevokeAccessFlow is one component with built-in copy for five kinds (api-key, oauth-client, portal-access, session, device) and plural forms. On Android, as on iOS, it is a recipe: the copy is the app's, written for its kind and count, and the step is a MonarchBottomSheet because a MonarchDialog cannot comfortably hold a list, a text field with a match check and a pending state. Danger is right for keys and OAuth clients, which cannot be undone; for sessions, devices and portal access, which can sign in again, use a plain MonarchDialog or the same sheet with warning wording. The web's stepUp prop is MonarchStepUpAuthDialog shown in the same sheet. The last-used time is written with DateUtils.getRelativeTimeSpanString (minSdk 24, no java.time).",
+  "accessibility": [
+    "The title has the heading semantics.",
+    "MonarchConsequenceList reads each consequence with its kind.",
+    "MonarchTypeToConfirmInput announces when the typed name matches.",
+    "The row's Revoke button is named with the item (\"Revoke CI deploy key\").",
+    "Buttons are MonarchButtons with 48dp targets and a loading state while revoking; the sheet cannot be dismissed while revoking, so the result is not lost."
+  ],
+  "edgeCases": [
+    "For several items, list each one and put the count in the title and the button (\"Revoke 3 keys\").",
+    "An item never used reads \"Never used\" instead of a time.",
+    "Reset the typed name each time the sheet opens.",
+    "After a failure keep the sheet open with the typed name, so the person can try again."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "API key with type-to-confirm and step-up",
+      "fixture": "revoke-access-flow",
+      "webExample": "API key with type-to-confirm and step-up",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchText(text = keyName, style = MonarchTextStyle.BodyStrong)\n    MonarchText(text = \"{{item.detail|raw}} · Last used $lastUsed\", style = MonarchTextStyle.Caption)\n    MonarchButton(\n        text = {{trigger}},\n        onClick = {\n            typed = \"\"\n            failure = null\n            confirming = true\n        },\n        modifier = Modifier.semantics { contentDescription = \"Revoke $keyName\" },\n        variant = MonarchButtonVariant.Danger,\n    )\n}\nif (confirming) {\n    MonarchDialog(\n        onDismissRequest = { confirming = false },\n        title = \"Revoke API key?\",\n        icon = { MonarchIcon(SampleIcons.Warning, contentDescription = null, tint = MonarchTheme.colors.dangerStrong) },\n        description = \"A revoked key cannot be restored. Create a new key if you still need access.\",\n        dismissible = !revoking,\n        actions = {\n            MonarchButton(\n                text = \"Cancel\",\n                onClick = { confirming = false },\n                size = MonarchButtonSize.Sm,\n                enabled = !revoking,\n            )\n            MonarchButton(\n                text = \"Revoke key\",\n                onClick = {\n                    revoking = true\n                    scope.launch {\n                        // The app's request. On failure set failure and keep the dialog open.\n                        revoking = false\n                        confirming = false\n                    }\n                },\n                variant = MonarchButtonVariant.Danger,\n                size = MonarchButtonSize.Sm,\n                enabled = MonarchTypeToConfirmInputDefaults.matches(typed, keyName),\n                loading = revoking,\n            )\n        },\n    ) {\n        Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n            MonarchCard {\n                MonarchText(text = keyName, style = MonarchTextStyle.BodyStrong)\n                MonarchText(text = \"{{item.detail|raw}}\", style = MonarchTextStyle.Caption)\n                MonarchText(text = \"Last used $lastUsed\", style = MonarchTextStyle.Caption)\n            }\n            MonarchConsequenceList(\n                items = listOf(\n                    MonarchConsequence(MonarchConsequenceKind.Removed, \"Apps and scripts using this key stop working immediately\"),\n                ),\n                heading = \"What happens\",\n            )\n            MonarchTypeToConfirmInput(phrase = keyName, value = typed, onValueChange = { typed = it })\n            failure?.let { MonarchInlineNotice(message = it, tone = MonarchTone.Danger) }\n        }\n    }\n}\n",
+      "setupTemplate": "val keyName = {{item.label}}\nval scope = rememberCoroutineScope()\nvar confirming by rememberSaveable { mutableStateOf(true) }\nvar typed by remember { mutableStateOf(\"\") }\nvar revoking by remember { mutableStateOf(false) }\nvar failure by remember { mutableStateOf<String?>(null) }\nval now = remember { System.currentTimeMillis() }\nval lastUsed = DateUtils.getRelativeTimeSpanString(now - {{item.lastUsedHoursAgo}} * DateUtils.HOUR_IN_MILLIS, now, DateUtils.MINUTE_IN_MILLIS)",
+      "imports": [
+        "android.text.format.DateUtils",
+        "kotlinx.coroutines.launch",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "val keyName = \"Build server\"\nval scope = rememberCoroutineScope()\nvar confirming by rememberSaveable { mutableStateOf(true) }\nvar typed by remember { mutableStateOf(\"\") }\nvar revoking by remember { mutableStateOf(false) }\nvar failure by remember { mutableStateOf<String?>(null) }\nval now = remember { System.currentTimeMillis() }\nval lastUsed = DateUtils.getRelativeTimeSpanString(now - 3 * DateUtils.HOUR_IN_MILLIS, now, DateUtils.MINUTE_IN_MILLIS)",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchText(text = keyName, style = MonarchTextStyle.BodyStrong)\n    MonarchText(text = \"sk_live_…4f2a · read and write · Last used $lastUsed\", style = MonarchTextStyle.Caption)\n    MonarchButton(\n        text = \"Revoke key\",\n        onClick = {\n            typed = \"\"\n            failure = null\n            confirming = true\n        },\n        modifier = Modifier.semantics { contentDescription = \"Revoke $keyName\" },\n        variant = MonarchButtonVariant.Danger,\n    )\n}\nif (confirming) {\n    MonarchDialog(\n        onDismissRequest = { confirming = false },\n        title = \"Revoke API key?\",\n        icon = { MonarchIcon(SampleIcons.Warning, contentDescription = null, tint = MonarchTheme.colors.dangerStrong) },\n        description = \"A revoked key cannot be restored. Create a new key if you still need access.\",\n        dismissible = !revoking,\n        actions = {\n            MonarchButton(\n                text = \"Cancel\",\n                onClick = { confirming = false },\n                size = MonarchButtonSize.Sm,\n                enabled = !revoking,\n            )\n            MonarchButton(\n                text = \"Revoke key\",\n                onClick = {\n                    revoking = true\n                    scope.launch {\n                        // The app's request. On failure set failure and keep the dialog open.\n                        revoking = false\n                        confirming = false\n                    }\n                },\n                variant = MonarchButtonVariant.Danger,\n                size = MonarchButtonSize.Sm,\n                enabled = MonarchTypeToConfirmInputDefaults.matches(typed, keyName),\n                loading = revoking,\n            )\n        },\n    ) {\n        Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n            MonarchCard {\n                MonarchText(text = keyName, style = MonarchTextStyle.BodyStrong)\n                MonarchText(text = \"sk_live_…4f2a · read and write\", style = MonarchTextStyle.Caption)\n                MonarchText(text = \"Last used $lastUsed\", style = MonarchTextStyle.Caption)\n            }\n            MonarchConsequenceList(\n                items = listOf(\n                    MonarchConsequence(MonarchConsequenceKind.Removed, \"Apps and scripts using this key stop working immediately\"),\n                ),\n                heading = \"What happens\",\n            )\n            MonarchTypeToConfirmInput(phrase = keyName, value = typed, onValueChange = { typed = it })\n            failure?.let { MonarchInlineNotice(message = it, tone = MonarchTone.Danger) }\n        }\n    }\n}\n"
+    }
+  ],
+  "webEquivalent": "RevokeAccessFlow",
+  "dependsOn": [
+    "confirm-dialog",
+    "consequence-list",
+    "relative-time"
+  ]
+}

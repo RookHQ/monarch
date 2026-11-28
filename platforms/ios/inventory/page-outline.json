@@ -1,0 +1,126 @@
+{
+  "id": "page-outline",
+  "name": "MonarchPageOutline",
+  "title": "PageOutline",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of Buttons; the app scrolls with ScrollViewReader.scrollTo in onNavigate",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A document's headings as a nested list, with the section being read marked as current; picking a heading lets the app scroll to it.",
+  "whenToUse": "For long documents, articles and help pages, in a sheet on a phone or beside the document on a wide screen.",
+  "whenNotToUse": "Not for moving between screens or pages of an app (use a List with NavigationLink or a tab bar) and not for a short page with two or three headings.",
+  "api": [
+    "init(_ headings: [MonarchPageOutlineHeading], currentID: String? = nil, maxLevel: Int = 3, stats: MonarchPageOutlineStats? = nil, isTitleHidden: Bool = false, labels: MonarchPageOutlineLabels = MonarchPageOutlineLabels(), onNavigate: @escaping @MainActor (MonarchPageOutlineHeading) -> Void)",
+    "struct MonarchPageOutlineHeading: Identifiable { init(_ text: String, level: Int, id: String) }",
+    "struct MonarchPageOutlineStats { init(words: Int, minutes: Int); init(text: String); static let wordsPerMinute: Int }",
+    "struct MonarchPageOutlineLabels { init(title: String? = nil, empty: String? = nil, stats: (@Sendable (MonarchPageOutlineStats) -> String)? = nil, current: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "headings",
+      "type": "[MonarchPageOutlineHeading]",
+      "default": "required",
+      "description": "The headings in document order, each with its text, level 1 through 6 and the id used to scroll to it."
+    },
+    {
+      "name": "currentID",
+      "type": "String?",
+      "default": "nil",
+      "description": "The id of the heading of the section being read. The app works it out from the scroll position."
+    },
+    {
+      "name": "maxLevel",
+      "type": "Int",
+      "default": "3",
+      "description": "The deepest heading level listed."
+    },
+    {
+      "name": "stats",
+      "type": "MonarchPageOutlineStats?",
+      "default": "nil",
+      "description": "The word count and reading time shown under the list, such as \"1,234 words · 6 min read\". MonarchPageOutlineStats(text:) counts them."
+    },
+    {
+      "name": "isTitleHidden",
+      "type": "Bool",
+      "default": "false",
+      "description": "Hides the visible \"On this page\" title, for example when a sheet's navigation title already says it. The outline keeps it as its spoken name."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchPageOutlineLabels",
+      "default": "MonarchPageOutlineLabels()",
+      "description": "Replacements for the title, the empty message, the stats line and the spoken \"Current section\"."
+    },
+    {
+      "name": "onNavigate",
+      "type": "@MainActor (MonarchPageOutlineHeading) -> Void",
+      "default": "required",
+      "description": "Runs when a heading is picked. Scroll to it here, for example with ScrollViewProxy.scrollTo(heading.id, anchor: .top), and close the sheet."
+    }
+  ],
+  "states": [
+    {
+      "name": "current",
+      "description": "The current heading is in the accent strong colour and a stronger weight, with an accent bar at its leading edge."
+    },
+    {
+      "name": "other headings",
+      "description": "Muted text with a subtle bar, indented one step per nesting level."
+    },
+    {
+      "name": "empty",
+      "description": "\"Headings you add appear here.\" in muted text."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true): the headings use the disabled text colour and cannot be picked."
+    }
+  ],
+  "appearance": "A title in the label style, then the headings in the body style with a thin leading bar in the subtle border role, the current one in the accent strong and accent solid roles. The stats line is a muted caption. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web outline reads headings from a Tiptap editor or the page and spies on the scroll position itself. On iOS the app passes the headings and the current id, because only the app knows its document model and scroll view, and scrolls to a heading in onNavigate with ScrollViewReader. There is no rich text editor on iOS yet, so the editor mode and its caret tracking are not offered; MonarchPageOutlineStats(text:) replaces the editor word count.",
+  "accessibility": [
+    "The outline is a container named by its title; the visible title has the header trait.",
+    "Each heading is a standard button with a 44-point touch target.",
+    "The current heading has the selected trait and the value \"Current section\", and is shown with a stronger weight and a bar as well as colour.",
+    "The indent of nested headings scales with Dynamic Type and follows the layout direction."
+  ],
+  "edgeCases": [
+    "Skipped levels (a level 3 under a level 1) add one step of indent, not two.",
+    "Blank headings and headings deeper than maxLevel are left out.",
+    "Long headings wrap; nothing is truncated.",
+    "Levels outside 1 through 6 are clamped."
+  ],
+  "tests": [
+    "MonarchPageOutlineTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Static headings",
+      "fixture": "page-outline",
+      "webExample": "Static headings",
+      "template": "MonarchPageOutline(\n    headings,\n    currentID: current,\n    labels: MonarchPageOutlineLabels(title: {{title}})\n) { heading in\n    current = heading.id\n}",
+      "setupTemplate": "@State private var current: String? = {{activeId}}\nprivate let headings = [\n    MonarchPageOutlineHeading({{headings.0.text}}, level: {{headings.0.level}}, id: {{headings.0.id}}),\n    MonarchPageOutlineHeading({{headings.1.text}}, level: {{headings.1.level}}, id: {{headings.1.id}}),\n    MonarchPageOutlineHeading({{headings.2.text}}, level: {{headings.2.level}}, id: {{headings.2.id}}),\n    MonarchPageOutlineHeading({{headings.3.text}}, level: {{headings.3.level}}, id: {{headings.3.id}}),\n    MonarchPageOutlineHeading({{headings.4.text}}, level: {{headings.4.level}}, id: {{headings.4.id}}),\n]",
+      "setup": "@State private var current: String? = \"accounts\"\nprivate let headings = [\n    MonarchPageOutlineHeading(\"Overview\", level: 2, id: \"overview\"),\n    MonarchPageOutlineHeading(\"Getting started\", level: 2, id: \"getting-started\"),\n    MonarchPageOutlineHeading(\"Accounts\", level: 3, id: \"accounts\"),\n    MonarchPageOutlineHeading(\"Permissions\", level: 3, id: \"permissions\"),\n    MonarchPageOutlineHeading(\"Billing\", level: 2, id: \"billing\"),\n]",
+      "code": "MonarchPageOutline(\n    headings,\n    currentID: current,\n    labels: MonarchPageOutlineLabels(title: \"In this document\")\n) { heading in\n    current = heading.id\n}"
+    }
+  ],
+  "webEquivalent": "PageOutline",
+  "dependsOn": [
+    "link"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "Each row keeps a 44-point touch target, so the rows are taller than the web's 27-pixel rows; the rail, the active bar and its accent weight, the indent of nested headings and the title are as on the web.",
+      "convention": "HIG: controls are at least 44 points tall"
+    }
+  ]
+}

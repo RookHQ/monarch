@@ -1,0 +1,70 @@
+{
+  "id": "sticky",
+  "name": null,
+  "title": "Sticky",
+  "family": "layout",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyListScope.stickyHeader, androidx.compose.material3.Scaffold (topBar, bottomBar)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Headers that stay at the top while their section scrolls are LazyColumn's stickyHeader, and bars fixed to an edge are the topBar and bottomBar of a Scaffold. Monarch ships nothing.",
+  "whenToUse": "stickyHeader for group headers of a long list (letters of a contact list, days of an activity feed). Scaffold's topBar and bottomBar for a filter bar or an action bar that is always at the top or bottom; pass the Scaffold's content padding to the list so nothing is hidden behind them.",
+  "whenNotToUse": "Do not pin more than one header at a time, and do not pin content in a short screen that does not scroll. For a top app bar that collapses on scroll use TopAppBar with a TopAppBarScrollBehavior.",
+  "api": [
+    "fun LazyListScope.stickyHeader(key: Any? = null, contentType: Any? = null, content: @Composable LazyItemScope.(Int) -> Unit)",
+    "@Composable fun Scaffold(modifier: Modifier = Modifier, topBar: @Composable () -> Unit = {}, bottomBar: @Composable () -> Unit = {}, snackbarHost: @Composable () -> Unit = {}, floatingActionButton: @Composable () -> Unit = {}, ..., content: @Composable (PaddingValues) -> Unit)",
+    "val LazyListState.firstVisibleItemIndex: Int",
+    "val LazyListState.firstVisibleItemScrollOffset: Int"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "stuck",
+      "description": "Read from the list state: derivedStateOf { state.firstVisibleItemIndex > 0 || state.firstVisibleItemScrollOffset > 0 } is true once content scrolls under the header; use it to add a divider or a shadow."
+    }
+  ],
+  "appearance": "A sticky header needs an opaque background (the surface color) so rows do not show through it. A bar in a Scaffold uses the Material 3 colors mapped from the Monarch theme.",
+  "platformNotes": "The web Sticky pins any element to the top or bottom with an offset, adds a shadow when stuck (elevateWhenStuck) and reports it (onStuckChange). On Android the two cases are separate APIs: stickyHeader for headers of a lazy list, and the Scaffold's bars for content fixed to an edge. There is no stuck callback; the stuck state is derived from LazyListState, and a top app bar's scroll behavior already changes its color when content scrolls under it. The web's offset is the window insets, which Scaffold applies. iOS uses pinnedViews and safeAreaInset.",
+  "accessibility": [
+    "System behavior: a sticky header is read once, in its place in the list order, not again while it is pinned.",
+    "Mark a sticky header as a heading so TalkBack's heading navigation jumps between groups.",
+    "Bars in a Scaffold are read before (topBar) or after (bottomBar) the content."
+  ],
+  "edgeCases": [
+    "A sticky header with a transparent background lets rows show through it.",
+    "Forgetting the Scaffold's content padding puts the first and last rows behind the bars."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Header that knows it is pinned",
+      "fixture": "sticky",
+      "webExample": "Header that knows it is pinned",
+      "template": "LazyColumn(state = listState, modifier = Modifier.height(MonarchTheme.spacing.space24 * 3)) {\n    item {\n        MonarchText(text = {{intro}})\n    }\n    stickyHeader {\n        Row(\n            modifier = Modifier\n                .fillMaxWidth()\n                .background(MonarchTheme.colors.bgSurface)\n                .padding(vertical = MonarchTheme.spacing.space2),\n            verticalAlignment = Alignment.CenterVertically,\n        ) {\n            MonarchText(text = {{header}}, modifier = Modifier.weight(1f), style = MonarchTextStyle.BodyStrong)\n            MonarchText(text = if (pinned) {{pinnedLabel}} else {{placeLabel}}, style = MonarchTextStyle.Caption)\n        }\n    }\n    items(items = (1..{{rows.count}}).toList(), key = { it }) { number ->\n        MonarchText(text = \"{{rows.prefix|raw}} $number\")\n    }\n}",
+      "setupTemplate": "val listState = rememberLazyListState()\nval pinned by remember { derivedStateOf { listState.firstVisibleItemIndex >= 1 } }",
+      "setup": "val listState = rememberLazyListState()\nval pinned by remember { derivedStateOf { listState.firstVisibleItemIndex >= 1 } }",
+      "code": "LazyColumn(state = listState, modifier = Modifier.height(MonarchTheme.spacing.space24 * 3)) {\n    item {\n        MonarchText(text = \"Scroll this box.\")\n    }\n    stickyHeader {\n        Row(\n            modifier = Modifier\n                .fillMaxWidth()\n                .background(MonarchTheme.colors.bgSurface)\n                .padding(vertical = MonarchTheme.spacing.space2),\n            verticalAlignment = Alignment.CenterVertically,\n        ) {\n            MonarchText(text = \"Entries\", modifier = Modifier.weight(1f), style = MonarchTextStyle.BodyStrong)\n            MonarchText(text = if (pinned) \"Pinned\" else \"In place\", style = MonarchTextStyle.Caption)\n        }\n    }\n    items(items = (1..24).toList(), key = { it }) { number ->\n        MonarchText(text = \"Entry $number\")\n    }\n}",
+      "imports": [
+        "androidx.compose.foundation.lazy.rememberLazyListState",
+        "androidx.compose.runtime.derivedStateOf"
+      ]
+    },
+    {
+      "title": "An action bar fixed to the bottom",
+      "code": "Scaffold(\n    modifier = Modifier.height(MonarchTheme.spacing.space24 * 3),\n    bottomBar = {\n        Surface(color = MonarchTheme.colors.bgSurface) {\n            MonarchButton(\n                text = \"Apply filters\",\n                onClick = {},\n                modifier = Modifier.fillMaxWidth().padding(MonarchTheme.spacing.space4),\n                variant = MonarchButtonVariant.Primary,\n            )\n        }\n    },\n) { padding ->\n    LazyColumn(contentPadding = padding) {\n        items(20) { MonarchText(text = \"Filter ${it + 1}\") }\n    }\n}"
+    },
+    {
+      "title": "A divider once the header is stuck",
+      "code": "Column {\n    MonarchText(text = \"Activity\", style = MonarchTextStyle.Heading)\n    if (stuck) MonarchDivider()\n    LazyColumn(state = state, modifier = Modifier.height(MonarchTheme.spacing.space24 * 2)) {\n        items(30) { MonarchText(text = \"Event ${it + 1}\") }\n    }\n}",
+      "setup": "val state = rememberLazyListState()\nval stuck by remember { derivedStateOf { state.firstVisibleItemIndex > 0 || state.firstVisibleItemScrollOffset > 0 } }"
+    }
+  ],
+  "webEquivalent": "Sticky",
+  "dependsOn": []
+}

@@ -1,6 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { AiStopButton } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-stop-button.fixture.json';
+
+/** A response caught mid-stream: the text so far, and Stop below it. */
+function MidStreamDemo() {
+  const [stopped, setStopped] = useState(false);
+  return (
+    <div style={{ display: 'grid', gap: 'var(--mn-space-2)', maxWidth: '28rem' }}>
+      <p style={{ margin: 0 }}>{fixture.data.partial}</p>
+      <AiStopButton
+        stopped={stopped}
+        onStop={() => setStopped(true)}
+        onContinue={() => setStopped(false)}
+      />
+    </div>
+  );
+}
 
 /** A fake response that "streams" until stopped, then can continue. */
 function StopDemo() {
@@ -139,6 +156,11 @@ export default {
     },
     examples: {
       items: [
+        {
+          title: 'While a response streams',
+          stack: true,
+          render: () => <MidStreamDemo />,
+        },
         {
           title: 'Stop a streaming response, then continue',
           stack: true,

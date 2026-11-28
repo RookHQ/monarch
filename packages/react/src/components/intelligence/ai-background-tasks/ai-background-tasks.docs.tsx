@@ -1,52 +1,12 @@
 import { useState } from 'react';
 import { AiBackgroundTasks, type AiBackgroundTask } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-background-tasks.fixture.json';
 
-const NOW = '2026-01-01T12:00:00.000Z';
+const NOW = fixture.data.now;
 
-const TASKS: AiBackgroundTask[] = [
-  {
-    id: 'venue',
-    title: 'Book the venue',
-    agent: 'Planning agent',
-    status: 'needs-input',
-    step: 'Two dates are free. Which one do you prefer?',
-    startedAt: '2026-01-01T11:50:00.000Z',
-  },
-  {
-    id: 'contracts',
-    title: 'Summarise 40 contracts',
-    agent: 'Research agent',
-    status: 'running',
-    progress: 0.4,
-    step: 'Reading contract 16 of 40',
-    startedAt: '2026-01-01T11:56:48.000Z',
-  },
-  {
-    id: 'index',
-    title: 'Index the workspace',
-    status: 'running',
-    startedAt: '2026-01-01T11:59:20.000Z',
-  },
-  { id: 'translate', title: 'Translate the summary', status: 'queued' },
-  {
-    id: 'notes',
-    title: 'Draft the release notes',
-    agent: 'Writing agent',
-    status: 'succeeded',
-    startedAt: '2026-01-01T11:40:00.000Z',
-    endedAt: '2026-01-01T11:55:00.000Z',
-    result: 'Draft ready, 420 words.',
-  },
-  {
-    id: 'import',
-    title: 'Import the spreadsheet',
-    status: 'failed',
-    startedAt: '2026-01-01T11:30:00.000Z',
-    endedAt: '2026-01-01T11:31:00.000Z',
-    error: 'The file could not be read.',
-  },
-];
+const TASKS = fixture.data.tasks as AiBackgroundTask[];
 
 /** The product owns the tasks; the tray only reports what the person asked for. */
 function ManagedDemo() {
@@ -219,8 +179,10 @@ export default {
       items: [
         {
           title: 'Trigger and popover',
+          stage: true,
           render: () => (
             <AiBackgroundTasks
+              defaultOpen
               tasks={TASKS}
               now={NOW}
               align="start"

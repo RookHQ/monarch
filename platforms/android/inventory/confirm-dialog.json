@@ -1,0 +1,85 @@
+{
+  "id": "confirm-dialog",
+  "name": null,
+  "title": "ConfirmDialog",
+  "family": "overlays",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "MonarchDialog with a MonarchButton in the Danger variant as its confirm action",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Confirming a consequential action is a MonarchDialog whose confirm button is a danger MonarchButton and whose dismiss button is Cancel. Monarch ships nothing.",
+  "whenToUse": "Before an action that deletes or cannot be undone. Say in the title what will happen and in the text what changes; name the button after the action.",
+  "whenNotToUse": "Do not confirm actions that are easy to undo: do them and offer undo in a snackbar. For a choice between several options see choice-dialog; for a value see prompt-dialog.",
+  "api": [
+    "@Composable fun MonarchDialog(onDismissRequest: () -> Unit, title: String?, modifier: Modifier = Modifier, description: String? = null, dismissible: Boolean = true, dismissOnClickOutside: Boolean = dismissible, paneTitle: String? = null, actions: (@Composable RowScope.() -> Unit)? = null, content: (@Composable ColumnScope.() -> Unit)? = null)",
+    "@Composable fun MonarchButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, variant: MonarchButtonVariant = MonarchButtonVariant.Secondary, size: MonarchButtonSize = MonarchButtonSize.Md, enabled: Boolean = true, loading: Boolean = false, \u2026)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "asking",
+      "description": "The title, the consequences and two buttons: Cancel (ghost) and the action (danger)."
+    },
+    {
+      "name": "type to confirm",
+      "description": "A MonarchTextField as the dialog's content; the danger button is disabled until the phrase matches."
+    },
+    {
+      "name": "pending",
+      "description": "The danger button is loading and back and outside taps are turned off, so the dialog stays while the action runs."
+    },
+    {
+      "name": "failed",
+      "description": "The content shows the error, for example in a MonarchInlineNotice, and the button can be pressed again."
+    }
+  ],
+  "appearance": "MonarchDialog in the raised background role with the default and muted text roles. The confirm button is the danger solid role with its on-solid text; Cancel is a ghost button in the default text role. The high-contrast themes resolve the same roles to stronger colors.",
+  "platformNotes": "The web ConfirmDialog has consequences, a confirm phrase, an acknowledgement checkbox, a reason field, and pending and error states. An Android MonarchDialog stays until the app stops composing it, so all of these fit in its slots: the consequences and fields in text, a loading MonarchButton for pending, and an error message. Material's own buttons have no danger look, so the confirm button is a MonarchButton. iOS uses the system alert, which closes when a button is tapped.",
+  "accessibility": [
+    "System behavior: TalkBack reads the title and text when the dialog opens and stays inside it.",
+    "The danger button says the action (\"Delete\") so the meaning does not depend on its color.",
+    "A loading MonarchButton is announced as busy and ignores taps while the action runs.",
+    "Back calls onDismissRequest, which is Cancel, unless it is turned off while pending."
+  ],
+  "edgeCases": [
+    "Do not put the danger button where a quick double tap on the opening control would hit it; MonarchDialog places it at the end, after Cancel.",
+    "The type-to-confirm phrase compares the exact text; trim or ignore case if the product allows it."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Type to confirm, with consequences",
+      "fixture": "confirm-dialog",
+      "webExample": "Type to confirm, with consequences",
+      "template": "MonarchButton(text = {{trigger}}, onClick = { confirming = true }, variant = MonarchButtonVariant.Danger)\nif (confirming) {\n    MonarchDialog(\n        onDismissRequest = { confirming = false },\n        title = {{title}},\n        description = {{description}},\n        icon = { MonarchIcon(SampleIcons.Warning, contentDescription = null, tint = MonarchTheme.colors.dangerStrong) },\n        actions = {\n            MonarchButton(text = {{cancelLabel}}, onClick = { confirming = false }, variant = MonarchButtonVariant.Ghost)\n            MonarchButton(\n                text = {{confirmLabel}},\n                onClick = {\n                    deleted = true\n                    confirming = false\n                },\n                variant = MonarchButtonVariant.Danger,\n                enabled = MonarchTypeToConfirmInputDefaults.matches(typed, {{confirmPhrase}}),\n            )\n        },\n    ) {\n        MonarchText(text = {{consequences.0}})\n        MonarchText(text = {{consequences.1}})\n        MonarchText(text = {{consequences.2}})\n        MonarchTypeToConfirmInput(phrase = {{confirmPhrase}}, value = typed, onValueChange = { typed = it })\n    }\n}",
+      "setupTemplate": "var confirming by remember { mutableStateOf(true) }\nvar deleted by remember { mutableStateOf(false) }\nvar typed by remember { mutableStateOf(\"\") }",
+      "setup": "var confirming by remember { mutableStateOf(true) }\nvar deleted by remember { mutableStateOf(false) }\nvar typed by remember { mutableStateOf(\"\") }",
+      "code": "MonarchButton(text = \"Delete project\", onClick = { confirming = true }, variant = MonarchButtonVariant.Danger)\nif (confirming) {\n    MonarchDialog(\n        onDismissRequest = { confirming = false },\n        title = \"Delete this project?\",\n        description = \"This cannot be undone.\",\n        icon = { MonarchIcon(SampleIcons.Warning, contentDescription = null, tint = MonarchTheme.colors.dangerStrong) },\n        actions = {\n            MonarchButton(text = \"Cancel\", onClick = { confirming = false }, variant = MonarchButtonVariant.Ghost)\n            MonarchButton(\n                text = \"Delete project\",\n                onClick = {\n                    deleted = true\n                    confirming = false\n                },\n                variant = MonarchButtonVariant.Danger,\n                enabled = MonarchTypeToConfirmInputDefaults.matches(typed, \"q3-launch\"),\n            )\n        },\n    ) {\n        MonarchText(text = \"48 tasks and their comments are deleted\")\n        MonarchText(text = \"6 people lose access\")\n        MonarchText(text = \"Shared links stop working\")\n        MonarchTypeToConfirmInput(phrase = \"q3-launch\", value = typed, onValueChange = { typed = it })\n    }\n}",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.foundation.icon.MonarchIcon",
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ]
+    },
+    {
+      "title": "Type a phrase, and stay open while the action runs",
+      "setup": "var confirming by remember { mutableStateOf(true) }\nvar phrase by remember { mutableStateOf(\"\") }\nvar deleting by remember { mutableStateOf(false) }",
+      "imports": [
+        "androidx.compose.ui.window.DialogProperties",
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "code": "if (confirming) {\n    MonarchDialog(\n        onDismissRequest = { confirming = false },\n        title = \"Delete the workspace?\",\n        description = \"The workspace and everything in it are deleted. Type DELETE to confirm.\",\n        // While it is deleted, back and a tap outside do not close it; a tap outside never loses the typed phrase.\n        dismissible = !deleting,\n        dismissOnClickOutside = false,\n        actions = {\n            MonarchButton(\n                text = \"Cancel\",\n                onClick = { confirming = false },\n                variant = MonarchButtonVariant.Ghost,\n                enabled = !deleting,\n            )\n            MonarchButton(\n                text = \"Delete\",\n                onClick = { deleting = true },\n                variant = MonarchButtonVariant.Danger,\n                enabled = phrase == \"DELETE\",\n                loading = deleting,\n            )\n        },\n    ) {\n        MonarchTextField(\n            value = phrase,\n            onValueChange = { phrase = it },\n            label = \"Confirmation\",\n            enabled = !deleting,\n        )\n    }\n}"
+    }
+  ],
+  "webEquivalent": "ConfirmDialog",
+  "dependsOn": [
+    "button",
+    "text-field"
+  ]
+}

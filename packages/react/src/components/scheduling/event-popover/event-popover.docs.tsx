@@ -1,16 +1,14 @@
 import { Button } from '@rookcom/monarch-react';
 import { EventChip, EventPopover, type CalendarEvent } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './event-popover.fixture.json';
 
-const EVENT: CalendarEvent = {
+const EVENT = {
   id: 'e1',
-  title: 'Sam Lee',
-  start: '2026-11-04T09:30:00Z',
-  end: '2026-11-04T10:15:00Z',
   color: '#2f7d6d',
-  status: 'confirmed',
-  detail: 'Consultation',
-};
+  ...fixture.data.event,
+} as CalendarEvent;
 
 export default {
   id: 'event-popover',
@@ -99,27 +97,32 @@ export default {
       items: [
         {
           title: 'From an event chip',
+          stage: true,
           render: () => (
             <EventPopover
+              defaultOpen
               event={EVENT}
-              timeZone="Europe/London"
-              locale="en-GB"
-              details={[
-                { label: 'Hosts', value: 'Alex Kim' },
-                { label: 'Reference', value: 'AB12CD' },
-              ]}
+              timeZone={fixture.data.timeZone}
+              locale={fixture.data.locale}
+              hourCycle="24"
+              details={fixture.data.details}
               actions={(close: () => void) => (
                 <>
                   <Button size="sm" onClick={close}>
-                    Open
+                    {fixture.data.actions[0]}
                   </Button>
                   <Button size="sm" variant="danger-subtle" onClick={close}>
-                    Cancel booking
+                    {fixture.data.actions[1]}
                   </Button>
                 </>
               )}
             >
-              <EventChip title={EVENT.title} time="09:30" color="#2f7d6d" variant="bar" />
+              <EventChip
+                title={EVENT.title}
+                time={fixture.data.chipTime}
+                color="#2f7d6d"
+                variant="bar"
+              />
             </EventPopover>
           ),
         },

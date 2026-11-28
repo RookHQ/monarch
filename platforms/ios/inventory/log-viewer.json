@@ -1,0 +1,169 @@
+{
+  "id": "log-viewer",
+  "name": "MonarchLogViewer",
+  "title": "LogViewer",
+  "family": "technical",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "ScrollViewReader and ScrollView with a LazyVStack of monospaced Text built from AttributedString; MonarchToggleGroup for the level filters; Toggle with .toggleStyle(.monarchButton) for Follow and Wrap; MonarchButton for the jump button; MonarchEmptyState",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A streaming log with level filters and counts, search that filters or highlights, follow mode that keeps the newest line in view, and a wrap toggle.",
+  "whenToUse": "To show the output of a build, a job, a deployment or a service: many short lines that arrive while the reader watches.",
+  "whenNotToUse": "For a fixed snippet of code or a command, use MonarchCodeBlock. For a searchable audit trail of user actions, use MonarchActivityTimeline or a table.",
+  "api": [
+    "MonarchLogViewer.init(_ lines: [MonarchLogLine], levels: Binding<Set<MonarchLogLevel>>? = nil, query: Binding<String>? = nil, isFollowing: Binding<Bool>? = nil, isWrapped: Binding<Bool>? = nil, searchMode: MonarchLogViewerSearchMode = .filter, showsTimestamps: Bool = true, showsLineNumbers: Bool = false, isLoading: Bool = false, labels: MonarchLogViewerLabels = MonarchLogViewerLabels(), @ViewBuilder actions: () -> Actions)",
+    "MonarchLogViewer.init(_ lines: [MonarchLogLine], levels: Binding<Set<MonarchLogLevel>>? = nil, query: Binding<String>? = nil, isFollowing: Binding<Bool>? = nil, isWrapped: Binding<Bool>? = nil, searchMode: MonarchLogViewerSearchMode = .filter, showsTimestamps: Bool = true, showsLineNumbers: Bool = false, isLoading: Bool = false, labels: MonarchLogViewerLabels = MonarchLogViewerLabels()) where Actions == EmptyView",
+    "MonarchLogLine.init(id: String, message: String, level: MonarchLogLevel = .info, time: Date? = nil, source: String? = nil)",
+    "enum MonarchLogLevel { case debug, info, warn, error }",
+    "enum MonarchLogViewerSearchMode { case filter, highlight }",
+    "MonarchLogViewerLabels.init(log: String? = nil, levels: String? = nil, levelName: (@Sendable (MonarchLogLevel) -> String)? = nil, search: String? = nil, searchPrompt: String? = nil, clearSearch: String? = nil, follow: String? = nil, wrap: String? = nil, count: (@Sendable (Int, Int) -> String)? = nil, jumpToLatest: String? = nil, newLines: (@Sendable (Int) -> String)? = nil, followPaused: String? = nil, followResumed: String? = nil, empty: String? = nil, noMatches: String? = nil, loading: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "lines",
+      "type": "[MonarchLogLine]",
+      "default": "required",
+      "description": "The lines, oldest first. Append to the array to stream."
+    },
+    {
+      "name": "levels",
+      "type": "Binding<Set<MonarchLogLevel>>?",
+      "default": "nil",
+      "description": "The levels shown. Kept inside, with all four on at first, when nil."
+    },
+    {
+      "name": "query",
+      "type": "Binding<String>?",
+      "default": "nil",
+      "description": "The search text. Kept inside when nil. Trimmed and matched against the message and the source, ignoring case."
+    },
+    {
+      "name": "isFollowing",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Whether the newest line is kept in view. Kept inside, on at first, when nil. The viewer sets it to false when the reader drags toward older lines and to true when they return to the end."
+    },
+    {
+      "name": "isWrapped",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Whether long lines wrap. Kept inside, off at first, when nil. Unwrapped lines scroll sideways."
+    },
+    {
+      "name": "searchMode",
+      "type": "MonarchLogViewerSearchMode",
+      "default": ".filter",
+      "description": "filter hides lines without a match; highlight keeps every line. Both mark the matches."
+    },
+    {
+      "name": "showsTimestamps",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the time of each line as 24-hour HH:mm:ss.SSS in the environment's time zone."
+    },
+    {
+      "name": "showsLineNumbers",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows each line's 1-based position in lines, which stays the same when filters hide lines."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows Loading log while lines is empty."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchLogViewerLabels",
+      "default": "MonarchLogViewerLabels()",
+      "description": "Replacements for every built-in string, including the level names, the count and the jump button."
+    },
+    {
+      "name": "actions",
+      "type": "@ViewBuilder () -> Actions",
+      "default": "EmptyView",
+      "description": "Extra controls after Follow and Wrap, such as ShareLink or a Clear button."
+    }
+  ],
+  "states": [
+    {
+      "name": "following",
+      "description": "Every new line scrolls the log to the end. The Follow toggle is on."
+    },
+    {
+      "name": "paused",
+      "description": "The log stays where the reader is. A Jump to latest button floats over the bottom of the log and becomes \"3 new lines\" when lines arrive."
+    },
+    {
+      "name": "wrapped",
+      "description": "Long lines wrap inside the width; otherwise each line is one row and the log scrolls sideways."
+    },
+    {
+      "name": "filtered",
+      "description": "The footer reads \"2 of 5 lines\". When nothing is left, a filtered empty state offers Clear filters, which empties the search and turns every level back on."
+    },
+    {
+      "name": "loading",
+      "description": "A spinner and Loading log while there are no lines yet."
+    },
+    {
+      "name": "empty",
+      "description": "An empty state, No log lines yet."
+    }
+  ],
+  "appearance": "The log sits in a rounded area on the subtle background with a subtle border. Lines use the code type role. Level names are bold, debug in the muted text colour and info, warn and error in the strong colour of their tone; warning and error lines have the subtle tone background. Sources are in the accent's strong colour and search matches have the subtle warning background and an underline. In dark and high-contrast themes the same roles are used.",
+  "platformNotes": "The web LogViewer measures and virtualises rows itself; on iOS a LazyVStack builds rows as they scroll into view. The web pauses following from the scroll position; here a drag toward older lines pauses it, and the bottom of the log coming back into view after the reader scrolled resumes it, because iOS 17 offers no scroll position callback. Home and End keys of the web are not offered; Follow and the jump button do the same. The time formatter is fixed to HH:mm:ss.SSS and cannot be replaced. Android uses the same name and API shape.",
+  "accessibility": [
+    "The log area is a container named \"Log\".",
+    "Each line is one element read as its level, time, source and message.",
+    "The level filters are a toggle group named \"Levels\"; each filter is a switch read with its count.",
+    "Follow and Wrap lines are toggles read with their on or off value.",
+    "Pausing and resuming following are announced: \"Following paused\" and \"Following new lines\".",
+    "Search matches are underlined as well as tinted, and the level is written as a word, so neither relies on colour.",
+    "The search field has a 44-point clear button named \"Clear search\".",
+    "VoiceOver scrolling does not pause following; turn Follow off to read back."
+  ],
+  "edgeCases": [
+    "Lines without a time leave out the time column; lines without a source leave out the source.",
+    "Long lines without wrap make the whole log scroll sideways.",
+    "Ids must be unique and stable; a repeated id confuses the scroll target.",
+    "The viewer never grows with its lines: give it a height with frame(height:), otherwise it is about twelve lines tall.",
+    "Line numbers keep their positions in the full list, so a filtered log shows gaps."
+  ],
+  "tests": [
+    "MonarchLogViewerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Streaming build output",
+      "fixture": "log-viewer",
+      "webExample": "Streaming build output",
+      "template": "MonarchLogViewer(lines) {\n    Button({{pause}}) {}\n        .buttonStyle(.monarch(.ghost, size: .sm))\n}\n.frame(height: 440)\n.environment(\\.timeZone, TimeZone(identifier: \"UTC\") ?? .gmt)",
+      "setupTemplate": "private let lines = [\n    MonarchLogLine(id: {{lines.0.id}}, message: {{lines.0.message}}, level: {{lines.0.level|case}}, time: {{lines.0.time|date}}, source: {{lines.0.source}}),\n    MonarchLogLine(id: {{lines.1.id}}, message: {{lines.1.message}}, level: {{lines.1.level|case}}, time: {{lines.1.time|date}}, source: {{lines.1.source}}),\n    MonarchLogLine(id: {{lines.2.id}}, message: {{lines.2.message}}, level: {{lines.2.level|case}}, time: {{lines.2.time|date}}, source: {{lines.2.source}}),\n    MonarchLogLine(id: {{lines.3.id}}, message: {{lines.3.message}}, level: {{lines.3.level|case}}, time: {{lines.3.time|date}}, source: {{lines.3.source}}),\n    MonarchLogLine(id: {{lines.4.id}}, message: {{lines.4.message}}, level: {{lines.4.level|case}}, time: {{lines.4.time|date}}, source: {{lines.4.source}}),\n    MonarchLogLine(id: {{lines.5.id}}, message: {{lines.5.message}}, level: {{lines.5.level|case}}, time: {{lines.5.time|date}}, source: {{lines.5.source}}),\n    MonarchLogLine(id: {{lines.6.id}}, message: {{lines.6.message}}, level: {{lines.6.level|case}}, time: {{lines.6.time|date}}, source: {{lines.6.source}}),\n    MonarchLogLine(id: {{lines.7.id}}, message: {{lines.7.message}}, level: {{lines.7.level|case}}, time: {{lines.7.time|date}}, source: {{lines.7.source}}),\n    MonarchLogLine(id: {{lines.8.id}}, message: {{lines.8.message}}, level: {{lines.8.level|case}}, time: {{lines.8.time|date}}, source: {{lines.8.source}}),\n    MonarchLogLine(id: {{lines.9.id}}, message: {{lines.9.message}}, level: {{lines.9.level|case}}, time: {{lines.9.time|date}}, source: {{lines.9.source}}),\n    MonarchLogLine(id: {{lines.10.id}}, message: {{lines.10.message}}, level: {{lines.10.level|case}}, time: {{lines.10.time|date}}, source: {{lines.10.source}}),\n    MonarchLogLine(id: {{lines.11.id}}, message: {{lines.11.message}}, level: {{lines.11.level|case}}, time: {{lines.11.time|date}}, source: {{lines.11.source}}),\n    MonarchLogLine(id: {{lines.12.id}}, message: {{lines.12.message}}, level: {{lines.12.level|case}}, time: {{lines.12.time|date}}, source: {{lines.12.source}}),\n    MonarchLogLine(id: {{lines.13.id}}, message: {{lines.13.message}}, level: {{lines.13.level|case}}, time: {{lines.13.time|date}}, source: {{lines.13.source}}),\n    MonarchLogLine(id: {{lines.14.id}}, message: {{lines.14.message}}, level: {{lines.14.level|case}}, time: {{lines.14.time|date}}, source: {{lines.14.source}}),\n    MonarchLogLine(id: {{lines.15.id}}, message: {{lines.15.message}}, level: {{lines.15.level|case}}, time: {{lines.15.time|date}}, source: {{lines.15.source}}),\n    MonarchLogLine(id: {{lines.16.id}}, message: {{lines.16.message}}, level: {{lines.16.level|case}}, time: {{lines.16.time|date}}, source: {{lines.16.source}}),\n    MonarchLogLine(id: {{lines.17.id}}, message: {{lines.17.message}}, level: {{lines.17.level|case}}, time: {{lines.17.time|date}}, source: {{lines.17.source}}),\n    MonarchLogLine(id: {{lines.18.id}}, message: {{lines.18.message}}, level: {{lines.18.level|case}}, time: {{lines.18.time|date}}, source: {{lines.18.source}}),\n    MonarchLogLine(id: {{lines.19.id}}, message: {{lines.19.message}}, level: {{lines.19.level|case}}, time: {{lines.19.time|date}}, source: {{lines.19.source}}),\n]",
+      "setup": "private let lines = [\n    MonarchLogLine(id: \"0\", message: \"Cloning repository (step 1)\", level: .info, time: Date(timeIntervalSince1970: 1_767_605_400), source: \"builder\"),\n    MonarchLogLine(id: \"1\", message: \"Installing dependencies (step 2)\", level: .info, time: Date(timeIntervalSince1970: 1_767_605_400.25), source: \"runner\"),\n    MonarchLogLine(id: \"2\", message: \"Resolved 412 packages (step 3)\", level: .debug, time: Date(timeIntervalSince1970: 1_767_605_400.5), source: \"runner\"),\n    MonarchLogLine(id: \"3\", message: \"Compiling 128 modules (step 4)\", level: .info, time: Date(timeIntervalSince1970: 1_767_605_400.75), source: \"builder\"),\n    MonarchLogLine(id: \"4\", message: \"Cache miss for build step, rebuilding (step 5)\", level: .warn, time: Date(timeIntervalSince1970: 1_767_605_401), source: \"runner\"),\n    MonarchLogLine(id: \"5\", message: \"Running tests (step 6)\", level: .info, time: Date(timeIntervalSince1970: 1_767_605_401.25), source: \"runner\"),\n    MonarchLogLine(id: \"6\", message: \"Test suite passed: 96 tests (step 7)\", level: .info, time: Date(timeIntervalSince1970: 1_767_605_401.5), source: \"builder\"),\n    MonarchLogLine(id: \"7\", message: \"Uploading build output (step 8)\", level: .info, time: Date(timeIntervalSince1970: 1_767_605_401.75), source: \"runner\"),\n    MonarchLogLine(id: \"8\", message: \"Retrying upload after a timeout (step 9)\", level: .warn, time: Date(timeIntervalSince1970: 1_767_605_402), source: \"runner\"),\n    MonarchLogLine(id: \"9\", message: \"Upload failed: connection reset by peer (step 10)\", level: .error, time: Date(timeIntervalSince1970: 1_767_605_402.25), source: \"builder\"),\n    MonarchLogLine(id: \"10\", message: \"Cloning repository (step 11)\", level: .info, time: Date(timeIntervalSince1970: 1_767_605_402.5), source: \"runner\"),\n    MonarchLogLine(id: \"11\", message: \"Installing dependencies (step 12)\", level: .info, time: Date(timeIntervalSince1970: 1_767_605_402.75), source: \"runner\"),\n    MonarchLogLine(id: \"12\", message: \"Resolved 412 packages (step 13)\", level: .debug, time: Date(timeIntervalSince1970: 1_767_605_403), source: \"builder\"),\n    MonarchLogLine(id: \"13\", message: \"Compiling 128 modules (step 14)\", level: .info, time: Date(timeIntervalSince1970: 1_767_605_403.25), source: \"runner\"),\n    MonarchLogLine(id: \"14\", message: \"Cache miss for build step, rebuilding (step 15)\", level: .warn, time: Date(timeIntervalSince1970: 1_767_605_403.5), source: \"runner\"),\n    MonarchLogLine(id: \"15\", message: \"Running tests (step 16)\", level: .info, time: Date(timeIntervalSince1970: 1_767_605_403.75), source: \"builder\"),\n    MonarchLogLine(id: \"16\", message: \"Test suite passed: 96 tests (step 17)\", level: .info, time: Date(timeIntervalSince1970: 1_767_605_404), source: \"runner\"),\n    MonarchLogLine(id: \"17\", message: \"Uploading build output (step 18)\", level: .info, time: Date(timeIntervalSince1970: 1_767_605_404.25), source: \"runner\"),\n    MonarchLogLine(id: \"18\", message: \"Retrying upload after a timeout (step 19)\", level: .warn, time: Date(timeIntervalSince1970: 1_767_605_404.5), source: \"builder\"),\n    MonarchLogLine(id: \"19\", message: \"Upload failed: connection reset by peer (step 20)\", level: .error, time: Date(timeIntervalSince1970: 1_767_605_404.75), source: \"runner\"),\n]",
+      "code": "MonarchLogViewer(lines) {\n    Button(\"Pause stream\") {}\n        .buttonStyle(.monarch(.ghost, size: .sm))\n}\n.frame(height: 440)\n.environment(\\.timeZone, TimeZone(identifier: \"UTC\") ?? .gmt)"
+    },
+    {
+      "title": "Highlight matches in wrapped lines, with a Clear action",
+      "setup": "@State private var lines = [\n    MonarchLogLine(id: \"1\", message: \"GET /v1/invoices 200\"),\n    MonarchLogLine(id: \"2\", message: \"GET /v1/invoices 500\", level: .error),\n]",
+      "code": "MonarchLogViewer(\n    lines,\n    query: .constant(\"invoices\"),\n    isWrapped: .constant(true),\n    searchMode: .highlight,\n    showsLineNumbers: true\n) {\n    Button(\"Clear\") { lines.removeAll() }\n        .buttonStyle(.monarch(.ghost, size: .sm))\n}\n.frame(height: 300)"
+    }
+  ],
+  "webEquivalent": "LogViewer",
+  "dependsOn": [
+    "toggle-group",
+    "toggle-button",
+    "button",
+    "text-field",
+    "empty-state"
+  ],
+  "icons": {
+    "follow": "ArrowDownGlyph"
+  }
+}

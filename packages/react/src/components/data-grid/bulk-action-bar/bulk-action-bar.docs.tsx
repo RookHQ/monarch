@@ -1,29 +1,24 @@
 import { useState } from 'react';
 import { BulkActionBar, DataTable, type DataTableColumn } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './bulk-action-bar.fixture.json';
 
-interface Member {
-  id: string;
-  name: string;
-  team: string;
-  role: string;
-}
+type Member = (typeof fixture.data.members)[number];
 
-const MEMBERS: Member[] = [
-  { id: 'm1', name: 'Ana Silva', team: 'Support', role: 'Agent' },
-  { id: 'm2', name: 'Ben Okafor', team: 'Support', role: 'Lead' },
-  { id: 'm3', name: 'Chen Wei', team: 'Billing', role: 'Agent' },
-  { id: 'm4', name: 'Dev Patel', team: 'Sales', role: 'Manager' },
-];
+const MEMBERS: Member[] = fixture.data.members;
 
 const COLUMNS: DataTableColumn<Member>[] = [
-  { id: 'name', header: 'Name' },
-  { id: 'team', header: 'Team' },
-  { id: 'role', header: 'Role' },
+  { id: 'name', header: fixture.data.columns[0] },
+  { id: 'team', header: fixture.data.columns[1] },
+  { id: 'role', header: fixture.data.columns[2] },
 ];
 
+type Action = { id: string; label: string; destructive?: boolean };
+const ACTIONS = fixture.data.actions as unknown as readonly [Action, Action, Action, Action];
+
 function WithTable() {
-  const [selected, setSelected] = useState<string[]>(['m1', 'm3']);
+  const [selected, setSelected] = useState<string[]>(fixture.data.selected);
   const [log, setLog] = useState('');
   const act = (what: string) => () => setLog(`${what}: ${selected.length} members`);
   return (
@@ -33,10 +28,15 @@ function WithTable() {
         totalCount={MEMBERS.length}
         onClear={() => setSelected([])}
         actions={[
-          { id: 'team', label: 'Move to team', onSelect: act('Moved') },
-          { id: 'role', label: 'Change role', onSelect: act('Role changed') },
-          { id: 'export', label: 'Export', onSelect: act('Exported') },
-          { id: 'remove', label: 'Remove', tone: 'danger', onSelect: act('Removed') },
+          { id: ACTIONS[0].id, label: ACTIONS[0].label, onSelect: act('Moved') },
+          { id: ACTIONS[1].id, label: ACTIONS[1].label, onSelect: act('Role changed') },
+          { id: ACTIONS[2].id, label: ACTIONS[2].label, onSelect: act('Exported') },
+          {
+            id: ACTIONS[3].id,
+            label: ACTIONS[3].label,
+            ...(ACTIONS[3].destructive ? { tone: 'danger' as const } : {}),
+            onSelect: act('Removed'),
+          },
         ]}
       />
       <DataTable
@@ -44,7 +44,7 @@ function WithTable() {
         rows={MEMBERS}
         getRowId={(r) => r.id}
         getRowLabel={(r) => r.name}
-        caption="Members"
+        caption={fixture.data.caption}
         selectable
         selectedRowIds={selected}
         onSelectedRowIdsChange={setSelected}

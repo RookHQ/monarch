@@ -12,30 +12,32 @@ import {
 } from '@rookcom/monarch-react';
 import { DatePicker } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './date-picker.fixture.json';
 
 // Examples pin `today` so the page and its visual baselines never change with the date.
-const TODAY = '2026-11-04';
+const TODAY = fixture.data.today;
 
-const PRESETS = [
-  { label: 'Today', days: 0 },
-  { label: 'Tomorrow', days: 1 },
-  { label: 'In a week', days: 7 },
-  { label: 'In two weeks', days: 14 },
-];
+const PRESETS = fixture.data.presets;
 
 function DueDate() {
   const [value, setValue] = useState<string | null>(null);
+  const [open, setOpen] = useState(true);
   return (
     <Field>
-      <FieldLabel>Due date</FieldLabel>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
       <DatePicker
-        locale="en-GB"
+        open={open}
+        onOpenChange={setOpen}
+        locale={fixture.data.locale}
         today={TODAY}
         presets={PRESETS}
         value={value}
         onValueChange={setValue}
       />
-      <FieldDescription>Type a date or pick one. Value: {value ?? 'none'}</FieldDescription>
+      <FieldDescription>
+        {fixture.data.helper} Value: {value ?? 'none'}
+      </FieldDescription>
     </Field>
   );
 }
@@ -202,6 +204,7 @@ export default {
       items: [
         {
           title: 'Due date with quick picks',
+          stage: true,
           render: () => <DueDate />,
         },
         {

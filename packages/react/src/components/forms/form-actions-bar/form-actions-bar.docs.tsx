@@ -8,8 +8,10 @@ import {
   UnsavedChangesGuard,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './form-actions-bar.fixture.json';
 
-const SAVED = { name: 'Northwind', email: 'team@example.com' };
+const SAVED = { name: fixture.data.name.saved, email: fixture.data.email.value };
 
 /** A stand-in for a network save that fails when the name is empty. */
 function fakeSave(values: typeof SAVED) {
@@ -18,23 +20,30 @@ function fakeSave(values: typeof SAVED) {
   );
 }
 
-function SettingsDemo() {
+/**
+ * `edited` opens with the name already changed, so the bar shows its dirty
+ * state; that demo has no leave guard, which would otherwise hold this page.
+ * Each bar is a named region, so the two demos on one page get their own names.
+ */
+function SettingsDemo({ edited = false }: { edited?: boolean }) {
   const [saved, setSaved] = useState(SAVED);
-  const [values, setValues] = useState(SAVED);
+  const [values, setValues] = useState(
+    edited ? { ...SAVED, name: fixture.data.name.edited } : SAVED,
+  );
   const dirty = values.name !== saved.name || values.email !== saved.email;
   const save = () => fakeSave(values).then(() => setSaved(values));
   return (
     <div style={{ display: 'grid', gap: 12, maxWidth: 420 }}>
-      <UnsavedChangesGuard when={dirty} onSave={save} />
+      {edited ? null : <UnsavedChangesGuard when={dirty} onSave={save} />}
       <Field>
-        <FieldLabel>Workspace name</FieldLabel>
+        <FieldLabel>{fixture.data.name.label}</FieldLabel>
         <Input
           value={values.name}
           onChange={(event) => setValues({ ...values, name: event.target.value })}
         />
       </Field>
       <Field>
-        <FieldLabel>Contact email</FieldLabel>
+        <FieldLabel>{fixture.data.email.label}</FieldLabel>
         <Input
           type="email"
           value={values.email}
@@ -46,6 +55,7 @@ function SettingsDemo() {
         sticky={false}
         onSave={save}
         onDiscard={() => setValues(saved)}
+        messages={{ label: edited ? 'Profile form actions' : 'Settings form actions' }}
       />
     </div>
   );
@@ -167,6 +177,7 @@ export default {
     },
     examples: {
       items: [
+        { title: 'Unsaved changes', stack: true, render: () => <SettingsDemo edited /> },
         { title: 'Settings form with a leave guard', stack: true, render: () => <SettingsDemo /> },
         {
           title: 'States',

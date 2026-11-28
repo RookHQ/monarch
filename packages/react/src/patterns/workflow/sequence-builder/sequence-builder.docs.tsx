@@ -6,34 +6,17 @@ import {
   type SequenceVariable,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './sequence-builder.fixture.json';
 
-const CHANNELS: SequenceChannel[] = [
-  { value: 'email', label: 'Email', hasSubject: true },
-  { value: 'chat', label: 'Chat message', maxLength: 1000 },
-];
+const CHANNELS: SequenceChannel[] = fixture.data.channels;
 
-const VARIABLES: SequenceVariable[] = [
-  { token: 'firstName', label: 'First name', sample: 'Sam' },
-  { token: 'product.name', label: 'Product name', sample: 'Atlas' },
-  { token: 'product.url', label: 'Product link', sample: 'https://example.com' },
-];
+const VARIABLES: SequenceVariable[] = fixture.data.variables;
 
 function SequenceDemo() {
-  const [steps, setSteps] = useState<SequenceStep[]>([
-    {
-      id: '1',
-      channel: 'email',
-      delayMinutes: 0,
-      subject: 'A quick intro to {{product.name}}',
-      body: 'Hi {{firstName}},\n\nHere is {{product.name}}: {{product.url}}.\n\nWorth a short look?',
-    },
-    {
-      id: '2',
-      channel: 'chat',
-      delayMinutes: 2880,
-      body: 'Hi {{firstName}}, a gentle nudge about {{product.name}}.',
-    },
-  ]);
+  const [steps, setSteps] = useState<SequenceStep[]>(
+    fixture.data.steps.map((step, i) => ({ id: String(i + 1), ...step })),
+  );
   return (
     <SequenceBuilder
       style={{ width: '100%', maxWidth: 720 }}

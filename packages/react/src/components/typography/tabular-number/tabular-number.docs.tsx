@@ -1,11 +1,9 @@
 import { TabularNumber, Text, formatTabularNumber } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './tabular-number.fixture.json';
 
-const ROWS = [
-  { label: 'Requests', value: 18420 },
-  { label: 'Errors', value: 37 },
-  { label: 'Median time (ms)', value: 112.4 },
-];
+const ROWS = fixture.data.rows;
 
 export default {
   id: 'tabular-number',
@@ -113,7 +111,7 @@ export default {
                       </Text>
                     </th>
                     <td style={{ textAlign: 'end' }}>
-                      <TabularNumber value={r.value} locale="en-US" />
+                      <TabularNumber value={r.value} locale={fixture.data.locale} />
                     </td>
                   </tr>
                 ))}

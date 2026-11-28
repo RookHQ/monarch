@@ -1,0 +1,139 @@
+{
+  "id": "duplicate-panel",
+  "name": "MonarchDuplicatePanel",
+  "title": "DuplicatePanel",
+  "family": "data-grid",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack, ForEach, Button, ViewThatFits",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Likely duplicates of a record, why each one matched, and buttons to open, merge or dismiss each one.",
+  "whenToUse": "Under a create form while the person types, or on a record screen, when the app has found records that may be the same.",
+  "whenNotToUse": "For the merge itself, present your own merge screen from onMerge. For a single validation message, use MonarchInlineNotice.",
+  "api": [
+    "init(_ matches: [MonarchDuplicateMatch], footer: String? = nil, variant: MonarchDuplicatePanelVariant = .hint, title: String? = nil, openLabel: String? = nil, mergeLabel: String? = nil, dismissLabel: String? = nil, onOpen: (@MainActor (MonarchDuplicateMatch) -> Void)? = nil, onMerge: (@MainActor (MonarchDuplicateMatch) -> Void)? = nil, onDismiss: (@MainActor (MonarchDuplicateMatch) -> Void)? = nil)",
+    "struct MonarchDuplicateMatch { init(id: String, title: String, kind: String? = nil, reasons: [String] = [], detail: String? = nil, score: Double? = nil) }",
+    "enum MonarchDuplicatePanelVariant { case hint, panel }"
+  ],
+  "options": [
+    {
+      "name": "matches",
+      "type": "[MonarchDuplicateMatch]",
+      "default": "required",
+      "description": "The likely duplicates. Nothing is drawn when it is empty."
+    },
+    {
+      "name": "footer",
+      "type": "String?",
+      "default": "nil",
+      "description": "A closing line, for example \"You can still create it.\""
+    },
+    {
+      "name": "variant",
+      "type": "MonarchDuplicatePanelVariant",
+      "default": ".hint",
+      "description": "hint is a warning box that is announced; panel is a plain section."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in heading."
+    },
+    {
+      "name": "openLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Open\" title."
+    },
+    {
+      "name": "mergeLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Merge\" title."
+    },
+    {
+      "name": "dismissLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Not a duplicate\" title."
+    },
+    {
+      "name": "onOpen",
+      "type": "((MonarchDuplicateMatch) -> Void)?",
+      "default": "nil",
+      "description": "Opens a match. No button without it."
+    },
+    {
+      "name": "onMerge",
+      "type": "((MonarchDuplicateMatch) -> Void)?",
+      "default": "nil",
+      "description": "Merges a match. No button without it."
+    },
+    {
+      "name": "onDismiss",
+      "type": "((MonarchDuplicateMatch) -> Void)?",
+      "default": "nil",
+      "description": "Says a match is not a duplicate. No button without it."
+    }
+  ],
+  "states": [
+    {
+      "name": "one match",
+      "description": "The heading is singular."
+    },
+    {
+      "name": "several matches",
+      "description": "The heading is plural, with one card per match."
+    },
+    {
+      "name": "no matches",
+      "description": "Nothing is drawn and no space is taken."
+    }
+  ],
+  "appearance": "The hint is a container with the warning subtle fill, the warning border and a warning icon beside the heading; the panel has no fill or border. Each match is a MonarchCard without a shadow, with the kind as a neutral badge and the confidence as an outlined warning badge.",
+  "platformNotes": "The web takes an href per match and opens it in a new tab; here onOpen hands the match to the app, which navigates. The web meta slot takes any content; detail is a String. The heading level option has no equivalent: the heading has the header trait. The heading chooses between a singular and a plural string by count, not by plural rules, so a translation needs only those two forms. The variant names hint and panel are the web's. Android builds the same component. Several closures are optional (onOpen, onMerge, onDismiss). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onOpen.",
+  "accessibility": [
+    "The heading has the header trait.",
+    "The name, badges, reasons and detail of a match are one element.",
+    "Each button is read as its title and the name of the record, for example \"Merge: Example Ltd\".",
+    "The hint variant posts an announcement with the heading and the names of the matches when it appears and when the set of matches changes. The panel variant does not.",
+    "Buttons have a touch target of at least 44 points and stack vertically when they do not fit on one line.",
+    "The confidence is text, so it does not depend on colour."
+  ],
+  "edgeCases": [
+    "A score outside 0 through 1 is limited to that range; a not-a-number score is not shown.",
+    "Empty reasons are left out; reasons are joined with the list format of the environment's locale.",
+    "Matches must have unique ids.",
+    "With no action given, a match shows no buttons."
+  ],
+  "tests": [
+    "MonarchDuplicatePanelTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Hint under a create form",
+      "fixture": "duplicate-panel",
+      "webExample": "Hint under a create form",
+      "template": "MonarchDuplicatePanel(\n    [\n        MonarchDuplicateMatch(\n            id: {{matches.0.id}},\n            title: {{matches.0.title}},\n            kind: {{matches.0.kind}},\n            reasons: [{{matches.0.reasons.0}}]\n        ),\n        MonarchDuplicateMatch(\n            id: {{matches.1.id}},\n            title: {{matches.1.title}},\n            kind: {{matches.1.kind}},\n            reasons: [{{matches.1.reasons.0}}],\n            detail: {{matches.1.meta}}\n        ),\n    ],\n    footer: {{footer}},\n    onOpen: { _ in }\n)",
+      "code": "MonarchDuplicatePanel(\n    [\n        MonarchDuplicateMatch(\n            id: \"c1\",\n            title: \"Example Ltd\",\n            kind: \"Client\",\n            reasons: [\"Same email\"]\n        ),\n        MonarchDuplicateMatch(\n            id: \"l7\",\n            title: \"Example Group\",\n            kind: \"Open lead\",\n            reasons: [\"Same company domain\"],\n            detail: \"Created last week\"\n        ),\n    ],\n    footer: \"You can still create it. Merge duplicates later from the record page.\",\n    onOpen: { _ in }\n)"
+    },
+    {
+      "title": "A plain section on a record screen",
+      "code": "MonarchDuplicatePanel(\n    [\n        MonarchDuplicateMatch(id: \"1\", title: \"Example Ltd\", reasons: [\"Same name\"]),\n        MonarchDuplicateMatch(id: \"2\", title: \"Example Limited\", detail: \"Archived\"),\n    ],\n    variant: .panel\n)"
+    }
+  ],
+  "webEquivalent": "DuplicatePanel",
+  "dependsOn": [
+    "card",
+    "button",
+    "badge",
+    "text",
+    "icon"
+  ]
+}

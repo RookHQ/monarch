@@ -6,6 +6,7 @@
  * lazily loaded page details (search-index.ts, entry-server.tsx), so the
  * entry chunk does not grow with every summary.
  */
+import { guides as nativeGuides } from 'virtual:monarch-native-nav';
 import { FAMILY_TITLES, docsPages, isMarketing, type DocsPageMeta } from '../lib/docs.js';
 
 export interface NavItem {
@@ -31,6 +32,45 @@ const componentItem = (p: DocsPageMeta): NavItem => ({
   keywords: [p.family, p.id],
   hint: FAMILY_TITLES[p.family] ?? p.family,
 });
+
+/**
+ * Native guides, in reading order. Each is listed only when its file exists
+ * (plugins/native.ts). Like component entries, the platform pages carry no
+ * description or keywords here: those are in native-nav-details.ts, which
+ * search and the prerender step load, so the entry chunk stays small.
+ */
+const NATIVE_GUIDE_ITEMS: readonly (readonly [id: string, label: string])[] = [
+  ['adaptive-layout', 'Adaptive layout'],
+  ['accessibility', 'Native accessibility and testing'],
+  ['compatibility', 'Native compatibility'],
+  ['contributing', 'Native contributing'],
+];
+
+/**
+ * A platform's group: its landing page, its own pages, then the native guides
+ * both platforms share. A shared guide is listed in both groups under the same
+ * address (`/native/<id>`), so each platform's sidebar has it; the top bar
+ * marks a platform by the path prefix only (top-bar.tsx).
+ */
+function platformGroup(id: 'ios' | 'android', heading: string): NavGroup {
+  return {
+    id,
+    heading,
+    items: [
+      { path: `/${id}`, label: 'Overview' },
+      { path: `/${id}/get-started`, label: 'Get started', hint: heading },
+      { path: `/${id}/guide`, label: 'Guide', hint: heading },
+      { path: `/${id}/components`, label: 'Components', hint: heading },
+      { path: `/${id}/releases`, label: 'Releases', hint: heading },
+      ...NATIVE_GUIDE_ITEMS.filter(([guide]) => nativeGuides.includes(guide)).map(
+        ([guide, label]) => ({ path: `/native/${guide}`, label, hint: 'iOS and Android' }),
+      ),
+    ],
+  };
+}
+
+/** True for the native guides that both platform groups list. */
+export const isSharedNativePath = (path: string): boolean => path.startsWith('/native/');
 
 export const NAV: readonly NavGroup[] = [
   {
@@ -68,6 +108,8 @@ export const NAV: readonly NavGroup[] = [
       },
     ],
   },
+  platformGroup('ios', 'iOS'),
+  platformGroup('android', 'Android'),
   {
     id: 'components',
     heading: 'Components',
@@ -144,7 +186,9 @@ export const NAV_ORDER: readonly (NavItem & { group: NavGroup })[] = NAV.flatMap
   g.items.map((i) => ({ ...i, group: g })),
 );
 
-const byPath = new Map(NAV_ORDER.map((i) => [i.path, i]));
+/** The first entry of each path: a shared native guide belongs to the first platform group. */
+const byPath = new Map<string, (typeof NAV_ORDER)[number]>();
+for (const item of NAV_ORDER) if (!byPath.has(item.path)) byPath.set(item.path, item);
 
 export function navItem(path: string) {
   return byPath.get(path);

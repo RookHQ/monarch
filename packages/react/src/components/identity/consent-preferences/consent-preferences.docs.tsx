@@ -3,11 +3,21 @@ import {
   ConsentPreferences,
   ConsentProvider,
   ConsentSettingsLink,
+  type ConsentCategory,
   type ConsentRecord,
   type ConsentRegime,
   type ConsentStorage,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './consent-preferences.fixture.json';
+
+/** The categories of the fixture; strictly necessary is required, marketing is sale or sharing. */
+const CATEGORIES: readonly ConsentCategory[] = fixture.data.categories.map((category) => ({
+  ...category,
+  ...(category.id === 'necessary' && { required: true }),
+  ...(category.id === 'marketing' && { saleOrSharing: true }),
+}));
 
 /** Keeps the demo's choice in memory, starting from `initial`. */
 function memoryStorage(initial: ConsentRecord | null): ConsentStorage {
@@ -33,17 +43,25 @@ const SAVED: ConsentRecord = {
 function PreferencesDemo({
   regime = 'opt-in',
   saved = false,
+  defaultOpen = false,
 }: {
   regime?: ConsentRegime;
   saved?: boolean;
+  defaultOpen?: boolean;
 }) {
   const [storage] = useState(() => memoryStorage(saved ? { ...SAVED, regime } : null));
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <ConsentProvider policyVersion="2026-01" regime={regime} storage={storage}>
+    <ConsentProvider
+      policyVersion="2026-01"
+      regime={regime}
+      storage={storage}
+      categories={CATEGORIES}
+    >
       <footer>
-        <ConsentSettingsLink />
+        <ConsentSettingsLink onClick={() => setOpen(true)}>{fixture.data.link}</ConsentSettingsLink>
       </footer>
-      <ConsentPreferences policyHref="#cookie-policy" />
+      <ConsentPreferences policyHref="#cookie-policy" open={open} onOpenChange={setOpen} />
     </ConsentProvider>
   );
 }
@@ -164,7 +182,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'First visit (opt-in)', render: () => <PreferencesDemo /> },
+        {
+          title: 'First visit (opt-in)',
+          stage: { align: 'center' },
+          render: () => <PreferencesDemo defaultOpen />,
+        },
         { title: 'With a saved choice', render: () => <PreferencesDemo saved /> },
         { title: 'Opt-out region', render: () => <PreferencesDemo regime="opt-out" /> },
       ],

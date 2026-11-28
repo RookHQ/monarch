@@ -1,0 +1,163 @@
+{
+  "id": "ai-usage-meter",
+  "name": "MonarchAiUsageMeter",
+  "title": "AiUsageMeter",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchUsageMeter (androidx.compose.material3.LinearProgressIndicator per scope), androidx.compose.foundation.layout.Box with a polite live region",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "How much AI the person has used against their quotas: one meter per scope (this turn, the conversation, this month) in tokens or credits.",
+  "whenToUse": "In an assistant panel, a settings screen or a billing screen, to show AI usage against quotas and warn before a limit is reached.",
+  "whenNotToUse": "For usage that is not about AI (seats, storage, requests) use MonarchUsageMeter. For how full the model's context window is use a context window meter.",
+  "api": [
+    "@Composable fun MonarchAiUsageMeter(scopes: List<MonarchAiUsageScope>, modifier: Modifier = Modifier, title: String? = null, period: String? = null, resetsAtMillis: Long? = null, warningAt: Double = 0.8, loading: Boolean = false, error: String? = null, onRetry: (() -> Unit)? = null, labels: MonarchAiUsageMeterLabels = MonarchAiUsageMeterLabels())",
+    "class MonarchAiUsageScope(label: String, used: Double, limit: Double? = null, unit: MonarchAiUsageUnit = MonarchAiUsageUnit.Tokens, id: String? = null)",
+    "enum class MonarchAiUsageUnit { Tokens, Credits }",
+    "class MonarchAiUsageMeterLabels(label: String? = null, unit: ((unit: MonarchAiUsageUnit, count: Double) -> String)? = null, nearLimit: ((label: String, percent: String) -> String)? = null, overLimit: ((label: String) -> String)? = null, meter: MonarchUsageMeterLabels = MonarchUsageMeterLabels())"
+  ],
+  "options": [
+    {
+      "name": "scopes",
+      "type": "List<MonarchAiUsageScope>",
+      "default": "required",
+      "description": "The quotas in order, each with a label, the amount used, an optional limit, a unit (tokens or credits) and an optional id."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the meter."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "null",
+      "description": "A visible heading. Without it the group is named \"AI usage\" for TalkBack."
+    },
+    {
+      "name": "period",
+      "type": "String?",
+      "default": "null",
+      "description": "The period measured, shown under the title."
+    },
+    {
+      "name": "resetsAtMillis",
+      "type": "Long?",
+      "default": "null",
+      "description": "When the quotas reset, in epoch milliseconds (UTC), shown under the title."
+    },
+    {
+      "name": "warningAt",
+      "type": "Double",
+      "default": "0.8",
+      "description": "The share of a limit at which a scope is near the limit."
+    },
+    {
+      "name": "loading",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows a progress indicator and \"Loading usage\" instead of the scopes."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "null",
+      "description": "A message shown instead of the scopes. It wins over loading."
+    },
+    {
+      "name": "onRetry",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Adds a \"Try again\" button under the error."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiUsageMeterLabels",
+      "default": "MonarchAiUsageMeterLabels()",
+      "description": "Replaces the group name, the unit names, the two announcements and the strings of the underlying MonarchUsageMeter."
+    }
+  ],
+  "states": [
+    {
+      "name": "normal",
+      "description": "Below the warning share: the meter uses the accent fill and the share in muted text."
+    },
+    {
+      "name": "near the limit",
+      "description": "At or above warningAt, and exactly at the limit: warning fill and \"Near the limit\" written with the share."
+    },
+    {
+      "name": "over the limit",
+      "description": "Above the limit: danger fill and \"Over the limit\" written with the share."
+    },
+    {
+      "name": "no limit",
+      "description": "The amount and unit alone, with no meter."
+    },
+    {
+      "name": "loading",
+      "description": "A progress indicator and \"Loading usage\"."
+    },
+    {
+      "name": "error",
+      "description": "The message in the danger text role, and a retry button with onRetry."
+    }
+  ],
+  "appearance": "The look of MonarchUsageMeter: label text, the figures in strong body text, a Material 3 linear indicator on the emphasis track in the accent, warning or danger solid role, and the level in muted, warning strong or danger strong caption text. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "A preset of MonarchUsageMeter, so like iOS it also offers a title, a period, a reset date, loading and error, which the web does not. The web calls a scope exceeded when it reaches its limit; the shared meter, on iOS and Android, calls a scope over the limit only above it and near the limit at exactly 100%. Units come from Android plural resources. The web announces the most serious warning through a status region; Android does the same with an always-present polite live region, filled only after the most serious state changes while the meter is on screen. MonarchUsageMeter shows no warning icon on Android (Monarch bundles no icons); the level is written instead.",
+  "accessibility": [
+    "The meter is a TalkBack traversal group named by the title, or by \"AI usage\".",
+    "Each scope is one element read as its label, its figures with the unit and its level and share (from MonarchUsageMeter).",
+    "Near and over the limit are written, so they do not depend on color.",
+    "When the most serious scope reaches near or over the limit while the meter is on screen, it is announced once through a polite live region, for example \"This month: 85% of the limit used\"; the state on first appearance is not announced.",
+    "The retry button has a touch target of at least 48dp by 48dp."
+  ],
+  "edgeCases": [
+    "A negative amount counts as zero; a limit of zero or less, or one that is not finite, is no limit.",
+    "Scopes are identified by position unless they have an id, so labels may repeat.",
+    "The unit is singular only for exactly one (the limit, or the amount when there is no limit); fractional counts use the other form.",
+    "No announcement is made while loading or showing an error."
+  ],
+  "tests": [
+    "MonarchAiUsageMeterTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Turn, conversation and month",
+      "fixture": "ai-usage-meter",
+      "webExample": "Turn, conversation and month",
+      "template": "MonarchAiUsageMeter(\n    scopes = listOf(\n        MonarchAiUsageScope({{scopes.0.label}}, used = {{scopes.0.used|double}}, unit = MonarchAiUsageUnit.{{scopes.0.unit|pascal}}),\n        MonarchAiUsageScope({{scopes.1.label}}, used = {{scopes.1.used|double}}, limit = {{scopes.1.limit|double}}, unit = MonarchAiUsageUnit.{{scopes.1.unit|pascal}}),\n        MonarchAiUsageScope({{scopes.2.label}}, used = {{scopes.2.used|double}}, limit = {{scopes.2.limit|double}}, unit = MonarchAiUsageUnit.{{scopes.2.unit|pascal}}),\n    ),\n)",
+      "code": "MonarchAiUsageMeter(\n    scopes = listOf(\n        MonarchAiUsageScope(\"This turn\", used = 1840.0, unit = MonarchAiUsageUnit.Tokens),\n        MonarchAiUsageScope(\"Conversation\", used = 42_000.0, limit = 200_000.0, unit = MonarchAiUsageUnit.Tokens),\n        MonarchAiUsageScope(\"This month\", used = 870.0, limit = 1000.0, unit = MonarchAiUsageUnit.Credits),\n    ),\n)"
+    },
+    {
+      "title": "Titled, with a period",
+      "code": "MonarchAiUsageMeter(\n    scopes = listOf(MonarchAiUsageScope(\"Image generation\", used = 32.0, limit = 100.0, unit = MonarchAiUsageUnit.Credits)),\n    title = \"AI usage\",\n    period = \"November\",\n)"
+    }
+  ],
+  "webEquivalent": "AiUsageMeter",
+  "dependsOn": [
+    "usage-meter"
+  ],
+  "icons": {
+    "state.warning": "WarningGlyph",
+    "state.exceeded": "ErrorGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-text",
+      "platform": "android",
+      "reason": "The web gives the meter one spoken sentence (\"This month: 87% of the limit used\"). On Android the month row shows \"This month\", \"870 of 1,000 credits\" and \"Near the limit · 87% used\" as text, and TalkBack reads those lines.",
+      "convention": "a meter is read from its visible lines (Android accessibility)",
+      "paths": [
+        "This month: 87% of the limit used"
+      ]
+    }
+  ]
+}

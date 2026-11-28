@@ -1,0 +1,131 @@
+{
+  "id": "booking-flow",
+  "name": null,
+  "title": "BookingFlow",
+  "family": "scheduling",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "NavigationStack(path:) with navigationDestination(for:) for each step, a List of service Buttons, MonarchTimezoneSelect and MonarchSlotPicker in a ScrollView, MonarchTextField fields, a List of LabeledContent for the review, MonarchStepper(compact: .always) for progress, MonarchButton in safeAreaInset(edge: .bottom), and MonarchEmptyState(kind: .success) for the confirmation",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: booking an appointment step by step on a navigation stack: service, time, details, review and confirmation, with progress on every step.",
+  "whenToUse": "When a visitor or a member of staff books an appointment, meeting or interview in a few ordered steps that end in one submit.",
+  "whenNotToUse": "For only choosing a time use MonarchSlotPicker on its own. For moving an existing booking use the reschedule-dialog recipe. For long forms with branching sections use MonarchStepper with your own form.",
+  "api": [
+    "NavigationStack(path: $path) { List { Section { MonarchStepper(steps, current: 0, compact: .always) }; Section(\"Choose a service\") { Button { …; path.append(.time) } } }.navigationTitle(\"Book a session\").navigationDestination(for: Step.self) { step in switch step { case .time: MonarchTimezoneSelect(…); MonarchSlotPicker(selection:day:slots:timeZone:) case .details: MonarchTextField(…) case .review: List { LabeledContent(…) } } } }",
+    "Continue and Book: MonarchButton(…, variant: .primary, isLoading:, fullWidth: true) in .safeAreaInset(edge: .bottom). Confirmation: MonarchEmptyState(…, kind: .success)."
+  ],
+  "options": [
+    {
+      "name": "steps",
+      "type": "[MonarchStepperStep]",
+      "default": "required",
+      "description": "The step labels for the progress indicator; leave out steps that do not apply, such as choosing a host."
+    },
+    {
+      "name": "service step",
+      "type": "List of Button",
+      "default": "none",
+      "description": "The root of the stack: tapping a service chooses it and pushes the time step."
+    },
+    {
+      "name": "time step",
+      "type": "MonarchSlotPicker",
+      "default": "required",
+      "description": "Open times for the chosen day, with MonarchTimezoneSelect for the visitor's zone. Continue is disabled until a time is chosen."
+    },
+    {
+      "name": "details step",
+      "type": "MonarchTextField",
+      "default": "required",
+      "description": "Name, email and any questions the product asks."
+    },
+    {
+      "name": "review step",
+      "type": "List of LabeledContent",
+      "default": "required",
+      "description": "The summary of every choice; Back changes any of them."
+    },
+    {
+      "name": "submit",
+      "type": "MonarchButton with isLoading",
+      "default": "required",
+      "description": "Book on the review step; it shows \"Booking…\" while the request runs and keeps the steps when it fails."
+    },
+    {
+      "name": "confirmation",
+      "type": "MonarchEmptyState(kind: .success)",
+      "default": "required",
+      "description": "Replaces the steps after a successful booking."
+    }
+  ],
+  "states": [
+    {
+      "name": "service",
+      "description": "The root list; the stepper shows step 1 of 4."
+    },
+    {
+      "name": "time",
+      "description": "The slot picker; Continue is disabled until a time is chosen."
+    },
+    {
+      "name": "details",
+      "description": "The fields; Continue is disabled until they are valid."
+    },
+    {
+      "name": "review",
+      "description": "The summary and Book."
+    },
+    {
+      "name": "booking",
+      "description": "Book shows a progress indicator and \"Booking…\"."
+    },
+    {
+      "name": "failed",
+      "description": "The steps stay; show MonarchInlineErrorRetry above Book with the reason."
+    },
+    {
+      "name": "booked",
+      "description": "The confirmation replaces the steps and the stack returns to its root."
+    }
+  ],
+  "appearance": "System lists and navigation bars with Monarch fields, slot picker, compact stepper and the primary Monarch button pinned above the home indicator. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web ships BookingFlow as one component with a steps or list layout, a summary aside and a focus move with \"Step 2 of 4\" announcements. On a phone each step is a screen on a navigation stack: the system back button and swipe go back a step, the navigation title names the step and VoiceOver reads it when the screen appears, and the compact stepper shows the progress. The web's summary aside becomes the review step. The web's brandColor tenant colour is not offered; Monarch buttons use the theme. useBookingFlow's next, back and goTo are the navigation path the app owns. Android has the same recipe coverage and status (available).",
+  "accessibility": [
+    "Each step is its own screen; VoiceOver reads its navigation title when it appears and the back button names the previous step.",
+    "MonarchStepper reads the progress as \"Step 2 of 4: Time\".",
+    "Continue is disabled, not hidden, until the step is complete, so the reason stays discoverable.",
+    "Book announces its loading state through MonarchButton; the confirmation is text with a decorative symbol.",
+    "Every button is at least 44 points; the fields have visible labels."
+  ],
+  "edgeCases": [
+    "Changing the day clears the chosen time in MonarchSlotPicker.",
+    "When nothing can be booked, show MonarchEmptyState instead of the first step.",
+    "At the largest text sizes each step scrolls and the Continue button stays above the keyboard and home indicator.",
+    "A failed booking keeps every choice so the person can try again."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Steps layout",
+      "fixture": "booking-flow",
+      "webExample": "Steps layout",
+      "template": "NavigationStack(path: $path) {\n    Group {\n        if isBooked {\n            MonarchEmptyState(\n                \"You're booked\",\n                message: \"We sent the details to \\(email).\",\n                systemImage: \"checkmark.circle\",\n                kind: .success\n            )\n        } else {\n            ScrollView {\n                VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                    MonarchStepper(steps, current: 0, compact: .never)\n                    Divider()\n                    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                        Text(\"Step 1 of 4\".uppercased())\n                            .monarchTextStyle(.caption)\n                            .foregroundStyle(theme.colors.textMuted)\n                        Text({{steps.0.title}})\n                            .monarchTextStyle(.heading)\n                            .foregroundStyle(theme.colors.textDefault)\n                            .accessibilityAddTraits(.isHeader)\n                    }\n                    VStack(spacing: theme.spacing.space2) {\n                        ForEach(services, id: \\.self) { item in\n                            MonarchButton(item, variant: .secondary, fullWidth: true) {\n                                service = item\n                                path.append(.time)\n                            }\n                        }\n                    }\n                }\n                .padding(theme.spacing.space4)\n            }\n        }\n    }\n    .monarchCanvas()\n    #if os(iOS)\n    .navigationBarTitleDisplayMode(.inline)\n    .toolbar(.hidden, for: .navigationBar)\n    #endif\n    .navigationDestination(for: BookingStep.self) { step in\n        switch step {\n        case .time:\n            ScrollView {\n                VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                    progress(1)\n                    MonarchTimezoneSelect(\"Time zone\", selection: $zone)\n                    MonarchSlotPicker(selection: $slot, day: $day, slots: slots, timeZone: zone ?? \"UTC\")\n                }\n                .padding(theme.spacing.space4)\n            }\n            .safeAreaInset(edge: .bottom) { continueButton(.details, isEnabled: slot != nil) }\n            .navigationTitle(\"Pick a time\")\n        case .details:\n            ScrollView {\n                VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                    progress(2)\n                    MonarchTextField(\"Name\", text: $name)\n                    MonarchTextField(\"Email\", text: $email, prompt: \"name@example.com\")\n                }\n                .padding(theme.spacing.space4)\n            }\n            .safeAreaInset(edge: .bottom) {\n                continueButton(.review, isEnabled: !name.isEmpty && email.contains(\"@\"))\n            }\n            .navigationTitle(\"Your details\")\n        case .review:\n            List {\n                Section { progress(3) }\n                Section(\"Summary\") {\n                    LabeledContent(\"Service\", value: service ?? \"\")\n                    LabeledContent(\"Time\", value: slot?.formatted(date: .abbreviated, time: .shortened) ?? \"\")\n                    LabeledContent(\"Name\", value: name)\n                    LabeledContent(\"Email\", value: email)\n                }\n            }\n            .safeAreaInset(edge: .bottom) {\n                MonarchButton(\"Book\", variant: .primary, isLoading: isBooking, loadingLabel: \"Booking…\", fullWidth: true) {\n                    isBooking = true\n                    Task {\n                        // Send the booking; keep the steps if it fails.\n                        isBooking = false\n                        isBooked = true\n                        path = []\n                    }\n                }\n                .padding(theme.spacing.space4)\n            }\n            .navigationTitle(\"Review\")\n        }\n    }\n}\n.monarchCanvas()\n.frame(minHeight: theme.spacing.space24 * 7)",
+      "setupTemplate": "enum BookingStep: Hashable {\n    case time, details, review\n}\n\nprivate static let start = Date(timeIntervalSince1970: 1_793_750_400)\nprivate let steps = [\n    MonarchStepperStep(id: {{steps.0.id}}, label: {{steps.0.label}}),\n    MonarchStepperStep(id: {{steps.1.id}}, label: {{steps.1.label}}),\n    MonarchStepperStep(id: {{steps.2.id}}, label: {{steps.2.label}}),\n    MonarchStepperStep(id: {{steps.3.id}}, label: {{steps.3.label}}),\n]\nprivate let services = [\n    {{services.0.name}} + \" · {{services.0.minutes|raw}} min\",\n    {{services.1.name}} + \" · {{services.1.minutes|raw}} min\",\n]\n\n@Environment(\\.monarchTheme) private var theme\n@State private var path: [BookingStep] = []\n@State private var service: String?\n@State private var slot: Date?\n@State private var day: Date? = start\n@State private var zone: String? = \"Europe/London\"\n@State private var name = \"\"\n@State private var email = \"\"\n@State private var isBooking = false\n@State private var isBooked = false\n\nprivate var slots: [MonarchSlotPickerSlot] {\n    [9, 10, 13.5, 15].map { MonarchSlotPickerSlot(start: Self.start.addingTimeInterval($0 * 3_600)) }\n}\n\nprivate func progress(_ index: Int) -> some View {\n    MonarchStepper(steps, current: index, compact: .never)\n}\n\nprivate func continueButton(_ next: BookingStep, isEnabled: Bool) -> some View {\n    MonarchButton(\"Continue\", variant: .primary, fullWidth: true) { path.append(next) }\n        .disabled(!isEnabled)\n        .padding(theme.spacing.space4)\n}",
+      "setup": "enum BookingStep: Hashable {\n    case time, details, review\n}\n\nprivate static let start = Date(timeIntervalSince1970: 1_793_750_400)\nprivate let steps = [\n    MonarchStepperStep(id: \"service\", label: \"Service\"),\n    MonarchStepperStep(id: \"time\", label: \"Date and time\"),\n    MonarchStepperStep(id: \"details\", label: \"Your details\"),\n    MonarchStepperStep(id: \"review\", label: \"Review\"),\n]\nprivate let services = [\n    \"Introductory call\" + \" · 20 min\",\n    \"Consultation\" + \" · 45 min\",\n]\n\n@Environment(\\.monarchTheme) private var theme\n@State private var path: [BookingStep] = []\n@State private var service: String?\n@State private var slot: Date?\n@State private var day: Date? = start\n@State private var zone: String? = \"Europe/London\"\n@State private var name = \"\"\n@State private var email = \"\"\n@State private var isBooking = false\n@State private var isBooked = false\n\nprivate var slots: [MonarchSlotPickerSlot] {\n    [9, 10, 13.5, 15].map { MonarchSlotPickerSlot(start: Self.start.addingTimeInterval($0 * 3_600)) }\n}\n\nprivate func progress(_ index: Int) -> some View {\n    MonarchStepper(steps, current: index, compact: .never)\n}\n\nprivate func continueButton(_ next: BookingStep, isEnabled: Bool) -> some View {\n    MonarchButton(\"Continue\", variant: .primary, fullWidth: true) { path.append(next) }\n        .disabled(!isEnabled)\n        .padding(theme.spacing.space4)\n}",
+      "code": "NavigationStack(path: $path) {\n    Group {\n        if isBooked {\n            MonarchEmptyState(\n                \"You're booked\",\n                message: \"We sent the details to \\(email).\",\n                systemImage: \"checkmark.circle\",\n                kind: .success\n            )\n        } else {\n            ScrollView {\n                VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                    MonarchStepper(steps, current: 0, compact: .never)\n                    Divider()\n                    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                        Text(\"Step 1 of 4\".uppercased())\n                            .monarchTextStyle(.caption)\n                            .foregroundStyle(theme.colors.textMuted)\n                        Text(\"Choose a service\")\n                            .monarchTextStyle(.heading)\n                            .foregroundStyle(theme.colors.textDefault)\n                            .accessibilityAddTraits(.isHeader)\n                    }\n                    VStack(spacing: theme.spacing.space2) {\n                        ForEach(services, id: \\.self) { item in\n                            MonarchButton(item, variant: .secondary, fullWidth: true) {\n                                service = item\n                                path.append(.time)\n                            }\n                        }\n                    }\n                }\n                .padding(theme.spacing.space4)\n            }\n        }\n    }\n    .monarchCanvas()\n    #if os(iOS)\n    .navigationBarTitleDisplayMode(.inline)\n    .toolbar(.hidden, for: .navigationBar)\n    #endif\n    .navigationDestination(for: BookingStep.self) { step in\n        switch step {\n        case .time:\n            ScrollView {\n                VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                    progress(1)\n                    MonarchTimezoneSelect(\"Time zone\", selection: $zone)\n                    MonarchSlotPicker(selection: $slot, day: $day, slots: slots, timeZone: zone ?? \"UTC\")\n                }\n                .padding(theme.spacing.space4)\n            }\n            .safeAreaInset(edge: .bottom) { continueButton(.details, isEnabled: slot != nil) }\n            .navigationTitle(\"Pick a time\")\n        case .details:\n            ScrollView {\n                VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                    progress(2)\n                    MonarchTextField(\"Name\", text: $name)\n                    MonarchTextField(\"Email\", text: $email, prompt: \"name@example.com\")\n                }\n                .padding(theme.spacing.space4)\n            }\n            .safeAreaInset(edge: .bottom) {\n                continueButton(.review, isEnabled: !name.isEmpty && email.contains(\"@\"))\n            }\n            .navigationTitle(\"Your details\")\n        case .review:\n            List {\n                Section { progress(3) }\n                Section(\"Summary\") {\n                    LabeledContent(\"Service\", value: service ?? \"\")\n                    LabeledContent(\"Time\", value: slot?.formatted(date: .abbreviated, time: .shortened) ?? \"\")\n                    LabeledContent(\"Name\", value: name)\n                    LabeledContent(\"Email\", value: email)\n                }\n            }\n            .safeAreaInset(edge: .bottom) {\n                MonarchButton(\"Book\", variant: .primary, isLoading: isBooking, loadingLabel: \"Booking…\", fullWidth: true) {\n                    isBooking = true\n                    Task {\n                        // Send the booking; keep the steps if it fails.\n                        isBooking = false\n                        isBooked = true\n                        path = []\n                    }\n                }\n                .padding(theme.spacing.space4)\n            }\n            .navigationTitle(\"Review\")\n        }\n    }\n}\n.monarchCanvas()\n.frame(minHeight: theme.spacing.space24 * 7)"
+    }
+  ],
+  "webEquivalent": "BookingFlow",
+  "dependsOn": [
+    "slot-picker",
+    "text-field",
+    "stepper",
+    "button",
+    "timezone-select"
+  ]
+}

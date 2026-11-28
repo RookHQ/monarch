@@ -2,17 +2,14 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { Stepper, type StepperStep } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './stepper.fixture.json';
 
-const SETUP: StepperStep[] = [
-  { id: 'basics', label: 'Basics' },
-  { id: 'access', label: 'Access' },
-  { id: 'branding', label: 'Branding', optional: true },
-  { id: 'review', label: 'Review' },
-];
+const SETUP = fixture.data.steps as StepperStep[];
 
 function WizardDemo() {
-  const [current, setCurrent] = useState(1);
-  const [furthest, setFurthest] = useState(1);
+  const [current, setCurrent] = useState(fixture.data.current);
+  const [furthest, setFurthest] = useState(fixture.data.furthest);
   const go = (i: number) => {
     setCurrent(i);
     setFurthest((f) => Math.max(f, i));
@@ -28,14 +25,14 @@ function WizardDemo() {
       />
       <div style={{ display: 'flex', gap: 8 }}>
         <Button disabled={current === 0} onClick={() => go(current - 1)}>
-          Back
+          {fixture.data.back}
         </Button>
         <Button
           variant="primary"
           disabled={current === SETUP.length - 1}
           onClick={() => go(current + 1)}
         >
-          Continue
+          {fixture.data.continue}
         </Button>
       </div>
     </div>

@@ -1,5 +1,7 @@
-import { Badge } from '@rookcom/monarch-react';
+import { Badge, type BadgeProps } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './badge.fixture.json';
 
 export default {
   id: 'badge',
@@ -77,18 +79,21 @@ export default {
           title: 'Tones and variants',
           render: () => (
             <>
-              {(['neutral', 'accent', 'info', 'success', 'warning', 'danger'] as const).map((t) => (
-                <Badge key={t} tone={t} dot>
-                  {t}
+              {fixture.data.badges.map((badge) => (
+                <Badge
+                  key={badge.label}
+                  tone={badge.tone as NonNullable<BadgeProps['tone']>}
+                  variant={badge.variant as NonNullable<BadgeProps['variant']>}
+                  size={
+                    'size' in badge
+                      ? (badge.size as NonNullable<BadgeProps['size']>)
+                      : (undefined as never)
+                  }
+                  dot={'dot' in badge ? badge.dot : (undefined as never)}
+                >
+                  {badge.label}
                 </Badge>
               ))}
-              <Badge tone="success" variant="solid">
-                3
-              </Badge>
-              <Badge tone="info" variant="outline">
-                Beta
-              </Badge>
-              <Badge size="sm">v0.1.0</Badge>
             </>
           ),
         },

@@ -1,0 +1,167 @@
+{
+  "id": "ai-draft-queue",
+  "name": "MonarchAiDraftQueue",
+  "title": "AiDraftQueue",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of MonarchCard (androidx.compose.material3.Surface) drafts with MonarchBadge, MonarchAiGeneratedBadge, MonarchAiTypingDots, MonarchButton in androidx.compose.foundation.layout.FlowRow, MonarchTextField (androidx.compose.material3.OutlinedTextField) for editing, MonarchProgress (androidx.compose.material3.LinearProgressIndicator), androidx.compose.ui.focus.FocusRequester",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A review queue for AI-written drafts (replies, messages, notes): each draft with its context and Approve, Edit, Regenerate, Skip and Send, so nothing is sent without a person approving it.",
+  "whenToUse": "When an assistant prepares several messages or notes that a person must approve, edit or skip before anything is sent.",
+  "whenNotToUse": "For one proposed change to existing text use an edit proposal in MonarchAiConversation. For a single reply in a chat use the conversation itself with its message actions.",
+  "api": [
+    "@Composable fun MonarchAiDraftQueue(drafts: List<MonarchAiDraft>, onApprove: (id: String) -> Unit, onEdit: (id: String, body: String) -> Unit, onRegenerate: (id: String) -> Unit, onSkip: (id: String) -> Unit, modifier: Modifier = Modifier, title: String? = null, onSend: ((id: String) -> Unit)? = null, advancesOnAction: Boolean = true, labels: MonarchAiDraftQueueLabels = MonarchAiDraftQueueLabels())",
+    "data class MonarchAiDraft(id: String, title: String, body: String, context: String? = null, status: MonarchAiDraftStatus = MonarchAiDraftStatus.Draft) { constructor(message: MonarchAiConversationMessage, title: String, context: String? = null, status: MonarchAiDraftStatus = MonarchAiDraftStatus.Draft) }",
+    "enum class MonarchAiDraftStatus { Draft, Regenerating, Approved, Sent, Skipped }",
+    "class MonarchAiDraftQueueLabels(label: String? = null, progress: ((reviewed: Int, total: Int) -> String)? = null, empty: String? = null, status: ((status: MonarchAiDraftStatus) -> String)? = null, writing: String? = null, aiDraft: String? = null, context: String? = null, approve: String? = null, send: String? = null, edit: String? = null, regenerate: String? = null, skip: String? = null, save: String? = null, cancel: String? = null, editField: ((title: String) -> String)? = null, announce: ((status: MonarchAiDraftStatus, title: String) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "drafts",
+      "type": "List<MonarchAiDraft>",
+      "default": "required",
+      "description": "The drafts in review order, each with a unique id, a title, the body, optional context and a status. A draft can be made from a MonarchAiConversationMessage."
+    },
+    {
+      "name": "onApprove",
+      "type": "(id: String) -> Unit",
+      "default": "required",
+      "description": "Called with the id of an approved draft. Set its status to Approved (or send it)."
+    },
+    {
+      "name": "onEdit",
+      "type": "(id: String, body: String) -> Unit",
+      "default": "required",
+      "description": "Called with the id and the trimmed text when the person saves an edit that changed the text."
+    },
+    {
+      "name": "onRegenerate",
+      "type": "(id: String) -> Unit",
+      "default": "required",
+      "description": "Asks for a new version; set the status to Regenerating while it is written and back to Draft when it is ready."
+    },
+    {
+      "name": "onSkip",
+      "type": "(id: String) -> Unit",
+      "default": "required",
+      "description": "Called with the id of a skipped draft."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the queue."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "null",
+      "description": "A heading above the queue. It also names the queue for TalkBack."
+    },
+    {
+      "name": "onSend",
+      "type": "((id: String) -> Unit)?",
+      "default": "null",
+      "description": "Adds Send to approved drafts; called with the id."
+    },
+    {
+      "name": "advancesOnAction",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether focus moves to the next draft that needs review (wrapping to the top) after Approve, Send or Skip."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiDraftQueueLabels",
+      "default": "MonarchAiDraftQueueLabels()",
+      "description": "Replaces any built-in string; the ones that depend on a value are functions."
+    }
+  ],
+  "states": [
+    {
+      "name": "draft",
+      "description": "\"Needs review\" in a neutral badge; Approve (primary), Edit, Regenerate and Skip (ghost)."
+    },
+    {
+      "name": "regenerating",
+      "description": "\"Writing\" in an info badge; the body is replaced by still-or-moving typing dots and \"AI is still writing…\"; no actions."
+    },
+    {
+      "name": "approved",
+      "description": "\"Approved\" in a success badge; Send (primary, with onSend) and Edit."
+    },
+    {
+      "name": "sent",
+      "description": "\"Sent\" in a success badge; no actions."
+    },
+    {
+      "name": "skipped",
+      "description": "\"Skipped\" in a neutral badge; the body uses the muted text color; no actions."
+    },
+    {
+      "name": "editing",
+      "description": "The body is replaced by a multi-line field labelled \"Edit draft: <title>\", focused, with Save (disabled while the text is blank) and Cancel."
+    },
+    {
+      "name": "empty",
+      "description": "A small success empty state: \"No drafts to review\"."
+    }
+  ],
+  "appearance": "Each draft is a MonarchCard with the heading type for the title, a status badge, the small AI generated mark above the body, and the context on the subtle background with the medium radius in the muted text color. The header shows the title in the title type, the progress line in the caption type and a progress bar. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The parity map named a pager or a list; the queue is a plain column like iOS and the web, because every draft shows its own actions and a pager would hide the others. It is not lazy: place it in a screen that scrolls. The web's opt-in J and K keyboard shortcuts are not offered; Android moves between drafts with TalkBack, Switch Access or the keyboard focus order. Status badges have no icons because Monarch for Android bundles none; the badge text names the status. The context is a String, where the web takes any content. Focus after a decision moves with FocusRequester to the next draft's heading; announcements use a polite live region instead of a posted announcement.",
+  "accessibility": [
+    "The queue is a traversal group named by its title, or \"Drafts to review\".",
+    "The queue title and each draft's title are headings.",
+    "Each status is a badge with its name, so it does not rest on color.",
+    "Each body is read after \"AI draft\"; the AI generated mark and the typing dots are hidden from TalkBack because text says the same.",
+    "After Approve, Send or Skip, focus moves to the next draft that needs review, wrapping to the top.",
+    "Every status change is announced through a polite live region that is always present, for example \"Approved: Reply to Alex\", or \"New draft ready: Reply to Alex\" when a draft needs review again.",
+    "The editor is focused when it opens and is labelled \"Edit draft: <title>\"; Save is disabled while the text is blank.",
+    "Every button has a 48dp touch target and the buttons wrap onto new rows at large font sizes.",
+    "The progress bar is hidden from TalkBack; the visible line \"n of m reviewed\" is read instead."
+  ],
+  "edgeCases": [
+    "Saving text that is unchanged after trimming closes the editor without calling onEdit.",
+    "Drafts that appear in the list later are not announced; only status changes of known drafts are.",
+    "If no other draft needs review, focus stays where it is after a decision.",
+    "Draft ids must be unique; with repeated ids the first status wins in announcements."
+  ],
+  "tests": [
+    "MonarchAiDraftQueueTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Review queue",
+      "fixture": "ai-draft-queue",
+      "webExample": "Review queue",
+      "template": "MonarchAiDraftQueue(\n    drafts = listOf(\n        MonarchAiDraft({{drafts.0.id}}, {{drafts.0.title}}, {{drafts.0.body}}, context = {{drafts.0.context}}, status = MonarchAiDraftStatus.{{drafts.0.status|pascal}}),\n        MonarchAiDraft({{drafts.1.id}}, {{drafts.1.title}}, {{drafts.1.body}}, context = {{drafts.1.context}}, status = MonarchAiDraftStatus.{{drafts.1.status|pascal}}),\n        MonarchAiDraft({{drafts.2.id}}, {{drafts.2.title}}, {{drafts.2.body}}, context = {{drafts.2.context}}, status = MonarchAiDraftStatus.{{drafts.2.status|pascal}}),\n    ),\n    onApprove = {},\n    onEdit = { _, _ -> },\n    onRegenerate = {},\n    onSkip = {},\n    title = {{title}},\n)",
+      "code": "MonarchAiDraftQueue(\n    drafts = listOf(\n        MonarchAiDraft(\"1\", \"Reply to Alex Morgan\", \"Hi Alex,\\n\\nThursday afternoon works. Shall we say 2 pm?\\n\\nThanks\", context = \"Could we move Thursday’s review to the afternoon?\", status = MonarchAiDraftStatus.Draft),\n        MonarchAiDraft(\"2\", \"Reply to Sam Lee\", \"Hi Sam,\\n\\nYes, the updated report is attached. Let me know if anything needs changing.\", context = \"Is the updated report ready to share?\", status = MonarchAiDraftStatus.Draft),\n        MonarchAiDraft(\"3\", \"Reply to Kim Park\", \"You are welcome. Glad they helped.\", context = \"Thanks for the notes from yesterday.\", status = MonarchAiDraftStatus.Regenerating),\n    ),\n    onApprove = {},\n    onEdit = { _, _ -> },\n    onRegenerate = {},\n    onSkip = {},\n    title = \"Replies to review\",\n)"
+    }
+  ],
+  "webEquivalent": "AiDraftQueue",
+  "dependsOn": [
+    "card",
+    "button",
+    "text-field",
+    "ai-generated-badge",
+    "badge",
+    "progress-bar",
+    "ai-typing-dots",
+    "empty-state",
+    "ai-conversation"
+  ],
+  "icons": {
+    "status.draft": "PencilGlyph",
+    "status.regenerating": "RetryGlyph",
+    "approve": "CheckGlyph",
+    "edit": "PencilGlyph",
+    "regenerate": "RetryGlyph"
+  }
+}

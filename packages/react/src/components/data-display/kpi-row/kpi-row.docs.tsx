@@ -1,5 +1,21 @@
 import { KPIRow } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './kpi-row.fixture.json';
+
+const [open, sla, reply, csat] = fixture.data.items as unknown as readonly [
+  {
+    label: string;
+    value: number;
+    format: 'number';
+    change: number;
+    goodDirection: 'down';
+    caption: string;
+  },
+  { label: string; value: number; format: 'percent'; change: number },
+  { label: string; value: number; unit: string; change: number; goodDirection: 'down' },
+  { label: string; value: null; hint: string },
+];
 
 export default {
   id: 'kpi-row',
@@ -117,31 +133,31 @@ export default {
           stack: true,
           render: () => (
             <KPIRow
-              label="Last 30 days"
+              label={fixture.data.label}
               items={[
                 {
                   id: 'open',
-                  label: 'Open tickets',
-                  value: 128,
-                  format: 'number',
-                  change: { value: 0.12, goodDirection: 'down' },
-                  caption: 'vs previous 30 days',
+                  label: open.label,
+                  value: open.value,
+                  format: open.format,
+                  change: { value: open.change, goodDirection: open.goodDirection },
+                  caption: open.caption,
                 },
                 {
                   id: 'sla',
-                  label: 'Within target',
-                  value: 0.94,
-                  format: 'percent',
-                  change: { value: 0.02 },
+                  label: sla.label,
+                  value: sla.value,
+                  format: sla.format,
+                  change: { value: sla.change },
                 },
                 {
                   id: 'reply',
-                  label: 'First reply',
-                  value: 42,
-                  unit: 'min',
-                  change: { value: -0.08, goodDirection: 'down' },
+                  label: reply.label,
+                  value: reply.value,
+                  unit: reply.unit,
+                  change: { value: reply.change, goodDirection: reply.goodDirection },
                 },
-                { id: 'csat', label: 'Satisfaction', value: null, hint: 'No survey answers yet' },
+                { id: 'csat', label: csat.label, value: csat.value, hint: csat.hint },
               ]}
             />
           ),

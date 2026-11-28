@@ -7,10 +7,12 @@ import {
   type EmojiSkinTone,
 } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './emoji-picker.fixture.json';
 
 function InlineDemo() {
-  const [recents, setRecents] = useState<string[]>(['👍', '🎉', '✅']);
-  const [tone, setTone] = useState<EmojiSkinTone>('none');
+  const [recents, setRecents] = useState<string[]>(fixture.data.recents);
+  const [tone, setTone] = useState<EmojiSkinTone>(fixture.data.skinTone as EmojiSkinTone);
   const [last, setLast] = useState('');
   return (
     <div

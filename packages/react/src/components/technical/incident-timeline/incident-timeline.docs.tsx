@@ -1,35 +1,11 @@
 import { IncidentTimeline, type IncidentUpdate } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './incident-timeline.fixture.json';
 
 const narrow = { width: '100%', maxWidth: '32rem' } as const;
 
-const updates: IncidentUpdate[] = [
-  {
-    id: 'u1',
-    stage: 'investigating',
-    body: 'Requests to the API are failing for some customers. We are looking into it.',
-    time: '2026-03-02T09:05:00Z',
-    automated: true,
-  },
-  {
-    id: 'u2',
-    stage: 'identified',
-    body: 'A configuration change caused the errors. We are rolling it back.',
-    time: '2026-03-02T09:20:00Z',
-  },
-  {
-    id: 'u3',
-    stage: 'monitoring',
-    body: 'The rollback is complete. Error rates are dropping.',
-    time: '2026-03-02T09:40:00Z',
-  },
-  {
-    id: 'u4',
-    stage: 'resolved',
-    body: 'Error rates are back to normal.',
-    time: '2026-03-02T10:00:00Z',
-  },
-];
+const updates = fixture.data.updates as IncidentUpdate[];
 
 export default {
   id: 'incident-timeline',

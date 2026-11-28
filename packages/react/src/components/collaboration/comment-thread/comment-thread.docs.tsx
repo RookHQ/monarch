@@ -1,27 +1,21 @@
 import { useState } from 'react';
 import { CommentThread, type CommentItem } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './comment-thread.fixture.json';
 
-const NOW = '2026-03-10T12:00:00Z';
+const NOW = fixture.data.now;
 const PRIYA = { name: 'Priya Raman', seed: 'u1' };
 const TOM = { name: 'Tom Becker', seed: 'u2' };
 const LEE = { name: 'Lee Park', seed: 'u3' };
 
-const START: CommentItem[] = [
-  {
-    id: 'c1',
-    author: PRIYA,
-    body: 'Should this say "billed every quarter" instead?',
-    createdAt: '2026-03-10T09:12:00Z',
-  },
-  {
-    id: 'c2',
-    author: TOM,
-    body: 'Yes. Monthly billing was retired last year.',
-    createdAt: '2026-03-10T09:40:00Z',
-    canDelete: true,
-  },
-];
+const START: CommentItem[] = fixture.data.comments.map((c) => ({
+  id: c.id,
+  author: { name: c.author, seed: c.seed },
+  body: c.body,
+  createdAt: c.createdAt,
+  ...('canDelete' in c ? { canDelete: c.canDelete } : {}),
+}));
 
 // Each example thread has its own starter, so each region has its own name.
 const LONG: CommentItem[] = [
@@ -62,7 +56,7 @@ function ThreadDemo() {
   return (
     <CommentThread
       comments={comments}
-      quote="Billed monthly, cancel any time."
+      quote={fixture.data.quote}
       resolved={resolved}
       onResolvedChange={setResolved}
       onReply={(body) =>

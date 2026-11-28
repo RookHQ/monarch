@@ -1,0 +1,171 @@
+{
+  "id": "agenda-list",
+  "name": "MonarchAgendaList",
+  "title": "AgendaList",
+  "family": "scheduling",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyColumn with LazyListScope.stickyHeader, MonarchEventChip, MonarchEmptyState, android.icu.text.DateFormat",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Events grouped by day in a scrolling list: a pinned heading per day with the date, a Today marker and the number of events, all-day events first, longer events on each day they touch, and an empty state.",
+  "whenToUse": "For the agenda view of a calendar, a bookings screen or a schedule tab, where people scan what is coming day by day and tap an event to open it.",
+  "whenNotToUse": "For one day laid out in hours use a time grid. For a picker of dates use MonarchMiniMonth or the Material 3 DatePicker. For a feed of things that happened use MonarchActivityTimeline.",
+  "api": [
+    "@Composable fun MonarchAgendaList(events: List<MonarchAgendaEvent>, modifier: Modifier = Modifier, from: Long? = null, days: Int? = null, today: Long? = System.currentTimeMillis(), showEmptyDays: Boolean = false, timeZone: String? = null, dayNotes: Map<Long, List<String>> = emptyMap(), state: LazyListState = rememberLazyListState(), contentPadding: PaddingValues = PaddingValues(), labels: MonarchAgendaListLabels = MonarchAgendaListLabels(), onSelect: ((MonarchAgendaEvent) -> Unit)? = null)",
+    "class MonarchAgendaEvent(id: String, title: String, start: Long, end: Long? = null, allDay: Boolean = false, detail: String? = null, color: Color = Color.Unspecified, status: MonarchEventChipStatus = MonarchEventChipStatus.Confirmed)",
+    "class MonarchAgendaListLabels(today: String? = null, allDay: String? = null, count: ((Int) -> String)? = null, emptyTitle: String? = null, until: ((String) -> String)? = null, range: ((String, String) -> String)? = null)",
+    "typealias MonarchCalendarEvent = MonarchAgendaEvent"
+  ],
+  "options": [
+    {
+      "name": "events",
+      "type": "List<MonarchAgendaEvent>",
+      "default": "required",
+      "description": "The events in any order, each with an id, a title, a start and optionally an end, allDay, a detail, a color and a status. Times are epoch milliseconds."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the list. Give it a bounded height, as for any LazyColumn."
+    },
+    {
+      "name": "from",
+      "type": "Long?",
+      "default": "null",
+      "description": "Any time on the first day listed. By default the first day with an event. Events that started earlier and still run appear on it."
+    },
+    {
+      "name": "days",
+      "type": "Int?",
+      "default": "null",
+      "description": "How many days to list from from. By default through the last event. At most 400 days."
+    },
+    {
+      "name": "today",
+      "type": "Long?",
+      "default": "System.currentTimeMillis()",
+      "description": "Any time on the day marked Today, or null for no marker. Pass a fixed value in tests and previews."
+    },
+    {
+      "name": "showEmptyDays",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Lists the days in the range that have no events and no notes, with \"0 events\"."
+    },
+    {
+      "name": "timeZone",
+      "type": "String?",
+      "default": "null",
+      "description": "The zone days and times are read in; the web's timeZone. An IANA id such as Europe/Berlin; null, or an id the device does not know, is the device's zone."
+    },
+    {
+      "name": "dayNotes",
+      "type": "Map<Long, List<String>>",
+      "default": "emptyMap()",
+      "description": "Informational lines shown first in a day, such as time off or a holiday, keyed by any time on that day. A day with notes is listed even without events."
+    },
+    {
+      "name": "state",
+      "type": "LazyListState",
+      "default": "rememberLazyListState()",
+      "description": "The scroll state, to scroll to a day from outside."
+    },
+    {
+      "name": "contentPadding",
+      "type": "PaddingValues",
+      "default": "PaddingValues()",
+      "description": "Padding around the content, for example for system bars."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAgendaListLabels",
+      "default": "MonarchAgendaListLabels()",
+      "description": "Replacements for \"Today\", \"All day\", the count, \"Nothing scheduled\" and the spoken \"until\" and \"to\"."
+    },
+    {
+      "name": "onSelect",
+      "type": "((MonarchAgendaEvent) -> Unit)?",
+      "default": "null",
+      "description": "Opens an event. Without it the events are labels, not buttons."
+    }
+  ],
+  "states": [
+    {
+      "name": "days",
+      "description": "Each day has a heading pinned while its events scroll, with the date, a Today badge on today and the count; events are bar event chips."
+    },
+    {
+      "name": "multi-day",
+      "description": "A timed event shows its start and end on its first day, \"All day\" on days it covers whole and \"– 02:00\" on its last day."
+    },
+    {
+      "name": "notes",
+      "description": "Muted caption lines before the day's events."
+    },
+    {
+      "name": "empty",
+      "description": "MonarchEmptyState titled \"Nothing scheduled\" when no day is listed."
+    },
+    {
+      "name": "event status",
+      "description": "Tentative, cancelled and declined events use the event chip's dashed, struck-through and muted forms and say their status."
+    }
+  ],
+  "appearance": "Headings sit on the surface color with a subtle divider; the date is in the default text color (the strong accent on today), the count in the muted color and Today in an info badge. Events keep the event chip's colors: the event color only as the bar and a light tint. High contrast themes use their stronger text and border roles.",
+  "platformNotes": "The web AgendaList reads ISO days in an IANA zone, takes a renderEvent wrapper and moves focus between events with the arrow keys. On Android events are epoch milliseconds read in the zone of an IANA id, as on the web, TalkBack and hardware keyboards move through the list's items themselves, and a wrapper is not needed because the app handles onSelect. The web's headingLevel has no meaning in Compose; headings have the heading semantics. The web's hourCycle and locale come from the configuration's locale. The web's empty slot is not offered; the built-in empty state takes labels.emptyTitle. The web's accent Today marker is a MonarchBadge in the info tone, because MonarchTone has no accent tone; the date of today uses the strong accent role directly. iOS builds the same component with the same name.",
+  "accessibility": [
+    "Each day heading is one element with heading semantics, read as \"Wednesday, November 4, Today, 3 events\", so TalkBack's heading navigation moves from day to day.",
+    "Each event is a MonarchEventChip read as one element: title, spoken time (\"9:30 AM to 10:15 AM\", \"until 2:00 AM\" or \"All day\"), status and detail.",
+    "With onSelect each event is a button with a 48dp touch target reserved in the layout; without it the events have no click action.",
+    "Today is a word in a badge, not only a color; statuses are words read by the event chip.",
+    "Text scales with the font size setting; the heading wraps instead of cutting the date."
+  ],
+  "edgeCases": [
+    "An event that ends exactly at midnight does not appear on the next day.",
+    "An end before the start is treated as no end.",
+    "Ids must be unique; one event appears on several days with the same id, under different headings.",
+    "Give the list a bounded height; inside a vertically scrolling Column it needs Modifier.height.",
+    "Days and times are read in timeZone, so pass the zone of the place the events happen when it differs from the device.",
+    "today defaults to the time of composition; pass a fixed value for previews and tests."
+  ],
+  "tests": [
+    "MonarchAgendaListTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Agenda",
+      "fixture": "agenda-list",
+      "webExample": "Agenda",
+      "template": "CompositionLocalProvider(LocalConfiguration provides locale) {\n    MonarchAgendaList(\n        events = listOf(\n            MonarchAgendaEvent({{events.0.id}}, {{events.0.title}}, {{events.0.start|millis}}, allDay = {{events.0.allDay}}, color = Color(red = {{events.0.color.r}}, green = {{events.0.color.g}}, blue = {{events.0.color.b}})),\n            MonarchAgendaEvent({{events.1.id}}, {{events.1.title}}, {{events.1.start|millis}}, {{events.1.end|millis}}, color = Color(red = {{events.1.color.r}}, green = {{events.1.color.g}}, blue = {{events.1.color.b}})),\n            MonarchAgendaEvent({{events.2.id}}, {{events.2.title}}, {{events.2.start|millis}}, {{events.2.end|millis}}, detail = {{events.2.detail}}, color = Color(red = {{events.2.color.r}}, green = {{events.2.color.g}}, blue = {{events.2.color.b}})),\n            MonarchAgendaEvent({{events.3.id}}, {{events.3.title}}, {{events.3.start|millis}}, {{events.3.end|millis}}, detail = {{events.3.detail}}, color = Color(red = {{events.3.color.r}}, green = {{events.3.color.g}}, blue = {{events.3.color.b}}), status = MonarchEventChipStatus.{{events.3.status|pascal}}),\n            MonarchAgendaEvent({{events.4.id}}, {{events.4.title}}, {{events.4.start|millis}}, {{events.4.end|millis}}, color = Color(red = {{events.4.color.r}}, green = {{events.4.color.g}}, blue = {{events.4.color.b}}), status = MonarchEventChipStatus.{{events.4.status|pascal}}),\n        ),\n        modifier = Modifier.heightIn(max = 360.dp),\n        today = {{today|millis}},\n        timeZone = {{timeZone}},\n        dayNotes = mapOf({{dayNotes.0.day|millis}} to listOf({{dayNotes.0.notes.0}})),\n    )\n}",
+      "setupTemplate": "val configuration = LocalConfiguration.current\nval locale = remember(configuration) {\n    Configuration(configuration).apply { setLocale(Locale.forLanguageTag({{locale}})) }\n}",
+      "imports": [
+        "android.content.res.Configuration",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.LocalConfiguration",
+        "androidx.compose.ui.unit.dp",
+        "java.util.Locale"
+      ],
+      "setup": "val configuration = LocalConfiguration.current\nval locale = remember(configuration) {\n    Configuration(configuration).apply { setLocale(Locale.forLanguageTag(\"en-GB\")) }\n}",
+      "code": "CompositionLocalProvider(LocalConfiguration provides locale) {\n    MonarchAgendaList(\n        events = listOf(\n            MonarchAgendaEvent(\"e1\", \"Team offsite\", 1_793_750_400_000L, allDay = true, color = Color(red = 22, green = 163, blue = 74)),\n            MonarchAgendaEvent(\"e2\", \"Stand-up\", 1_793_782_800_000L, 1_793_783_700_000L, color = Color(red = 15, green = 118, blue = 110)),\n            MonarchAgendaEvent(\"e3\", \"Design review\", 1_793_790_000_000L, 1_793_793_600_000L, detail = \"Room 4\", color = Color(red = 124, green = 58, blue = 237)),\n            MonarchAgendaEvent(\"e4\", \"Vendor call\", 1_793_887_200_000L, 1_793_889_000_000L, detail = \"Video call\", color = Color(red = 37, green = 99, blue = 235), status = MonarchEventChipStatus.Tentative),\n            MonarchAgendaEvent(\"e5\", \"Retrospective\", 1_793_980_800_000L, 1_793_984_400_000L, color = Color(red = 194, green = 65, blue = 12), status = MonarchEventChipStatus.Cancelled),\n        ),\n        modifier = Modifier.heightIn(max = 360.dp),\n        today = 1_793_750_400_000L,\n        timeZone = \"UTC\",\n        dayNotes = mapOf(1_793_836_800_000L to listOf(\"Time off · Priya\")),\n    )\n}"
+    },
+    {
+      "title": "A fixed range with empty days and a note",
+      "setup": "val start = 1_793_750_400_000L",
+      "code": "MonarchAgendaList(\n    events = listOf(MonarchAgendaEvent(\"call\", \"Client call\", start + 15 * 3_600_000L)),\n    modifier = Modifier.height(360.dp),\n    from = start,\n    days = 3,\n    today = start,\n    showEmptyDays = true,\n    dayNotes = mapOf(start to listOf(\"Public holiday\")),\n)"
+    }
+  ],
+  "webEquivalent": "AgendaList",
+  "dependsOn": [
+    "event-chip",
+    "empty-state"
+  ]
+}

@@ -2,24 +2,27 @@ import { useState } from 'react';
 import { type NotificationItem } from '@rookcom/monarch-react/collaboration';
 import { NotificationsBell } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './notifications-bell.fixture.json';
 
-const now = new Date('2026-03-02T12:00:00Z');
-const initial: NotificationItem[] = [
-  {
-    id: 'n1',
-    title: 'Ana Lopez assigned you “Quarterly plan”',
-    time: '2026-03-02T11:40:00Z',
-    actor: { name: 'Ana Lopez' },
-  },
-  {
-    id: 'n2',
-    title: 'Sam Lee replied to your comment',
-    description: 'Looks good to me, shipping it after lunch.',
-    time: '2026-03-02T09:15:00Z',
-    actor: { name: 'Sam Lee' },
-  },
-  { id: 'n3', title: 'Your export is ready', time: '2026-03-01T17:05:00Z', read: true },
-];
+const now = new Date(fixture.data.now);
+const initial: NotificationItem[] = (
+  fixture.data.items as {
+    id: string;
+    title: string;
+    description?: string;
+    time: string;
+    actor?: string;
+    read?: boolean;
+  }[]
+).map(({ id, title, description, time, actor, read }) => ({
+  id,
+  title,
+  ...(description !== undefined && { description }),
+  time,
+  ...(actor !== undefined && { actor: { name: actor } }),
+  ...(read !== undefined && { read }),
+}));
 
 function useInbox() {
   const [items, setItems] = useState(initial);
@@ -33,7 +36,7 @@ function useInbox() {
 
 function IconBell() {
   const inbox = useInbox();
-  return <NotificationsBell {...inbox} now={now} seeAllHref="#notifications" />;
+  return <NotificationsBell {...inbox} defaultOpen now={now} seeAllHref="#notifications" />;
 }
 
 function Rows() {
@@ -146,7 +149,7 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Icon button with See all', render: () => <IconBell /> },
+        { title: 'Icon button with See all', stage: true, render: () => <IconBell /> },
         { title: 'Row and collapsed row', render: () => <Rows /> },
       ],
     },

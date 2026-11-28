@@ -25,6 +25,10 @@ npm run dev -w @rookcom/monarch-docs   # http://localhost:5173
   The first example is shown large; every example has "Show code"; API and props
   tables come from `@rookcom/monarch-react/manifest.json`.
 - Guides rendered from `docs/guides/*.md` at build time (no copy to drift).
+- iOS and Android (each a section of the top bar): Monarch for iOS and Monarch
+  for Android, from the native packages under `platforms/`
+  ([Native platform pages](#native-platform-pages)). The native guides they
+  share (`/native/<guide>/`) are listed in both sidebars under one address.
 - Search (⌘K / Ctrl K): Monarch's `CommandPalette` over every page.
 - `#/__gallery`, `#/__gallery/<id>` and `#/__marketing`: no chrome; the screenshot surfaces.
   They stay in the fragment of the site root and render in the browser only.
@@ -38,7 +42,8 @@ three before first paint (`system` theme and contrast by default).
 
 ```
 apps/docs/
-  plugins/          monarch-docs.ts (Vite plugin), extract-examples.ts (+ test), guides.ts (Markdown at build time)
+  plugins/          monarch-docs.ts (Vite plugin), extract-examples.ts (+ test), guides.ts (Markdown at build time),
+                    native.ts (+ test): the Android and iOS data
   public/           icons, web manifest (copied as is)
   scripts/          prerender.mjs (static HTML for every page, 404, sitemap, robots)
   src/
@@ -47,12 +52,92 @@ apps/docs/
     fonts/          Poppins woff2 subsets and their licence (OFL.txt)
     app/            app.tsx (providers, hidden routes), routes.tsx (lazy pages), navigation.ts
     layout/         docs-shell, top-bar, sidebar, page-frame, toc, site-footer
-    features/       appearance/, search/, code/ (code block, highlighter), examples/, brand/, content/
-    pages/          home/, foundations/, components/, guides/, gallery.tsx (+ gallery-ids.ts)
+    features/       appearance/, search/, code/ (code block, highlighter), examples/, brand/, content/, native/
+    pages/          home/, foundations/, components/, guides/, android/, ios/, native/, gallery.tsx (+ gallery-ids.ts)
     lib/            docs.ts (index + lazy docs files), router, appearance, manifest, registry, facts
     marketing/      the #/__marketing reference page
-    styles/         fonts, base, gallery (baseline surface), shell, content, examples, home, foundations, component-page
+    styles/         fonts, base, gallery (baseline surface), shell, content, examples, home, foundations, component-page, native
 ```
+
+## Native platform pages
+
+Everything the site says about Android and iOS is read at build time from the
+files the native packages own, by `plugins/native.ts`. Nothing is copied into
+the site, and no count or version is typed in.
+
+| Address                                      | What it shows                                                                                                                                                                     | Read from                                                                                                           |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `/android/`, `/ios/`                         | The landing page of each platform: one layout (`features/native/platform-landing.tsx`), the words per platform in `platform-landing-content.ts`, screenshots of the catalogue app | Counts from the inventory, the install snippet from the README, compiled inventory examples, `public/native/*.webp` |
+| `/android/get-started/`, `/ios/get-started/` | Requirements, installation, the first screen, the theme and the tokens                                                                                                            | Sections of `platforms/<platform>/README.md`, the version catalog, `Package.swift`, the changelog                   |
+| `/android/guide/`, `/ios/guide/`             | The long form: approach, previews, examples, accessibility, adaptive layouts, reference, API policy, platform terms                                                               | The same, and the inventory entries with no web page (theme, icon)                                                  |
+| `/android/components/`, `/ios/components/`   | The catalogue: every inventory entry and every planned component, by family                                                                                                       | `platforms/<platform>/inventory/*.json`, `platforms/parity.json`                                                    |
+| `/android/releases/`, `/ios/releases/`       | Release notes                                                                                                                                                                     | `platforms/<platform>/CHANGELOG.md`                                                                                 |
+| `/native/<guide>/`                           | `adaptive-layout`, `accessibility`, `compatibility`, `contributing`                                                                                                               | `docs/guides/native-*.md`, `docs/architecture/NATIVE-COMPATIBILITY.md`                                              |
+| `/components/<id>/#android`, `#ios`          | The component on each platform, as two sections of its existing page (no second page per platform)                                                                                | The inventory entry of that id, or its plan in `platforms/parity.json` when there is no entry yet                   |
+
+The landing pages' pictures are drawn by the sample apps from one scenario (the
+demo workspace Acme Studio): the showcase screen on a phone and a tablet, eight
+category tiles and three small cards beside the hero phone, light and dark: `apps/docs/scripts/capture-native-screens.sh
+[ios|android|all]` captures them (the iOS Simulator with the status bar set to
+9:41; a Robolectric test, `LandingScreensTest`, on Android) and writes WebP
+files of at most 150 KB to `apps/docs/public/native/`, with their sizes in
+`src/features/native/native-screens.json`. The sections of the old one-page
+`/ios/` and `/android/` moved to `get-started` and `guide` under the same ids;
+an old link such as `/ios/#installation` is sent there by the landing page
+(`src/features/native/moved-sections.ts`).
+
+Rules the pages follow:
+
+- **Status is never guessed.** A component with an inventory entry shows the
+  entry's status (available, experimental, deprecated). A component that is
+  only in `platforms/parity.json` is shown as planned, with the planned
+  coverage, and never as available. Web-only coverage shows no status.
+- **Text about installing and using a platform is the README's own.** The
+  landing pages embed README sections by heading (`README_SECTIONS` in
+  `plugins/native.ts`), so a change to the README changes the page. A heading
+  that is renamed is left out and a link to the README stands in; add the new
+  slug to `README_SECTIONS`. Commands quoted outside those sections
+  (`README_COMMANDS`) are shown only while the README still contains them.
+- **Missing data never fails the build.** No inventory folder (the generated
+  `components.json` is read instead, if it is in the same shape), no
+  changelog, no guide file: the pages say less. A guide whose file does not
+  exist has no route, no navigation entry and no links to it. An inventory
+  file that is not in the shape of `inventory/schema.json` is skipped with a
+  build warning.
+- **Previews are images of the real components or nothing.** When
+  `platforms/<platform>/previews/<id>.light.png` or `<id>.dark.png` exists,
+  the entry shows it (the one matching the site theme, with its width and
+  height, loaded lazily). Without a file nothing is drawn in its place.
+- **Per-component data loads per component.** Each `<id>.docs.tsx` gets a
+  `loadNative` export that imports `virtual:monarch-native-component/<id>`, a
+  chunk of its own with both platforms' entries. Only the component's page
+  loads it (`loadNative()` in `src/features/native/native-sections.tsx`); overview cards, the gallery
+  and every other page do not. The sections are in the prerendered HTML, but
+  their code and data are not preloaded. In the browser the page keeps that
+  HTML exactly as it is (`NativeSlot` in `src/pages/components/native-slot.tsx`
+  renders the same HTML as the element's content, so React hydrates around it)
+  until the sections near the viewport; then it loads the code and the data
+  and replaces the static sections with live ones, with the same markup, in
+  one commit. They do not count towards the page's initial JavaScript, and a
+  slow connection never holds up the rest of the page.
+- Kotlin and Swift code is highlighted by a small highlighter beside the TSX
+  one (`src/features/code/highlight-native.ts`), which only the native pages
+  load: in the browser for inventory examples, at build time for guides and
+  README sections. Code blocks carry their language (`data-lang`), which the
+  Markdown copies use for the fence.
+- The iOS and Android pages add as little as possible to the entry chunk, which
+  every page loads: their paths and labels (`src/app/navigation.ts`) and
+  their page modules, found by naming convention (`platformPages` in
+  `src/app/routes.tsx`). Descriptions
+  and search keywords are in `src/app/native-nav-details.ts`, read by the
+  search index and the prerender step.
+
+To add a native guide, add its file to `NATIVE_GUIDES` (`plugins/native.ts`)
+and `GUIDE_ROUTES` (`plugins/guides.ts`), a page module in `src/pages/native`,
+named `<id>-page.tsx` and exporting `<Id>Page`, and its entry in
+`NATIVE_GUIDE_ITEMS` (`src/app/navigation.ts`), `NATIVE_NAV_DETAILS`
+(`src/app/native-nav-details.ts`) and `nativeGuideRoutes()`
+(`tests/helpers.ts`).
 
 ## Example code ("Show code")
 
@@ -140,7 +225,7 @@ production build and fails when:
 | Home page: JavaScript loaded before any interaction           | 150 KB        |
 | Home page: CSS                                                | 60 KB         |
 | Any other page: JavaScript loaded before any interaction      | 290 KB        |
-| `/components/block-editor` (composes every editor block)      | 335 KB        |
+| `/components/block-editor` (composes every editor block)      | 336 KB        |
 | `/components/{rich-text-editor,message-composer,table-block}` | 300 KB        |
 | Any other page: CSS                                           | 60 KB         |
 | The entry chunk                                               | 135 KB        |

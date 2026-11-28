@@ -6,17 +6,34 @@ import {
   type AuditLogEvent,
 } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './audit-log-viewer.fixture.json';
+
+const [e1, e2, e3, e4] = fixture.data.events as [
+  { id: string; actor: string; action: string; target: string; time: string },
+  { id: string; actor: string; action: string; time: string },
+  {
+    id: string;
+    actor: string;
+    kind: 'automation';
+    action: string;
+    target: string;
+    source: string;
+    time: string;
+  },
+  { id: string; actor: string; kind: 'api'; action: string; target: string; time: string },
+];
 
 const NOW = '2026-03-02T12:00:00Z';
 /** Built lazily: docs files cannot create JSX at module scope. */
 const sampleEvents = (): (AuditLogEvent & { area: string })[] => [
   {
-    id: 'a1',
+    id: e1.id,
     area: 'members',
-    time: '2026-03-02T11:04:12Z',
-    actor: { name: 'Ana Lopez', detail: 'ana@example.com' },
-    action: 'Changed a member’s role',
-    target: 'Ben Okafor',
+    time: e1.time,
+    actor: { name: e1.actor, detail: 'ana@example.com' },
+    action: e1.action,
+    target: e1.target,
     ip: '203.0.113.24',
     device: 'Firefox on macOS',
     reason: 'Moved to the platform team',
@@ -26,32 +43,32 @@ const sampleEvents = (): (AuditLogEvent & { area: string })[] => [
     ],
   },
   {
-    id: 'a2',
+    id: e2.id,
     area: 'security',
-    time: '2026-03-02T09:47:51Z',
-    actor: { name: 'Chloé Martin', detail: 'chloe@example.com' },
-    action: 'Signed in',
+    time: e2.time,
+    actor: { name: e2.actor, detail: 'chloe@example.com' },
+    action: e2.action,
     ip: '198.51.100.8',
     device: 'Safari on iPhone',
     location: 'Lisbon, Portugal (approximate)',
   },
   {
-    id: 'a3',
+    id: e3.id,
     area: 'settings',
-    time: '2026-03-02T03:00:00Z',
-    actor: { name: 'Retention policy', kind: 'automation' },
-    action: 'Deleted 14 expired exports',
-    target: 'Exports',
-    source: <Badge size="sm">Scheduled</Badge>,
+    time: e3.time,
+    actor: { name: e3.actor, kind: e3.kind },
+    action: e3.action,
+    target: e3.target,
+    source: <Badge size="sm">{e3.source}</Badge>,
     details: <pre>{JSON.stringify({ policy: 'exports-30d', deleted: 14 }, null, 2)}</pre>,
   },
   {
-    id: 'a4',
+    id: e4.id,
     area: 'settings',
-    time: '2026-03-01T15:22:09Z',
-    actor: { name: 'Deploy key', kind: 'api', detail: 'Key ending 7f3a' },
-    action: 'Updated a webhook',
-    target: 'Billing events',
+    time: e4.time,
+    actor: { name: e4.actor, kind: e4.kind, detail: 'Key ending 7f3a' },
+    action: e4.action,
+    target: e4.target,
     ip: '192.0.2.44',
     device: 'API client',
     changes: [
@@ -84,7 +101,7 @@ function Demo() {
           <Select value={area} onValueChange={setArea}>
             <SelectTrigger aria-label="Area" style={{ width: '12rem' }} />
             <SelectContent>
-              <SelectItem value="all">All areas</SelectItem>
+              <SelectItem value="all">{fixture.data.toolbar.filter}</SelectItem>
               <SelectItem value="members">Members</SelectItem>
               <SelectItem value="security">Security</SelectItem>
               <SelectItem value="settings">Settings</SelectItem>
@@ -103,8 +120,8 @@ function Demo() {
         hasMore
         onLoadMore={() => {}}
         now={NOW}
-        timeZone="UTC"
-        locale="en-GB"
+        timeZone={fixture.data.timeZone}
+        locale={fixture.data.locale}
       />
     </div>
   );

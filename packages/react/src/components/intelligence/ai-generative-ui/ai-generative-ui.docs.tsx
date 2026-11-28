@@ -1,6 +1,8 @@
 import { Badge, Card, CardContent, CardHeader, CardTitle } from '@rookcom/monarch-react';
 import { AiGenerativeUi, createAiUiRegistry, type AiUiPart } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-generative-ui.fixture.json';
 
 function MetricCard({ label, value, change }: { label?: string; value?: string; change?: string }) {
   return (
@@ -41,8 +43,8 @@ const validate = {
 
 const metric: AiUiPart = {
   type: 'ui',
-  component: 'MetricCard',
-  props: { label: 'Active projects', value: '42', change: '+6 this month' },
+  component: fixture.data.component,
+  props: fixture.data.props,
 };
 const unknown: AiUiPart = {
   type: 'ui',

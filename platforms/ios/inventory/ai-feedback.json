@@ -1,0 +1,129 @@
+{
+  "id": "ai-feedback",
+  "name": "MonarchAiFeedback",
+  "title": "AiFeedback",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Toggle with MonarchToggleButtonStyle for the thumbs, .sheet with NavigationStack, MonarchCheckboxGroup for the reasons, TextField(axis: .vertical) for the comment, MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Thumbs up and down for an AI answer, then reasons and an optional comment in a sheet, then a thank-you.",
+  "whenToUse": "Under an AI answer, summary or generated draft when the product wants structured feedback to improve prompts, retrieval or models.",
+  "whenNotToUse": "When a plain rating is enough, put thumbs in the message's own actions. For rating a person's work or a product, use MonarchRatingPicker or a survey.",
+  "api": [
+    "init(selection: Binding<MonarchAiMessageFeedback?>, reasons: [MonarchAiMessageFeedback: [MonarchCheckboxGroupOption]]? = nil, asksDetails: MonarchAiFeedbackDetails = .down, labels: MonarchAiFeedbackLabels = MonarchAiFeedbackLabels(), onSubmit: (@MainActor (MonarchAiFeedbackSubmission) async throws -> Void)? = nil)",
+    "enum MonarchAiFeedbackDetails { case down, both, none }",
+    "struct MonarchAiFeedbackSubmission: Codable { var value: MonarchAiMessageFeedback; var reasons: [String]; var comment: String }",
+    "struct MonarchAiFeedbackLabels { var group, good, bad, reasonsDown, reasonsUp, comment, commentPlaceholder, submit, cancel, thanks, error: String? }"
+  ],
+  "options": [
+    {
+      "name": "selection",
+      "type": "Binding<MonarchAiMessageFeedback?>",
+      "default": "required",
+      "description": "The rating, nil for none. It changes as soon as a thumb is pressed, before anything is sent."
+    },
+    {
+      "name": "reasons",
+      "type": "[MonarchAiMessageFeedback: [MonarchCheckboxGroupOption]]?",
+      "default": "nil",
+      "description": "The reasons offered for each rating; a rating without an entry offers none. nil offers Inaccurate, Not helpful, Incomplete, Hard to follow and Harmful or unsafe after a thumbs down and none after a thumbs up."
+    },
+    {
+      "name": "asksDetails",
+      "type": "MonarchAiFeedbackDetails",
+      "default": ".down",
+      "description": "Which ratings open the sheet. down: a thumbs up is sent at once. none: every rating is sent at once."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiFeedbackLabels",
+      "default": "MonarchAiFeedbackLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onSubmit",
+      "type": "(@MainActor (MonarchAiFeedbackSubmission) async throws -> Void)?",
+      "default": "nil",
+      "description": "Sends the rating, the chosen reason ids in listed order and the trimmed comment. Throw to show the error."
+    }
+  ],
+  "states": [
+    {
+      "name": "unrated",
+      "description": "Two outlined thumbs, neither pressed."
+    },
+    {
+      "name": "rated",
+      "description": "The chosen thumb is pressed: filled glyph and the toggle button's on fill."
+    },
+    {
+      "name": "details",
+      "description": "A sheet with the question and reasons as checkboxes, the comment, Send feedback and Cancel."
+    },
+    {
+      "name": "sending",
+      "description": "The send button shows progress; the sheet cannot be swiped away and the thumbs are disabled."
+    },
+    {
+      "name": "thanks",
+      "description": "\"Thanks for your feedback.\" with a check under the thumbs, announced."
+    },
+    {
+      "name": "error",
+      "description": "onSubmit threw: the error is shown with an icon and announced; the sheet stays filled in, or the error shows under the thumbs after a direct send."
+    },
+    {
+      "name": "disabled",
+      "description": "The thumbs use the disabled colours and do nothing."
+    }
+  ],
+  "appearance": "The thumbs are ghost toggle buttons: no fill while off, the accent subtle fill and accent border while on. The sheet uses the surface background, the checkbox group and the text field look; the error is strong danger text, the thank-you muted text. All roles come from the theme.",
+  "platformNotes": "The web shows the reasons as chips and the form inline under the thumbs; on iOS the form is a sheet, as the plan names, and the reasons are a MonarchCheckboxGroup, which is the platform's way to pick several items. Pressed thumbs use the shared toggle button style, so they take the accent colours where the web uses the AI colours. The rating type is MonarchAiMessageFeedback, the same one the conversation model uses. The web returns focus to the thank-you; iOS announces it instead because the sheet closes. onSubmit is an async throwing closure in place of a promise.",
+  "accessibility": [
+    "Each thumb is a standard Toggle (through accessibilityRepresentation) named \"Good response\" or \"Bad response\", with on and off as its value; the thumbs are a container named \"Rate this response\".",
+    "A pressed thumb has a filled glyph, so the state is never colour alone.",
+    "In the sheet the reasons are labelled checkboxes under the question, the comment has a visible label and reads the error as its hint, and Cancel is the sheet's cancellation action.",
+    "The thank-you and the error are announced when they appear.",
+    "Thumbs, checkboxes and buttons have touch targets of at least 44 points; text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Pressing the pressed thumb clears the rating and closes nothing else; no submission is sent.",
+    "Cancel or a swipe down keeps the rating and sends nothing.",
+    "Reason ids that are not listed are dropped from the submission; reasons keep the listed order whatever order they were picked in.",
+    "Without onSubmit the thank-you shows at once.",
+    "A comment of only spaces is sent as an empty string."
+  ],
+  "tests": [
+    "MonarchAiFeedbackTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Default (details on thumbs down)",
+      "fixture": "ai-feedback",
+      "webExample": "Default (details on thumbs down)",
+      "template": "MonarchAiFeedback(selection: $rating, asksDetails: {{askDetails|case}}) { submission in\n    sent = submission\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var rating: MonarchAiMessageFeedback?\n@State private var sent: MonarchAiFeedbackSubmission?",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var rating: MonarchAiMessageFeedback?\n@State private var sent: MonarchAiFeedbackSubmission?",
+      "code": "MonarchAiFeedback(selection: $rating, asksDetails: .down) { submission in\n    sent = submission\n}"
+    },
+    {
+      "title": "Details after both ratings",
+      "setup": "@State private var rating: MonarchAiMessageFeedback? = .up",
+      "code": "MonarchAiFeedback(\n    selection: $rating,\n    reasons: [\n        .up: [MonarchCheckboxGroupOption(id: \"clear\", label: \"Clear\")],\n        .down: [MonarchCheckboxGroupOption(id: \"wrong\", label: \"Wrong\")],\n    ],\n    asksDetails: .both\n)"
+    }
+  ],
+  "webEquivalent": "AiFeedback",
+  "dependsOn": [
+    "toggle-button",
+    "checkbox-group",
+    "text-field",
+    "sheet",
+    "button"
+  ]
+}

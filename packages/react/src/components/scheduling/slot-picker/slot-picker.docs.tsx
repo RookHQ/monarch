@@ -1,54 +1,47 @@
 import { useState } from 'react';
 import { SlotPicker, type SlotPickerSlot } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './slot-picker.fixture.json';
 
-/** Sample opening times: 09:00-12:00 UTC every 30 minutes, with a full slot and a small group. */
+const data = fixture.data;
+
+/** Sample opening times on `day`: the fixture's times of day, with a full slot and a small group. */
 function sampleSlots(day: string): SlotPickerSlot[] {
   if (day.endsWith('-08') || day.endsWith('-15')) return [];
-  return [0, 30, 60, 90, 120, 150].map((offset, i) => {
-    const h = 9 + Math.floor(offset / 60);
-    const mm = offset % 60;
-    return {
-      start: `${day}T${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}:00Z`,
-      disabled: i === 2,
-      seatsLeft: i === 4 ? 3 : null,
-    };
-  });
+  return (data.slots as readonly { start: string; disabled?: boolean; seatsLeft?: number }[]).map(
+    (slot) => ({
+      start: `${day}T${slot.start.slice(11)}`,
+      disabled: slot.disabled === true,
+      seatsLeft: slot.seatsLeft ?? null,
+    }),
+  );
 }
 
-const BOOKABLE = [
-  '2026-11-04',
-  '2026-11-05',
-  '2026-11-06',
-  '2026-11-09',
-  '2026-11-10',
-  '2026-11-11',
-];
-
 function BookingDemo() {
-  const [day, setDay] = useState<string | null>('2026-11-04');
+  const [day, setDay] = useState<string | null>(data.day);
   const [value, setValue] = useState<string | null>(null);
-  const [zone, setZone] = useState('Europe/London');
+  const [zone, setZone] = useState(data.timeZone);
   return (
     <div style={{ display: 'grid', gap: 8, width: '100%', maxWidth: 720 }}>
       <SlotPicker
-        locale="en-GB"
-        today="2026-11-02"
+        locale={data.locale}
+        today={data.today}
         day={day}
         onDayChange={(d: string) => {
           setDay(d);
           setValue(null);
         }}
-        availableDays={BOOKABLE}
-        min="2026-11-02"
-        max="2026-12-31"
+        availableDays={data.availableDays}
+        min={data.min}
+        max={data.max}
         slots={day ? sampleSlots(day) : []}
         value={value}
         onValueChange={setValue}
         timeZone={zone}
         onTimeZoneChange={setZone}
-        businessTimeZone="Europe/London"
-        pinnedTimeZones={['Europe/London', 'America/New_York', 'Asia/Kolkata']}
+        businessTimeZone={data.businessTimeZone}
+        pinnedTimeZones={data.pinnedTimeZones}
       />
       <p style={{ margin: 0, fontSize: 13 }}>Selected: {value ?? 'none'}</p>
     </div>

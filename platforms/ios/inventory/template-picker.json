@@ -1,0 +1,142 @@
+{
+  "id": "template-picker",
+  "name": "MonarchTemplatePicker",
+  "title": "TemplatePicker",
+  "family": "forms",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "LazyVGrid of Buttons with a custom ButtonStyle; MonarchTag toggles for categories; search through searchable(text:prompt:) on the containing screen",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A gallery of templates to start from, with category filters, search through the system search field, and an optional \"start from scratch\" card first.",
+  "whenToUse": "When people create a document, project or workspace and can start from one of several templates or from scratch.",
+  "whenNotToUse": "Not for a few plain options without previews (use MonarchRadioCardGroup or a Picker) and not for choosing many items (use a List with selection).",
+  "api": [
+    "init(_ label: String, selection: Binding<String?>, templates: [MonarchTemplatePickerItem], categories: [MonarchTemplatePickerCategory] = [], query: String = \"\", blank: MonarchTemplatePickerItem? = nil, initialCategory: String? = nil, labels: MonarchTemplatePickerLabels = MonarchTemplatePickerLabels())",
+    "struct MonarchTemplatePickerItem: Identifiable { init(id: String, name: String, description: String? = nil, category: String? = nil, badge: String? = nil, systemImage: String? = nil, image: Image? = nil, keywords: [String] = [], isDisabled: Bool = false); static func blank(name: String? = nil, description: String? = nil, id: String = \"blank\") -> Self }",
+    "struct MonarchTemplatePickerCategory: Identifiable { init(id: String, label: String) }",
+    "struct MonarchTemplatePickerLabels { init(categories: String? = nil, allCategories: String? = nil, results: (@Sendable (Int) -> String)? = nil, noResults: (@Sendable (String) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The name of the gallery, read by VoiceOver. It is not shown; a sheet's navigation title usually says it."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<String?>",
+      "default": "required",
+      "description": "The id of the chosen template or of the blank card, or nil for none yet."
+    },
+    {
+      "name": "templates",
+      "type": "[MonarchTemplatePickerItem]",
+      "default": "required",
+      "description": "The templates in order, each with a name, an optional description, category, badge, preview symbol or image, search keywords and disabled flag."
+    },
+    {
+      "name": "categories",
+      "type": "[MonarchTemplatePickerCategory]",
+      "default": "[]",
+      "description": "Category filters, shown as a scrolling row of toggle tags with \"All\" first when given."
+    },
+    {
+      "name": "query",
+      "type": "String",
+      "default": "\"\"",
+      "description": "The search text from searchable(text:) on the screen that shows the picker. Every word must appear in the name, description or keywords."
+    },
+    {
+      "name": "blank",
+      "type": "MonarchTemplatePickerItem?",
+      "default": "nil",
+      "description": "A \"start from scratch\" card shown first whatever the filters, usually .blank() or .blank(description:)."
+    },
+    {
+      "name": "initialCategory",
+      "type": "String?",
+      "default": "nil",
+      "description": "The category filter selected at first. All by default."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchTemplatePickerLabels",
+      "default": "MonarchTemplatePickerLabels()",
+      "description": "Replacements for the filter names, the announced result count and the no-results message."
+    }
+  ],
+  "states": [
+    {
+      "name": "selected",
+      "description": "The chosen card has the accent subtle background, a heavier accent border and a check mark."
+    },
+    {
+      "name": "pressed",
+      "description": "The card darkens to the emphasis background with a strong border."
+    },
+    {
+      "name": "disabled template",
+      "description": "Subtle background with disabled text; it cannot be chosen."
+    },
+    {
+      "name": "no results",
+      "description": "A filtered MonarchEmptyState saying no templates match the search, under the blank card."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true) every card and filter is disabled."
+    }
+  ],
+  "appearance": "Cards share the radio card colours: surface background with the default border, accent subtle and accent strong when chosen. The preview is a subtle tile with a large symbol or the app's image. Names use the label style, descriptions the muted caption style, badges are info MonarchBadges. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web picker has its own search box; on iOS search is the system search field from searchable on the containing screen, passed in as query, so it sits in the navigation bar and keyboard like every other iOS search. The web's renderPreview pane is not offered: on a phone the app shows a preview after the choice, for example in the next step. Previews are an SF Symbol or an Image instead of free content. The web's arrow-key grid navigation is replaced by VoiceOver and Full Keyboard Access moving through the buttons.",
+  "accessibility": [
+    "The grid is a container named by label.",
+    "Each card is one standard button: the template name as its label, the badge and description as its value, the selected trait when chosen, and at least 44 points high.",
+    "Selection is also shown by a check mark and a heavier border, not colour alone.",
+    "Category filters are MonarchTag toggles in a container named \"Categories\".",
+    "When the category or search changes, the number of templates shown is announced.",
+    "Previews are hidden from VoiceOver."
+  ],
+  "edgeCases": [
+    "The blank card is never hidden by the filters.",
+    "Search ignores case and accents and matches the words in any order.",
+    "Cards are at least 144 points wide, scaled with Dynamic Type, so the largest text sizes show one column.",
+    "A selected template hidden by a filter stays selected."
+  ],
+  "tests": [
+    "MonarchTemplatePickerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Gallery with categories, search, blank and preview",
+      "fixture": "template-picker",
+      "webExample": "Gallery with categories, search, blank and preview",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    HStack(spacing: theme.spacing.space2) {\n        MonarchIcon(systemName: \"magnifyingglass\", size: .sm)\n            .foregroundStyle(theme.colors.textMuted)\n            .accessibilityHidden(true)\n        TextField(\"Search templates\", text: $query)\n            .monarchTextStyle(.body)\n    }\n    .padding(.horizontal, theme.spacing.space3)\n    .frame(minHeight: MonarchAccessibility.minimumHitTarget)\n    .overlay(\n        RoundedRectangle(cornerRadius: theme.radius.md)\n            .strokeBorder(theme.colors.borderDefault, lineWidth: 1)\n    )\n    MonarchTemplatePicker(\n        {{label}},\n        selection: $selection,\n        templates: templates,\n        categories: [\n            MonarchTemplatePickerCategory(id: {{categories.0.id}}, label: {{categories.0.label}}),\n            MonarchTemplatePickerCategory(id: {{categories.1.id}}, label: {{categories.1.label}}),\n            MonarchTemplatePickerCategory(id: {{categories.2.id}}, label: {{categories.2.label}}),\n        ],\n        query: query,\n        blank: .blank(description: {{blank.description}})\n    )\n    if let chosen = templates.first(where: { $0.id == selection }) {\n        VStack(alignment: .leading, spacing: theme.spacing.space2) {\n            Self.thumbnail(chosen.id, dark: scheme == .dark)\n                .resizable()\n                .aspectRatio(contentMode: .fit)\n                .frame(maxWidth: .infinity)\n                .background(theme.colors.bgSubtle)\n                .accessibilityHidden(true)\n            Text(chosen.name)\n                .monarchTextStyle(.bodyStrong)\n                .foregroundStyle(theme.colors.textDefault)\n            if let description = chosen.description {\n                Text(description)\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textMuted)\n            }\n        }\n        .padding(theme.spacing.space3)\n        .overlay(\n            RoundedRectangle(cornerRadius: theme.radius.lg)\n                .strokeBorder(theme.colors.borderSubtle, lineWidth: 1)\n        )\n        .accessibilityElement(children: .contain)\n        .accessibilityLabel(\"Preview\")\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var query = \"\"\n@State private var selection: String? = {{selected}}\n@Environment(\\.colorScheme) private var scheme\nprivate var templates: [MonarchTemplatePickerItem] { [\n    MonarchTemplatePickerItem(id: {{templates.0.id}}, name: {{templates.0.name}}, description: {{templates.0.description}}, category: {{templates.0.category}}, badge: {{templates.0.badge}}, image: Self.thumbnail({{templates.0.id}}, dark: scheme == .dark)),\n    MonarchTemplatePickerItem(id: {{templates.1.id}}, name: {{templates.1.name}}, description: {{templates.1.description}}, category: {{templates.1.category}}, image: Self.thumbnail({{templates.1.id}}, dark: scheme == .dark)),\n    MonarchTemplatePickerItem(id: {{templates.2.id}}, name: {{templates.2.name}}, description: {{templates.2.description}}, category: {{templates.2.category}}, image: Self.thumbnail({{templates.2.id}}, dark: scheme == .dark)),\n    MonarchTemplatePickerItem(id: {{templates.3.id}}, name: {{templates.3.name}}, description: {{templates.3.description}}, category: {{templates.3.category}}, image: Self.thumbnail({{templates.3.id}}, dark: scheme == .dark)),\n    MonarchTemplatePickerItem(id: {{templates.4.id}}, name: {{templates.4.name}}, description: {{templates.4.description}}, category: {{templates.4.category}}, image: Self.thumbnail({{templates.4.id}}, dark: scheme == .dark), keywords: [{{templates.4.keywords.0}}, {{templates.4.keywords.1}}]),\n    MonarchTemplatePickerItem(id: {{templates.5.id}}, name: {{templates.5.name}}, description: {{templates.5.description}}, category: {{templates.5.category}}, image: Self.thumbnail({{templates.5.id}}, dark: scheme == .dark)),\n] }\n\n/// A small picture of each layout, as the web draws: a page with a red heading bar and grey lines.\nprivate static func thumbnail(_ id: String, dark: Bool) -> Image {\n    let width = 320, height = 200\n    guard let context = CGContext(\n        data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,\n        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue\n    ) else { return Image(systemName: \"doc\") }\n    // Core Graphics counts up from the bottom: flip it so the picture is drawn from the top left.\n    context.translateBy(x: 0, y: CGFloat(height))\n    context.scaleBy(x: 1, y: -1)\n    let red = CGColor(red: 0.86, green: 0.15, blue: 0.22, alpha: 1)\n    let grey = dark ? CGColor(red: 0.27, green: 0.27, blue: 0.31, alpha: 1) : CGColor(red: 0.8, green: 0.8, blue: 0.82, alpha: 1)\n    let pink = dark ? CGColor(red: 0.24, green: 0.1, blue: 0.12, alpha: 1) : CGColor(red: 0.99, green: 0.9, blue: 0.91, alpha: 1)\n    func bar(_ x: CGFloat, _ y: CGFloat, _ length: CGFloat, _ color: CGColor) {\n        context.setFillColor(color)\n        context.addPath(CGPath(roundedRect: CGRect(x: x, y: y, width: length, height: 8), cornerWidth: 3, cornerHeight: 3, transform: nil))\n        context.fillPath()\n    }\n    func box(_ x: CGFloat, _ y: CGFloat, _ boxWidth: CGFloat, _ boxHeight: CGFloat, fill: CGColor? = nil) {\n        context.addPath(CGPath(roundedRect: CGRect(x: x, y: y, width: boxWidth, height: boxHeight), cornerWidth: 6, cornerHeight: 6, transform: nil))\n        if let fill {\n            context.setFillColor(fill)\n            context.fillPath()\n        } else {\n            context.setStrokeColor(grey)\n            context.setLineWidth(2)\n            context.strokePath()\n        }\n    }\n    context.setFillColor(dark ? CGColor(red: 0.09, green: 0.09, blue: 0.12, alpha: 1) : CGColor(red: 1, green: 1, blue: 1, alpha: 1))\n    context.fill(CGRect(x: 0, y: 0, width: width, height: height))\n    switch id {\n    case \"classic\":\n        bar(24, 28, 80, red)\n        for row in 0..<3 { bar(24, CGFloat(52 + row * 18), 90, grey) }\n        box(136, 24, 160, 32)\n        for row in 0..<2 { bar(136, CGFloat(70 + row * 18), 160, grey) }\n    case \"banner\":\n        box(24, 20, 272, 52, fill: pink)\n        bar(24, 88, 120, red)\n        for row in 0..<3 { bar(24, CGFloat(112 + row * 18), 272, grey) }\n    case \"gallery\":\n        for row in 0..<2 {\n            for column in 0..<3 { box(CGFloat(24 + column * 92), CGFloat(24 + row * 76), 80, 64) }\n        }\n    case \"split\":\n        box(24, 28, 110, 140, fill: pink)\n        bar(158, 40, 100, red)\n        for row in 0..<3 { bar(158, CGFloat(66 + row * 18), 138, grey) }\n    case \"article\":\n        bar(24, 28, 110, red)\n        for row in 0..<6 { bar(24, CGFloat(54 + row * 18), 272, grey) }\n    default:\n        bar(24, 24, 110, red)\n        for row in 0..<3 { box(24, CGFloat(48 + row * 44), 272, 32) }\n    }\n    guard let picture = context.makeImage() else { return Image(systemName: \"doc\") }\n    return Image(decorative: picture, scale: 1)\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var query = \"\"\n@State private var selection: String? = \"classic\"\n@Environment(\\.colorScheme) private var scheme\nprivate var templates: [MonarchTemplatePickerItem] { [\n    MonarchTemplatePickerItem(id: \"classic\", name: \"Classic\", description: \"Navigation on the side, content on the right.\", category: \"pages\", badge: \"Built-in\", image: Self.thumbnail(\"classic\", dark: scheme == .dark)),\n    MonarchTemplatePickerItem(id: \"banner\", name: \"Banner\", description: \"A large header, then a list.\", category: \"pages\", image: Self.thumbnail(\"banner\", dark: scheme == .dark)),\n    MonarchTemplatePickerItem(id: \"gallery\", name: \"Gallery\", description: \"Cards in a grid.\", category: \"pages\", image: Self.thumbnail(\"gallery\", dark: scheme == .dark)),\n    MonarchTemplatePickerItem(id: \"split\", name: \"Split\", description: \"Image beside text.\", category: \"pages\", image: Self.thumbnail(\"split\", dark: scheme == .dark)),\n    MonarchTemplatePickerItem(id: \"article\", name: \"Article\", description: \"One readable column.\", category: \"docs\", image: Self.thumbnail(\"article\", dark: scheme == .dark), keywords: [\"blog\", \"post\"]),\n    MonarchTemplatePickerItem(id: \"intake\", name: \"Intake form\", description: \"Collect details before a call.\", category: \"forms\", image: Self.thumbnail(\"intake\", dark: scheme == .dark)),\n] }\n\n/// A small picture of each layout, as the web draws: a page with a red heading bar and grey lines.\nprivate static func thumbnail(_ id: String, dark: Bool) -> Image {\n    let width = 320, height = 200\n    guard let context = CGContext(\n        data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,\n        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue\n    ) else { return Image(systemName: \"doc\") }\n    // Core Graphics counts up from the bottom: flip it so the picture is drawn from the top left.\n    context.translateBy(x: 0, y: CGFloat(height))\n    context.scaleBy(x: 1, y: -1)\n    let red = CGColor(red: 0.86, green: 0.15, blue: 0.22, alpha: 1)\n    let grey = dark ? CGColor(red: 0.27, green: 0.27, blue: 0.31, alpha: 1) : CGColor(red: 0.8, green: 0.8, blue: 0.82, alpha: 1)\n    let pink = dark ? CGColor(red: 0.24, green: 0.1, blue: 0.12, alpha: 1) : CGColor(red: 0.99, green: 0.9, blue: 0.91, alpha: 1)\n    func bar(_ x: CGFloat, _ y: CGFloat, _ length: CGFloat, _ color: CGColor) {\n        context.setFillColor(color)\n        context.addPath(CGPath(roundedRect: CGRect(x: x, y: y, width: length, height: 8), cornerWidth: 3, cornerHeight: 3, transform: nil))\n        context.fillPath()\n    }\n    func box(_ x: CGFloat, _ y: CGFloat, _ boxWidth: CGFloat, _ boxHeight: CGFloat, fill: CGColor? = nil) {\n        context.addPath(CGPath(roundedRect: CGRect(x: x, y: y, width: boxWidth, height: boxHeight), cornerWidth: 6, cornerHeight: 6, transform: nil))\n        if let fill {\n            context.setFillColor(fill)\n            context.fillPath()\n        } else {\n            context.setStrokeColor(grey)\n            context.setLineWidth(2)\n            context.strokePath()\n        }\n    }\n    context.setFillColor(dark ? CGColor(red: 0.09, green: 0.09, blue: 0.12, alpha: 1) : CGColor(red: 1, green: 1, blue: 1, alpha: 1))\n    context.fill(CGRect(x: 0, y: 0, width: width, height: height))\n    switch id {\n    case \"classic\":\n        bar(24, 28, 80, red)\n        for row in 0..<3 { bar(24, CGFloat(52 + row * 18), 90, grey) }\n        box(136, 24, 160, 32)\n        for row in 0..<2 { bar(136, CGFloat(70 + row * 18), 160, grey) }\n    case \"banner\":\n        box(24, 20, 272, 52, fill: pink)\n        bar(24, 88, 120, red)\n        for row in 0..<3 { bar(24, CGFloat(112 + row * 18), 272, grey) }\n    case \"gallery\":\n        for row in 0..<2 {\n            for column in 0..<3 { box(CGFloat(24 + column * 92), CGFloat(24 + row * 76), 80, 64) }\n        }\n    case \"split\":\n        box(24, 28, 110, 140, fill: pink)\n        bar(158, 40, 100, red)\n        for row in 0..<3 { bar(158, CGFloat(66 + row * 18), 138, grey) }\n    case \"article\":\n        bar(24, 28, 110, red)\n        for row in 0..<6 { bar(24, CGFloat(54 + row * 18), 272, grey) }\n    default:\n        bar(24, 24, 110, red)\n        for row in 0..<3 { box(24, CGFloat(48 + row * 44), 272, 32) }\n    }\n    guard let picture = context.makeImage() else { return Image(systemName: \"doc\") }\n    return Image(decorative: picture, scale: 1)\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    HStack(spacing: theme.spacing.space2) {\n        MonarchIcon(systemName: \"magnifyingglass\", size: .sm)\n            .foregroundStyle(theme.colors.textMuted)\n            .accessibilityHidden(true)\n        TextField(\"Search templates\", text: $query)\n            .monarchTextStyle(.body)\n    }\n    .padding(.horizontal, theme.spacing.space3)\n    .frame(minHeight: MonarchAccessibility.minimumHitTarget)\n    .overlay(\n        RoundedRectangle(cornerRadius: theme.radius.md)\n            .strokeBorder(theme.colors.borderDefault, lineWidth: 1)\n    )\n    MonarchTemplatePicker(\n        \"Page template\",\n        selection: $selection,\n        templates: templates,\n        categories: [\n            MonarchTemplatePickerCategory(id: \"pages\", label: \"Pages\"),\n            MonarchTemplatePickerCategory(id: \"docs\", label: \"Articles\"),\n            MonarchTemplatePickerCategory(id: \"forms\", label: \"Forms\"),\n        ],\n        query: query,\n        blank: .blank(description: \"Start from an empty page.\")\n    )\n    if let chosen = templates.first(where: { $0.id == selection }) {\n        VStack(alignment: .leading, spacing: theme.spacing.space2) {\n            Self.thumbnail(chosen.id, dark: scheme == .dark)\n                .resizable()\n                .aspectRatio(contentMode: .fit)\n                .frame(maxWidth: .infinity)\n                .background(theme.colors.bgSubtle)\n                .accessibilityHidden(true)\n            Text(chosen.name)\n                .monarchTextStyle(.bodyStrong)\n                .foregroundStyle(theme.colors.textDefault)\n            if let description = chosen.description {\n                Text(description)\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textMuted)\n            }\n        }\n        .padding(theme.spacing.space3)\n        .overlay(\n            RoundedRectangle(cornerRadius: theme.radius.lg)\n                .strokeBorder(theme.colors.borderSubtle, lineWidth: 1)\n        )\n        .accessibilityElement(children: .contain)\n        .accessibilityLabel(\"Preview\")\n    }\n}"
+    }
+  ],
+  "webEquivalent": "TemplatePicker",
+  "dependsOn": [
+    "radio-card-group",
+    "search-input",
+    "tag",
+    "empty-state",
+    "badge"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "phone-width",
+      "platform": "ios",
+      "reason": "The web grid has four cards in a row and the large preview is a framed page. On a phone the grid has two columns and the chosen filter shows a check, so the choice is not told by colour alone; the templates, copy and order are the same.",
+      "convention": "HIG: Accessibility, do not rely on colour alone; adaptive columns"
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+{
+  "id": "ai-error-message",
+  "name": "MonarchAiErrorMessage",
+  "title": "AiErrorMessage",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Text, MonarchButton, DisclosureGroup and ViewThatFits in a tinted RoundedRectangle",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The failure card for an assistant turn: what went wrong in plain words, the actions that can fix it, an optional retry countdown and a technical details disclosure.",
+  "whenToUse": "In place of, or under, an assistant message whose turn failed.",
+  "whenNotToUse": "Not for a status that is not a failed turn: use MonarchBanner. Not for a request that was blocked or adjusted for safety with guidance, which is AiSafetyNotice.",
+  "api": [
+    "init(_ kind: MonarchAiErrorKind = .unknown, title: String? = nil, message: String? = nil, details: String? = nil, retryAfter: TimeInterval? = nil, isRetrying: Bool = false, announces: Bool = true, labels: MonarchAiErrorMessageLabels = MonarchAiErrorMessageLabels(), onRetry: (@MainActor () -> Void)? = nil, onEditPrompt: (@MainActor () -> Void)? = nil, onSwitchModel: (@MainActor () -> Void)? = nil, onNewConversation: (@MainActor () -> Void)? = nil, onSummarize: (@MainActor () -> Void)? = nil)",
+    "init(_ kind:, …the same parameters…, @ViewBuilder actions: () -> Actions)",
+    "enum MonarchAiErrorKind { case rateLimit, contextOverflow, safetyBlock, network, toolFailure, unknown }",
+    "MonarchAiErrorKind.init(code: String?)",
+    "MonarchAiErrorMessageLabels.init(tone: String? = nil, retry: String? = nil, retryIn: (@Sendable (Int) -> String)? = nil, retryReady: String? = nil, editPrompt: String? = nil, switchModel: String? = nil, newConversation: String? = nil, summarize: String? = nil, details: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "kind",
+      "type": "MonarchAiErrorKind",
+      "default": ".unknown",
+      "description": "Why the turn failed. MonarchAiErrorKind(code:) maps a raw error code."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in title of the kind."
+    },
+    {
+      "name": "message",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in description of the kind."
+    },
+    {
+      "name": "details",
+      "type": "String?",
+      "default": "nil",
+      "description": "Technical information, shown as selectable code behind a disclosure."
+    },
+    {
+      "name": "retryAfter",
+      "type": "TimeInterval?",
+      "default": "nil",
+      "description": "Seconds until a retry is allowed, counted from when the card appears."
+    },
+    {
+      "name": "isRetrying",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows a progress indicator on the retry action."
+    },
+    {
+      "name": "announces",
+      "type": "Bool",
+      "default": "true",
+      "description": "Announces the title and message when the card appears."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiErrorMessageLabels",
+      "default": "MonarchAiErrorMessageLabels()",
+      "description": "Replacements for the built-in tone name, action titles, countdown text and details title."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows \"Try again\"."
+    },
+    {
+      "name": "onEditPrompt",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows \"Edit message\"."
+    },
+    {
+      "name": "onSwitchModel",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows \"Switch model\"."
+    },
+    {
+      "name": "onNewConversation",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows \"New conversation\"."
+    },
+    {
+      "name": "onSummarize",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows \"Summarize and continue\", for contextOverflow only."
+    },
+    {
+      "name": "actions",
+      "type": "() -> Actions",
+      "default": "none",
+      "description": "Extra actions after the built-in ones."
+    }
+  ],
+  "states": [
+    {
+      "name": "kind",
+      "description": "rateLimit, contextOverflow and safetyBlock use the warning tone; network, toolFailure and unknown the danger tone. Each kind has its own title, description, icon and action order."
+    },
+    {
+      "name": "counting down",
+      "description": "The retry action is disabled and reads \"Try again in 12s\". Without onRetry the same text is shown as a caption."
+    },
+    {
+      "name": "retrying",
+      "description": "The retry action shows a progress indicator and does not run."
+    },
+    {
+      "name": "details expanded",
+      "description": "The technical details are shown in a bordered box."
+    }
+  ],
+  "appearance": "The same surface as MonarchBanner: the subtle fill and the border of the tone, the strong role of the tone for the icon, default text for the title and muted text for the description. The first action is a primary button, the others secondary.",
+  "platformNotes": "The parity map names MonarchBanner, but the banner takes one action and no custom icon or content, so the card is composed from the banner's tokens and the tone palette and looks the same. The web's code prop is MonarchAiErrorKind(code:). title and message are Strings, and details is a String shown as code. The many built-in strings are replaced through one labels value instead of one parameter each. The actions sit side by side where they fit and one under the other where they do not (ViewThatFits), instead of wrapping one by one. The countdown starts when the card appears and is checked every half second.",
+  "accessibility": [
+    "The icon, title and message are one element, read as \"Warning\" or \"Error\", then the title, then the message.",
+    "Each action is a separate button with a 44-point touch target; the disclosure title is 44 points high.",
+    "The title and message are announced once, at high priority, when the card appears, unless announces is false.",
+    "\"You can try again now.\" is announced when a countdown ends.",
+    "The tone is an icon and a spoken name as well as a colour. The raw error code is never shown or spoken.",
+    "While retrying, the retry button reads \"Loading\" as its value."
+  ],
+  "edgeCases": [
+    "Without handlers and without extra actions there is no action row.",
+    "onSummarize is ignored unless the kind is contextOverflow.",
+    "A non-positive or infinite retryAfter is no countdown.",
+    "A code that matches several rules takes the first: rate limit, then context, safety, tool, network.",
+    "Long titles, messages and details wrap; details keep their line breaks."
+  ],
+  "tests": [
+    "MonarchAiErrorMessageTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Too many requests",
+      "fixture": "ai-error-message",
+      "webExample": "Too many requests",
+      "template": "MonarchAiErrorMessage(\n    MonarchAiErrorKind(code: {{code}}),\n    details: {{details}},\n    onRetry: {},\n    onNewConversation: {}\n)",
+      "code": "MonarchAiErrorMessage(\n    MonarchAiErrorKind(code: \"http-429\"),\n    details: \"code: http-429\\nmessage: Too many requests.\",\n    onRetry: {},\n    onNewConversation: {}\n)"
+    },
+    {
+      "title": "A rate limit with a countdown and details",
+      "setup": "@State private var attempts = 0",
+      "code": "MonarchAiErrorMessage(\n    .rateLimit,\n    details: \"request_id: req_8f3a2c\",\n    retryAfter: 12,\n    onRetry: { attempts += 1 }\n)"
+    },
+    {
+      "title": "A conversation that is too long, with an extra action",
+      "setup": "@State private var choice = \"\"",
+      "code": "MonarchAiErrorMessage(\n    .contextOverflow,\n    onNewConversation: { choice = \"new\" },\n    onSummarize: { choice = \"summarize\" }\n) {\n    Button(\"Learn about limits\") { choice = \"learn\" }\n        .buttonStyle(.monarch(.ghost, size: .sm))\n}"
+    }
+  ],
+  "webEquivalent": "AiErrorMessage",
+  "dependsOn": [
+    "alert",
+    "button",
+    "icon"
+  ],
+  "toneMap": {
+    "TONE": {
+      "rate-limit": "warning",
+      "context-overflow": "warning",
+      "safety-block": "warning",
+      "network": "danger",
+      "tool-failure": "danger",
+      "unknown": "danger"
+    }
+  },
+  "icons": {
+    "kind.rate-limit": "ClockGlyph",
+    "kind.network": "OfflineGlyph",
+    "kind.tool-failure": "WrenchGlyph",
+    "retry": "RetryGlyph",
+    "editPrompt": "PencilGlyph",
+    "newConversation": "PlusGlyph"
+  }
+}

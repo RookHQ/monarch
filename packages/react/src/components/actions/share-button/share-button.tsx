@@ -3,6 +3,7 @@
 import { forwardRef, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { cx } from '../../../internal/cx.js';
 import { isSafeUrl } from '../../../internal/sanitize.js';
+import { useControllable } from '../../../internal/use-controllable.js';
 import { Button, type ButtonProps } from '../button/index.js';
 import { CopyButton } from '../copy-button/index.js';
 import { Popover, PopoverAnchor, PopoverContent } from '../../overlays/popover/index.js';
@@ -138,6 +139,10 @@ export interface ShareButtonProps
   onShareError?: ((error: Error) => void) | undefined;
   /** Tooltip of the button (the shared `title` is a separate prop). */
   tooltip?: string;
+  /** Whether the panel is open (controlled), for example to show it from the start. */
+  open?: boolean | undefined;
+  /** Called when the panel opens or closes. */
+  onOpenChange?: ((open: boolean) => void) | undefined;
 }
 
 /**
@@ -161,6 +166,8 @@ export const ShareButton = forwardRef<HTMLButtonElement, ShareButtonProps>(funct
     onShareCancel,
     onShareError,
     tooltip,
+    open: openProp,
+    onOpenChange,
     onClick,
     leadingIcon,
     variant = iconOnly ? 'ghost' : 'secondary',
@@ -170,7 +177,7 @@ export const ShareButton = forwardRef<HTMLButtonElement, ShareButtonProps>(funct
   ref,
 ) {
   const messages = { ...DEFAULT_MESSAGES, ...messagesProp };
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useControllable(openProp, false, onOpenChange);
   const [busy, setBusy] = useState(false);
   // Whether a click will open the panel, known only in the browser.
   const [panelFirst, setPanelFirst] = useState(mode === 'panel');

@@ -2,50 +2,29 @@ import { useState } from 'react';
 import { FilterBar, FilterChip } from '@rookcom/monarch-react';
 import { SavedViews, type SavedView } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './saved-views.fixture.json';
 
 type Filters = { status: string | null; owner: string | null };
 
-const INITIAL: (SavedView & { filters: Filters })[] = [
-  {
-    id: 'all',
-    name: 'All tickets',
-    count: 64,
-    readOnly: true,
-    group: 'Built-in',
-    filters: { status: null, owner: null },
-  },
-  {
-    id: 'open',
-    name: 'Open',
-    count: 18,
-    readOnly: true,
-    group: 'Built-in',
-    filters: { status: 'Open', owner: null },
-  },
-  {
-    id: 'mine',
-    name: 'My open tickets',
-    count: 7,
-    isDefault: true,
-    group: 'My views',
-    filters: { status: 'Open', owner: 'Me' },
-  },
-  {
-    id: 'team',
-    name: 'Team backlog',
-    count: 23,
-    shared: true,
-    group: 'My views',
-    filters: { status: 'Pending', owner: null },
-  },
-];
+// The filters behind each view are web state; the fixture holds what the example shows.
+const VIEW_FILTERS: Record<string, Filters> = {
+  all: { status: null, owner: null },
+  open: { status: 'Open', owner: null },
+  mine: { status: 'Open', owner: 'Me' },
+  team: { status: 'Pending', owner: null },
+};
+const INITIAL = fixture.data.views.map((view) => ({
+  ...view,
+  filters: VIEW_FILTERS[view.id] as Filters,
+})) as (SavedView & { filters: Filters })[];
 
 const same = (a: Filters, b: Filters) => a.status === b.status && a.owner === b.owner;
 
 function ViewsWithFilters() {
   const [views, setViews] = useState(INITIAL);
-  const [viewId, setViewId] = useState<string | null>('mine');
-  const [filters, setFilters] = useState<Filters>({ status: 'Open', owner: null });
+  const [viewId, setViewId] = useState<string | null>(fixture.data.selected);
+  const [filters, setFilters] = useState<Filters>({ status: fixture.data.chip.value, owner: null });
   const current = views.find((v) => v.id === viewId);
   const modified = !!current && !same(current.filters, filters);
   return (
@@ -81,7 +60,7 @@ function ViewsWithFilters() {
       <FilterBar>
         {filters.status ? (
           <FilterChip
-            name="Status"
+            name={fixture.data.chip.name}
             value={filters.status}
             onRemove={() => setFilters((f) => ({ ...f, status: null }))}
           />

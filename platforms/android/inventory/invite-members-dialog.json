@@ -1,0 +1,132 @@
+{
+  "id": "invite-members-dialog",
+  "name": null,
+  "title": "InviteMembersDialog",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet (dismissible = false keeps it open while sending) with a scrolling androidx.compose.foundation.layout.Column of MonarchTagInput, MonarchRolePicker, MonarchAppAccessPicker, MonarchTextField, MonarchInlineNotice and MonarchButtons",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: invite people to a workspace by email address, with a role, the apps they get and an optional note, keeping any address the server refused with its reason.",
+  "whenToUse": "From a workspace's members screen, when an admin invites one or more people by email.",
+  "whenNotToUse": "To change the role of someone already in the workspace, use MonarchRolePicker on their member screen. To share one record with a person, use the share recipe.",
+  "api": [
+    "MonarchBottomSheet(onDismissRequest = { open = false }, title = \"Invite people\", description = …, dismissible = !sending) { … }",
+    "MonarchTagInput(tags = emails, onTagsChange = { … }, label = \"Email addresses\", removeIcon = { … }, separators = setOf(',', ' ', ';'), maxCount = 50, normalize = { … }, validate = { tag, _ -> … })",
+    "MonarchRolePicker(roles = …, selected = role, onSelect = { role = it }, layout = MonarchRolePickerLayout.Compact, label = \"Role\")",
+    "MonarchAppAccessPicker(apps = …, value = apps, onValueChange = { apps = it }) // @ExperimentalMonarchApi, opted in at the call",
+    "MonarchTextField(value = note, onValueChange = { note = it }, label = \"Personal note\", helperText = \"Optional\", singleLine = false)",
+    "MonarchButton(text = if (emails.size > 1) \"Send ${emails.size} invites\" else \"Send invite\", onClick = …, variant = MonarchButtonVariant.Primary, loading = sending)"
+  ],
+  "options": [
+    {
+      "name": "roles",
+      "type": "List<MonarchRoleOption<String>>",
+      "default": "required",
+      "description": "The roles to choose from, least access first; the first enabled one is chosen when the sheet opens."
+    },
+    {
+      "name": "apps",
+      "type": "List<MonarchAppAccessOption>",
+      "default": "none",
+      "description": "The apps that can be granted; leave the picker out when the product has one app."
+    },
+    {
+      "name": "maxEmails",
+      "type": "Int",
+      "default": "50",
+      "description": "The most addresses per invitation, passed to MonarchTagInput's maxCount, as on the web."
+    },
+    {
+      "name": "validate",
+      "type": "(String) -> String?",
+      "default": "a basic email check",
+      "description": "Checks each address before it becomes a chip; return a message to refuse it. Replace it to accept usernames."
+    },
+    {
+      "name": "allowMessage",
+      "type": "Boolean",
+      "default": "false on the web",
+      "description": "Whether to show the personal note field."
+    },
+    {
+      "name": "failures",
+      "type": "Map<String, String>",
+      "default": "empty",
+      "description": "Addresses the server refused with the reason; they stay as chips and are listed in a danger notice."
+    }
+  ],
+  "states": [
+    {
+      "name": "editing",
+      "description": "The addresses as chips, the role, the apps, the note and Send invite, which counts the addresses: \"Send 3 invites\"."
+    },
+    {
+      "name": "invalid",
+      "description": "MonarchTagInput refuses an address that is not one and says why; an empty list on Send shows \"Add at least one email address.\""
+    },
+    {
+      "name": "sending",
+      "description": "Send shows the loading state, every field is disabled, and the sheet cannot be swiped or backed away."
+    },
+    {
+      "name": "partly failed",
+      "description": "The invited addresses are removed; the refused ones stay as chips and a danger MonarchInlineNotice lists each with its reason."
+    },
+    {
+      "name": "done",
+      "description": "The sheet closes; the app shows a snackbar such as \"Invited 3 people\"."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component on the Material 3 sheet surface: the title style, the tag input with its chips, the compact role picker, the app access picker, the multi-line text field and full-width primary and ghost buttons. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web's InviteMembersDialog is one component on Dialog. On Android it is a recipe, as on iOS: a MonarchBottomSheet, because a phone dialog has no room for the chips, the role cards and the app list, and the sending state is a few lines of the app's state. The web's onInvite result ({ failed }) is the app's server response mapped to failures; the web's trigger prop is the app's own button; closeOnSuccess and the success announcement are the app's snackbar. The web adds a typed address on submit; MonarchTagInput adds an address when a separator is typed or on the keyboard's done action.",
+  "accessibility": [
+    "MonarchTagInput reads each chip with its remove action and announces added, refused and removed addresses.",
+    "MonarchRolePicker reads each role as a radio button with its description; MonarchAppAccessPicker reads each app as a checkbox.",
+    "Send is read as loading while sending, and the sheet cannot be dismissed so the result is not lost.",
+    "The refused addresses are listed in words in a danger notice, not only by color.",
+    "Every button has a 48dp target; the fields grow at font scale 2.0 inside the scrolling sheet."
+  ],
+  "edgeCases": [
+    "Check the addresses on the server as well; the email pattern only catches typos.",
+    "Duplicates are refused by MonarchTagInput; addresses are compared as typed, so lower-case them in normalize if the server does.",
+    "Pasting a list adds every address split by the separators, up to maxCount.",
+    "When every address fails, keep the sheet open with the reasons; when some fail, report the invited ones too."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Invite with role, apps and a note",
+      "fixture": "invite-members-dialog",
+      "webExample": "Invite with role, apps and a note",
+      "template": "MonarchButton(text = {{trigger}}, onClick = { open = true }, variant = MonarchButtonVariant.Primary)\nif (open) {\n    MonarchBottomSheet(\n        onDismissRequest = { open = false },\n        title = {{title}},\n        description = {{description}},\n        dismissible = !sending,\n    ) {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            MonarchTagInput(\n                tags = emails,\n                onTagsChange = {\n                    emails = it\n                    fieldError = null\n                    failures = failures.filterKeys { email -> email in it }\n                },\n                label = {{emails.label}},\n                required = true,\n                removeIcon = {\n                    MonarchIcon(imageVector = SampleIcons.Close, contentDescription = null)\n                },\n                enabled = !sending,\n                placeholder = {{emails.placeholder}},\n                helperText = {{emails.helper}},\n                errorText = fieldError,\n                separators = setOf(',', ' ', '\\n'),\n                maxCount = 50,\n                normalize = { it.trim().removePrefix(\"<\").removeSuffix(\">\") },\n                validate = { tag, _ -> if (emailPattern.matches(tag)) null else \"“$tag” is not an email address.\" },\n            )\n            if (failures.isNotEmpty()) {\n                MonarchInlineNotice(\n                    title = \"${failures.size} addresses couldn’t be invited\",\n                    message = failures.entries.joinToString(\"\\n\") { (email, reason) -> \"$email: $reason\" },\n                    tone = MonarchTone.Danger,\n                )\n            }\n            MonarchRolePicker(\n                roles = listOf(\n                    MonarchRoleOption({{role.options.0.value}}, title = {{role.options.0.label}}, description = {{role.options.0.description}}),\n                    MonarchRoleOption({{role.options.1.value}}, title = {{role.options.1.label}}, description = {{role.options.1.description}}),\n                    MonarchRoleOption({{role.options.2.value}}, title = {{role.options.2.label}}, description = {{role.options.2.description}}),\n                ),\n                selected = role,\n                onSelect = { role = it },\n                layout = MonarchRolePickerLayout.Compact,\n                enabled = !sending,\n                label = {{role.label}},\n                required = true,\n            )\n            @OptIn(ExperimentalMonarchApi::class)\n            MonarchAppAccessPicker(\n                apps = listOf(\n                    MonarchAppAccessOption({{apps.options.0.id}}, {{apps.options.0.name}}, description = {{apps.options.0.description}}),\n                    MonarchAppAccessOption({{apps.options.1.id}}, {{apps.options.1.name}}, description = {{apps.options.1.description}}),\n                    MonarchAppAccessOption({{apps.options.2.id}}, {{apps.options.2.name}}, description = {{apps.options.2.description}}),\n                ),\n                value = apps,\n                onValueChange = { apps = it },\n                enabled = !sending,\n                labels = MonarchAppAccessPickerLabels(label = {{apps.label}}),\n            )\n            MonarchTextField(\n                value = note,\n                onValueChange = { note = it },\n                label = {{note.label}},\n                placeholder = {{note.placeholder}},\n                helperText = {{note.helper}},\n                enabled = !sending,\n                singleLine = false,\n            )\n            MonarchButton(\n                text = if (emails.size > 1) \"Send ${emails.size} invites\" else {{send}},\n                onClick = {\n                    if (emails.isEmpty()) {\n                        fieldError = \"Add at least one email address.\"\n                    } else {\n                        sending = true\n                        scope.launch {\n                            // Send emails, role, apps and note.trim() to the server. Keep the addresses it refused.\n                            val refused = mapOf<String, String>()\n                            sending = false\n                            failures = refused\n                            emails = emails.filter { it in refused }\n                            if (refused.isEmpty()) open = false\n                        }\n                    }\n                },\n                modifier = Modifier.fillMaxWidth(),\n                variant = MonarchButtonVariant.Primary,\n                loading = sending,\n            )\n            MonarchButton(\n                text = {{cancel}},\n                onClick = { open = false },\n                modifier = Modifier.fillMaxWidth(),\n                variant = MonarchButtonVariant.Ghost,\n                enabled = !sending,\n            )\n        }\n    }\n}",
+      "setupTemplate": "val scope = rememberCoroutineScope()\nval emailPattern = remember { Regex(\"^[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+$\") }\nvar open by rememberSaveable { mutableStateOf(true) }\nvar emails by rememberSaveable { mutableStateOf(listOf<String>()) }\nvar role by rememberSaveable { mutableStateOf<String?>({{role.value}}) }\nvar apps by rememberSaveable { mutableStateOf(listOf<String>()) }\nvar note by rememberSaveable { mutableStateOf(\"\") }\nvar sending by remember { mutableStateOf(false) }\nvar fieldError by remember { mutableStateOf<String?>(null) }\nvar failures by remember { mutableStateOf(mapOf<String, String>()) }",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "kotlinx.coroutines.launch",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.foundation.layout.fillMaxWidth"
+      ],
+      "setup": "val scope = rememberCoroutineScope()\nval emailPattern = remember { Regex(\"^[^\\\\s@]+@[^\\\\s@]+\\\\.[^\\\\s@]+$\") }\nvar open by rememberSaveable { mutableStateOf(true) }\nvar emails by rememberSaveable { mutableStateOf(listOf<String>()) }\nvar role by rememberSaveable { mutableStateOf<String?>(\"member\") }\nvar apps by rememberSaveable { mutableStateOf(listOf<String>()) }\nvar note by rememberSaveable { mutableStateOf(\"\") }\nvar sending by remember { mutableStateOf(false) }\nvar fieldError by remember { mutableStateOf<String?>(null) }\nvar failures by remember { mutableStateOf(mapOf<String, String>()) }",
+      "code": "MonarchButton(text = \"Invite people\", onClick = { open = true }, variant = MonarchButtonVariant.Primary)\nif (open) {\n    MonarchBottomSheet(\n        onDismissRequest = { open = false },\n        title = \"Invite people\",\n        description = \"They’ll get an email and join once they accept the invitation.\",\n        dismissible = !sending,\n    ) {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            MonarchTagInput(\n                tags = emails,\n                onTagsChange = {\n                    emails = it\n                    fieldError = null\n                    failures = failures.filterKeys { email -> email in it }\n                },\n                label = \"Email addresses\",\n                required = true,\n                removeIcon = {\n                    MonarchIcon(imageVector = SampleIcons.Close, contentDescription = null)\n                },\n                enabled = !sending,\n                placeholder = \"name@example.com\",\n                helperText = \"Separate several addresses with commas, spaces or new lines.\",\n                errorText = fieldError,\n                separators = setOf(',', ' ', '\\n'),\n                maxCount = 50,\n                normalize = { it.trim().removePrefix(\"<\").removeSuffix(\">\") },\n                validate = { tag, _ -> if (emailPattern.matches(tag)) null else \"“$tag” is not an email address.\" },\n            )\n            if (failures.isNotEmpty()) {\n                MonarchInlineNotice(\n                    title = \"${failures.size} addresses couldn’t be invited\",\n                    message = failures.entries.joinToString(\"\\n\") { (email, reason) -> \"$email: $reason\" },\n                    tone = MonarchTone.Danger,\n                )\n            }\n            MonarchRolePicker(\n                roles = listOf(\n                    MonarchRoleOption(\"viewer\", title = \"Viewer\", description = \"Can see everything but change nothing.\"),\n                    MonarchRoleOption(\"member\", title = \"Member\", description = \"Can create and edit work.\"),\n                    MonarchRoleOption(\"admin\", title = \"Admin\", description = \"Can also manage members and settings.\"),\n                ),\n                selected = role,\n                onSelect = { role = it },\n                layout = MonarchRolePickerLayout.Compact,\n                enabled = !sending,\n                label = \"Role\",\n                required = true,\n            )\n            @OptIn(ExperimentalMonarchApi::class)\n            MonarchAppAccessPicker(\n                apps = listOf(\n                    MonarchAppAccessOption(\"notes\", \"Notes\", description = \"Shared documents\"),\n                    MonarchAppAccessOption(\"tasks\", \"Tasks\", description = \"Projects and issues\"),\n                    MonarchAppAccessOption(\"calendar\", \"Calendar\", description = \"Shared calendars\"),\n                ),\n                value = apps,\n                onValueChange = { apps = it },\n                enabled = !sending,\n                labels = MonarchAppAccessPickerLabels(label = \"App access\"),\n            )\n            MonarchTextField(\n                value = note,\n                onValueChange = { note = it },\n                label = \"Personal note\",\n                placeholder = \"Add a note to the invitation email\",\n                helperText = \"Optional\",\n                enabled = !sending,\n                singleLine = false,\n            )\n            MonarchButton(\n                text = if (emails.size > 1) \"Send ${emails.size} invites\" else \"Send invite\",\n                onClick = {\n                    if (emails.isEmpty()) {\n                        fieldError = \"Add at least one email address.\"\n                    } else {\n                        sending = true\n                        scope.launch {\n                            // Send emails, role, apps and note.trim() to the server. Keep the addresses it refused.\n                            val refused = mapOf<String, String>()\n                            sending = false\n                            failures = refused\n                            emails = emails.filter { it in refused }\n                            if (refused.isEmpty()) open = false\n                        }\n                    }\n                },\n                modifier = Modifier.fillMaxWidth(),\n                variant = MonarchButtonVariant.Primary,\n                loading = sending,\n            )\n            MonarchButton(\n                text = \"Cancel\",\n                onClick = { open = false },\n                modifier = Modifier.fillMaxWidth(),\n                variant = MonarchButtonVariant.Ghost,\n                enabled = !sending,\n            )\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "InviteMembersDialog",
+  "dependsOn": [
+    "sheet",
+    "tag-input",
+    "role-picker",
+    "app-access-picker",
+    "text-field",
+    "button"
+  ]
+}

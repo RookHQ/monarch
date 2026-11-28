@@ -1,0 +1,89 @@
+{
+  "id": "pagination",
+  "name": null,
+  "title": "Pagination",
+  "family": "navigation",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "List with ForEach over the loaded items and MonarchLoadMore as the last row (.listRowSeparator(.hidden)); the app loads the next page from onLoadMore",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: numbered pages with Previous and Next buttons and a compact range such as “81–100 of 143”, built from Monarch buttons as the web Pagination draws them. MonarchLoadMore is the alternative for a feed that loads at its end.",
+  "whenToUse": "For any long list that the server returns in pages and where a person needs to jump to a page: invoices, tickets, search results, audit logs. Use the numbered pages as the primary layout.",
+  "whenNotToUse": "For a list that fits in memory, show it all in a List. For a feed that loads at its end, use MonarchLoadMore; for a cursor-based feed with its own spinner, use MonarchCursorList.",
+  "api": [
+    "List { ForEach(items) { … } ; MonarchLoadMore(…) }",
+    "MonarchLoadMore.init(hasMore: Bool, isLoading: Bool = false, isFailed: Bool = false, loadedCount: Int? = nil, totalCount: Int? = nil, showsCount: Bool? = nil, showsEnd: Bool = true, autoLoads: Bool = false, labels: MonarchLoadMoreLabels = MonarchLoadMoreLabels(), onRetry: (@MainActor () -> Void)? = nil, onLoadMore: @escaping @MainActor () -> Void)",
+    "func listRowSeparator(_ visibility: Visibility, edges: VerticalEdge.Set = .all) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "more to load",
+      "description": "\"Showing 20 of 60 items\" and a Load more button (or automatic loading with autoLoads)."
+    },
+    {
+      "name": "loading",
+      "description": "The button shows its progress; the list stays where it is."
+    },
+    {
+      "name": "failed",
+      "description": "Couldn’t load more with Retry; loaded items stay."
+    },
+    {
+      "name": "end",
+      "description": "That’s everything, once every page is loaded."
+    }
+  ],
+  "appearance": "The system list with the MonarchLoadMore footer: the count and end text in the muted text role and a secondary Monarch button, in every theme.",
+  "platformNotes": "The numbered pages with Previous and Next, and the compact range, match the web Pagination: the active page is outlined and the gaps are drawn as an ellipsis. A list that scrolls on and loads more at its end (MonarchLoadMore) is the alternative when jumping to a page is not needed; the app then asks for page n + 1 in onLoadMore. VoiceOver reads each page button with its number and marks the current one.",
+  "accessibility": [
+    "MonarchLoadMore's button is a standard button; the count is read before it.",
+    "New items are announced (\"20 more items loaded.\"), as are failures and the end of the list.",
+    "Focus stays on the list; loaded rows keep their position."
+  ],
+  "edgeCases": [
+    "Guard against a second request while one is running (isLoading).",
+    "Keep loaded items when a page fails, and retry only that page.",
+    "When items can be added or removed on the server while paging, page by cursor, not by number."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Full and compact",
+      "fixture": "pagination",
+      "webExample": "Full and compact",
+      "template": "VStack(alignment: .leading, spacing: 16) {\n    HStack(spacing: 4) {\n        MonarchButton(\"Previous page\", systemImage: \"chevron.left\", variant: .ghost, size: .sm, isIconOnly: true) { page = max(1, page - 1) }\n        pageButton({{full.items.0}})\n        Text({{full.items.1}}).monarchTextStyle(.bodySmall).foregroundStyle(theme.colors.textMuted)\n        pageButton({{full.items.2}})\n        pageButton({{full.items.3}})\n        pageButton({{full.items.4}})\n        Text({{full.items.5}}).monarchTextStyle(.bodySmall).foregroundStyle(theme.colors.textMuted)\n        pageButton({{full.items.6}})\n        MonarchButton(\"Next page\", systemImage: \"chevron.right\", variant: .ghost, size: .sm, isIconOnly: true) { page += 1 }\n    }\n    HStack(spacing: 4) {\n        Text({{compact.range}}).monarchTextStyle(.bodySmall).monospacedDigit().foregroundStyle(theme.colors.textMuted)\n            .padding(.trailing, 8)\n        MonarchButton(\"Previous page\", systemImage: \"chevron.left\", variant: .ghost, size: .sm, isIconOnly: true) { page = max(1, page - 1) }\n        MonarchButton(\"Next page\", systemImage: \"chevron.right\", variant: .ghost, size: .sm, isIconOnly: true) { page += 1 }\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var page = {{page}}\n\nprivate func pageButton(_ label: String) -> some View {\n    let isCurrent = String(page) == label\n    return Button { page = Int(label) ?? page } label: {\n        Text(label)\n            .monarchTextStyle(.label)\n            .foregroundStyle(isCurrent ? theme.colors.accentStrong : theme.colors.textMuted)\n            .frame(minWidth: 36, minHeight: 36)\n            .background(\n                isCurrent ? theme.colors.accentSubtle : Color.clear,\n                in: RoundedRectangle(cornerRadius: 8, style: .continuous)\n            )\n            .contentShape(Rectangle())\n    }\n    .buttonStyle(.plain)\n    .accessibilityLabel(label)\n    .accessibilityAddTraits(isCurrent ? .isSelected : [])\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var page = 5\n\nprivate func pageButton(_ label: String) -> some View {\n    let isCurrent = String(page) == label\n    return Button { page = Int(label) ?? page } label: {\n        Text(label)\n            .monarchTextStyle(.label)\n            .foregroundStyle(isCurrent ? theme.colors.accentStrong : theme.colors.textMuted)\n            .frame(minWidth: 36, minHeight: 36)\n            .background(\n                isCurrent ? theme.colors.accentSubtle : Color.clear,\n                in: RoundedRectangle(cornerRadius: 8, style: .continuous)\n            )\n            .contentShape(Rectangle())\n    }\n    .buttonStyle(.plain)\n    .accessibilityLabel(label)\n    .accessibilityAddTraits(isCurrent ? .isSelected : [])\n}",
+      "code": "VStack(alignment: .leading, spacing: 16) {\n    HStack(spacing: 4) {\n        MonarchButton(\"Previous page\", systemImage: \"chevron.left\", variant: .ghost, size: .sm, isIconOnly: true) { page = max(1, page - 1) }\n        pageButton(\"1\")\n        Text(\"…\").monarchTextStyle(.bodySmall).foregroundStyle(theme.colors.textMuted)\n        pageButton(\"4\")\n        pageButton(\"5\")\n        pageButton(\"6\")\n        Text(\"…\").monarchTextStyle(.bodySmall).foregroundStyle(theme.colors.textMuted)\n        pageButton(\"20\")\n        MonarchButton(\"Next page\", systemImage: \"chevron.right\", variant: .ghost, size: .sm, isIconOnly: true) { page += 1 }\n    }\n    HStack(spacing: 4) {\n        Text(\"81–100 of 143\").monarchTextStyle(.bodySmall).monospacedDigit().foregroundStyle(theme.colors.textMuted)\n            .padding(.trailing, 8)\n        MonarchButton(\"Previous page\", systemImage: \"chevron.left\", variant: .ghost, size: .sm, isIconOnly: true) { page = max(1, page - 1) }\n        MonarchButton(\"Next page\", systemImage: \"chevron.right\", variant: .ghost, size: .sm, isIconOnly: true) { page += 1 }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "Pagination",
+  "dependsOn": [
+    "load-more"
+  ],
+  "icons": {
+    "previous": "ChevronRightGlyph",
+    "next": "ChevronRightGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "compact.label",
+        "compact.pageCount",
+        "compact.pageSize",
+        "compact.totalItems",
+        "full.pageCount"
+      ],
+      "reason": "The recipe draws the numbered pages and the range text the app computes (the first page, ellipses, the pages around the current one, the last page, and the \"81–100 of 143\" range); the page count, page size, total and label are the web component's inputs for working those out, not drawn text.",
+      "convention": "none: the values are inputs, not shown text"
+    }
+  ]
+}

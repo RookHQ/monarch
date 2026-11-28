@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ComponentProps } from 'react';
 import {
   Avatar,
   BackLink,
@@ -17,6 +17,12 @@ import {
 import { RecordHeader } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { MoreIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './record-header.fixture.json';
+
+const contact = fixture.data;
+const [menuMerge, menuArchive, menuDelete] = contact.menu;
+const [tabOverview, tabActivity, tabDeals] = contact.tabs;
 
 const tickets = [
   'Printer offline on floor 3',
@@ -171,33 +177,33 @@ export default {
           render: () => (
             <RecordHeader
               headingLevel="h2"
-              back={<BackLink href="#/components/record-header">All contacts</BackLink>}
-              avatar={<Avatar name="Ada Lovelace" size="lg" />}
-              title="Ada Lovelace"
-              status={<StatusBadge status="success" label="Active" />}
-              badges={<Badge>Enterprise</Badge>}
-              subtitle={<span>ada@example.com · Head of Engineering, Northfield</span>}
-              facts={[
-                { term: 'Owner', value: 'Grace Hopper' },
-                { term: 'Lifecycle', value: 'Customer' },
-                { term: 'Contact ID', value: 'c_1042', copyable: true },
-                { term: 'Phone', value: null },
-              ]}
+              back={<BackLink href="#/components/record-header">{contact.back}</BackLink>}
+              avatar={<Avatar name={contact.name} size="lg" />}
+              title={contact.name}
+              status={
+                <StatusBadge
+                  status={contact.status.tone as 'success'}
+                  label={contact.status.label}
+                />
+              }
+              badges={<Badge tone={contact.badge.tone as 'neutral'}>{contact.badge.label}</Badge>}
+              subtitle={<span>{contact.subtitle}</span>}
+              facts={contact.facts as NonNullable<ComponentProps<typeof RecordHeader>['facts']>}
               actions={
                 <>
-                  <Button>Email</Button>
+                  <Button>{contact.action}</Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <IconButton
-                        label="More actions for Ada Lovelace"
+                        label={`More actions for ${contact.name}`}
                         icon={<MoreIcon />}
                         variant="secondary"
                       />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Merge</DropdownMenuItem>
-                      <DropdownMenuItem>Archive</DropdownMenuItem>
-                      <DropdownMenuItem tone="danger">Delete contact</DropdownMenuItem>
+                      <DropdownMenuItem>{menuMerge}</DropdownMenuItem>
+                      <DropdownMenuItem>{menuArchive}</DropdownMenuItem>
+                      <DropdownMenuItem tone="danger">{menuDelete}</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </>
@@ -205,10 +211,10 @@ export default {
               tabs={
                 <TabsNav aria-label="Contact sections">
                   <TabsLink href="#/components/record-header" active>
-                    Overview
+                    {tabOverview}
                   </TabsLink>
-                  <TabsLink href="#/components/record-header">Activity</TabsLink>
-                  <TabsLink href="#/components/record-header">Deals</TabsLink>
+                  <TabsLink href="#/components/record-header">{tabActivity}</TabsLink>
+                  <TabsLink href="#/components/record-header">{tabDeals}</TabsLink>
                 </TabsNav>
               }
             />

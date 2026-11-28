@@ -1,12 +1,18 @@
 import { useState } from 'react';
 import { AvailabilityToggle } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './availability-toggle.fixture.json';
 
 function Basic() {
-  const [available, setAvailable] = useState(true);
+  const [available, setAvailable] = useState(fixture.data.available);
   return (
     <div style={{ width: '18rem' }}>
-      <AvailabilityToggle available={available} onAvailableChange={setAvailable} showHint />
+      <AvailabilityToggle
+        available={available}
+        onAvailableChange={setAvailable}
+        showHint={fixture.data.showHint}
+      />
     </div>
   );
 }

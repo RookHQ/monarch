@@ -1,5 +1,7 @@
 import { Button, Input, Toolbar, ToolbarGroup } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './toolbar.fixture.json';
 
 export default {
   id: 'toolbar',
@@ -88,13 +90,14 @@ export default {
           stack: true,
           render: () => (
             <Toolbar
-              label="Task list tools"
-              search={<Input aria-label="Search tasks" placeholder="Search tasks" />}
-              end={<Button>Export</Button>}
+              label={fixture.data.label}
+              search={<Input aria-label={fixture.data.search} placeholder={fixture.data.search} />}
+              end={<Button>{fixture.data.end}</Button>}
             >
-              <ToolbarGroup aria-label="View">
-                <Button>Board</Button>
-                <Button>List</Button>
+              <ToolbarGroup aria-label={fixture.data.group.label}>
+                {fixture.data.group.items.map((item) => (
+                  <Button key={item}>{item}</Button>
+                ))}
               </ToolbarGroup>
             </Toolbar>
           ),

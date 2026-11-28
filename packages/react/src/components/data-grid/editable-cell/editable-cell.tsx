@@ -14,6 +14,7 @@ import {
 } from 'react';
 import { useIsomorphicLayoutEffect } from '../../../internal/layout-effect.js';
 import { cx } from '../../../internal/cx.js';
+import { useOverlayStage } from '../../../internal/overlay-stage.js';
 import { Spinner } from '../../feedback/spinner/index.js';
 
 // useIsomorphicLayoutEffect warns during server rendering; focus work only runs in the browser.
@@ -228,6 +229,10 @@ export const EditableCell = forwardRef<HTMLDivElement, EditableCellProps>(functi
   const initialRef = useRef(initialDraft);
   initialRef.current = initialDraft;
   const wasEditing = useRef(false);
+  // In a docs preview stage a cell that starts in edit mode is a picture: it
+  // does not take focus when the page loads. Opening it later still does.
+  const staged = useOverlayStage();
+  const settled = useRef(false);
   useIsoLayoutEffect(() => {
     if (editing && !wasEditing.current) {
       const typed = type === 'text' || type === 'number' ? initialRef.current : undefined;
@@ -235,7 +240,7 @@ export const EditableCell = forwardRef<HTMLDivElement, EditableCellProps>(functi
       setError(null);
       failedDraft.current = null;
       const el = inputRef.current;
-      if (el) {
+      if (el && !(staged && !settled.current)) {
         el.focus();
         if (typed === undefined && (type === 'text' || type === 'number')) el.select?.();
       }
@@ -245,6 +250,7 @@ export const EditableCell = forwardRef<HTMLDivElement, EditableCellProps>(functi
     }
     if (!editing) restoreFocus.current = false;
     wasEditing.current = editing;
+    settled.current = true;
   }, [editing]);
 
   const refocusAfterSave = useRef(false);

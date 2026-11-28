@@ -1,0 +1,171 @@
+{
+  "id": "field-renderer",
+  "name": "MonarchFieldRenderer",
+  "title": "FieldRenderer",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "A switch over MonarchFormFieldType to existing inputs: MonarchFormField around a TextField (axis: .vertical for long text, TextField(value:format:) for numbers), a Picker with .pickerStyle(.menu) (select), Button rows with a check mark (radio), a Picker with .pickerStyle(.segmented) (yes or no), DatePicker with displayedComponents .date or .hourAndMinute, and a compact MonarchFileUpload; MonarchCheckboxGroup, MonarchMultiSelect, MonarchRatingPicker, and a Toggle with .toggleStyle(.monarchCheckbox) for a consent",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Renders one form question from data: the right Monarch input for its type, with the label, help, required mark, error and an optional “filled in automatically” note.",
+  "whenToUse": "Questions are authored by admins and stored as data, or a form shows answers that were filled in automatically and people must check them.",
+  "whenNotToUse": "When the form is fixed in code, compose MonarchFormField, MonarchTextField and the other inputs directly.",
+  "api": [
+    "init(_ field: MonarchFormFieldDefinition, value: Binding<MonarchFormFieldValue?>, problem: MonarchFormFieldProblem? = nil, error: String? = nil, confidence: Double? = nil, confidenceThreshold: Double = 0.6, today: @escaping () -> Date = { Date() }, labels: MonarchFieldRendererLabels = MonarchFieldRendererLabels())",
+    "struct MonarchFormFieldDefinition: Identifiable, Hashable, Sendable { init(id: String, type: MonarchFormFieldType, label: String, description: String? = nil, placeholder: String? = nil, isRequired: Bool = false, options: [MonarchFormFieldOption] = [], minLength: Int? = nil, maxLength: Int? = nil, min: Double? = nil, max: Double? = nil, minDate: Date? = nil, maxDate: Date? = nil, minSelections: Int? = nil, maxSelections: Int? = nil, rows: Int = 4, allowedContentTypes: [UTType] = [.item], maxFileSize: Int64? = nil, maxFiles: Int = 1, consentText: String? = nil, conditions: [MonarchCondition] = [], conditionMatch: MonarchConditionMatch = .and, isReadOnly: Bool = false); func problem(for value: MonarchFormFieldValue?) -> MonarchFormFieldProblem?; func isVisible(in values: [String: MonarchFormFieldValue], calendar: Calendar = .current) -> Bool }",
+    "enum MonarchFormFieldType: String, CaseIterable { case shortText = \"short-text\", longText = \"long-text\", email, phone, url, number, date, time, select, multiSelect = \"multi-select\", radio, checkboxes, yesNo = \"yes-no\", consent, rating, file, section }",
+    "enum MonarchFormFieldValue: Hashable, Sendable { case text(String), number(Double), date(Date), flag(Bool), values([String]), files([MonarchFormFieldFile]); var isEmpty: Bool }",
+    "enum MonarchFormFieldProblem: Hashable, Sendable { case required, mustAgree, email, url, notANumber, min(Double), max(Double), minLength(Int), maxLength(Int), minSelections(Int), maxSelections(Int) }",
+    "struct MonarchFormFieldOption: Identifiable, Hashable, Sendable { init(value: String, label: String) }",
+    "struct MonarchFormFieldFile: Hashable, Sendable { init(name: String, size: Int64? = nil, file: MonarchFileUploadFile? = nil) }",
+    "struct MonarchFieldRendererLabels: Sendable { init(required: String? = nil, mustAgree: String? = nil, email: String? = nil, url: String? = nil, number: String? = nil, min: (@Sendable (String) -> String)? = nil, max: (@Sendable (String) -> String)? = nil, minLength: (@Sendable (Int) -> String)? = nil, maxLength: (@Sendable (Int) -> String)? = nil, minSelections: (@Sendable (Int) -> String)? = nil, maxSelections: (@Sendable (Int) -> String)? = nil, yes: String? = nil, no: String? = nil, choose: String? = nil, chooseDate: String? = nil, chooseTime: String? = nil, clear: String? = nil, aiFilled: String? = nil, aiCheck: String? = nil, remove: String? = nil, removeFile: (@Sendable (String) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "field",
+      "type": "MonarchFormFieldDefinition",
+      "default": "required",
+      "description": "The question: its type, label, help, required flag, options, limits, conditions and read-only flag."
+    },
+    {
+      "name": "value",
+      "type": "Binding<MonarchFormFieldValue?>",
+      "default": "required",
+      "description": "The answer, or nil for none. Set to nil when an optional select, date, time or rating is cleared."
+    },
+    {
+      "name": "problem",
+      "type": "MonarchFormFieldProblem?",
+      "default": "nil",
+      "description": "A problem from MonarchFormFieldDefinition.problem(for:), shown as the error with its built-in message."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "An error message, such as a server error; replaces the message of problem."
+    },
+    {
+      "name": "confidence",
+      "type": "Double?",
+      "default": "nil",
+      "description": "The confidence, from 0 to 1, of an answer filled in automatically; shows a note under the question."
+    },
+    {
+      "name": "confidenceThreshold",
+      "type": "Double",
+      "default": "0.6",
+      "description": "The confidence under which the note asks people to check the answer."
+    },
+    {
+      "name": "today",
+      "type": "() -> Date",
+      "default": "{ Date() }",
+      "description": "The current day, where Choose a date and Choose a time start. Inject a fixed day in tests."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchFieldRendererLabels",
+      "default": "MonarchFieldRendererLabels()",
+      "description": "Replacements for the built-in strings and messages."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "The input shows its placeholder, Choose…, a Choose a date or Choose a time button, no chosen option or no files."
+    },
+    {
+      "name": "answered",
+      "description": "The input shows the answer: text, the chosen option with a check mark, the system date or time picker with Clear when optional, a rating or the chosen files."
+    },
+    {
+      "name": "error",
+      "description": "The message shows under the question with an icon in the danger colour, becomes part of the input's hint and is announced."
+    },
+    {
+      "name": "filled in automatically",
+      "description": "With confidence, a note with a bot (cpu) icon says the answer was filled in; below the threshold it asks for a check in the warning colour."
+    },
+    {
+      "name": "read-only",
+      "description": "Text and number questions show the answer as selectable text in the field; other questions are disabled."
+    },
+    {
+      "name": "disabled",
+      "description": "With disabled(true), every input is disabled, remove buttons and the upload row are hidden, and text takes the disabled colour."
+    },
+    {
+      "name": "section",
+      "description": "A heading with an optional description and no input."
+    }
+  ],
+  "appearance": "Each question uses the look of the input it renders: text questions use the text field's surface fill and input border (danger border with an error), options sit in one bordered list with the accent check mark on the chosen one, menus, segmented controls and date pickers are the system's. Errors use the danger text colour, the automatic-fill note the AI text colour or, when unsure, the warning text colour; section descriptions and help use the muted text colour. Light, dark and both high-contrast themes follow from the colour roles.",
+  "platformNotes": "Same question types, checks, order of checks and default messages as the web and Android (validateFormField is MonarchFormFieldDefinition.problem(for:), which returns a typed problem; the renderer turns it into the message and error replaces it). Differences: a date answer is a Date, as the system DatePicker gives it, where the web stores YYYY-MM-DD and Android UTC milliseconds; a time stays HH:MM. Dates and times are a button that sets them and then the compact system DatePicker, with Clear for optional questions. A radio question is a list of rows with a check mark, the iOS settings pattern, because iOS has no radio button; yes or no is a segmented Picker. File limits are UTType values and bytes (allowedContentTypes, maxFileSize) as in MonarchFileUpload, where the web takes an accept string and megabytes. Text length counts characters, where the web counts UTF-16 code units. Conditions are MonarchCondition values with MonarchConditionMatch, as MonarchConditionEditor edits them; a list answer equals or contains a value when one of its items is that value. A rating keeps MonarchRatingPicker's own label, so it shows no visible required mark; Required is in its hint and its error is drawn under it. headingLevel and locale are not parameters: VoiceOver headings have no levels here and the locale comes from the environment. The answer is a Binding instead of value and onChange, and disabled(_:) replaces the disabled prop. The text field is a private copy of MonarchTextField's look, because MonarchTextField has no read-only, several-line or label-less form.",
+  "accessibility": [
+    "Questions without a label of their own sit in a MonarchFormField: the input is named by the label, its hint is the error, the help and Required, and a new error is announced.",
+    "Checkboxes and multi-select questions use the labels, required marks, hints and errors of MonarchCheckboxGroup and MonarchMultiSelect.",
+    "Radio options are buttons in a group named by the label, each at least 44 points high; the chosen one has the selected trait and a check mark, not colour alone.",
+    "A consent is one checkbox named by its statement; its hint is the error, the help and Required, and a new error is announced. The visible required mark is hidden from VoiceOver.",
+    "A rating is MonarchRatingPicker's adjustable element; the renderer adds the error, help and Required to its hint and announces a new error.",
+    "Read-only text is static text whose value is the answer, selectable with the system text selection.",
+    "A section is a heading.",
+    "Each chosen file's remove button is named Remove followed by the file name.",
+    "The automatic-fill note is text read as one element; its icon is decorative."
+  ],
+  "edgeCases": [
+    "Typing stops at maxLength; problem(for:) also reports a stored answer that is too long.",
+    "Spaces alone are no answer, and length checks ignore spaces at either end, as on the web.",
+    "A yes-or-no question whose answer is not a flag counts as unanswered.",
+    "A select or radio answer that is not one of the options shows no choice.",
+    "A time answer that is not HH:MM shows Choose a time.",
+    "Choose a date starts on today, moved inside minDate and maxDate; a reversed minDate and maxDate is ignored except for the minimum.",
+    "A rating with min above max falls back to 1 to 5.",
+    "Use isVisible(in:calendar:) to leave out questions whose conditions do not hold; the renderer does not hide itself.",
+    "Files the upload control rejects are listed by MonarchFileUpload and never reach the answer."
+  ],
+  "tests": [
+    "MonarchFieldRendererTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "A short public form",
+      "fixture": "field-renderer",
+      "webExample": "A short public form",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    MonarchFieldRenderer(\n        MonarchFormFieldDefinition(id: {{fields.0.id}}, type: {{fields.0.type|case}}, label: {{fields.0.label}}, isRequired: {{fields.0.required}}),\n        value: $answers[{{fields.0.id}}], confidence: {{prefilled.confidence}}\n    )\n    MonarchFieldRenderer(\n        MonarchFormFieldDefinition(id: {{fields.1.id}}, type: {{fields.1.type|case}}, label: {{fields.1.label}}, description: {{fields.1.description}}, isRequired: {{fields.1.required}}),\n        value: $answers[{{fields.1.id}}]\n    )\n    MonarchFieldRenderer(\n        MonarchFormFieldDefinition(id: {{fields.2.id}}, type: {{fields.2.type|case}}, label: {{fields.2.label}}, options: [MonarchFormFieldOption(value: {{fields.2.options.0.value}}, label: {{fields.2.options.0.label}}), MonarchFormFieldOption(value: {{fields.2.options.1.value}}, label: {{fields.2.options.1.label}})]),\n        value: $answers[{{fields.2.id}}]\n    )\n    MonarchFieldRenderer(\n        MonarchFormFieldDefinition(id: {{fields.3.id}}, type: {{fields.3.type|case}}, label: {{fields.3.label}}),\n        value: $answers[{{fields.3.id}}]\n    )\n    MonarchFieldRenderer(\n        MonarchFormFieldDefinition(id: {{fields.4.id}}, type: {{fields.4.type|case}}, label: {{fields.4.label}}),\n        value: $answers[{{fields.4.id}}]\n    )\n    MonarchFieldRenderer(\n        MonarchFormFieldDefinition(id: {{fields.5.id}}, type: {{fields.5.type|case}}, label: {{fields.5.label}}, isRequired: {{fields.5.required}}, consentText: {{fields.5.consentText}}),\n        value: $answers[{{fields.5.id}}]\n    )\n}",
+      "setupTemplate": "@State private var answers: [String: MonarchFormFieldValue] = [{{prefilled.field}}: .text({{prefilled.value}})]",
+      "setup": "@State private var answers: [String: MonarchFormFieldValue] = [\"name\": .text(\"Alex Morgan\")]",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    MonarchFieldRenderer(\n        MonarchFormFieldDefinition(id: \"name\", type: .shortText, label: \"Full name\", isRequired: true),\n        value: $answers[\"name\"], confidence: 0.92\n    )\n    MonarchFieldRenderer(\n        MonarchFormFieldDefinition(id: \"email\", type: .email, label: \"Email\", description: \"We only use it to reply.\", isRequired: true),\n        value: $answers[\"email\"]\n    )\n    MonarchFieldRenderer(\n        MonarchFormFieldDefinition(id: \"where\", type: .radio, label: \"Where will you join from?\", options: [MonarchFormFieldOption(value: \"remote\", label: \"Remote\"), MonarchFormFieldOption(value: \"office\", label: \"Office\")]),\n        value: $answers[\"where\"]\n    )\n    MonarchFieldRenderer(\n        MonarchFormFieldDefinition(id: \"relocate\", type: .yesNo, label: \"Can you relocate?\"),\n        value: $answers[\"relocate\"]\n    )\n    MonarchFieldRenderer(\n        MonarchFormFieldDefinition(id: \"rating\", type: .rating, label: \"How was the process?\"),\n        value: $answers[\"rating\"]\n    )\n    MonarchFieldRenderer(\n        MonarchFormFieldDefinition(id: \"consent\", type: .consent, label: \"Consent\", isRequired: true, consentText: \"I agree to be contacted about this request.\"),\n        value: $answers[\"consent\"]\n    )\n}"
+    },
+    {
+      "title": "An answer filled in automatically",
+      "code": "MonarchFieldRenderer(\n    MonarchFormFieldDefinition(id: \"company\", type: .shortText, label: \"Company\"),\n    value: .constant(.text(\"Rook\")),\n    confidence: 0.4\n)"
+    },
+    {
+      "title": "A rating and a consent",
+      "setup": "@State private var rating: MonarchFormFieldValue? = .number(4)\n@State private var consent: MonarchFormFieldValue?",
+      "code": "VStack(alignment: .leading) {\n    MonarchFieldRenderer(\n        MonarchFormFieldDefinition(id: \"rating\", type: .rating, label: \"How was the process?\"),\n        value: $rating\n    )\n    MonarchFieldRenderer(\n        MonarchFormFieldDefinition(\n            id: \"consent\",\n            type: .consent,\n            label: \"Consent\",\n            isRequired: true,\n            consentText: \"I agree to be contacted about this request.\"\n        ),\n        value: $consent,\n        problem: .mustAgree\n    )\n}"
+    }
+  ],
+  "webEquivalent": "FieldRenderer",
+  "dependsOn": [
+    "form-field",
+    "text-field",
+    "number-input",
+    "select",
+    "multi-select",
+    "checkbox-group",
+    "radio-group",
+    "switch",
+    "date-picker",
+    "file-upload",
+    "rating-picker",
+    "condition-editor",
+    "checkbox"
+  ]
+}

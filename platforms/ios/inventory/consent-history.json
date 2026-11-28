@@ -1,0 +1,144 @@
+{
+  "id": "consent-history",
+  "name": "MonarchConsentHistory",
+  "title": "ConsentHistory",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of bordered records with Text, Date.FormatStyle, Date.RelativeFormatStyle in a TimelineView(.everyMinute), MonarchEmptyState and MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A person's recorded consent decisions, newest first: when, how, which policy version and rules applied, and each category allowed or not.",
+  "whenToUse": "On a privacy screen where people see what they agreed to, or in an admin view of one person's consent.",
+  "whenNotToUse": "To ask for consent or change it, use the consent preferences sheet. For app tracking across other companies' apps, iOS requires the AppTrackingTransparency prompt instead.",
+  "api": [
+    "init(_ title: String? = nil, records: [MonarchConsentRecord], categories: [MonarchConsentCategory] = [], description: String? = nil, dateFormat: Date.FormatStyle = Date.FormatStyle(date: .abbreviated, time: .shortened), showsRelativeTime: Bool = false, exportTitle: String? = nil, labels: MonarchConsentHistoryLabels = MonarchConsentHistoryLabels(), onExport: (@MainActor () async throws -> Void)? = nil)",
+    "struct MonarchConsentRecord { init(id: String, date: Date, method: MonarchConsentMethod, policyVersion: String, regime: MonarchConsentRegime, categories: [String: Bool], isGlobalPrivacyControl: Bool = false) }",
+    "enum MonarchConsentMethod: String { case acceptAll, rejectAll, custom, globalPrivacyControl, acknowledged, withdrawn }",
+    "enum MonarchConsentRegime: String { case optIn, optOut, notice }",
+    "struct MonarchConsentCategory { init(id: String, label: String) }",
+    "struct MonarchConsentHistoryLabels { init(method:, regime:, methodTitle:, policyVersionTitle:, regimeTitle:, categoriesTitle:, allowed:, denied:, signalPresent:, emptyTitle:, emptyMessage:, exportFailed:) }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "The heading; \"Consent history\" when nil."
+    },
+    {
+      "name": "records",
+      "type": "[MonarchConsentRecord]",
+      "default": "required",
+      "description": "The decisions, in any order; shown newest first."
+    },
+    {
+      "name": "categories",
+      "type": "[MonarchConsentCategory]",
+      "default": "[]",
+      "description": "The product's categories, for their names and order. Ids in a record that are not listed are shown as the raw id, after the listed ones, sorted."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "A sentence under the heading."
+    },
+    {
+      "name": "dateFormat",
+      "type": "Date.FormatStyle",
+      "default": "Date.FormatStyle(date: .abbreviated, time: .shortened)",
+      "description": "The format of each decision's date, in the current locale and time zone unless the style sets them."
+    },
+    {
+      "name": "showsRelativeTime",
+      "type": "Bool",
+      "default": "false",
+      "description": "Also shows how long ago each decision was (\"3 days ago\"), updated every minute."
+    },
+    {
+      "name": "exportTitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "The title of the download button; name the format. \"Download history\" when nil."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchConsentHistoryLabels",
+      "default": "MonarchConsentHistoryLabels()",
+      "description": "Replacements for every built-in string: methods, regimes, line names, Allowed and Not allowed, the signal line, the empty state and the export failure."
+    },
+    {
+      "name": "onExport",
+      "type": "(@MainActor () async throws -> Void)?",
+      "default": "nil",
+      "description": "Builds and shares the file (for example with ShareLink or a document exporter). The button shows while there are records and is busy while this runs; throwing shows the failure."
+    }
+  ],
+  "states": [
+    {
+      "name": "records",
+      "description": "One bordered record per decision on the surface colour."
+    },
+    {
+      "name": "empty",
+      "description": "A small MonarchEmptyState with a shield symbol, and no download button."
+    },
+    {
+      "name": "exporting",
+      "description": "The download button shows its spinner and ignores further taps."
+    },
+    {
+      "name": "export failed",
+      "description": "An icon and \"The download did not start. Try again.\" in the strong danger colour under the header, announced; the button can be used again."
+    }
+  ],
+  "appearance": "Records use the surface colour, a subtle border and 12-point corners. Dates use the strong body style; line names the caption style in the muted colour; values the body style. Allowed categories have a filled check in the strong success colour, refused ones an empty cross in the muted colour, each followed by the words. All are theme roles.",
+  "platformNotes": "The web shows a table on wide containers and stacked cards below 640 points; iOS always shows the stacked records, which suit a phone and large text. The web's ConsentRecord stores the date as an ISO string; on iOS it is a Date. The web's locale and timeZone props are replaced by dateFormat; now is not needed because relative times come from the system clock. headingLevel has no iOS equivalent (the title is a header). The record types are defined here because the consent manager is not built on iOS; a later consent preferences sheet should use them. Android builds the same component. The parity map lists badge as a dependency; the method is plain text, as on the web, so no badge is used.",
+  "accessibility": [
+    "The title and each decision's date have the header trait, so the headings rotor moves between decisions.",
+    "Each line is one element read as its name, value and any note (\"Choice, Custom choice, Browser privacy signal present\").",
+    "Each category is one element read as its name and \"Allowed\" or \"Not allowed\"; the label is built by a tested pure function and the icon and colour are not the only signal.",
+    "The download button is a MonarchButton with a 44-point touch target and a busy state while exporting.",
+    "The export failure is posted as an announcement."
+  ],
+  "edgeCases": [
+    "Records with the same date keep the order they were given in.",
+    "A record with no categories shows no categories list.",
+    "The relative time is static text refreshed every minute, not a ticking clock.",
+    "Long policy versions and category names wrap."
+  ],
+  "tests": [
+    "MonarchConsentHistoryTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Privacy page, with labels from the categories",
+      "fixture": "consent-history",
+      "webExample": "Privacy page, with labels from the categories",
+      "template": "MonarchConsentHistory(\n    {{title}},\n    records: records,\n    categories: [\n        MonarchConsentCategory(id: {{categories.0.id}}, label: {{categories.0.label}}),\n        MonarchConsentCategory(id: {{categories.1.id}}, label: {{categories.1.label}}),\n        MonarchConsentCategory(id: {{categories.2.id}}, label: {{categories.2.label}}),\n        MonarchConsentCategory(id: {{categories.3.id}}, label: {{categories.3.label}}),\n    ],\n    description: {{description}}\n)\n.environment(\\.locale, Locale(identifier: {{locale}}))\n.environment(\\.timeZone, TimeZone(identifier: {{timeZone}}) ?? .gmt)",
+      "setupTemplate": "private let records = [\n    MonarchConsentRecord(\n        id: {{records.0.id}},\n        date: {{records.0.at|date}},\n        method: {{records.0.method|case}},\n        policyVersion: {{records.0.policyVersion}},\n        regime: {{records.0.regime|case}},\n        categories: [\"necessary\": {{records.0.categories.necessary}}, \"preferences\": {{records.0.categories.preferences}}, \"analytics\": {{records.0.categories.analytics}}, \"marketing\": {{records.0.categories.marketing}}],\n        isGlobalPrivacyControl: {{records.0.gpc}}\n    ),\n    MonarchConsentRecord(\n        id: {{records.1.id}},\n        date: {{records.1.at|date}},\n        method: {{records.1.method|case}},\n        policyVersion: {{records.1.policyVersion}},\n        regime: {{records.1.regime|case}},\n        categories: [\"necessary\": {{records.1.categories.necessary}}, \"preferences\": {{records.1.categories.preferences}}, \"analytics\": {{records.1.categories.analytics}}, \"marketing\": {{records.1.categories.marketing}}],\n        isGlobalPrivacyControl: {{records.1.gpc}}\n    ),\n    MonarchConsentRecord(\n        id: {{records.2.id}},\n        date: {{records.2.at|date}},\n        method: {{records.2.method|case}},\n        policyVersion: {{records.2.policyVersion}},\n        regime: {{records.2.regime|case}},\n        categories: [\"necessary\": {{records.2.categories.necessary}}, \"preferences\": {{records.2.categories.preferences}}, \"analytics\": {{records.2.categories.analytics}}, \"marketing\": {{records.2.categories.marketing}}],\n        isGlobalPrivacyControl: {{records.2.gpc}}\n    ),\n]",
+      "setup": "private let records = [\n    MonarchConsentRecord(\n        id: \"c-3\",\n        date: Date(timeIntervalSince1970: 1_776_501_720),\n        method: .custom,\n        policyVersion: \"2026-04\",\n        regime: .optIn,\n        categories: [\"necessary\": true, \"preferences\": true, \"analytics\": true, \"marketing\": false],\n        isGlobalPrivacyControl: false\n    ),\n    MonarchConsentRecord(\n        id: \"c-2\",\n        date: Date(timeIntervalSince1970: 1_770_135_000),\n        method: .acceptAll,\n        policyVersion: \"2026-01\",\n        regime: .optIn,\n        categories: [\"necessary\": true, \"preferences\": true, \"analytics\": true, \"marketing\": true],\n        isGlobalPrivacyControl: false\n    ),\n    MonarchConsentRecord(\n        id: \"c-1\",\n        date: Date(timeIntervalSince1970: 1_768_212_300),\n        method: .rejectAll,\n        policyVersion: \"2026-01\",\n        regime: .optIn,\n        categories: [\"necessary\": true, \"preferences\": false, \"analytics\": false, \"marketing\": false],\n        isGlobalPrivacyControl: false\n    ),\n]",
+      "code": "MonarchConsentHistory(\n    \"Consent history\",\n    records: records,\n    categories: [\n        MonarchConsentCategory(id: \"necessary\", label: \"Strictly necessary\"),\n        MonarchConsentCategory(id: \"preferences\", label: \"Preferences\"),\n        MonarchConsentCategory(id: \"analytics\", label: \"Analytics\"),\n        MonarchConsentCategory(id: \"marketing\", label: \"Marketing\"),\n    ],\n    description: \"Every choice you made about cookies and similar storage.\"\n)\n.environment(\\.locale, Locale(identifier: \"en-GB\"))\n.environment(\\.timeZone, TimeZone(identifier: \"UTC\") ?? .gmt)"
+    },
+    {
+      "title": "Nothing recorded yet",
+      "code": "MonarchConsentHistory(records: [])"
+    }
+  ],
+  "webEquivalent": "ConsentHistory",
+  "dependsOn": [
+    "relative-time",
+    "empty-state",
+    "button",
+    "icon"
+  ],
+  "icons": {
+    "allowed": "CheckGlyph",
+    "denied": "CloseGlyph"
+  }
+}

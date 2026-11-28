@@ -1,0 +1,134 @@
+{
+  "id": "reaction-bar",
+  "name": "MonarchReactionBar",
+  "title": "ReactionBar",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchFlowLayout (a SwiftUI Layout) of Button chips with AccessibilityTraits.isToggle and .isSelected; Button with sheet(isPresented:) holding MonarchEmojiPicker",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The emoji reactions under a message, comment or post: a chip per emoji with its count, selected when you reacted, and a button that opens the emoji picker.",
+  "whenToUse": "Under messages, comments and posts where people react with emoji.",
+  "whenNotToUse": "Not for filters or selectable labels; use MonarchTag. Not for a single like button; use a Toggle with MonarchToggleButtonStyle.",
+  "api": [
+    "init(_ reactions: [MonarchReactionBarItem], size: MonarchReactionBarSize = .sm, maxReactions: Int? = nil, isAddable: Bool = true, quickReactions: [String] = [], labels: MonarchReactionBarLabels = MonarchReactionBarLabels(), onToggle: (@MainActor (String, Bool) -> Void)? = nil)",
+    "MonarchReactionBarItem.init(_ emoji: String, count: Int, isReacted: Bool = false, label: String? = nil, reactedBy: String? = nil)",
+    "enum MonarchReactionBarSize { case sm, md }",
+    "MonarchReactionBarLabels.init(label: String? = nil, reaction: (@Sendable (String, Int) -> String)? = nil, add: String? = nil, reactedBy: String? = nil, picker: MonarchEmojiPickerLabels = MonarchEmojiPickerLabels())"
+  ],
+  "options": [
+    {
+      "name": "reactions",
+      "type": "[MonarchReactionBarItem]",
+      "default": "required",
+      "description": "The reactions in display order. A count of 0 hides the chip; a repeated emoji is shown once."
+    },
+    {
+      "name": "size",
+      "type": "MonarchReactionBarSize",
+      "default": ".sm",
+      "description": "sm under messages and comments, md under posts."
+    },
+    {
+      "name": "maxReactions",
+      "type": "Int?",
+      "default": "nil",
+      "description": "At most this many distinct reactions; the add button hides when the limit is reached."
+    },
+    {
+      "name": "isAddable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether an interactive bar shows the add button."
+    },
+    {
+      "name": "quickReactions",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Emoji offered first in the picker, as its recents row."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchReactionBarLabels",
+      "default": "MonarchReactionBarLabels()",
+      "description": "Replacements for the bar's name, a chip's name, the add button, the \"Reacted by\" heading and the picker's strings."
+    },
+    {
+      "name": "onToggle",
+      "type": "(@MainActor (String, Bool) -> Void)?",
+      "default": "nil",
+      "description": "Receives the emoji and the new state when a chip is tapped, or true when an emoji is picked. Without it the bar is read-only."
+    }
+  ],
+  "states": [
+    {
+      "name": "not reacted",
+      "description": "A chip on the subtle background with a thin border and the count in regular weight."
+    },
+    {
+      "name": "reacted",
+      "description": "A chip in the accent's subtle fill and strong text, a 2-point accent border and a bold count; the chip has the selected trait."
+    },
+    {
+      "name": "read-only",
+      "description": "Chips are images, not buttons, with no add button; nothing is drawn without reactions."
+    },
+    {
+      "name": "picker open",
+      "description": "The emoji picker in a sheet at medium height; picking closes it."
+    },
+    {
+      "name": "limit reached",
+      "description": "The add button is hidden."
+    },
+    {
+      "name": "disabled",
+      "description": "Chips and the add button use the disabled text colour and do not respond."
+    }
+  ],
+  "appearance": "Capsule chips on the subtle background with the subtle border, or in the accent's subtle fill, strong text and border when reacted; the add button in the muted text colour. The same roles in light, dark and both high-contrast themes.",
+  "platformNotes": "The web bar is a toolbar with one tab stop and arrow keys between chips; on iOS each chip is a button VoiceOver reaches by swiping, and full keyboard access moves between them with Tab. The web opens the picker in a popover; iOS opens it in a sheet at medium height, which iPad shows as a form sheet. Who reacted is VoiceOver's more content and the pointer hover text instead of a title attribute. A chip's default spoken name comes from the emoji picker's built-in English index when no label is given.",
+  "accessibility": [
+    "The bar is a container named \"Reactions\".",
+    "Each chip is a button with the toggle trait, named by the emoji's name and count, \"thumbs up, 3 reactions\"; the emoji character itself is not read.",
+    "A reacted chip has the selected trait, and a thicker border and bold count, so the state does not depend on colour.",
+    "Who reacted is offered as VoiceOver more content under \"Reacted by\".",
+    "Chips are at least 44 points wide and their touch targets 44 points high; the add button is 44 by 44 points and named \"Add reaction\".",
+    "Read-only chips are images with the same names.",
+    "Text scales with Dynamic Type and chips wrap onto new rows."
+  ],
+  "edgeCases": [
+    "Taking back the last reaction of an emoji removes its chip when the product updates reactions.",
+    "Picking an emoji you already reacted with does not call onToggle.",
+    "Large counts are formatted with the locale's grouping, such as 1,204.",
+    "An emoji that is not in the built-in index is read by its character unless a label is given."
+  ],
+  "tests": [
+    "MonarchReactionBarTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Interactive",
+      "fixture": "reaction-bar",
+      "webExample": "Interactive",
+      "template": "MonarchReactionBar(\n    reactions,\n    quickReactions: [{{quick.0}}, {{quick.1}}, {{quick.2}}, {{quick.3}}, {{quick.4}}, {{quick.5}}]\n) { emoji, isReacted in\n    // The product saves the reaction and updates `reactions`.\n    print(emoji, isReacted)\n}",
+      "setupTemplate": "@State private var reactions = [\n    MonarchReactionBarItem({{reactions.0.emoji}}, count: {{reactions.0.count}}, isReacted: {{reactions.0.reacted}}, label: {{reactions.0.label}}, reactedBy: {{reactions.0.title}}),\n    MonarchReactionBarItem({{reactions.1.emoji}}, count: {{reactions.1.count}}, isReacted: {{reactions.1.reacted}}, label: {{reactions.1.label}}, reactedBy: {{reactions.1.title}}),\n    MonarchReactionBarItem({{reactions.2.emoji}}, count: {{reactions.2.count}}, isReacted: {{reactions.2.reacted}}, label: {{reactions.2.label}}, reactedBy: {{reactions.2.title}}),\n]",
+      "setup": "@State private var reactions = [\n    MonarchReactionBarItem(\"👍\", count: 4, isReacted: true, label: \"thumbs up\", reactedBy: \"You, Priya, Tom and Lee\"),\n    MonarchReactionBarItem(\"🎉\", count: 2, isReacted: false, label: \"party popper\", reactedBy: \"Ana and Ben\"),\n    MonarchReactionBarItem(\"👀\", count: 1, isReacted: false, label: \"eyes\", reactedBy: \"Sam\"),\n]",
+      "code": "MonarchReactionBar(\n    reactions,\n    quickReactions: [\"👍\", \"❤️\", \"😄\", \"🎉\", \"👀\", \"✅\"]\n) { emoji, isReacted in\n    // The product saves the reaction and updates `reactions`.\n    print(emoji, isReacted)\n}"
+    },
+    {
+      "title": "Read-only, under a post",
+      "code": "MonarchReactionBar(\n    [MonarchReactionBarItem(\"❤️\", count: 12), MonarchReactionBarItem(\"🚀\", count: 4)],\n    size: .md\n)"
+    }
+  ],
+  "webEquivalent": "ReactionBar",
+  "dependsOn": [
+    "emoji-picker",
+    "inline"
+  ]
+}

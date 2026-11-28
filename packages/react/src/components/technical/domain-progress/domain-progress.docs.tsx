@@ -1,5 +1,11 @@
-import { DnsRecordTable, DomainProgress } from '@rookcom/monarch-react/patterns';
+import {
+  DnsRecordTable,
+  DomainProgress,
+  type DomainProgressProps,
+} from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './domain-progress.fixture.json';
 
 const box = {
   width: '100%',
@@ -7,8 +13,8 @@ const box = {
   display: 'grid',
   gap: 'var(--mn-space-4)',
 } as const;
-const checkedAt = '2026-01-10T11:58:00Z';
-const now = '2026-01-10T12:00:00Z';
+const checkedAt = fixture.data.checkedAt;
+const now = fixture.data.now;
 
 export default {
   id: 'domain-progress',
@@ -114,12 +120,12 @@ export default {
           render: () => (
             <div style={box}>
               <DomainProgress
-                host="book.example.com"
-                stage="certificate"
-                dnsFound={{ cnames: ['domains.example.net'] }}
+                host={fixture.data.host}
+                stage={fixture.data.stage as DomainProgressProps['stage']}
+                dnsFound={{ cnames: fixture.data.dnsFound.cnames }}
                 checkedAt={checkedAt}
                 now={now}
-                notify="email"
+                notify={fixture.data.notify as DomainProgressProps['notify']}
               />
             </div>
           ),

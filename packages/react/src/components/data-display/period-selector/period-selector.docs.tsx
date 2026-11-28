@@ -1,21 +1,25 @@
 import { useState } from 'react';
 import { PeriodSelector, type PeriodValue } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './period-selector.fixture.json';
 
 function ControlledDemo() {
-  const [value, setValue] = useState<PeriodValue>({ preset: '30d' });
+  const [value, setValue] = useState<PeriodValue>({
+    preset: fixture.data.selected as PeriodValue['preset'],
+  });
   const [range, setRange] = useState<string>('2026-10-09 – 2026-11-07');
   return (
     <div style={{ display: 'grid', gap: 'var(--mn-space-2)' }}>
       <PeriodSelector
-        today="2026-11-07"
+        today={fixture.data.today}
         value={value}
         onValueChange={(next, dates) => {
           setValue(next);
           setRange(dates ? `${dates.start} – ${dates.end}` : 'choose dates');
         }}
-        presets={['7d', '30d', '90d', 'this-month', 'last-month', 'custom']}
-        maxDays={366}
+        presets={fixture.data.presets as PeriodValue['preset'][]}
+        maxDays={fixture.data.maxDays}
       />
       <p style={{ margin: 0, fontSize: 'var(--mn-text-xs)' }}>Query: {range}</p>
     </div>

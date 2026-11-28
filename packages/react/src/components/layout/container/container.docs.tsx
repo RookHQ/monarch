@@ -1,5 +1,9 @@
-import { Container } from '@rookcom/monarch-react';
+import { Container, type ContainerProps } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './container.fixture.json';
+
+type ContainerSize = NonNullable<ContainerProps['size']>;
 
 const fill = {
   padding: 12,
@@ -82,15 +86,11 @@ export default {
           stack: true,
           render: () => (
             <div style={{ display: 'grid', gap: 8, width: '100%' }}>
-              <Container size="narrow">
-                <div style={fill}>narrow</div>
-              </Container>
-              <Container>
-                <div style={fill}>content (default)</div>
-              </Container>
-              <Container size="wide">
-                <div style={fill}>wide</div>
-              </Container>
+              {fixture.data.blocks.map((block) => (
+                <Container key={block.size} size={block.size as ContainerSize}>
+                  <div style={fill}>{block.text}</div>
+                </Container>
+              ))}
             </div>
           ),
         },

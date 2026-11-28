@@ -1,0 +1,114 @@
+{
+  "id": "no-app-access",
+  "name": null,
+  "title": "NoAppAccess",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchErrorState (kind Forbidden) with MonarchButton and MonarchWorkspaceSwitcher in its actions, a MonarchText polite live region (androidx.compose.ui.semantics.liveRegion) and MonarchInlineNotice",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the screen a workspace member sees when they have no access to the app they opened, with who can fix it, Request access, Back to workspace and Switch workspace.",
+  "whenToUse": "In place of an app's content when the signed-in person belongs to the workspace but has no grant for this app.",
+  "whenNotToUse": "When the person is not signed in, show the sign-in screen. When the content does not exist, use the error-page recipe with NotFound. When a single record is off limits inside an app the person can use, use MonarchErrorState with Forbidden and no request.",
+  "api": [
+    "MonarchErrorState(title = \"You don’t have access to $app\", kind = MonarchErrorStateKind.Forbidden, size = MonarchEmptyStateSize.Lg, message = \"Ask an admin of $workspace to give you access to $app.\", actions = { … })",
+    "MonarchButton(text = if (sent) \"Access requested\" else \"Request access\", onClick = …, variant = MonarchButtonVariant.Primary, enabled = !sent, loading = pending)",
+    "MonarchWorkspaceSwitcher(workspaces = …, selection = workspace, onSelectionChange = { … }) // @ExperimentalMonarchApi, opted in at the call",
+    "MonarchText(text = sentMessage, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })",
+    "MonarchInlineNotice(message = \"The request didn’t go through. Try again.\", tone = MonarchTone.Danger)"
+  ],
+  "options": [
+    {
+      "name": "appName",
+      "type": "String",
+      "default": "required",
+      "description": "The app the person cannot open, named in the title and the message."
+    },
+    {
+      "name": "workspaceName",
+      "type": "String?",
+      "default": "null",
+      "description": "The current workspace, named in the message: \"Ask an admin of Acme…\"; without it, \"Ask a workspace admin…\"."
+    },
+    {
+      "name": "request",
+      "type": "idle | pending | sent | error",
+      "default": "idle",
+      "description": "The access request: the button shows progress while pending and \"Access requested\", disabled, once sent; an open request from the server starts as sent."
+    },
+    {
+      "name": "onRequestAccess",
+      "type": "suspend () -> Unit",
+      "default": "none",
+      "description": "Sends the request; without it there is no Request access button."
+    },
+    {
+      "name": "contactAdmin",
+      "type": "() -> Unit",
+      "default": "none",
+      "description": "A ghost MonarchButton \"Contact an admin\" that opens a mail intent or the list of admins."
+    },
+    {
+      "name": "switchWorkspace",
+      "type": "MonarchWorkspaceSwitcher or a button",
+      "default": "none",
+      "description": "MonarchWorkspaceSwitcher in the actions, or a ghost button that opens the app's workspace list."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "The title, the message, Request access (primary), Back to workspace and the workspace switcher."
+    },
+    {
+      "name": "pending",
+      "description": "Request access shows the MonarchButton loading state."
+    },
+    {
+      "name": "sent",
+      "description": "The button reads \"Access requested\" and is disabled; \"Request sent. You can open Rook Tickets once an admin approves it.\" is announced."
+    },
+    {
+      "name": "error",
+      "description": "A danger MonarchInlineNotice under the actions; Request access can be tapped again."
+    }
+  ],
+  "appearance": "MonarchErrorState at the large size: the title, the muted message and the actions centered, on the screen's canvas; the app may pass a lock icon in its icon slot. The status line uses the muted text role and the error the danger notice. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web's NoAppAccess is a component built on ErrorPage (forbidden). On Android it is a recipe, as on iOS: MonarchErrorState with the Forbidden kind and the actions as MonarchButtons, because the state machine is a few lines and the app owns navigation. The web's links (homeHref, contactHref, switchWorkspaceHref, linkAs) are callbacks: components do not navigate. The web's focusOnMount and heading level are TalkBack's job on Android: MonarchErrorState's title is a heading. Monarch bundles no lock glyph; pass one in MonarchErrorState's icon slot.",
+  "accessibility": [
+    "MonarchErrorState's title is a TalkBack heading and the message is read after it.",
+    "Request access is read as loading while pending and as disabled once sent.",
+    "The status line is an always-present polite live region, so \"Request sent…\" is announced without moving focus.",
+    "The failure is a danger MonarchInlineNotice with its tone in words.",
+    "Every action has a 48dp target and the actions wrap at font scale 2.0."
+  ],
+  "edgeCases": [
+    "The access check stays on the server; the screen only explains it.",
+    "If a request is already open, start in the sent state so the person does not request twice.",
+    "When the person has access in no app of the workspace, offer only Switch workspace.",
+    "After a workspace switch, check access again: the screen may no longer apply."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Every action",
+      "fixture": "no-app-access",
+      "webExample": "Every action",
+      "template": "MonarchErrorState(\n    title = \"You don’t have access to {{appName|raw}}\",\n    kind = MonarchErrorStateKind.Forbidden,\n    size = MonarchEmptyStateSize.Lg,\n    message = \"Ask an admin of {{workspaceName|raw}} to give you access to {{appName|raw}}.\",\n    actions = {\n        MonarchButton(text = {{requestAccess}}, onClick = {}, variant = MonarchButtonVariant.Primary)\n        MonarchButton(text = {{back}}, onClick = {})\n        MonarchButton(text = {{switchWorkspace}}, onClick = {}, variant = MonarchButtonVariant.Ghost)\n        MonarchLink(text = {{contact}}, onClick = {}, variant = MonarchLinkVariant.Standalone)\n    },\n)",
+      "code": "MonarchErrorState(\n    title = \"You don’t have access to Example Desk\",\n    kind = MonarchErrorStateKind.Forbidden,\n    size = MonarchEmptyStateSize.Lg,\n    message = \"Ask an admin of Acme to give you access to Example Desk.\",\n    actions = {\n        MonarchButton(text = \"Request access\", onClick = {}, variant = MonarchButtonVariant.Primary)\n        MonarchButton(text = \"Back to workspace\", onClick = {})\n        MonarchButton(text = \"Switch workspace\", onClick = {}, variant = MonarchButtonVariant.Ghost)\n        MonarchLink(text = \"Contact an admin\", onClick = {}, variant = MonarchLinkVariant.Standalone)\n    },\n)"
+    }
+  ],
+  "webEquivalent": "NoAppAccess",
+  "dependsOn": [
+    "empty-state",
+    "error-state",
+    "button",
+    "workspace-switcher"
+  ]
+}

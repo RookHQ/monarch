@@ -1,0 +1,128 @@
+{
+  "id": "rook-bar",
+  "name": "MonarchRookBar",
+  "title": "RookBar",
+  "family": "layout",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "HStack bar with MonarchButton and Menu; .sheet with a NavigationStack and a List of DisclosureGroups for the menus; openURL for links",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The Rook company bar for the public and signed-out screens of a Rook app: the brand, the account controls and a menu button that opens every Rook menu (products, services, pricing, news) in a full-height sheet.",
+  "whenToUse": "At the top of a Rook app's signed-out, welcome or about screens, so they carry the same company navigation as Rook's websites. Rook-scoped.",
+  "whenNotToUse": "Outside Rook's own apps, use MonarchSiteShell. In the signed-in app, use a TabView or NavigationSplitView and the account screen.",
+  "api": [
+    "init(_ brand: String, mark: Image? = nil, items: [MonarchRookBarItem], account: MonarchRookBarAccount? = nil, labels: MonarchRookBarLabels = MonarchRookBarLabels(), onSignOut: (@MainActor () -> Void)? = nil)",
+    "MonarchRookBarItem.init(_ id: String, label: String, groups: [MonarchRookBarGroup])",
+    "MonarchRookBarItem.init(_ id: String, label: String, destination: URL?)",
+    "MonarchRookBarGroup.init(_ title: String? = nil, description: String? = nil, links: [MonarchRookBarLink])",
+    "MonarchRookBarLink.init(_ label: String, destination: URL? = nil, description: String? = nil, meta: String? = nil, isExternal: Bool = false)",
+    "enum MonarchRookBarAccount { case signedOut(signInURL: URL?, signUpURL: URL?), signedIn(name: String, dashboardURL: URL?, accountURL: URL?) }",
+    "MonarchRookBarLabels.init(navigation: String? = nil, openMenu: String? = nil, closeMenu: String? = nil, accountMenu: String? = nil, dashboard: String? = nil, account: String? = nil, signOut: String? = nil, signIn: String? = nil, signUp: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "brand",
+      "type": "String",
+      "default": "required",
+      "description": "The app's name beside its mark."
+    },
+    {
+      "name": "mark",
+      "type": "Image?",
+      "default": "nil",
+      "description": "The app's mark; without it the brand's first letter is shown in a tile."
+    },
+    {
+      "name": "items",
+      "type": "[MonarchRookBarItem]",
+      "default": "required",
+      "description": "Menus with groups of links, and plain links such as Pricing, in order."
+    },
+    {
+      "name": "account",
+      "type": "MonarchRookBarAccount?",
+      "default": "nil",
+      "description": "Signed out (Log in and Sign up) or signed in (an avatar menu); without it no account controls."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchRookBarLabels",
+      "default": "MonarchRookBarLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "onSignOut",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Signs the person out; without it Sign out is not shown."
+    }
+  ],
+  "states": [
+    {
+      "name": "signed out",
+      "description": "Log in (ghost) and Sign up (primary) beside the menu button; Log in is dropped when the bar is too narrow."
+    },
+    {
+      "name": "signed in",
+      "description": "An avatar with the person's initials opens a menu: the name, Open dashboard, Account settings and Sign out."
+    },
+    {
+      "name": "menu open",
+      "description": "A full-height sheet titled with the brand: a collapsible group per menu, plain links, and the account controls at the end."
+    }
+  ],
+  "appearance": "The bar uses the surface colour with a divider under it; the brand is semibold in the default text colour beside its mark or a letter tile on the muted background. Link descriptions in the sheet use the muted text colour. Colours come from theme roles in every theme.",
+  "platformNotes": "The web RookBar is the company bar of every Rook website, with hover menus that open wide panels (an app catalogue, a featured card, recent posts) and a full-height sheet on phones. On iOS there is no hover and no page header: the bar is a view placed at the top of the screen, and its menus are always the full-height sheet, as on a phone on the web, with each panel's content as groups of links. The web's scroll progress, colour scheme override and posts loaded on open are not offered; the app passes every link and post. Rook-scoped. Android does not ship this component.",
+  "accessibility": [
+    "The bar is a container named \"Rook\" (or labels.navigation); the brand has the header trait.",
+    "The menu button is named \"Open menu\"; the sheet's close button is named \"Close menu\".",
+    "Each menu is a DisclosureGroup read with \"Expanded\" or \"Collapsed\"; group titles have the header trait.",
+    "Each link row is one link read as its title, its description and its meta line.",
+    "A signed-in person's avatar is a menu named \"Account menu\" with the name as its value."
+  ],
+  "edgeCases": [
+    "A long brand is shortened to one line before the account controls.",
+    "A link without a destination closes the sheet and goes nowhere.",
+    "Without a sign-up link only Log in is shown."
+  ],
+  "tests": [
+    "MonarchRookBarTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Signed out",
+      "setup": "private let items: [MonarchRookBarItem] = [\n    MonarchRookBarItem(\"products\", label: \"Products\", groups: [\n        MonarchRookBarGroup(\"Sales & Support\", description: \"Win customers, then look after them.\", links: [\n            MonarchRookBarLink(\"Pipeline\", destination: URL(string: \"https://example.com/pipeline\"), description: \"Leads, deals and invoices.\"),\n            MonarchRookBarLink(\"Help desk\", destination: URL(string: \"https://desk.example.com\"), description: \"Support with a branded portal.\", isExternal: true),\n        ]),\n        MonarchRookBarGroup(\"Collaboration\", description: \"Everyone on the same page.\", links: [\n            MonarchRookBarLink(\"Team chat\", destination: URL(string: \"https://example.com/chat\"), description: \"Channels, calls and search.\"),\n            MonarchRookBarLink(\"Documents\", destination: URL(string: \"https://example.com/docs\"), description: \"Docs the whole workspace can find.\"),\n            MonarchRookBarLink(\"Planner\", destination: URL(string: \"https://example.com/planner\"), description: \"Plan sprints across teams.\"),\n        ]),\n        MonarchRookBarGroup(\"Platform\", links: [\n            MonarchRookBarLink(\"Accounts\", destination: URL(string: \"https://example.com/accounts\"), description: \"One sign-in for every app.\"),\n            MonarchRookBarLink(\"Developers\", destination: URL(string: \"https://example.com/developers\"), description: \"Guides and API docs.\"),\n            MonarchRookBarLink(\"Create your account\", destination: URL(string: \"https://example.com/signup\")),\n        ]),\n    ]),\n    MonarchRookBarItem(\"services\", label: \"Services\", groups: [\n        MonarchRookBarGroup(\"When you need more than software.\", description: \"Tell us what you need. We will build it with you.\", links: [\n            MonarchRookBarLink(\"Visit our services site\", destination: URL(string: \"https://services.example.com\"), isExternal: true),\n            MonarchRookBarLink(\"Product engineering\", destination: URL(string: \"https://example.com/engineering\"), description: \"Designed and built end to end.\"),\n            MonarchRookBarLink(\"Implementation\", destination: URL(string: \"https://example.com/implementation\"), description: \"Brought into the way you work.\"),\n            MonarchRookBarLink(\"Consulting\", destination: URL(string: \"https://example.com/consulting\"), description: \"Plans, reviews and audits.\"),\n            MonarchRookBarLink(\"Enterprise systems\", destination: URL(string: \"https://example.com/enterprise\"), description: \"Engineered for scale.\"),\n        ]),\n    ]),\n    MonarchRookBarItem(\"pricing\", label: \"Pricing\", destination: URL(string: \"https://example.com/pricing\")),\n    MonarchRookBarItem(\"news\", label: \"News\", groups: [\n        MonarchRookBarGroup(links: [\n            MonarchRookBarLink(\"Blog\", destination: URL(string: \"https://example.com/blog\"), description: \"Ideas from the team.\"),\n            MonarchRookBarLink(\"Press releases\", destination: URL(string: \"https://example.com/press\"), description: \"Announcements.\"),\n        ]),\n        MonarchRookBarGroup(links: [\n            MonarchRookBarLink(\"What we learned shipping a design system\", destination: URL(string: \"https://example.com/posts/1\"), meta: \"Blog · Mar 2, 2026\"),\n            MonarchRookBarLink(\"Quarterly product update\", destination: URL(string: \"https://example.com/posts/2\"), meta: \"Press · Feb 18, 2026\"),\n            MonarchRookBarLink(\"Our plans for the year\", destination: URL(string: \"https://example.com/posts/3\"), meta: \"Letters · Jan 9, 2026\"),\n        ]),\n    ]),\n]",
+      "code": "MonarchRookBar(\n    \"Northwind\",\n    items: items,\n    account: .signedOut(\n        signInURL: URL(string: \"https://example.com/login\"),\n        signUpURL: URL(string: \"https://example.com/signup\")\n    )\n)"
+    },
+    {
+      "title": "Signed in",
+      "setup": "private let items: [MonarchRookBarItem] = [\n    MonarchRookBarItem(\"products\", label: \"Products\", groups: [\n        MonarchRookBarGroup(\"Sales & Support\", description: \"Win customers, then look after them.\", links: [\n            MonarchRookBarLink(\"Pipeline\", destination: URL(string: \"https://example.com/pipeline\"), description: \"Leads, deals and invoices.\"),\n            MonarchRookBarLink(\"Help desk\", destination: URL(string: \"https://desk.example.com\"), description: \"Support with a branded portal.\", isExternal: true),\n        ]),\n        MonarchRookBarGroup(\"Collaboration\", description: \"Everyone on the same page.\", links: [\n            MonarchRookBarLink(\"Team chat\", destination: URL(string: \"https://example.com/chat\"), description: \"Channels, calls and search.\"),\n            MonarchRookBarLink(\"Documents\", destination: URL(string: \"https://example.com/docs\"), description: \"Docs the whole workspace can find.\"),\n            MonarchRookBarLink(\"Planner\", destination: URL(string: \"https://example.com/planner\"), description: \"Plan sprints across teams.\"),\n        ]),\n        MonarchRookBarGroup(\"Platform\", links: [\n            MonarchRookBarLink(\"Accounts\", destination: URL(string: \"https://example.com/accounts\"), description: \"One sign-in for every app.\"),\n            MonarchRookBarLink(\"Developers\", destination: URL(string: \"https://example.com/developers\"), description: \"Guides and API docs.\"),\n            MonarchRookBarLink(\"Create your account\", destination: URL(string: \"https://example.com/signup\")),\n        ]),\n    ]),\n    MonarchRookBarItem(\"services\", label: \"Services\", groups: [\n        MonarchRookBarGroup(\"When you need more than software.\", description: \"Tell us what you need. We will build it with you.\", links: [\n            MonarchRookBarLink(\"Visit our services site\", destination: URL(string: \"https://services.example.com\"), isExternal: true),\n            MonarchRookBarLink(\"Product engineering\", destination: URL(string: \"https://example.com/engineering\"), description: \"Designed and built end to end.\"),\n            MonarchRookBarLink(\"Implementation\", destination: URL(string: \"https://example.com/implementation\"), description: \"Brought into the way you work.\"),\n            MonarchRookBarLink(\"Consulting\", destination: URL(string: \"https://example.com/consulting\"), description: \"Plans, reviews and audits.\"),\n            MonarchRookBarLink(\"Enterprise systems\", destination: URL(string: \"https://example.com/enterprise\"), description: \"Engineered for scale.\"),\n        ]),\n    ]),\n    MonarchRookBarItem(\"pricing\", label: \"Pricing\", destination: URL(string: \"https://example.com/pricing\")),\n    MonarchRookBarItem(\"news\", label: \"News\", groups: [\n        MonarchRookBarGroup(links: [\n            MonarchRookBarLink(\"Blog\", destination: URL(string: \"https://example.com/blog\"), description: \"Ideas from the team.\"),\n            MonarchRookBarLink(\"Press releases\", destination: URL(string: \"https://example.com/press\"), description: \"Announcements.\"),\n        ]),\n        MonarchRookBarGroup(links: [\n            MonarchRookBarLink(\"What we learned shipping a design system\", destination: URL(string: \"https://example.com/posts/1\"), meta: \"Blog · Mar 2, 2026\"),\n            MonarchRookBarLink(\"Quarterly product update\", destination: URL(string: \"https://example.com/posts/2\"), meta: \"Press · Feb 18, 2026\"),\n            MonarchRookBarLink(\"Our plans for the year\", destination: URL(string: \"https://example.com/posts/3\"), meta: \"Letters · Jan 9, 2026\"),\n        ]),\n    ]),\n]",
+      "code": "MonarchRookBar(\n    \"Northwind\",\n    items: items,\n    account: .signedIn(\n        name: \"Ada Lovelace\",\n        dashboardURL: URL(string: \"https://example.com/home\"),\n        accountURL: URL(string: \"https://id.example.com\")\n    ),\n    labels: MonarchRookBarLabels(navigation: \"Rook, signed in\")\n) {}"
+    }
+  ],
+  "webEquivalent": "RookBar",
+  "dependsOn": [
+    "button",
+    "avatar",
+    "accordion",
+    "separator"
+  ],
+  "icons": {
+    "menu": "MenuGlyph",
+    "close": "CloseGlyph",
+    "link": "ChevronRightGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "no-fixture",
+      "platform": "ios",
+      "reason": "No shared scenario fixture exists for this component yet.",
+      "convention": "The iOS example uses the data and copy of the web primary example."
+    }
+  ]
+}

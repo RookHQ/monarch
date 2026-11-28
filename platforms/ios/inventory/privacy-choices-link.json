@@ -1,0 +1,75 @@
+{
+  "id": "privacy-choices-link",
+  "name": null,
+  "title": "PrivacyChoicesLink",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "Button with Label and the Monarch link style, opening sheet(isPresented:content:) with a NavigationStack, a Form with one Toggle (switch), a Link and ToolbarItem Cancel and Save",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a \"Your privacy choices\" row in settings that opens a sheet with one switch to allow or stop the sale or sharing of personal information.",
+  "whenToUse": "In settings, for people in regions where they may opt out of the sale or sharing of their personal information (opt-out regimes such as the California rules).",
+  "whenNotToUse": "Where consent is asked before any optional use (opt-in regimes), ask with the full consent preferences instead. For tracking across other companies' apps and websites, iOS requires the AppTrackingTransparency prompt; this switch does not replace it.",
+  "api": [
+    "Button { … } label: { Label(\"Your privacy choices\", systemImage: \"hand.raised\") }.buttonStyle(.monarchLink(.standalone))",
+    ".sheet(isPresented: $isOpen) { NavigationStack { Form { Toggle(\"Allow sale or sharing\", isOn: $draft) } } }",
+    "ToolbarItem(placement: .cancellationAction) { Button(\"Cancel\") { … } }",
+    "ToolbarItem(placement: .confirmationAction) { Button(\"Save\") { … } }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "hidden",
+      "description": "Outside opt-out regions the row is not shown."
+    },
+    {
+      "name": "open",
+      "description": "A sheet with what sale or sharing means, the switch with its help line, the policy link, and Cancel and Save in the toolbar. The switch starts from the stored choice."
+    },
+    {
+      "name": "locked by signal",
+      "description": "When the account carries a Global Privacy Control opt-out, the switch is off and disabled and the help line says why."
+    },
+    {
+      "name": "saved",
+      "description": "Save stores the switch; Cancel leaves the stored choice unchanged."
+    }
+  ],
+  "appearance": "The row is a standalone Monarch link with an icon. The sheet is a system Form with the standard switch, the body text style for the explanation and an external Monarch link to the policy, all in the theme colours.",
+  "platformNotes": "The web's PrivacyChoicesLink is a footer link component with a dialog and its own strings. On iOS it is a recipe: a settings row opening a sheet with a Form, the native place for a setting. A native app receives no browser Global Privacy Control header, so the lock applies only when the app knows of a signal for the account (for example from its website); otherwise leave it out. The web's showIn regimes are the app's own region check. The web shows a policy link from policyHref or policyLink; here it is a Link. The official California privacy choices icon is the app's to add as an image; the recipe uses an SF Symbol. Android composes the same recipe.",
+  "accessibility": [
+    "The row is a button whose label is the text; the icon is part of the Label.",
+    "The switch is a standard Toggle, read as \"Allow sale or sharing\" with its on or off value.",
+    "When the switch is locked, the reason is the visible section footer, which VoiceOver reads with the form.",
+    "Cancel and Save are standard toolbar buttons in the cancellation and confirmation placements.",
+    "The policy link is a standard Link marked as external."
+  ],
+  "edgeCases": [
+    "Show the row only where the opt-out applies, decided by the app's region logic.",
+    "Opening the sheet starts from the stored choice, so a cancelled change does not linger.",
+    "A signal lock keeps sale and sharing off whatever was stored before."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Footer control",
+      "fixture": "privacy-choices-link",
+      "webExample": "Footer control",
+      "template": "if isOptOutRegion {\n    Button {\n        draft = allowsSale && !isLockedBySignal\n        isOpen = true\n    } label: {\n        Text({{label}}).underline()\n    }\n    .buttonStyle(.monarchLink(.standalone))\n    .monarchTextStyle(.label)\n    .sheet(isPresented: $isOpen) {\n        NavigationStack {\n            Form {\n                Section {\n                    Text(\"We may share information about how you use the app, such as screens viewed and device identifiers, with advertising partners. You can turn this off at any time.\")\n                        .monarchTextStyle(.body)\n                }\n                Section {\n                    Toggle(\"Allow sale or sharing\", isOn: $draft)\n                        .disabled(isLockedBySignal)\n                } footer: {\n                    Text(\n                        isLockedBySignal\n                            ? \"A Global Privacy Control signal is on for your account, so sale and sharing stay off.\"\n                            : \"When off, we stop selling or sharing your personal information.\"\n                    )\n                }\n                if let policy = URL(string: \"https://example.com/privacy\") {\n                    Link(\"Privacy policy\", destination: policy)\n                        .buttonStyle(.monarchLink(.standalone, isExternal: true))\n                }\n            }\n            .navigationTitle({{label}})\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button(\"Cancel\") { isOpen = false }\n                }\n                ToolbarItem(placement: .confirmationAction) {\n                    Button(\"Save\") {\n                        // Store the choice for the sale and sharing consent categories.\n                        allowsSale = draft\n                        isOpen = false\n                    }\n                }\n            }\n        }\n        .presentationDetents([.medium, .large])\n    }\n}",
+      "setupTemplate": "@State private var isOpen = false\n@State private var allowsSale = true\n@State private var draft = true\n/// Whether the person lives where they may opt out of sale or sharing. The app decides.\nprivate let isOptOutRegion = true\n/// Whether the account carries a Global Privacy Control opt-out, for example from the website.\nprivate let isLockedBySignal = false",
+      "setup": "@State private var isOpen = false\n@State private var allowsSale = true\n@State private var draft = true\n/// Whether the person lives where they may opt out of sale or sharing. The app decides.\nprivate let isOptOutRegion = true\n/// Whether the account carries a Global Privacy Control opt-out, for example from the website.\nprivate let isLockedBySignal = false",
+      "code": "if isOptOutRegion {\n    Button {\n        draft = allowsSale && !isLockedBySignal\n        isOpen = true\n    } label: {\n        Text(\"Your privacy choices\").underline()\n    }\n    .buttonStyle(.monarchLink(.standalone))\n    .monarchTextStyle(.label)\n    .sheet(isPresented: $isOpen) {\n        NavigationStack {\n            Form {\n                Section {\n                    Text(\"We may share information about how you use the app, such as screens viewed and device identifiers, with advertising partners. You can turn this off at any time.\")\n                        .monarchTextStyle(.body)\n                }\n                Section {\n                    Toggle(\"Allow sale or sharing\", isOn: $draft)\n                        .disabled(isLockedBySignal)\n                } footer: {\n                    Text(\n                        isLockedBySignal\n                            ? \"A Global Privacy Control signal is on for your account, so sale and sharing stay off.\"\n                            : \"When off, we stop selling or sharing your personal information.\"\n                    )\n                }\n                if let policy = URL(string: \"https://example.com/privacy\") {\n                    Link(\"Privacy policy\", destination: policy)\n                        .buttonStyle(.monarchLink(.standalone, isExternal: true))\n                }\n            }\n            .navigationTitle(\"Your privacy choices\")\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button(\"Cancel\") { isOpen = false }\n                }\n                ToolbarItem(placement: .confirmationAction) {\n                    Button(\"Save\") {\n                        // Store the choice for the sale and sharing consent categories.\n                        allowsSale = draft\n                        isOpen = false\n                    }\n                }\n            }\n        }\n        .presentationDetents([.medium, .large])\n    }\n}"
+    }
+  ],
+  "webEquivalent": "PrivacyChoicesLink",
+  "dependsOn": [
+    "sheet",
+    "switch",
+    "link"
+  ]
+}

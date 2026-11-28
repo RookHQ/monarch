@@ -2,19 +2,21 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { KeyCreatedDialog } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './key-created-dialog.fixture.json';
 
 function CreateKey() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   return (
     <>
       <Button variant="primary" onClick={() => setOpen(true)}>
-        Create key
+        {fixture.data.trigger}
       </Button>
       <KeyCreatedDialog
         open={open}
         onOpenChange={setOpen}
-        name="Reporting job"
-        secret="sk_live_4f9a1c7e2b8d6035"
+        name={fixture.data.name}
+        secret={fixture.data.secret}
       />
     </>
   );
@@ -190,7 +192,7 @@ export default {
     },
     examples: {
       items: [
-        { title: 'New API key', render: () => <CreateKey /> },
+        { title: 'New API key', stage: { align: 'center' }, render: () => <CreateKey /> },
         { title: 'Rotated, masked secret with a note', render: () => <RotateSecret /> },
         { title: 'Publishable key (no acknowledgement)', render: () => <PublicKey /> },
       ],

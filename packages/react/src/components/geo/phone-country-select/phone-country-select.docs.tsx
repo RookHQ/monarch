@@ -9,19 +9,25 @@ import {
   matchPhoneCountry,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './phone-country-select.fixture.json';
 
 function PhoneNumberDemo() {
-  const [country, setCountry] = useState<string | null>('GB');
-  const [number, setNumber] = useState('');
+  const [country, setCountry] = useState<string | null>(fixture.data.country);
+  const [number, setNumber] = useState<string>(fixture.data.number);
   const dial = country ? getPhoneCountry(country)?.dialCode : undefined;
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, width: '100%', maxWidth: 420 }}>
       <Field style={{ flex: '1 1 11rem' }}>
-        <FieldLabel>Country code</FieldLabel>
-        <PhoneCountrySelect value={country} onValueChange={setCountry} preferred={['GB', 'US']} />
+        <FieldLabel>{fixture.data.countryLabel}</FieldLabel>
+        <PhoneCountrySelect
+          value={country}
+          onValueChange={setCountry}
+          preferred={fixture.data.preferred}
+        />
       </Field>
       <Field style={{ flex: '1 1 11rem' }}>
-        <FieldLabel>Phone number</FieldLabel>
+        <FieldLabel>{fixture.data.phoneLabel}</FieldLabel>
         <Input
           type="tel"
           inputMode="tel"
@@ -30,7 +36,7 @@ function PhoneNumberDemo() {
           onChange={(e) => setNumber(e.target.value)}
         />
         <FieldDescription>
-          Saved as {dial ?? '—'} {number || '…'}
+          {fixture.data.savedAs} {dial ?? '—'} {number || fixture.data.numberPlaceholder}
         </FieldDescription>
       </Field>
     </div>

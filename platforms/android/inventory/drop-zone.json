@@ -1,0 +1,82 @@
+{
+  "id": "drop-zone",
+  "name": null,
+  "title": "DropZone",
+  "family": "files",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "androidx.compose.foundation.draganddrop.dragAndDropTarget with androidx.compose.ui.draganddrop.DragAndDropTarget, beside MonarchFileUpload (androidx.activity.result.contract.ActivityResultContracts.OpenMultipleDocuments) as the main path",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Compose's drop target on an existing region, such as a file list or a conversation, so files dragged from another app can be dropped where they belong, with MonarchFileUpload's picker button as the path that works everywhere. Monarch ships no type.",
+  "whenToUse": "On tablets, foldables and desktop windows, where people drag files between apps in split screen, add Modifier.dragAndDropTarget to the region the files belong to, and keep MonarchFileUpload in it for everyone else.",
+  "whenNotToUse": "Never as the only way to add files: on a phone, with TalkBack, Switch Access or a keyboard, the picker button is the way in. For one image or video use MonarchMediaUpload.",
+  "api": [
+    "fun Modifier.dragAndDropTarget(shouldStartDragAndDrop: (startEvent: DragAndDropEvent) -> Boolean, target: DragAndDropTarget): Modifier",
+    "interface DragAndDropTarget { fun onDrop(event: DragAndDropEvent): Boolean; fun onStarted(event: DragAndDropEvent) {}; fun onEntered(event: DragAndDropEvent) {}; fun onMoved(event: DragAndDropEvent) {}; fun onExited(event: DragAndDropEvent) {}; fun onChanged(event: DragAndDropEvent) {}; fun onEnded(event: DragAndDropEvent) {} }",
+    "fun DragAndDropEvent.mimeTypes(): Set<String>",
+    "fun DragAndDropEvent.toAndroidDragEvent(): android.view.DragEvent",
+    "fun Activity.requestDragAndDropPermissions(event: DragEvent): DragAndDropPermissions?",
+    "@Composable fun MonarchFileUpload(onFiles: (accepted: List<MonarchPickedFile>, rejected: List<MonarchFileRejection>) -> Unit, modifier: Modifier = Modifier, …)",
+    "fun MonarchPickedFile.Companion.of(resolver: ContentResolver, uri: Uri): MonarchPickedFile"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "idle",
+      "description": "The region looks as it always does; the MonarchFileUpload button in it is the visible way in."
+    },
+    {
+      "name": "targeted",
+      "description": "Between onEntered and onExited or onEnded, draw the region in the accent subtle fill with the accent border, and say so in text (\"Release to add the images\")."
+    },
+    {
+      "name": "refused",
+      "description": "shouldStartDragAndDrop returns false for types the region does not take, so the system shows that the drop is not accepted; checks of size and count after the drop are the app's, shown in a danger MonarchInlineNotice."
+    },
+    {
+      "name": "full or disabled",
+      "description": "Return false from shouldStartDragAndDrop and disable MonarchFileUpload with enabled = false."
+    }
+  ],
+  "appearance": "The system draws the dragged shadow. The region's targeted state uses the accent subtle and accent border roles from MonarchTheme, and the idle state the region's own colors, in light, dark and both high-contrast themes.",
+  "platformNotes": "The web DropZone listens to a region or the whole window, shows an overlay while files are dragged and refuses a wrong type before the drop. On Android the Compose drop target does this for the region it is on, and a whole-screen zone is the modifier on the screen's root. The dragged MIME types are known when the drag starts, so a wrong type is refused then; sizes are known only after the drop, through MonarchPickedFile.of. Dropped content URIs from another app need Activity.requestDragAndDropPermissions before they are read. MonarchFileUpload's checks are internal, so after a drop the app checks size and count itself; a public validate function, like iOS's MonarchFileUpload.validate, is requested. Dragging files between apps is a tablet, foldable and desktop interaction; the picker is the main path on phones. iOS uses dropDestination with the same rules.",
+  "accessibility": [
+    "Dragging is an extra: MonarchFileUpload's button is a standard button with a 48dp target, and is how TalkBack, Switch Access and keyboard users add files.",
+    "The targeted state is a fill and a border plus a line of text, so nothing relies on color alone.",
+    "After a drop, update a polite live region with the number of files added and refused, because focus does not move."
+  ],
+  "edgeCases": [
+    "Drops from the same app carry no permission request; drops from other apps need requestDragAndDropPermissions, and the permission ends with the activity.",
+    "ClipData items can be text or intents instead of URIs; count only items with a uri.",
+    "onEnded runs after every drag, also one that was dropped elsewhere; reset the targeted state there.",
+    "A phone in single-window mode never receives a drag from another app."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "A file list that accepts drops",
+      "fixture": "drop-zone",
+      "webExample": "A file list that accepts drops",
+      "template": "Column(\n    modifier = Modifier\n        .fillMaxWidth()\n        .dragAndDropTarget(\n            shouldStartDragAndDrop = { event -> event.mimeTypes().any { type -> accept.any { pattern -> type == pattern || (pattern.endsWith(\"/*\") && type.startsWith(pattern.dropLast(1))) } } },\n            target = target,\n        )\n        .background(if (targeted) MonarchTheme.colors.accentSubtle else Color.Transparent, MonarchTheme.shapes.md),\n    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n) {\n    MonarchFileUpload(\n        onFiles = { accepted, _ ->\n            items = items + accepted.map { MonarchFileListItem(id = it.uri.toString(), name = it.name, sizeBytes = it.size) }\n        },\n        variant = MonarchFileUploadVariant.Compact,\n        accept = accept,\n        maxSize = {{maxSize}},\n        hint = {{hint}},\n        labels = MonarchFileUploadLabels(browse = {{browse}}),\n    )\n    MonarchFileList(items = items, modifier = Modifier.height(96.dp), label = {{listLabel}})\n}",
+      "setupTemplate": "val accept = listOf({{accept.0}}, {{accept.1}})\nvar targeted by remember { mutableStateOf(false) }\nvar items by remember {\n    mutableStateOf(\n        listOf(\n            MonarchFileListItem(id = {{files.0.id}}, name = {{files.0.name}}, sizeBytes = {{files.0.size}}),\n        ),\n    )\n}\nval target = remember {\n    object : DragAndDropTarget {\n        override fun onEntered(event: DragAndDropEvent) { targeted = true }\n        override fun onExited(event: DragAndDropEvent) { targeted = false }\n        override fun onEnded(event: DragAndDropEvent) { targeted = false }\n        override fun onDrop(event: DragAndDropEvent): Boolean {\n            // The app requests permissions and reads each uri with MonarchPickedFile.of here, then adds it to items.\n            return true\n        }\n    }\n}",
+      "imports": [
+        "androidx.compose.foundation.draganddrop.dragAndDropTarget",
+        "androidx.compose.ui.draganddrop.DragAndDropEvent",
+        "androidx.compose.ui.draganddrop.DragAndDropTarget",
+        "androidx.compose.ui.draganddrop.mimeTypes"
+      ],
+      "setup": "val accept = listOf(\"image/*\", \"application/pdf\")\nvar targeted by remember { mutableStateOf(false) }\nvar items by remember {\n    mutableStateOf(\n        listOf(\n            MonarchFileListItem(id = \"seed-1\", name = \"team-charter.pdf\", sizeBytes = 420_000),\n        ),\n    )\n}\nval target = remember {\n    object : DragAndDropTarget {\n        override fun onEntered(event: DragAndDropEvent) { targeted = true }\n        override fun onExited(event: DragAndDropEvent) { targeted = false }\n        override fun onEnded(event: DragAndDropEvent) { targeted = false }\n        override fun onDrop(event: DragAndDropEvent): Boolean {\n            // The app requests permissions and reads each uri with MonarchPickedFile.of here, then adds it to items.\n            return true\n        }\n    }\n}",
+      "code": "Column(\n    modifier = Modifier\n        .fillMaxWidth()\n        .dragAndDropTarget(\n            shouldStartDragAndDrop = { event -> event.mimeTypes().any { type -> accept.any { pattern -> type == pattern || (pattern.endsWith(\"/*\") && type.startsWith(pattern.dropLast(1))) } } },\n            target = target,\n        )\n        .background(if (targeted) MonarchTheme.colors.accentSubtle else Color.Transparent, MonarchTheme.shapes.md),\n    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n) {\n    MonarchFileUpload(\n        onFiles = { accepted, _ ->\n            items = items + accepted.map { MonarchFileListItem(id = it.uri.toString(), name = it.name, sizeBytes = it.size) }\n        },\n        variant = MonarchFileUploadVariant.Compact,\n        accept = accept,\n        maxSize = 10_485_760,\n        hint = \"Images or PDF, up to 10 MB. Or drop files on the list.\",\n        labels = MonarchFileUploadLabels(browse = \"Upload files\"),\n    )\n    MonarchFileList(items = items, modifier = Modifier.height(96.dp), label = \"Shared files\")\n}"
+    }
+  ],
+  "webEquivalent": "DropZone",
+  "dependsOn": [
+    "file-upload"
+  ]
+}

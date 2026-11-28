@@ -1,5 +1,22 @@
+import { useState } from 'react';
 import { ShareButton, emailShareTarget } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './share-button.fixture.json';
+
+function ShareReport() {
+  const [open, setOpen] = useState(true);
+  return (
+    <ShareButton
+      url={fixture.data.url}
+      title={fixture.data.title}
+      messages={{ label: fixture.data.label }}
+      targets={[emailShareTarget()]}
+      open={open}
+      onOpenChange={setOpen}
+    />
+  );
+}
 
 export default {
   id: 'share-button',
@@ -113,9 +130,8 @@ export default {
       items: [
         {
           title: 'Share sheet with panel fallback',
-          render: () => (
-            <ShareButton url="https://example.com/reports/q3" title="Quarterly report" />
-          ),
+          stage: true,
+          render: () => <ShareReport />,
         },
         {
           title: 'Always the panel, with email',

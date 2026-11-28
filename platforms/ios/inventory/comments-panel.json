@@ -1,0 +1,170 @@
+{
+  "id": "comments-panel",
+  "name": "MonarchCommentsPanel",
+  "title": "CommentsPanel",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Content for a NavigationStack in a .sheet or .inspector: Picker with .pickerStyle(.segmented) for Open and Resolved, a List with .listStyle(.plain) of thread rows (Button with MonarchAvatar), .navigationDestination(item:) that pushes the selected thread as a MonarchCommentThread in a ScrollView, .navigationTitle and a .cancellationAction toolbar Close button",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Every comment thread of a document or record: Open and Resolved threads in a list, and one thread at a time pushed as a screen with its quote, replies, Resolve or Reopen and confirmed delete.",
+  "whenToUse": "Beside a document or record that people discuss in threads anchored to passages: the comments sheet of a document editor on a phone, or the comments inspector beside it on iPad. Selecting a thread lets the app highlight its passage.",
+  "whenNotToUse": "For one thread shown in place next to its passage, use MonarchCommentThread. For a chat conversation, use MonarchVirtualMessageList with MonarchMessageRow. For replies to one chat message, use MonarchThreadPanel.",
+  "api": [
+    "init(_ threads: [MonarchCommentsPanelThread]?, filter: Binding<MonarchCommentsPanelFilter>, selectedThreadID: Binding<String?>, errorMessage: String? = nil, now: Date? = nil, labels: MonarchCommentsPanelLabels = MonarchCommentsPanelLabels(), onRetry: (@MainActor () -> Void)? = nil, onClose: (@MainActor () -> Void)? = nil, onReply: (@MainActor (String, String) async throws -> Void)? = nil, onResolvedChange: (@MainActor (String, Bool) async throws -> Void)? = nil, onDeleteComment: (@MainActor (String, String) async throws -> Void)? = nil)",
+    "struct MonarchCommentsPanelThread: Identifiable, Sendable, Hashable { init(id: String, comments: [MonarchCommentThreadComment], quote: String? = nil, updatedAt: Date? = nil, isResolved: Bool = false, canResolve: Bool = true, canReply: Bool = true) }",
+    "enum MonarchCommentsPanelFilter: String, Sendable, Hashable, CaseIterable { case open, resolved }",
+    "struct MonarchCommentsPanelLabels: Sendable { init(title:close:filter:open:resolved:loading:emptyOpen:emptyResolved:emptyHint:commentCount:thread:), every parameter optional; thread: MonarchCommentThreadLabels }"
+  ],
+  "options": [
+    {
+      "name": "threads",
+      "type": "[MonarchCommentsPanelThread]?",
+      "default": "required",
+      "description": "The threads, or nil while they load, listed in this order. Each has an id, its comments (MonarchCommentThreadComment, oldest first), an optional quote and updatedAt, isResolved, canResolve and canReply."
+    },
+    {
+      "name": "filter",
+      "type": "Binding<MonarchCommentsPanelFilter>",
+      "default": "required",
+      "description": "Open or Resolved: which threads are listed. Changing it closes the open thread."
+    },
+    {
+      "name": "selectedThreadID",
+      "type": "Binding<String?>",
+      "default": "required",
+      "description": "The thread pushed in full, or nil for the list. The panel sets it when a row is selected, and to nil after the back button, the back swipe, a filter change or a successful resolve. A thread not listed under the current filter shows the list."
+    },
+    {
+      "name": "errorMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Loading failed: shown instead of the list."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "Fixes now for the relative times. Without it the times follow the clock and refresh every minute."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchCommentsPanelLabels",
+      "default": "MonarchCommentsPanelLabels()",
+      "description": "Replacements for every built-in string, including the open thread's (MonarchCommentThreadLabels)."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds Try again to errorMessage, with MonarchInlineErrorRetry."
+    },
+    {
+      "name": "onClose",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds a Close button in the cancellation position of the toolbar, on the list and on the open thread."
+    },
+    {
+      "name": "onReply",
+      "type": "(@MainActor (String, String) async throws -> Void)?",
+      "default": "nil",
+      "description": "Posts a reply, given the thread id and the trimmed text. Shows the reply field on open threads with canReply. Throw to keep the text and show a failure."
+    },
+    {
+      "name": "onResolvedChange",
+      "type": "(@MainActor (String, Bool) async throws -> Void)?",
+      "default": "nil",
+      "description": "Resolves (true) or reopens a thread. Shows Resolve or Reopen on threads with canResolve. On success the panel returns to the list; throw to show a failure."
+    },
+    {
+      "name": "onDeleteComment",
+      "type": "(@MainActor (String, String) async throws -> Void)?",
+      "default": "nil",
+      "description": "Deletes a comment, given the thread id and the comment id, after a system confirmation dialog. Offered in the context menu of comments with canDelete."
+    }
+  ],
+  "states": [
+    {
+      "name": "list",
+      "description": "The segmented Open and Resolved picker and one row per thread: the starter's avatar and name, the quote cut after two lines, and the number of comments with the last activity."
+    },
+    {
+      "name": "thread",
+      "description": "The selected thread is pushed with the comment count as its inline title: a MonarchCommentThread with the quote, comments, Resolve or Reopen and the reply field. The back button and the back swipe return to the list."
+    },
+    {
+      "name": "loading",
+      "description": "threads is nil: a MonarchLoadingState with three rows, read as Loading comments."
+    },
+    {
+      "name": "error",
+      "description": "errorMessage is set: a MonarchInlineErrorRetry with Try again, or the message in the strong danger role without onRetry."
+    },
+    {
+      "name": "empty",
+      "description": "No thread under the filter: a small MonarchEmptyState, No open comments with the hint Select text to start a discussion., or No resolved comments."
+    },
+    {
+      "name": "resolved",
+      "description": "After a thread is resolved or reopened the panel returns to the list; MonarchCommentThread announces Thread resolved or Thread reopened."
+    }
+  ],
+  "appearance": "No fill of its own, so it takes the sheet's or inspector's surface. The starter's name uses the default text role, the quote and the count line the muted text role, and the segmented picker and the navigation bar are the system controls in the theme's tint. The same roles adapt to dark and both high-contrast themes.",
+  "platformNotes": "The web's CommentsPanel is a side panel that swaps the list for the thread in place, with an All comments back button, and keeps its filter and selection itself when uncontrolled. On iOS the thread is pushed onto the NavigationStack the panel sits in, so the system back button (titled with the previous screen) and the back swipe return to the list; there is no All comments label. Filter and selection are Bindings, as SwiftUI state is. The web's icon delete button on each comment is the comment's context menu here (MonarchCommentThread). The web's Show group name is the segmented Picker's hidden label. The web's Enter to send hint is left out: a hardware keyboard's Return sends and the on-screen keyboard's Return adds a line. Android swaps the views in place under a BackHandler and has emptyIcon and backIcon slots because it bundles no icons; iOS uses SF Symbols and the system back button. Android announces the resolved notice from the panel; on iOS MonarchCommentThread announces it once. Status experimental: it is a product composite until a Rook app adopts it.",
+  "accessibility": [
+    "The navigation title, Comments, is the screen's heading; the open thread's title is its comment count.",
+    "Open and Resolved are a segmented Picker with the system selected state.",
+    "Each thread row is one button read as the starter, the quote, the number of comments and the last activity; the avatar is decorative.",
+    "The back button and the back swipe return from a thread to the list; the system restores focus.",
+    "Loading is one element read as Loading comments; resolving, reopening, replies and failures are announced by MonarchCommentThread.",
+    "Rows, Close and Try again have touch targets of at least 44 points."
+  ],
+  "edgeCases": [
+    "A selectedThreadID that is not listed under the current filter shows the list, so a thread resolved by someone else does not stay open.",
+    "Switching the filter closes the open thread.",
+    "A thread without comments has no name or avatar in its row and reads 0 comments.",
+    "A long quote is cut after two lines in the list and shown in full in the thread.",
+    "Each thread starts with an empty reply field; the draft is not kept across threads.",
+    "Without now, the relative times refresh every minute while on screen.",
+    "The panel needs an enclosing NavigationStack for its title, its toolbar and pushing a thread."
+  ],
+  "tests": [
+    "MonarchCommentsPanelTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Comments beside a document",
+      "fixture": "comments-panel",
+      "webExample": "Comments beside a document",
+      "template": "NavigationStack {\n    MonarchCommentsPanel(\n        threads,\n        filter: $filter,\n        selectedThreadID: $selectedThreadID,\n        now: {{now|date}},\n        onClose: {},\n        onReply: { id, text in\n            guard let index = threads.firstIndex(where: { $0.id == id }) else { return }\n            let thread = threads[index]\n            let reply = MonarchCommentThreadComment(id: UUID().uuidString, author: \"You\", body: text, createdAt: .now, canDelete: true)\n            threads[index] = MonarchCommentsPanelThread(id: id, comments: thread.comments + [reply], quote: thread.quote, isResolved: thread.isResolved)\n        },\n        onResolvedChange: { id, isResolved in\n            guard let index = threads.firstIndex(where: { $0.id == id }) else { return }\n            let thread = threads[index]\n            threads[index] = MonarchCommentsPanelThread(\n                id: id,\n                comments: thread.comments,\n                quote: thread.quote,\n                isResolved: isResolved\n            )\n        },\n        onDeleteComment: { id, commentID in\n            guard let index = threads.firstIndex(where: { $0.id == id }) else { return }\n            let thread = threads[index]\n            threads[index] = MonarchCommentsPanelThread(\n                id: id,\n                comments: thread.comments.filter { $0.id != commentID },\n                quote: thread.quote,\n                isResolved: thread.isResolved\n            )\n        }\n    )\n}\n.frame(height: 480)",
+      "setupTemplate": "@State private var filter = MonarchCommentsPanelFilter.open\n@State private var selectedThreadID: String?\n@State private var threads = [\n    MonarchCommentsPanelThread(\n        id: {{threads.0.id}},\n        comments: [\n            MonarchCommentThreadComment(\n                id: {{threads.0.comments.0.id}},\n                author: {{threads.0.comments.0.author}},\n                body: {{threads.0.comments.0.body}},\n                createdAt: {{threads.0.comments.0.createdAt|date}}\n            ),\n            MonarchCommentThreadComment(\n                id: {{threads.0.comments.1.id}},\n                author: {{threads.0.comments.1.author}},\n                body: {{threads.0.comments.1.body}},\n                createdAt: {{threads.0.comments.1.createdAt|date}},\n                canDelete: {{threads.0.comments.1.canDelete}}\n            ),\n        ],\n        quote: {{threads.0.quote}}\n    ),\n    MonarchCommentsPanelThread(\n        id: {{threads.1.id}},\n        comments: [\n            MonarchCommentThreadComment(\n                id: {{threads.1.comments.0.id}},\n                author: {{threads.1.comments.0.author}},\n                body: {{threads.1.comments.0.body}},\n                createdAt: {{threads.1.comments.0.createdAt|date}},\n                canDelete: {{threads.1.comments.0.canDelete}}\n            ),\n        ],\n        quote: {{threads.1.quote}}\n    ),\n    MonarchCommentsPanelThread(\n        id: {{threads.2.id}},\n        comments: [\n            MonarchCommentThreadComment(\n                id: {{threads.2.comments.0.id}},\n                author: {{threads.2.comments.0.author}},\n                body: {{threads.2.comments.0.body}},\n                createdAt: {{threads.2.comments.0.createdAt|date}}\n            ),\n        ],\n        quote: {{threads.2.quote}},\n        isResolved: {{threads.2.resolved}}\n    ),\n]",
+      "setup": "@State private var filter = MonarchCommentsPanelFilter.open\n@State private var selectedThreadID: String?\n@State private var threads = [\n    MonarchCommentsPanelThread(\n        id: \"t1\",\n        comments: [\n            MonarchCommentThreadComment(\n                id: \"c1\",\n                author: \"Ana Ruiz\",\n                body: \"Can we confirm the date with the support team first?\",\n                createdAt: Date(timeIntervalSince1970: 1_773_135_000)\n            ),\n            MonarchCommentThreadComment(\n                id: \"c2\",\n                author: \"Ben Okafor\",\n                body: \"Confirmed. They are ready from the Monday.\",\n                createdAt: Date(timeIntervalSince1970: 1_773_141_000),\n                canDelete: true\n            ),\n        ],\n        quote: \"The rollout starts in the second week of the quarter.\"\n    ),\n    MonarchCommentsPanelThread(\n        id: \"t2\",\n        comments: [\n            MonarchCommentThreadComment(\n                id: \"c3\",\n                author: \"Chen Li\",\n                body: \"The totals row is missing the last line item.\",\n                createdAt: Date(timeIntervalSince1970: 1_773_068_400),\n                canDelete: true\n            ),\n        ],\n        quote: \"Budget summary table\"\n    ),\n    MonarchCommentsPanelThread(\n        id: \"t3\",\n        comments: [\n            MonarchCommentThreadComment(\n                id: \"c4\",\n                author: \"Dana Novak\",\n                body: \"Added the missing terms.\",\n                createdAt: Date(timeIntervalSince1970: 1_772_964_000)\n            ),\n        ],\n        quote: \"Glossary\",\n        isResolved: true\n    ),\n]",
+      "code": "NavigationStack {\n    MonarchCommentsPanel(\n        threads,\n        filter: $filter,\n        selectedThreadID: $selectedThreadID,\n        now: Date(timeIntervalSince1970: 1_773_144_000),\n        onClose: {},\n        onReply: { id, text in\n            guard let index = threads.firstIndex(where: { $0.id == id }) else { return }\n            let thread = threads[index]\n            let reply = MonarchCommentThreadComment(id: UUID().uuidString, author: \"You\", body: text, createdAt: .now, canDelete: true)\n            threads[index] = MonarchCommentsPanelThread(id: id, comments: thread.comments + [reply], quote: thread.quote, isResolved: thread.isResolved)\n        },\n        onResolvedChange: { id, isResolved in\n            guard let index = threads.firstIndex(where: { $0.id == id }) else { return }\n            let thread = threads[index]\n            threads[index] = MonarchCommentsPanelThread(\n                id: id,\n                comments: thread.comments,\n                quote: thread.quote,\n                isResolved: isResolved\n            )\n        },\n        onDeleteComment: { id, commentID in\n            guard let index = threads.firstIndex(where: { $0.id == id }) else { return }\n            let thread = threads[index]\n            threads[index] = MonarchCommentsPanelThread(\n                id: id,\n                comments: thread.comments.filter { $0.id != commentID },\n                quote: thread.quote,\n                isResolved: thread.isResolved\n            )\n        }\n    )\n}\n.frame(height: 480)"
+    },
+    {
+      "title": "In a sheet, while loading",
+      "setup": "@State private var isOpen = true\n@State private var filter = MonarchCommentsPanelFilter.open\n@State private var selectedThreadID: String?",
+      "code": "MonarchButton(\"Comments\", systemImage: \"text.bubble\") { isOpen = true }\n    .sheet(isPresented: $isOpen) {\n        NavigationStack {\n            MonarchCommentsPanel(\n                nil,\n                filter: $filter,\n                selectedThreadID: $selectedThreadID,\n                onClose: { isOpen = false }\n            )\n        }\n        .presentationDetents([.medium, .large])\n    }"
+    }
+  ],
+  "webEquivalent": "CommentsPanel",
+  "dependsOn": [
+    "comment-thread",
+    "sheet",
+    "tabs",
+    "empty-state",
+    "segmented-control",
+    "loading-state",
+    "inline-error-retry",
+    "avatar"
+  ],
+  "icons": {
+    "close": "CloseGlyph"
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "id": "settings-section",
+  "name": null,
+  "title": "SettingsSection",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchSectionCard with androidx.compose.foundation.layout.FlowRow in its footer; rows are MonarchSwitchRow, MonarchFormField with the Row layout and MonarchListRow",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a titled group of settings in a card, with a save footer that appears while there are unsaved changes, a danger zone, and loading and no-access states.",
+  "whenToUse": "For each group of an app's settings screen, such as a workspace's general settings or its danger zone.",
+  "whenNotToUse": "For switches that save one by one, use MonarchSwitchSettingsList. For a bar of Save and Discard pinned to the bottom of a long form, use MonarchFormActionsBar.",
+  "api": [
+    "MonarchSectionCard(title = \"Workspace\", description = …, busy = saving, footer = { … Discard and Save changes … }) { rows }",
+    "MonarchSwitchRow(checked = digest, onCheckedChange = …, label = \"Weekly digest\", description = …)",
+    "MonarchFormField(label = \"Language\", layout = MonarchFormFieldLayout.Row) { controlModifier -> MonarchSelect(…, modifier = controlModifier) }",
+    "MonarchSectionCard(title = \"Danger zone\", tone = MonarchTone.Danger) { MonarchListRow(headlineContent = …, supportingContent = …, trailingContent = { MonarchButton(…, variant = MonarchButtonVariant.Danger) }) }",
+    "MonarchSectionCard(title = …, state = MonarchSectionCardState.Loading, labels = MonarchSectionCardLabels(loading = \"Loading settings\")) {}",
+    "MonarchSectionCard(title = …, state = MonarchSectionCardState.Empty, emptyMessage = …, labels = MonarchSectionCardLabels(emptyTitle = \"You don’t have access to these settings\")) {}"
+  ],
+  "options": [
+    {
+      "name": "dirty",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The draft differs from the saved settings: the footer says so in a polite live region and enables Discard and Save changes."
+    },
+    {
+      "name": "saving",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Passed to Save changes' loading and to the card's busy; Discard is disabled meanwhile."
+    },
+    {
+      "name": "tone",
+      "type": "MonarchTone",
+      "default": "MonarchTone.Neutral",
+      "description": "MonarchTone.Danger on the card for a danger zone: a danger border, spoken with the title."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The title, the description and the rows; no footer actions are enabled while nothing has changed."
+    },
+    {
+      "name": "dirty",
+      "description": "\"You have unsaved changes.\" in the footer, announced politely, with Discard and Save changes enabled."
+    },
+    {
+      "name": "saving",
+      "description": "Save changes shows its progress indicator, the title reads busy and Discard is disabled."
+    },
+    {
+      "name": "loading",
+      "description": "MonarchSectionCardState.Loading: skeleton rows announced as \"Loading settings\"."
+    },
+    {
+      "name": "no access",
+      "description": "MonarchSectionCardState.Empty with the no-access title and who can change the settings, in place of the rows and the footer."
+    },
+    {
+      "name": "danger zone",
+      "description": "A card with the danger tone and MonarchListRow rows whose action is a danger button that opens a confirmation."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch or Material 3 component: the section card's surface, border and header, switch and form-field rows, Material 3 list items on the surface color, and small secondary and primary buttons in a footer under a line. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The parity map named a MonarchSettingsSection type; following the native-first rule it is a recipe, because MonarchSectionCard already gives the titled card, its loading and empty states, the busy state, a danger tone and a footer slot, and the rows are existing Monarch rows and the MonarchListRow. The web's SettingsRow is MonarchFormField with the Row layout (or MonarchSwitchRow for a switch), and its SettingsActionRow is a MonarchListRow with a trailing button. The web's stickyFooter is MonarchFormActionsBar, the Android bottom bar for Save and Discard; the web's no-access notice is the card's empty state. iOS plans a MonarchSettingsSectionStyle for its Form sections and has not shipped it yet.",
+  "accessibility": [
+    "The title is a heading and the danger tone is spoken with it, from MonarchSectionCard.",
+    "Switch rows are one TalkBack element with the switch role; form-field rows name their control by the label.",
+    "The unsaved-changes line is a polite live region, so it is announced when it appears.",
+    "Discard and Save changes are MonarchButtons with 48dp targets; Save changes reads \"Loading\" while saving.",
+    "The footer wraps onto more lines at large font sizes."
+  ],
+  "edgeCases": [
+    "Keep Save changes enabled only while dirty; Discard restores the saved values the app keeps.",
+    "When a save fails, keep the draft and show the error with MonarchInlineNotice in the card.",
+    "For a long settings screen with several sections, prefer one MonarchFormActionsBar for the whole screen over a footer per section."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Profile settings",
+      "fixture": "settings-section",
+      "webExample": "Profile settings",
+      "template": "MonarchSectionCard(\n    title = {{title}},\n    description = {{description}},\n    footer = {\n        Spacer(Modifier.weight(1f))\n        MonarchButton(text = {{action}}, onClick = {}, variant = MonarchButtonVariant.Primary)\n    },\n) {\n    MonarchTextField(\n        value = displayName,\n        onValueChange = { displayName = it },\n        label = {{rows.0.label}},\n        helperText = {{rows.0.description}},\n        required = {{rows.0.required}},\n    )\n    MonarchSwitchRow(\n        checked = showsStatus,\n        onCheckedChange = { showsStatus = it },\n        label = {{rows.1.label}},\n    )\n}",
+      "setupTemplate": "var displayName by rememberSaveable { mutableStateOf({{rows.0.value}}) }\nvar showsStatus by rememberSaveable { mutableStateOf({{rows.1.on}}) }",
+      "setup": "var displayName by rememberSaveable { mutableStateOf(\"Ada Lovelace\") }\nvar showsStatus by rememberSaveable { mutableStateOf(true) }",
+      "code": "MonarchSectionCard(\n    title = \"Profile\",\n    description = \"How you appear to your teammates.\",\n    footer = {\n        Spacer(Modifier.weight(1f))\n        MonarchButton(text = \"Save\", onClick = {}, variant = MonarchButtonVariant.Primary)\n    },\n) {\n    MonarchTextField(\n        value = displayName,\n        onValueChange = { displayName = it },\n        label = \"Display name\",\n        helperText = \"Shown on comments and assignments.\",\n        required = true,\n    )\n    MonarchSwitchRow(\n        checked = showsStatus,\n        onCheckedChange = { showsStatus = it },\n        label = \"Show my status\",\n    )\n}"
+    },
+    {
+      "title": "Danger zone",
+      "code": "MonarchSectionCard(title = \"Danger zone\", tone = MonarchTone.Danger) {\n    MonarchListRow(\n        headlineContent = { Text(\"Delete workspace\") },\n        supportingContent = { Text(\"Removes every project and file. This cannot be undone.\") },\n        trailingContent = {\n            MonarchButton(\n                text = \"Delete\",\n                onClick = { /* Open a confirmation. */ },\n                variant = MonarchButtonVariant.Danger,\n                size = MonarchButtonSize.Sm,\n            )\n        },\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.ui.Alignment"
+      ]
+    },
+    {
+      "title": "Loading and no access",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    MonarchSectionCard(\n        title = \"Billing\",\n        state = MonarchSectionCardState.Loading,\n        labels = MonarchSectionCardLabels(loading = \"Loading settings\"),\n    ) {}\n    MonarchSectionCard(\n        title = \"Billing\",\n        state = MonarchSectionCardState.Empty,\n        emptyMessage = \"Ask a workspace owner to change billing.\",\n        labels = MonarchSectionCardLabels(emptyTitle = \"You don’t have access to these settings\"),\n    ) {}\n}",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.ui.Alignment"
+      ]
+    }
+  ],
+  "webEquivalent": "SettingsSection",
+  "dependsOn": [
+    "section-card",
+    "switch",
+    "button",
+    "skeleton",
+    "form-field",
+    "select"
+  ]
+}

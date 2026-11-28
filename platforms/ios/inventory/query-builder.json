@@ -1,0 +1,165 @@
+{
+  "id": "query-builder",
+  "name": "MonarchQueryBuilder",
+  "title": "QueryBuilder",
+  "family": "search",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Nested VStack groups, each with a segmented Picker for AND / OR; rules stacked vertically with Picker(.menu) for the field and the operator, and a TextField, DatePicker or Picker(.menu) for the value; Buttons with buttonStyle(.monarch()) to add and remove",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Builds a filter query from AND and OR groups of field, operator and value rules, nested up to a set depth, with validation and a matcher for previews.",
+  "whenToUse": "For advanced search or segment definitions where people combine conditions with AND and OR, such as \"status is open AND (amount is at least 500 OR flagged)\".",
+  "whenNotToUse": "For filters that simply combine with AND, use MonarchFacetedFilterPanel; for a few fixed filters, a Menu with a Picker; for a free-text search, .searchable.",
+  "api": [
+    "MonarchQueryBuilder.init(query: Binding<MonarchQueryGroup>, fields: [MonarchConditionField], maxDepth: Int = 3, maxRulesPerGroup: Int = 20, showsErrors: Bool = false, labels: MonarchQueryBuilderLabels = MonarchQueryBuilderLabels(), makeID: @escaping @MainActor () -> String = { UUID().uuidString })",
+    "MonarchQueryGroup.init(id: String, combinator: MonarchQueryCombinator = .and, rules: [MonarchCondition] = [], groups: [MonarchQueryGroup] = [])",
+    "var MonarchQueryGroup.allRules: [MonarchCondition]",
+    "func MonarchQueryGroup.problems(fields: [MonarchConditionField]) -> [String: MonarchConditionProblem]",
+    "func MonarchQueryGroup.matches(_ values: [String: MonarchConditionValue], calendar: Calendar = .current) -> Bool",
+    "MonarchCondition.init(id: String, field: String, operator: MonarchConditionOperator, value: MonarchConditionValue = .none)",
+    "MonarchCondition.init(id: String, field: MonarchConditionField?)",
+    "func MonarchCondition.problem(fields: [MonarchConditionField]) -> MonarchConditionProblem?",
+    "func MonarchCondition.matches(_ actual: MonarchConditionValue, calendar: Calendar = .current) -> Bool",
+    "MonarchConditionField.init(id: String, label: String, kind: MonarchConditionFieldType, operators: [MonarchConditionOperator]? = nil, prompt: String? = nil)",
+    "var MonarchConditionField.availableOperators: [MonarchConditionOperator]",
+    "func MonarchConditionField.blankValue(for queryOperator: MonarchConditionOperator) -> MonarchConditionValue",
+    "enum MonarchConditionFieldType { case text, number, date, boolean, select([MonarchComboboxOption]) }",
+    "enum MonarchQueryCombinator: String { case and, or }",
+    "enum MonarchConditionOperator: String { case equals, notEquals, contains, notContains, greaterThan, atLeast, lessThan, atMost, before, after, isTrue, isFalse, isEmpty, isNotEmpty; var takesValue: Bool }",
+    "enum MonarchConditionValue { case none, text(String), number(Double?), date(Date?), boolean(Bool), option(String?); var isEmpty: Bool }",
+    "enum MonarchConditionProblem: String { case field, value, option }",
+    "MonarchQueryBuilderLabels.init(label:group:combinatorBefore:and:or:combinatorLabel:ruleTitle:rule:field:operatorLabel:value:removeRule:addRule:addGroup:removeGroup:emptyGroup:maxDepthReached:maxRulesReached:choose:removedField:chooseDate:operatorName:problem:), every parameter optional"
+  ],
+  "options": [
+    {
+      "name": "query",
+      "type": "Binding<MonarchQueryGroup>",
+      "default": "required",
+      "description": "The top group: a combinator, its rules and its nested groups."
+    },
+    {
+      "name": "fields",
+      "type": "[MonarchConditionField]",
+      "default": "required",
+      "description": "The fields a rule can test. The kind (text, number, date, boolean, select) decides the operators and the value input; operators narrows them."
+    },
+    {
+      "name": "maxDepth",
+      "type": "Int",
+      "default": "3",
+      "description": "How many levels of groups are allowed, counting the top group. 1 turns off nested groups."
+    },
+    {
+      "name": "maxRulesPerGroup",
+      "type": "Int",
+      "default": "20",
+      "description": "The most rules in one group; Add rule is replaced by a note at the limit."
+    },
+    {
+      "name": "showsErrors",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows what is missing under each incomplete rule, with a danger border, for example after a save attempt."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchQueryBuilderLabels",
+      "default": "MonarchQueryBuilderLabels()",
+      "description": "Replacements for every built-in string: group names, AND and OR, the spoken names of every control, operator names and problems."
+    },
+    {
+      "name": "makeID",
+      "type": "@MainActor () -> String",
+      "default": "{ UUID().uuidString }",
+      "description": "Makes the id of a new rule or group."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty group",
+      "description": "\"No rules in this group.\" with Add rule and Add group."
+    },
+    {
+      "name": "nested",
+      "description": "A nested group sits inside its parent with a border and a fill that alternates by depth, a header with its name and a remove button."
+    },
+    {
+      "name": "deepest level",
+      "description": "Add group is replaced by \"Groups cannot be nested any deeper.\""
+    },
+    {
+      "name": "full group",
+      "description": "Add rule is replaced by \"A group can have up to 20 rules.\""
+    },
+    {
+      "name": "errors shown",
+      "description": "An incomplete rule has a danger border and a message with an icon: Choose a field, Enter a value, or the chosen value no longer exists."
+    },
+    {
+      "name": "removed field",
+      "description": "A rule whose field is no longer in fields shows \"amount (removed)\" in its field menu."
+    },
+    {
+      "name": "no fields",
+      "description": "Add rule and Add group are disabled."
+    },
+    {
+      "name": "disabled",
+      "description": "disabled(_:) on the builder disables every menu, field and button and uses the disabled text role."
+    }
+  ],
+  "appearance": "Nested groups have a subtle border and alternate the subtle and surface background roles so depth stays visible; rules are surface cards with a subtle border, or the danger strong border when they show a problem. The AND / OR switch and the menus are the system's controls; text uses the default and muted roles. The dark and high-contrast themes swap every role.",
+  "platformNotes": "Each rule is a MonarchConditionRow, the row of MonarchConditionEditor, so the two components look and speak the same. The web QueryBuilder lays each group's rules out as a ConditionEditor row (field, operator and value side by side) and supports multi-select, tags, in and not-in values. On iOS each rule stacks vertically for a phone, field and operator are menu Pickers, and the value is a text field, a number field that parses in the current locale, a DatePicker (after Choose a date), or a menu of choices; in / not in, multi-select and tags are not offered (use several rules joined by OR). The web's number problem is the value problem here, because a number that does not parse is no number. There is no MonarchConditionEditor yet, so the rule row is part of this component. Focus after removing a group or rule is left to the system. Android builds the same component with the same name.",
+  "accessibility": [
+    "The builder is a container named \"Query\"; each group is a container named after it (\"Top group\", \"Group 2.1\") and its visible name has the header trait.",
+    "Each rule is a container named \"Top group, rule 1\"; its field menu, operator menu and value are named \"Top group, rule 1 field\", \"… operator\" and \"… value\".",
+    "The AND / OR switch is a segmented Picker named \"Top group combinator\", so VoiceOver reads the selected choice.",
+    "Remove buttons are icon-only with spoken names (\"Remove top group, rule 1\", \"Remove group 2\").",
+    "A shown problem is text with an icon, and the rule's hint reads it.",
+    "Every control has a touch target of at least 44 points and the text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Changing a rule's field resets its operator to the field's first and empties the value; changing the operator keeps the value when it still fits.",
+    "A stored operator the field does not offer stays at the top of the operator menu so it is not lost.",
+    "A new nested group starts with the opposite combinator of its parent.",
+    "matches(_:calendar:) treats an empty group as matching, compares text without case and dates by day in the given calendar; the server stays the authority.",
+    "A number field keeps what is typed while it is not a number and stores nil until it parses."
+  ],
+  "tests": [
+    "MonarchQueryBuilderTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Nested AND / OR",
+      "fixture": "query-builder",
+      "webExample": "Nested AND / OR",
+      "template": "VStack(alignment: .leading, spacing: 8) {\n    MonarchQueryBuilder(query: $query, fields: fields)\n    Text(\"Sample record (open, amount 120, flagged) \" + (query.matches([\"status\": .option(\"open\"), \"amount\": .number(120), \"flagged\": .boolean(true)]) ? \"matches\" : \"does not match\") + \".\")\n        .monarchTextStyle(.body)\n}",
+      "setupTemplate": "@State private var query = MonarchQueryGroup(\n    id: {{query.id}},\n    combinator: .{{query.combinator|raw}},\n    rules: [\n        MonarchCondition(id: {{query.rules.0.id}}, field: {{query.rules.0.field}}, operator: Self.queryOperator({{query.rules.0.operator}}), value: .option({{query.rules.0.value}})),\n    ],\n    groups: [\n        MonarchQueryGroup(\n            id: {{query.groups.0.id}},\n            combinator: .{{query.groups.0.combinator|raw}},\n            rules: [\n                MonarchCondition(id: {{query.groups.0.rules.0.id}}, field: {{query.groups.0.rules.0.field}}, operator: Self.queryOperator({{query.groups.0.rules.0.operator}}), value: .number({{query.groups.0.rules.0.value}})),\n                MonarchCondition(id: {{query.groups.0.rules.1.id}}, field: {{query.groups.0.rules.1.field}}, operator: Self.queryOperator({{query.groups.0.rules.1.operator}})),\n            ]\n        ),\n    ]\n)\nprivate let fields = [\n    MonarchConditionField(id: {{fields.0.value}}, label: {{fields.0.label}}, kind: .{{fields.0.type|raw}}([\n        MonarchComboboxOption(id: {{fields.0.options.0.value}}, label: {{fields.0.options.0.label}}),\n        MonarchComboboxOption(id: {{fields.0.options.1.value}}, label: {{fields.0.options.1.label}}),\n        MonarchComboboxOption(id: {{fields.0.options.2.value}}, label: {{fields.0.options.2.label}}),\n    ])),\n    MonarchConditionField(id: {{fields.1.value}}, label: {{fields.1.label}}, kind: .{{fields.1.type|raw}}),\n    MonarchConditionField(id: {{fields.2.value}}, label: {{fields.2.label}}, kind: .{{fields.2.type|raw}}, prompt: {{fields.2.placeholder}}),\n    MonarchConditionField(id: {{fields.3.value}}, label: {{fields.3.label}}, kind: .{{fields.3.type|raw}}),\n    MonarchConditionField(id: {{fields.4.value}}, label: {{fields.4.label}}, kind: .{{fields.4.type|raw}}),\n]\n// The web operator names, as Monarch operators.\nprivate static func queryOperator(_ web: String) -> MonarchConditionOperator {\n    switch web {\n    case \"gte\": .atLeast\n    case \"is_true\": .isTrue\n    default: .equals\n    }\n}",
+      "setup": "@State private var query = MonarchQueryGroup(\n    id: \"root\",\n    combinator: .and,\n    rules: [\n        MonarchCondition(id: \"r1\", field: \"status\", operator: Self.queryOperator(\"eq\"), value: .option(\"open\")),\n    ],\n    groups: [\n        MonarchQueryGroup(\n            id: \"g1\",\n            combinator: .or,\n            rules: [\n                MonarchCondition(id: \"r2\", field: \"amount\", operator: Self.queryOperator(\"gte\"), value: .number(500)),\n                MonarchCondition(id: \"r3\", field: \"flagged\", operator: Self.queryOperator(\"is_true\")),\n            ]\n        ),\n    ]\n)\nprivate let fields = [\n    MonarchConditionField(id: \"status\", label: \"Status\", kind: .select([\n        MonarchComboboxOption(id: \"open\", label: \"Open\"),\n        MonarchComboboxOption(id: \"pending\", label: \"Pending\"),\n        MonarchComboboxOption(id: \"closed\", label: \"Closed\"),\n    ])),\n    MonarchConditionField(id: \"title\", label: \"Title\", kind: .text),\n    MonarchConditionField(id: \"amount\", label: \"Amount\", kind: .number, prompt: \"Amount\"),\n    MonarchConditionField(id: \"created\", label: \"Created\", kind: .date),\n    MonarchConditionField(id: \"flagged\", label: \"Flagged\", kind: .boolean),\n]\n// The web operator names, as Monarch operators.\nprivate static func queryOperator(_ web: String) -> MonarchConditionOperator {\n    switch web {\n    case \"gte\": .atLeast\n    case \"is_true\": .isTrue\n    default: .equals\n    }\n}",
+      "code": "VStack(alignment: .leading, spacing: 8) {\n    MonarchQueryBuilder(query: $query, fields: fields)\n    Text(\"Sample record (open, amount 120, flagged) \" + (query.matches([\"status\": .option(\"open\"), \"amount\": .number(120), \"flagged\": .boolean(true)]) ? \"matches\" : \"does not match\") + \".\")\n        .monarchTextStyle(.body)\n}"
+    },
+    {
+      "title": "One level, errors after saving",
+      "setup": "@State private var query = MonarchQueryGroup(id: \"flat\", combinator: .or, rules: [\n    MonarchCondition(id: \"f1\", field: \"title\", operator: .contains, value: .text(\"\")),\n])\n@State private var showsErrors = false\nprivate let fields = [MonarchConditionField(id: \"title\", label: \"Title\", kind: .text, prompt: \"Text\")]",
+      "code": "VStack(alignment: .leading) {\n    MonarchQueryBuilder(query: $query, fields: fields, maxDepth: 1, showsErrors: showsErrors)\n    MonarchButton(\"Save\", variant: .primary) {\n        showsErrors = !query.problems(fields: fields).isEmpty\n    }\n}"
+    }
+  ],
+  "webEquivalent": "QueryBuilder",
+  "dependsOn": [
+    "select",
+    "text-field",
+    "segmented-control",
+    "button",
+    "date-picker",
+    "condition-editor"
+  ],
+  "icons": {
+    "remove": "CloseGlyph",
+    "add": "PlusGlyph"
+  }
+}

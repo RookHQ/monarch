@@ -2,39 +2,22 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { ScopeSelector, type ScopeGroup } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './scope-selector.fixture.json';
 
-const groups: ScopeGroup[] = [
-  {
-    id: 'projects',
-    label: 'Projects API',
-    description: 'Example Inc.',
-    scopes: [
-      { value: 'projects:read', description: 'List and read projects.' },
-      { value: 'projects:write', description: 'Create, update and archive projects.' },
-    ],
-  },
-  {
-    id: 'reports',
-    label: 'Reports API',
-    description: 'Example Inc.',
-    scopes: [
-      { value: 'reports:read', description: 'Read generated reports.' },
-      { value: 'reports:export', description: 'Download reports as files.' },
-    ],
-  },
-];
+const groups = fixture.data.groups as ScopeGroup[];
 
 const width = { width: '100%', maxWidth: '32rem' } as const;
 
 function KeyScopes() {
-  const [value, setValue] = useState<string[]>(['projects:read']);
+  const [value, setValue] = useState<string[]>([fixture.data.selected]);
   return (
     <div style={width}>
       <ScopeSelector
         groups={groups}
         value={value}
         onValueChange={setValue}
-        defaultExpanded={['projects']}
+        defaultExpanded={[fixture.data.expanded]}
       />
     </div>
   );

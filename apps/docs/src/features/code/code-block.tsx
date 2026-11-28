@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { CopyButton } from '@rookcom/monarch-react';
-import { highlight } from './highlight.js';
+import { highlight, type Token } from './highlight.js';
 
 /**
  * A highlighted, copyable code block. The `<pre>` is a focusable, named region
@@ -12,6 +12,8 @@ export function CodeBlock({
   copy = true,
   id,
   hidden,
+  lang,
+  tokenize,
 }: {
   code: string;
   /** Accessible name of the region, unique on the page ("Code: Variants"). */
@@ -20,11 +22,21 @@ export function CodeBlock({
   copy?: boolean;
   id?: string;
   hidden?: boolean;
+  /** The language, when it is not TSX: the fence language of the page's Markdown copy. */
+  lang?: string;
+  /** Highlighter for `lang`; the TSX one when absent. */
+  tokenize?: (code: string) => Token[];
 }) {
-  const tokens = useMemo(() => highlight(code), [code]);
+  const tokens = useMemo(() => (tokenize ?? highlight)(code), [code, tokenize]);
   return (
     <div className="docs-code" id={id} hidden={hidden}>
-      <pre className="docs-code__pre" tabIndex={0} role="region" aria-label={label}>
+      <pre
+        className="docs-code__pre"
+        tabIndex={0}
+        role="region"
+        aria-label={label}
+        data-lang={lang}
+      >
         <code>
           {tokens.map((t, i) =>
             t.kind ? (

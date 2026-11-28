@@ -1,0 +1,128 @@
+{
+  "id": "audit-log-viewer",
+  "name": null,
+  "title": "AuditLogViewer",
+  "family": "technical",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchListRow rows in MonarchCursorList, MonarchBottomSheet for one event, android.text.format.DateUtils for relative and absolute times; MonarchSearchBar and MonarchTag (the filter-bar recipe), MonarchAvatar, MonarchBadge, MonarchDescriptionList with copy, MonarchDownloadReportButton for the CSV export",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a searchable, filterable audit log of who did what, when and from where, as list rows that open one event's details (including field changes) in a bottom sheet.",
+  "whenToUse": "For workspace security and admin screens where people review sign-ins, permission changes, exports and API activity.",
+  "whenNotToUse": "For one request's raw details use the log-drawer recipe; for streaming output use MonarchLogViewer; for a person's own activity feed use a timeline.",
+  "api": [
+    "MonarchSearchBar(query = query, onQueryChange = …, onSearch = …, placeholder = \"Search the audit log\")",
+    "MonarchTag(text = \"Automations and API\", selected = …, onSelectedChange = …); MonarchDownloadReportButton(onDownload = …, labels = MonarchDownloadReportButtonLabels(label = \"Export CSV\"))",
+    "MonarchCursorList(items = events, label = \"Audit log\", hasMore = …, onLoadMore = …, key = { it.id }) { event -> ListItem(headlineContent = …, overlineContent = { MonarchBadge(kind) }, supportingContent = …, leadingContent = { MonarchAvatar(…, decorative = true) }, trailingContent = { Text(relative time) }, modifier = Modifier.clickable(onClickLabel = \"Details\") { … }) }",
+    "DateUtils.getRelativeTimeSpanString(time, now, DateUtils.MINUTE_IN_MILLIS)",
+    "ModalBottomSheet(onDismissRequest = …) { Column(Modifier.verticalScroll(…)) { MonarchText(\"Event details\", heading = true); MonarchDescriptionList(items = …); MonarchButton(\"Close\", …) } }"
+  ],
+  "options": [
+    {
+      "name": "events",
+      "type": "the app's records",
+      "default": "required",
+      "description": "Each event: id, time in epoch milliseconds, actor (name, kind), action, target, IP, device, location, source, reason, field changes."
+    },
+    {
+      "name": "query and filters",
+      "type": "state",
+      "default": "none",
+      "description": "The search text and filter tags; the app filters, or queries the server and pages with the cursor."
+    },
+    {
+      "name": "hasMore / onLoadMore",
+      "type": "Boolean / () -> Unit",
+      "default": "required",
+      "description": "Cursor paging of MonarchCursorList."
+    },
+    {
+      "name": "export",
+      "type": "MonarchDownloadReportButton",
+      "default": "none",
+      "description": "Export CSV of the filtered events."
+    },
+    {
+      "name": "now",
+      "type": "Long",
+      "default": "System.currentTimeMillis()",
+      "description": "The instant relative times are measured from."
+    }
+  ],
+  "states": [
+    {
+      "name": "events",
+      "description": "One row per event: overline tag for automations and API keys, actor and action, target, relative time."
+    },
+    {
+      "name": "loading / more",
+      "description": "MonarchCursorList shows placeholders on the first load and a load-more footer after."
+    },
+    {
+      "name": "empty",
+      "description": "MonarchCursorList's empty state; for a search, say no events match."
+    },
+    {
+      "name": "error",
+      "description": "MonarchCursorList's failed state with Try again."
+    },
+    {
+      "name": "details",
+      "description": "A bottom sheet titled Event details with time, actor, action, target, IP address with copy, device and the field changes as before → after."
+    }
+  ],
+  "appearance": "Material 3 list items on the surface with Monarch avatars and badges, the search bar and tags above, and a bottom sheet of description lists for one event. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships AuditLogViewer as a pattern with a table (time, actor, action, target, IP and device columns), a details drawer from the side with a before-and-after table, an export button and messages. On a phone, as on iOS, it is a recipe: the table becomes list rows that open a bottom sheet, the before-and-after table becomes description items reading Before → After, and the relative time with a tooltip becomes DateUtils' relative text with the full time in the sheet. Paging uses MonarchCursorList.",
+  "accessibility": [
+    "Each row is one element whose click is labelled Details; the avatar is decorative and the actor is text.",
+    "Automation and API actors carry a word badge, not only a color or an icon.",
+    "The sheet is modal, its title has heading semantics, and Back closes it.",
+    "The IP address has a copy button named for it.",
+    "The search bar and tags keep their own roles and selected states."
+  ],
+  "edgeCases": [
+    "An unknown actor: show \"Unknown\" instead of an empty name.",
+    "A field set for the first time or cleared: write None for the missing side.",
+    "Long targets wrap in the row; the full text is in the sheet.",
+    "Keep the event's id in rememberSaveable so the open sheet survives rotation."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Workspace audit log",
+      "fixture": "audit-log-viewer",
+      "webExample": "Workspace audit log",
+      "template": "Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n    Row(\n        modifier = Modifier.padding(horizontal = MonarchTheme.spacing.space4),\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        verticalAlignment = Alignment.CenterVertically,\n    ) {\n        MonarchSelect(\n            options = listOf(\n                MonarchSelectOption(\"all\", {{toolbar.filter}}),\n                MonarchSelectOption(\"members\", \"Members\"),\n                MonarchSelectOption(\"security\", \"Security\"),\n                MonarchSelectOption(\"settings\", \"Settings\"),\n            ),\n            selected = area,\n            onSelect = { area = it },\n            modifier = Modifier.weight(1f),\n            contentDescription = \"Area\",\n        )\n        MonarchButton(\n            text = {{toolbar.export}},\n            onClick = { /* Download the CSV file. */ },\n            variant = MonarchButtonVariant.Secondary,\n            size = MonarchButtonSize.Sm,\n        )\n    }\n    // Five short columns fit a phone when the table may narrow them below the 112dp default.\n    CompositionLocalProvider(LocalMonarchDataTableMinColumnWidth provides 48.dp) {\n    MonarchDataTable(\n        caption = \"Audit log\",\n        rows = shown,\n        columns = listOf<MonarchDataTableColumn<AuditEvent>>(\n            MonarchDataTableColumn(\n                \"Time\",\n                id = \"time\",\n                sortable = false,\n                weight = 1.3f,\n                cell = { event ->\n                    MonarchText(\n                        text = timeFormat.format(Instant.ofEpochMilli(event.time)),\n                        style = MonarchTextStyle.Caption,\n                        color = MonarchTheme.colors.textMuted,\n                    )\n                },\n            ) { timeFormat.format(Instant.ofEpochMilli(it.time)) },\n            MonarchDataTableColumn(\n                \"Actor\",\n                id = \"actor\",\n                sortable = false,\n                weight = 1.5f,\n                cell = { event ->\n                    // The avatar over the name: a phone column is too narrow for them side by side.\n                    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n                        MonarchAvatar(image = null, name = event.actor, size = MonarchAvatarSize.Sm, decorative = true)\n                        MonarchText(text = event.actor, style = MonarchTextStyle.Label)\n                        event.kind?.let { MonarchBadge(text = kindLabel(it), variant = MonarchBadgeVariant.Outline) }\n                    }\n                },\n            ) { event -> listOfNotNull(event.actor, event.kind?.let(::kindLabel)).joinToString(\" · \") },\n            MonarchDataTableColumn(\n                \"Action\",\n                id = \"action\",\n                sortable = false,\n                weight = 1.5f,\n                cell = { event ->\n                    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n                        MonarchText(text = event.action, style = MonarchTextStyle.Caption)\n                        event.source?.let { MonarchBadge(text = it) }\n                    }\n                },\n            ) { event -> listOfNotNull(event.action, event.source).joinToString(\"\\n\") },\n            MonarchDataTableColumn(\n                \"Target\",\n                id = \"target\",\n                sortable = false,\n                weight = 1.15f,\n                cell = { event -> MonarchText(text = event.target ?: \"—\", style = MonarchTextStyle.Caption) },\n            ) { it.target.orEmpty() },\n            MonarchDataTableColumn(\n                \"Details\",\n                id = \"details\",\n                sortable = false,\n                weight = 1.1f,\n                cell = { MonarchText(text = \"Details\", style = MonarchTextStyle.Caption) },\n            ) { \"Details\" },\n        ),\n        rowKey = { it.id },\n        layout = MonarchDataTableLayout.Table,\n        sortsRows = false,\n        onOpen = { openId = it.id },\n        footer = {\n            Row(\n                modifier = Modifier.fillMaxWidth().padding(MonarchTheme.spacing.space3),\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3, Alignment.CenterHorizontally),\n                verticalAlignment = Alignment.CenterVertically,\n            ) {\n                MonarchText(text = \"Showing ${shown.size} events\", style = MonarchTextStyle.Caption)\n                MonarchButton(\n                    text = \"Load more\",\n                    onClick = { /* Load the next page with the cursor. */ },\n                    variant = MonarchButtonVariant.Secondary,\n                    size = MonarchButtonSize.Sm,\n                )\n            }\n        },\n    )\n    }\n}\nevents.firstOrNull { it.id == openId }?.let { event ->\n    MonarchBottomSheet(onDismissRequest = { openId = null }, title = \"Event details\") {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            MonarchDescriptionList(\n                items = listOf(\n                    MonarchDescriptionItem(\"Time\", timeFormat.format(Instant.ofEpochMilli(event.time))),\n                    MonarchDescriptionItem(\"Actor\", listOfNotNull(event.actor, event.kind?.let(::kindLabel)).joinToString(\" · \")),\n                    MonarchDescriptionItem(\"Action\", event.action),\n                    MonarchDescriptionItem(\"Target\", event.target.orEmpty()),\n                ),\n            )\n            MonarchButton(text = \"Close\", onClick = { openId = null }, modifier = Modifier.fillMaxWidth())\n        }\n    }\n}",
+      "setupTemplate": "data class AuditEvent(\n    val id: String,\n    val time: Long,\n    val actor: String,\n    val kind: String?,\n    val action: String,\n    val target: String?,\n    val source: String?,\n    val area: String = \"members\",\n)\nval events = listOf(\n    AuditEvent({{events.0.id}}, {{events.0.time|millis}}, {{events.0.actor}}, null, {{events.0.action}}, {{events.0.target}}, null),\n    AuditEvent({{events.1.id}}, {{events.1.time|millis}}, {{events.1.actor}}, null, {{events.1.action}}, null, null, \"security\"),\n    AuditEvent({{events.2.id}}, {{events.2.time|millis}}, {{events.2.actor}}, {{events.2.kind}}, {{events.2.action}}, {{events.2.target}}, {{events.2.source}}, \"settings\"),\n    AuditEvent({{events.3.id}}, {{events.3.time|millis}}, {{events.3.actor}}, {{events.3.kind}}, {{events.3.action}}, {{events.3.target}}, null),\n)\n// The kind as a label: \"automation\" is Automation, \"api\" is API.\nfun kindLabel(kind: String) = if (kind == \"api\") \"API\" else kind.replaceFirstChar { it.uppercase() }\nval timeFormat = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)\n    .withLocale(Locale.forLanguageTag({{locale}}))\n    .withZone(ZoneId.of({{timeZone}}))\nvar area by rememberSaveable { mutableStateOf(\"all\") }\nvar openId by rememberSaveable { mutableStateOf<String?>(null) }\nval shown = events.filter { area == \"all\" || it.area == area }",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "java.time.Instant",
+        "java.time.ZoneId",
+        "java.time.format.DateTimeFormatter",
+        "java.time.format.FormatStyle",
+        "java.util.Locale",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.Column"
+      ],
+      "setup": "data class AuditEvent(\n    val id: String,\n    val time: Long,\n    val actor: String,\n    val kind: String?,\n    val action: String,\n    val target: String?,\n    val source: String?,\n    val area: String = \"members\",\n)\nval events = listOf(\n    AuditEvent(\"a1\", 1_772_449_452_000L, \"Ana Lopez\", null, \"Changed a member’s role\", \"Ben Okafor\", null),\n    AuditEvent(\"a2\", 1_772_444_871_000L, \"Chloé Martin\", null, \"Signed in\", null, null, \"security\"),\n    AuditEvent(\"a3\", 1_772_420_400_000L, \"Retention policy\", \"automation\", \"Deleted 14 expired exports\", \"Exports\", \"Scheduled\", \"settings\"),\n    AuditEvent(\"a4\", 1_772_378_529_000L, \"Deploy key\", \"api\", \"Updated a webhook\", \"Billing events\", null),\n)\n// The kind as a label: \"automation\" is Automation, \"api\" is API.\nfun kindLabel(kind: String) = if (kind == \"api\") \"API\" else kind.replaceFirstChar { it.uppercase() }\nval timeFormat = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)\n    .withLocale(Locale.forLanguageTag(\"en-GB\"))\n    .withZone(ZoneId.of(\"UTC\"))\nvar area by rememberSaveable { mutableStateOf(\"all\") }\nvar openId by rememberSaveable { mutableStateOf<String?>(null) }\nval shown = events.filter { area == \"all\" || it.area == area }",
+      "code": "Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n    Row(\n        modifier = Modifier.padding(horizontal = MonarchTheme.spacing.space4),\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        verticalAlignment = Alignment.CenterVertically,\n    ) {\n        MonarchSelect(\n            options = listOf(\n                MonarchSelectOption(\"all\", \"All areas\"),\n                MonarchSelectOption(\"members\", \"Members\"),\n                MonarchSelectOption(\"security\", \"Security\"),\n                MonarchSelectOption(\"settings\", \"Settings\"),\n            ),\n            selected = area,\n            onSelect = { area = it },\n            modifier = Modifier.weight(1f),\n            contentDescription = \"Area\",\n        )\n        MonarchButton(\n            text = \"Export CSV\",\n            onClick = { /* Download the CSV file. */ },\n            variant = MonarchButtonVariant.Secondary,\n            size = MonarchButtonSize.Sm,\n        )\n    }\n    // Five short columns fit a phone when the table may narrow them below the 112dp default.\n    CompositionLocalProvider(LocalMonarchDataTableMinColumnWidth provides 48.dp) {\n    MonarchDataTable(\n        caption = \"Audit log\",\n        rows = shown,\n        columns = listOf<MonarchDataTableColumn<AuditEvent>>(\n            MonarchDataTableColumn(\n                \"Time\",\n                id = \"time\",\n                sortable = false,\n                weight = 1.3f,\n                cell = { event ->\n                    MonarchText(\n                        text = timeFormat.format(Instant.ofEpochMilli(event.time)),\n                        style = MonarchTextStyle.Caption,\n                        color = MonarchTheme.colors.textMuted,\n                    )\n                },\n            ) { timeFormat.format(Instant.ofEpochMilli(it.time)) },\n            MonarchDataTableColumn(\n                \"Actor\",\n                id = \"actor\",\n                sortable = false,\n                weight = 1.5f,\n                cell = { event ->\n                    // The avatar over the name: a phone column is too narrow for them side by side.\n                    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n                        MonarchAvatar(image = null, name = event.actor, size = MonarchAvatarSize.Sm, decorative = true)\n                        MonarchText(text = event.actor, style = MonarchTextStyle.Label)\n                        event.kind?.let { MonarchBadge(text = kindLabel(it), variant = MonarchBadgeVariant.Outline) }\n                    }\n                },\n            ) { event -> listOfNotNull(event.actor, event.kind?.let(::kindLabel)).joinToString(\" · \") },\n            MonarchDataTableColumn(\n                \"Action\",\n                id = \"action\",\n                sortable = false,\n                weight = 1.5f,\n                cell = { event ->\n                    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n                        MonarchText(text = event.action, style = MonarchTextStyle.Caption)\n                        event.source?.let { MonarchBadge(text = it) }\n                    }\n                },\n            ) { event -> listOfNotNull(event.action, event.source).joinToString(\"\\n\") },\n            MonarchDataTableColumn(\n                \"Target\",\n                id = \"target\",\n                sortable = false,\n                weight = 1.15f,\n                cell = { event -> MonarchText(text = event.target ?: \"—\", style = MonarchTextStyle.Caption) },\n            ) { it.target.orEmpty() },\n            MonarchDataTableColumn(\n                \"Details\",\n                id = \"details\",\n                sortable = false,\n                weight = 1.1f,\n                cell = { MonarchText(text = \"Details\", style = MonarchTextStyle.Caption) },\n            ) { \"Details\" },\n        ),\n        rowKey = { it.id },\n        layout = MonarchDataTableLayout.Table,\n        sortsRows = false,\n        onOpen = { openId = it.id },\n        footer = {\n            Row(\n                modifier = Modifier.fillMaxWidth().padding(MonarchTheme.spacing.space3),\n                horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3, Alignment.CenterHorizontally),\n                verticalAlignment = Alignment.CenterVertically,\n            ) {\n                MonarchText(text = \"Showing ${shown.size} events\", style = MonarchTextStyle.Caption)\n                MonarchButton(\n                    text = \"Load more\",\n                    onClick = { /* Load the next page with the cursor. */ },\n                    variant = MonarchButtonVariant.Secondary,\n                    size = MonarchButtonSize.Sm,\n                )\n            }\n        },\n    )\n    }\n}\nevents.firstOrNull { it.id == openId }?.let { event ->\n    MonarchBottomSheet(onDismissRequest = { openId = null }, title = \"Event details\") {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            MonarchDescriptionList(\n                items = listOf(\n                    MonarchDescriptionItem(\"Time\", timeFormat.format(Instant.ofEpochMilli(event.time))),\n                    MonarchDescriptionItem(\"Actor\", listOfNotNull(event.actor, event.kind?.let(::kindLabel)).joinToString(\" · \")),\n                    MonarchDescriptionItem(\"Action\", event.action),\n                    MonarchDescriptionItem(\"Target\", event.target.orEmpty()),\n                ),\n            )\n            MonarchButton(text = \"Close\", onClick = { openId = null }, modifier = Modifier.fillMaxWidth())\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "AuditLogViewer",
+  "dependsOn": [
+    "filter-bar",
+    "cursor-list",
+    "log-drawer",
+    "relative-time"
+  ],
+  "parityExceptions": []
+}

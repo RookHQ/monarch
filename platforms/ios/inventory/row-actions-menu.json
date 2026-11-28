@@ -1,0 +1,85 @@
+{
+  "id": "row-actions-menu",
+  "name": null,
+  "title": "RowActionsMenu",
+  "family": "data-grid",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "A ghost icon Button and a popover of text Buttons (a shortcut hint at the end of a row, a danger row after a MonarchDivider) with confirmationDialog for destructive items; Menu with Button items and .menuStyle(.button) remains the choice for the system menu",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The per-row actions of a list or table are the standard SwiftUI Menu behind a \"⋯\" button, swipe actions and a context menu, with destructive items last. Monarch ships nothing; the trigger takes the Monarch button style.",
+  "whenToUse": "For the actions on one row, card or item: a \"⋯\" Menu that is always visible, swipeActions for the one or two most frequent actions on List rows, and contextMenu (press and hold) with the full set.",
+  "whenNotToUse": "For actions on several selected rows, use MonarchBulkActionBar. For a single obvious action, put a button on the row. For screen-level actions, use the navigation bar's toolbar.",
+  "api": [
+    "Menu(content: () -> Content, label: () -> Label)",
+    "Button(_ title: String, systemImage: String, role: ButtonRole? = nil, action: () -> Void)",
+    "func swipeActions<T: View>(edge: HorizontalEdge = .trailing, allowsFullSwipe: Bool = true, content: () -> T) -> some View",
+    "func contextMenu<MenuItems: View>(menuItems: () -> MenuItems) -> some View",
+    "func confirmationDialog(_ title: String, isPresented: Binding<Bool>, titleVisibility: Visibility = .automatic, actions: () -> some View, message: () -> some View) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "open",
+      "description": "The system draws the menu next to the \"⋯\" button."
+    },
+    {
+      "name": "swiped",
+      "description": "On a List row, swiping from the trailing edge reveals the swipe buttons; a full swipe runs the first one."
+    },
+    {
+      "name": "destructive",
+      "description": "A Button with role: .destructive is drawn in the system's red, sits last after a Divider, and asks for confirmation before it runs."
+    },
+    {
+      "name": "disabled",
+      "description": "An item with disabled(true) is dimmed; disable the trigger to block every action."
+    }
+  ],
+  "appearance": "The menu, swipe buttons and context menu are drawn by the system in every theme and follow light, dark and Increase Contrast. The \"⋯\" trigger is a small ghost MonarchButtonStyle button. Swipe buttons take tint(_:) for a non-destructive colour; destructive ones are the system red.",
+  "platformNotes": "The web RowActionsMenu is a component that sorts danger items to the end and opens a ConfirmDialog for items with `confirm`. On iOS the app lists the items in that order with a Divider before the destructive ones and presents confirmationDialog itself, so Monarch adds no type. iOS adds swipe actions and a context menu, which the web does not have; use the same items in all three. The web shortcut hint is keyboardShortcut on the Button, shown by the system with a hardware keyboard. Android plans a Compose recipe for the same menu.",
+  "accessibility": [
+    "Name the icon-only trigger after the row (\"Actions for Acme Ltd\") with the Label's title, so rows are told apart.",
+    "System behaviour: swipe actions and context-menu items are offered to VoiceOver in the rotor's Actions on the row.",
+    "System behaviour: destructive items are announced with their role, and the confirmation dialog takes focus.",
+    "The trigger keeps a 44-point touch target through MonarchButtonStyle."
+  ],
+  "edgeCases": [
+    "Swipe actions only work on rows of a List; on other stacks use the \"⋯\" Menu and contextMenu.",
+    "Set allowsFullSwipe: false when the first swipe action is destructive and must be confirmed.",
+    "A destructive item that runs at once after a full swipe should offer Undo (see undo-toast) instead of a confirmation."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "With a confirmed delete",
+      "fixture": "row-actions-menu",
+      "webExample": "With a confirmed delete",
+      "template": "HStack {\n    Text({{rowLabel}}).monarchTextStyle(.body)\n    Spacer()\n    Button {\n        isOpen = true\n    } label: {\n        MonarchIcon(systemName: \"ellipsis\", label: \"Actions for \" + {{rowLabel}})\n            .monarchMinimumHitTarget()\n    }\n    .buttonStyle(.monarch(.ghost, size: .sm))\n    .onAppear { if startsPresented { isOpen = true } }\n    .popover(isPresented: $isOpen, arrowEdge: .top) {\n        VStack(alignment: .leading, spacing: 0) {\n            Button {\n                isOpen = false\n            } label: {\n                Text({{actions.0.label}}).monarchTextStyle(.body).frame(maxWidth: .infinity, alignment: .leading).frame(minHeight: 44).contentShape(Rectangle())\n            }\n            .buttonStyle(.plain)\n            Button {\n                isOpen = false\n            } label: {\n                HStack {\n                    Text({{actions.1.label}}).monarchTextStyle(.body)\n                    Spacer(minLength: theme.spacing.space4)\n                    Text({{actions.1.shortcut}}).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                }\n                .frame(minHeight: 44).contentShape(Rectangle())\n            }\n            .buttonStyle(.plain)\n            MonarchDivider()\n            Button {\n                isOpen = false\n                isConfirming = true\n            } label: {\n                Text({{actions.2.label}}).monarchTextStyle(.body).foregroundStyle({{actions.2.tone}} == \"danger\" ? theme.colors.dangerStrong : theme.colors.textDefault).frame(maxWidth: .infinity, alignment: .leading).frame(minHeight: 44).contentShape(Rectangle())\n            }\n            .buttonStyle(.plain)\n        }\n        .padding(.horizontal, theme.spacing.space3)\n        .frame(minWidth: 200)\n        .presentationCompactAdaptation(.popover)\n        .presentationBackground(theme.colors.bgSurface)\n    }\n}\n.confirmationDialog(\n    {{actions.2.confirm.title}},\n    isPresented: $isConfirming,\n    titleVisibility: .visible,\n    actions: {\n        Button({{actions.2.confirm.confirmLabel}}, role: .destructive) { isDeleted = true }\n        Button(\"Cancel\", role: .cancel) {}\n    },\n    message: { Text({{actions.2.confirm.description}}) }\n)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@Environment(\\.monarchStartsPresented) private var startsPresented\n@State private var isOpen = false\n@State private var isConfirming = false\n@State private var isDeleted = false\n",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@Environment(\\.monarchStartsPresented) private var startsPresented\n@State private var isOpen = false\n@State private var isConfirming = false\n@State private var isDeleted = false\n",
+      "code": "HStack {\n    Text(\"Report 12\").monarchTextStyle(.body)\n    Spacer()\n    Button {\n        isOpen = true\n    } label: {\n        MonarchIcon(systemName: \"ellipsis\", label: \"Actions for \" + \"Report 12\")\n            .monarchMinimumHitTarget()\n    }\n    .buttonStyle(.monarch(.ghost, size: .sm))\n    .onAppear { if startsPresented { isOpen = true } }\n    .popover(isPresented: $isOpen, arrowEdge: .top) {\n        VStack(alignment: .leading, spacing: 0) {\n            Button {\n                isOpen = false\n            } label: {\n                Text(\"Open\").monarchTextStyle(.body).frame(maxWidth: .infinity, alignment: .leading).frame(minHeight: 44).contentShape(Rectangle())\n            }\n            .buttonStyle(.plain)\n            Button {\n                isOpen = false\n            } label: {\n                HStack {\n                    Text(\"Rename\").monarchTextStyle(.body)\n                    Spacer(minLength: theme.spacing.space4)\n                    Text(\"F2\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                }\n                .frame(minHeight: 44).contentShape(Rectangle())\n            }\n            .buttonStyle(.plain)\n            MonarchDivider()\n            Button {\n                isOpen = false\n                isConfirming = true\n            } label: {\n                Text(\"Delete\").monarchTextStyle(.body).foregroundStyle(\"danger\" == \"danger\" ? theme.colors.dangerStrong : theme.colors.textDefault).frame(maxWidth: .infinity, alignment: .leading).frame(minHeight: 44).contentShape(Rectangle())\n            }\n            .buttonStyle(.plain)\n        }\n        .padding(.horizontal, theme.spacing.space3)\n        .frame(minWidth: 200)\n        .presentationCompactAdaptation(.popover)\n        .presentationBackground(theme.colors.bgSurface)\n    }\n}\n.confirmationDialog(\n    \"Delete Report 12?\",\n    isPresented: $isConfirming,\n    titleVisibility: .visible,\n    actions: {\n        Button(\"Delete report\", role: .destructive) { isDeleted = true }\n        Button(\"Cancel\", role: .cancel) {}\n    },\n    message: { Text(\"The report and its history are removed.\") }\n)",
+      "previewTap": true
+    },
+    {
+      "title": "Swipe actions and a context menu on List rows",
+      "setup": "@State private var companies = [\"Acme Ltd\", \"Globex\", \"Initech\"]",
+      "code": "List(companies, id: \\.self) { company in\n    Text(company)\n        .monarchTextStyle(.body)\n        .swipeActions(edge: .trailing) {\n            Button(\"Delete\", systemImage: \"trash\", role: .destructive) {\n                companies.removeAll { $0 == company }\n            }\n            Button(\"Archive\", systemImage: \"archivebox\") {}\n        }\n        .contextMenu {\n            Button(\"Archive\", systemImage: \"archivebox\") {}\n            Divider()\n            Button(\"Delete\", systemImage: \"trash\", role: .destructive) {\n                companies.removeAll { $0 == company }\n            }\n        }\n}\n.listStyle(.plain)\n.monarchCanvas()"
+    }
+  ],
+  "webEquivalent": "RowActionsMenu",
+  "dependsOn": [
+    "dropdown-menu",
+    "confirm-dialog",
+    "button"
+  ],
+  "icons": {
+    "trigger": "MoreGlyph"
+  },
+  "parityExceptions": []
+}

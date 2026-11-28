@@ -1,19 +1,20 @@
 import { useState } from 'react';
 import { DropZone, FileList, type FileListItem } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './drop-zone.fixture.json';
 
 const MB = 1024 * 1024;
+const seedFiles = fixture.data.files as FileListItem[];
 
 function FolderWithDrop() {
-  const [items, setItems] = useState<FileListItem[]>([
-    { id: 'seed-1', name: 'team-charter.pdf', size: 420_000 },
-  ]);
+  const [items, setItems] = useState<FileListItem[]>(seedFiles);
   return (
     <div style={{ width: '100%', maxWidth: 560 }}>
       <DropZone
-        accept="image/*,application/pdf"
-        maxSize={10 * MB}
-        toolbar={<span>Images or PDF, up to 10 MB. Or drop files on the list.</span>}
+        accept={fixture.data.accept.join(',')}
+        maxSize={fixture.data.maxSize}
+        toolbar={<span>{fixture.data.hint}</span>}
         onFiles={(accepted) =>
           setItems((list) => [
             ...list,
@@ -26,7 +27,7 @@ function FolderWithDrop() {
           ])
         }
       >
-        <FileList label="Shared files" items={items} />
+        <FileList label={fixture.data.listLabel} items={items} />
       </DropZone>
     </div>
   );

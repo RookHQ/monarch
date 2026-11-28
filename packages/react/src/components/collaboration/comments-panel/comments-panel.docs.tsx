@@ -1,56 +1,23 @@
 import { useState } from 'react';
 import { CommentsPanel, type CommentThreadData } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './comments-panel.fixture.json';
 
-const NOW = new Date('2026-03-10T12:00:00Z');
+const NOW = new Date(fixture.data.now);
 
-const START: CommentThreadData[] = [
-  {
-    id: 't1',
-    quote: 'The rollout starts in the second week of the quarter.',
-    comments: [
-      {
-        id: 'c1',
-        author: { name: 'Ana Ruiz' },
-        body: 'Can we confirm the date with the support team first?',
-        createdAt: '2026-03-10T09:30:00Z',
-      },
-      {
-        id: 'c2',
-        author: { name: 'Ben Okafor' },
-        body: 'Confirmed. They are ready from the Monday.',
-        createdAt: '2026-03-10T11:10:00Z',
-        canDelete: true,
-      },
-    ],
-  },
-  {
-    id: 't2',
-    quote: 'Budget summary table',
-    comments: [
-      {
-        id: 'c3',
-        author: { name: 'Chen Li' },
-        body: 'The totals row is missing the last line item.',
-        createdAt: '2026-03-09T15:00:00Z',
-        canDelete: true,
-      },
-    ],
-  },
-  {
-    id: 't3',
-    quote: 'Glossary',
-    resolved: true,
-    comments: [
-      {
-        id: 'c4',
-        author: { name: 'Dana Novak' },
-        body: 'Added the missing terms.',
-        createdAt: '2026-03-08T10:00:00Z',
-      },
-    ],
-  },
-];
+const START: CommentThreadData[] = fixture.data.threads.map((t) => ({
+  id: t.id,
+  quote: t.quote,
+  ...('resolved' in t ? { resolved: t.resolved } : {}),
+  comments: t.comments.map((c) => ({
+    id: c.id,
+    author: { name: c.author },
+    body: c.body,
+    createdAt: c.createdAt,
+    ...('canDelete' in c ? { canDelete: c.canDelete } : {}),
+  })),
+}));
 
 function Basic() {
   const [threads, setThreads] = useState(START);

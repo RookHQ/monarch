@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToString } from 'react-dom/server';
@@ -163,5 +165,13 @@ describe('PricingTable', () => {
     );
     expect(html).toContain('mn-pricing-table');
     expect(html).toContain('₹B');
+  });
+
+  it('narrows its columns by its own width, not the window', () => {
+    // A 620px column on a wide window kept the wide minimum and clipped the last plan.
+    const css = readFileSync(join(dirname(__filename), 'pricing-table.css'), 'utf8');
+    expect(css).toMatch(/\.mn-pricing-table \{[^}]*container-type: inline-size/);
+    expect(css).toContain('@container (max-width: 44rem)');
+    expect(css).not.toContain('@media (max-width: 639px)');
   });
 });

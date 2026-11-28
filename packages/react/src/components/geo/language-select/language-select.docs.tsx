@@ -2,20 +2,22 @@ import { useState } from 'react';
 import { Field, FieldDescription, FieldLabel } from '@rookcom/monarch-react';
 import { LanguageSelect } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './language-select.fixture.json';
 
 function InterfaceLanguage() {
-  const [language, setLanguage] = useState<string | null>('en');
+  const [language, setLanguage] = useState<string | null>(fixture.data.value);
   return (
     <Field style={{ width: '100%', maxWidth: 320 }}>
-      <FieldLabel>Interface language</FieldLabel>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
       <LanguageSelect
         value={language}
         onValueChange={setLanguage}
-        languages={['ar', 'de', 'en', 'es', 'fr', 'hi', 'ja', 'pt-BR', 'zh-Hans']}
-        priority={['en', 'es']}
+        languages={fixture.data.languages}
+        priority={fixture.data.priority}
         showTag
       />
-      <FieldDescription>Each language is listed in its own name.</FieldDescription>
+      <FieldDescription>{fixture.data.description}</FieldDescription>
     </Field>
   );
 }

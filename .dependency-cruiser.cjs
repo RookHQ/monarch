@@ -146,7 +146,8 @@ module.exports = {
         "Docs files render live examples with components imported from '@rookcom/monarch-react', exactly as an app does, so the docs site never bundles a second copy of a component.",
       severity: 'error',
       from: { path: '\\.docs\\.tsx?$' },
-      to: { path: '^packages/react/src/(components|patterns)/' },
+      // A parity fixture (<id>.fixture.json, CROSS-PLATFORM.md section 8) is data, not a component.
+      to: { path: '^packages/react/src/(components|patterns)/', pathNot: '\\.fixture\\.json$' },
     },
     // ---- ./editor (docs/architecture/PACKAGE-ARCHITECTURE.md): Tiptap is an optional peer dependency
     {

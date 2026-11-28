@@ -1,20 +1,9 @@
 import { PresenceAvatars, type PresencePerson } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './presence-avatars.fixture.json';
 
-const PEOPLE: PresencePerson[] = [
-  { id: 'u1', name: 'Priya Raman', activity: 'Editing' },
-  { id: 'u2', name: 'Tom Becker', activity: 'Viewing' },
-  { id: 'u3', name: 'Lee Park', status: 'away' },
-  {
-    id: 'u4',
-    name: 'Ana Silva',
-    status: 'busy',
-    customStatus: { emoji: '📅', text: 'In a meeting' },
-  },
-  { id: 'u5', name: 'Ben Okafor', status: 'dnd' },
-  { id: 'u6', name: 'Sam Ito' },
-  { id: 'u7', name: 'Mia Novak', status: 'offline' },
-];
+const PEOPLE = fixture.data.people as unknown as PresencePerson[];
 
 export default {
   id: 'presence-avatars',

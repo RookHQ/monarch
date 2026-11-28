@@ -1,0 +1,105 @@
+{
+  "id": "privacy-choices-link",
+  "name": null,
+  "title": "PrivacyChoicesLink",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet with androidx.compose.foundation.layout.Column, MonarchLink, MonarchSwitchRow and MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a \"Your privacy choices\" link in settings that opens a sheet with one switch to allow or stop the sale or sharing of personal information.",
+  "whenToUse": "In settings, for people in regions where they may opt out of the sale or sharing of their personal information (opt-out regimes such as the California rules).",
+  "whenNotToUse": "Where consent is asked before any optional use (opt-in regimes), ask with full consent preferences (MonarchMarketingConsentCheckbox, MonarchSwitchSettingsList) instead. For the Android advertising ID, the system setting applies; this switch does not replace it.",
+  "api": [
+    "MonarchLink(text = \"Your privacy choices\", onClick = { draft = allowed; open = true }, variant = MonarchLinkVariant.Standalone)",
+    "MonarchBottomSheet(onDismissRequest = { open = false }, title = \"Your privacy choices\", description = …) { … }",
+    "MonarchSwitchRow(checked = draft && !locked, onCheckedChange = { draft = it }, label = \"Allow sale or sharing\", enabled = !locked, description = …)",
+    "MonarchLink(text = \"Privacy policy\", onClick = { uriHandler.openUri(policyUrl) }, external = true)",
+    "MonarchButton(text = \"Save\", onClick = { allowed = draft; open = false }, variant = MonarchButtonVariant.Primary)"
+  ],
+  "options": [
+    {
+      "name": "allowed",
+      "type": "Boolean",
+      "default": "true",
+      "description": "The stored choice, kept by the app with the account."
+    },
+    {
+      "name": "draft",
+      "type": "Boolean",
+      "default": "allowed",
+      "description": "The switch while the sheet is open; reset from the stored choice each time it opens."
+    },
+    {
+      "name": "locked",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The account carries an opt-out signal the app knows of, such as Global Privacy Control from its website: the switch is off and disabled and says why."
+    },
+    {
+      "name": "policyUrl",
+      "type": "String",
+      "default": "required",
+      "description": "The privacy policy, opened with LocalUriHandler."
+    }
+  ],
+  "states": [
+    {
+      "name": "hidden",
+      "description": "Outside opt-out regions the link is not shown; the region check is the app's."
+    },
+    {
+      "name": "open",
+      "description": "A sheet with a heading, what sale or sharing means, the switch with its help line, the policy link, and Cancel and Save."
+    },
+    {
+      "name": "locked by signal",
+      "description": "With a known opt-out signal the switch is off and disabled and its description says why."
+    },
+    {
+      "name": "saved",
+      "description": "Save stores the switch; Cancel and dismissing the sheet leave the stored choice unchanged."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component: a standalone link, a Material 3 sheet on the surface background, a heading, a MonarchSwitchRow and ghost and primary buttons. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web's PrivacyChoicesLink is a footer link component with a dialog and its own strings. On Android, as on iOS, it is a recipe: a settings link opening a MonarchBottomSheet, the usual place for a setting on a phone. A native app receives no browser Global Privacy Control header, so the lock applies only when the app knows of a signal for the account (for example from its website); otherwise leave it out. The web's showIn regimes are the app's own region check. The official California privacy choices icon is the app's to add as an image in the link's trailingIcon; Monarch bundles no icons.",
+  "accessibility": [
+    "The link is a MonarchLink with the link role and a 48dp target.",
+    "The switch is a MonarchSwitchRow: one element read as \"Allow sale or sharing\" with its state and description, so a locked switch also reads why.",
+    "The sheet's heading has the heading semantics.",
+    "The policy link is an external MonarchLink, read with \"opens in the browser\".",
+    "Cancel and Save are MonarchButtons with 48dp targets."
+  ],
+  "edgeCases": [
+    "Show the link only where the opt-out applies, decided by the app's region logic.",
+    "Opening the sheet starts from the stored choice, so a cancelled change does not linger.",
+    "A signal lock keeps sale and sharing off whatever was stored before."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Footer control",
+      "fixture": "privacy-choices-link",
+      "webExample": "Footer control",
+      "template": "MonarchLink(\n    text = {{label}},\n    onClick = {\n        draft = allowed && !locked\n        open = true\n    },\n    variant = MonarchLinkVariant.Inline,\n)\nif (open) {\n    MonarchBottomSheet(\n        onDismissRequest = { open = false },\n        title = {{label}},\n        description = \"We share some personal information with advertising partners. You can stop it.\",\n    ) {\n        Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n            MonarchSwitchRow(\n                checked = draft && !locked,\n                onCheckedChange = { draft = it },\n                label = \"Allow sale or sharing\",\n                enabled = !locked,\n                description = if (locked) \"Your Global Privacy Control signal turned this off.\" else null,\n            )\n            MonarchLink(\n                text = \"Privacy policy\",\n                onClick = { uriHandler.openUri(\"https://example.com/privacy\") },\n                external = true,\n            )\n            Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                MonarchButton(text = \"Cancel\", onClick = { open = false }, variant = MonarchButtonVariant.Ghost)\n                MonarchButton(\n                    text = \"Save\",\n                    onClick = {\n                        allowed = draft && !locked\n                        open = false\n                    },\n                    variant = MonarchButtonVariant.Primary,\n                )\n            }\n        }\n    }\n}",
+      "setupTemplate": "var allowed by rememberSaveable { mutableStateOf(true) }\nvar draft by rememberSaveable { mutableStateOf(true) }\nvar open by rememberSaveable { mutableStateOf(false) }\n// True when the app knows of an opt-out signal for the account, such as Global Privacy Control.\nval locked by remember { mutableStateOf(false) }\nval uriHandler = LocalUriHandler.current",
+      "imports": [
+        "androidx.compose.ui.platform.LocalUriHandler",
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "var allowed by rememberSaveable { mutableStateOf(true) }\nvar draft by rememberSaveable { mutableStateOf(true) }\nvar open by rememberSaveable { mutableStateOf(false) }\n// True when the app knows of an opt-out signal for the account, such as Global Privacy Control.\nval locked by remember { mutableStateOf(false) }\nval uriHandler = LocalUriHandler.current",
+      "code": "MonarchLink(\n    text = \"Your privacy choices\",\n    onClick = {\n        draft = allowed && !locked\n        open = true\n    },\n    variant = MonarchLinkVariant.Inline,\n)\nif (open) {\n    MonarchBottomSheet(\n        onDismissRequest = { open = false },\n        title = \"Your privacy choices\",\n        description = \"We share some personal information with advertising partners. You can stop it.\",\n    ) {\n        Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n            MonarchSwitchRow(\n                checked = draft && !locked,\n                onCheckedChange = { draft = it },\n                label = \"Allow sale or sharing\",\n                enabled = !locked,\n                description = if (locked) \"Your Global Privacy Control signal turned this off.\" else null,\n            )\n            MonarchLink(\n                text = \"Privacy policy\",\n                onClick = { uriHandler.openUri(\"https://example.com/privacy\") },\n                external = true,\n            )\n            Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                MonarchButton(text = \"Cancel\", onClick = { open = false }, variant = MonarchButtonVariant.Ghost)\n                MonarchButton(\n                    text = \"Save\",\n                    onClick = {\n                        allowed = draft && !locked\n                        open = false\n                    },\n                    variant = MonarchButtonVariant.Primary,\n                )\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "PrivacyChoicesLink",
+  "dependsOn": [
+    "sheet",
+    "switch",
+    "button"
+  ]
+}

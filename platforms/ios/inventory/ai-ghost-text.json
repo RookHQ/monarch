@@ -1,0 +1,182 @@
+{
+  "id": "ai-ghost-text",
+  "name": "MonarchAiGhostText",
+  "title": "AiGhostText",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "UITextView subclass in a UIViewRepresentable, with a second inert UITextView laid over it that draws the suggestion; UIKeyCommand, UITapGestureRecognizer and UIAccessibilityCustomAction; inlinePredictionType = .no",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A multi-line text field with inline completion: the model's suggested continuation is drawn in a muted colour after the typed text and is accepted by a tap, a button, or Tab on a hardware keyboard. MonarchAiCompletion is the headless state behind it.",
+  "whenToUse": "For free text where the model can usefully continue what the person is writing: a reply, a note, a description.",
+  "whenNotToUse": "Not for a single-line field with a fixed format, or for passwords: use MonarchTextField. Not for rewriting a selection, which is AiInlinePrompt. Not for chat prompts, which is AiPromptInput.",
+  "api": [
+    "init(_ label: String, text: Binding<String>, prompt: String? = nil, helper: String? = nil, debounce: Duration = .milliseconds(300), minimumCharacters: Int = 3, isCompletionEnabled: Bool = true, showsAcceptButton: Bool = true, labels: MonarchAiGhostTextLabels = MonarchAiGhostTextLabels(), onAccept: (@MainActor (MonarchAiCompletionAcceptance, MonarchAiGhostTextAcceptKind) -> Void)? = nil, onDismiss: (@MainActor () -> Void)? = nil, complete: @escaping @Sendable (String, Int) async throws -> String?)",
+    "init(_ label: String, text: Binding<String>, completion: MonarchAiCompletion, prompt: String? = nil, helper: String? = nil, showsAcceptButton: Bool = true, labels: MonarchAiGhostTextLabels = MonarchAiGhostTextLabels(), onAccept: (@MainActor (MonarchAiCompletionAcceptance, MonarchAiGhostTextAcceptKind) -> Void)? = nil, onDismiss: (@MainActor () -> Void)? = nil)",
+    "@MainActor @Observable final class MonarchAiCompletion",
+    "MonarchAiCompletion.init(debounce: Duration = .milliseconds(300), minimumCharacters: Int = 3, isEnabled: Bool = true, complete: @escaping @Sendable (String, Int) async throws -> String?)",
+    "MonarchAiCompletion: var status: MonarchAiCompletionStatus { get }; var suggestion: String { get }; var text: String { get }; var cursor: Int { get }; var isEnabled: Bool { get }; var onError: (@MainActor (any Error) -> Void)?",
+    "MonarchAiCompletion: func update(text: String, cursor: Int); func dismiss(); @discardableResult func accept() -> MonarchAiCompletionAcceptance?; @discardableResult func acceptWord() -> MonarchAiCompletionAcceptance?; func setComposing(_ isComposing: Bool); func setEnabled(_ isEnabled: Bool); static func nextWord(of suggestion: String) -> String",
+    "enum MonarchAiCompletionStatus { case idle, waiting, loading, ready, error }",
+    "struct MonarchAiCompletionAcceptance { let inserted: String; let text: String; let cursor: Int }",
+    "enum MonarchAiGhostTextAcceptKind { case all, word }",
+    "MonarchAiGhostTextLabels.init(announce: (@Sendable (String) -> String)? = nil, instruction: String? = nil, accept: String? = nil, dismiss: String? = nil, accepted: String? = nil, dismissed: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The visible label and the accessibility label."
+    },
+    {
+      "name": "text",
+      "type": "Binding<String>",
+      "default": "required",
+      "description": "The text to edit."
+    },
+    {
+      "name": "prompt",
+      "type": "String?",
+      "default": "nil",
+      "description": "Placeholder text shown while the field is empty."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Supporting text under the field."
+    },
+    {
+      "name": "debounce",
+      "type": "Duration",
+      "default": ".milliseconds(300)",
+      "description": "How long typing must pause before a request is sent."
+    },
+    {
+      "name": "minimumCharacters",
+      "type": "Int",
+      "default": "3",
+      "description": "The fewest characters before the cursor, without surrounding white space, for a request."
+    },
+    {
+      "name": "isCompletionEnabled",
+      "type": "Bool",
+      "default": "true",
+      "description": "Turns suggestions off when false."
+    },
+    {
+      "name": "completion",
+      "type": "MonarchAiCompletion",
+      "default": "required in the second initialiser",
+      "description": "Completion state you keep, to read or drive it. Replaces complete, debounce, minimumCharacters and isCompletionEnabled."
+    },
+    {
+      "name": "showsAcceptButton",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the \"Accept suggestion\" button under the field while a suggestion shows. Its room is always kept."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiGhostTextLabels",
+      "default": "MonarchAiGhostTextLabels()",
+      "description": "Replacements for the announcements, the hint and the action names."
+    },
+    {
+      "name": "onAccept",
+      "type": "(@MainActor (MonarchAiCompletionAcceptance, MonarchAiGhostTextAcceptKind) -> Void)?",
+      "default": "nil",
+      "description": "Called after a suggestion, or one word of it, went into the text."
+    },
+    {
+      "name": "onDismiss",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Called when the person dismisses the suggestion."
+    },
+    {
+      "name": "complete",
+      "type": "@Sendable (String, Int) async throws -> String?",
+      "default": "required in the first initialiser",
+      "description": "Asks the model for a continuation of the text at the cursor, a UTF-16 offset. Return the text to insert, or nil for none. Its task is cancelled when the answer is stale."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "Only the typed text, or the prompt while the field is empty."
+    },
+    {
+      "name": "waiting, loading",
+      "description": "Nothing is drawn while the request waits for the pause or is in flight."
+    },
+    {
+      "name": "ready",
+      "description": "The suggestion is drawn after the typed text in the muted text role, and the accept button appears in the room kept for it."
+    },
+    {
+      "name": "error",
+      "description": "Nothing is drawn. onError of the completion is called."
+    },
+    {
+      "name": "focused",
+      "description": "The theme's focus ring around the field."
+    },
+    {
+      "name": "disabled",
+      "description": "With disabled(true): the disabled text and fill roles, no editing and no suggestion."
+    }
+  ],
+  "appearance": "The box of MonarchTextField: the surface fill, the input border and the control radius, with the focus ring while editing. Typed text is the default text role and the suggestion the muted text role, both in the body type role. All roles come from the theme.",
+  "platformNotes": "The web wraps any textarea or input; on iOS the component is the field, because the suggestion must be drawn inside a UITextView. SwiftUI's TextField cannot report the caret or marked text on iOS 17, draw after the caret, turn off the system's inline predictions or take Tab from the focus system. The web's accept hint (a \"Tab\" key that is also a button) is here a tap on the suggestion itself plus an \"Accept suggestion\" button with a full touch target, since a key cap means nothing on touch. The keys are the web's: Tab or the forward arrow accepts, Control or Option with the forward arrow accepts a word, Escape dismisses; they need a hardware keyboard. The cursor is a UTF-16 offset, as on the web. Accepting sets the text through the binding, so it is not a step in the text view's undo history. The web's useAiRewrite and applyAiRewrite (rewriting a selection), exported from the same web folder, are not part of this entry. On the macOS host, which only exists to build and test the package, the field is a SwiftUI TextField with the suggestion laid over it.",
+  "accessibility": [
+    "The field is one element whose label is the label and whose value is the typed text. The suggestion is not part of the value.",
+    "While a suggestion shows, the hint says how to accept it; otherwise the hint is the helper text.",
+    "A new suggestion is announced. The rest of one being typed through, or taken word by word, is not announced again.",
+    "VoiceOver has \"Accept suggestion\" and \"Dismiss suggestion\" actions on the field while a suggestion shows.",
+    "The accept button has a touch target at least 44 points high. The tap area on the suggestion itself is the suggestion's text with a 4-point margin, which is smaller than 44 points; the button is the full-size alternative.",
+    "\"Suggestion accepted.\" and \"Suggestion dismissed.\" are announced.",
+    "The suggestion differs from typed text by its position after the caret as well as its colour.",
+    "Nothing is suggested while an input method is composing. The system's inline predictions are off in this field; the QuickType bar stays.",
+    "The text follows Dynamic Type and the layout direction; in a right-to-left layout the forward arrow is the left arrow."
+  ],
+  "edgeCases": [
+    "A suggestion is only shown with the caret at the end of the text (white space may follow), never in the middle or with a selection.",
+    "The field grows with the typed text, not with the suggestion: a suggestion that wraps past the last typed line is cut off at the bottom of the field and still inserted whole.",
+    "Changing the text from outside, losing focus or disabling the field dismisses the suggestion.",
+    "A request whose text has since changed is cancelled and its answer ignored.",
+    "With a custom font family in the theme the field uses it; if the family is not registered it falls back to the system font.",
+    "The UIKit text view is compiled for iOS and has its own tests, but when this entry was written those tests had only been compiled, not run: the tap on the suggestion, the hardware keys and the alignment of the suggestion with the typed text still need a simulator or a device.",
+    "Experimental: the UIKit text view used on iOS has been compiled for iOS but not yet run on a simulator or device. It becomes available after the simulator tests and a VoiceOver check pass."
+  ],
+  "tests": [
+    "MonarchAiGhostTextTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Reply with suggestions",
+      "fixture": "ai-ghost-text",
+      "webExample": "Reply with suggestions",
+      "template": "MonarchAiGhostText(\n    {{label}},\n    text: $message,\n    prompt: {{placeholder}},\n    showsAcceptButton: false,\n    showsLabel: false,\n    keyHint: \"Tab\"\n) { text, _ in\n    text.hasSuffix({{text}}) ? {{suggestion}} : nil\n}",
+      "setupTemplate": "@State private var message = {{text}}",
+      "setup": "@State private var message = \"Thanks\"",
+      "code": "MonarchAiGhostText(\n    \"Reply\",\n    text: $message,\n    prompt: \"Type “Thanks” or “Let me know” and pause\",\n    showsAcceptButton: false,\n    showsLabel: false,\n    keyHint: \"Tab\"\n) { text, _ in\n    text.hasSuffix(\"Thanks\") ? \" for getting back to me so quickly.\" : nil\n}"
+    },
+    {
+      "title": "Reading the completion state yourself",
+      "setup": "@State private var note = \"\"\n@State private var completion = MonarchAiCompletion(minimumCharacters: 1) { _, _ in \" and so on.\" }",
+      "code": "VStack(alignment: .leading) {\n    MonarchAiGhostText(\"Note\", text: $note, completion: completion)\n    Text(\"Completion: \\(completion.status.rawValue)\").monarchTextStyle(.caption)\n}"
+    }
+  ],
+  "webEquivalent": "AiGhostText",
+  "dependsOn": [
+    "text-field",
+    "button"
+  ]
+}

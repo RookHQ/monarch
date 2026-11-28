@@ -1,0 +1,120 @@
+{
+  "name": null,
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "id": "command-palette",
+  "title": "CommandPalette",
+  "family": "search",
+  "wrapsNative": "MonarchBottomSheet (fully expanded) holding MonarchSearchBar (androidx.compose.material3.DockedSearchBar) and MonarchSearchResults (a androidx.compose.foundation.lazy.LazyColumn), opened by a button and by androidx.compose.ui.input.key.onPreviewKeyEvent for Ctrl+K",
+  "summary": "A recipe, not a component: a full-height search sheet whose results are commands and places, grouped, run by tapping one; Ctrl+K opens it on a hardware keyboard.",
+  "whenToUse": "For apps with many commands or places, so people can type what they want instead of hunting through menus.",
+  "whenNotToUse": "For searching records only, use MonarchSearchBar with MonarchSearchResults on the screen. For a few actions, use a MonarchMenu (menu-button recipe).",
+  "api": [
+    "Modifier.onPreviewKeyEvent { event -> event.type == KeyEventType.KeyDown && event.isCtrlPressed && event.key == Key.K }",
+    "ModalBottomSheet(onDismissRequest = …, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) { … }",
+    "MonarchSearchBar(query = query, onQueryChange = { query = it }, onSearch = {}, placeholder = \"Type a command or search\")",
+    "MonarchSearchResults(groups = commands grouped by heading, onSelect = { result, _ -> run it and close }, modifier = Modifier.weight(1f), query = query)"
+  ],
+  "options": [
+    {
+      "name": "commands",
+      "type": "List of id, label and group",
+      "default": "none",
+      "description": "The commands and places, each under a group heading such as Actions or Go to; filter them by the query."
+    },
+    {
+      "name": "open",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Whether the sheet is shown, kept with rememberSaveable."
+    },
+    {
+      "name": "query",
+      "type": "String",
+      "default": "\"\"",
+      "description": "The search text; cleared when the sheet closes."
+    },
+    {
+      "name": "sources",
+      "type": "suspend (String) -> List",
+      "default": "none",
+      "description": "Results fetched as the person types: run them in a LaunchedEffect keyed on the query, pass loading to MonarchSearchResults and cancel with the effect."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "Only the trigger button (or a search MonarchIconButton in the top app bar) is shown."
+    },
+    {
+      "name": "open",
+      "description": "The sheet fills the screen with the search field at the top and grouped results under it."
+    },
+    {
+      "name": "no results",
+      "description": "MonarchSearchResults shows its empty state for the query."
+    },
+    {
+      "name": "loading",
+      "description": "Pass loading to MonarchSearchResults while server results arrive."
+    }
+  ],
+  "appearance": "A Material 3 bottom sheet in the Monarch theme holding the docked search bar and grouped result rows. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships CommandPalette as a centered dialog with keyboard navigation, nested pages, recent items, shortcut hints and async sources. On a phone the native pattern is a full-height sheet with a search field, so the recipe uses MonarchBottomSheet with MonarchSearchBar and MonarchSearchResults; touch replaces arrow keys and TalkBack moves through the results in order. The Ctrl+K shortcut applies to hardware keyboards only; put onPreviewKeyEvent on the screen's root so it works wherever focus is. Shortcut hints are left out because touch users have no keys; nested pages become a second query state or a second sheet; recent items are a Recent group while the query is empty. The system back gesture closes the sheet.",
+  "accessibility": [
+    "The trigger is a button with a 48dp target.",
+    "The sheet is a modal pane; back and the scrim close it.",
+    "The search field has the search role from Material 3.",
+    "Group headings are headings and each result is one button, from MonarchSearchResults, which also announces the result count.",
+    "Closing after a command returns focus to the screen."
+  ],
+  "edgeCases": [
+    "Never put MonarchSearchResults inside verticalScroll; give it the remaining height with weight(1f).",
+    "Clear the query when the sheet closes so the next opening starts fresh.",
+    "A command that needs confirmation should close the sheet and open a dialog."
+  ],
+  "examples": [
+    {
+      "title": "Commands, groups and shortcut hints",
+      "fixture": "command-palette",
+      "webExample": "Commands, groups and shortcut hints",
+      "template": "Column {\n    Box(\n        modifier = Modifier.onPreviewKeyEvent { event ->\n            val shortcut = event.type == KeyEventType.KeyDown && event.isCtrlPressed && event.key == Key.K\n            if (shortcut) open = true\n            shortcut\n        },\n    ) {\n        MonarchButton(text = {{trigger}}, onClick = { open = true })\n    }\n    MonarchText(text = last?.let { \"Ran: \" + it } ?: {{hint}})\n}\nif (open) {\n    MonarchBottomSheet(\n        onDismissRequest = {\n            open = false\n            query = \"\"\n        },\n    ) {\n        Column(modifier = Modifier.fillMaxHeight()) {\n            MonarchSearchBar(\n                query = query,\n                onQueryChange = { query = it },\n                onSearch = {},\n                modifier = Modifier.fillMaxWidth(),\n                placeholder = \"Type a command or search\",\n            )\n            MonarchSearchResults(\n                groups = matches,\n                onSelect = { result, _ ->\n                    last = result.title\n                    open = false\n                    query = \"\"\n                },\n                modifier = Modifier.weight(1f),\n                query = query,\n            )\n        }\n    }\n}",
+      "setupTemplate": "var open by rememberSaveable { mutableStateOf(true) }\nvar query by rememberSaveable { mutableStateOf(\"\") }\nvar last by rememberSaveable { mutableStateOf<String?>(null) }\nval commands = listOf(\n    MonarchSearchResultGroup(\n        title = {{groups.0.title}},\n        id = {{groups.0.id}},\n        results = listOf(\n            MonarchSearchResult(title = {{groups.0.items.0.label}}, id = {{groups.0.items.0.id}}, meta = \"C\", icon = { MonarchIcon(SampleIcons.Plus, contentDescription = null) }),\n            MonarchSearchResult(title = {{groups.0.items.1.label}}, id = {{groups.0.items.1.id}}, meta = \"F2\", icon = { MonarchIcon(SampleIcons.Pencil, contentDescription = null) }),\n            MonarchSearchResult(title = {{groups.0.items.2.label}}, id = {{groups.0.items.2.id}}, icon = { MonarchIcon(SampleIcons.Trash, contentDescription = null) }),\n            // {{groups.0.items.2.tone}}: the row is a danger action on the web; native rows have no tone.\n        ),\n    ),\n    MonarchSearchResultGroup(\n        title = {{groups.1.title}},\n        id = {{groups.1.id}},\n        results = listOf(\n            MonarchSearchResult(title = {{groups.1.items.0.label}}, id = {{groups.1.items.0.id}}, meta = \"G B\", icon = { MonarchIcon(SampleIcons.Board, contentDescription = null) }),\n            MonarchSearchResult(title = {{groups.1.items.1.label}}, id = {{groups.1.items.1.id}}, meta = \"G M\", icon = { MonarchIcon(SampleIcons.List, contentDescription = null) }),\n            MonarchSearchResult(title = {{groups.1.items.2.label}}, id = {{groups.1.items.2.id}}, snippet = {{groups.1.items.2.description}}, meta = \"Ctrl ,\"),\n        ),\n    ),\n)\nval matches = commands.map { group ->\n    MonarchSearchResultGroup(\n        title = group.title,\n        id = group.id,\n        results = group.results.filter { it.title.contains(query.trim(), ignoreCase = true) },\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.ui.input.key.*",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "var open by rememberSaveable { mutableStateOf(true) }\nvar query by rememberSaveable { mutableStateOf(\"\") }\nvar last by rememberSaveable { mutableStateOf<String?>(null) }\nval commands = listOf(\n    MonarchSearchResultGroup(\n        title = \"Actions\",\n        id = \"actions\",\n        results = listOf(\n            MonarchSearchResult(title = \"Create task\", id = \"new\", meta = \"C\", icon = { MonarchIcon(SampleIcons.Plus, contentDescription = null) }),\n            MonarchSearchResult(title = \"Rename\", id = \"rename\", meta = \"F2\", icon = { MonarchIcon(SampleIcons.Pencil, contentDescription = null) }),\n            MonarchSearchResult(title = \"Archive\", id = \"archive\", icon = { MonarchIcon(SampleIcons.Trash, contentDescription = null) }),\n            // \"danger\": the row is a danger action on the web; native rows have no tone.\n        ),\n    ),\n    MonarchSearchResultGroup(\n        title = \"Go to\",\n        id = \"go-to\",\n        results = listOf(\n            MonarchSearchResult(title = \"Board\", id = \"board\", meta = \"G B\", icon = { MonarchIcon(SampleIcons.Board, contentDescription = null) }),\n            MonarchSearchResult(title = \"My tasks\", id = \"list\", meta = \"G M\", icon = { MonarchIcon(SampleIcons.List, contentDescription = null) }),\n            MonarchSearchResult(title = \"Settings\", id = \"settings\", snippet = \"Workspace\", meta = \"Ctrl ,\"),\n        ),\n    ),\n)\nval matches = commands.map { group ->\n    MonarchSearchResultGroup(\n        title = group.title,\n        id = group.id,\n        results = group.results.filter { it.title.contains(query.trim(), ignoreCase = true) },\n    )\n}",
+      "code": "Column {\n    Box(\n        modifier = Modifier.onPreviewKeyEvent { event ->\n            val shortcut = event.type == KeyEventType.KeyDown && event.isCtrlPressed && event.key == Key.K\n            if (shortcut) open = true\n            shortcut\n        },\n    ) {\n        MonarchButton(text = \"Search commands\", onClick = { open = true })\n    }\n    MonarchText(text = last?.let { \"Ran: \" + it } ?: \"Press ⌘K or Ctrl+K anywhere on this page.\")\n}\nif (open) {\n    MonarchBottomSheet(\n        onDismissRequest = {\n            open = false\n            query = \"\"\n        },\n    ) {\n        Column(modifier = Modifier.fillMaxHeight()) {\n            MonarchSearchBar(\n                query = query,\n                onQueryChange = { query = it },\n                onSearch = {},\n                modifier = Modifier.fillMaxWidth(),\n                placeholder = \"Type a command or search\",\n            )\n            MonarchSearchResults(\n                groups = matches,\n                onSelect = { result, _ ->\n                    last = result.title\n                    open = false\n                    query = \"\"\n                },\n                modifier = Modifier.weight(1f),\n                query = query,\n            )\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "CommandPalette",
+  "dependsOn": [
+    "search-input",
+    "search-results",
+    "sheet"
+  ],
+  "icons": {
+    "item.new": "PlusGlyph",
+    "item.rename": "PencilGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "android",
+      "paths": [
+        "groups.0.items.2.tone"
+      ],
+      "reason": "NATIVE GAP: the web palette draws Archive as a danger command; MonarchSearchResult has no tone parameter.",
+      "convention": "none: recorded in native-gaps.json"
+    }
+  ]
+}

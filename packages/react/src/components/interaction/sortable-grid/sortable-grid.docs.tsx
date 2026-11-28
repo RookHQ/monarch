@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Badge } from '@rookcom/monarch-react';
 import { SortableGrid } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './sortable-grid.fixture.json';
 
 interface Shortcut {
   id: string;
@@ -10,24 +12,17 @@ interface Shortcut {
   pinned?: boolean;
 }
 
-const SHORTCUTS: Shortcut[] = [
-  { id: 'inbox', name: 'Inbox', detail: '12 unread' },
-  { id: 'calendar', name: 'Calendar', detail: '3 events today' },
-  { id: 'reports', name: 'Reports', detail: 'Updated hourly' },
-  { id: 'files', name: 'Files', detail: '48 items' },
-  { id: 'people', name: 'People', detail: '9 teams' },
-  { id: 'settings', name: 'Settings', detail: 'Workspace' },
-];
+const SHORTCUTS: Shortcut[] = fixture.data.shortcuts;
 
 function TilesDemo() {
   const [tiles, setTiles] = useState(SHORTCUTS);
   return (
     <div style={{ width: '100%' }}>
       <SortableGrid
-        aria-label="Shortcuts"
+        aria-label={fixture.data.label}
         items={tiles}
         onReorder={setTiles}
-        minItemWidth="10rem"
+        minItemWidth={`${fixture.data.minItemWidth}rem`}
         getKey={(t) => t.id}
         getLabel={(t) => t.name}
         renderItem={(t) => (

@@ -10,6 +10,10 @@ import {
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { PlusIcon, TrashIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './page-header.fixture.json';
+
+const primary = fixture.data;
 
 export default {
   id: 'page-header',
@@ -153,18 +157,18 @@ export default {
               eyebrow={
                 <Breadcrumb
                   items={[
-                    { label: 'Projects', href: '#/components/page-header' },
-                    { label: 'Website refresh' },
+                    { label: primary.parent, href: '#/components/page-header' },
+                    { label: primary.title },
                   ]}
                 />
               }
-              title="Website refresh"
-              meta={<Badge tone="success">Active</Badge>}
-              description="Tasks, owners and dates for this project."
+              title={primary.title}
+              meta={<Badge tone={primary.status.tone as 'success'}>{primary.status.label}</Badge>}
+              description={primary.description}
               actions={
                 <>
-                  <Button>Share</Button>
-                  <Button variant="primary">New task</Button>
+                  <Button>{primary.actions[0]?.label}</Button>
+                  <Button variant="primary">{primary.actions[1]?.label}</Button>
                 </>
               }
             />

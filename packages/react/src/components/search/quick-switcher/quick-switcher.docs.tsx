@@ -2,40 +2,31 @@ import { Button } from '@rookcom/monarch-react';
 import { QuickSwitcher, type QuickSwitcherDestination } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { InboxIcon, UsersIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './quick-switcher.fixture.json';
 
-const destinations: QuickSwitcherDestination[] = [
-  { id: 'c-general', label: '#general', group: 'Channels', href: '#general', icon: <InboxIcon /> },
-  {
-    id: 'c-design',
-    label: '#design-review',
-    group: 'Channels',
-    href: '#design',
-    icon: <InboxIcon />,
-  },
-  {
-    id: 'c-launch',
-    label: '#launch-plan',
-    group: 'Channels',
-    href: '#launch',
-    icon: <InboxIcon />,
-  },
-  {
-    id: 'p-ana',
-    label: 'Ana Silva',
-    description: 'ana@example.com',
-    group: 'People',
-    href: '#ana',
-    icon: <UsersIcon />,
-  },
-  {
-    id: 'p-kofi',
-    label: 'Kofi Mensah',
-    description: 'kofi@example.com',
-    group: 'People',
-    href: '#kofi',
-    icon: <UsersIcon />,
-  },
-];
+const HREFS: Record<string, string> = {
+  'c-general': '#general',
+  'c-design': '#design',
+  'c-launch': '#launch',
+  'p-ana': '#ana',
+  'p-kofi': '#kofi',
+};
+
+const groups = fixture.data.groups as readonly {
+  label: string;
+  items: readonly { id: string; label: string; description?: string }[];
+}[];
+
+// Built lazily: docs files cannot create JSX at module scope. The first group is channels.
+const destinations: QuickSwitcherDestination[] = groups.flatMap((group, i) =>
+  group.items.map((item) => ({
+    ...item,
+    group: group.label,
+    href: HREFS[item.id] ?? '#',
+    icon: i === 0 ? <InboxIcon /> : <UsersIcon />,
+  })),
+);
 
 export default {
   id: 'quick-switcher',
@@ -146,12 +137,14 @@ export default {
       items: [
         {
           title: 'Jump to a channel or person',
+          stage: true,
           render: () => (
             <QuickSwitcher
+              defaultOpen
               destinations={destinations}
               recent={destinations.slice(0, 2)}
               hotkey={false}
-              trigger={<Button>Jump to…</Button>}
+              trigger={<Button>{fixture.data.trigger}</Button>}
               onNavigate={() => {}}
             />
           ),

@@ -1,0 +1,159 @@
+{
+  "id": "ai-subagent-tree",
+  "name": "MonarchAiSubagentTree",
+  "title": "AiSubagentTree",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Recursive VStack of rows: a chevron Button that shows or hides sub-agents and a row Button that selects the agent, with MonarchAiAgentAvatar and MonarchStatusBadge for the status and MonarchButton actions",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A lead AI agent and the sub-agents it handed work to, as a tree with each agent's status, activity, progress and result, and actions for the selected agent.",
+  "whenToUse": "Beside a conversation or in a run screen when one request fans out to several agents and people need to follow the run, answer an agent or stop one.",
+  "whenNotToUse": "Not for the timing of model and tool calls in one run, which is MonarchAiTraceView or MonarchAiAgentRunTimeline. Not for one agent's plan, which is MonarchAiPlan.",
+  "api": [
+    "init(_ agents: [MonarchAiSubagent], label: String? = nil, selection: Binding<String?>? = nil, expandedIDs: Binding<Set<String>>? = nil, labels: MonarchAiSubagentTreeLabels = MonarchAiSubagentTreeLabels(), onSelect: (@MainActor (MonarchAiSubagent) -> Void)? = nil, onRespond: (@MainActor (MonarchAiSubagent) -> Void)? = nil, onOpen: (@MainActor (MonarchAiSubagent) -> Void)? = nil, onOpenPart: (@MainActor (MonarchAiSubagent) -> Void)? = nil, onStop: (@MainActor (MonarchAiSubagent) -> Void)? = nil)",
+    "MonarchAiSubagent.init(id: String, name: String, role: String? = nil, status: MonarchAiSubagentStatus, activity: String? = nil, stepsDone: Int? = nil, stepsTotal: Int? = nil, toolCalls: Int? = nil, startedAt: Date? = nil, endedAt: Date? = nil, summary: String? = nil, children: [MonarchAiSubagent] = [], partId: String? = nil, messageId: String? = nil)",
+    "enum MonarchAiSubagentStatus: String { case working, needsInput, waiting, done, failed, stopped }",
+    "MonarchAiSubagentTreeLabels.init(label:status:agentCount:statusCount:empty:steps:toolCalls:started:ran:actionsFor:stop:open:respond:openPart:announce:expand:collapse:)"
+  ],
+  "options": [
+    {
+      "name": "agents",
+      "type": "[MonarchAiSubagent]",
+      "default": "required",
+      "description": "The top-level agents, usually one lead, each with the agents it handed work to, nested to any depth. Ids are unique across the tree."
+    },
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in spoken name \"Agents\"."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<String?>?",
+      "default": "nil",
+      "description": "The id of the selected agent. Kept inside when nil."
+    },
+    {
+      "name": "expandedIDs",
+      "type": "Binding<Set<String>>?",
+      "default": "nil",
+      "description": "The ids of open agents. Kept inside when nil: active branches open at first, and a branch that becomes active opens once unless the person closed it."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiSubagentTreeLabels",
+      "default": "MonarchAiSubagentTreeLabels()",
+      "description": "Replacements for every built-in string, including the count, step and time phrases."
+    },
+    {
+      "name": "onSelect",
+      "type": "(@MainActor (MonarchAiSubagent) -> Void)?",
+      "default": "nil",
+      "description": "Runs when the person selects an agent."
+    },
+    {
+      "name": "onRespond",
+      "type": "(@MainActor (MonarchAiSubagent) -> Void)?",
+      "default": "nil",
+      "description": "Adds Respond for a selected agent that needs input."
+    },
+    {
+      "name": "onOpen",
+      "type": "(@MainActor (MonarchAiSubagent) -> Void)?",
+      "default": "nil",
+      "description": "Adds Open for the selected agent, for example to show its transcript."
+    },
+    {
+      "name": "onOpenPart",
+      "type": "(@MainActor (MonarchAiSubagent) -> Void)?",
+      "default": "nil",
+      "description": "Adds Show in conversation for a selected agent with a partId or messageId."
+    },
+    {
+      "name": "onStop",
+      "type": "(@MainActor (MonarchAiSubagent) -> Void)?",
+      "default": "nil",
+      "description": "Adds Stop for a selected agent that is waiting or working. The tree does not stop anything itself."
+    }
+  ],
+  "states": [
+    {
+      "name": "working",
+      "description": "Info tone, circling arrows and \"Working\"; the activity line is shown."
+    },
+    {
+      "name": "needs input",
+      "description": "Warning tone, a question mark and \"Needs input\"; Respond is offered when selected."
+    },
+    {
+      "name": "waiting",
+      "description": "Neutral tone, a clock and \"Waiting\"."
+    },
+    {
+      "name": "done, failed, stopped",
+      "description": "Success, danger or neutral tone with a check, an octagon or a minus; the summary line is shown."
+    },
+    {
+      "name": "selected",
+      "description": "The row takes the subtle AI fill and a bar in the strong AI role at its leading edge, and the action bar appears under the tree."
+    },
+    {
+      "name": "collapsed",
+      "description": "The chevron points forward and the sub-agents are hidden."
+    },
+    {
+      "name": "empty",
+      "description": "With no agents the header reads \"No agents yet\" and no tree is shown."
+    }
+  ],
+  "appearance": "Rows on the page background with a small agent avatar whose ring follows the status, the name in default text, a small status badge in the status's tone, the role and facts in muted text and the activity and summary in default text. The selected row uses the subtle AI fill with a strong AI bar; the action bar sits on the subtle background. All colours are theme roles.",
+  "platformNotes": "The web builds on TreeView with a tree role, arrow-key navigation and typeahead. iOS has no tree role; each agent is a button with the selected trait and a separate chevron button, which is what VoiceOver users navigate on iOS. The parity map named OutlineGroup, but OutlineGroup's rows toggle on tap and cannot select, so the rows are drawn as a recursive stack in the same way as MonarchGoalTree. Times are Dates formatted with the environment's locale and time zone; the web takes ISO strings and a timeZone prop. Callbacks receive the agent; the web passes the id and the agent.",
+  "accessibility": [
+    "The tree is a container named \"Agents\" (or label).",
+    "Each row is a button read as name, status, role, activity (while working), steps, tool calls, times and summary (once ended).",
+    "The selected row has the selected trait and a visible bar, not only a fill.",
+    "The chevron is a separate 44-point button named \"Show agents under <name>\" or \"Hide agents under <name>\".",
+    "A status change after the tree appears is announced as \"<name>: <status>\"; a new agent that already needs input or failed is announced too; the first statuses are not.",
+    "The action bar is a container named \"Actions for <name>\"; its buttons are MonarchButton with 44-point targets.",
+    "Status icons are decorative; the status is always a word."
+  ],
+  "edgeCases": [
+    "An unknown selection id shows no action bar.",
+    "Steps without a total read \"3 steps\"; one step and one tool call use the singular.",
+    "Long names, roles and activities wrap; nothing is cut.",
+    "Agents nested deeply are indented one step per level; very deep trees get narrow on a phone."
+  ],
+  "tests": [
+    "MonarchAiSubagentTreeTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "A run in progress",
+      "fixture": "ai-subagent-tree",
+      "webExample": "A run in progress",
+      "template": "MonarchAiSubagentTree(\n    [\n        MonarchAiSubagent(\n            id: {{agents.0.id}},\n            name: {{agents.0.name}},\n            role: {{agents.0.role}},\n            status: {{agents.0.status|case}},\n            activity: {{agents.0.activity}},\n            stepsDone: {{agents.0.stepsDone}},\n            stepsTotal: {{agents.0.stepsTotal}},\n            startedAt: {{agents.0.startedAt|date}},\n            children: [\n                MonarchAiSubagent(\n                    id: {{agents.0.children.0.id}},\n                    name: {{agents.0.children.0.name}},\n                    role: {{agents.0.children.0.role}},\n                    status: {{agents.0.children.0.status|case}},\n                    activity: {{agents.0.children.0.activity}},\n                    stepsDone: {{agents.0.children.0.stepsDone}},\n                    stepsTotal: {{agents.0.children.0.stepsTotal}},\n                    toolCalls: {{agents.0.children.0.toolCalls}},\n                    startedAt: {{agents.0.children.0.startedAt|date}},\n                    children: [\n                        MonarchAiSubagent(\n                            id: {{agents.0.children.0.children.0.id}},\n                            name: {{agents.0.children.0.children.0.name}},\n                            role: {{agents.0.children.0.children.0.role}},\n                            status: {{agents.0.children.0.children.0.status|case}},\n                            toolCalls: {{agents.0.children.0.children.0.toolCalls}},\n                            startedAt: {{agents.0.children.0.children.0.startedAt|date}},\n                            endedAt: {{agents.0.children.0.children.0.endedAt|date}},\n                            summary: {{agents.0.children.0.children.0.summary}}\n                        ),\n                        MonarchAiSubagent(\n                            id: {{agents.0.children.0.children.1.id}},\n                            name: {{agents.0.children.0.children.1.name}},\n                            role: {{agents.0.children.0.children.1.role}},\n                            status: {{agents.0.children.0.children.1.status|case}}\n                        ),\n                    ]\n                ),\n                MonarchAiSubagent(\n                    id: {{agents.0.children.1.id}},\n                    name: {{agents.0.children.1.name}},\n                    role: {{agents.0.children.1.role}},\n                    status: {{agents.0.children.1.status|case}},\n                    startedAt: {{agents.0.children.1.startedAt|date}}\n                ),\n                MonarchAiSubagent(\n                    id: {{agents.0.children.2.id}},\n                    name: {{agents.0.children.2.name}},\n                    role: {{agents.0.children.2.role}},\n                    status: {{agents.0.children.2.status|case}},\n                    stepsDone: {{agents.0.children.2.stepsDone}},\n                    stepsTotal: {{agents.0.children.2.stepsTotal}},\n                    startedAt: {{agents.0.children.2.startedAt|date}},\n                    endedAt: {{agents.0.children.2.endedAt|date}},\n                    summary: {{agents.0.children.2.summary}}\n                ),\n            ]\n        ),\n    ]\n)\n.environment(\\.locale, Locale(identifier: {{locale}}))\n.environment(\\.timeZone, TimeZone(identifier: {{timeZone}}) ?? .gmt)",
+      "code": "MonarchAiSubagentTree(\n    [\n        MonarchAiSubagent(\n            id: \"lead\",\n            name: \"Lead\",\n            role: \"Plans the quarterly report and hands out the work\",\n            status: .working,\n            activity: \"Waiting for two sub-agents\",\n            stepsDone: 2,\n            stepsTotal: 5,\n            startedAt: Date(timeIntervalSince1970: 1_767_268_800),\n            children: [\n                MonarchAiSubagent(\n                    id: \"research\",\n                    name: \"Researcher\",\n                    role: \"Collect the figures for each region\",\n                    status: .working,\n                    activity: \"Reading the sales export\",\n                    stepsDone: 3,\n                    stepsTotal: 7,\n                    toolCalls: 12,\n                    startedAt: Date(timeIntervalSince1970: 1_767_268_860),\n                    children: [\n                        MonarchAiSubagent(\n                            id: \"fetch\",\n                            name: \"Fetcher\",\n                            role: \"Download the exports\",\n                            status: .done,\n                            toolCalls: 4,\n                            startedAt: Date(timeIntervalSince1970: 1_767_268_860),\n                            endedAt: Date(timeIntervalSince1970: 1_767_268_980),\n                            summary: \"Downloaded 4 exports\"\n                        ),\n                        MonarchAiSubagent(\n                            id: \"parse\",\n                            name: \"Parser\",\n                            role: \"Turn the exports into tables\",\n                            status: .waiting\n                        ),\n                    ]\n                ),\n                MonarchAiSubagent(\n                    id: \"write\",\n                    name: \"Writer\",\n                    role: \"Draft the summary\",\n                    status: .needsInput,\n                    startedAt: Date(timeIntervalSince1970: 1_767_268_920)\n                ),\n                MonarchAiSubagent(\n                    id: \"check\",\n                    name: \"Checker\",\n                    role: \"Compare the totals with last quarter\",\n                    status: .done,\n                    stepsDone: 4,\n                    stepsTotal: 4,\n                    startedAt: Date(timeIntervalSince1970: 1_767_268_860),\n                    endedAt: Date(timeIntervalSince1970: 1_767_269_040),\n                    summary: \"All totals match\"\n                ),\n            ]\n        ),\n    ]\n)\n.environment(\\.locale, Locale(identifier: \"en-GB\"))\n.environment(\\.timeZone, TimeZone(identifier: \"UTC\") ?? .gmt)"
+    }
+  ],
+  "webEquivalent": "AiSubagentTree",
+  "dependsOn": [
+    "tree-view",
+    "ai-agent-avatar",
+    "status-badge"
+  ],
+  "icons": {
+    "status.done": "SuccessGlyph",
+    "status.waiting": "ClockGlyph",
+    "status.needs-input": "HelpGlyph",
+    "status.failed": "ErrorGlyph",
+    "status.stopped": "DashGlyph",
+    "expand": "ChevronDownGlyph"
+  }
+}

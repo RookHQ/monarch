@@ -1,0 +1,160 @@
+{
+  "id": "code-block",
+  "name": "MonarchCodeBlock",
+  "title": "CodeBlock",
+  "family": "typography",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "ScrollView(.horizontal) of monospaced Text built from AttributedString, with Toggle (.monarchButton) for wrap and MonarchCopyButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A code sample with a header (title or language), copy, a wrap toggle, optional line numbers, light syntax colouring and a diff mode.",
+  "whenToUse": "To show code people read or copy: an API request in settings, a configuration snippet in onboarding, a change in a message.",
+  "whenNotToUse": "For a short token inside a sentence use MonarchInlineCodeStyle. For a single value to copy, such as a URL or key, use MonarchCopyField.",
+  "api": [
+    "init(_ code: String, language: String? = nil, title: String? = nil, isDiff: Bool? = nil, isHighlighted: Bool = true, showsLineNumbers: Bool = false, showsWrapToggle: Bool = true, isCopyable: Bool = true, isWrapped: Binding<Bool>? = nil, labels: MonarchCodeBlockLabels = MonarchCodeBlockLabels(), onCopy: (@MainActor (String) -> Void)? = nil)",
+    "struct MonarchCodeBlockLabels { init(copy: String? = nil, copied: String? = nil, copiedAnnouncement: String? = nil, wrap: String? = nil, added: String? = nil, removed: String? = nil, codeName: (@Sendable (String?) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "code",
+      "type": "String",
+      "default": "required",
+      "description": "The code, exactly as it should be copied."
+    },
+    {
+      "name": "language",
+      "type": "String?",
+      "default": "nil",
+      "description": "A language id (\"ts\", \"python\", \"bash\", \"diff\"). Picks the highlighter and the header text. Highlighted: JavaScript and TypeScript, JSON, Python, shell, CSS and SCSS, HTML, XML and SVG, SQL, Go, Rust. Others are plain text."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "Header text, such as a file name or what the snippet does. Also names the code. Defaults to the language name."
+    },
+    {
+      "name": "isDiff",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Draws + and - lines as a diff. nil means true when language is \"diff\" or \"patch\"."
+    },
+    {
+      "name": "isHighlighted",
+      "type": "Bool",
+      "default": "true",
+      "description": "Turns syntax colouring on or off."
+    },
+    {
+      "name": "showsLineNumbers",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows line numbers before the lines. They are not read by VoiceOver and not copied."
+    },
+    {
+      "name": "showsWrapToggle",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the \"Wrap lines\" toggle in the header."
+    },
+    {
+      "name": "isCopyable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the copy button in the header."
+    },
+    {
+      "name": "isWrapped",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Whether long lines wrap instead of scrolling sideways. Without it the component keeps the state itself, starting unwrapped."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchCodeBlockLabels",
+      "default": "MonarchCodeBlockLabels()",
+      "description": "Replacements for the built-in strings: copy, copied, copiedAnnouncement, wrap, added, removed and codeName."
+    },
+    {
+      "name": "onCopy",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Runs with the copied code after each copy."
+    }
+  ],
+  "states": [
+    {
+      "name": "unwrapped",
+      "description": "Default. Each line stays on one line and the code scrolls sideways inside the block."
+    },
+    {
+      "name": "wrapped",
+      "description": "Long lines wrap; the wrap toggle is on and drawn with the accent fill of MonarchToggleButtonStyle."
+    },
+    {
+      "name": "diff",
+      "description": "Added and removed lines get the diff fills and a visible + or − marker; hunk headers use the info colour; file headers are muted and semibold."
+    },
+    {
+      "name": "copied",
+      "description": "The copy button shows a checkmark and \"Copied\" for two seconds."
+    },
+    {
+      "name": "no header",
+      "description": "With no title, no language, no wrap toggle and no copy button, the header is not drawn."
+    }
+  ],
+  "appearance": "A subtle fill with a subtle border and medium corners; the header has the muted fill and the title in the muted text colour. Code uses the monospaced code type role. Keywords use the info strong role, strings success strong, numbers warning strong, tags danger strong, attributes and properties AI strong, and comments the muted text colour in italics. All are theme roles, so light, dark and both high-contrast themes follow the theme.",
+  "platformNotes": "The tokenizer is ported from the web and gives the same tokens, without the web's incremental mode for streaming code. The web code is a focusable scroll region for the keyboard; on iOS the region scrolls by touch and VoiceOver reads it line by line. The web has a CodeTabs companion for the same sample in several languages; on iOS put several MonarchCodeBlock views in MonarchTabs or a segmented Picker. AiCodeBlock's Apply and Insert are not part of this component. Android has the same parameters.",
+  "accessibility": [
+    "The code is a VoiceOver container named after the title, else \"<Language> code\", else \"Code\".",
+    "Each line is one element read as its text; added and removed lines of a diff start with \"Added:\" or \"Removed:\"; lines with only white space are skipped.",
+    "Line numbers and diff markers are not read, and diff lines carry a visible + or − marker, so a change does not depend on colour alone.",
+    "The wrap control is a standard Toggle named \"Wrap lines\" with an on or off value.",
+    "The copy button is MonarchCopyButton named \"Copy\" followed by the code's name; it announces \"Copied to clipboard\".",
+    "The code reads left to right in right-to-left layouts; the header follows the layout direction.",
+    "Text scales with Dynamic Type; at large sizes the header actions move under the title, and the header buttons keep a 44-point touch target."
+  ],
+  "edgeCases": [
+    "A final line break does not add an empty line; Windows line breaks are treated as line breaks.",
+    "Tabs are drawn as four spaces; the copied code keeps its tabs.",
+    "Empty code draws one empty line.",
+    "An unknown language is plain text, and its id is shown as given in the header.",
+    "Very long code is drawn in full (not lazily); keep samples to a screenful or two.",
+    "The highlighter is not a grammar: unusual code can be coloured imperfectly, never changed."
+  ],
+  "tests": [
+    "MonarchCodeBlockTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "A file",
+      "fixture": "code-block",
+      "webExample": "A file",
+      "template": "MonarchCodeBlock(\n    {{code}},\n    language: {{language}},\n    title: {{title}},\n    showsLineNumbers: {{lineNumbers}}\n)",
+      "code": "MonarchCodeBlock(\n    \"export async function handleWebhook(request: Request) {\\n  const event = await request.json();\\n  if (event.type === 'invoice.paid') {\\n    await markInvoicePaid(event.data.id);\\n  }\\n  return new Response(null, { status: 204 });\\n}\\n\",\n    language: \"ts\",\n    title: \"webhook.ts\",\n    showsLineNumbers: true\n)"
+    },
+    {
+      "title": "Line numbers and a wrap state held by the screen",
+      "setup": "@State private var isWrapped = true",
+      "code": "MonarchCodeBlock(\n    \"export const client = createClient({ retries: 3, timeout: 2500, baseURL: \\\"https://api.example.com\\\" });\",\n    language: \"ts\",\n    title: \"client.ts\",\n    showsLineNumbers: true,\n    isWrapped: $isWrapped\n)"
+    },
+    {
+      "title": "A diff",
+      "code": "MonarchCodeBlock(\n    \"@@ -1,2 +1,2 @@\\n-const port = 3000;\\n+const port = 8080;\\n app.listen(port);\",\n    language: \"diff\",\n    title: \"server.ts\"\n)"
+    }
+  ],
+  "webEquivalent": "CodeBlock",
+  "dependsOn": [
+    "copy-button",
+    "toggle-button"
+  ],
+  "icons": {
+    "copy": "CopyGlyph"
+  }
+}

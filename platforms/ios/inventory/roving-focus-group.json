@@ -1,0 +1,63 @@
+{
+  "id": "roving-focus-group",
+  "name": null,
+  "title": "RovingFocusGroup",
+  "family": "interaction",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "The system focus engine: @FocusState with focused(_:equals:), focusable(_:), and onKeyPress(_:action:) for arrow keys in a custom group",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Moving focus between the items of a toolbar, list or grid with a hardware keyboard is done by the system focus engine. Monarch ships nothing.",
+  "whenToUse": "Nothing is needed for standard controls: with a keyboard, Tab (and the arrow keys under Full Keyboard Access) already moves between them. Use @FocusState to read or move focus in code, focusable() to let a custom view take focus, and onKeyPress to move focus with the arrow keys inside a group of custom views.",
+  "whenNotToUse": "Do not add key handling to standard controls or build a roving tab index for them. Without a hardware keyboard none of this applies: touch and VoiceOver reach every element directly.",
+  "api": [
+    "@FocusState var focused: Value?",
+    "func focused<Value: Hashable>(_ binding: FocusState<Value?>.Binding, equals value: Value) -> some View",
+    "func focusable(_ isFocusable: Bool = true) -> some View",
+    "func onKeyPress(_ key: KeyEquivalent, action: @escaping () -> KeyPress.Result) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "focused",
+      "description": "The system draws its focus indicator on the focused control. A custom view can use monarchFocusRing(_:in:) driven by @FocusState."
+    }
+  ],
+  "appearance": "The system focus indicator in every theme. Monarch text fields, and custom views that use monarchFocusRing, draw the theme's focus ring.",
+  "platformNotes": "The parity plan names focusSection() for this entry, but that modifier is unavailable on iOS (it exists on macOS and tvOS), so it is not used here. The web needs RovingFocusGroup and useRovingFocus because a browser puts every control in the Tab order and gives arrow keys no meaning. On iOS and iPadOS the focus engine and Full Keyboard Access move between standard controls; only a group of custom focusable views needs onKeyPress. The web's loop, columns and grid orientation options have no ready-made equivalent. Android's focus system plays the same role.",
+  "accessibility": [
+    "System behaviour: with a hardware keyboard, Tab moves between the controls that take keyboard focus.",
+    "System behaviour: Full Keyboard Access reaches every control, including ones that do not take focus by default, and moves with the arrow keys.",
+    "VoiceOver and Switch Control do not use keyboard focus; they reach every element in reading order."
+  ],
+  "edgeCases": [
+    "On iOS most buttons take keyboard focus only when Full Keyboard Access is on; text fields always do.",
+    "A view made focusable() must show that it has focus, for example with monarchFocusRing(_:in:).",
+    "onKeyPress reports physical keys: swap the left and right arrows when layoutDirection is rightToLeft, as the second example does.",
+    "onKeyPress is called only while the view, or a view inside it, has focus."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Toolbar",
+      "fixture": "roving-focus-group",
+      "webExample": "Toolbar",
+      "template": "HStack(spacing: theme.spacing.space1) {\n    MonarchButton({{buttons.0.label}}, variant: .ghost, size: .sm) {}\n    MonarchButton({{buttons.1.label}}, variant: .ghost, size: .sm) {}\n    MonarchButton({{buttons.2.label}}, variant: .ghost, size: .sm) {}\n        .disabled({{buttons.2.disabled}})\n    MonarchButton({{buttons.3.label}}, variant: .ghost, size: .sm) {}\n}\n.accessibilityElement(children: .contain)\n.accessibilityLabel({{label}})",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme",
+      "setup": "@Environment(\\.monarchTheme) private var theme",
+      "code": "HStack(spacing: theme.spacing.space1) {\n    MonarchButton(\"Bold\", variant: .ghost, size: .sm) {}\n    MonarchButton(\"Italic\", variant: .ghost, size: .sm) {}\n    MonarchButton(\"Strikethrough\", variant: .ghost, size: .sm) {}\n        .disabled(true)\n    MonarchButton(\"Link\", variant: .ghost, size: .sm) {}\n}\n.accessibilityElement(children: .contain)\n.accessibilityLabel(\"Text formatting\")"
+    },
+    {
+      "title": "Arrow keys inside a group of custom focusable views",
+      "code": "HStack(spacing: theme.spacing.space2) {\n    ForEach(0..<3, id: \\.self) { index in\n        Text(\"Swatch \\(index + 1)\")\n            .monarchTextStyle(.label)\n            .padding(theme.spacing.space3)\n            .background(theme.colors.bgMuted, in: RoundedRectangle(cornerRadius: theme.radius.md))\n            .focusable()\n            .focused($focused, equals: index)\n            .monarchFocusRing(focused == index, in: RoundedRectangle(cornerRadius: theme.radius.md))\n    }\n}\n.onKeyPress(.rightArrow) { move(layoutDirection == .rightToLeft ? -1 : 1) }\n.onKeyPress(.leftArrow) { move(layoutDirection == .rightToLeft ? 1 : -1) }",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@Environment(\\.layoutDirection) private var layoutDirection\n@FocusState private var focused: Int?\n\nprivate func move(_ step: Int) -> KeyPress.Result {\n    guard let current = focused, (0..<3).contains(current + step) else { return .ignored }\n    focused = current + step\n    return .handled\n}"
+    }
+  ],
+  "webEquivalent": "RovingFocusGroup",
+  "dependsOn": []
+}

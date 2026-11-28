@@ -1,0 +1,66 @@
+{
+  "id": "virtual-list",
+  "name": null,
+  "title": "VirtualList",
+  "family": "data-grid",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "List, or LazyVStack inside a ScrollView, with ForEach over Identifiable data",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Long lists are virtualised by the platform: List and LazyVStack create a row only when it is about to appear. Monarch ships nothing.",
+  "whenToUse": "For any list that can be long. Use List for rows with system behaviour (swipe actions, selection, separators) and LazyVStack in a ScrollView for free layout such as cards or a feed.",
+  "whenNotToUse": "For a handful of rows, a plain VStack is enough. Do not put a lazy stack inside a non-lazy one that measures all of it, and do not give rows the index as identity when the data can be reordered or filtered.",
+  "api": [
+    "List(_ data: Data, rowContent: (Data.Element) -> RowContent)",
+    "LazyVStack(alignment: HorizontalAlignment = .center, spacing: CGFloat? = nil, pinnedViews: PinnedScrollableViews = [], content: () -> Content)",
+    "ForEach(_ data: Data, id: KeyPath<Data.Element, ID>, content: (Data.Element) -> Content)",
+    "ScrollViewReader, ScrollViewProxy.scrollTo(_ id: ID, anchor: UnitPoint? = nil)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "loading more",
+      "description": "Add a row with a ProgressView after the last item and load the next page from its onAppear."
+    },
+    {
+      "name": "empty",
+      "description": "Show MonarchEmptyState in place of the list."
+    }
+  ],
+  "appearance": "System list appearance, with the theme's tint. In a LazyVStack the rows are your own views, drawn with theme colours.",
+  "platformNotes": "The web VirtualList measures row heights, keeps a window of rows and exposes scrollToIndex; List and LazyVStack do all of that inside the framework. Item keys are the identity of the data: make the element Identifiable, or pass id:, with an id that is stable across reloads, as the web getItemKey must be. Heights are measured by the framework, so there is no estimated height or overscan to set. The web onEndReached is the onAppear of the last row or of a trailing loading row. The web scrollToKey is ScrollViewReader with scrollTo(_:anchor:). A LazyVStack keeps rows it has created; List reuses them. Android uses LazyColumn with keys and content types.",
+  "accessibility": [
+    "System behaviour: List rows are exposed in order and VoiceOver scrolls the list as it moves through it.",
+    "In a LazyVStack, rows that have not been created are not in the accessibility tree until scrolling creates them.",
+    "A trailing loading row should have an accessibilityLabel that says more items are loading."
+  ],
+  "edgeCases": [
+    "Identity by index (id: \\.self on indices) loses row state and animations when the data is filtered or reordered.",
+    "A LazyVStack needs a scrolling ancestor; outside a ScrollView it creates every row.",
+    "Rows with @State keep it only while they exist: a LazyVStack row keeps its state once created, a List row that scrolls far away may be recreated."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "5,000 contacts",
+      "fixture": "virtual-list",
+      "webExample": "5,000 contacts",
+      "template": "ScrollView {\n    LazyVStack(alignment: .leading, spacing: 0) {\n        ForEach(1...{{count}}, id: \\.self) { index in\n            HStack {\n                Text({{itemLabel}} + \" \\(index)\").foregroundStyle(theme.colors.textDefault)\n                Spacer()\n                Text(teams[(index - 1) % teams.count]).foregroundStyle(theme.colors.textMuted)\n            }\n            .monarchTextStyle(.body)\n            .padding(.horizontal, 12)\n            .padding(.vertical, 12)\n        }\n    }\n}\n.frame(height: {{height}})\n.accessibilityLabel({{label}})",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\nprivate let teams = [{{teams.0}}, {{teams.1}}, {{teams.2}}, {{teams.3}}]",
+      "setup": "@Environment(\\.monarchTheme) private var theme\nprivate let teams = [\"Design\", \"Finance\", \"Support\", \"Engineering\"]",
+      "code": "ScrollView {\n    LazyVStack(alignment: .leading, spacing: 0) {\n        ForEach(1...5000, id: \\.self) { index in\n            HStack {\n                Text(\"Contact\" + \" \\(index)\").foregroundStyle(theme.colors.textDefault)\n                Spacer()\n                Text(teams[(index - 1) % teams.count]).foregroundStyle(theme.colors.textMuted)\n            }\n            .monarchTextStyle(.body)\n            .padding(.horizontal, 12)\n            .padding(.vertical, 12)\n        }\n    }\n}\n.frame(height: 320)\n.accessibilityLabel(\"Contacts\")"
+    },
+    {
+      "title": "List with a loading row that requests the next page",
+      "code": "List {\n    ForEach(1...loaded, id: \\.self) { ticket in\n        Text(\"Ticket \\(ticket)\").monarchTextStyle(.body)\n    }\n    ProgressView()\n        .frame(maxWidth: .infinity)\n        .accessibilityLabel(\"Loading more tickets\")\n        .onAppear { loaded += 50 }\n}\n.listStyle(.plain)\n.monarchCanvas()\n.frame(height: MonarchTokens.Space.space24 * 3)",
+      "setup": "@State private var loaded = 50"
+    }
+  ],
+  "webEquivalent": "VirtualList",
+  "dependsOn": []
+}

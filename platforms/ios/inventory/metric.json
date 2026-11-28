@@ -1,0 +1,154 @@
+{
+  "id": "metric",
+  "name": "MonarchMetric",
+  "title": "Metric",
+  "family": "data-display",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of Text (or MonarchFlowLayout when inline) with .monospacedDigit(), numbers written by FloatingPointFormatStyle (.number, .percent, .currency(code:), .notation(.compactName)); the change is a MonarchDeltaIndicator",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "One number with its label, an optional unit and an optional change, formatted for the locale, with no surface around it.",
+  "whenToUse": "When a figure sits inside another surface: a card or widget header, a panel, a table footer or a toolbar; or when several small figures sit in a row.",
+  "whenNotToUse": "For a dashboard tile with its own surface, loading and error states, put the metric in a MonarchWidget. For an amount of money inside running text, format it with Text(value, format: .currency(code:)). For a change on its own, use MonarchDeltaIndicator.",
+  "api": [
+    "init(_ label: String, value: Double?, unit: String? = nil, change: MonarchMetricChange? = nil, format: MonarchMetricFormat = .number, size: MonarchMetricSize = .md, isCompact: Bool = false, emptyLabel: String? = nil, layout: MonarchMetricLayout = .stacked, alignment: HorizontalAlignment = .leading)",
+    "init(_ label: String, text: String?, spokenText: String? = nil, unit: String? = nil, change: MonarchMetricChange? = nil, size: MonarchMetricSize = .md, emptyLabel: String? = nil, layout: MonarchMetricLayout = .stacked, alignment: HorizontalAlignment = .leading)",
+    "static func formatted(_ value: Double, format: MonarchMetricFormat = .number, isCompact: Bool = false, locale: Locale = .current) -> String",
+    "struct MonarchMetricChange { init(_ value: Double?, comparison: String? = nil, goodDirection: MonarchDeltaIndicatorGoodDirection = .up, variant: MonarchDeltaIndicatorVariant = .plain, flatThreshold: Double = 0, formatValue: (@Sendable (Double) -> String)? = nil); init(current: Double?, previous: Double?, …) }",
+    "enum MonarchMetricFormat { case number, percent, currency(code: String) }",
+    "enum MonarchMetricSize { case sm, md, lg }",
+    "enum MonarchMetricLayout { case stacked, inline }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "What the number measures, such as \"Open tickets\". Always visible."
+    },
+    {
+      "name": "value",
+      "type": "Double?",
+      "default": "required",
+      "description": "The number. nil shows a muted dash that VoiceOver reads as \"No data\"."
+    },
+    {
+      "name": "text",
+      "type": "String?",
+      "default": "required",
+      "description": "In the second initialiser: the value already written by the app. nil or empty shows the dash."
+    },
+    {
+      "name": "spokenText",
+      "type": "String?",
+      "default": "nil",
+      "description": "In the second initialiser: what VoiceOver reads instead of text."
+    },
+    {
+      "name": "unit",
+      "type": "String?",
+      "default": "nil",
+      "description": "Written smaller and muted after the value, never split from itself. Hidden for an empty value."
+    },
+    {
+      "name": "change",
+      "type": "MonarchMetricChange?",
+      "default": "nil",
+      "description": "The change versus an earlier period, drawn by MonarchDeltaIndicator under the value (or after it when inline)."
+    },
+    {
+      "name": "format",
+      "type": "MonarchMetricFormat",
+      "default": ".number",
+      "description": "number, percent (a ratio: 0.12 is 12%) or currency(code:)."
+    },
+    {
+      "name": "size",
+      "type": "MonarchMetricSize",
+      "default": ".md",
+      "description": "sm for dense rows, md, lg for a headline figure. lg also makes the change one size larger."
+    },
+    {
+      "name": "isCompact",
+      "type": "Bool",
+      "default": "false",
+      "description": "Writes 12K or €3.4M with the compact notation; VoiceOver reads the full value."
+    },
+    {
+      "name": "emptyLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"No data\" read for a missing value."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchMetricLayout",
+      "default": ".stacked",
+      "description": "stacked puts the label above the value; inline puts label, value and change on one line that wraps."
+    },
+    {
+      "name": "alignment",
+      "type": "HorizontalAlignment",
+      "default": ".leading",
+      "description": "The alignment of the stacked layout; .trailing for numeric columns."
+    }
+  ],
+  "states": [
+    {
+      "name": "default",
+      "description": "The label in muted text, the value in the default text colour with tabular figures, the unit muted, the change under it."
+    },
+    {
+      "name": "empty",
+      "description": "A dash in the subtle text colour instead of the value, read as \"No data\"; the unit is hidden."
+    },
+    {
+      "name": "compact",
+      "description": "The value is written short (12K); the spoken value is the full number."
+    }
+  ],
+  "appearance": "No surface. The label and unit use the muted text role, the value the default text role (the subtle role for the empty dash), in every theme including high contrast. The change takes MonarchDeltaIndicator's success and danger roles together with its arrow and sign.",
+  "platformNotes": "The web value accepts any React node and Intl.NumberFormat options; on iOS a number is written with Foundation format styles (number, percent, currency) in the environment's locale, and any other value is passed as text with an optional spoken form. The web `align` start/end is a SwiftUI HorizontalAlignment. The web shows the full compact value as a hover title; iOS has no hover, so only VoiceOver gets it. The change takes the main DeltaIndicator options; its flat and no-data labels keep their built-in text. Android uses the same name and options.",
+  "accessibility": [
+    "The metric is one element: the label is its label, and the value is the full number with its unit and the change as a sentence, such as \"840 ms, down 8% vs last week, better\".",
+    "A compact figure is read in full (\"12,345\"), and the dash for a missing value is read as \"No data\" or emptyLabel.",
+    "The change's meaning is carried by its arrow, its sign and the spoken sentence, not by colour.",
+    "Text uses Monarch type roles, so it scales with Dynamic Type and wraps instead of truncating."
+  ],
+  "edgeCases": [
+    "A value that is not finite (infinity, NaN) is shown as empty.",
+    "Very long values wrap; the unit stays on one line beside or under the value.",
+    "Percent takes a ratio: pass 0.12 for 12%.",
+    "Currency digits follow the currency: JPY has none."
+  ],
+  "tests": [
+    "MonarchMetricTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Number, unit and change",
+      "fixture": "metric",
+      "webExample": "Number, unit and change",
+      "template": "MonarchMetric(\n    {{label}},\n    value: {{value|double}},\n    unit: {{unit}},\n    change: MonarchMetricChange({{change.value}}, comparison: {{change.comparison}}, goodDirection: {{change.goodDirection|case}})\n)",
+      "code": "MonarchMetric(\n    \"Median response\",\n    value: 182.0,\n    unit: \"ms\",\n    change: MonarchMetricChange(-0.08, comparison: \"vs last week\", goodDirection: .down)\n)"
+    },
+    {
+      "title": "A compact headline figure",
+      "code": "MonarchMetric(\n    \"Revenue\",\n    value: 1_284_000,\n    change: MonarchMetricChange(current: 1_284_000, previous: 1_190_000, comparison: \"vs last month\"),\n    format: .currency(code: \"EUR\"),\n    size: .lg,\n    isCompact: true\n)"
+    },
+    {
+      "title": "Inline in a footer, and an empty value",
+      "code": "VStack(alignment: .leading) {\n    MonarchMetric(\"Conversion\", value: 0.034, format: .percent, layout: .inline)\n    MonarchMetric(\"Churn\", value: nil, unit: \"%\", size: .sm)\n}"
+    }
+  ],
+  "webEquivalent": "Metric",
+  "dependsOn": [
+    "delta-indicator",
+    "tabular-number"
+  ]
+}

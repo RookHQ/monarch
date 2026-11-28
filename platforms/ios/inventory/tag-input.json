@@ -1,0 +1,178 @@
+{
+  "id": "tag-input",
+  "name": "MonarchTagInput",
+  "title": "TagInput",
+  "family": "forms",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "TextField with .onSubmit and .submitLabel(.done), MonarchTag chips in MonarchFlowLayout, MonarchButton suggestions",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A field that edits a list of short values as removable tags, with validation, paste splitting and optional suggestions.",
+  "whenToUse": "When people type several short free-form values into one field: skills, labels, keywords, email recipients, perhaps with known values suggested.",
+  "whenNotToUse": "For values from a fixed list, use a multi-selection List or MonarchTag filters. For one value, use MonarchTextField. For values with several properties each, use a list with an add row.",
+  "api": [
+    "init(_ label: String, tags: Binding<[String]>, prompt: String? = nil, helper: String? = nil, error: String? = nil, suggestions: [String] = [], separators: Set<Character> = [\",\"], maxCount: Int? = nil, allowsDuplicates: Bool = false, isReadOnly: Bool = false, labels: MonarchTagInputLabels = MonarchTagInputLabels(), normalize: ((String) -> String)? = nil, validate: ((String, [String]) -> String?)? = nil)",
+    "struct MonarchTagInputLabels { init(duplicate: (@Sendable (String) -> String)? = nil, maximum: (@Sendable (Int) -> String)? = nil, added: (@Sendable (String) -> String)? = nil, removed: (@Sendable (String) -> String)? = nil, remove: (@Sendable (String) -> String)? = nil, addSuggestion: (@Sendable (String) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The visible label; also the VoiceOver label of the text field."
+    },
+    {
+      "name": "tags",
+      "type": "Binding<[String]>",
+      "default": "required",
+      "description": "The tags, in order."
+    },
+    {
+      "name": "prompt",
+      "type": "String?",
+      "default": "nil",
+      "description": "Placeholder text in the empty text field."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Help text under the field, such as how values are separated."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "An error from the app. A rejected tag's message replaces it while shown."
+    },
+    {
+      "name": "suggestions",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Values offered as buttons under the field while the typed text matches them (ignoring case). Already added values are left out; at most 8 are shown."
+    },
+    {
+      "name": "separators",
+      "type": "Set<Character>",
+      "default": "[\",\"]",
+      "description": "Characters that add the typed text, besides Return. New lines and tabs also split pasted text."
+    },
+    {
+      "name": "maxCount",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The most tags. Further additions are rejected with \"You can add up to N.\""
+    },
+    {
+      "name": "allowsDuplicates",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether the same tag may appear twice. Duplicates are compared without case."
+    },
+    {
+      "name": "isReadOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the tags without remove buttons and without the text field."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchTagInputLabels",
+      "default": "MonarchTagInputLabels()",
+      "description": "Replacements for the duplicate and maximum messages, the announcements and the spoken names of the remove and suggestion buttons."
+    },
+    {
+      "name": "normalize",
+      "type": "((String) -> String)?",
+      "default": "nil",
+      "description": "Cleans typed text before it is checked and added. Trims white space by default."
+    },
+    {
+      "name": "validate",
+      "type": "((String, [String]) -> String?)?",
+      "default": "nil",
+      "description": "Returns a message to reject a tag, or nil to accept it. Runs after the duplicate and maximum checks."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "Only the text field, with its prompt."
+    },
+    {
+      "name": "with tags",
+      "description": "Small neutral tags wrap above the text field and the box grows; each has a remove button."
+    },
+    {
+      "name": "rejected entry",
+      "description": "The rejected text stays in the field, the border and the message under the box take the danger colour with an icon; the message is announced and clears when the person types."
+    },
+    {
+      "name": "error",
+      "description": "The app's error, shown like a rejection while no tag is rejected."
+    },
+    {
+      "name": "suggestions",
+      "description": "Matching suggestions appear as ghost buttons with a plus under the box while text is typed."
+    },
+    {
+      "name": "read only",
+      "description": "Tags without remove buttons; no text field."
+    },
+    {
+      "name": "disabled",
+      "description": "Set with disabled(_:). Tags without remove buttons, the text field disabled, the subtle fill and border and the disabled text colour."
+    }
+  ],
+  "appearance": "The box repeats MonarchTextField: the surface fill, the input border (danger when there is a message), 8-point corners and the focus ring. Tags are small neutral MonarchTags. The label uses the label style, the help text the caption style in the muted colour, messages the strong danger colour. All are theme roles.",
+  "platformNotes": "The web's keyboard shortcuts (Backspace in the empty field to reach the last tag, arrow keys between tags) are not offered: SwiftUI's TextField does not report Backspace in an empty field, and every remove button is a real button VoiceOver reaches. Suggestions are buttons under the field instead of a combobox listbox, and there is no addOnBlur or name for hidden form inputs. The web's sizes are not offered because the field and remove buttons keep the 44-point touch target at every size; tags are drawn at the small tag size. A paste is told apart from typing by the number of characters inserted at once: typing a separator commits what comes before it, and inserting several characters that contain separators commits every part. Android builds the same component. Several closures are optional (normalize, validate). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is normalize.",
+  "accessibility": [
+    "The text field is labelled with the label; its hint is the rejection or error (read as \"Error: …\"), otherwise the help text. The visible label and supporting text are hidden from VoiceOver.",
+    "Each tag is read as its text; its remove button is a separate element named \"Remove\" and the tag, with a 44-point touch target, and can be renamed with labels.remove.",
+    "Additions (\"Added Research.\"), removals (\"Removed Research.\") and rejection messages are posted as announcements.",
+    "After a tag is removed or a suggestion added, focus returns to the text field.",
+    "Suggestion buttons are named \"Add\" and the suggestion.",
+    "Messages have an icon and text, not colour alone."
+  ],
+  "edgeCases": [
+    "Pasting \"a, b, c\" adds three tags; parts that are rejected stay in the field joined by commas.",
+    "Tags are compared without case for duplicates, so \"research\" is rejected when \"Research\" is there.",
+    "A long tag takes a row of its own in the flow layout.",
+    "Tags are identified by position, so duplicate tags (with allowsDuplicates) can each be removed."
+  ],
+  "tests": [
+    "MonarchTagInputTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Skills with suggestions",
+      "fixture": "tag-input",
+      "webExample": "Skills with suggestions",
+      "template": "MonarchTagInput(\n    {{label}},\n    tags: $skills,\n    prompt: {{placeholder}},\n    suggestions: [{{suggestions.0}}, {{suggestions.1}}, {{suggestions.2}}, {{suggestions.3}}, {{suggestions.4}}, {{suggestions.5}}],\n    maxCount: {{max}}\n)",
+      "setupTemplate": "@State private var skills = [{{tags.0}}, {{tags.1}}]",
+      "setup": "@State private var skills = [\"Research\", \"TypeScript\"]",
+      "code": "MonarchTagInput(\n    \"Skills\",\n    tags: $skills,\n    prompt: \"Add a skill\",\n    suggestions: [\"Accessibility\", \"Copywriting\", \"Data analysis\", \"Illustration\", \"Research\", \"TypeScript\"],\n    maxCount: 8\n)"
+    },
+    {
+      "title": "Validated email addresses",
+      "setup": "@State private var recipients: [String] = []",
+      "code": "MonarchTagInput(\n    \"Recipients\",\n    tags: $recipients,\n    prompt: \"name@example.com\",\n    separators: [\",\", \" \", \";\"],\n    normalize: { $0.trimmingCharacters(in: .whitespaces).lowercased() },\n    validate: { tag, _ in tag.contains(\"@\") ? nil : \"Enter an email address like name@example.com.\" }\n)"
+    },
+    {
+      "title": "Read only",
+      "code": "MonarchTagInput(\"Labels\", tags: .constant([\"Billing\", \"Priority\"]), isReadOnly: true)"
+    }
+  ],
+  "webEquivalent": "TagInput",
+  "dependsOn": [
+    "tag",
+    "text-field",
+    "button",
+    "icon"
+  ]
+}

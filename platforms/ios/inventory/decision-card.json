@@ -1,0 +1,188 @@
+{
+  "id": "decision-card",
+  "name": "MonarchDecisionCard",
+  "title": "DecisionCard",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchCard with Button rows, TextField(axis: .vertical), MonarchButton and MonarchBadge",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Records a decision about an item (keep, review, let lapse) with a reason, next to the evidence for it, and shows who decided and when.",
+  "whenToUse": "When a person must choose one of two to five outcomes for a record and others should see the choice and the reason.",
+  "whenNotToUse": "For a simple confirmation use the system confirmationDialog. For a choice with no reason and no record, use a Picker.",
+  "api": [
+    "init(_ title: String? = nil, options: [MonarchDecisionOption], value: String?, reason: String? = nil, decidedAt: Date? = nil, decidedBy: String? = nil, now: Date? = nil, allowsNone: Bool = true, isReasonRequired: Bool = false, isReadOnly: Bool = false, labels: MonarchDecisionCardLabels = MonarchDecisionCardLabels(), reasonLimit: Int = 500, onDecide: (@MainActor (MonarchDecision) async throws -> Void)? = nil, @ViewBuilder context: () -> Context)",
+    "init(_ title: String? = nil, options: [MonarchDecisionOption], value: String?, reason: String? = nil, decidedAt: Date? = nil, decidedBy: String? = nil, now: Date? = nil, allowsNone: Bool = true, isReasonRequired: Bool = false, isReadOnly: Bool = false, labels: MonarchDecisionCardLabels = MonarchDecisionCardLabels(), reasonLimit: Int = 500, onDecide: (@MainActor (MonarchDecision) async throws -> Void)? = nil) where Context == EmptyView",
+    "struct MonarchDecisionOption { init(_ label: String, value: String, description: String? = nil, note: String? = nil, tone: MonarchTone = .neutral, isReasonRequired: Bool? = nil, isDisabled: Bool = false) }",
+    "struct MonarchDecision { init(value: String?, reason: String? = nil) }",
+    "struct MonarchDecisionCardLabels { init(choices: String? = nil, none: String? = nil, reason: String? = nil, reasonOptional: String? = nil, reasonPrompt: String? = nil, reasonRequired: String? = nil, charactersLeft: (@Sendable (Int) -> String)? = nil, save: String? = nil, saved: String? = nil, decided: String? = nil, undecided: String? = nil, failed: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "The heading of the card."
+    },
+    {
+      "name": "options",
+      "type": "[MonarchDecisionOption]",
+      "default": "required",
+      "description": "The choices, in order. Each has a label, a value, and optionally a description, a note shown while selected, a badge tone, its own reason rule and a disabled flag."
+    },
+    {
+      "name": "value",
+      "type": "String?",
+      "default": "required",
+      "description": "The saved decision, or nil for none."
+    },
+    {
+      "name": "reason",
+      "type": "String?",
+      "default": "nil",
+      "description": "The saved reason."
+    },
+    {
+      "name": "decidedAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the saved decision was made. Shown as a relative time."
+    },
+    {
+      "name": "decidedBy",
+      "type": "String?",
+      "default": "nil",
+      "description": "Who made the saved decision."
+    },
+    {
+      "name": "allowsNone",
+      "type": "Bool",
+      "default": "true",
+      "description": "Offers a \"No decision\" choice that clears the decision."
+    },
+    {
+      "name": "isReasonRequired",
+      "type": "Bool",
+      "default": "false",
+      "description": "Every choice needs a reason. An option's own isReasonRequired overrides it."
+    },
+    {
+      "name": "isReadOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the decision as a badge with the reason, without the form."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchDecisionCardLabels",
+      "default": "MonarchDecisionCardLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "reasonLimit",
+      "type": "Int",
+      "default": "500",
+      "description": "The longest reason accepted, in characters."
+    },
+    {
+      "name": "onDecide",
+      "type": "(@MainActor (MonarchDecision) async throws -> Void)?",
+      "default": "nil",
+      "description": "Saves the decision. Without it the card is read-only."
+    },
+    {
+      "name": "context",
+      "type": "() -> Context",
+      "default": "EmptyView",
+      "description": "Evidence for the decision, shown above the choices."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The date the decided line is measured from; the current time by default."
+    }
+  ],
+  "states": [
+    {
+      "name": "unchanged",
+      "description": "The Save button is disabled while the form equals the saved decision."
+    },
+    {
+      "name": "selected choice",
+      "description": "The row has an accent border, a subtle accent fill and a filled checkmark glyph; its note is shown under the choices."
+    },
+    {
+      "name": "reason missing",
+      "description": "After Save is activated without a required reason, the field has a danger border and an error message with an icon."
+    },
+    {
+      "name": "near the limit",
+      "description": "From 50 characters left, the number left is shown under the reason."
+    },
+    {
+      "name": "saving",
+      "description": "The choices and the reason are disabled and the button shows progress until onDecide returns."
+    },
+    {
+      "name": "failed",
+      "description": "The choice is kept and the error is shown with an icon above the button."
+    },
+    {
+      "name": "read-only",
+      "description": "A badge in the option's tone, or \"No decision yet\", then the reason and who decided when."
+    }
+  ],
+  "appearance": "A card on the surface colour. Choices are bordered rows on the surface colour; the selected row uses the subtle accent fill and the strong accent border. The reason field looks like MonarchTextField. Errors use the strong danger colour with an icon.",
+  "platformNotes": "The web card uses radio inputs and a Textarea. iOS has no radio button and a Picker cannot show a description under each option outside a List, so the choices are button rows with a checkmark and the selected trait; the reason is a multi-line TextField drawn with the tokens of MonarchTextField. onDecide is an async throwing closure instead of a function that may return a promise. The web headingLevel, now and locale properties have no counterpart: the title is a heading, and the time uses the user's locale and is redrawn every minute.",
+  "accessibility": [
+    "The title is a heading.",
+    "Each choice is a button with the selected trait, read as its label and description, inside a group named \"Decision\".",
+    "Selection is a glyph as well as a colour.",
+    "The note of a newly selected choice is announced.",
+    "A missing reason is announced and shown with an icon and text; it is also the hint of the field.",
+    "A successful save and a failed save are announced.",
+    "The time of the decision is read as an absolute date and time.",
+    "Every choice is at least 44 points high and the Save button has a 44-point touch target."
+  ],
+  "edgeCases": [
+    "A new value or reason from the app resets the form.",
+    "A reason of white space only counts as empty, and the reason is trimmed before it is passed to onDecide.",
+    "Text beyond reasonLimit is cut as it is typed or pasted.",
+    "An error that is not a LocalizedError shows the built-in failure text.",
+    "The built-in \"characters left\" text uses the English plural rule; pass labels.charactersLeft for other languages.",
+    "If the view is removed while onDecide runs, the task still finishes.",
+    "With allowsNone false and no saved value, no choice is selected and Save stays disabled until one is chosen."
+  ],
+  "tests": [
+    "MonarchDecisionCardTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Renewal decision with evidence",
+      "fixture": "decision-card",
+      "webExample": "Renewal decision with evidence",
+      "template": "MonarchDecisionCard(\n    {{title}},\n    options: options,\n    value: saved.value,\n    reason: saved.reason,\n    decidedAt: {{decidedAt|date}},\n    decidedBy: {{decidedBy}},\n    now: {{now|date}},\n    onDecide: { decision in saved = decision },\n    context: {\n        HStack {\n            Text({{context.label}})\n            MonarchBadge({{context.badge}}, tone: .info)\n            Text({{context.text}})\n        }\n        .monarchTextStyle(.body)\n    }\n)",
+      "setupTemplate": "@State private var saved = MonarchDecision(value: {{value}}, reason: {{reason}})\n\nprivate let options = [\n    MonarchDecisionOption({{options.0.label}}, value: {{options.0.value}}, tone: {{options.0.tone|tone}}),\n    MonarchDecisionOption({{options.1.label}}, value: {{options.1.value}}, tone: {{options.1.tone|tone}}),\n    MonarchDecisionOption({{options.2.label}}, value: {{options.2.value}}, note: {{options.2.note}}, tone: {{options.2.tone|tone}}, isReasonRequired: {{options.2.reasonRequired}}),\n]",
+      "setup": "@State private var saved = MonarchDecision(value: \"review\", reason: \"Check with the team first\")\n\nprivate let options = [\n    MonarchDecisionOption(\"Keep\", value: \"keep\", tone: .success),\n    MonarchDecisionOption(\"Review\", value: \"review\", tone: .warning),\n    MonarchDecisionOption(\"Let lapse\", value: \"lapse\", note: \"Reminders stop and one final notice is sent before it expires.\", tone: .danger, isReasonRequired: true),\n]",
+      "code": "MonarchDecisionCard(\n    \"Renewal decision\",\n    options: options,\n    value: saved.value,\n    reason: saved.reason,\n    decidedAt: Date(timeIntervalSince1970: 1_778_230_800),\n    decidedBy: \"Alex Morgan\",\n    now: Date(timeIntervalSince1970: 1_778_414_400),\n    onDecide: { decision in saved = decision },\n    context: {\n        HStack {\n            Text(\"Usage:\")\n            MonarchBadge(\"Active\", tone: .info)\n            Text(\"Serves a website and email.\")\n        }\n        .monarchTextStyle(.body)\n    }\n)"
+    },
+    {
+      "title": "Read-only",
+      "code": "MonarchDecisionCard(\n    \"Renewal decision\",\n    options: [MonarchDecisionOption(\"Let lapse\", value: \"lapse\", tone: .danger)],\n    value: \"lapse\",\n    reason: \"Nobody has signed in since March.\",\n    decidedBy: \"Ana\",\n    isReadOnly: true\n)"
+    }
+  ],
+  "webEquivalent": "DecisionCard",
+  "dependsOn": [
+    "card",
+    "radio-group",
+    "text-field",
+    "button",
+    "badge"
+  ]
+}

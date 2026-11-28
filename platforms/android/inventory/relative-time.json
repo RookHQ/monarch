@@ -1,0 +1,112 @@
+{
+  "id": "relative-time",
+  "name": null,
+  "title": "RelativeTime",
+  "family": "data-display",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "android.text.format.DateUtils.getRelativeTimeSpanString(long, long, long), android.icu.text.RelativeDateTimeFormatter",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Relative times such as \"3 hours ago\" come from the platform's formatters. Monarch ships nothing; the text takes a Monarch type role and color, and TalkBack reads the absolute time.",
+  "whenToUse": "For timestamps in lists, comments and activity. Use DateUtils.getRelativeTimeSpanString for \"3 hours ago\" and \"in 2 days\", and RelativeDateTimeFormatter for words such as \"yesterday\" or \"next week\".",
+  "whenNotToUse": "When the exact time matters more than the age, such as a due date or a log entry, show the absolute date with DateUtils.formatDateTime or android.icu.text.DateFormat.",
+  "api": [
+    "DateUtils.getRelativeTimeSpanString(time: Long, now: Long, minResolution: Long): CharSequence",
+    "DateUtils.formatDateTime(context: Context, millis: Long, flags: Int): String",
+    "RelativeDateTimeFormatter.getInstance(): RelativeDateTimeFormatter"
+  ],
+  "options": [
+    {
+      "name": "time",
+      "type": "Long",
+      "default": "required",
+      "description": "The moment, in epoch milliseconds (UTC)."
+    },
+    {
+      "name": "now",
+      "type": "Long",
+      "default": "required",
+      "description": "The reference time, usually System.currentTimeMillis(); redraw it every minute to keep the text true."
+    },
+    {
+      "name": "minResolution",
+      "type": "Long",
+      "default": "required",
+      "description": "The smallest unit shown, such as DateUtils.MINUTE_IN_MILLIS, so \"0 minutes ago\" never shows seconds."
+    }
+  ],
+  "states": [
+    {
+      "name": "past",
+      "description": "\"3 hours ago\"."
+    },
+    {
+      "name": "future",
+      "description": "\"In 2 days\"."
+    }
+  ],
+  "appearance": "Plain text in a Monarch type role, usually Caption, in the muted text color, so it reads in every theme.",
+  "platformNotes": "The web RelativeTime is a component with a tooltip for the absolute time, its own ticking and an absoluteAfter threshold. Android has no hover tooltip on touch, so the absolute time goes in the content description, as on iOS. The ticking is a produceState that updates every minute, and the threshold is an if in the app. java.time is not used because the minimum SDK is 24 without desugaring; times are epoch milliseconds. Monarch's own components write relative times with one rule on every platform, the web formatRelativeTime rule (internal MonarchRelativeTime: seconds to years with the web rollovers, Math.round, \"now\", \"yesterday\", \"last week\", no switch to a date unless a component sets an absolute-after threshold). DateUtils.getRelativeTimeSpanString, suggested here for app code, differs: it never shows seconds and writes a date from a week on.",
+  "accessibility": [
+    "Set the absolute date and time as the content description, so TalkBack reads a time that does not go stale.",
+    "The formatters use the user's locale.",
+    "The text grows with the font size setting when a Monarch type role is applied."
+  ],
+  "edgeCases": [
+    "getRelativeTimeSpanString is worked out when it is composed and does not update by itself; redraw it every minute.",
+    "Times more than a week away are written as a date by getRelativeTimeSpanString.",
+    "RelativeDateTimeFormatter needs the direction and unit worked out by the app."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Relative and absolute",
+      "fixture": "relative-time",
+      "webExample": "Relative and absolute",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n    MonarchText(text = \"{{lines.0.prefix|raw}} ${relative({{lines.0.date|millis}})}\")\n    MonarchText(text = \"{{lines.1.prefix|raw}} ${relative({{lines.1.date|millis}})}\")\n    MonarchText(text = \"{{lines.2.prefix|raw}} ${relative({{lines.2.date|millis}})}\")\n    MonarchText(text = \"{{lines.3.prefix|raw}} ${absolute({{lines.3.date|millis}})}\")\n}",
+      "setupTemplate": "val now = {{now|millis}}\nfun relative(at: Long): String =\n    DateUtils.getRelativeTimeSpanString(at, now, DateUtils.MINUTE_IN_MILLIS).toString()\n        .replaceFirstChar { it.lowercase() }\nfun absolute(at: Long): String =\n    DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.forLanguageTag({{locale}}))\n        .apply { timeZone = TimeZone.getTimeZone({{timeZone}}) }\n        .format(Date(at))",
+      "imports": [
+        "android.text.format.DateUtils",
+        "java.text.DateFormat",
+        "java.util.Date",
+        "java.util.Locale",
+        "java.util.TimeZone",
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "val now = 1_793_707_200_000L\nfun relative(at: Long): String =\n    DateUtils.getRelativeTimeSpanString(at, now, DateUtils.MINUTE_IN_MILLIS).toString()\n        .replaceFirstChar { it.lowercase() }\nfun absolute(at: Long): String =\n    DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.forLanguageTag(\"en-GB\"))\n        .apply { timeZone = TimeZone.getTimeZone(\"UTC\") }\n        .format(Date(at))",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n    MonarchText(text = \"Edited ${relative(1_793_707_020_000L)}\")\n    MonarchText(text = \"Synced ${relative(1_793_689_200_000L)}\")\n    MonarchText(text = \"Renews ${relative(1_793_880_000_000L)}\")\n    MonarchText(text = \"Created ${absolute(1_790_251_200_000L)}\")\n}"
+    },
+    {
+      "title": "Kept up to date every minute",
+      "setup": "val postedAt = remember { System.currentTimeMillis() - 90_000L }\nval now by produceState(System.currentTimeMillis()) {\n    while (true) {\n        delay(DateUtils.MINUTE_IN_MILLIS)\n        value = System.currentTimeMillis()\n    }\n}",
+      "imports": [
+        "android.text.format.DateUtils",
+        "kotlinx.coroutines.delay"
+      ],
+      "code": "MonarchText(\n    text = DateUtils.getRelativeTimeSpanString(postedAt, now, DateUtils.MINUTE_IN_MILLIS).toString(),\n    style = MonarchTextStyle.Caption,\n)"
+    },
+    {
+      "title": "Words such as \"yesterday\"",
+      "imports": [
+        "android.icu.text.RelativeDateTimeFormatter"
+      ],
+      "code": "MonarchText(\n    text = RelativeDateTimeFormatter.getInstance().format(\n        RelativeDateTimeFormatter.Direction.LAST,\n        RelativeDateTimeFormatter.AbsoluteUnit.DAY,\n    ),\n    style = MonarchTextStyle.Caption,\n)"
+    }
+  ],
+  "webEquivalent": "RelativeTime",
+  "dependsOn": [],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "android",
+      "reason": "The web underlines the relative time with a dotted line because hovering it shows the absolute time in a tooltip. Touch has no hover, so the dotted line would suggest a tap target that does not exist; the absolute time is in the content description for TalkBack instead.",
+      "convention": "Material guidance: no hover tooltips on touch; do not mark non-interactive text as interactive"
+    }
+  ]
+}

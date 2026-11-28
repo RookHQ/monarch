@@ -1,0 +1,153 @@
+{
+  "id": "ai-plan",
+  "name": "MonarchAiPlan",
+  "title": "AiPlan",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchCard with MonarchReorderableList (androidx.compose.foundation.lazy.LazyColumn) of compact bordered text field rows with Move up and Move down buttons, androidx.compose.material3.IconButton or MonarchButton to remove, MonarchButton footer, and MonarchAiChainOfSteps once decided",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The plan an agent proposes before it acts, which a person edits, reorders, approves or rejects, and which then shows the steps as the agent works through them.",
+  "whenToUse": "When an agent asks for approval before it takes several steps that change things, so the person can correct the plan first.",
+  "whenNotToUse": "For steps that run without approval, use MonarchAiChainOfSteps. For a single risky tool call, use MonarchAiPermissionScope or the tool call's own approval.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchAiPlan(part: MonarchAiPlanPart, modifier: Modifier = Modifier, decision: MonarchAiPlanDecision? = null, editable: Boolean = true, removeIcon: (@Composable () -> Unit)? = null, labels: MonarchAiPlanLabels = MonarchAiPlanLabels(), onChange: ((List<MonarchAiPlanStep>) -> Unit)? = null, onReject: (() -> Unit)? = null, onApprove: ((List<MonarchAiPlanStep>) -> Unit)? = null)",
+    "enum class MonarchAiPlanDecision { Pending, Approved, Rejected }",
+    "class MonarchAiPlanLabels(title: String? = null, description: String? = null, editHint: String? = null, approvedNotice: String? = null, rejectedNotice: String? = null, stepLabel: ((position: Int) -> String)? = null, stepPlaceholder: String? = null, untitledStep: ((position: Int) -> String)? = null, remove: ((step: String) -> String)? = null, removeText: String? = null, removed: ((step: String) -> String)? = null, addStep: String? = null, approve: String? = null, reject: String? = null, emptyPlan: String? = null, reorder: MonarchReorderableListLabels = MonarchReorderableListLabels())"
+  ],
+  "options": [
+    {
+      "name": "part",
+      "type": "MonarchAiPlanPart",
+      "default": "required",
+      "description": "The plan part the agent proposed. Its steps seed the draft; a new part from the model (not an echo of the draft) replaces it."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the card."
+    },
+    {
+      "name": "decision",
+      "type": "MonarchAiPlanDecision?",
+      "default": "null",
+      "description": "The decision, when the app keeps it. When null the view keeps its own after Approve or Reject."
+    },
+    {
+      "name": "editable",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the person can change the steps before deciding. Once decided the plan is always read-only."
+    },
+    {
+      "name": "removeIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The icon of each step's remove button, in a 48dp Material 3 IconButton. Without it the button reads \"Remove\". Monarch bundles no icons."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiPlanLabels",
+      "default": "MonarchAiPlanLabels()",
+      "description": "Replacements for the built-in strings, including the title and the reorderable list's strings."
+    },
+    {
+      "name": "onChange",
+      "type": "((List<MonarchAiPlanStep>) -> Unit)?",
+      "default": "null",
+      "description": "Called with the draft after every edit, move, addition and removal."
+    },
+    {
+      "name": "onReject",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Called when the person rejects the plan."
+    },
+    {
+      "name": "onApprove",
+      "type": "((List<MonarchAiPlanStep>) -> Unit)?",
+      "default": "null",
+      "description": "Called with the approved steps, labels trimmed and empty steps left out."
+    }
+  ],
+  "states": [
+    {
+      "name": "pending, editable",
+      "description": "Each step is a row with the reorder handle, its number, the step text in a bordered field, a remove button and Move up and Move down buttons; Add step, Reject and Approve plan follow."
+    },
+    {
+      "name": "pending, read-only",
+      "description": "editable false: the steps as a MonarchAiChainOfSteps with Reject and Approve plan."
+    },
+    {
+      "name": "empty",
+      "description": "Every step empty: Approve plan is disabled and a note says to add a step."
+    },
+    {
+      "name": "approved",
+      "description": "The description reads the approved notice, which is announced; the cleaned steps show as a MonarchAiChainOfSteps whose states follow the part and are announced."
+    },
+    {
+      "name": "rejected",
+      "description": "The description reads the rejected notice, which is announced; the steps show read-only with no buttons."
+    },
+    {
+      "name": "dragging",
+      "description": "A step held after a long press follows the finger and the others slide out of its way, as in MonarchReorderableList."
+    }
+  ],
+  "appearance": "A MonarchCard with the title in the subheading style, a muted caption, step numbers in the label style in the muted color, bordered step fields, ghost Add step and Remove buttons, a secondary Reject and a primary Approve plan. All are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "Same names as iOS, with Kotlin names: isEditable is editable and the callbacks follow the labels. The parity map names an editable ordered list; Android builds it on MonarchReorderableList, a LazyColumn, so a long press anywhere on a step drags it and the handle offers Move up and Move down to TalkBack, Switch Access and the arrow keys. Because the plan sits inside a scrolling conversation, the list of steps is limited to four rows of the spacing scale (384dp) and scrolls inside the card past that. iOS builds a VStack with drag and drop onto another step. Like the web, each step's text is an always-open compact bordered field, followed by Remove, Move up and Move down; a new step takes focus at once. Monarch bundles no icons, so the remove button is text unless the app gives an icon. The web's title prop is labels.title. Android announces removals and the decision through a polite live region; iOS posts announcements. The composable is experimental: an AI panel that waits for a Rook app to adopt it.",
+  "accessibility": [
+    "The title is a heading; the card is a traversal group.",
+    "Each step's text is a text field named \"Step 2\"; the visible number is hidden from TalkBack because that name carries it.",
+    "Each handle is named \"Reorder <step>\" and offers Move up and Move down; a move is announced by the reorderable list.",
+    "Each remove button is named \"Remove <step>\" and has a 48dp touch target; a removal is announced as \"Removed <step>\".",
+    "An empty step is named \"step 2\" in these names.",
+    "Approving or rejecting announces the notice through a polite live region; once approved the chain of steps announces starts and failures.",
+    "Approve plan is disabled while every step is empty and a visible note says why; the footer buttons wrap when they do not fit."
+  ],
+  "edgeCases": [
+    "A step whose text is only spaces counts as empty and is left out of the approved steps.",
+    "A new step gets the id new-1, new-2… skipping ids in use, and opens its editor at once.",
+    "When the app passes a decision and neither onApprove nor onReject, no buttons are shown.",
+    "Long steps wrap at every text size; more than about four steps scroll inside the card."
+  ],
+  "tests": [
+    "MonarchAiPlanTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Editable proposal",
+      "fixture": "ai-plan",
+      "webExample": "Editable proposal",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiPlan(\n    part = MonarchAiPlanPart(\n        listOf(\n            MonarchAiPlanStep(id = {{steps.0.id}}, label = {{steps.0.label}}),\n            MonarchAiPlanStep(id = {{steps.1.id}}, label = {{steps.1.label}}),\n            MonarchAiPlanStep(id = {{steps.2.id}}, label = {{steps.2.label}}),\n        ),\n    ),\n    removeIcon = { MonarchIcon(SampleIcons.Close, contentDescription = null) },\n    onReject = {},\n    onApprove = {},\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.components.intelligence.aiconversation.MonarchAiPlanPart",
+        "com.rookhq.monarch.components.intelligence.aiconversation.MonarchAiPlanStep",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiPlan(\n    part = MonarchAiPlanPart(\n        listOf(\n            MonarchAiPlanStep(id = \"s1\", label = \"Collect last quarter’s figures\"),\n            MonarchAiPlanStep(id = \"s2\", label = \"Compare them with the forecast\"),\n            MonarchAiPlanStep(id = \"s3\", label = \"Draft a one-page summary\"),\n        ),\n    ),\n    removeIcon = { MonarchIcon(SampleIcons.Close, contentDescription = null) },\n    onReject = {},\n    onApprove = {},\n)"
+    }
+  ],
+  "webEquivalent": "AiPlan",
+  "dependsOn": [
+    "reorderable-list",
+    "inline-edit-text",
+    "button",
+    "card",
+    "ai-chain-of-steps"
+  ],
+  "icons": {
+    "remove": "CloseGlyph",
+    "addStep": "PlusGlyph"
+  }
+}

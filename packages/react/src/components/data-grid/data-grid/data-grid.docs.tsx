@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { DataGrid, type DataGridColumn } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './data-grid.fixture.json';
 
 interface Invoice {
   id: string;
@@ -11,10 +13,10 @@ interface Invoice {
   due: string;
 }
 
-const CUSTOMERS = ['Example Ltd', 'Sample Co', 'Demo GmbH', 'Placeholder Inc'];
-const STATUSES = ['Draft', 'Sent', 'Paid', 'Overdue'];
+const CUSTOMERS = fixture.data.customers;
+const STATUSES = fixture.data.statuses;
 
-const INVOICES: Invoice[] = Array.from({ length: 10_000 }, (_, i) => ({
+const INVOICES: Invoice[] = Array.from({ length: fixture.data.rowCount }, (_, i) => ({
   id: `inv-${i}`,
   number: `INV-${String(i + 1).padStart(5, '0')}`,
   customer: CUSTOMERS[i % CUSTOMERS.length] ?? 'Example Ltd',
@@ -23,44 +25,39 @@ const INVOICES: Invoice[] = Array.from({ length: 10_000 }, (_, i) => ({
   due: `2026-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 27) + 1).padStart(2, '0')}`,
 }));
 
-const COLUMNS: DataGridColumn<Invoice>[] = [
-  { id: 'number', header: 'Invoice', sortable: true, hideable: false, pinned: 'start', width: 140 },
-  {
-    id: 'customer',
-    header: 'Customer',
-    sortable: true,
-    editable: true,
-    required: true,
-    width: 200,
-  },
-  {
-    id: 'status',
-    header: 'Status',
+// What the columns do on the web only; the headers and widths are the fixture's.
+const COLUMN_BEHAVIOUR: Record<string, Partial<DataGridColumn<Invoice>>> = {
+  number: { sortable: true, hideable: false, pinned: 'start' },
+  customer: { sortable: true, editable: true, required: true },
+  status: {
     sortable: true,
     editable: true,
     editor: 'select',
     options: STATUSES.map((s) => ({ value: s, label: s })),
-    width: 140,
   },
-  {
-    id: 'amount',
-    header: 'Amount',
+  amount: {
     numeric: true,
     sortable: true,
     editable: true,
     min: 0,
-    width: 130,
     cell: (r) => r.amount.toFixed(2),
   },
-  { id: 'due', header: 'Due', sortable: true, editable: true, editor: 'date', width: 150 },
-];
+  due: { sortable: true, editable: true, editor: 'date' },
+};
+
+const COLUMNS = fixture.data.columns.map((c) => ({
+  id: c.id,
+  header: c.header,
+  width: c.width,
+  ...COLUMN_BEHAVIOUR[c.id],
+})) as DataGridColumn<Invoice>[];
 
 function EditableGrid() {
   const [rows, setRows] = useState(INVOICES);
   const [selected, setSelected] = useState<string[]>([]);
   return (
     <DataGrid
-      label="Invoices"
+      label={fixture.data.label}
       columns={COLUMNS}
       rows={rows}
       getRowId={(r) => r.id}
@@ -73,10 +70,10 @@ function EditableGrid() {
         setRows((all) => all.map((r) => (r.id === row.id ? { ...r, [column]: value } : r)))
       }
       rowActions={(r) => [
-        { id: 'open', label: 'Open', onSelect: () => {} },
+        { id: 'open', label: fixture.data.rowActions[0] ?? '', onSelect: () => {} },
         {
           id: 'delete',
-          label: 'Delete',
+          label: fixture.data.rowActions[1] ?? '',
           tone: 'danger',
           onSelect: () => setRows((all) => all.filter((x) => x.id !== r.id)),
           confirm: { title: `Delete ${r.number}?`, confirmLabel: 'Delete invoice' },

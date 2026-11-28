@@ -1,5 +1,7 @@
 import { Avatar, Button, DeviceFrame } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './device-frame.fixture.json';
 
 function SamplePage() {
   return (
@@ -12,12 +14,12 @@ function SamplePage() {
         textAlign: 'center',
       }}
     >
-      <Avatar name="Northwind Studio" size="lg" />
-      <strong>Northwind Studio</strong>
+      <Avatar name={fixture.data.name} size="lg" />
+      <strong>{fixture.data.name}</strong>
       <span style={{ color: 'var(--mn-color-text-muted)', fontSize: 'var(--mn-text-sm)' }}>
-        Ceramics and workshops
+        {fixture.data.tagline}
       </span>
-      {['Shop', 'Book a workshop', 'Newsletter'].map((label) => (
+      {fixture.data.links.map((label) => (
         <Button key={label} variant="secondary" style={{ width: '100%' }}>
           {label}
         </Button>
@@ -130,10 +132,10 @@ export default {
           render: () => (
             <div style={{ width: '17.5rem' }}>
               <DeviceFrame
-                label="Preview of a link page on a phone"
-                width={280}
-                height={560}
-                statusBarTime="9:41"
+                label={fixture.data.label}
+                width={fixture.data.width}
+                height={fixture.data.height}
+                statusBarTime={fixture.data.statusBarTime}
               >
                 <SamplePage />
               </DeviceFrame>

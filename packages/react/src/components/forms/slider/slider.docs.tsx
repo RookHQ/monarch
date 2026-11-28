@@ -1,14 +1,23 @@
 import { useState } from 'react';
 import { Field, FieldDescription, FieldLabel, Slider } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './slider.fixture.json';
 
 function VolumeDemo() {
-  const [volume, setVolume] = useState(60);
-  const [saved, setSaved] = useState(60);
+  const [volume, setVolume] = useState(fixture.data.value);
+  const [saved, setSaved] = useState(fixture.data.value);
   return (
     <Field style={{ width: '100%', maxWidth: 360 }}>
-      <FieldLabel>Notification volume</FieldLabel>
-      <Slider value={volume} onValueChange={setVolume} onValueCommit={setSaved} showValue />
+      <FieldLabel>{fixture.data.label}</FieldLabel>
+      <Slider
+        value={volume}
+        min={fixture.data.min}
+        max={fixture.data.max}
+        onValueChange={setVolume}
+        onValueCommit={setSaved}
+        showValue
+      />
       <FieldDescription>Saved at {saved}.</FieldDescription>
     </Field>
   );
@@ -30,7 +39,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'Picks a value in a known range where the position matters more than the exact digit: volume, opacity, zoom, a 1–5 level. A WAI-ARIA slider with a formatted spoken value. Replaces the shadcn/ui copies at `Rook Links/src/components/ui/slider.tsx`, `Rook ID/rookid/components/ui/slider.tsx` and `Rook ID/rookid/src/components/ui/slider.tsx`. Needed by: rookatlas, rookcalendar, rookdots, rookfriends, rookid, rookpeople, rookstride and rooktickets frontends.',
+        'Picks a value in a known range where the position matters more than the exact digit: volume, opacity, zoom, a 1–5 level. A WAI-ARIA slider with a formatted spoken value. Replaces the shadcn/ui copies at `Rook Links/src/components/ui/slider.tsx`, `Rook ID/rookid/components/ui/slider.tsx` and `Rook ID/rookid/src/components/ui/slider.tsx`. Needed by: rookatlas, rookcalendar, rookdots, rookid, rookpartner, rookpeople, rookstride and rooktickets frontends.',
       useWhen: [
         'A bounded value people adjust and watch the effect of (volume, opacity, zoom).',
         'A short ordered scale with named points: `marks` plus `formatValue`.',

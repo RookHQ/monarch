@@ -1,14 +1,14 @@
 import { BarChart } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './bar-chart.fixture.json';
 
-const WEEKS = [
-  { week: 'Week 1', drafted: 12, posted: 8 },
-  { week: 'Week 2', drafted: 9, posted: 9 },
-  { week: 'Week 3', drafted: 15, posted: 11 },
-  { week: 'Week 4', drafted: 11, posted: 10 },
-  { week: 'Week 5', drafted: 14, posted: 13 },
-  { week: 'Week 6', drafted: 18, posted: 12 },
-];
+const [DRAFTED, POSTED] = fixture.data.series.map((series) => series.values);
+const WEEKS = fixture.data.categories.map((week, i) => ({
+  week,
+  drafted: DRAFTED?.[i] ?? 0,
+  posted: POSTED?.[i] ?? 0,
+}));
 const MONTHS = [
   { month: 'May', earned: 320 },
   { month: 'Jun', earned: 410 },
@@ -172,16 +172,13 @@ export default {
           stack: true,
           render: () => (
             <BarChart
-              title="Posts"
-              description="Drafted and posted per week"
+              title={fixture.data.title}
+              description={fixture.data.description}
               data={WEEKS}
               categoryKey="week"
-              categoryLabel="Week"
-              series={[
-                { key: 'drafted', label: 'Drafted' },
-                { key: 'posted', label: 'Posted' },
-              ]}
-              locale="en-US"
+              categoryLabel={fixture.data.categoryLabel}
+              series={fixture.data.series.map(({ key, label }) => ({ key, label }))}
+              locale={fixture.data.locale}
             />
           ),
         },

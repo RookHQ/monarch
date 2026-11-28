@@ -9,7 +9,14 @@ import {
   DropdownMenuTrigger,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './dropdown-menu.fixture.json';
 import { MoreIcon, PencilIcon, TrashIcon } from '../../../internal/docs-demo.js';
+
+const [renameItem, assignItem] = fixture.data.items as [
+  { label: string; shortcut: string },
+  { label: string },
+];
 
 export default {
   id: 'dropdown-menu',
@@ -108,18 +115,23 @@ export default {
       items: [
         {
           title: 'Actions',
+          stage: true,
           render: () => (
-            <DropdownMenu>
+            <DropdownMenu defaultOpen>
               <DropdownMenuTrigger asChild>
-                <Button trailingIcon={<MoreIcon />}>Actions</Button>
+                <Button trailingIcon={<MoreIcon />}>{fixture.data.trigger}</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuLabel>Ticket</DropdownMenuLabel>
-                <DropdownMenuItem shortcut="R">Rename</DropdownMenuItem>
-                <DropdownMenuItem>Assign to me</DropdownMenuItem>
-                <DropdownMenuCheckboxItem checked>Watching</DropdownMenuCheckboxItem>
+                <DropdownMenuLabel>{fixture.data.label}</DropdownMenuLabel>
+                <DropdownMenuItem shortcut={renameItem.shortcut}>
+                  {renameItem.label}
+                </DropdownMenuItem>
+                <DropdownMenuItem>{assignItem.label}</DropdownMenuItem>
+                <DropdownMenuCheckboxItem checked={fixture.data.watching.checked}>
+                  {fixture.data.watching.label}
+                </DropdownMenuCheckboxItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem tone="danger">Delete</DropdownMenuItem>
+                <DropdownMenuItem tone="danger">{fixture.data.delete}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ),

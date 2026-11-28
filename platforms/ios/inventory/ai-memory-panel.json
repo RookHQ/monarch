@@ -1,0 +1,153 @@
+{
+  "id": "ai-memory-panel",
+  "name": "MonarchAiMemoryPanel",
+  "title": "AiMemoryPanel",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "List(selection:) with a Section per entity, searchable(text:prompt:), the editMode environment for multiple selection, toolbar(content:), swipeActions, confirmationDialog(_:isPresented:titleVisibility:actions:message:), safeAreaInset(edge: .bottom) with MonarchBulkActionBar, and MonarchAiMemoryChip rows",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Everything the assistant remembers, grouped by the person, organization or project it is about, with search, edit, forget one, and select several to forget after a confirmation.",
+  "whenToUse": "As the settings screen where people review and correct what the assistant remembers about them, their organization and their projects.",
+  "whenNotToUse": "To show that a reply used or saved a memory, use MonarchAiMemoryChip in the thread. For a short list without grouping or bulk actions, use MonarchAiMemoryChip rows in a List.",
+  "api": [
+    "init(_ memories: [MonarchAiMemoryItem], labels: MonarchAiMemoryPanelLabels = MonarchAiMemoryPanelLabels(), startsSelecting: Bool = false, onEdit: @escaping @MainActor (_ id: String, _ text: String) -> Void, onForget: @escaping @MainActor (_ id: String) -> Void, onForgetMany: @escaping @MainActor (_ ids: [String]) -> Void)",
+    "struct MonarchAiMemoryItem: Identifiable { init(id: String, text: String, entity: MonarchAiMemoryEntity, updatedAt: Date); static func apply(_ memories: [MonarchAiMemoryItem], event: MonarchAiMemoryPart, now: Date, defaultEntityName: String = \"General\", entity: (@Sendable (MonarchAiMemoryPart) -> MonarchAiMemoryEntity)? = nil) -> [MonarchAiMemoryItem] }",
+    "struct MonarchAiMemoryEntity { init(kind: MonarchAiMemoryEntityKind, name: String) }",
+    "enum MonarchAiMemoryEntityKind { case person, organization, project, other }",
+    "struct MonarchAiMemoryPanelLabels { init(label: String? = nil, search: String? = nil, select: String? = nil, done: String? = nil, selectAll: (@Sendable (_ shown: Int) -> String)? = nil, deselectAll: String? = nil, kind: (@Sendable (_ kind: MonarchAiMemoryEntityKind) -> String)? = nil, count: (@Sendable (_ count: Int) -> String)? = nil, updated: (@Sendable (_ date: String) -> String)? = nil, empty: String? = nil, noMatches: (@Sendable (_ query: String) -> String)? = nil, matches: (@Sendable (_ count: Int) -> String)? = nil, forget: String? = nil, confirmTitle: (@Sendable (_ count: Int) -> String)? = nil, confirmMessage: String? = nil, cancel: String? = nil, forgotten: (@Sendable (_ count: Int) -> String)? = nil, edited: String? = nil, chip: MonarchAiMemoryChipLabels = MonarchAiMemoryChipLabels(), bulkBar: MonarchBulkActionBarLabels = MonarchBulkActionBarLabels()) }"
+  ],
+  "options": [
+    {
+      "name": "memories",
+      "type": "[MonarchAiMemoryItem]",
+      "default": "required",
+      "description": "Everything remembered: id, text, the entity it is about and when it was last updated. The app's state: change it in the callbacks. MonarchAiMemoryItem.apply keeps it in step with a conversation's memory events."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiMemoryPanelLabels",
+      "default": "MonarchAiMemoryPanelLabels()",
+      "description": "Replaces every built-in string, the row strings (chip) and the bulk bar strings."
+    },
+    {
+      "name": "onEdit",
+      "type": "@MainActor (_ id: String, _ text: String) -> Void",
+      "default": "required",
+      "description": "Saves an edited memory with the trimmed new text, from the row's Edit dialog."
+    },
+    {
+      "name": "onForget",
+      "type": "@MainActor (_ id: String) -> Void",
+      "default": "required",
+      "description": "Forgets one memory straight away, from the row's menu or a swipe."
+    },
+    {
+      "name": "onForgetMany",
+      "type": "@MainActor (_ ids: [String]) -> Void",
+      "default": "required",
+      "description": "Forgets the selected memories after the person confirms. With one selected, onForget is called instead."
+    },
+    {
+      "name": "environment locale and timeZone",
+      "type": "Locale, TimeZone",
+      "default": "the environment's",
+      "description": "The search's case folding, the order of names and the updated dates follow the environment's locale and time zone."
+    },
+    {
+      "name": "startsSelecting",
+      "type": "Bool",
+      "default": "false",
+      "description": "Opens in selection mode with select-all and forget showing."
+    }
+  ],
+  "states": [
+    {
+      "name": "listing",
+      "description": "One section per entity: people, then organizations, projects and other, each by name; newest memory first, each with \"Updated\" and its date."
+    },
+    {
+      "name": "searching",
+      "description": "Only memories whose text or entity name contains the search are shown; the count is announced 300 ms after typing stops."
+    },
+    {
+      "name": "selecting",
+      "description": "Select in the toolbar puts the list in edit mode with selection circles, a Select all (n) or Deselect all button, and MonarchBulkActionBar with the count and Forget once something is selected. Row menus are hidden meanwhile."
+    },
+    {
+      "name": "confirming",
+      "description": "A confirmation dialog asks \"Forget 2 memories?\" with Forget (destructive) and Cancel."
+    },
+    {
+      "name": "empty",
+      "description": "\"Nothing is remembered yet.\" as a first-run empty state, and no Select button."
+    },
+    {
+      "name": "no matches",
+      "description": "\"No memories match “…”.\" as a filtered empty state with a way to clear the search."
+    }
+  ],
+  "appearance": "A standard inset grouped list: group names in the default text colour with the strong body type, kinds, counts and dates muted, rows from MonarchAiMemoryChip's row variant. Swipe and confirmation use the system destructive red. The list follows the system's dark and high-contrast appearance; Monarch roles resolve in each theme.",
+  "platformNotes": "A product pattern, experimental until a Rook app adopts it; plain public API with status experimental, like the other experimental iOS entries, because the compiled examples import MonarchUI without SPI. On a phone the web's toolbar (search, select-all checkbox and a Forget selected button) becomes the system pattern: searchable in the navigation bar, a Select button that turns on the list's edit mode, Select all in the toolbar and MonarchBulkActionBar at the bottom, as Mail and Files do; so the panel needs a NavigationStack around it. There are no group checkboxes (the web's and Android's select-a-group): iOS edit mode selects rows, and Select all covers what the search shows. Each row reuses MonarchAiMemoryChip's row variant, so Edit and Forget are in its menu and VoiceOver actions; a trailing swipe also forgets. The web's AiMemoryItem entity kind org is organization here, and updatedAt is a Date. Locale and time zone come from the environment instead of parameters (Android takes locale and timeZone). The web's onForgetMany may return a promise that keeps the dialog pending; here the dialog closes on confirm and the app updates memories. The web moves focus to the next row after a forget; iOS leaves focus to the system. Android uses the same type names.",
+  "accessibility": [
+    "The list is named \"Memories\"; each group name has the header trait and is followed by its kind and count.",
+    "Each row is the MonarchAiMemoryChip row: the memory is one element with Edit and Forget as actions, and the menu button is named after the memory.",
+    "Selection uses the system edit mode, so VoiceOver reads each row's selected state and the toolbar buttons by name.",
+    "The number of matches is announced after the search settles; \"Memory updated\", \"Memory forgotten\" or \"2 memories forgotten\" are announced after a change.",
+    "Forgetting several memories always asks for confirmation first."
+  ],
+  "edgeCases": [
+    "A selected memory that the search hides is not forgotten; only shown selected memories count.",
+    "Selecting one memory and confirming calls onForget, not onForgetMany.",
+    "Long memories wrap; the menu's spoken name uses a shortened copy.",
+    "With no memories the Select button is hidden."
+  ],
+  "tests": [
+    "MonarchAiMemoryPanelTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Memories",
+      "fixture": "ai-memory-panel",
+      "webExample": "Memories",
+      "template": "NavigationStack {\n    MonarchAiMemoryPanel(\n        memories,\n        startsSelecting: true,\n        onEdit: { id, text in\n            if let index = memories.firstIndex(where: { $0.id == id }) { memories[index].text = text }\n        },\n        onForget: { id in memories.removeAll { $0.id == id } },\n        onForgetMany: { ids in memories.removeAll { ids.contains($0.id) } }\n    )\n    .monarchCanvas()\n    .navigationTitle(\"Memories\")\n    #if os(iOS)\n    .navigationBarTitleDisplayMode(.inline)\n    #endif\n}\n.environment(\\.locale, Locale(identifier: {{locale}}))\n.environment(\\.timeZone, TimeZone(identifier: {{timeZone}}) ?? .gmt)",
+      "setupTemplate": "@State private var memories = [\n    MonarchAiMemoryItem(\n        id: {{memories.0.id}},\n        text: {{memories.0.text}},\n        entity: MonarchAiMemoryEntity(kind: {{memories.0.entity.kind|case}}, name: {{memories.0.entity.name}}),\n        updatedAt: {{memories.0.updatedAt|date}}\n    ),\n    MonarchAiMemoryItem(\n        id: {{memories.1.id}},\n        text: {{memories.1.text}},\n        entity: MonarchAiMemoryEntity(kind: {{memories.1.entity.kind|case}}, name: {{memories.1.entity.name}}),\n        updatedAt: {{memories.1.updatedAt|date}}\n    ),\n    MonarchAiMemoryItem(\n        id: {{memories.2.id}},\n        text: {{memories.2.text}},\n        entity: MonarchAiMemoryEntity(kind: .organization, name: {{memories.2.entity.name}}),\n        updatedAt: {{memories.2.updatedAt|date}}\n    ),\n    MonarchAiMemoryItem(\n        id: {{memories.3.id}},\n        text: {{memories.3.text}},\n        entity: MonarchAiMemoryEntity(kind: {{memories.3.entity.kind|case}}, name: {{memories.3.entity.name}}),\n        updatedAt: {{memories.3.updatedAt|date}}\n    ),\n]",
+      "setup": "@State private var memories = [\n    MonarchAiMemoryItem(\n        id: \"a1\",\n        text: \"Prefers summaries under 200 words\",\n        entity: MonarchAiMemoryEntity(kind: .person, name: \"Ada Lovelace\"),\n        updatedAt: Date(timeIntervalSince1970: 1_790_848_800)\n    ),\n    MonarchAiMemoryItem(\n        id: \"a2\",\n        text: \"Works in the Lisbon office\",\n        entity: MonarchAiMemoryEntity(kind: .person, name: \"Ada Lovelace\"),\n        updatedAt: Date(timeIntervalSince1970: 1_791_194_400)\n    ),\n    MonarchAiMemoryItem(\n        id: \"o1\",\n        text: \"Fiscal year starts in April\",\n        entity: MonarchAiMemoryEntity(kind: .organization, name: \"Northwind\"),\n        updatedAt: Date(timeIntervalSince1970: 1_785_578_400)\n    ),\n    MonarchAiMemoryItem(\n        id: \"p1\",\n        text: \"Launch review is every Thursday\",\n        entity: MonarchAiMemoryEntity(kind: .project, name: \"Atlas\"),\n        updatedAt: Date(timeIntervalSince1970: 1_788_256_800)\n    ),\n]",
+      "code": "NavigationStack {\n    MonarchAiMemoryPanel(\n        memories,\n        startsSelecting: true,\n        onEdit: { id, text in\n            if let index = memories.firstIndex(where: { $0.id == id }) { memories[index].text = text }\n        },\n        onForget: { id in memories.removeAll { $0.id == id } },\n        onForgetMany: { ids in memories.removeAll { ids.contains($0.id) } }\n    )\n    .monarchCanvas()\n    .navigationTitle(\"Memories\")\n    #if os(iOS)\n    .navigationBarTitleDisplayMode(.inline)\n    #endif\n}\n.environment(\\.locale, Locale(identifier: \"en-GB\"))\n.environment(\\.timeZone, TimeZone(identifier: \"Europe/London\") ?? .gmt)"
+    },
+    {
+      "title": "Keeping the list in step with a conversation",
+      "setup": "@State private var memories: [MonarchAiMemoryItem] = []\nprivate let now = Date(timeIntervalSince1970: 1_763_100_000)",
+      "code": "NavigationStack {\n    MonarchAiMemoryPanel(\n        memories,\n        onEdit: { _, _ in },\n        onForget: { id in memories.removeAll { $0.id == id } },\n        onForgetMany: { ids in memories.removeAll { ids.contains($0.id) } }\n    )\n}\n.frame(minHeight: 300)\n.onAppear {\n    let event = MonarchAiMemoryPart(id: \"m1\", action: .write, text: \"Works in Lisbon\", scope: \"Ada\")\n    memories = MonarchAiMemoryItem.apply(memories, event: event, now: now)\n}"
+    }
+  ],
+  "webEquivalent": "AiMemoryPanel",
+  "dependsOn": [
+    "ai-memory-chip",
+    "search-input",
+    "bulk-action-bar",
+    "confirm-dialog",
+    "empty-state"
+  ],
+  "icons": {
+    "search": "SearchGlyph",
+    "edit": "PencilGlyph",
+    "forget": "CloseGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "memories.2.entity.kind"
+      ],
+      "reason": "The web kind org is the enum case organization natively (naming only, same behaviour), so it is written literally.",
+      "convention": "enum naming: web org = native Organization"
+    }
+  ]
+}

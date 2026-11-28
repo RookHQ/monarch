@@ -17,20 +17,27 @@ export function Toc({ path, root }: { path: string; root: HTMLElement | null }) 
   useEffect(() => {
     if (!root) return;
     let key = '';
+    let headings: HTMLElement[] = [];
     const read = () => {
-      const next = [...root.querySelectorAll<HTMLElement>('[data-toc]')].map((el) => ({
+      // Headings in a hidden tab panel are not on the page being read.
+      const found = [...root.querySelectorAll<HTMLElement>('[data-toc]:not([hidden] *)')];
+      const next = found.map((el) => ({
         id: el.id,
         label: el.dataset.toc || el.textContent || el.id,
       }));
       const nextKey = next.map((e) => `${e.id}:${e.label}`).join('|');
-      if (nextKey === key) return;
+      // The same list, but a section was replaced by a new element (the native
+      // sections of a component page go live): observe the new headings.
+      const same = found.length === headings.length && found.every((el, i) => el === headings[i]);
+      if (nextKey === key && same) return;
       key = nextKey;
+      headings = found;
       setEntries(next);
     };
     read();
-    // Sections can mount after lazy content resolves.
+    // Sections can mount after lazy content resolves, and tabs show and hide them.
     const mo = new MutationObserver(read);
-    mo.observe(root, { childList: true, subtree: true });
+    mo.observe(root, { childList: true, subtree: true, attributeFilter: ['hidden'] });
     return () => mo.disconnect();
   }, [root]);
 

@@ -1,0 +1,112 @@
+{
+  "id": "ai-handoff",
+  "name": "MonarchAiHandoff",
+  "title": "AiHandoff",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "HStack of MonarchAiAgentAvatar, MonarchIcon and MonarchAvatar, Text, a dashed stroked Shape, RelativeDateTimeFormatter",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A marker in a thread where one agent hands the work to another agent or to a person, with the reason and the time.",
+  "whenToUse": "When a coordinating agent routes the conversation to a specialist agent, or an agent escalates to a person for an approval or a judgement call.",
+  "whenNotToUse": "Not for a day change, a context reset or a summary: use MonarchAiContextDivider. Not when the agent simply asks the person a question: that is a normal message.",
+  "api": [
+    "init(from: MonarchAiAgentRef, to: MonarchAiHandoffTarget, reason: String? = nil, date: Date? = nil, now: Date? = nil, labels: MonarchAiHandoffLabels = MonarchAiHandoffLabels())",
+    "enum MonarchAiHandoffTarget { case agent(MonarchAiAgentRef), person(name: String, avatarURL: URL? = nil); var name: String; var isPerson: Bool }",
+    "struct MonarchAiHandoffLabels { var label: String?; var handedOff: (@Sendable (String, String, Bool) -> String)?; var agentKind: String?; var reason: String? }"
+  ],
+  "options": [
+    {
+      "name": "from",
+      "type": "MonarchAiAgentRef",
+      "default": "required",
+      "description": "The agent that hands the work over."
+    },
+    {
+      "name": "to",
+      "type": "MonarchAiHandoffTarget",
+      "default": "required",
+      "description": "The agent, or the person, that takes the work."
+    },
+    {
+      "name": "reason",
+      "type": "String?",
+      "default": "nil",
+      "description": "Why the work moved, shown under the sentence in muted text."
+    },
+    {
+      "name": "date",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When it happened, shown as a relative time such as \"3 minutes ago\"."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for date. nil is the current time."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiHandoffLabels",
+      "default": "MonarchAiHandoffLabels()",
+      "description": "Replacements for \"Handoff\", the sentence, \"AI agent\" and \"Reason:\"."
+    }
+  ],
+  "states": [
+    {
+      "name": "to an agent",
+      "description": "The target is a square agent avatar; the dashed lines, border and arrow use the AI colours."
+    },
+    {
+      "name": "to a person",
+      "description": "The target is a round avatar; the lines and border are the neutral border colour."
+    },
+    {
+      "name": "accessibility text size",
+      "description": "The side lines are dropped so the sentence keeps the width."
+    }
+  ],
+  "appearance": "A body with a dashed rounded border between two dashed side lines. Lines and border use the AI border role for an agent target and the default border role for a person; the sentence is default text, the reason muted text and the time subtle text. All roles come from the theme, so the four themes differ only in their values.",
+  "platformNotes": "The web takes reason as any node and a locale prop; here the reason is a String and the locale, calendar and time zone come from the SwiftUI environment. The web drops the side lines below 30rem; iOS drops them at accessibility text sizes. The web marks the root with the note role; SwiftUI has no note trait, so the marker is one static element whose label starts with \"Handoff\". The arrow is the SF Symbol arrow.forward, which flips right to left.",
+  "accessibility": [
+    "The marker is one element read as \"Handoff\", the sentence, \"Reason:\" and the reason, then the time.",
+    "Agent names are read with \"(AI agent)\" after them; a person's name is not, so the direction is clear without the pictures.",
+    "The avatars, the arrow and the lines are hidden from VoiceOver.",
+    "The sentence is built by a function of both names, so a translation can reorder it.",
+    "Text scales with Dynamic Type and wraps; nothing is interactive."
+  ],
+  "edgeCases": [
+    "An empty reason is treated as no reason.",
+    "Long names and reasons wrap inside the border; the side lines keep a least length of 16 points.",
+    "Without date no time is shown; now only matters with date.",
+    "Future dates read as \"in 3 minutes\"."
+  ],
+  "tests": [
+    "MonarchAiHandoffTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Agent to agent",
+      "fixture": "ai-handoff",
+      "webExample": "Agent to agent",
+      "template": "MonarchAiHandoff(\n    from: MonarchAiAgentRef(id: {{from.id}}, name: {{from.name}}),\n    to: .agent(MonarchAiAgentRef(id: {{to.id}}, name: {{to.name}})),\n    reason: {{reason}},\n    date: {{at|date}},\n    now: {{now|date}}\n)",
+      "code": "MonarchAiHandoff(\n    from: MonarchAiAgentRef(id: \"research\", name: \"Research agent\"),\n    to: .agent(MonarchAiAgentRef(id: \"writer\", name: \"Writing agent\")),\n    reason: \"Sources are ready to draft from\",\n    date: Date(timeIntervalSince1970: 1_772_452_620),\n    now: Date(timeIntervalSince1970: 1_772_452_800)\n)"
+    },
+    {
+      "title": "Agent to a person",
+      "code": "MonarchAiHandoff(\n    from: MonarchAiAgentRef(id: \"research\", name: \"Research agent\"),\n    to: .person(name: \"Sam Lee\"),\n    reason: \"Needs a person to approve the refund\"\n)"
+    }
+  ],
+  "webEquivalent": "AiHandoff",
+  "dependsOn": [
+    "ai-agent-avatar",
+    "avatar",
+    "ai-context-divider"
+  ]
+}

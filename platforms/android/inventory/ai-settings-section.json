@@ -1,0 +1,132 @@
+{
+  "id": "ai-settings-section",
+  "name": null,
+  "title": "AiSettingsSection",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchSectionCard with androidx.compose.foundation.layout.FlowRow in its footer; rows are MonarchSwitchRow, MonarchFormField with MonarchSelect, and MonarchSecretField for the provider key",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: workspace AI settings in a settings card (AI on or off per app, data sharing, memory, conversation retention and a bring-your-own provider key), kept as a draft until Save changes.",
+  "whenToUse": "On a workspace settings screen where admins decide where AI is available and how it handles data.",
+  "whenNotToUse": "For switches that save one by one as they change, use MonarchSwitchSettingsList. For a spending limit, use MonarchAiSpendCap; for the model choice, MonarchAiModelPicker.",
+  "api": [
+    "MonarchSectionCard(title = \"AI\", description = …, busy = saving, footer = { … Discard and Save changes … }) { rows }",
+    "MonarchSwitchRow(checked = id in apps, onCheckedChange = …, label = appLabel)",
+    "MonarchFormField(label = \"Conversation history\", helperText = …) { controlModifier -> MonarchSelect(…, modifier = controlModifier) }",
+    "MonarchSecretField(value = apiKey, label = \"<Provider> API key\", onValueChange = …, helperText = …, saved = keyConfigured)"
+  ],
+  "options": [
+    {
+      "name": "apps",
+      "type": "List of app ids and labels",
+      "default": "none",
+      "description": "One MonarchSwitchRow per app under a \"Use AI in\" heading; leave the group out when there are no apps."
+    },
+    {
+      "name": "dirty",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The draft differs from the saved settings, or a new key was typed: the footer says so and enables Discard and Save changes."
+    },
+    {
+      "name": "saving",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Passed to Save changes' loading and the card's busy; disable the rows meanwhile."
+    },
+    {
+      "name": "read only",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Every row disabled, the reason as the description, and no footer."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The saved settings with Discard and Save changes disabled."
+    },
+    {
+      "name": "dirty",
+      "description": "\"You have unsaved changes.\" in a polite live region, Discard and Save changes enabled."
+    },
+    {
+      "name": "provider chosen",
+      "description": "A secret field for the provider's key; a saved key shows as set and is never sent back to the screen."
+    },
+    {
+      "name": "saving",
+      "description": "Save changes shows its loading state and the card reads busy."
+    },
+    {
+      "name": "read only",
+      "description": "Rows disabled and the reason shown under the title."
+    },
+    {
+      "name": "save failed",
+      "description": "Keep the draft and show the error in a MonarchInlineNotice in the card."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component: the section card's surface, border and header, switch rows, form fields with selects, the secret field, and small buttons in a footer. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships AiSettingsSection as one component with a value, a draft and onSave. On Android, as for settings-section, it is a recipe: MonarchSectionCard gives the card, the busy state and the footer slot, and the rows are existing Monarch rows, so the app keeps the draft and the saved value itself. The web shows the apps with SwitchSettingsList; that component saves each switch as it changes, so this recipe uses MonarchSwitchRow for the apps to keep them in the same draft as the other rows. The web's NativeSelect is MonarchSelect, its SecretField with isSet is MonarchSecretField with saved. The web's bot icon in the heading is left out because Monarch bundles no icons. iOS has not covered this entry yet.",
+  "accessibility": [
+    "The card title is a heading, from MonarchSectionCard; \"Use AI in\" is a heading too.",
+    "Each switch row is one TalkBack element with the switch role; form fields name their select by the label.",
+    "The unsaved-changes line is a polite live region, so it is announced when it appears.",
+    "The provider key is a MonarchSecretField: hidden by default, with a reveal button, and a saved key read as set.",
+    "Discard and Save changes are MonarchButtons with 48dp targets; the footer wraps at large font sizes."
+  ],
+  "edgeCases": [
+    "Apps missing from the saved settings count as off.",
+    "Changing the provider clears a typed key; leaving the key blank keeps the saved one.",
+    "Send the key only when one was typed, and never show a saved key.",
+    "For a long settings screen, prefer one MonarchFormActionsBar for the whole screen over a footer per section."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Workspace AI settings",
+      "fixture": "ai-settings-section",
+      "webExample": "Workspace AI settings",
+      "template": "MonarchSectionCard(\n    title = {{messages.title}},\n    description = {{messages.description}},\n    icon = { MonarchIcon(SampleIcons.Bot, contentDescription = null, tint = MonarchTheme.colors.aiStrong) },\n    footer = {\n        FlowRow(\n            modifier = Modifier.weight(1f),\n            horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2, Alignment.End),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n            itemVerticalAlignment = Alignment.CenterVertically,\n        ) {\n            MonarchButton(\n                text = {{messages.discard}},\n                onClick = {\n                    apps = savedApps\n                    sharing = savedSharing\n                    memory = savedMemory\n                    retention = savedRetention\n                    provider = savedProvider\n                },\n                enabled = dirty,\n            )\n            MonarchButton(\n                text = {{messages.save}},\n                onClick = {\n                    // The app saves the draft here.\n                    savedApps = apps\n                    savedSharing = sharing\n                    savedMemory = memory\n                    savedRetention = retention\n                    savedProvider = provider\n                },\n                variant = MonarchButtonVariant.Primary,\n                enabled = dirty,\n            )\n        }\n    },\n) {\n    MonarchText(text = {{messages.appsTitle}}, style = MonarchTextStyle.Label, heading = true)\n    MonarchText(text = {{messages.appsDescription}}, style = MonarchTextStyle.Caption)\n    MonarchSwitchRow(\n        checked = apps[{{apps.0.id}}] == true,\n        onCheckedChange = { on -> apps = apps + ({{apps.0.id}} to on) },\n        label = {{apps.0.label}},\n        description = {{apps.0.description}},\n    )\n    MonarchSwitchRow(\n        checked = apps[{{apps.1.id}}] == true,\n        onCheckedChange = { on -> apps = apps + ({{apps.1.id}} to on) },\n        label = {{apps.1.label}},\n        description = {{apps.1.description}},\n    )\n    MonarchSwitchRow(\n        checked = apps[{{apps.2.id}}] == true,\n        onCheckedChange = { on -> apps = apps + ({{apps.2.id}} to on) },\n        label = {{apps.2.label}},\n    )\n    MonarchSwitchRow(\n        checked = sharing,\n        onCheckedChange = { sharing = it },\n        label = {{messages.dataSharing}},\n        description = {{messages.dataSharingDescription}},\n    )\n    MonarchSwitchRow(\n        checked = memory,\n        onCheckedChange = { memory = it },\n        label = {{messages.memory}},\n        description = {{messages.memoryDescription}},\n    )\n    MonarchFormField(\n        label = {{messages.retention}},\n        helperText = {{messages.retentionDescription}},\n    ) { controlModifier ->\n        MonarchSelect(\n            options = listOf(\n                MonarchSelectOption({{retentionOptions.0.value}}, {{retentionOptions.0.label}}),\n                MonarchSelectOption({{retentionOptions.1.value}}, {{retentionOptions.1.label}}),\n                MonarchSelectOption({{retentionOptions.2.value}}, {{retentionOptions.2.label}}),\n                MonarchSelectOption({{retentionOptions.3.value}}, {{retentionOptions.3.label}}),\n            ),\n            selected = retention,\n            onSelect = { retention = it },\n            modifier = controlModifier,\n        )\n    }\n    MonarchFormField(\n        label = {{messages.provider}},\n        helperText = {{messages.providerDescription}},\n    ) { controlModifier ->\n        MonarchSelect(\n            options = listOf(\n                MonarchSelectOption({{value.provider}}, {{messages.providerDefault}}),\n                MonarchSelectOption({{providers.0.id}}, {{providers.0.label}}),\n                MonarchSelectOption({{providers.1.id}}, {{providers.1.label}}),\n            ),\n            selected = provider,\n            onSelect = { provider = it },\n            modifier = controlModifier,\n        )\n    }\n}",
+      "setupTemplate": "var apps by remember {\n    mutableStateOf(mapOf({{apps.0.id}} to {{value.apps.docs}}, {{apps.1.id}} to {{value.apps.mail}}, {{apps.2.id}} to {{value.apps.calendar}}))\n}\nvar savedApps by remember { mutableStateOf(apps) }\nvar sharing by remember { mutableStateOf({{value.dataSharing}}) }\nvar savedSharing by remember { mutableStateOf(sharing) }\nvar memory by remember { mutableStateOf({{value.memory}}) }\nvar savedMemory by remember { mutableStateOf(memory) }\nvar retention by remember { mutableStateOf({{value.retention}}) }\nvar savedRetention by remember { mutableStateOf(retention) }\nvar provider by remember { mutableStateOf({{value.provider}}) }\nvar savedProvider by remember { mutableStateOf(provider) }\nval dirty = apps != savedApps || sharing != savedSharing || memory != savedMemory ||\n    retention != savedRetention || provider != savedProvider",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.foundation.*",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "androidx.compose.ui.Alignment"
+      ],
+      "setup": "var apps by remember {\n    mutableStateOf(mapOf(\"docs\" to true, \"mail\" to false, \"calendar\" to true))\n}\nvar savedApps by remember { mutableStateOf(apps) }\nvar sharing by remember { mutableStateOf(false) }\nvar savedSharing by remember { mutableStateOf(sharing) }\nvar memory by remember { mutableStateOf(true) }\nvar savedMemory by remember { mutableStateOf(memory) }\nvar retention by remember { mutableStateOf(\"90d\") }\nvar savedRetention by remember { mutableStateOf(retention) }\nvar provider by remember { mutableStateOf(\"\") }\nvar savedProvider by remember { mutableStateOf(provider) }\nval dirty = apps != savedApps || sharing != savedSharing || memory != savedMemory ||\n    retention != savedRetention || provider != savedProvider",
+      "code": "MonarchSectionCard(\n    title = \"AI\",\n    description = \"Choose where AI is available in this workspace and how it handles your data.\",\n    icon = { MonarchIcon(SampleIcons.Bot, contentDescription = null, tint = MonarchTheme.colors.aiStrong) },\n    footer = {\n        FlowRow(\n            modifier = Modifier.weight(1f),\n            horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2, Alignment.End),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n            itemVerticalAlignment = Alignment.CenterVertically,\n        ) {\n            MonarchButton(\n                text = \"Discard\",\n                onClick = {\n                    apps = savedApps\n                    sharing = savedSharing\n                    memory = savedMemory\n                    retention = savedRetention\n                    provider = savedProvider\n                },\n                enabled = dirty,\n            )\n            MonarchButton(\n                text = \"Save changes\",\n                onClick = {\n                    // The app saves the draft here.\n                    savedApps = apps\n                    savedSharing = sharing\n                    savedMemory = memory\n                    savedRetention = retention\n                    savedProvider = provider\n                },\n                variant = MonarchButtonVariant.Primary,\n                enabled = dirty,\n            )\n        }\n    },\n) {\n    MonarchText(text = \"Use AI in\", style = MonarchTextStyle.Label, heading = true)\n    MonarchText(text = \"Turn AI features on or off for each app.\", style = MonarchTextStyle.Caption)\n    MonarchSwitchRow(\n        checked = apps[\"docs\"] == true,\n        onCheckedChange = { on -> apps = apps + (\"docs\" to on) },\n        label = \"Documents\",\n        description = \"Summaries, drafts and answers about pages.\",\n    )\n    MonarchSwitchRow(\n        checked = apps[\"mail\"] == true,\n        onCheckedChange = { on -> apps = apps + (\"mail\" to on) },\n        label = \"Mail\",\n        description = \"Reply suggestions and thread summaries.\",\n    )\n    MonarchSwitchRow(\n        checked = apps[\"calendar\"] == true,\n        onCheckedChange = { on -> apps = apps + (\"calendar\" to on) },\n        label = \"Calendar\",\n    )\n    MonarchSwitchRow(\n        checked = sharing,\n        onCheckedChange = { sharing = it },\n        label = \"Share data to improve AI\",\n        description = \"Allow prompts and responses to be used to improve AI quality. Off keeps them private to this workspace.\",\n    )\n    MonarchSwitchRow(\n        checked = memory,\n        onCheckedChange = { memory = it },\n        label = \"Memory\",\n        description = \"Let AI remember facts and preferences across conversations.\",\n    )\n    MonarchFormField(\n        label = \"Conversation history\",\n        helperText = \"How long AI conversations are kept before they are deleted.\",\n    ) { controlModifier ->\n        MonarchSelect(\n            options = listOf(\n                MonarchSelectOption(\"30d\", \"30 days\"),\n                MonarchSelectOption(\"90d\", \"90 days\"),\n                MonarchSelectOption(\"1y\", \"1 year\"),\n                MonarchSelectOption(\"forever\", \"Until deleted\"),\n            ),\n            selected = retention,\n            onSelect = { retention = it },\n            modifier = controlModifier,\n        )\n    }\n    MonarchFormField(\n        label = \"AI provider\",\n        helperText = \"Use the built-in provider or bring your own key.\",\n    ) { controlModifier ->\n        MonarchSelect(\n            options = listOf(\n                MonarchSelectOption(\"\", \"Built-in\"),\n                MonarchSelectOption(\"provider-a\", \"Provider A\"),\n                MonarchSelectOption(\"provider-b\", \"Provider B\"),\n            ),\n            selected = provider,\n            onSelect = { provider = it },\n            modifier = controlModifier,\n        )\n    }\n}"
+    },
+    {
+      "title": "Read only",
+      "code": "MonarchSectionCard(\n    title = \"AI\",\n    description = \"Only workspace admins can change these settings.\",\n) {\n    MonarchSwitchRow(checked = true, onCheckedChange = {}, label = \"CRM\", enabled = false)\n    MonarchSwitchRow(\n        checked = false,\n        onCheckedChange = {},\n        label = \"Share data to improve AI\",\n        enabled = false,\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.foundation.*",
+        "androidx.compose.ui.Alignment"
+      ]
+    }
+  ],
+  "webEquivalent": "AiSettingsSection",
+  "dependsOn": [
+    "settings-section",
+    "switch-settings-list",
+    "select",
+    "secret-field",
+    "section-card",
+    "switch",
+    "form-field",
+    "button"
+  ],
+  "icons": {
+    "header": "BotGlyph"
+  }
+}

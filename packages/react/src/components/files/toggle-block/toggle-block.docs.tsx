@@ -1,5 +1,7 @@
 import { RichTextEditor, ToggleBlock, ToggleBlockExtension } from '@rookcom/monarch-react/editor';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './toggle-block.fixture.json';
 
 const EXTENSIONS = [ToggleBlockExtension];
 
@@ -103,8 +105,8 @@ export default {
           stack: true,
           render: () => (
             <div style={{ width: '100%', maxWidth: 560 }}>
-              <ToggleBlock summary="How are invoices numbered?">
-                <p>Each workspace has its own sequence, starting at 1001.</p>
+              <ToggleBlock summary={fixture.data.summary}>
+                <p>{fixture.data.body}</p>
               </ToggleBlock>
             </div>
           ),

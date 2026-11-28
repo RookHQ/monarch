@@ -8,40 +8,12 @@ import {
   type QueryGroup,
 } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './query-builder.fixture.json';
 
-const FIELDS: QueryField[] = [
-  {
-    value: 'status',
-    label: 'Status',
-    type: 'select',
-    options: [
-      { value: 'open', label: 'Open' },
-      { value: 'pending', label: 'Pending' },
-      { value: 'closed', label: 'Closed' },
-    ],
-  },
-  { value: 'title', label: 'Title', type: 'text' },
-  { value: 'amount', label: 'Amount', type: 'number', placeholder: 'Amount' },
-  { value: 'created', label: 'Created', type: 'date' },
-  { value: 'flagged', label: 'Flagged', type: 'boolean' },
-];
+const FIELDS = fixture.data.fields as unknown as QueryField[];
 
-const START: QueryGroup = {
-  id: 'root',
-  combinator: 'and',
-  rules: [{ id: 'r1', field: 'status', operator: 'eq', value: 'open' }],
-  groups: [
-    {
-      id: 'g1',
-      combinator: 'or',
-      rules: [
-        { id: 'r2', field: 'amount', operator: 'gte', value: 500 },
-        { id: 'r3', field: 'flagged', operator: 'is_true' },
-      ],
-      groups: [],
-    },
-  ],
-};
+const START = fixture.data.query as unknown as QueryGroup;
 
 function NestedQuery() {
   const [query, setQuery] = useState<QueryGroup>(START);

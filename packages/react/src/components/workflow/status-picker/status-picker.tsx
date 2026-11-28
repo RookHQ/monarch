@@ -130,6 +130,10 @@ export interface StatusPickerProps extends Omit<
   showLabel?: boolean | undefined;
   /** Trigger size. Default `md`. */
   size?: 'sm' | 'md' | undefined;
+  /** Whether the menu is open (controlled). */
+  open?: boolean | undefined;
+  /** Called when the menu opens or closes. */
+  onOpenChange?: ((open: boolean) => void) | undefined;
   /** Translated strings. */
   messages?:
     | (Partial<Omit<StatusPickerMessages, 'categories'>> & {
@@ -151,6 +155,8 @@ export const StatusPicker = forwardRef<HTMLButtonElement, StatusPickerProps>(fun
     onValueChange,
     showLabel = true,
     size = 'md',
+    open,
+    onOpenChange,
     messages: messagesProp,
     className,
     disabled,
@@ -171,7 +177,10 @@ export const StatusPicker = forwardRef<HTMLButtonElement, StatusPickerProps>(fun
   })).filter((g) => g.items.length > 0);
 
   return (
-    <DropdownMenu>
+    <DropdownMenu
+      {...(open !== undefined ? { open } : {})}
+      {...(onOpenChange ? { onOpenChange } : {})}
+    >
       <DropdownMenuTrigger
         ref={ref}
         type="button"

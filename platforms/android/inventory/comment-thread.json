@@ -1,0 +1,183 @@
+{
+  "id": "comment-thread",
+  "name": "MonarchCommentThread",
+  "title": "CommentThread",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column with MonarchMessageRow for each comment, MonarchMessageComposer (Foundation BasicTextField with TextFieldState) for the reply field, MonarchButton, MonarchBadge and androidx.compose.material3.AlertDialog for the delete confirmation",
+  "status": "experimental",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "One threaded discussion shown in place: an optional quote, the starting comment, replies with older ones folded, Resolve and Reopen, and a reply field that stays busy while saving.",
+  "whenToUse": "For a discussion anchored to one thing, shown next to it: a comment on a document passage, a field or a ticket, in a sheet or under the item. Use resolved for review flows where threads are settled.",
+  "whenNotToUse": "For a chat-style conversation, use MonarchVirtualMessageList with MonarchMessageRow and MonarchMessageComposer. For one message alone, use MonarchMessageRow. For a feed of events, use MonarchActivityTimeline.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchCommentThread(comments: List<MonarchCommentThreadComment>, modifier: Modifier = Modifier, quote: String? = null, resolved: Boolean = false, visibleReplies: Int = 3, now: Long? = null, replyState: TextFieldState = rememberTextFieldState(), labels: MonarchCommentThreadLabels = MonarchCommentThreadLabels(), onResolvedChange: (suspend (Boolean) -> Unit)? = null, onReply: (suspend (String) -> Unit)? = null, onDeleteComment: (suspend (String) -> Unit)? = null, resolveIcon: (@Composable () -> Unit)? = null)",
+    "class MonarchCommentThreadComment(id: String, author: String, body: String, createdAt: Long, authorImage: Painter? = null, authorSeed: String? = null, canDelete: Boolean = false)",
+    "class MonarchCommentThreadLabels(label: ((author: String) -> String)? = null, quote: ((quote: String) -> String)? = null, showEarlier: ((count: Int) -> String)? = null, reply: String? = null, replyPlaceholder: String? = null, send: String? = null, resolve: String? = null, reopen: String? = null, resolved: String? = null, resolvedHint: String? = null, resolvedNotice: String? = null, reopenedNotice: String? = null, sentNotice: String? = null, actionFailed: String? = null, deleteComment: String? = null, deleteTitle: String? = null, deleteDescription: String? = null, deleteConfirm: String? = null, cancel: String? = null, messageRow: MonarchMessageRowLabels = MonarchMessageRowLabels())"
+  ],
+  "options": [
+    {
+      "name": "comments",
+      "type": "List<MonarchCommentThreadComment>",
+      "default": "required",
+      "description": "The comments, oldest first. The first starts the thread; the rest are replies. Each has an id, author, body, creation time in epoch milliseconds, an optional avatar Painter and canDelete."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the thread."
+    },
+    {
+      "name": "quote",
+      "type": "String?",
+      "default": "null",
+      "description": "The passage the thread is about, shown above it in the muted color with a bar along the start edge."
+    },
+    {
+      "name": "resolved",
+      "type": "Boolean",
+      "default": "false",
+      "description": "A Resolved badge, the subtle fill, Reopen instead of Resolve, and a hint instead of the reply field."
+    },
+    {
+      "name": "visibleReplies",
+      "type": "Int",
+      "default": "3",
+      "description": "The latest replies shown before older ones fold behind Show N earlier replies. Folding never hides a single reply."
+    },
+    {
+      "name": "now",
+      "type": "Long?",
+      "default": "null",
+      "description": "Fixes now for the relative times. Without it the times follow the clock."
+    },
+    {
+      "name": "replyState",
+      "type": "TextFieldState",
+      "default": "rememberTextFieldState()",
+      "description": "The reply text. Hoist it to keep a draft."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchCommentThreadLabels",
+      "default": "MonarchCommentThreadLabels()",
+      "description": "Replacements for every built-in string, including the comments' MonarchMessageRowLabels."
+    },
+    {
+      "name": "onResolvedChange",
+      "type": "(suspend (Boolean) -> Unit)?",
+      "default": "null",
+      "description": "Resolves (true) or reopens (false); shows the Resolve or Reopen button, which shows progress while it runs. Throw to report a failure."
+    },
+    {
+      "name": "onReply",
+      "type": "(suspend (String) -> Unit)?",
+      "default": "null",
+      "description": "Posts the trimmed reply; shows the reply field. The field clears when it returns and keeps the text when it throws."
+    },
+    {
+      "name": "onDeleteComment",
+      "type": "(suspend (String) -> Unit)?",
+      "default": "null",
+      "description": "Deletes the comment with this id after a confirmation dialog; offered on comments with canDelete, by long press and as a TalkBack action."
+    },
+    {
+      "name": "resolveIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The icon before Resolve, a MonarchIcon with a null description. Text only without it."
+    }
+  ],
+  "states": [
+    {
+      "name": "open",
+      "description": "The comments, Resolve when onResolvedChange is given, and the reply field when onReply is given."
+    },
+    {
+      "name": "folded",
+      "description": "With more replies than visibleReplies plus one, the starting comment, a Show N earlier replies button and the latest replies. The button reveals all and moves focus to the first revealed reply."
+    },
+    {
+      "name": "resolving",
+      "description": "The Resolve or Reopen button shows a progress indicator until onResolvedChange returns."
+    },
+    {
+      "name": "sending",
+      "description": "The composer's send button shows Sending… until onReply returns; the text clears on success."
+    },
+    {
+      "name": "resolved",
+      "description": "The subtle fill, a success Resolved badge, Reopen, and This thread is resolved. Reopen it to reply. instead of the reply field."
+    },
+    {
+      "name": "failed",
+      "description": "That didn't work. Try again. in the strong danger color under the thread; a failed reply keeps its text."
+    },
+    {
+      "name": "confirming delete",
+      "description": "A Material 3 AlertDialog: Delete this comment?, a danger Delete comment button and Cancel."
+    },
+    {
+      "name": "empty",
+      "description": "With no comments, only the reply field (when onReply is given); the thread has no TalkBack name."
+    }
+  ],
+  "appearance": "No fill while open and the subtle background role when resolved. The quote is muted text beside a strong border bar; the Resolved badge uses the success subtle roles; a failure uses the strong danger text role; comments and the reply field keep the MonarchMessageRow and MonarchMessageComposer roles. The same roles adapt to dark and both high-contrast themes.",
+  "platformNotes": "The web's CommentThread shows a delete icon button on each deletable comment and a hint about Enter and Shift+Enter; on Android, Delete is in the comment's long-press menu and a TalkBack action (MonarchMessageRow's actions), and the on-screen keyboard's Enter adds a line while the send button sends (MonarchMessageComposer's behavior), so there is no keyboard hint. The web returns promises from its callbacks; Android takes suspending functions and treats a thrown exception as the failure. A resolved thread on the web is muted with opacity; Monarch never dims with alpha, so Android uses the subtle background and a Resolved badge, which also says the state in text. The web's success notices are visually hidden; on Android the same live region shows them as a muted caption. The thread is a Column, not a LazyColumn, so it can sit in a scrolling screen or sheet; folding keeps it short. Comment bodies are plain strings, where the web accepts any React node. iOS has no entry for this id yet.",
+  "accessibility": [
+    "The thread is a traversal group named Thread started by <first author>.",
+    "The quote is one element read as Quoted text: <quote>.",
+    "Each comment is a MonarchMessageRow: author, full date and body are one element.",
+    "Delete comment is a TalkBack custom action and a long-press menu item on comments with canDelete, and asks for confirmation in a dialog.",
+    "Resolve, Reopen, Show N earlier replies and Send reply are buttons with a 48dp touch target.",
+    "Resolved is written as a badge, not shown by color alone.",
+    "Success (Reply sent, Thread resolved, Thread reopened) and failure are written in a polite live region that is always present, so changes are announced.",
+    "Show N earlier replies moves focus to the first revealed reply.",
+    "The reply field is named Reply for TalkBack."
+  ],
+  "edgeCases": [
+    "Folding never hides a single reply: with visibleReplies 3, four replies are all shown and five fold two.",
+    "A negative visibleReplies counts as 0.",
+    "With no comments the thread has no TalkBack name and shows only the reply field.",
+    "onReply receives the trimmed text; an empty or blank field cannot be sent.",
+    "Without now, the relative times refresh every minute while on screen.",
+    "A second tap on Resolve while it is saving is ignored."
+  ],
+  "tests": [
+    "MonarchCommentThreadTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Open thread with a quote",
+      "fixture": "comment-thread",
+      "webExample": "Open thread with a quote",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchCommentThread(\n    comments = comments,\n    quote = {{quote}},\n    resolved = resolved,\n    now = {{now|millis}},\n    onResolvedChange = { resolved = it /* Save on the server; throw on failure. */ },\n    onReply = { body ->\n        comments += MonarchCommentThreadComment(\"c${comments.size + 1}\", \"Lee Park\", body, System.currentTimeMillis(), canDelete = true)\n    },\n    onDeleteComment = { id -> comments.removeAll { it.id == id } },\n)",
+      "setupTemplate": "val comments = remember {\n    mutableStateListOf(\n        MonarchCommentThreadComment(\n            id = {{comments.0.id}},\n            author = {{comments.0.author}},\n            body = {{comments.0.body}},\n            createdAt = {{comments.0.createdAt|millis}},\n            authorSeed = {{comments.0.seed}},\n        ),\n        MonarchCommentThreadComment(\n            id = {{comments.1.id}},\n            author = {{comments.1.author}},\n            body = {{comments.1.body}},\n            createdAt = {{comments.1.createdAt|millis}},\n            authorSeed = {{comments.1.seed}},\n            canDelete = {{comments.1.canDelete}},\n        ),\n    )\n}\nvar resolved by remember { mutableStateOf(false) }",
+      "setup": "val comments = remember {\n    mutableStateListOf(\n        MonarchCommentThreadComment(\n            id = \"c1\",\n            author = \"Priya Raman\",\n            body = \"Should this say \\\"billed every quarter\\\" instead?\",\n            createdAt = 1_773_133_920_000L,\n            authorSeed = \"u1\",\n        ),\n        MonarchCommentThreadComment(\n            id = \"c2\",\n            author = \"Tom Becker\",\n            body = \"Yes. Monthly billing was retired last year.\",\n            createdAt = 1_773_135_600_000L,\n            authorSeed = \"u2\",\n            canDelete = true,\n        ),\n    )\n}\nvar resolved by remember { mutableStateOf(false) }",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchCommentThread(\n    comments = comments,\n    quote = \"Billed monthly, cancel any time.\",\n    resolved = resolved,\n    now = 1_773_144_000_000L,\n    onResolvedChange = { resolved = it /* Save on the server; throw on failure. */ },\n    onReply = { body ->\n        comments += MonarchCommentThreadComment(\"c${comments.size + 1}\", \"Lee Park\", body, System.currentTimeMillis(), canDelete = true)\n    },\n    onDeleteComment = { id -> comments.removeAll { it.id == id } },\n)"
+    },
+    {
+      "title": "A read-only thread with older replies folded",
+      "setup": "val now = remember { System.currentTimeMillis() }\nval comments = remember {\n    listOf(\"Can we drop the footnote?\", \"Agreed.\", \"Updated the copy.\", \"Legal is fine.\", \"Shipping tomorrow.\", \"Thanks all.\")\n        .mapIndexed { i, body -> MonarchCommentThreadComment(\"c$i\", if (i % 2 == 0) \"Lee Park\" else \"Tom Becker\", body, now - (60 - i * 5) * 60_000L) }\n}",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchCommentThread(comments = comments, visibleReplies = 2)"
+    }
+  ],
+  "webEquivalent": "CommentThread",
+  "dependsOn": [
+    "avatar",
+    "message-composer",
+    "relative-time",
+    "button",
+    "message-row"
+  ],
+  "icons": {
+    "resolve": "CheckGlyph"
+  }
+}

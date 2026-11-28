@@ -1,28 +1,20 @@
 import { useState } from 'react';
 import { PendingInvitesList, type PendingInvite } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './pending-invites-list.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 const days = (n: number) => new Date(Date.now() + n * 86_400_000);
 
-const SAMPLE: PendingInvite[] = [
-  {
-    id: 'inv-1',
-    email: 'ana@example.com',
-    role: 'Member',
-    invitedBy: 'Sam Rivera',
-    sentAt: days(-2),
-    expiresAt: days(5),
-  },
-  {
-    id: 'inv-2',
-    email: 'bo@example.com',
-    role: 'Admin',
-    invitedBy: 'Sam Rivera',
-    sentAt: days(-9),
-    expiresAt: days(-2),
-  },
-];
+const SAMPLE: PendingInvite[] = fixture.data.invites.map((invite) => ({
+  id: invite.id,
+  email: invite.email,
+  role: invite.role,
+  invitedBy: invite.invitedBy,
+  sentAt: days(invite.sentDays),
+  expiresAt: days(invite.expiresDays),
+}));
 
 function Interactive() {
   const [invites, setInvites] = useState(SAMPLE);

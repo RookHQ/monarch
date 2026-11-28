@@ -6,15 +6,19 @@ Each package is versioned on its own, managed by Changesets.
 
 Every Monarch package is pre-1.0. While that is true:
 
+- `@rookcom/monarch-react`, and Monarch for Android and iOS with it, stay in
+  the `0.14.x` patch series. Semantic versioning allows any change before
+  1.0; Monarch limits itself to the rules below. There is no `0.15.0`.
 - **Patch** (`0.14.2` → `0.14.3`): fixes and additive features, such as new
-  components, props, variants, tokens, or rules at `warn` or below. A patch
-  never contains a breaking change.
-- **Minor** (`0.14.x` → `0.15.0`): the only place a breaking change can
-  ship. Each one has a migration note in
-  [migration](../guides/migration.md), an entry in the changelog and, for
-  an API change, an ADR.
-- The current `@rookcom/monarch-react` line stays on `0.14.x`. Its peer range
-  for `@rookcom/monarch-tokens` is `>=0.5.3 <1.0.0`.
+  components, props, variants, tokens, or rules at `warn` or below.
+- **Removal** of a deprecated API also ships in a patch, and only after its
+  window: 90 days **and** two patch releases after the release that
+  deprecated it ([deprecation policy](DEPRECATION-POLICY.md)). Each removal
+  has a migration note in [migration](../guides/migration.md), an entry in
+  the changelog and, for an API change, an ADR. A break that cannot be
+  preceded by a deprecation is an exception, recorded in an ADR.
+- The peer range of `@rookcom/monarch-react` for `@rookcom/monarch-tokens` is
+  `>=0.5.3 <1.0.0`.
 
 From 1.0 the usual semantic versioning applies: additive features in a
 minor, breaking changes only in a major.
@@ -40,7 +44,7 @@ where a change would break a contrast guarantee, which is a bug.
 ## `mn-*` class names
 
 The root and part `mn-*` class names listed in the manifest (`className`) are
-public and stable within a minor; internal modifier classes and `--_*` or
+public and follow the deprecation policy; internal modifier classes and `--_*` or
 undocumented variables are not.
 
 Public variables are the theme tokens (`--mn-color-*`, `--mn-space-*` and the

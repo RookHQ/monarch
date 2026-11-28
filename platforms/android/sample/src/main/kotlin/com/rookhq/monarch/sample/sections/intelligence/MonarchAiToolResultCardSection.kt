@@ -1,0 +1,75 @@
+package com.rookhq.monarch.sample.sections.intelligence
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import com.rookhq.monarch.components.actions.button.MonarchButton
+import com.rookhq.monarch.components.actions.button.MonarchButtonVariant
+import com.rookhq.monarch.components.datadisplay.keyvalue.MonarchKeyValueItem
+import com.rookhq.monarch.components.intelligence.aitoolresultcard.MonarchAiToolResultCard
+import com.rookhq.monarch.components.intelligence.aitoolresultcard.MonarchAiToolResultKind
+import com.rookhq.monarch.components.typography.text.MonarchText
+import com.rookhq.monarch.foundation.MonarchTextStyle
+import com.rookhq.monarch.foundation.icon.MonarchIcon
+import com.rookhq.monarch.sample.CatalogueCaption
+import com.rookhq.monarch.sample.CataloguePage
+import com.rookhq.monarch.sampleicons.SampleIcons
+import com.rookhq.monarch.theme.MonarchTheme
+import kotlinx.coroutines.delay
+
+private const val SimulatedUndoMillis = 800L
+
+/** The catalogue page of AiToolResultCard. */
+object MonarchAiToolResultCardSection : CataloguePage {
+    override val title = "AiToolResultCard"
+
+    @Composable
+    override fun Content() {
+        var round by rememberSaveable { mutableIntStateOf(0) }
+        var failNext by rememberSaveable { mutableStateOf(true) }
+        var opened by rememberSaveable { mutableIntStateOf(0) }
+        CatalogueCaption("A record created, with Open and Undo. The first Undo fails; the second works.")
+        key(round) {
+            MonarchAiToolResultCard(
+                title = "Acme Ltd",
+                kind = MonarchAiToolResultKind.RecordCreated,
+                description = "Added to Accounts",
+                meta = listOf(MonarchKeyValueItem("Owner", "Ana Flores"), MonarchKeyValueItem("Region", "EMEA")),
+                icon = { MonarchIcon(SampleIcons.Wrench, contentDescription = null) },
+                onOpen = { opened++ },
+                onUndo = {
+                    delay(SimulatedUndoMillis)
+                    if (failNext) {
+                        failNext = false
+                        error("The CRM did not answer")
+                    }
+                },
+            )
+        }
+        if (opened > 0) {
+            MonarchText(
+                text = "Opened $opened times",
+                style = MonarchTextStyle.Caption,
+                color = MonarchTheme.colors.textMuted,
+            )
+        }
+        MonarchButton(
+            text = "Reset the example",
+            onClick = {
+                round++
+                failNext = true
+            },
+            variant = MonarchButtonVariant.Ghost,
+        )
+        CatalogueCaption("An email sent, without Undo")
+        MonarchAiToolResultCard(
+            title = "Renewal reminder",
+            kind = MonarchAiToolResultKind.EmailSent,
+            description = "To 3 people",
+        )
+    }
+}

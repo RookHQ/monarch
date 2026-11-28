@@ -182,6 +182,7 @@ function page(route, rendered, { notFound = false } = {}) {
           siteUrl: urlOf('/'),
           crumbs: crumbsOf(route),
           modified,
+          landing: rendered.landing,
         }),
       ].join('\n    ');
   let html = template

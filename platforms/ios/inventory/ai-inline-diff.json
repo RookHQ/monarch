@@ -1,0 +1,133 @@
+{
+  "id": "ai-inline-diff",
+  "name": "MonarchAiInlineDiff",
+  "title": "AiInlineDiff",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Text(AttributedString) with strikethroughStyle, underlineStyle, backgroundColor and a link per change handled by the openURL environment action, MonarchAiMessageBranch for previous and next, MonarchButton for Accept and Reject, accessibilityActions, AccessibilityNotification.Announcement",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "AI-suggested edits marked inside read-only text, deletions struck through and insertions underlined, with the position, previous and next, and Accept and Reject for the change on show.",
+  "whenToUse": "When an assistant suggests rewording a paragraph, a description or a message draft and the changes are small enough to read in context, one at a time.",
+  "whenNotToUse": "For edits that span several labelled fields or sections use MonarchAiEditProposal. For code use MonarchAiCodeBlock with isDiff. For two whole versions side by side use MonarchDiffViewer. Wait until streamed text is complete.",
+  "api": [
+    "init(_ segments: [MonarchAiDiffSegment], showsNavigation: Bool = true, labels: MonarchAiInlineDiffLabels = MonarchAiInlineDiffLabels(), onAccept: (@MainActor (String) -> Void)? = nil, onReject: (@MainActor (String) -> Void)? = nil)",
+    "static func changes(in segments: [MonarchAiDiffSegment]) -> [MonarchAiInlineDiffChange]",
+    "static func resolve(_ segments: [MonarchAiDiffSegment], change id: String, decision: MonarchAiInlineDiffDecision) -> [MonarchAiDiffSegment]",
+    "struct MonarchAiDiffSegment { init(_ kind: MonarchAiDiffSegmentKind, text: String, id: String? = nil); static func words(from before: String, to after: String) -> [MonarchAiDiffSegment] }",
+    "enum MonarchAiDiffSegmentKind: String { case equal, insert, delete }",
+    "struct MonarchAiInlineDiffChange: Identifiable { let id: String; let segmentIndexes: [Int]; let deleted: String; let inserted: String }",
+    "enum MonarchAiInlineDiffDecision: String { case accept, reject }",
+    "struct MonarchAiInlineDiffLabels { init(label:, deleted:, inserted:, position:, none:, previous:, next:, acceptTitle:, rejectTitle:, accept:, reject:, announce:) }"
+  ],
+  "options": [
+    {
+      "name": "segments",
+      "type": "[MonarchAiDiffSegment]",
+      "default": "required",
+      "description": "The text as unchanged, inserted and deleted runs, for example from MonarchAiDiffSegment.words(from:to:). Controlled: update it after a decision."
+    },
+    {
+      "name": "showsNavigation",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the position (\"Change 2 of 5\", or \"No suggested changes\") with previous and next buttons. Hide it for one short suggestion."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiInlineDiffLabels",
+      "default": "MonarchAiInlineDiffLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onAccept",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Accepts the change with this id. Shows Accept under the text and as an accessibility action."
+    },
+    {
+      "name": "onReject",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Rejects the change with this id. Shows Reject under the text and as an accessibility action."
+    }
+  ],
+  "states": [
+    {
+      "name": "active change",
+      "description": "The change on show is bold and has the stronger danger or success background; Accept and Reject act on it."
+    },
+    {
+      "name": "other changes",
+      "description": "Struck through on the subtle danger background (deleted) or underlined on the subtle success background (inserted)."
+    },
+    {
+      "name": "read only",
+      "description": "Without onAccept and onReject there are no decision buttons; previous and next still work."
+    },
+    {
+      "name": "no changes",
+      "description": "The position reads \"No suggested changes\" and the text is plain."
+    }
+  ],
+  "appearance": "Body text in the default text colour. Deletions are struck through on the subtle danger background, insertions underlined on the subtle success background, and the change on show is bold on the hover shade of those backgrounds. Accept is a primary button and Reject a secondary one. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web places small Accept and Reject icon buttons right after the active change inside the text; SwiftUI Text cannot hold buttons, so iOS puts full-size Accept and Reject buttons under the text and makes each change a link in the text that selects it. The web wraps from the last change to the first with the buttons; the buttons here (MonarchAiMessageBranch) stop at the ends, and the VoiceOver Next and Previous actions wrap. Arrow-key navigation and roving focus are web keyboard patterns; iOS uses the buttons and the named accessibility actions. Marks inside an editable text view wait for a later wave, as on the web, where no editor adapter ships yet. MonarchAiDiffSegment.words(from:to:) is the same word diff as MonarchAiEditProposal. Marked experimental as an AI product pattern until a Rook app adopts it. Android has no inline diff yet.",
+  "accessibility": [
+    "The diff is a group named \"AI suggested changes\", which says the suggestions come from AI.",
+    "The text is one element that reads unchanged text as it is and every removal and addition after \"Deleted:\" or \"Inserted:\", built by a tested pure function.",
+    "The text's value is the position, \"Change 2 of 5\".",
+    "The text has the named actions Next change and Previous change (wrapping) and Accept change 2 of 5 and Reject change 2 of 5, so every decision works without a precise tap.",
+    "Accept and Reject are buttons named \"Accept change 2 of 5\" and \"Reject change 2 of 5\" with 44-point touch targets.",
+    "Every decision is announced: \"Change accepted. 3 left.\" or \"Change rejected. No changes left.\".",
+    "Changes are never marked by colour alone: deletions are struck through, insertions underlined, and the change on show is bold."
+  ],
+  "edgeCases": [
+    "Adjacent deleted and inserted runs with different ids are separate changes.",
+    "After the app applies a decision, the change in the same position becomes the one on show; after the last one, the previous change is shown.",
+    "An unknown id in resolve returns the segments unchanged.",
+    "Long text wraps at every text size; there is no horizontal scrolling.",
+    "Tapping a change link selects it; other links in the environment keep their system action."
+  ],
+  "tests": [
+    "MonarchAiInlineDiffTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Review suggestions",
+      "fixture": "ai-inline-diff",
+      "webExample": "Review suggestions",
+      "template": "MonarchAiInlineDiff(\n    segments,\n    onAccept: { id in segments = MonarchAiInlineDiff.resolve(segments, change: id, decision: .accept) },\n    onReject: { id in segments = MonarchAiInlineDiff.resolve(segments, change: id, decision: .reject) }\n)",
+      "setupTemplate": "@State private var segments = MonarchAiDiffSegment.words(\n    from: {{before}},\n    to: {{after}}\n)",
+      "setup": "@State private var segments = MonarchAiDiffSegment.words(\n    from: \"Our team meets every week to review the plan. We will ship the new flow in May, and collect feedback after.\",\n    to: \"Our team meets every Monday to review the roadmap. We will ship the redesigned flow in June, and collect feedback after launch.\"\n)",
+      "code": "MonarchAiInlineDiff(\n    segments,\n    onAccept: { id in segments = MonarchAiInlineDiff.resolve(segments, change: id, decision: .accept) },\n    onReject: { id in segments = MonarchAiInlineDiff.resolve(segments, change: id, decision: .reject) }\n)"
+    },
+    {
+      "title": "Read only, without navigation",
+      "code": "MonarchAiInlineDiff(\n    [\n        MonarchAiDiffSegment(.equal, text: \"Send the \"),\n        MonarchAiDiffSegment(.insert, text: \"final \"),\n        MonarchAiDiffSegment(.equal, text: \"report.\"),\n    ],\n    showsNavigation: false\n)"
+    }
+  ],
+  "webEquivalent": "AiInlineDiff",
+  "dependsOn": [
+    "ai-edit-proposal",
+    "ai-message-branch",
+    "button"
+  ],
+  "icons": {
+    "navigate": "ChevronDownGlyph",
+    "accept": "CheckGlyph",
+    "reject": "CloseGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web puts the accept and reject icons inline after the active change and an outline around it. SwiftUI Text cannot hold interactive controls inside a wrapped run, so the two icon buttons sit under the text; the active change is outlined by the highlight. Reset demo is the web docs harness and is not part of the component.",
+      "convention": "SwiftUI Text runs are not views: no inline buttons in wrapped text"
+    }
+  ]
+}

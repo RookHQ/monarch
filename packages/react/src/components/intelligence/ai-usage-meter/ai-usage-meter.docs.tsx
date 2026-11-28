@@ -1,5 +1,7 @@
-import { AiUsageMeter } from '@rookcom/monarch-react/ai';
+import { AiUsageMeter, type AiUsageScope } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-usage-meter.fixture.json';
 
 export default {
   id: 'ai-usage-meter',
@@ -104,13 +106,7 @@ export default {
           stack: true,
           render: () => (
             <div style={{ maxWidth: '22rem' }}>
-              <AiUsageMeter
-                scopes={[
-                  { label: 'This turn', used: 1840, unit: 'tokens' },
-                  { label: 'Conversation', used: 42000, limit: 200000, unit: 'tokens' },
-                  { label: 'This month', used: 870, limit: 1000, unit: 'credits' },
-                ]}
-              />
+              <AiUsageMeter scopes={fixture.data.scopes as AiUsageScope[]} />
             </div>
           ),
         },

@@ -1,0 +1,140 @@
+{
+  "id": "celebration",
+  "name": "MonarchCelebration",
+  "title": "Celebration",
+  "family": "feedback",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.Canvas, androidx.compose.animation.core.Animatable, androidx.compose.foundation.layout.Column",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A success moment for a real milestone: an icon in a tinted tile with confetti that falls once, a title, a message and the next actions.",
+  "whenToUse": "After a milestone the person worked towards: a workspace set up, a domain verified, a first payment received. Inline at the end of a flow, or inside a MonarchDialog or MonarchBottomSheet.",
+  "whenNotToUse": "For routine confirmations (saved, sent), use a snackbar or MonarchBanner. Not for every step of a flow: one celebration per milestone.",
+  "api": [
+    "@Composable fun MonarchCelebration(title: String, modifier: Modifier = Modifier, message: String? = null, tone: MonarchTone = MonarchTone.Success, decoration: MonarchCelebrationDecoration = MonarchCelebrationDecoration.Confetti, announces: Boolean = true, icon: (@Composable () -> Unit)? = null, actions: (@Composable () -> Unit)? = null)",
+    "enum class MonarchCelebrationDecoration { Confetti, None }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "What was achieved. A heading."
+    },
+    {
+      "name": "message",
+      "type": "String?",
+      "default": "null",
+      "description": "What it means or what to do next, in muted text."
+    },
+    {
+      "name": "tone",
+      "type": "MonarchTone",
+      "default": "MonarchTone.Success",
+      "description": "The tile's colors: the tone's subtle fill and strong foreground."
+    },
+    {
+      "name": "decoration",
+      "type": "MonarchCelebrationDecoration",
+      "default": "MonarchCelebrationDecoration.Confetti",
+      "description": "Confetti that falls once behind the icon, or none."
+    },
+    {
+      "name": "announces",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Announces the title and message through a polite live region when it appears. Turn it off when it is part of the screen from the start."
+    },
+    {
+      "name": "icon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The icon in the tile, such as a MonarchIcon with a null content description; it takes the tone's strong color. Without it no tile is drawn."
+    },
+    {
+      "name": "actions",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The next steps, side by side when they fit and wrapped onto more lines when they do not."
+    }
+  ],
+  "states": [
+    {
+      "name": "appearing",
+      "description": "The tile grows from 85% to full size and twelve pieces fall once over about 1.9 seconds, fading in and out."
+    },
+    {
+      "name": "settled",
+      "description": "The confetti has faded and the Canvas stops drawing it; only the tile and text remain."
+    },
+    {
+      "name": "reduced motion",
+      "description": "With animations removed the tile appears at full size and the pieces rest as a still scatter at 70% opacity."
+    }
+  ],
+  "appearance": "Centered text on the surrounding background: the title in the subheading style and the default text role, the message in the muted text role. The tile is a circle in the tone's subtle role with the icon in its strong role; the confetti uses the five data roles. The same roles in every theme, including both high-contrast themes.",
+  "platformNotes": "The web ships two components: CelebrationPanel (inline) and Celebration (a dialog with a Continue button). On Android one composable covers both: place it inline, or inside a MonarchDialog or MonarchBottomSheet with the Continue button in actions. The web tone accent is not offered because MonarchTone has no accent tone; any MonarchTone works, success by default. The web media slot is the icon slot; the web defaults to a check mark, but Monarch for Android bundles no icons, so without an icon no tile is drawn and the confetti falls on its own. The web heading level becomes the heading semantics on the title. iOS uses the same name and options, with an SF Symbol instead of the icon slot.",
+  "accessibility": [
+    "The title is a heading; the message is read after it.",
+    "With announces on, the title and message are announced through a polite live region one frame after it appears.",
+    "The tile and the confetti are hidden from TalkBack; everything is said in the text.",
+    "The confetti only moves and fades, never flashes, falls once, and is still when animations are removed; the tile's growth is skipped too.",
+    "Buttons in actions keep their own 48dp touch targets."
+  ],
+  "edgeCases": [
+    "Long titles and messages wrap and stay centered; the panel is at most 448dp wide.",
+    "The confetti is drawn with Canvas, which is not mirrored in right-to-left layouts; the scatter has no direction, so it looks the same.",
+    "Composing it again under a new key plays the confetti again."
+  ],
+  "tests": [
+    "MonarchCelebrationTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Verification dialog",
+      "fixture": "celebration",
+      "webExample": "Verification dialog",
+      "template": "MonarchCelebration(\n    title = {{title}},\n    message = {{description}},\n    icon = { MonarchIcon(SampleIcons.Success, contentDescription = null) },\n) {\n    MonarchButton(text = {{continue}}, onClick = {}, variant = MonarchButtonVariant.Primary)\n}",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "code": "MonarchCelebration(\n    title = \"Workspace verified\",\n    message = \"Your public profile now shows the verified badge.\",\n    icon = { MonarchIcon(SampleIcons.Success, contentDescription = null) },\n) {\n    MonarchButton(text = \"Continue\", onClick = {}, variant = MonarchButtonVariant.Primary)\n}"
+    },
+    {
+      "title": "In a dialog",
+      "setup": "var verified by remember { mutableStateOf(true) }",
+      "code": "if (verified) {\n    // The celebration brings its own heading, so the dialog has no title; TalkBack names it by its pane title.\n    MonarchDialog(\n        onDismissRequest = { verified = false },\n        title = null,\n        paneTitle = \"Domain verified\",\n        content = {\n            MonarchCelebration(\n                title = \"Domain verified\",\n                message = \"Email from acme.com is now signed.\",\n            ) {\n                MonarchButton(\n                    text = \"Continue\",\n                    onClick = { verified = false },\n                    variant = MonarchButtonVariant.Primary,\n                )\n            }\n        },\n    )\n}"
+    }
+  ],
+  "webEquivalent": "Celebration",
+  "dependsOn": [
+    "dialog",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "android",
+      "paths": [
+        "trigger"
+      ],
+      "reason": "NATIVE GAP: the web example is a dialog opened from a trigger button; MonarchCelebration is drawn inline and has no dialog presentation or trigger, so the trigger button is not shown.",
+      "convention": "none: recorded in native-gaps.json"
+    },
+    {
+      "rule": "fixture-text",
+      "platform": "android",
+      "reason": "\"Show celebration\" is the docs page button that starts the effect; on Android the example starts the celebration itself.",
+      "convention": "docs-page chrome is not part of a native example",
+      "paths": [
+        "Show celebration"
+      ]
+    }
+  ]
+}

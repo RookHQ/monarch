@@ -1,0 +1,180 @@
+{
+  "id": "ai-voice-mode",
+  "name": "MonarchAiVoiceMode",
+  "title": "AiVoiceMode",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "A view for .fullScreenCover (or a panel): Canvas for the halo, orb and level bars; ScrollView with defaultScrollAnchor(.bottom) for captions; Toggle with MonarchToggleButtonStyle for Mute and Captions; MonarchButton for Interrupt, End, Start again and Retry; AccessibilityNotification.Announcement",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The surface for a live, two-way spoken conversation with an AI assistant: a calm central visual, always-visible state text, live captions from the conversation's messages, and explicit Mute, Interrupt, Captions and End controls. UI only; the app owns the audio.",
+  "whenToUse": "When the person talks with the assistant by voice, presented with .fullScreenCover (md) or inside an assistant panel (compact).",
+  "whenNotToUse": "For dictating a prompt that the person then sends, use MonarchAiVoiceInput. For a call between people, use the call components.",
+  "api": [
+    "init(state: MonarchAiVoiceModeState, level: Double = 0, agent: MonarchAiAgentRef? = nil, captions: [MonarchAiConversationMessage] = [], captionsVisible: Binding<Bool>? = nil, isMuted: Bool? = nil, elapsedSeconds: Int? = nil, error: String? = nil, size: MonarchAiVoiceModeSize = .md, labels: MonarchAiVoiceModeLabels = MonarchAiVoiceModeLabels(), onMuteChange: (@MainActor (Bool) -> Void)? = nil, onInterrupt: (@MainActor () -> Void)? = nil, onEnd: (@MainActor () -> Void)? = nil, onRestart: (@MainActor () -> Void)? = nil, onRetry: (@MainActor () -> Void)? = nil)",
+    "enum MonarchAiVoiceModeState { case connecting, listening, thinking, speaking, muted, reconnecting, ended, error }",
+    "enum MonarchAiVoiceModeSize { case md, compact }",
+    "struct MonarchAiVoiceModeLabels { var label: (@Sendable (String) -> String)?; var assistant, you: String?; var states: [MonarchAiVoiceModeState: String]; var microphoneMuted, mute, interrupt, captions, end, restart, retry, captionsEmpty, elapsed: String?; var lasted: (@Sendable (String) -> String)?; var errorFallback: String? }"
+  ],
+  "options": [
+    {
+      "name": "state",
+      "type": "MonarchAiVoiceModeState",
+      "default": "required",
+      "description": "Where the call is, reported by the app."
+    },
+    {
+      "name": "level",
+      "type": "Double",
+      "default": "0",
+      "description": "The live audio level, 0 through 1, of whoever is talking. Drives the halo and bars while listening or speaking."
+    },
+    {
+      "name": "agent",
+      "type": "MonarchAiAgentRef?",
+      "default": "nil",
+      "description": "The assistant; its name labels the surface and its captions, its avatar URL is shown beside the name."
+    },
+    {
+      "name": "captions",
+      "type": "[MonarchAiConversationMessage]",
+      "default": "[]",
+      "description": "The conversation's messages, oldest first. User and assistant text is shown; a message with streaming text is an interim caption."
+    },
+    {
+      "name": "captionsVisible",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Whether captions show. Without a binding the surface keeps its own value, on at first."
+    },
+    {
+      "name": "isMuted",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Whether the microphone is muted. By default only in the muted state; pass it when the microphone stays muted while the assistant thinks or speaks."
+    },
+    {
+      "name": "elapsedSeconds",
+      "type": "Int?",
+      "default": "nil",
+      "description": "How long the call has run, shown as a clock and as the duration once ended."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "What went wrong, shown on the error state."
+    },
+    {
+      "name": "size",
+      "type": "MonarchAiVoiceModeSize",
+      "default": ".md",
+      "description": "md fills the space on the canvas background; compact is a bordered card with small buttons."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiVoiceModeLabels",
+      "default": "MonarchAiVoiceModeLabels()",
+      "description": "Replacements for every built-in string, including the state texts."
+    },
+    {
+      "name": "onMuteChange",
+      "type": "(@MainActor (Bool) -> Void)?",
+      "default": "nil",
+      "description": "Called with the wanted value from Mute or Magic Tap. Shows Mute while the call is live."
+    },
+    {
+      "name": "onInterrupt",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows Interrupt while the assistant thinks or speaks."
+    },
+    {
+      "name": "onEnd",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows End while the call is live. Only this button ends the call."
+    },
+    {
+      "name": "onRestart",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows Start again on the ended state."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows Retry on the error state."
+    }
+  ],
+  "states": [
+    {
+      "name": "connecting, thinking, reconnecting",
+      "description": "The orb shows the AI typing dots; the state text says which."
+    },
+    {
+      "name": "listening, speaking",
+      "description": "The orb shows five bars and the halo grows with the level."
+    },
+    {
+      "name": "muted",
+      "description": "A neutral orb with a crossed-out microphone; Mute is on. Muted in another state adds the note Your microphone is muted."
+    },
+    {
+      "name": "ended",
+      "description": "A neutral orb, Conversation ended, the duration, and Start again when onRestart is given."
+    },
+    {
+      "name": "error",
+      "description": "A danger orb with an exclamation mark, the error text, and Retry when onRetry is given."
+    }
+  ],
+  "appearance": "md fills the space on the canvas background; compact is a surface card with a subtle border. The halo uses the AI subtle role and the orb the AI solid role with AI on-solid bars; error uses the danger roles, muted and ended the neutral emphasis roles. The state is heading text, the name and clock labels, captions body text with the speaker in bold (AI strong for the assistant, muted for the person).",
+  "platformNotes": "The web component reports state through props in the same way and also ships browser and realtime session helpers (Web Speech, WebRTC, PCM players); iOS ships only the surface, and the app owns AVAudioSession, interruptions and route changes as described in the component's documentation. Captions use the shared MonarchAiConversationMessage model instead of the web's separate caption type: a message with streaming text is interim. Space toggles mute on the web; on iOS Magic Tap (two-finger double-tap) does. The web shows an AiAgentAvatar; iOS shows the agent's avatar image when it has a URL, and nothing otherwise, as there is no agent avatar component on iOS yet. Present it with .fullScreenCover; macOS, used only to build, has no full-screen cover. The web keeps the captions scrolled to the newest unless the person scrolled up; iOS anchors the captions to the bottom with defaultScrollAnchor.",
+  "accessibility": [
+    "The surface is a container named \"Voice conversation with\" and the assistant's name.",
+    "The state is always written; each change is announced, except the first state and turns into listening or speaking, which the audio already makes clear. An error is announced with its text.",
+    "Final captions are announced once each as \"You:\" or the assistant's name followed by the words; interim captions are hidden from VoiceOver until they are final.",
+    "Mute and Captions are toggles with on and off values; Magic Tap toggles mute while the call is live.",
+    "When Interrupt goes away while VoiceOver focus is on it, focus moves to Mute.",
+    "The visual is decorative and holds still with Reduce Motion; the state text and the glyph carry the meaning, not colour.",
+    "Buttons keep 44 by 44 point touch targets; text scales with Dynamic Type and the captions scroll."
+  ],
+  "edgeCases": [
+    "System and tool messages, and messages with no text, are not captions.",
+    "Captions show while the call is live even when there are none yet (with a hint), and after it only when there are some.",
+    "A level outside 0 through 1 is limited; not-a-number is 0.",
+    "Times of an hour or more show hours: 1:02:09.",
+    "Captions announced while hidden are still marked as announced, so turning captions on does not replay them."
+  ],
+  "tests": [
+    "MonarchAiVoiceModeTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Listening, with captions",
+      "fixture": "ai-voice-mode",
+      "webExample": "Listening, with captions",
+      "template": "MonarchAiVoiceMode(\n    state: {{state|case}},\n    level: {{level|double}},\n    agent: MonarchAiAgentRef(name: {{agent.name}}),\n    captions: [\n    MonarchAiConversationMessage(\n        id: {{captions.0.id}},\n        role: {{captions.0.speaker|case}},\n        parts: [.text(MonarchAiTextPart(text: {{captions.0.text}}, state: {{captions.0.state|case}}))],\n        createdAt: \"2026-03-10T12:00:00.000Z\"\n    ),\n    MonarchAiConversationMessage(\n        id: {{captions.1.id}},\n        role: {{captions.1.speaker|case}},\n        parts: [.text(MonarchAiTextPart(text: {{captions.1.text}}, state: {{captions.1.state|case}}))],\n        createdAt: \"2026-03-10T12:00:00.000Z\"\n    ),\n    MonarchAiConversationMessage(\n        id: {{captions.2.id}},\n        role: {{captions.2.speaker|case}},\n        parts: [.text(MonarchAiTextPart(text: {{captions.2.text}}, state: {{captions.2.state|case}}))],\n        createdAt: \"2026-03-10T12:00:00.000Z\"\n    ),\n    ],\n    elapsedSeconds: {{elapsedSeconds}},\n    size: .compact,\n    onMuteChange: { _ in },\n    onInterrupt: {},\n    onEnd: {}\n)",
+      "code": "MonarchAiVoiceMode(\n    state: .listening,\n    level: 0.6,\n    agent: MonarchAiAgentRef(name: \"Atlas\"),\n    captions: [\n    MonarchAiConversationMessage(\n        id: \"c1\",\n        role: .user,\n        parts: [.text(MonarchAiTextPart(text: \"What is on my calendar this afternoon?\", state: .done))],\n        createdAt: \"2026-03-10T12:00:00.000Z\"\n    ),\n    MonarchAiConversationMessage(\n        id: \"c2\",\n        role: .assistant,\n        parts: [.text(MonarchAiTextPart(text: \"You have two meetings: the design review at two, and a planning call at four.\", state: .done))],\n        createdAt: \"2026-03-10T12:00:00.000Z\"\n    ),\n    MonarchAiConversationMessage(\n        id: \"c3\",\n        role: .user,\n        parts: [.text(MonarchAiTextPart(text: \"Move the planning call to\", state: .streaming))],\n        createdAt: \"2026-03-10T12:00:00.000Z\"\n    ),\n    ],\n    elapsedSeconds: 42,\n    size: .compact,\n    onMuteChange: { _ in },\n    onInterrupt: {},\n    onEnd: {}\n)"
+    },
+    {
+      "title": "Compact, after the call",
+      "code": "MonarchAiVoiceMode(state: .ended, elapsedSeconds: 245, size: .compact, onRestart: {})"
+    }
+  ],
+  "webEquivalent": "AiVoiceMode",
+  "dependsOn": [
+    "button",
+    "toggle-button",
+    "ai-conversation",
+    "ai-typing-dots",
+    "inline"
+  ]
+}

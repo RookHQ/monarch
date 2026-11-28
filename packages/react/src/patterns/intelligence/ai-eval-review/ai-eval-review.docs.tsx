@@ -7,40 +7,12 @@ import {
   type AiEvalItemReview,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-eval-review.fixture.json';
 
-const ITEMS: AiEvalItem[] = [
-  {
-    id: 'q1',
-    title: 'Summarise a meeting',
-    prompt: 'Summarise the attached meeting notes in three bullet points.',
-    output:
-      '- The launch moves to **next Tuesday**.\n- Design owns the final copy review.\n- Support needs the FAQ by Friday.',
-    reference: 'Launch moved to Tuesday; design reviews copy; support needs the FAQ by Friday.',
-    meta: 'Model A · 12 Oct',
-  },
-  {
-    id: 'q2',
-    title: 'Answer a policy question',
-    prompt: 'Can I expense a train ticket for a client visit?',
-    output:
-      'Yes. Travel for client visits is reimbursable with a receipt, up to the standard fare.',
-    meta: 'Model A · 12 Oct',
-  },
-  {
-    id: 'q3',
-    title: 'Draft a reply',
-    prompt: 'Draft a short, polite reply declining the invitation.',
-    output:
-      'Thank you for the invitation. Unfortunately I can’t join this time, but I hope it goes well.',
-    meta: 'Model B · 13 Oct',
-  },
-];
+const ITEMS = fixture.data.items as AiEvalItem[];
 
-const RUBRIC: AiEvalCriterion[] = [
-  { id: 'accuracy', label: 'Accuracy', description: 'Facts match the source or reference.' },
-  { id: 'completeness', label: 'Completeness', description: 'Covers everything asked.' },
-  { id: 'tone', label: 'Tone', scale: 3 },
-];
+const RUBRIC = fixture.data.rubric as AiEvalCriterion[];
 
 function Demo() {
   const [reviews, setReviews] = useState<Record<string, AiEvalItemReview>>({});

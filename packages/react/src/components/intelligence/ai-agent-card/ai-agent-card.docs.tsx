@@ -1,12 +1,10 @@
 import { Avatar, Button } from '@rookcom/monarch-react';
 import { AiAgentCard } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-agent-card.fixture.json';
 
-const research = {
-  id: 'research',
-  name: 'Research agent',
-  role: 'Finds and summarises sources',
-};
+const research = fixture.data.agent;
 
 export default {
   id: 'ai-agent-card',
@@ -117,20 +115,17 @@ export default {
           render: () => (
             <AiAgentCard
               agent={research}
-              description="Reads documents in this space and answers with citations to the passages it used."
-              capabilities={['Summarises documents', 'Compares versions', 'Cites sources']}
-              tools={[
-                { name: 'Search documents', description: 'Full-text search in this space' },
-                { name: 'Read file', description: 'Opens a document you can already see' },
-              ]}
-              dataAccess={['Documents in this space', 'Comments on those documents']}
+              description={fixture.data.description}
+              capabilities={fixture.data.capabilities}
+              tools={fixture.data.tools}
+              dataAccess={fixture.data.dataAccess}
               owner={
                 <>
-                  <Avatar name="Alex Morgan" size="xs" decorative />
-                  Alex Morgan
+                  <Avatar name={fixture.data.owner} size="xs" decorative />
+                  {fixture.data.owner}
                 </>
               }
-              actions={<Button size="sm">Start a chat</Button>}
+              actions={<Button size="sm">{fixture.data.action.label}</Button>}
             />
           ),
         },

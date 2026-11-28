@@ -1,0 +1,76 @@
+{
+  "id": "popconfirm",
+  "name": null,
+  "title": "Popconfirm",
+  "family": "overlays",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "confirmationDialog(_:isPresented:titleVisibility:actions:message:) on the button, shown as a popover anchored to it at regular width; popover(isPresented:arrowEdge:content:) with presentationCompactAdaptation(.popover) when it must stay anchored on a phone",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A small confirmation tied to the button that asked is the system confirmation dialog, anchored to the button on an iPad; for a phone, a popover kept as a popover. Monarch ships nothing.",
+  "whenToUse": "Before a small, local action that is hard to undo, started from a control on screen: removing a filter, revoking one invitation, clearing a field.",
+  "whenNotToUse": "For actions that are easy to undo, act at once and offer Undo (see undo-toast). For deleting something important, or with consequences to list, use an alert or a sheet (see confirm-dialog).",
+  "api": [
+    "func confirmationDialog(_ title: String, isPresented: Binding<Bool>, titleVisibility: Visibility = .automatic, actions: () -> some View, message: () -> some View) -> some View",
+    "func popover(isPresented: Binding<Bool>, arrowEdge: Edge = .top, content: () -> some View) -> some View",
+    "func presentationCompactAdaptation(_ adaptation: PresentationAdaptation) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "compact width",
+      "description": "The confirmation dialog rises from the bottom of an iPhone with the destructive button and Cancel."
+    },
+    {
+      "name": "regular width",
+      "description": "On an iPad the same dialog is a popover with an arrow pointing at the button."
+    },
+    {
+      "name": "anchored popover",
+      "description": "With the popover recipe the question and its two buttons stay next to the button at every width."
+    }
+  ],
+  "appearance": "The confirmation dialog is drawn by the system in every theme, with the destructive button in the system's red. The popover recipe uses the theme's raised background, Monarch text styles and a danger MonarchButton.",
+  "platformNotes": "The web Popconfirm is a popover with a title, a description, confirm and cancel buttons, a danger tone, a pending state while onConfirm runs, and an error line. On iOS the confirmation dialog anchors to its button on an iPad but is a bottom sheet on an iPhone; the popover recipe keeps it anchored everywhere. The system dialog closes when a button is tapped, so run the action afterwards and show its progress and failure on the screen; the popover recipe can keep a loading button instead. initialFocus has no equivalent: VoiceOver starts at the top. Android composes a small dialog.",
+  "accessibility": [
+    "System behaviour: the dialog is modal; VoiceOver reads the title and message, and the escape gesture chooses Cancel.",
+    "Name the destructive button after the action (\"Remove\"), so it does not depend on its colour.",
+    "In the popover recipe, mark the question with the header trait and give the buttons the 44-point targets of MonarchButton."
+  ],
+  "edgeCases": [
+    "titleVisibility: .visible is needed for the question to show on an iPhone.",
+    "Only one dialog or popover is shown at a time.",
+    "In a List row, attach the dialog to the button, not the row, so the iPad popover points at the button."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Remove a filter",
+      "fixture": "popconfirm",
+      "webExample": "Remove a filter",
+      "template": "HStack {\n    ForEach(filters, id: \\.self) { filter in\n        MonarchButton(filter, variant: .secondary, size: .sm) {\n            pending = filter\n            isConfirming = true\n        }\n        .popover(\n            isPresented: Binding(\n                get: { isConfirming && pending == filter },\n                set: { if !$0 { isConfirming = false } }\n            ),\n            arrowEdge: .top\n        ) {\n            VStack(alignment: .leading, spacing: theme.spacing.space3) {\n                Text({{title}})\n                    .monarchTextStyle(.bodyStrong)\n                    .accessibilityAddTraits(.isHeader)\n                Text({{description}}).monarchTextStyle(.body)\n                HStack(spacing: theme.spacing.space2) {\n                    Spacer(minLength: 0)\n                    MonarchButton(\"Cancel\", variant: .secondary, size: .sm) { isConfirming = false }\n                    MonarchButton({{confirmLabel}}, variant: .danger, size: .sm) {\n                        filters.removeAll { $0 == pending }\n                        isConfirming = false\n                    }\n                }\n            }\n            .foregroundStyle(theme.colors.textDefault)\n            .padding(theme.spacing.space4)\n            .presentationCompactAdaptation(.popover)\n            .presentationBackground(theme.colors.bgRaised)\n        }\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var filters = [{{filters.0}}, {{filters.1}}]\n@State private var pending = {{filters.0}}\n@State private var isConfirming = false",
+      "previewPresented": [
+        "isConfirming"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var filters = [\"Status: Open\", \"Owner: Me\"]\n@State private var pending = \"Status: Open\"\n@State private var isConfirming = false",
+      "code": "HStack {\n    ForEach(filters, id: \\.self) { filter in\n        MonarchButton(filter, variant: .secondary, size: .sm) {\n            pending = filter\n            isConfirming = true\n        }\n        .popover(\n            isPresented: Binding(\n                get: { isConfirming && pending == filter },\n                set: { if !$0 { isConfirming = false } }\n            ),\n            arrowEdge: .top\n        ) {\n            VStack(alignment: .leading, spacing: theme.spacing.space3) {\n                Text(\"Remove this filter?\")\n                    .monarchTextStyle(.bodyStrong)\n                    .accessibilityAddTraits(.isHeader)\n                Text(\"The list shows matching items again.\").monarchTextStyle(.body)\n                HStack(spacing: theme.spacing.space2) {\n                    Spacer(minLength: 0)\n                    MonarchButton(\"Cancel\", variant: .secondary, size: .sm) { isConfirming = false }\n                    MonarchButton(\"Remove\", variant: .danger, size: .sm) {\n                        filters.removeAll { $0 == pending }\n                        isConfirming = false\n                    }\n                }\n            }\n            .foregroundStyle(theme.colors.textDefault)\n            .padding(theme.spacing.space4)\n            .presentationCompactAdaptation(.popover)\n            .presentationBackground(theme.colors.bgRaised)\n        }\n    }\n}"
+    },
+    {
+      "title": "Anchored to the button on a phone too",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isConfirming = false\n@State private var isRevoked = false",
+      "code": "MonarchButton(\"Revoke invitation\", variant: .ghost) { isConfirming = true }\n    .popover(isPresented: $isConfirming, arrowEdge: .top) {\n        VStack(alignment: .leading, spacing: theme.spacing.space3) {\n            Text(\"Revoke this invitation?\")\n                .monarchTextStyle(.bodyStrong)\n                .accessibilityAddTraits(.isHeader)\n            Text(\"The link in the email stops working.\").monarchTextStyle(.body)\n            HStack {\n                MonarchButton(\"Cancel\", size: .sm) { isConfirming = false }\n                MonarchButton(\"Revoke\", variant: .danger, size: .sm) {\n                    isRevoked = true\n                    isConfirming = false\n                }\n            }\n        }\n        .foregroundStyle(theme.colors.textDefault)\n        .padding(theme.spacing.space4)\n        .presentationCompactAdaptation(.popover)\n        .presentationBackground(theme.colors.bgRaised)\n    }"
+    }
+  ],
+  "webEquivalent": "Popconfirm",
+  "dependsOn": [
+    "popover",
+    "button",
+    "confirm-dialog"
+  ]
+}

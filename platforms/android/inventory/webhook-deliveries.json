@@ -1,0 +1,313 @@
+{
+  "id": "webhook-deliveries",
+  "name": "MonarchWebhookDeliveries",
+  "title": "WebhookDeliveries",
+  "family": "technical",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyColumn of tappable rows; androidx.compose.material3.ModalBottomSheet for the details; androidx.compose.material3.DropdownMenu with DropdownMenuItem and RadioButton for the status and event type filters; MonarchTextField, MonarchStatusBadge, MonarchButton, MonarchDescriptionList, MonarchSkeleton, MonarchInlineErrorRetry, MonarchEmptyState and MonarchLoadMore",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The delivery log of a webhook endpoint: status, event, response, attempts and time of each delivery, with filters, paging, a details sheet and Redeliver.",
+  "whenToUse": "On a developer settings screen that shows what an outbound webhook or integration sent and lets the person resend a failed delivery.",
+  "whenNotToUse": "For a stream of application log lines, use MonarchLogViewer. For one request's full details on its own screen, use the log-drawer recipe (a ModalBottomSheet with MonarchDescriptionList and MonarchCodeBlock).",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchWebhookDeliveries(deliveries: List<MonarchWebhookDelivery>, modifier: Modifier = Modifier, statuses: MonarchStatusRegistry? = null, filterable: Boolean = true, filters: MonarchWebhookDeliveryFilters? = null, onFiltersChange: ((MonarchWebhookDeliveryFilters) -> Unit)? = null, manualFiltering: Boolean = false, filterStatuses: List<String>? = null, eventTypes: List<String> = emptyList(), showDestination: Boolean = false, counts: Map<String, Int> = emptyMap(), loading: Boolean = false, failed: Boolean = false, onRetry: (() -> Unit)? = null, hasMore: Boolean = false, onLoadMore: (() -> Unit)? = null, loadingMore: Boolean = false, loadMoreFailed: Boolean = false, now: Long? = null, locale: Locale? = null, timeZone: String? = null, onRedeliver: (suspend (MonarchWebhookDelivery) -> Unit)? = null, canRedeliver: ((MonarchWebhookDelivery) -> Boolean)? = null, onSelect: ((MonarchWebhookDelivery) -> Unit)? = null, labels: MonarchWebhookDeliveriesLabels = MonarchWebhookDeliveriesLabels(), emptyAction: (@Composable () -> Unit)? = null, actions: (@Composable RowScope.(MonarchWebhookDelivery) -> Unit)? = null, details: (@Composable ColumnScope.(MonarchWebhookDelivery) -> Unit)? = null)",
+    "data class MonarchWebhookDelivery(id: String, status: String, eventType: String, attempts: Int, atMillis: Long, eventId: String? = null, destination: String? = null, responseCode: Int? = null, error: String? = null, durationMillis: Long? = null, nextAttemptMillis: Long? = null)",
+    "data class MonarchWebhookDeliveryFilters(status: String = \"\", eventType: String = \"\", query: String = \"\") { val active: Boolean; fun matches(delivery: MonarchWebhookDelivery): Boolean; fun filter(deliveries: List<MonarchWebhookDelivery>): List<MonarchWebhookDelivery> }",
+    "object MonarchWebhookDeliveryStatus { const val Pending: String; const val Sending: String; const val Succeeded: String; const val Retrying: String; const val Failed: String; const val Gone: String }",
+    "class MonarchWebhookDeliveriesLabels(label: String? = null, status: String? = null, anyStatus: String? = null, eventType: String? = null, anyEventType: String? = null, search: String? = null, filterValue: ((name: String, value: String) -> String)? = null, clearFilters: String? = null, redeliver: String? = null, redeliverItem: ((delivery: MonarchWebhookDelivery) -> String)? = null, redeliverQueued: String? = null, redeliverFailed: String? = null, viewDetails: ((delivery: MonarchWebhookDelivery) -> String)? = null, notAttempted: String? = null, httpStatus: ((code: Int) -> String)? = null, duration: ((milliseconds: String) -> String)? = null, attempts: ((count: Int) -> String)? = null, nextAttempt: ((time: String) -> String)? = null, emptyTitle: String? = null, emptyDescription: String? = null, filteredTitle: String? = null, filteredDescription: String? = null, loading: String? = null, loadError: String? = null, endOfList: String? = null, count: ((count: String, status: String) -> String)? = null, eventId: String? = null, destination: String? = null, response: String? = null, durationTerm: String? = null, error: String? = null, attemptsTerm: String? = null, lastAttempt: String? = null, nextAttemptTerm: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "deliveries",
+      "type": "List<MonarchWebhookDelivery>",
+      "default": "required",
+      "description": "The deliveries to show, newest first. Ids must be unique."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the component. Give it a bounded height: the list is lazy."
+    },
+    {
+      "name": "statuses",
+      "type": "MonarchStatusRegistry?",
+      "default": "null",
+      "description": "Status names and tones over the built-in ones, or the app's own status keys."
+    },
+    {
+      "name": "filterable",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the event id search field and the status and event type menus."
+    },
+    {
+      "name": "filters",
+      "type": "MonarchWebhookDeliveryFilters?",
+      "default": "null",
+      "description": "The filter values. null keeps them inside the component."
+    },
+    {
+      "name": "onFiltersChange",
+      "type": "((MonarchWebhookDeliveryFilters) -> Unit)?",
+      "default": "null",
+      "description": "Called with the new filter values when the person changes one."
+    },
+    {
+      "name": "manualFiltering",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The server filters: deliveries are shown as given; send filters with the next request."
+    },
+    {
+      "name": "filterStatuses",
+      "type": "List<String>?",
+      "default": "null",
+      "description": "The status keys the status menu offers. null offers every key of the merged registry."
+    },
+    {
+      "name": "eventTypes",
+      "type": "List<String>",
+      "default": "emptyList()",
+      "description": "The event types the event type menu offers. The menu is hidden when empty."
+    },
+    {
+      "name": "showDestination",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows each delivery's destination on its row."
+    },
+    {
+      "name": "counts",
+      "type": "Map<String, Int>",
+      "default": "emptyMap()",
+      "description": "Totals per status key, shown above the list as \"12 delivered · 3 retrying\", in map order."
+    },
+    {
+      "name": "loading",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The first page is loading: placeholder rows replace the list."
+    },
+    {
+      "name": "failed",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The list failed to load: the failure replaces the list."
+    },
+    {
+      "name": "onRetry",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Called by Try again after a load failure. Without it the failure has no button."
+    },
+    {
+      "name": "hasMore",
+      "type": "Boolean",
+      "default": "false",
+      "description": "There is another page."
+    },
+    {
+      "name": "onLoadMore",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Loads the next page. Adds the MonarchLoadMore footer."
+    },
+    {
+      "name": "loadingMore",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The next page is loading."
+    },
+    {
+      "name": "loadMoreFailed",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Loading the next page failed."
+    },
+    {
+      "name": "now",
+      "type": "Long?",
+      "default": "null",
+      "description": "The time relative times are measured from, in epoch milliseconds. null follows the clock, refreshed every minute."
+    },
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "null",
+      "description": "The locale of numbers and dates. null uses the first locale of the configuration."
+    },
+    {
+      "name": "timeZone",
+      "type": "String?",
+      "default": "null",
+      "description": "The time zone of the dates in the details sheet. An IANA id such as Europe/Berlin; null, or an id the device does not know, is the device's zone."
+    },
+    {
+      "name": "onRedeliver",
+      "type": "(suspend (MonarchWebhookDelivery) -> Unit)?",
+      "default": "null",
+      "description": "Sends a delivery again. The button shows progress while it runs; the result is announced; throwing announces the failure. Without it there is no Redeliver."
+    },
+    {
+      "name": "canRedeliver",
+      "type": "((MonarchWebhookDelivery) -> Boolean)?",
+      "default": "null",
+      "description": "Which deliveries offer Redeliver. null offers it on every one that is not pending or sending."
+    },
+    {
+      "name": "onSelect",
+      "type": "((MonarchWebhookDelivery) -> Unit)?",
+      "default": "null",
+      "description": "Opens the app's own detail screen. null opens the built-in details sheet."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchWebhookDeliveriesLabels",
+      "default": "MonarchWebhookDeliveriesLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "emptyAction",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "Shown in the first-run empty state, such as a Send a test event button."
+    },
+    {
+      "name": "actions",
+      "type": "(@Composable RowScope.(MonarchWebhookDelivery) -> Unit)?",
+      "default": "null",
+      "description": "More actions on each row, after Redeliver."
+    },
+    {
+      "name": "details",
+      "type": "(@Composable ColumnScope.(MonarchWebhookDelivery) -> Unit)?",
+      "default": "null",
+      "description": "More content at the end of the details sheet, such as the request and response bodies."
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "description": "Four MonarchSkeleton rows replace the list, read by TalkBack as one polite \"Loading deliveries\"."
+    },
+    {
+      "name": "failed",
+      "description": "A MonarchInlineErrorRetry with \"Deliveries did not load.\" and Try again replaces the list; without onRetry the message is danger text in a polite live region."
+    },
+    {
+      "name": "empty",
+      "description": "A small first-run MonarchEmptyState, \"No deliveries yet\", with emptyAction."
+    },
+    {
+      "name": "filtered to nothing",
+      "description": "A filtered MonarchEmptyState, \"No deliveries match\", with Clear filters."
+    },
+    {
+      "name": "filtered",
+      "description": "The active filter's menu button becomes primary and reads \"Status: Failed\"; Clear filters appears next to the menus."
+    },
+    {
+      "name": "redelivering",
+      "description": "The row's Redeliver (and the sheet's) shows progress and is read as Loading until onRedeliver returns."
+    },
+    {
+      "name": "scheduled retry",
+      "description": "A pending or retrying delivery with nextAttemptMillis shows \"Next attempt in 10 minutes\" in place of the last attempt's time."
+    },
+    {
+      "name": "not attempted",
+      "description": "A delivery with no attempts and no response shows \"Not attempted yet\"."
+    },
+    {
+      "name": "more pages",
+      "description": "With onLoadMore, a MonarchLoadMore footer ends the list: Load more, loading, a failure with Retry, or \"End of the delivery log\"."
+    }
+  ],
+  "appearance": "A plain list on the surface color with subtle dividers. The event type uses the strong body style in the default text color, the event id the code style; time, response and attempts use the caption style in the muted text color, and an error the strong danger color. Status badges use their tone's subtle fill. The same roles adapt to dark and both high-contrast themes.",
+  "platformNotes": "A domain composite, marked experimental until a Rook app adopts it. The web shows a table with a column per fact; on a phone each delivery is a row of stacked lines and its full details open in a ModalBottomSheet (or the app's own screen through onSelect), the list-and-detail pattern people expect on Android. The copy button of the event id moved into the sheet, where MonarchDescriptionList copies it. The web's status, event type and search filters are a MonarchTextField and two menu buttons that open DropdownMenus with radio items. onRedeliver is a suspend function instead of a returned promise; error is a failed flag with a built-in, overridable message instead of rich content; destination and error are strings. Status icons are not shown because Monarch bundles no icons; the status is always written. There is no iOS entry yet.",
+  "accessibility": [
+    "Each row is one TalkBack element read as status, time, event type, event id, response and attempts, and error; its action is named \"View delivery of invoice.paid evt_1\".",
+    "Redeliver is a separate element named after the event it resends, such as \"Redeliver invoice.paid evt_1\", and is read as Loading while it runs.",
+    "A queued or failed redelivery is announced through a polite live region that is always present.",
+    "The counts line is a polite live region, so new totals are read.",
+    "The list is named \"Webhook deliveries\".",
+    "Filter menu items are radio buttons marked selected for the current value.",
+    "Statuses and errors are words, so nothing relies on color.",
+    "Redeliver and the filter buttons have 48dp touch targets."
+  ],
+  "edgeCases": [
+    "The search matches the event id exactly, ignoring case, or any part of the event type; blank text is no filter.",
+    "Status keys that are neither built in nor in statuses are shown with the key as their name.",
+    "The list is lazy: give it a bounded height. Inside a vertically scrolling parent it would get an infinite height and fail.",
+    "A delivery that disappears from deliveries while its sheet is open closes the sheet.",
+    "Long event types and errors wrap; nothing is cut at font scale 2.0.",
+    "Redeliver is ignored while the same delivery is already being redelivered."
+  ],
+  "tests": [
+    "MonarchWebhookDeliveriesTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Delivery log with redeliver",
+      "fixture": "webhook-deliveries",
+      "webExample": "Delivery log with redeliver",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchWebhookDeliveries(\n    deliveries = listOf(\n        MonarchWebhookDelivery(id = {{deliveries.0.id}}, status = {{deliveries.0.status}}, eventType = {{deliveries.0.eventType}}, attempts = {{deliveries.0.attempts}}, atMillis = now - {{deliveries.0.ageSeconds}} * 1_000L, eventId = {{deliveries.0.eventId}}, responseCode = {{deliveries.0.responseCode}}, durationMillis = {{deliveries.0.durationMs}}),\n        MonarchWebhookDelivery(id = {{deliveries.1.id}}, status = {{deliveries.1.status}}, eventType = {{deliveries.1.eventType}}, attempts = {{deliveries.1.attempts}}, atMillis = now - {{deliveries.1.ageSeconds}} * 1_000L, eventId = {{deliveries.1.eventId}}, responseCode = {{deliveries.1.responseCode}}, error = {{deliveries.1.error}}, nextAttemptMillis = now + {{deliveries.1.nextAttemptSeconds}} * 1_000L),\n        MonarchWebhookDelivery(id = {{deliveries.2.id}}, status = {{deliveries.2.status}}, eventType = {{deliveries.2.eventType}}, attempts = {{deliveries.2.attempts}}, atMillis = now - {{deliveries.2.ageSeconds}} * 1_000L, eventId = {{deliveries.2.eventId}}, error = {{deliveries.2.error}}),\n        MonarchWebhookDelivery(id = {{deliveries.3.id}}, status = {{deliveries.3.status}}, eventType = {{deliveries.3.eventType}}, attempts = {{deliveries.3.attempts}}, atMillis = now - {{deliveries.3.ageSeconds}} * 1_000L, eventId = {{deliveries.3.eventId}}),\n    ),\n    modifier = Modifier.height(1280.dp),\n    eventTypes = listOf({{eventTypes.0}}, {{eventTypes.1}}, {{eventTypes.2}}),\n    now = now,\n    onRedeliver = { },\n)",
+      "setupTemplate": "val now = System.currentTimeMillis()",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ],
+      "setup": "val now = System.currentTimeMillis()",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchWebhookDeliveries(\n    deliveries = listOf(\n        MonarchWebhookDelivery(id = \"d1\", status = \"succeeded\", eventType = \"order.created\", attempts = 1, atMillis = now - 120 * 1_000L, eventId = \"evt_3c91a0\", responseCode = 200, durationMillis = 142),\n        MonarchWebhookDelivery(id = \"d2\", status = \"retrying\", eventType = \"order.updated\", attempts = 2, atMillis = now - 540 * 1_000L, eventId = \"evt_3c8f12\", responseCode = 503, error = \"The endpoint answered 503\", nextAttemptMillis = now + 300 * 1_000L),\n        MonarchWebhookDelivery(id = \"d3\", status = \"failed\", eventType = \"invoice.paid\", attempts = 6, atMillis = now - 3900 * 1_000L, eventId = \"evt_3c7b55\", error = \"No response within 10 seconds\"),\n        MonarchWebhookDelivery(id = \"d4\", status = \"pending\", eventType = \"order.created\", attempts = 0, atMillis = now - 30 * 1_000L, eventId = \"evt_3c9d77\"),\n    ),\n    modifier = Modifier.height(1280.dp),\n    eventTypes = listOf(\"order.created\", \"order.updated\", \"invoice.paid\"),\n    now = now,\n    onRedeliver = { },\n)"
+    },
+    {
+      "title": "Server-side filters and paging",
+      "setup": "var filters by remember { mutableStateOf(MonarchWebhookDeliveryFilters()) }\nvar page by remember { mutableStateOf(listOf<MonarchWebhookDelivery>()) }",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchWebhookDeliveries(\n    deliveries = page,\n    modifier = Modifier.height(480.dp),\n    filters = filters,\n    onFiltersChange = { filters = it /* The app fetches the first page with these filters. */ },\n    manualFiltering = true,\n    hasMore = true,\n    onLoadMore = { /* The app fetches the next page with the cursor it holds. */ },\n    onSelect = { /* The app opens its own delivery screen. */ },\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ]
+    }
+  ],
+  "webEquivalent": "WebhookDeliveries",
+  "dependsOn": [
+    "status-badge",
+    "load-more",
+    "log-drawer",
+    "button"
+  ],
+  "toneMap": {
+    "webhookDeliveryStatuses": {
+      "pending": "neutral",
+      "sending": "info",
+      "succeeded": "success",
+      "retrying": "warning",
+      "failed": "danger",
+      "gone": "danger"
+    }
+  },
+  "icons": {
+    "status.pending": "ClockGlyph",
+    "status.sending": "DotGlyph",
+    "status.succeeded": "SuccessGlyph",
+    "status.retrying": "RetryGlyph",
+    "status.failed": "ErrorGlyph",
+    "status.gone": "HelpGlyph",
+    "copy": "CopyGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "android",
+      "reason": "The web shows a table with filters and a Redeliver button in each row; on a phone each delivery is a row that opens a details sheet where Redeliver and the copy action live, and the filters are menus.",
+      "convention": "Material 3 list-detail: a row opens a ModalBottomSheet"
+    }
+  ]
+}

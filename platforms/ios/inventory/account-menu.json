@@ -1,0 +1,72 @@
+{
+  "id": "account-menu",
+  "name": null,
+  "title": "AccountMenu",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "A Button with MonarchAvatar as the trigger and, open, a card of rows: the signed-in name and address, Profile and Settings, the workspace and theme choices under their own titles with a dot on the current one, and Sign out. (MonarchElevation, MonarchDivider, MonarchIcon)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the signed-in person's menu, an avatar button that opens a system menu with who is signed in, Profile and Settings, a workspace switcher, the colour scheme and Sign out.",
+  "whenToUse": "In the toolbar or header of an app with accounts, as the one place for the person's own settings and signing out.",
+  "whenNotToUse": "For a full account screen with many settings, push a Form from a toolbar button instead. For switching workspaces as the main navigation, use a dedicated switcher in the sidebar.",
+  "api": [
+    "Menu { Section(\"Signed in as …\") { Button(\"Profile\", systemImage:) {}; Button(\"Settings\", systemImage:) {} }; Picker(\"Switch workspace\", selection:) { … }.pickerStyle(.menu); Picker(\"Theme\", selection: $scheme) { … }.pickerStyle(.menu); Divider(); Button(\"Sign out\", systemImage:, role: .destructive) {} } label: { MonarchAvatar(image:name:size:status:isDecorative:) }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "closed",
+      "description": "The avatar, with a presence dot when given, as the menu's button."
+    },
+    {
+      "name": "open",
+      "description": "The system menu: the signed-in address as the section title, Profile and Settings, the workspace and theme pickers as submenus that show the current choice, and Sign out in the destructive colour."
+    },
+    {
+      "name": "with name",
+      "description": "The label can be the avatar and the name in an HStack, for wide toolbars."
+    }
+  ],
+  "appearance": "The avatar keeps its Monarch colours; the menu is the system menu in every theme, with the destructive role drawing Sign out in the system red.",
+  "platformNotes": "The web ships AccountMenu as one component with user, workspaces, theme and callback props, and renderLink for router links. On iOS it is a recipe: Menu already gives the trigger, focus, keyboard and VoiceOver behaviour, and on a phone the system menu is the expected surface, so no Monarch type is added. The theme picker binds the same MonarchSchemePreference that MonarchThemeToggle uses; apply it with .monarchTheme(scheme:) and keep it with @AppStorage through MonarchThemeToggle.storageValue(for:). The web's workspaceSlot and items props are the app's own Menu items. The web's \"sheet on phones\" option is not needed: the system menu fits phone screens; push a Form if the account options grow.",
+  "accessibility": [
+    "The menu's button is named \"Account menu for <name>\" with accessibilityLabel; the avatar inside is decorative.",
+    "The pickers are read as menus with their current value; each choice is read with a selected state.",
+    "Sign out uses the destructive role, which VoiceOver announces.",
+    "The avatar label keeps a 44-point touch target with monarchMinimumHitTarget()."
+  ],
+  "edgeCases": [
+    "With one workspace, leave the workspace picker out.",
+    "Long names and addresses in the section title are truncated by the system menu.",
+    "Signing out usually needs a confirmation only when there is unsaved work; use confirmationDialog then."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Workspaces, theme and sign out",
+      "fixture": "account-menu",
+      "webExample": "Workspaces, theme and sign out",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    Button {\n        isOpen.toggle()\n    } label: {\n        MonarchAvatar(image: nil, name: {{user.name}}, size: .sm, isDecorative: true)\n            .monarchMinimumHitTarget()\n    }\n    .buttonStyle(.plain)\n    .accessibilityLabel(\"Account menu for \" + {{user.name}})\n    .accessibilityValue(isOpen ? \"expanded\" : \"collapsed\")\n    if isOpen {\n        VStack(alignment: .leading, spacing: 0) {\n            VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                Text({{user.name}})\n                    .monarchTextStyle(.bodyStrong)\n                    .foregroundStyle(theme.colors.textDefault)\n                Text(verbatim: {{user.email}})\n                    .monarchTextStyle(.caption)\n                    .foregroundStyle(theme.colors.textMuted)\n            }\n            .padding(.horizontal, theme.spacing.space3)\n            .padding(.vertical, theme.spacing.space3)\n            MonarchDivider()\n            row(\"Profile\", systemImage: \"person\") {}\n            row(\"Settings\", systemImage: \"gearshape\") {}\n            MonarchDivider()\n            sectionTitle(\"Switch workspace\")\n            row({{workspaces.0.name}}, initials: \"N\", isCurrent: workspace == {{workspaces.0.id}}) { workspace = {{workspaces.0.id}} }\n            row({{workspaces.1.name}}, initials: \"HL\", isCurrent: workspace == {{workspaces.1.id}}) { workspace = {{workspaces.1.id}} }\n            MonarchDivider()\n            sectionTitle(\"Theme\")\n            row(\"Light\", isCurrent: scheme == .light) { scheme = .light }\n            row(\"Dark\", isCurrent: scheme == .dark) { scheme = .dark }\n            row(\"System\", isCurrent: scheme == .system) { scheme = .system }\n            MonarchDivider()\n            row({{extraItem}}) {}\n            MonarchDivider()\n            row(\"Sign out\", systemImage: \"rectangle.portrait.and.arrow.right\") {}\n        }\n        .frame(maxWidth: 280)\n        .monarchElevation(.md, fill: \\.bgRaised, in: RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous))\n        .overlay(RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous).stroke(theme.colors.borderSubtle))\n        .accessibilityElement(children: .contain)\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var workspace = {{workspace}}\n@State private var scheme: MonarchSchemePreference = {{theme|case}}\n@State private var isOpen = true\n\nprivate func sectionTitle(_ title: String) -> some View {\n    Text(title)\n        .monarchTextStyle(.caption)\n        .foregroundStyle(theme.colors.textMuted)\n        .padding(.horizontal, theme.spacing.space3)\n        .padding(.top, theme.spacing.space2)\n}\n\n/// One row of the menu: an icon or a workspace tile, the name, and a dot on the current choice.\nprivate func row(\n    _ title: String,\n    systemImage: String? = nil,\n    initials: String? = nil,\n    isCurrent: Bool = false,\n    action: @escaping () -> Void\n) -> some View {\n    Button(action: action) {\n        HStack(spacing: theme.spacing.space2) {\n            if let systemImage {\n                MonarchIcon(systemName: systemImage, size: .sm)\n                    .foregroundStyle(theme.colors.textMuted)\n            }\n            if let initials {\n                Text(initials)\n                    .monarchTextStyle(.caption)\n                    .fontWeight(.semibold)\n                    .foregroundStyle(theme.colors.infoStrong)\n                    .frame(width: theme.spacing.space6, height: theme.spacing.space6)\n                    .background(Circle().fill(theme.colors.infoSubtle))\n            }\n            Text(title)\n                .monarchTextStyle(.bodySmall)\n                .foregroundStyle(theme.colors.textDefault)\n            Spacer(minLength: 0)\n            if isCurrent {\n                Circle()\n                    .fill(theme.colors.accentSolid)\n                    .frame(width: theme.spacing.space1_5, height: theme.spacing.space1_5)\n            }\n        }\n        .padding(.horizontal, theme.spacing.space3)\n        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)\n        .contentShape(Rectangle())\n    }\n    .buttonStyle(.plain)\n    .accessibilityAddTraits(isCurrent ? .isSelected : [])\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var workspace = \"ws-1\"\n@State private var scheme: MonarchSchemePreference = .system\n@State private var isOpen = true\n\nprivate func sectionTitle(_ title: String) -> some View {\n    Text(title)\n        .monarchTextStyle(.caption)\n        .foregroundStyle(theme.colors.textMuted)\n        .padding(.horizontal, theme.spacing.space3)\n        .padding(.top, theme.spacing.space2)\n}\n\n/// One row of the menu: an icon or a workspace tile, the name, and a dot on the current choice.\nprivate func row(\n    _ title: String,\n    systemImage: String? = nil,\n    initials: String? = nil,\n    isCurrent: Bool = false,\n    action: @escaping () -> Void\n) -> some View {\n    Button(action: action) {\n        HStack(spacing: theme.spacing.space2) {\n            if let systemImage {\n                MonarchIcon(systemName: systemImage, size: .sm)\n                    .foregroundStyle(theme.colors.textMuted)\n            }\n            if let initials {\n                Text(initials)\n                    .monarchTextStyle(.caption)\n                    .fontWeight(.semibold)\n                    .foregroundStyle(theme.colors.infoStrong)\n                    .frame(width: theme.spacing.space6, height: theme.spacing.space6)\n                    .background(Circle().fill(theme.colors.infoSubtle))\n            }\n            Text(title)\n                .monarchTextStyle(.bodySmall)\n                .foregroundStyle(theme.colors.textDefault)\n            Spacer(minLength: 0)\n            if isCurrent {\n                Circle()\n                    .fill(theme.colors.accentSolid)\n                    .frame(width: theme.spacing.space1_5, height: theme.spacing.space1_5)\n            }\n        }\n        .padding(.horizontal, theme.spacing.space3)\n        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)\n        .contentShape(Rectangle())\n    }\n    .buttonStyle(.plain)\n    .accessibilityAddTraits(isCurrent ? .isSelected : [])\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    Button {\n        isOpen.toggle()\n    } label: {\n        MonarchAvatar(image: nil, name: \"Sam Rivera\", size: .sm, isDecorative: true)\n            .monarchMinimumHitTarget()\n    }\n    .buttonStyle(.plain)\n    .accessibilityLabel(\"Account menu for \" + \"Sam Rivera\")\n    .accessibilityValue(isOpen ? \"expanded\" : \"collapsed\")\n    if isOpen {\n        VStack(alignment: .leading, spacing: 0) {\n            VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                Text(\"Sam Rivera\")\n                    .monarchTextStyle(.bodyStrong)\n                    .foregroundStyle(theme.colors.textDefault)\n                Text(verbatim: \"sam@example.com\")\n                    .monarchTextStyle(.caption)\n                    .foregroundStyle(theme.colors.textMuted)\n            }\n            .padding(.horizontal, theme.spacing.space3)\n            .padding(.vertical, theme.spacing.space3)\n            MonarchDivider()\n            row(\"Profile\", systemImage: \"person\") {}\n            row(\"Settings\", systemImage: \"gearshape\") {}\n            MonarchDivider()\n            sectionTitle(\"Switch workspace\")\n            row(\"Northwind\", initials: \"N\", isCurrent: workspace == \"ws-1\") { workspace = \"ws-1\" }\n            row(\"Harbor Labs\", initials: \"HL\", isCurrent: workspace == \"ws-2\") { workspace = \"ws-2\" }\n            MonarchDivider()\n            sectionTitle(\"Theme\")\n            row(\"Light\", isCurrent: scheme == .light) { scheme = .light }\n            row(\"Dark\", isCurrent: scheme == .dark) { scheme = .dark }\n            row(\"System\", isCurrent: scheme == .system) { scheme = .system }\n            MonarchDivider()\n            row(\"Keyboard shortcuts\") {}\n            MonarchDivider()\n            row(\"Sign out\", systemImage: \"rectangle.portrait.and.arrow.right\") {}\n        }\n        .frame(maxWidth: 280)\n        .monarchElevation(.md, fill: \\.bgRaised, in: RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous))\n        .overlay(RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous).stroke(theme.colors.borderSubtle))\n        .accessibilityElement(children: .contain)\n    }\n}"
+    },
+    {
+      "title": "Avatar and name as the button",
+      "setup": "@Environment(\\.monarchTheme) private var theme",
+      "code": "Menu {\n    Section(\"Signed in as priya@example.com\") {\n        Button(\"Profile\", systemImage: \"person.crop.circle\") {}\n        Button(\"Sign out\", systemImage: \"rectangle.portrait.and.arrow.right\", role: .destructive) {}\n    }\n} label: {\n    HStack(spacing: theme.spacing.space2) {\n        MonarchAvatar(image: nil, name: \"Priya Raman\", size: .sm, isDecorative: true)\n        Text(\"Priya Raman\")\n            .monarchTextStyle(.label)\n            .foregroundStyle(theme.colors.textDefault)\n    }\n    .monarchMinimumHitTarget()\n}\n.accessibilityLabel(\"Account menu for Priya Raman\")"
+    }
+  ],
+  "webEquivalent": "AccountMenu",
+  "dependsOn": [
+    "avatar",
+    "dropdown-menu",
+    "theme-toggle"
+  ]
+}

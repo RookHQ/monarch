@@ -1,0 +1,164 @@
+{
+  "id": "weekly-hours-editor",
+  "name": "MonarchWeeklyHoursEditor",
+  "title": "WeeklyHoursEditor",
+  "family": "scheduling",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of days, each a standard Toggle named by the weekday with pairs of Picker with .pickerStyle(.menu) for the start and end times, Button with .buttonStyle(.monarch(.ghost, size: .sm)) for remove, add and copy, MonarchInlineNotice for problems and sensoryFeedback(.success) on copy",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Edits weekly availability: each day switched on or off, one or more time intervals per day, copying a day to the whole week, and overlap checks.",
+  "whenToUse": "Booking availability, business hours, support or on-call hours: any setting that is “these times on these weekdays”.",
+  "whenNotToUse": "For one-off dates such as holidays or time off, use a list of dates with DatePicker (date-picker). For rotas that change week to week, use MonarchShiftRoster.",
+  "api": [
+    "init(value: Binding<[MonarchWeeklyHoursInterval]>, firstWeekday: Int? = nil, uses24HourClock: Bool? = nil, step: Int = 15, defaultStart: Int = 540, defaultEnd: Int = 1020, maxIntervals: Int = 6, isReadOnly: Bool = false, labels: MonarchWeeklyHoursEditorLabels = MonarchWeeklyHoursEditorLabels(), @ViewBuilder timeZoneLabel: () -> TimeZoneLabel)",
+    "init(value: Binding<[MonarchWeeklyHoursInterval]>, firstWeekday: Int? = nil, uses24HourClock: Bool? = nil, step: Int = 15, defaultStart: Int = 540, defaultEnd: Int = 1020, maxIntervals: Int = 6, isReadOnly: Bool = false, labels: MonarchWeeklyHoursEditorLabels = MonarchWeeklyHoursEditorLabels()) where TimeZoneLabel == EmptyView",
+    "struct MonarchWeeklyHoursInterval: Hashable, Sendable { var day: Int; var start: Int; var end: Int; init(day: Int, start: Int, end: Int); static func validate(_ value: [MonarchWeeklyHoursInterval]) -> [Int: MonarchWeeklyHoursError] }",
+    "enum MonarchWeeklyHoursError: String, CaseIterable { case range, order, overlap }",
+    "struct MonarchWeeklyHoursEditorLabels { init(title: String? = nil, unavailable: String? = nil, start: String? = nil, end: String? = nil, interval: ((String, Int) -> String)? = nil, add: String? = nil, addItem: ((String) -> String)? = nil, remove: String? = nil, removeItem: ((String, Int) -> String)? = nil, copyToAll: String? = nil, copyToAllItem: ((String) -> String)? = nil, copied: ((String) -> String)? = nil, range: ((String, String) -> String)? = nil, midnight: String? = nil, rangeError: String? = nil, orderError: String? = nil, overlapError: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "value",
+      "type": "Binding<[MonarchWeeklyHoursInterval]>",
+      "default": "required",
+      "description": "The intervals: ISO weekday (1 Monday … 7 Sunday) and minutes from midnight, end exclusive and at most 1440. Every change writes the whole list, ordered by weekday; each day's intervals stay in the order arranged."
+    },
+    {
+      "name": "firstWeekday",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The first day shown, as a Calendar weekday (1 Sunday … 7 Saturday). nil follows the environment calendar's firstWeekday."
+    },
+    {
+      "name": "uses24HourClock",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Shows times on a 24-hour clock; nil follows the locale."
+    },
+    {
+      "name": "step",
+      "type": "Int",
+      "default": "15",
+      "description": "Minutes between time options, 1 to 60; zero or a negative step falls back to 15."
+    },
+    {
+      "name": "defaultStart",
+      "type": "Int",
+      "default": "540",
+      "description": "The start of a day switched on for the first time (09:00)."
+    },
+    {
+      "name": "defaultEnd",
+      "type": "Int",
+      "default": "1020",
+      "description": "The end of a day switched on for the first time (17:00)."
+    },
+    {
+      "name": "maxIntervals",
+      "type": "Int",
+      "default": "6",
+      "description": "The most intervals per day; the add button is hidden at this count."
+    },
+    {
+      "name": "isReadOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows each day's hours as text, without controls."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchWeeklyHoursEditorLabels",
+      "default": "MonarchWeeklyHoursEditorLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "timeZoneLabel",
+      "type": "@ViewBuilder () -> TimeZoneLabel",
+      "default": "EmptyView",
+      "description": "Content under the heading for the zone the hours are in: a Text, or the app's MonarchTimezoneSelect."
+    }
+  ],
+  "states": [
+    {
+      "name": "day on",
+      "description": "The switch is on; each interval shows its start and end menus and a remove icon button; Add interval and Copy to all follow."
+    },
+    {
+      "name": "day off",
+      "description": "The switch is off and reads Unavailable under the day's name in the muted colour."
+    },
+    {
+      "name": "invalid",
+      "description": "A danger MonarchInlineNotice under the day says what is wrong: a time outside the day, an interval ending before it starts, or an overlap."
+    },
+    {
+      "name": "at the limit",
+      "description": "With maxIntervals intervals the add button is hidden."
+    },
+    {
+      "name": "read-only",
+      "description": "Each day is its name and its hours as text, such as 9:00 AM – 5:00 PM, without controls."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true) every switch, menu and button is disabled and the text uses the disabled colour."
+    }
+  ],
+  "appearance": "Days are separated by a hairline in the subtle border colour. The day switch is the standard Toggle; the time menus are standard menu pickers; the buttons are small ghost Monarch buttons. Unavailable, the time zone line and the read-only hours use the muted text colour, and problems use the danger tone with its icon. Light, dark and both high-contrast themes follow from the colour roles.",
+  "platformNotes": "Same value shape, validation and defaults as the web and Android (`{ day, start, end }` in minutes, ISO weekdays, 09:00 to 17:00, 15-minute steps, six intervals), and the same names (MonarchWeeklyHoursInterval, MonarchWeeklyHoursError, MonarchWeeklyHoursEditorLabels). Differences: value is a Binding; the first day follows the environment calendar by default (Android and the web default to Monday) and firstWeekday takes the Calendar weekday numbers; uses24HourClock replaces Android's is24Hour and the web's hourCycle; enabled is the SwiftUI .disabled modifier; the remove button is always the minus.circle symbol with the name Remove, so there is no removeIcon; labels add interval for the spoken name of an interval row. Times are menu Pickers, not DatePicker with .hourAndMinute (the planned date-time-picker dependency), because DatePicker has no minute step and no end-of-day 24:00. On a phone each interval is one line, start – end and the remove icon, and it stacks when the text is large. The web's hidden form input (name) has no meaning in SwiftUI.",
+  "accessibility": [
+    "The heading has the header trait.",
+    "Each day is a container named by the weekday; its switch is the standard Toggle labelled with the weekday, and reads Unavailable while off.",
+    "Each interval is a container named such as “Monday interval 1” holding the Start and End menus and the remove button “Remove Monday interval 1”; the dash between the menus is hidden.",
+    "Add interval and Copy to all are named with the day (“Add interval to Monday”, “Copy to all days from Monday”) and keep the visible title in the name for Voice Control.",
+    "A problem is text with the danger icon, not only colour, and its message is announced when it appears or changes.",
+    "Copying a day is announced (“Monday hours copied to every day.”) with a success haptic.",
+    "The read-only view combines each day's name and hours into one element.",
+    "Switches, menus and buttons have touch targets of at least 44 points."
+  ],
+  "edgeCases": [
+    "Switching a day off and on again restores its intervals while the editor stays on screen; it starts from the default interval after the editor leaves the view tree.",
+    "A stored time that is not on the step is kept and offered in the menu.",
+    "Intervals with a day outside 1 to 7 are dropped at the next change.",
+    "The end of the day is Midnight on a 12-hour clock and 24:00 on a 24-hour clock.",
+    "With a step of 1 each menu has over a thousand times; keep the step at 5 minutes or more.",
+    "The editor does not scroll on its own: put it in a ScrollView or a Form section."
+  ],
+  "tests": [
+    "MonarchWeeklyHoursEditorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Controlled with validation",
+      "fixture": "weekly-hours-editor",
+      "webExample": "Controlled with validation",
+      "template": "MonarchWeeklyHoursEditor(value: $hours, firstWeekday: 2, uses24HourClock: true) {\n    Text({{timeZoneLabel}})\n}",
+      "setupTemplate": "@State private var hours = [{{days.0}}, {{days.1}}, {{days.2}}, {{days.3}}, {{days.4}}].flatMap { day in\n    [\n        MonarchWeeklyHoursInterval(day: day, start: {{intervals.0.start}}, end: {{intervals.0.end}}),\n        MonarchWeeklyHoursInterval(day: day, start: {{intervals.1.start}}, end: {{intervals.1.end}}),\n    ]\n}",
+      "setup": "@State private var hours = [1, 2, 3, 4, 5].flatMap { day in\n    [\n        MonarchWeeklyHoursInterval(day: day, start: 540, end: 750),\n        MonarchWeeklyHoursInterval(day: day, start: 810, end: 1050),\n    ]\n}",
+      "code": "MonarchWeeklyHoursEditor(value: $hours, firstWeekday: 2, uses24HourClock: true) {\n    Text(\"Times in Europe/London\")\n}"
+    },
+    {
+      "title": "Hours as text",
+      "setup": "@State private var hours = [MonarchWeeklyHoursInterval(day: 1, start: 540, end: 1020)]",
+      "code": "MonarchWeeklyHoursEditor(value: $hours, uses24HourClock: true, isReadOnly: true)"
+    }
+  ],
+  "webEquivalent": "WeeklyHoursEditor",
+  "dependsOn": [
+    "switch",
+    "select",
+    "button",
+    "inline-notice"
+  ],
+  "icons": {
+    "remove": "CloseGlyph",
+    "add": "PlusGlyph",
+    "copy": "CopyGlyph"
+  }
+}

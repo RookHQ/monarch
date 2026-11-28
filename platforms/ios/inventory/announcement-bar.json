@@ -1,0 +1,71 @@
+{
+  "id": "announcement-bar",
+  "name": null,
+  "title": "AnnouncementBar",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "A banner row at the top of the screen: the message, a link with an arrow and a dismiss button, on the accent tint with a border below, as the web draws it; openURL opens the link and @AppStorage remembers the dismissal",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: one timely announcement across the top of a screen (a launch, a maintenance window, a policy change), with a link and a close button, built from MonarchCalloutBanner.",
+  "whenToUse": "For a short, product-wide message that people may act on once and then dismiss, at the top of the main screen.",
+  "whenNotToUse": "For a status about the content on screen, use MonarchCalloutBanner with placement .section or MonarchBanner. For an event that needs attention now, use an alert. For a message after an action, use MonarchToast.",
+  "api": [
+    "MonarchCalloutBanner(_ title: String? = nil, message: String, systemImage: String? = nil, tone: MonarchTone = .info, placement: .page, actionTitle: String? = nil, action: (@MainActor () -> Void)? = nil, onDismiss: (@MainActor () -> Void)? = nil)",
+    ".safeAreaInset(edge: .top, spacing: 0) { … }",
+    "@Environment(\\.openURL) private var openURL",
+    "@AppStorage(\"announcement.<id>.dismissed\") private var isDismissed = false"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "shown",
+      "description": "The page banner sits above the content, which scrolls under it."
+    },
+    {
+      "name": "dismissed",
+      "description": "The close button sets the stored flag and the banner is removed; the content moves up."
+    },
+    {
+      "name": "with link",
+      "description": "The action button opens the link through openURL."
+    }
+  ],
+  "appearance": "MonarchCalloutBanner with placement .page: a full-width strip in the tone's subtle fill with its border on the bottom edge, the tone icon or a custom symbol, the message in default text and a small secondary action button.",
+  "platformNotes": "The web AnnouncementBar is its own component with an accent tone, an inverse tone and a sticky option. On iOS it is a recipe: safeAreaInset keeps it above the scrolling content, which the web's sticky option does. MonarchTone has no accent or inverse tone, so the recipe uses info, neutral or warning; the product colour can come through systemImage only. The link is the banner's action button opened through openURL instead of an inline anchor. The web leaves storing the dismissal to the product; the recipe stores it with @AppStorage keyed by the announcement.",
+  "accessibility": [
+    "MonarchCalloutBanner reads its icon, title and message as one element, with the tone name first.",
+    "The action and the close button are separate buttons with 44-point touch targets; the close button is read as Dismiss.",
+    "The banner does not announce itself; it is part of the screen when the screen opens."
+  ],
+  "edgeCases": [
+    "Key the stored flag by the announcement, so a new announcement shows again.",
+    "Keep the message to one sentence; at the largest text sizes the banner wraps and takes more of the screen.",
+    "Inside a NavigationStack, put the inset on the stack's root view so the bar sits under the navigation bar."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Release announcement",
+      "fixture": "announcement-bar",
+      "webExample": "Release announcement",
+      "template": "VStack(spacing: 0) {\n    if !isDismissed {\n        let message = Text({{message}})\n            .monarchTextStyle(.bodySmall)\n            .foregroundStyle(theme.colors.textDefault)\n            .fixedSize(horizontal: false, vertical: true)\n        let link = Button {\n            if let url = URL(string: \"https://example.com/releases\") { openURL(url) }\n        } label: {\n            HStack(spacing: theme.spacing.space1) {\n                Text({{action.label}})\n                    .underline()\n                MonarchIcon(systemName: \"arrow.right\", size: .sm)\n            }\n            .monarchTextStyle(.bodySmall, weight: .semibold)\n            .foregroundStyle(theme.colors.textDefault)\n            .frame(minHeight: 44)\n        }\n        .buttonStyle(.plain)\n        let close = Button {\n            isDismissed = true\n        } label: {\n            MonarchIcon(systemName: \"xmark\", label: \"Dismiss\", size: .sm)\n                .foregroundStyle(theme.colors.textDefault)\n                .monarchMinimumHitTarget()\n        }\n        .buttonStyle(.plain)\n        ViewThatFits(in: .horizontal) {\n            HStack(spacing: theme.spacing.space3) {\n                Spacer(minLength: 0)\n                message\n                link\n                close\n                Spacer(minLength: 0)\n            }\n            HStack(alignment: .top, spacing: theme.spacing.space3) {\n                VStack(alignment: .leading, spacing: 0) {\n                    message.padding(.top, theme.spacing.space3)\n                    link\n                }\n                Spacer(minLength: 0)\n                close\n            }\n        }\n        .padding(.horizontal, theme.spacing.space4)\n        .background(theme.colors.accentSubtle)\n        .overlay(alignment: .bottom) {\n            Rectangle().fill(theme.colors.accentBorder).frame(height: 1)\n        }\n    }\n}",
+      "setupTemplate": "@Environment(\\.openURL) private var openURL\n@Environment(\\.monarchTheme) private var theme\n// In an app: @AppStorage(\"announcement.2024-10-launch.dismissed\")\n@State private var isDismissed = false",
+      "setup": "@Environment(\\.openURL) private var openURL\n@Environment(\\.monarchTheme) private var theme\n// In an app: @AppStorage(\"announcement.2024-10-launch.dismissed\")\n@State private var isDismissed = false",
+      "code": "VStack(spacing: 0) {\n    if !isDismissed {\n        let message = Text(\"Version 2 is available.\")\n            .monarchTextStyle(.bodySmall)\n            .foregroundStyle(theme.colors.textDefault)\n            .fixedSize(horizontal: false, vertical: true)\n        let link = Button {\n            if let url = URL(string: \"https://example.com/releases\") { openURL(url) }\n        } label: {\n            HStack(spacing: theme.spacing.space1) {\n                Text(\"Read the release notes\")\n                    .underline()\n                MonarchIcon(systemName: \"arrow.right\", size: .sm)\n            }\n            .monarchTextStyle(.bodySmall, weight: .semibold)\n            .foregroundStyle(theme.colors.textDefault)\n            .frame(minHeight: 44)\n        }\n        .buttonStyle(.plain)\n        let close = Button {\n            isDismissed = true\n        } label: {\n            MonarchIcon(systemName: \"xmark\", label: \"Dismiss\", size: .sm)\n                .foregroundStyle(theme.colors.textDefault)\n                .monarchMinimumHitTarget()\n        }\n        .buttonStyle(.plain)\n        ViewThatFits(in: .horizontal) {\n            HStack(spacing: theme.spacing.space3) {\n                Spacer(minLength: 0)\n                message\n                link\n                close\n                Spacer(minLength: 0)\n            }\n            HStack(alignment: .top, spacing: theme.spacing.space3) {\n                VStack(alignment: .leading, spacing: 0) {\n                    message.padding(.top, theme.spacing.space3)\n                    link\n                }\n                Spacer(minLength: 0)\n                close\n            }\n        }\n        .padding(.horizontal, theme.spacing.space4)\n        .background(theme.colors.accentSubtle)\n        .overlay(alignment: .bottom) {\n            Rectangle().fill(theme.colors.accentBorder).frame(height: 1)\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "AnnouncementBar",
+  "dependsOn": [
+    "callout-banner",
+    "link"
+  ],
+  "icons": {
+    "dismiss": "CloseGlyph"
+  }
+}

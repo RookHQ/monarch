@@ -1,0 +1,194 @@
+{
+  "id": "approval-queue",
+  "name": "MonarchApprovalQueue",
+  "title": "ApprovalQueue",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyColumn of rows, each an androidx.compose.material3.SwipeToDismissBox (springs back after the action); androidx.compose.material3.Checkbox and TriStateCheckbox for selection, androidx.compose.material3.AlertDialog for Send back and bulk confirmation; MonarchAvatar, MonarchBadge, MonarchButton, MonarchSearchBar, MonarchTextField, MonarchEmptyState and MonarchBulkActionBar",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Requests waiting on the viewer, with Approve, Send back with a reason and Review on each, swipe actions, search and bulk approval.",
+  "whenToUse": "When a manager or admin has requests (expenses, leave, timesheets, access) that need their decision, on an approvals screen or, with limit and a footer, in a dashboard card.",
+  "whenNotToUse": "For the steps of one request, use MonarchApprovalTimeline. For a list of conversations or notifications, use MonarchInboxRow rows.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchApprovalQueue(items: List<MonarchApprovalQueueItem>, modifier: Modifier = Modifier, rejectReason: MonarchApprovalQueueRejectReason = MonarchApprovalQueueRejectReason.Required, searchable: Boolean = false, limit: Int? = null, now: Long? = null, onApprove: (suspend (MonarchApprovalQueueItem) -> Unit)? = null, onReject: (suspend (MonarchApprovalQueueItem, String?) -> Unit)? = null, onReview: ((MonarchApprovalQueueItem) -> Unit)? = null, onApproveMany: (suspend (List<MonarchApprovalQueueItem>) -> Unit)? = null, labels: MonarchApprovalQueueLabels = MonarchApprovalQueueLabels(), footer: (@Composable () -> Unit)? = null)",
+    "class MonarchApprovalQueueItem(id: String, requesterName: String, title: String, requesterImage: Painter? = null, requesterSeed: String? = null, requesterDetail: String? = null, summary: String? = null, submittedMillis: Long? = null, overdue: Boolean = false, badges: List<MonarchStatusDefinition> = emptyList(), searchText: String? = null, canDecide: Boolean = true)",
+    "enum class MonarchApprovalQueueRejectReason { Required, Optional, None }",
+    "class MonarchApprovalQueueLabels(label: String? = null, approve: String? = null, reject: String? = null, review: String? = null, approveItem: ((requester: String) -> String)? = null, rejectItem: ((requester: String) -> String)? = null, reviewItem: ((requester: String) -> String)? = null, selectItem: ((requester: String) -> String)? = null, selectAll: String? = null, approveSelected: String? = null, overdue: String? = null, search: String? = null, emptyTitle: String? = null, emptyDescription: String? = null, noMatchesTitle: String? = null, rejectTitle: ((requester: String) -> String)? = null, rejectDescription: String? = null, rejectReason: String? = null, rejectReasonPrompt: String? = null, bulkTitle: ((count: Int) -> String)? = null, bulkDescription: String? = null, bulkConfirm: String? = null, cancel: String? = null, approved: ((requester: String) -> String)? = null, rejected: ((requester: String) -> String)? = null, bulkApproved: ((count: Int) -> String)? = null, failed: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "List<MonarchApprovalQueueItem>",
+      "default": "required",
+      "description": "The requests, in the order to show them. Ids must be unique. The app removes a request once it is decided."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the queue. Give it a bounded height: the list is lazy."
+    },
+    {
+      "name": "rejectReason",
+      "type": "MonarchApprovalQueueRejectReason",
+      "default": "MonarchApprovalQueueRejectReason.Required",
+      "description": "Required and Optional add a reason field to the Send back dialog (Send back is disabled while a required reason is blank); None asks for confirmation only."
+    },
+    {
+      "name": "searchable",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Adds a MonarchSearchBar above the list that filters by requester and title, or by each item's searchText, ignoring case."
+    },
+    {
+      "name": "limit",
+      "type": "Int?",
+      "default": "null",
+      "description": "Shows at most this many requests, after the search, for a dashboard card."
+    },
+    {
+      "name": "now",
+      "type": "Long?",
+      "default": "null",
+      "description": "The reference time for relative times, in epoch milliseconds. Without it they follow the clock, refreshed every minute."
+    },
+    {
+      "name": "onApprove",
+      "type": "(suspend (MonarchApprovalQueueItem) -> Unit)?",
+      "default": "null",
+      "description": "Adds Approve (button and swipe toward the start). The button shows progress until it returns; throwing marks the row as failed."
+    },
+    {
+      "name": "onReject",
+      "type": "(suspend (MonarchApprovalQueueItem, String?) -> Unit)?",
+      "default": "null",
+      "description": "Adds Send back. Receives the trimmed reason or null. The dialog stays open with a progress button until it returns and shows the failure if it throws."
+    },
+    {
+      "name": "onReview",
+      "type": "((MonarchApprovalQueueItem) -> Unit)?",
+      "default": "null",
+      "description": "Adds Review (button and swipe toward the end), which opens the full request."
+    },
+    {
+      "name": "onApproveMany",
+      "type": "(suspend (List<MonarchApprovalQueueItem>) -> Unit)?",
+      "default": "null",
+      "description": "Adds row checkboxes, Select all and a MonarchBulkActionBar with Approve selected, confirmed by an AlertDialog. Throwing shows the failure under Select all."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchApprovalQueueLabels",
+      "default": "MonarchApprovalQueueLabels()",
+      "description": "Replacements for every built-in string, including the announcements and the per-request button names."
+    },
+    {
+      "name": "footer",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "Content after the requests, inside the list, such as a See all requests button."
+    }
+  ],
+  "states": [
+    {
+      "name": "pending",
+      "description": "While onApprove runs, the row's Approve shows a progress indicator and is read as Loading; Send back and the approve swipe are unavailable."
+    },
+    {
+      "name": "failed",
+      "description": "The row shows \"That did not work. Try again.\" in the strong danger color, the text is part of the row's TalkBack reading, and it is announced."
+    },
+    {
+      "name": "sending back",
+      "description": "The Send back dialog shows a progress button and a disabled reason field and Cancel until onReject returns; a failure stays in the dialog as the field's error."
+    },
+    {
+      "name": "selected",
+      "description": "With onApproveMany, checked rows are counted in the bulk action bar under the list; Select all is on, off or partly checked."
+    },
+    {
+      "name": "read-only request",
+      "description": "canDecide false: no Approve, no Send back, a disabled checkbox; Review stays."
+    },
+    {
+      "name": "overdue",
+      "description": "A danger Past due badge after the title."
+    },
+    {
+      "name": "empty",
+      "description": "A success MonarchEmptyState, Nothing to review, with no search field and no Select all."
+    },
+    {
+      "name": "no matches",
+      "description": "A filtered MonarchEmptyState with Clear filters, which empties the search."
+    }
+  ],
+  "appearance": "A plain list on the surface color with subtle dividers. Names use the strong body style in the default text color; details, times and summaries the caption style in the muted text color. Approve is a primary button, Send back secondary and Review ghost. The swipe backgrounds use the solid success role for Approve and the solid accent role for Review, with their on-solid text. The same roles adapt to dark and both high-contrast themes.",
+  "platformNotes": "A domain composite, marked experimental until a Rook app adopts it. Android follows the iOS API with Kotlin conventions: suspend handlers instead of async throws, submittedMillis (epoch milliseconds, UTC) instead of Date, requesterName, requesterImage (a Painter loaded by the app) and requesterSeed instead of a MonarchApprovalPerson, and footer as an optional trailing slot. A Material 3 SwipeToDismissBox has one action per direction, so swipe toward the start approves and toward the end reviews; iOS also offers Send back in the trailing swipe, here it is the row's button. The web uses a success button for Approve; MonarchButton has no success variant, so Approve is primary. As on iOS, the Send back dialog stays open while onReject runs and the bulk confirmation closes while the bulk bar shows progress. TalkBack reads the relative submission time (\"2 days ago\"), where iOS reads the absolute date. The web moves focus back into the queue when a decided row disappears; Compose has no equivalent here, so focus follows the system default. Titles, summaries and badges are strings and MonarchStatusDefinition values rather than rich content.",
+  "accessibility": [
+    "The list is named \"Requests waiting for you\".",
+    "Each request is one element read as requester, detail, title, relative submission time, Past due, badges, summary and, after a failure, the error.",
+    "Approve, Send back, Review and each checkbox name the request they act on, such as \"Approve request from Sam Lee\".",
+    "Approving, sending back, bulk approval and failures are announced through a polite live region that is always present.",
+    "Swipe actions repeat the row's buttons, so every action is reachable without swiping; the swipe backgrounds are hidden from TalkBack.",
+    "Select all is a tri-state checkbox row read as checked, unchecked or partly checked.",
+    "While Approve runs its state is read as Loading.",
+    "Overdue is a badge with a word and failures are text, so nothing relies on color.",
+    "Buttons and checkboxes have 48dp touch targets."
+  ],
+  "edgeCases": [
+    "Decided requests stay until the app removes them from items; the queue does not hide them itself.",
+    "Selections of requests that are no longer in items, or that cannot be decided, are ignored.",
+    "limit applies after the search; a negative limit shows nothing.",
+    "The list is lazy: give the queue a bounded height. Inside a vertically scrolling parent it would get an infinite height and fail; in a loose height it takes the height of its rows.",
+    "The same announcement twice in a row (two failures) is not repeated by the live region.",
+    "Long names, titles and summaries wrap; the buttons wrap onto more lines at large font sizes."
+  ],
+  "tests": [
+    "MonarchApprovalQueueTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Inbox with search and bulk approval",
+      "fixture": "approval-queue",
+      "webExample": "Inbox with search and bulk approval",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchApprovalQueue(\n    items = items,\n    searchable = true,\n    now = {{now|millis}},\n    onApprove = { item -> items = items.filterNot { it.id == item.id } },\n    onReject = { item, _ -> items = items.filterNot { it.id == item.id } },\n    onReview = { },\n    onApproveMany = { chosen -> items = items - chosen.toSet() },\n)",
+      "setupTemplate": "var items by remember {\n    mutableStateOf(\n        listOf(\n            MonarchApprovalQueueItem(\n                id = {{items.0.id}},\n                requesterName = {{items.0.requester.name}},\n                title = {{items.0.title}},\n                requesterDetail = {{items.0.requester.detail}},\n                summary = {{items.0.summary}},\n                submittedMillis = {{items.0.submittedAt|millis}},\n                overdue = {{items.0.overdue}},\n            ),\n            MonarchApprovalQueueItem(\n                id = {{items.1.id}},\n                requesterName = {{items.1.requester.name}},\n                title = {{items.1.title}},\n                requesterDetail = {{items.1.requester.detail}},\n                summary = {{items.1.summary}},\n                submittedMillis = {{items.1.submittedAt|millis}},\n            ),\n            MonarchApprovalQueueItem(\n                id = {{items.2.id}},\n                requesterName = {{items.2.requester.name}},\n                title = {{items.2.title}},\n                requesterDetail = {{items.2.requester.detail}},\n                summary = {{items.2.summary}},\n                submittedMillis = {{items.2.submittedAt|millis}},\n                badges = listOf(MonarchStatusDefinition({{items.2.badge.label}}, {{items.2.badge.tone|tone}})),\n            ),\n        ),\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.foundation.MonarchTone"
+      ],
+      "setup": "var items by remember {\n    mutableStateOf(\n        listOf(\n            MonarchApprovalQueueItem(\n                id = \"1\",\n                requesterName = \"Alex Morgan\",\n                title = \"Expense claim\",\n                requesterDetail = \"Design\",\n                summary = \"3 receipts, travel\",\n                submittedMillis = 1_772_960_400_000L,\n                overdue = true,\n            ),\n            MonarchApprovalQueueItem(\n                id = \"2\",\n                requesterName = \"Sam Lee\",\n                title = \"Leave, 2 days\",\n                requesterDetail = \"Engineering\",\n                summary = \"14 to 15 April\",\n                submittedMillis = 1_773_130_500_000L,\n            ),\n            MonarchApprovalQueueItem(\n                id = \"3\",\n                requesterName = \"Jo Park\",\n                title = \"Timesheet\",\n                requesterDetail = \"Operations\",\n                summary = \"Week of 2 March, 41 h\",\n                submittedMillis = 1_773_078_000_000L,\n                badges = listOf(MonarchStatusDefinition(\"Resubmitted\", MonarchTone.Warning)),\n            ),\n        ),\n    )\n}",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchApprovalQueue(\n    items = items,\n    searchable = true,\n    now = 1_773_144_000_000L,\n    onApprove = { item -> items = items.filterNot { it.id == item.id } },\n    onReject = { item, _ -> items = items.filterNot { it.id == item.id } },\n    onReview = { },\n    onApproveMany = { chosen -> items = items - chosen.toSet() },\n)"
+    },
+    {
+      "title": "A dashboard card with See all",
+      "setup": "val items = listOf(MonarchApprovalQueueItem(id = \"1\", requesterName = \"Jo Park\", title = \"Timesheet\"))",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchApprovalQueue(\n    items = items,\n    modifier = Modifier.height(280.dp),\n    limit = 3,\n    onApprove = { },\n) {\n    MonarchButton(text = \"See all requests\", onClick = { }, variant = MonarchButtonVariant.Ghost)\n}",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ]
+    }
+  ],
+  "webEquivalent": "ApprovalQueue",
+  "dependsOn": [
+    "avatar",
+    "button",
+    "badge",
+    "bulk-action-bar",
+    "checkbox",
+    "text-field",
+    "empty-state",
+    "search-input",
+    "confirm-dialog",
+    "relative-time",
+    "status-badge"
+  ]
+}

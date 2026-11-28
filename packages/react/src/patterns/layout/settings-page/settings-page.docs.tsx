@@ -9,14 +9,21 @@ import {
 } from '@rookcom/monarch-react';
 import { SettingsPage } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './settings-page.fixture.json';
+
+const [general, notifications] = fixture.data.sections as unknown as readonly [
+  { title: string; row: { label: string; value: string } },
+  { title: string; row: { label: string; description: string; on: boolean } },
+];
 
 const sampleNav = [
-  { id: 'demo-general', label: 'General' },
-  { id: 'demo-notifications', label: 'Notifications' },
+  { id: 'demo-general', label: general.title },
+  { id: 'demo-notifications', label: notifications.title },
 ];
 
 function DirtyDemo() {
-  const [saved, setSaved] = useState('Workspace A');
+  const [saved, setSaved] = useState('Northwind');
   const [name, setName] = useState(saved);
   const dirty = name !== saved;
   return (
@@ -154,26 +161,33 @@ export default {
           title: 'Sections with nav and a danger zone',
           render: () => (
             <SettingsPage
-              title="Workspace settings"
+              title={fixture.data.title}
               headingLevel="h2"
               nav={sampleNav}
               interceptLinks={false}
               dangerZone={
                 <DangerZoneItem
-                  title="Delete this workspace"
-                  description="Removes the workspace and everything in it."
-                  action={<Button variant="danger">Delete workspace</Button>}
+                  title={fixture.data.danger.title}
+                  description={fixture.data.danger.description}
+                  action={<Button variant="danger">{fixture.data.danger.action}</Button>}
                 />
               }
             >
-              <SettingsSection id="demo-general" title="General" headingLevel="h3">
-                <SettingsRow label="Workspace name">
-                  <Input defaultValue="Workspace A" />
+              <SettingsSection id="demo-general" title={general.title} headingLevel="h3">
+                <SettingsRow label={general.row.label}>
+                  <Input defaultValue={general.row.value} />
                 </SettingsRow>
               </SettingsSection>
-              <SettingsSection id="demo-notifications" title="Notifications" headingLevel="h3">
-                <SettingsRow label="Email digest" description="A summary once a week.">
-                  <Switch defaultChecked />
+              <SettingsSection
+                id="demo-notifications"
+                title={notifications.title}
+                headingLevel="h3"
+              >
+                <SettingsRow
+                  label={notifications.row.label}
+                  description={notifications.row.description}
+                >
+                  <Switch defaultChecked={notifications.row.on} />
                 </SettingsRow>
               </SettingsSection>
             </SettingsPage>

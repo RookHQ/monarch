@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Button, MarketingConsentCheckbox, type MarketingConsent } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './marketing-consent-checkbox.fixture.json';
 
 function ContactForm() {
   const [posted, setPosted] = useState<string | null>(null);
@@ -15,12 +17,12 @@ function ContactForm() {
     >
       <MarketingConsentCheckbox
         name="marketing"
-        description="Product updates and event invitations, about twice a month."
-        policyLink={{ label: 'How we use your data', href: '#privacy' }}
+        description={fixture.data.description}
+        policyLink={fixture.data.policy}
       />
       <div>
         <Button type="submit" variant="primary">
-          Send message
+          {fixture.data.submit}
         </Button>
       </div>
       {posted ? <p>Submitted: {posted}</p> : null}

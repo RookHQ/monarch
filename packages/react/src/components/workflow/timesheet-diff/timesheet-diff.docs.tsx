@@ -4,17 +4,24 @@ import {
   type TimesheetDiffEntry,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './timesheet-diff.fixture.json';
 
-const SUBMITTED: TimesheetDiffEntry[] = [
-  { id: 'e1', date: '2026-01-12', minutes: 120, project: 'Website refresh', activity: 'Design' },
-  { id: 'e2', date: '2026-01-13', minutes: 60, project: 'Internal', billable: false },
-  { id: 'e3', date: '2026-01-14', minutes: 90, project: 'Mobile app' },
-];
-const RESUBMITTED: TimesheetDiffEntry[] = [
-  { id: 'e1', date: '2026-01-12', minutes: 180, project: 'Website refresh', activity: 'Design' },
-  { id: 'e3', date: '2026-01-14', minutes: 90, project: 'Mobile app', activity: 'Testing' },
-  { id: 'e4', date: '2026-01-15', minutes: 45, project: 'Mobile app', task: 'APP-7' },
-];
+type FixtureEntry = {
+  id: string;
+  date: string;
+  minutes: number;
+  project: string;
+  activity?: string;
+  task?: string;
+  billable?: boolean;
+};
+
+const toEntries = (entries: readonly FixtureEntry[]): TimesheetDiffEntry[] =>
+  entries.map((entry) => ({ ...entry, date: entry.date.slice(0, 10) }));
+
+const SUBMITTED = toEntries(fixture.data.submitted as FixtureEntry[]);
+const RESUBMITTED = toEntries(fixture.data.resubmitted as FixtureEntry[]);
 
 export default {
   id: 'timesheet-diff',
@@ -122,9 +129,9 @@ export default {
           render: () => (
             <TimesheetDiff
               {...diffTimesheetEntries(SUBMITTED, RESUBMITTED)}
-              title="Changes in this resubmission"
-              subtitle="since version 2"
-              locale="en-GB"
+              title={fixture.data.title}
+              subtitle={fixture.data.subtitle}
+              locale={fixture.data.locale}
             />
           ),
         },

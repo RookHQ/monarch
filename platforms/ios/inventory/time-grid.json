@@ -1,0 +1,230 @@
+{
+  "id": "time-grid",
+  "name": "MonarchTimeGrid",
+  "title": "TimeGrid",
+  "family": "scheduling",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "ScrollView with ScrollViewReader, a custom Layout per day column (overlap columns), MonarchEventChip blocks and bars, LongPressGesture sequenced before DragGesture, onTapGesture(coordinateSpace:), accessibilityActions and sensoryFeedback",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The day and week view of a calendar: an hour gutter, an all-day row and one column per day, with overlapping events side by side, a now line, working-hours shading, unavailable blocks, tap to create and long press and drag to move.",
+  "whenToUse": "For a calendar's day or week view, a booking schedule or a staff rota where the time of day matters. Put MonarchCalendarToolbar above it to change days and views.",
+  "whenNotToUse": "For a list of upcoming events by day use MonarchAgendaList; to pick a day use MonarchMiniMonth or DatePicker. Do not put it inside another vertical ScrollView: the hours scroll themselves.",
+  "api": [
+    "MonarchTimeGrid.init(days: [Date], events: [MonarchAgendaEvent] = [], now: Date? = Date(), startHour: Int = 0, endHour: Int = 24, hourHeight: CGFloat? = nil, snapMinutes: Int = 15, workingHours: [MonarchTimeGridWorkingHours]? = nil, unavailable: [MonarchTimeGridUnavailable] = [], scrollToMinutes: Int? = nil, showsAllDayRow: Bool = false, calendar: Calendar = .current, labels: MonarchTimeGridLabels = MonarchTimeGridLabels(), canMoveEvent: (@MainActor (MonarchAgendaEvent) -> Bool)? = nil, onSelectDay: (@MainActor (Date) -> Void)? = nil, onSelectSlot: (@MainActor (MonarchTimeGridSlot) -> Void)? = nil, onSelectEvent: (@MainActor (MonarchAgendaEvent) -> Void)? = nil, onMoveEvent: (@MainActor (MonarchTimeGridMove) -> Void)? = nil)",
+    "struct MonarchTimeGridSlot: Hashable, Sendable { let day: Date; let minutes: Int; let start: Date; init(day: Date, minutes: Int, start: Date) }",
+    "struct MonarchTimeGridMove: Hashable, Sendable { let event: MonarchAgendaEvent; let start: Date; let end: Date; init(event: MonarchAgendaEvent, start: Date, end: Date) }",
+    "struct MonarchTimeGridUnavailable: Identifiable, Hashable, Sendable { init(id: String, start: Date, end: Date, label: String? = nil) }",
+    "struct MonarchTimeGridWorkingHours: Hashable, Sendable { init(weekday: Int, start: Int, end: Int) }",
+    "struct MonarchTimeGridLabels: Sendable { init(allDay: String? = nil, createEvent: (@Sendable (String) -> String)? = nil, today: String? = nil, openDay: (@Sendable (String) -> String)? = nil, range: (@Sendable (String, String) -> String)? = nil, moveEarlier: String? = nil, moveLater: String? = nil, moveToPreviousDay: String? = nil, moveToNextDay: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "days",
+      "type": "[Date]",
+      "default": "required",
+      "description": "The day columns in order, any time on each day: one for a day view, seven for a week."
+    },
+    {
+      "name": "events",
+      "type": "[MonarchAgendaEvent]",
+      "default": "[]",
+      "description": "The events, the same model as MonarchAgendaList. Timed events are placed by start and end (exclusive); all-day events go in the all-day row of each day they cover."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "Date()",
+      "description": "The current time for the now line and today's heading; nil hides both. Pass it from TimelineView(.everyMinute) to keep the line moving."
+    },
+    {
+      "name": "startHour",
+      "type": "Int",
+      "default": "0",
+      "description": "The first visible hour, 0 to 23."
+    },
+    {
+      "name": "endHour",
+      "type": "Int",
+      "default": "24",
+      "description": "The end of the visible hours (exclusive), 1 to 24. At least one hour is shown."
+    },
+    {
+      "name": "hourHeight",
+      "type": "CGFloat?",
+      "default": "nil",
+      "description": "The height of one hour. nil is 48 points scaled with Dynamic Type."
+    },
+    {
+      "name": "snapMinutes",
+      "type": "Int",
+      "default": "15",
+      "description": "Taps, drags and VoiceOver moves snap to this many minutes; also the shortest an event is drawn."
+    },
+    {
+      "name": "workingHours",
+      "type": "[MonarchTimeGridWorkingHours]?",
+      "default": "nil",
+      "description": "Working hours per ISO weekday in minutes from midnight; time outside them is shaded. nil shades nothing."
+    },
+    {
+      "name": "unavailable",
+      "type": "[MonarchTimeGridUnavailable]",
+      "default": "[]",
+      "description": "Blocks drawn hatched with an optional label, such as time off or a closure."
+    },
+    {
+      "name": "scrollToMinutes",
+      "type": "Int?",
+      "default": "nil",
+      "description": "Minutes from midnight to scroll to when the grid appears and when the first day or the number of days changes. nil is an hour before the earliest visible event, else 08:00."
+    },
+    {
+      "name": "showsAllDayRow",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the all-day row even when no all-day event is visible."
+    },
+    {
+      "name": "calendar",
+      "type": "Calendar",
+      "default": ".current",
+      "description": "The calendar and time zone the grid is drawn in. Events are placed by wall-clock time in it."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchTimeGridLabels",
+      "default": "MonarchTimeGridLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "canMoveEvent",
+      "type": "(@MainActor (MonarchAgendaEvent) -> Bool)?",
+      "default": "nil",
+      "description": "Which events may be moved. nil allows all, when onMoveEvent is set."
+    },
+    {
+      "name": "onSelectDay",
+      "type": "(@MainActor (Date) -> Void)?",
+      "default": "nil",
+      "description": "Makes the headings of a multi-day grid buttons, for example to open the day view."
+    },
+    {
+      "name": "onSelectSlot",
+      "type": "(@MainActor (MonarchTimeGridSlot) -> Void)?",
+      "default": "nil",
+      "description": "Called when an empty part of a column is tapped, with the time snapped down to snapMinutes. Also adds one VoiceOver button per hour."
+    },
+    {
+      "name": "onSelectEvent",
+      "type": "(@MainActor (MonarchAgendaEvent) -> Void)?",
+      "default": "nil",
+      "description": "Opens an event, for example in MonarchEventPopover. Without it events are not buttons."
+    },
+    {
+      "name": "onMoveEvent",
+      "type": "(@MainActor (MonarchTimeGridMove) -> Void)?",
+      "default": "nil",
+      "description": "Turns on moving events by long press and drag and by VoiceOver actions. The grid does not change the events; the app applies or confirms the move."
+    }
+  ],
+  "states": [
+    {
+      "name": "week",
+      "description": "Seven columns with weekday and date headings; overlapping events share the column width side by side."
+    },
+    {
+      "name": "day",
+      "description": "One column; headings are not buttons."
+    },
+    {
+      "name": "today",
+      "description": "Today's date sits on a filled accent circle, its heading is read with \"Today\", and the now line crosses its column when now is inside the visible hours."
+    },
+    {
+      "name": "all-day row",
+      "description": "Shown when an all-day event is visible or showsAllDayRow is on: an \"All day\" gutter label and bar chips per day."
+    },
+    {
+      "name": "working hours",
+      "description": "Time outside the working hours of each weekday is shaded."
+    },
+    {
+      "name": "unavailable",
+      "description": "A hatched block with its label; taps still reach the slot under it."
+    },
+    {
+      "name": "short event",
+      "description": "Events under 45 minutes are one line, start time then title; events of 70 minutes or more also show their detail."
+    },
+    {
+      "name": "moving",
+      "description": "After a press of 0.4 seconds the event fades, a dashed ghost shows the new time and title, scrolling pauses, and haptics mark the pick-up and each step. Releasing calls onMoveEvent when the start changed."
+    },
+    {
+      "name": "read only",
+      "description": "Without callbacks the grid only shows events."
+    }
+  ],
+  "appearance": "The grid sits on the surface background with subtle border lines for hours and columns and a default border under the heading. Hour labels, weekdays and the all-day label use the muted text colour; today's date is in the accent on-solid colour on an accent solid circle; the now line is the danger solid colour. Shading outside working hours is the muted background, and unavailable blocks are the muted background with strong-border hatching and a label, so the two differ by more than colour. Events are MonarchEventChip blocks in their own colour or the accent. Every role is the theme's, so dark and high-contrast themes follow.",
+  "platformNotes": "The web TimeGrid reads ISO days in an IANA zone, drags with a pointer only (touch keeps scrolling), moves focus between hour slots with the arrow keys, and takes a renderEvent wrapper. On iOS days are Date values in the given Calendar, moving is long press then drag as in Calendar, with system haptics, and VoiceOver gets named move actions instead of keyboard dragging. There is no renderEvent: onSelectEvent gives the app the event to show in MonarchEventPopover or a sheet. The web's hourCycle prop is the locale's choice on iOS (set the environment locale). Events reuse MonarchAgendaEvent rather than a separate CalendarEvent type. iOS has no system day or week grid (EventKitUI does not offer one), so this is a custom view. Android has no TimeGrid yet. Several closures are optional (canMoveEvent, onSelectDay, onSelectSlot, onSelectEvent, onMoveEvent). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is canMoveEvent.",
+  "accessibility": [
+    "Each day heading is one element read as \"Wednesday 4 November\", with \", Today\" on today; it has the header trait, or is a button with the hint \"Opens Wednesday 4 November\" when onSelectDay is set in a multi-day grid.",
+    "Each event is a MonarchEventChip read as one element: title, time spoken in full (\"9:30 to 11:00\"), status and detail; with onSelectEvent it is a button.",
+    "A movable event has the VoiceOver actions Move earlier, Move later (by snapMinutes), Move to previous day and Move to next day, each offered only when the move is possible, so it can be rescheduled without dragging.",
+    "With onSelectSlot every hour of every column is a button read as \"Create event, Wednesday 4 November, 09:00\".",
+    "Each column is a container named with its long date; the all-day cell of each day is a container named \"Wednesday 4 November, All day\".",
+    "Unavailable blocks are read with their label and times; shading, the hour gutter, grid lines, the now line and the drag ghost are hidden.",
+    "Today is marked by a word and a filled shape, not by colour alone.",
+    "Hour height, gutter width and text scale with Dynamic Type; day headings that are buttons keep a 44-point touch target.",
+    "Haptics use the system's sensoryFeedback: impact when an event is picked up, selection at each step."
+  ],
+  "edgeCases": [
+    "Daylight-saving days still show 24 rows: events are placed by wall-clock time, so a skipped hour leaves a gap and a repeated hour overlaps; a slot in a skipped hour starts at the next valid time.",
+    "An event that ends exactly at midnight does not appear on the next day; a multi-day timed event is clipped on each day it touches.",
+    "Events outside startHour to endHour are hidden; events crossing the edges are clipped.",
+    "An event with no end, or an end before its start, is drawn snapMinutes long.",
+    "A moved event keeps its duration; a move is clamped so the whole event stays in the visible hours, and a move that would not change the start is not reported.",
+    "Many overlapping events in a narrow week column become thin; open the day view for detail.",
+    "Event ids must be unique."
+  ],
+  "tests": [
+    "MonarchTimeGridTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Work week",
+      "fixture": "time-grid",
+      "webExample": "Work week",
+      "template": "MonarchTimeGrid(\n    days: [{{days.0|date}}, {{days.1|date}}, {{days.2|date}}, {{days.3|date}}, {{days.4|date}}],\n    events: [\n        MonarchAgendaEvent({{events.0.title}}, id: \"t1\", start: {{events.0.start|date}}, end: {{events.0.end|date}}, isAllDay: {{events.0.allDay}}, color: hex({{events.0.color}})),\n        MonarchAgendaEvent({{events.1.title}}, id: \"t2\", start: {{events.1.start|date}}, end: {{events.1.end|date}}, color: hex({{events.1.color}})),\n        MonarchAgendaEvent({{events.2.title}}, id: \"t3\", start: {{events.2.start|date}}, end: {{events.2.end|date}}, detail: {{events.2.detail}}, color: hex({{events.2.color}})),\n        MonarchAgendaEvent({{events.3.title}}, id: \"t4\", start: {{events.3.start|date}}, end: {{events.3.end|date}}, color: hex({{events.3.color}}), status: {{events.3.status|case}}),\n        MonarchAgendaEvent({{events.4.title}}, id: \"t5\", start: {{events.4.start|date}}, end: {{events.4.end|date}}, color: hex({{events.4.color}})),\n        MonarchAgendaEvent({{events.5.title}}, id: \"t6\", start: {{events.5.start|date}}, end: {{events.5.end|date}}, color: hex({{events.5.color}}), status: {{events.5.status|case}}),\n        MonarchAgendaEvent({{events.6.title}}, id: \"t7\", start: {{events.6.start|date}}, end: {{events.6.end|date}}, color: hex({{events.6.color}})),\n    ],\n    now: {{now|date}},\n    workingHours: [{{workingDays.0}}, {{workingDays.1}}, {{workingDays.2}}, {{workingDays.3}}, {{workingDays.4}}].flatMap { weekday in\n        [\n            MonarchTimeGridWorkingHours(weekday: weekday, start: {{workingHours.0.start}}, end: {{workingHours.0.end}}),\n            MonarchTimeGridWorkingHours(weekday: weekday, start: {{workingHours.1.start}}, end: {{workingHours.1.end}}),\n        ]\n    },\n    unavailable: [\n        MonarchTimeGridUnavailable(id: \"off\", start: {{unavailable.0.start|date}}, end: {{unavailable.0.end|date}}, label: {{unavailable.0.label}}),\n    ],\n    scrollToMinutes: {{scrollToMinutes}},\n    showsAllDayRow: true,\n    calendar: calendar\n)\n.environment(\\.locale, Locale(identifier: {{locale}}))\n.frame(height: 416)",
+      "setupTemplate": "private var calendar: Calendar {\n    var calendar = Calendar(identifier: .gregorian)\n    calendar.timeZone = TimeZone(identifier: {{timeZone}}) ?? .gmt\n    calendar.firstWeekday = 2\n    return calendar\n}\nprivate func hex(_ value: String) -> Color {\n    let number = UInt32(value.drop(while: { $0 == \"#\" }), radix: 16) ?? 0\n    return Color(\n        red: Double((number >> 16) & 0xFF) / 255,\n        green: Double((number >> 8) & 0xFF) / 255,\n        blue: Double(number & 0xFF) / 255\n    )\n}",
+      "setup": "private var calendar: Calendar {\n    var calendar = Calendar(identifier: .gregorian)\n    calendar.timeZone = TimeZone(identifier: \"UTC\") ?? .gmt\n    calendar.firstWeekday = 2\n    return calendar\n}\nprivate func hex(_ value: String) -> Color {\n    let number = UInt32(value.drop(while: { $0 == \"#\" }), radix: 16) ?? 0\n    return Color(\n        red: Double((number >> 16) & 0xFF) / 255,\n        green: Double((number >> 8) & 0xFF) / 255,\n        blue: Double(number & 0xFF) / 255\n    )\n}",
+      "code": "MonarchTimeGrid(\n    days: [Date(timeIntervalSince1970: 1_793_577_600), Date(timeIntervalSince1970: 1_793_664_000), Date(timeIntervalSince1970: 1_793_750_400), Date(timeIntervalSince1970: 1_793_836_800), Date(timeIntervalSince1970: 1_793_923_200)],\n    events: [\n        MonarchAgendaEvent(\"Conference\", id: \"t1\", start: Date(timeIntervalSince1970: 1_793_664_000), end: Date(timeIntervalSince1970: 1_793_750_400), isAllDay: true, color: hex(\"#ca8a04\")),\n        MonarchAgendaEvent(\"Stand-up\", id: \"t2\", start: Date(timeIntervalSince1970: 1_793_610_000), end: Date(timeIntervalSince1970: 1_793_610_900), color: hex(\"#0f766e\")),\n        MonarchAgendaEvent(\"Design review\", id: \"t3\", start: Date(timeIntervalSince1970: 1_793_784_600), end: Date(timeIntervalSince1970: 1_793_790_000), detail: \"Room 4\", color: hex(\"#7c3aed\")),\n        MonarchAgendaEvent(\"Interview\", id: \"t4\", start: Date(timeIntervalSince1970: 1_793_786_400), end: Date(timeIntervalSince1970: 1_793_790_000), color: hex(\"#0891b2\"), status: .tentative),\n        MonarchAgendaEvent(\"Lunch & learn\", id: \"t5\", start: Date(timeIntervalSince1970: 1_793_880_000), end: Date(timeIntervalSince1970: 1_793_883_600), color: hex(\"#2563eb\")),\n        MonarchAgendaEvent(\"Retrospective\", id: \"t6\", start: Date(timeIntervalSince1970: 1_793_977_200), end: Date(timeIntervalSince1970: 1_793_980_800), color: hex(\"#c2410c\"), status: .cancelled),\n        MonarchAgendaEvent(\"Planning\", id: \"t7\", start: Date(timeIntervalSince1970: 1_793_714_400), end: Date(timeIntervalSince1970: 1_793_719_800), color: hex(\"#db2777\")),\n    ],\n    now: Date(timeIntervalSince1970: 1_793_788_800),\n    workingHours: [1, 2, 3, 4, 5].flatMap { weekday in\n        [\n            MonarchTimeGridWorkingHours(weekday: weekday, start: 540, end: 720),\n            MonarchTimeGridWorkingHours(weekday: weekday, start: 780, end: 1080),\n        ]\n    },\n    unavailable: [\n        MonarchTimeGridUnavailable(id: \"off\", start: Date(timeIntervalSince1970: 1_793_955_600), end: Date(timeIntervalSince1970: 1_793_966_400), label: \"Time off\"),\n    ],\n    scrollToMinutes: 480,\n    showsAllDayRow: true,\n    calendar: calendar\n)\n.environment(\\.locale, Locale(identifier: \"en-GB\"))\n.frame(height: 416)"
+    },
+    {
+      "title": "A day view with a live now line",
+      "setup": "@Environment(\\.monarchTheme) private var theme",
+      "code": "TimelineView(.everyMinute) { timeline in\n    MonarchTimeGrid(\n        days: [timeline.date],\n        now: timeline.date,\n        startHour: 7,\n        endHour: 20,\n        unavailable: [\n            MonarchTimeGridUnavailable(\n                id: \"lunch\",\n                start: Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: timeline.date) ?? timeline.date,\n                end: Calendar.current.date(bySettingHour: 13, minute: 0, second: 0, of: timeline.date) ?? timeline.date,\n                label: \"Closed\"\n            )\n        ]\n    )\n}\n.frame(height: theme.spacing.space24 * 4)"
+    }
+  ],
+  "webEquivalent": "TimeGrid",
+  "dependsOn": [
+    "event-chip",
+    "event-popover",
+    "calendar-toolbar",
+    "agenda-list"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "phone-width",
+      "platform": "ios",
+      "reason": "The web grid has 686 px for five days, so day names sit beside the number in capitals and event text has room. On a phone the day columns are about 60 pt wide, so the name sits above the number and event text is shortened; the events, times and tones are the same.",
+      "convention": "adaptive layout: day columns narrower on a phone (HIG: Layout)"
+    }
+  ]
+}

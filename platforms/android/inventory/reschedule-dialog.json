@@ -1,0 +1,134 @@
+{
+  "id": "reschedule-dialog",
+  "name": null,
+  "title": "RescheduleDialog",
+  "family": "scheduling",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchResponsiveDialog (MonarchBottomSheet on a phone, a Dialog on a large window) with MonarchSlotPicker, MonarchSwitchRow, androidx.compose.material3.TimeInput and DatePickerDialog for times outside working hours, MonarchTextField, MonarchBanner and MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: moving a booking to a new time in a responsive dialog, with the open slots, an optional switch to type any time outside working hours, an optional reason, and a confirm with pending and error states.",
+  "whenToUse": "From a booking's detail or an agenda row, when staff or a customer move one booking to another time.",
+  "whenNotToUse": "For a first booking use the booking-flow recipe; for cancelling use a confirmation dialog; for a recurring series use a form that edits the rule.",
+  "api": [
+    "MonarchResponsiveDialog(onDismissRequest = …, title = \"Reschedule\", description = \"Subject · Currently …\", dismissible = !pending, actions = { MonarchButton(\"Cancel\", …, variant = Ghost); MonarchButton(\"Reschedule\", …, variant = Primary, loading = pending) }) { … }",
+    "MonarchSlotPicker(slots = …, selection = …, onSelectionChange = …, day = …, onDayChange = …, timeZone = zone, previousMonthIcon = …, nextMonthIcon = …)",
+    "MonarchSwitchRow(checked = outside, onCheckedChange = …, label = \"Choose a time outside working hours\", description = …)",
+    "TimeInput(state = rememberTimePickerState(…)); DatePickerDialog(…) { DatePicker(state = …) }",
+    "MonarchTextField(value = reason, onValueChange = …, label = \"Reason (optional)\", helperText = \"Kept in the history.\", singleLine = false)",
+    "MonarchBanner(message = error, tone = MonarchTone.Danger, announcement = MonarchBannerAnnouncement.Polite)"
+  ],
+  "options": [
+    {
+      "name": "subject and current start",
+      "type": "String",
+      "default": "none",
+      "description": "What is moved and its current time, in the dialog's description."
+    },
+    {
+      "name": "timeZone",
+      "type": "String",
+      "default": "required",
+      "description": "The IANA zone every time is shown and typed in, passed to MonarchSlotPicker."
+    },
+    {
+      "name": "slots",
+      "type": "List<MonarchSlotPickerSlot>",
+      "default": "required",
+      "description": "The open times the app loaded for the chosen day."
+    },
+    {
+      "name": "allowOutsideHours",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows the switch that replaces the slots with a typed date and time (staff only)."
+    },
+    {
+      "name": "showReason",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the optional reason field."
+    },
+    {
+      "name": "notice",
+      "type": "String?",
+      "default": "null",
+      "description": "Information above the picker, as a MonarchBanner."
+    },
+    {
+      "name": "pending / error",
+      "type": "state",
+      "default": "none",
+      "description": "The confirm button's loading state, and the failure shown above the actions."
+    }
+  ],
+  "states": [
+    {
+      "name": "choosing",
+      "description": "The slots of the chosen day; the confirm button is enabled."
+    },
+    {
+      "name": "no time",
+      "description": "Confirming without a time shows \"Choose a new time first.\" in a danger banner, announced politely."
+    },
+    {
+      "name": "outside hours",
+      "description": "The switch replaces the slots with the Material 3 time input (and a date dialog)."
+    },
+    {
+      "name": "pending",
+      "description": "The confirm button shows progress; Cancel and dismissing are disabled."
+    },
+    {
+      "name": "failed",
+      "description": "The error stays above the actions and the dialog stays open."
+    }
+  ],
+  "appearance": "A bottom sheet with the drag handle on a phone and a centered dialog on a large window, on the dialog surface; the notice is an info banner, the error a danger banner, the actions a ghost and a primary button. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships RescheduleDialog as one component on Dialog with open, trigger, subject, currentStart, timeZone, slotPicker, allowOutsideHours, outsideHoursMin, outsideHoursStep, showReason, notice, onConfirm, pending, error and messages props, and returns the start as an ISO string. On Android, as on iOS, it is a recipe: MonarchResponsiveDialog is a sheet on a phone, the slots are MonarchSlotPicker, and times outside working hours use the Material 3 TimeInput and DatePickerDialog instead of a typed date-time field. The new start is epoch milliseconds (UTC); the app saves it with a coroutine and shows a failure in the banner.",
+  "accessibility": [
+    "The sheet or dialog is modal and TalkBack reads the title as the pane title; Back closes it unless it is pending.",
+    "MonarchSlotPicker announces how many times a day has, and each time is a selectable button.",
+    "The outside-hours switch is one control with its label and description.",
+    "The error is a banner with a polite live region, in words and color.",
+    "The confirm button reads its progress while pending."
+  ],
+  "edgeCases": [
+    "No slots on a day: MonarchSlotPicker shows its empty state and, with onChooseOutside, a way to pick outside hours.",
+    "Keep dismissible false while saving so the change cannot be lost half-way.",
+    "At the largest text sizes the content scrolls inside the sheet."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Reschedule to an open slot",
+      "fixture": "reschedule-dialog",
+      "webExample": "Reschedule to an open slot",
+      "template": "CompositionLocalProvider(LocalConfiguration provides gb) {\nMonarchButton(text = {{trigger}}, onClick = { open = true })\n    MonarchText(text = {{status}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n    if (open) {\n        MonarchDialog(\n            onDismissRequest = { open = false },\n            title = \"Reschedule\",\n            description = \"Consultation with Sam Lee · Currently Wed, 4 Nov 2026, 09:30 GMT\",\n            dismissible = !pending,\n            closeButton = true,\n            actions = {\n                MonarchButton(\n                    text = \"Cancel\",\n                    onClick = { open = false },\n                    variant = MonarchButtonVariant.Ghost,\n                    enabled = !pending,\n                )\n                MonarchButton(\n                    text = \"Reschedule\",\n                    onClick = {\n                        if (selection == null) {\n                            error = \"Choose a new time first.\"\n                        } else {\n                            scope.launch {\n                                pending = true\n                                // Save the new start (and the trimmed reason) here; show a failure in `error`.\n                                pending = false\n                                open = false\n                            }\n                        }\n                    },\n                    variant = MonarchButtonVariant.Primary,\n                    loading = pending,\n                )\n            },\n        ) {\n            MonarchSlotPicker(\n                slots = slots,\n                selection = selection,\n                onSelectionChange = { selection = it },\n                day = day,\n                onDayChange = {\n                    day = it\n                    selection = null\n                },\n                timeZone = \"Europe/London\",\n                previousMonthIcon = {\n                    MonarchIcon(SampleIcons.ChevronLeft, null)\n                },\n                nextMonthIcon = {\n                    MonarchIcon(SampleIcons.ChevronRight, null)\n                },\n                today = nov2,\n            firstDayOfWeek = Calendar.MONDAY,\n            is24Hour = true,\n            )\n            MonarchTextField(\n                value = reason,\n                onValueChange = { reason = it },\n                label = \"Reason (optional)\",\n                helperText = \"Kept in the history.\",\n                singleLine = false,\n            )\n            error?.let { MonarchBanner(message = it, tone = MonarchTone.Danger, announcement = MonarchBannerAnnouncement.Polite) }\n        }\n    }\n}",
+      "setupTemplate": "val nov2 = 1_793_577_600_000L\nval nov5 = 1_793_836_800_000L\nvar open by rememberSaveable { mutableStateOf(true) }\nvar day by rememberSaveable { mutableStateOf<Long?>(nov5) }\nvar selection by rememberSaveable { mutableStateOf<Long?>(null) }\nvar reason by rememberSaveable { mutableStateOf(\"\") }\nvar pending by remember { mutableStateOf(false) }\nvar error by remember { mutableStateOf<String?>(null) }\nval scope = rememberCoroutineScope()\nval slots = listOf(32_400_000L, 34_200_000L, 39_600_000L, 50_400_000L, 55_800_000L).map { MonarchSlotPickerSlot(start = (day ?: nov5) + it) }\nval configuration = LocalConfiguration.current\nval gb = remember(configuration) { Configuration(configuration).apply { setLocale(Locale.UK) } }",
+      "imports": [
+        "com.rookhq.monarch.foundation.icon.MonarchIcon",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "kotlinx.coroutines.launch",
+        "android.content.res.Configuration",
+        "androidx.compose.ui.platform.LocalConfiguration",
+        "java.util.Calendar",
+        "java.util.Locale"
+      ],
+      "setup": "val nov2 = 1_793_577_600_000L\nval nov5 = 1_793_836_800_000L\nvar open by rememberSaveable { mutableStateOf(true) }\nvar day by rememberSaveable { mutableStateOf<Long?>(nov5) }\nvar selection by rememberSaveable { mutableStateOf<Long?>(null) }\nvar reason by rememberSaveable { mutableStateOf(\"\") }\nvar pending by remember { mutableStateOf(false) }\nvar error by remember { mutableStateOf<String?>(null) }\nval scope = rememberCoroutineScope()\nval slots = listOf(32_400_000L, 34_200_000L, 39_600_000L, 50_400_000L, 55_800_000L).map { MonarchSlotPickerSlot(start = (day ?: nov5) + it) }\nval configuration = LocalConfiguration.current\nval gb = remember(configuration) { Configuration(configuration).apply { setLocale(Locale.UK) } }",
+      "code": "CompositionLocalProvider(LocalConfiguration provides gb) {\nMonarchButton(text = \"Reschedule\", onClick = { open = true })\n    MonarchText(text = \"Not moved yet\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n    if (open) {\n        MonarchDialog(\n            onDismissRequest = { open = false },\n            title = \"Reschedule\",\n            description = \"Consultation with Sam Lee · Currently Wed, 4 Nov 2026, 09:30 GMT\",\n            dismissible = !pending,\n            closeButton = true,\n            actions = {\n                MonarchButton(\n                    text = \"Cancel\",\n                    onClick = { open = false },\n                    variant = MonarchButtonVariant.Ghost,\n                    enabled = !pending,\n                )\n                MonarchButton(\n                    text = \"Reschedule\",\n                    onClick = {\n                        if (selection == null) {\n                            error = \"Choose a new time first.\"\n                        } else {\n                            scope.launch {\n                                pending = true\n                                // Save the new start (and the trimmed reason) here; show a failure in `error`.\n                                pending = false\n                                open = false\n                            }\n                        }\n                    },\n                    variant = MonarchButtonVariant.Primary,\n                    loading = pending,\n                )\n            },\n        ) {\n            MonarchSlotPicker(\n                slots = slots,\n                selection = selection,\n                onSelectionChange = { selection = it },\n                day = day,\n                onDayChange = {\n                    day = it\n                    selection = null\n                },\n                timeZone = \"Europe/London\",\n                previousMonthIcon = {\n                    MonarchIcon(SampleIcons.ChevronLeft, null)\n                },\n                nextMonthIcon = {\n                    MonarchIcon(SampleIcons.ChevronRight, null)\n                },\n                today = nov2,\n            firstDayOfWeek = Calendar.MONDAY,\n            is24Hour = true,\n            )\n            MonarchTextField(\n                value = reason,\n                onValueChange = { reason = it },\n                label = \"Reason (optional)\",\n                helperText = \"Kept in the history.\",\n                singleLine = false,\n            )\n            error?.let { MonarchBanner(message = it, tone = MonarchTone.Danger, announcement = MonarchBannerAnnouncement.Polite) }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "RescheduleDialog",
+  "dependsOn": [
+    "sheet",
+    "slot-picker",
+    "text-field",
+    "button"
+  ]
+}

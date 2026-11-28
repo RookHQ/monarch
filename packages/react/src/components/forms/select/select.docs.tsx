@@ -1,5 +1,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@rookcom/monarch-react';
 import { incomplete, type ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './select.fixture.json';
 
 export default {
   id: 'select',
@@ -26,7 +28,7 @@ export default {
     apiReference: {
       source: 'typescript',
       notes: [
-        '`Select`, `SelectGroup` and `SelectValue` are the Radix primitives re-exported unchanged.',
+        '`Select` takes the Radix Select root props unchanged (`SelectProps`); `SelectGroup` and `SelectValue` are the Radix primitives re-exported unchanged.',
         '`SelectTrigger`, `SelectContent`, `SelectItem`, `SelectLabel` and `SelectSeparator` forward their refs to the Radix parts.',
         '`SelectContent` renders in a portal with `position="popper"` and `sideOffset={4}` by default.',
       ],
@@ -93,13 +95,20 @@ export default {
       items: [
         {
           title: 'Status picker',
+          stage: true,
           render: () => (
-            <Select defaultValue="open">
-              <SelectTrigger aria-label="Status" placeholder="Status" style={{ width: '14rem' }} />
+            <Select defaultValue={fixture.data.selected} defaultOpen>
+              <SelectTrigger
+                aria-label={fixture.data.label}
+                placeholder={fixture.data.label}
+                style={{ width: '14rem' }}
+              />
               <SelectContent>
-                <SelectItem value="open">Open</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="resolved">Resolved</SelectItem>
+                {fixture.data.options.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           ),

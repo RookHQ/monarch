@@ -15,17 +15,35 @@ export const loadDrawer = () => import('./nav-drawer.js');
 export const REPO_URL = 'https://github.com/RookHQ/monarch';
 
 /** Section links in the bar, each to the first page of its group. */
-const SECTIONS = NAV.map((g) => ({ group: g, path: g.items[0]?.path ?? '/' }));
+/** Marketing and Guides stay reachable through search, the sidebar and links; the top bar leaves them out. */
+const TOP_BAR_HIDDEN = new Set(['marketing', 'guides']);
+const SECTIONS = NAV.filter((g) => !TOP_BAR_HIDDEN.has(g.id)).map((g) => ({
+  group: g,
+  path: g.items[0]?.path ?? '/',
+}));
+
+/**
+ * The section a page is in. iOS and Android are marked by their path prefix
+ * only: the native guides they share (`/native/…`) are in both, so neither.
+ */
+function isCurrent(group: NavGroup, path: string, currentGroup: NavGroup | undefined): boolean {
+  if (group.id === 'ios' || group.id === 'android')
+    return path === `/${group.id}` || path.startsWith(`/${group.id}/`);
+  if (currentGroup?.id === 'ios' || currentGroup?.id === 'android') return false;
+  return currentGroup?.id === group.id;
+}
 
 /**
  * The sticky top bar: menu (narrow screens), wordmark, section links (wide
  * screens), search, theme, appearance settings and the repository link.
  */
 export function TopBar({
+  path,
   currentGroup,
   onOpenMenu,
   menuOpen,
 }: {
+  path: string;
   currentGroup: NavGroup | undefined;
   onOpenMenu: () => void;
   menuOpen: boolean;
@@ -52,12 +70,12 @@ export function TopBar({
           v{reactVersion}
         </Badge>
         <nav className="docs-topbar__sections" aria-label="Sections">
-          {SECTIONS.map(({ group, path }) => (
+          {SECTIONS.map(({ group, path: to }) => (
             <a
               key={group.id}
-              href={href(path)}
+              href={href(to)}
               className="docs-topbar__section"
-              aria-current={currentGroup?.id === group.id ? 'true' : undefined}
+              aria-current={isCurrent(group, path, currentGroup) ? 'true' : undefined}
             >
               {group.heading}
             </a>

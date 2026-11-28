@@ -15,6 +15,7 @@ import { cx } from '../../../internal/cx.js';
 import { ChevronDownGlyph, CloseGlyph } from '../../../internal/icons.js';
 import { ownsOpenPopup } from '../../../internal/dismiss.js';
 import { isSafeUrl } from '../../../internal/sanitize.js';
+import { useOverlayStage } from '../../../internal/overlay-stage.js';
 
 /** The words PeekPanel shows and speaks. Override them to translate. */
 export interface PeekPanelMessages {
@@ -147,6 +148,8 @@ export const PeekPanel = forwardRef<HTMLElement, PeekPanelProps>(function PeekPa
   const panel = useRef<HTMLElement | null>(null);
   const returnTo = useRef<HTMLElement | null>(null);
   const restoreOnClose = useRef(false);
+  // A staged panel (a docs picture) never takes focus when it mounts open.
+  const staged = useOverlayStage();
 
   const setRef = useCallback(
     (node: HTMLElement | null) => {
@@ -161,7 +164,7 @@ export const PeekPanel = forwardRef<HTMLElement, PeekPanelProps>(function PeekPa
     if (!open) return;
     const active = document.activeElement;
     returnTo.current = active instanceof HTMLElement && active !== document.body ? active : null;
-    if (focusOnOpen) panel.current?.focus({ preventScroll: true });
+    if (focusOnOpen && !staged) panel.current?.focus({ preventScroll: true });
     return () => {
       // Closed from inside (Escape or the close button): put focus back on the row.
       if (!restoreOnClose.current) return;

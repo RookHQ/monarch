@@ -1,0 +1,183 @@
+{
+  "id": "goal-tree",
+  "name": "MonarchGoalTree",
+  "title": "GoalTree",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of goal rows with androidx.compose.foundation.clickable toggles and FlowRow headings; MonarchProgress (androidx.compose.material3.LinearProgressIndicator), MonarchStatusBadge, MonarchAvatar, MonarchButton, MonarchEmptyState",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Nested goals (objectives and key results) with progress, status, owner and alignment; branches open and close, open goals can offer an add button, and each goal can carry its own actions.",
+  "whenToUse": "For OKRs and other goal hierarchies, where readers scan progress and status and drill into the key results of an objective.",
+  "whenNotToUse": "For a hierarchy without progress (folders, departments), use MonarchTreeView. For reporting lines between people, use MonarchOrgChart. For a single figure, use MonarchProgress.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchGoalTree(goals: List<MonarchGoal>, expandIcon: @Composable () -> Unit, modifier: Modifier = Modifier, expanded: Set<String>? = null, onExpandedChange: ((Set<String>) -> Unit)? = null, quietChildren: Boolean = true, canAddChild: ((goal: MonarchGoal, depth: Int) -> Boolean)? = null, onAddChild: ((MonarchGoal) -> Unit)? = null, addIcon: (@Composable () -> Unit)? = null, labels: MonarchGoalTreeLabels = MonarchGoalTreeLabels(), actions: (@Composable (MonarchGoal) -> Unit)? = null)",
+    "class MonarchGoal(id: String, parentId: String? = null, title: String, progress: Float, status: MonarchGoalStatus, ownerName: String? = null, ownerImage: Painter? = null, meta: String? = null, alignedTo: String? = null)",
+    "enum class MonarchGoalStatus { NotStarted, OnTrack, AtRisk, OffTrack, Done }",
+    "class MonarchGoalTreeLabels(status: ((MonarchGoalStatus) -> String)? = null, expand: ((String) -> String)? = null, collapse: ((String) -> String)? = null, alignedTo: ((String) -> String)? = null, addChild: String? = null, addChildTo: ((String) -> String)? = null, childCount: ((Int) -> String)? = null, empty: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "goals",
+      "type": "List<MonarchGoal>",
+      "default": "required",
+      "description": "Every goal, flat. Nesting comes from parentId; a missing or self-referencing parent makes a top-level goal, a repeated id keeps its first goal, and goals only reachable through a cycle are not shown."
+    },
+    {
+      "name": "expandIcon",
+      "type": "@Composable () -> Unit",
+      "default": "required",
+      "description": "A chevron that points to the end. It turns a quarter to point down when the goal is open. Monarch bundles no icons."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the tree."
+    },
+    {
+      "name": "expanded",
+      "type": "Set<String>?",
+      "default": "null",
+      "description": "The ids of open goals. Kept inside the tree when null, with every goal that has children open at first."
+    },
+    {
+      "name": "onExpandedChange",
+      "type": "((Set<String>) -> Unit)?",
+      "default": "null",
+      "description": "Called with the new set of open ids."
+    },
+    {
+      "name": "quietChildren",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Children that are on track or not started hide their badge; their status is still read."
+    },
+    {
+      "name": "canAddChild",
+      "type": "((MonarchGoal, Int) -> Boolean)?",
+      "default": "null",
+      "description": "Which goals get the add button, from the goal and its depth (0 at the top). Top-level goals when null."
+    },
+    {
+      "name": "onAddChild",
+      "type": "((MonarchGoal) -> Unit)?",
+      "default": "null",
+      "description": "Adds an \"Add key result\" button inside the open goals canAddChild allows. Receives the parent; the app adds the goal."
+    },
+    {
+      "name": "addIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "A decorative icon before the add button's text."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchGoalTreeLabels",
+      "default": "MonarchGoalTreeLabels()",
+      "description": "Replacements for the status names, the button names, Aligned to, Add key result, the child count and the empty text."
+    },
+    {
+      "name": "actions",
+      "type": "(@Composable (MonarchGoal) -> Unit)?",
+      "default": "null",
+      "description": "Controls at the end of each goal's row, such as a button that opens a MonarchMenu with Check in and History."
+    }
+  ],
+  "states": [
+    {
+      "name": "open",
+      "description": "The chevron points down and the children (and the add button) are listed under the goal, indented by 24dp per level."
+    },
+    {
+      "name": "closed",
+      "description": "The chevron points to the end and the heading shows the number of children, such as \"3 key results\"."
+    },
+    {
+      "name": "quiet children",
+      "description": "Children on track or not started have no badge."
+    },
+    {
+      "name": "empty",
+      "description": "A small MonarchEmptyState, No goals yet."
+    }
+  ],
+  "appearance": "Top-level titles use the strong body style and children the body style, in the default text color. Status badges are subtle MonarchStatusBadges in the neutral, info, warning, danger or success tone. The bar is MonarchProgress (accent fill on the emphasis track) with the percentage, meta, child count and alignment in muted caption text. The same roles adapt to dark and both high-contrast themes.",
+  "platformNotes": "The parity map names tree rows over MonarchTreeView; MonarchTreeView rows hold a label and a description only, so the goal tree draws its own rows with the same toggle, indent and chevron behavior. The rows are a Column, not a lazy list, so the tree can sit in a scrolling screen with other content; very large trees belong in a list with a detail screen. The progress bar is always in the accent color because MonarchProgress has no tone; the web colors the bar by status, and the status is in words in the badge and the description. Progress is a fraction from 0 to 1 (the web takes 0 to 100), as on iOS. Titles, meta and alignment are plain strings (the web takes React nodes). expandIcon is required because Monarch bundles no icons, as in MonarchTreeView. The web's renderActions is the trailing actions lambda. Experimental: a domain pattern until a Rook app adopts it.",
+  "accessibility": [
+    "Each goal is one TalkBack element described as its title, status, owner, meta, alignment and, when closed, its number of children; it carries its progress as a progress value with the percentage in the device locale as its state.",
+    "Quiet children have no badge but their status is still in the description, so status never depends on color or on the badge.",
+    "The open and close button is a separate element with the button role, named \"Expand …\" or \"Collapse …\", with a 48dp touch target.",
+    "The add button is named \"Add key result to …\" and has a 48dp touch target.",
+    "The chevron turn follows the reduced motion setting; avatars, badges and the bar are hidden inside the goal's element.",
+    "Titles wrap at the largest font scale without being cut."
+  ],
+  "edgeCases": [
+    "Progress outside 0 to 1 is clamped; not-a-number reads as 0%.",
+    "Long titles wrap; badges and facts flow onto the next line.",
+    "A goal whose only child is the add button still has a toggle.",
+    "Deep trees indent by half a touch target per level; keep them to three levels on a phone.",
+    "Changing goals keeps the inside expanded set; new parents start closed unless expanded is controlled."
+  ],
+  "tests": [
+    "MonarchGoalTreeTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Objectives and key results with actions",
+      "fixture": "goal-tree",
+      "webExample": "Objectives and key results with actions",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchGoalTree(\n    goals = goals,\n    onAddChild = {},\n    labels = MonarchGoalTreeLabels(addChild = {{addChild}}),\n) { goal ->\n    MonarchButton(\n        text = if (goal.parentId == null) {{actions.objective}} else {{actions.keyResult}},\n        onClick = {},\n        variant = MonarchButtonVariant.Ghost,\n        size = MonarchButtonSize.Sm,\n    )\n}",
+      "setupTemplate": "val goals = listOf(\n    MonarchGoal(id = {{goals.0.id}}, title = {{goals.0.title}}, progress = {{goals.0.progress}} / 100f, status = MonarchGoalStatus.{{goals.0.status|pascal}}, ownerName = {{goals.0.owner.name}}, meta = {{goals.0.meta}}, alignedTo = {{goals.0.alignedTo}}),\n    MonarchGoal(id = {{goals.1.id}}, parentId = {{goals.1.parentId}}, title = {{goals.1.title}}, progress = {{goals.1.progress}} / 100f, status = MonarchGoalStatus.{{goals.1.status|pascal}}, meta = {{goals.1.meta}}),\n    MonarchGoal(id = {{goals.2.id}}, parentId = {{goals.2.parentId}}, title = {{goals.2.title}}, progress = {{goals.2.progress}} / 100f, status = MonarchGoalStatus.{{goals.2.status|pascal}}, meta = {{goals.2.meta}}),\n    MonarchGoal(id = {{goals.3.id}}, parentId = {{goals.3.parentId}}, title = {{goals.3.title}}, progress = {{goals.3.progress}} / 100f, status = MonarchGoalStatus.{{goals.3.status|pascal}}, meta = {{goals.3.meta}}),\n    MonarchGoal(id = {{goals.4.id}}, title = {{goals.4.title}}, progress = {{goals.4.progress}} / 100f, status = MonarchGoalStatus.{{goals.4.status|pascal}}, ownerName = {{goals.4.owner.name}}),\n    MonarchGoal(id = {{goals.5.id}}, parentId = {{goals.5.parentId}}, title = {{goals.5.title}}, progress = {{goals.5.progress}} / 100f, status = MonarchGoalStatus.{{goals.5.status|pascal}}),\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "val goals = listOf(\n    MonarchGoal(id = \"o1\", title = \"Grow repeat customers\", progress = 62 / 100f, status = MonarchGoalStatus.OnTrack, ownerName = \"Sam Lee\", meta = \"weight 40% · due 31 Mar\", alignedTo = \"Customers come back (Company)\"),\n    MonarchGoal(id = \"k1\", parentId = \"o1\", title = \"Launch loyalty emails\", progress = 100 / 100f, status = MonarchGoalStatus.Done, meta = \"30%\"),\n    MonarchGoal(id = \"k2\", parentId = \"o1\", title = \"Cut monthly churn to 3%\", progress = 30 / 100f, status = MonarchGoalStatus.AtRisk, meta = \"40%\"),\n    MonarchGoal(id = \"k3\", parentId = \"o1\", title = \"Interview 20 customers\", progress = 55 / 100f, status = MonarchGoalStatus.OnTrack, meta = \"30%\"),\n    MonarchGoal(id = \"o2\", title = \"Ship the mobile app\", progress = 10 / 100f, status = MonarchGoalStatus.OffTrack, ownerName = \"Alex Kim\"),\n    MonarchGoal(id = \"k4\", parentId = \"o2\", title = \"Beta with 50 testers\", progress = 0 / 100f, status = MonarchGoalStatus.NotStarted),\n)",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchGoalTree(\n    goals = goals,\n    onAddChild = {},\n    labels = MonarchGoalTreeLabels(addChild = \"Add key result\"),\n) { goal ->\n    MonarchButton(\n        text = if (goal.parentId == null) \"History\" else \"Check in\",\n        onClick = {},\n        variant = MonarchButtonVariant.Ghost,\n        size = MonarchButtonSize.Sm,\n    )\n}"
+    },
+    {
+      "title": "Controlled open goals with a menu per goal",
+      "setup": "val goals = listOf(\n    MonarchGoal(id = \"o1\", title = \"Ship the mobile app\", progress = 0.1f, status = MonarchGoalStatus.OffTrack),\n    MonarchGoal(id = \"k1\", parentId = \"o1\", title = \"Beta with 50 testers\", progress = 0f, status = MonarchGoalStatus.NotStarted),\n)\nvar expanded by remember { mutableStateOf(emptySet<String>()) }",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchGoalTree(\n    goals = goals,\n    expandIcon = { Text(\"›\") },\n    expanded = expanded,\n    onExpandedChange = { expanded = it },\n) { goal ->\n    var open by remember { mutableStateOf(false) }\n    MonarchButton(text = \"More\", onClick = { open = true }, variant = MonarchButtonVariant.Ghost, size = MonarchButtonSize.Sm)\n    MonarchMenu(expanded = open, onDismissRequest = { open = false }) {\n        MonarchMenuItem(text = \"Check in on ${goal.title}\", onClick = { open = false })\n    }\n}",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ]
+    }
+  ],
+  "webEquivalent": "GoalTree",
+  "dependsOn": [
+    "tree-view",
+    "progress-bar",
+    "avatar",
+    "status-badge",
+    "dropdown-menu",
+    "empty-state"
+  ],
+  "toneMap": {
+    "BADGE_TONE": {
+      "not-started": "neutral",
+      "on-track": "info",
+      "at-risk": "warning",
+      "off-track": "danger",
+      "done": "success"
+    },
+    "BAR_TONE": {
+      "not-started": "neutral",
+      "on-track": "accent",
+      "at-risk": "warning",
+      "off-track": "danger",
+      "done": "success"
+    }
+  },
+  "icons": {
+    "expand": "ChevronRightGlyph",
+    "addChild": "PlusGlyph"
+  }
+}

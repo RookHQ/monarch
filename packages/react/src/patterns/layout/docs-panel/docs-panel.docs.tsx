@@ -1,25 +1,10 @@
 import { useState } from 'react';
 import { DocsPanel, type LinkedDocItem } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './docs-panel.fixture.json';
 
-const START: LinkedDocItem[] = [
-  {
-    id: 'l1',
-    kind: 'doc',
-    docId: 'd1',
-    title: 'Release runbook',
-    href: '#doc-release-runbook',
-    meta: 'Updated 2 hours ago',
-    status: 'Published',
-    space: { id: 's-eng', name: 'Engineering' },
-  },
-  {
-    id: 'l2',
-    kind: 'link',
-    title: 'Design file',
-    href: 'https://design.example.com/file/123',
-  },
-];
+const START = fixture.data.items as unknown as LinkedDocItem[];
 
 function OnARecord() {
   const [items, setItems] = useState(START);

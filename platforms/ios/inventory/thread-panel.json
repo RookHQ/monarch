@@ -1,0 +1,211 @@
+{
+  "id": "thread-panel",
+  "name": "MonarchThreadPanel",
+  "title": "ThreadPanel",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Screen content for a NavigationStack push, or a NavigationStack in .inspector or .sheet: MonarchVirtualMessageList (ScrollView with LazyVStack and .defaultScrollAnchor(.bottom)) for the replies with the root and reply count divider as its header, .safeAreaInset(edge: .bottom) for the typing indicator and reply box, .navigationTitle, and .toolbar with a Toggle using .toggleStyle(.button) to follow and a .cancellationAction Close button",
+  "status": "experimental",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The replies to one message of a conversation: the message, a reply count divider, the replies pinned to the newest one, a Follow button, and the app's reply box pinned to the bottom.",
+  "whenToUse": "When someone opens the replies to one message of a chat or channel: pushed onto the conversation's navigation stack on a phone, or in an inspector beside the conversation on iPad.",
+  "whenNotToUse": "For the conversation itself, use MonarchVirtualMessageList with MonarchMessageRow (the message-timeline recipe). For discussions anchored to a document passage, use MonarchCommentThread or MonarchCommentsPanel.",
+  "api": [
+    "init(_ replies: [Item], replyCount: Int? = nil, status: MonarchThreadPanelStatus = .ready, isFollowing: Bool = false, notice: String? = nil, seenDelay: Duration = .milliseconds(400), now: Date? = nil, labels: MonarchThreadPanelLabels = MonarchThreadPanelLabels(), onClose: (@MainActor () -> Void)? = nil, onRetry: (@MainActor () -> Void)? = nil, onFollowingChange: (@MainActor (Bool) async throws -> Void)? = nil, onRepliesSeen: (@MainActor (Int) -> Void)? = nil, @ViewBuilder root: () -> Root, @ViewBuilder typing: () -> Typing, @ViewBuilder composer: () -> Composer, @ViewBuilder headerActions: () -> Actions, @ViewBuilder reply: @escaping (Item, MonarchVirtualMessageListContext<Item>) -> Reply)",
+    "init(_ replies: [Item], …, onRepliesSeen: (@MainActor (Int) -> Void)? = nil, @ViewBuilder root: () -> Root, @ViewBuilder composer: () -> Composer, @ViewBuilder reply: @escaping (Item, MonarchVirtualMessageListContext<Item>) -> Reply) where Typing == EmptyView, Actions == EmptyView",
+    "struct MonarchThreadPanel<Item: MonarchVirtualMessageListItem, Reply: View, Root: View, Typing: View, Composer: View, Actions: View>: View",
+    "enum MonarchThreadPanelStatus: Sendable, Hashable, CaseIterable { case ready, loading, error, deleted }",
+    "struct MonarchThreadPanelLabels: Sendable { init(title:close:follow:following:followedNotice:unfollowedNotice:followFailed:replyCount:replies:loading:error:deleted:list:), every parameter optional; list: MonarchVirtualMessageListLabels? }"
+  ],
+  "options": [
+    {
+      "name": "replies",
+      "type": "[Item]",
+      "default": "required",
+      "description": "The loaded replies, oldest first. Item conforms to MonarchVirtualMessageListItem (id, time, authorID)."
+    },
+    {
+      "name": "replyCount",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The number of replies for the divider; can exceed the loaded replies. The loaded count when nil."
+    },
+    {
+      "name": "status",
+      "type": "MonarchThreadPanelStatus",
+      "default": ".ready",
+      "description": "ready shows the replies; loading placeholder rows; error a failure with Try again; deleted a notice with Close."
+    },
+    {
+      "name": "isFollowing",
+      "type": "Bool",
+      "default": "false",
+      "description": "The person follows the thread: the Follow toggle is on and reads Following with a filled bell."
+    },
+    {
+      "name": "notice",
+      "type": "String?",
+      "default": "nil",
+      "description": "A note after the replies, such as Showing the first 500 replies."
+    },
+    {
+      "name": "seenDelay",
+      "type": "Duration",
+      "default": ".milliseconds(400)",
+      "description": "How long the replies stay on screen in an active scene before onRepliesSeen."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "Fixes now for the Today and Yesterday separators. The clock by default; the locale and calendar come from the environment."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchThreadPanelLabels",
+      "default": "MonarchThreadPanelLabels()",
+      "description": "Replacements for the built-in strings, and optionally the list's (MonarchVirtualMessageListLabels), whose name defaults to Replies."
+    },
+    {
+      "name": "onClose",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds Close in the cancellation position of the toolbar and under a deleted thread. Leave it out when the panel is pushed: the back button closes it."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds Try again when the thread could not be loaded."
+    },
+    {
+      "name": "onFollowingChange",
+      "type": "(@MainActor (Bool) async throws -> Void)?",
+      "default": "nil",
+      "description": "Follows (true) or unfollows. Adds the Follow toggle while ready; it is disabled until the function returns. Throw to announce a failure."
+    },
+    {
+      "name": "onRepliesSeen",
+      "type": "(@MainActor (Int) -> Void)?",
+      "default": "nil",
+      "description": "Receives the reply count once the replies have been on screen for seenDelay in an active scene, and again when the count changes: mark the thread read here."
+    },
+    {
+      "name": "root",
+      "type": "@ViewBuilder () -> Root",
+      "default": "required",
+      "description": "The message the thread answers, usually a MonarchMessageRow. EmptyView for none."
+    },
+    {
+      "name": "typing",
+      "type": "@ViewBuilder () -> Typing",
+      "default": "EmptyView in the shorter initialiser",
+      "description": "Above the reply box, such as a MonarchTypingIndicator."
+    },
+    {
+      "name": "composer",
+      "type": "@ViewBuilder () -> Composer",
+      "default": "required",
+      "description": "The reply box, usually a MonarchMessageComposer, pinned under the replies. EmptyView for a read-only thread."
+    },
+    {
+      "name": "headerActions",
+      "type": "@ViewBuilder () -> Actions",
+      "default": "EmptyView in the shorter initialiser",
+      "description": "Further toolbar buttons, after Follow in the primary action position."
+    },
+    {
+      "name": "reply",
+      "type": "@ViewBuilder (Item, MonarchVirtualMessageListContext<Item>) -> Reply",
+      "default": "required",
+      "description": "Draws one reply, usually a MonarchMessageRow with isGrouped: context.isGrouped."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The root message, the reply count divider and the replies, newest at the bottom, with day separators and grouping; typing and the reply box at the bottom."
+    },
+    {
+      "name": "no replies",
+      "description": "The root and the 0 replies divider."
+    },
+    {
+      "name": "following",
+      "description": "The Follow toggle is on, reads Following with a filled bell, and is disabled while the change runs."
+    },
+    {
+      "name": "loading",
+      "description": "A MonarchLoadingState with three rows, read as Loading thread; no Follow; the typing indicator and the reply box still show, as on the web."
+    },
+    {
+      "name": "error",
+      "description": "This thread couldn’t be loaded., with Try again (MonarchInlineErrorRetry), or in the strong danger role without onRetry."
+    },
+    {
+      "name": "deleted",
+      "description": "This thread was deleted., announced when it appears, with a Close button when onClose is given."
+    }
+  ],
+  "appearance": "No fill of its own above the replies, so it takes the screen's, sheet's or inspector's surface; the bottom bar uses the surface role with a subtle border on top. The reply count, notice and deleted text use the muted text role, the divider lines the subtle border role, and the toolbar is the system navigation bar in the theme's tint. The same roles adapt to dark and both high-contrast themes.",
+  "platformNotes": "The web's ThreadPanel is a side panel with its own header and takes the replies as children of a scrolling log. On iOS it is a screen: the title and buttons are in the navigation bar, it is pushed onto the conversation's NavigationStack on a phone (the back button and back swipe close it) or shown in .inspector at regular width, and the replies are a MonarchVirtualMessageList, so only rows near the screen are built, day separators are added and consecutive replies group. The web's follow button with aria-pressed is a Toggle with the button style, read with its on or off value. The web's close icon button is a Close text button in the cancellation position. The web reports replies seen while the page is visible; here the delay runs while the scene is active. Android draws an in-content header with a FilterChip; iOS uses the navigation bar. Android's key and time functions are the MonarchVirtualMessageListItem protocol here, and its LazyListState is not exposed. Status experimental: it is a product composite until a Rook app adopts it.",
+  "accessibility": [
+    "The navigation title, Thread, is the screen's heading.",
+    "The replies are a container named Replies; MonarchVirtualMessageList announces arriving replies and makes day separators headers.",
+    "The reply count divider is a header, so the rotor moves from the message to its replies.",
+    "Follow is a Toggle with the button style: VoiceOver reads its title and on or off value; it is disabled while the change runs.",
+    "Following, unfollowing and a failure are announced; the deleted notice is announced when it appears.",
+    "Loading is one element read as Loading thread; Close and Try again have touch targets of at least 44 points."
+  ],
+  "edgeCases": [
+    "replyCount can be larger than the loaded replies; use notice to say how many are shown.",
+    "The root and divider show above the first reply, as the list's header, once the start of the thread is loaded.",
+    "Follow is hidden while loading, after an error and for a deleted thread; the typing indicator and the reply box show in every state.",
+    "onRepliesSeen is called again after the delay when replyCount changes, and when the scene becomes active again.",
+    "A negative replyCount counts as 0.",
+    "The replies scroll themselves: give the panel the full screen or a bounded height and do not put it in a vertically scrolling parent."
+  ],
+  "tests": [
+    "MonarchThreadPanelTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "A thread with replies, Follow and a reply box",
+      "fixture": "thread-panel",
+      "webExample": "A thread with replies, Follow and a reply box",
+      "template": "NavigationStack {\n    MonarchThreadPanel(\n        replies,\n        isFollowing: isFollowing,\n        now: {{now|date}},\n        onClose: {},\n        onFollowingChange: { isFollowing = $0 },\n        onRepliesSeen: { _ in },\n        root: {\n            MonarchMessageRow(MonarchMessageRowAuthor({{root.name}}), time: {{root.time|date}}, now: {{now|date}}) {\n                Text({{root.body}})\n            }\n        },\n        composer: {\n            MonarchMessageComposer(\"Reply\", text: $draft, placeholder: {{placeholder}}, showsEmojiButton: false, showsFormatting: false) { message in\n                replies.append(Reply(id: UUID().uuidString, time: {{now|date}}, authorID: \"You\", text: message.text))\n            }\n        },\n        reply: { reply, context in\n            MonarchMessageRow(\n                MonarchMessageRowAuthor(reply.authorID ?? \"\"),\n                time: reply.time,\n                now: {{now|date}},\n                isGrouped: context.isGrouped\n            ) {\n                Text(reply.text)\n            }\n        }\n    )\n}\n.frame(height: 640)",
+      "setupTemplate": "struct Reply: MonarchVirtualMessageListItem {\n    let id: String\n    let time: Date\n    let authorID: String?\n    let text: String\n}\n@State private var replies = [\n    Reply(id: \"r1\", time: {{replies.0.time|date}}, authorID: {{replies.0.name}}, text: {{replies.0.body}}),\n    Reply(id: \"r2\", time: {{replies.1.time|date}}, authorID: {{replies.1.name}}, text: {{replies.1.body}}),\n    Reply(id: \"r3\", time: {{replies.2.time|date}}, authorID: {{replies.2.name}}, text: {{replies.2.body}}),\n]\n@State private var isFollowing = true\n@State private var draft = \"\"",
+      "setup": "struct Reply: MonarchVirtualMessageListItem {\n    let id: String\n    let time: Date\n    let authorID: String?\n    let text: String\n}\n@State private var replies = [\n    Reply(id: \"r1\", time: Date(timeIntervalSince1970: 1_773_140_520), authorID: \"Ben Okafor\", text: \"In the shared release folder, next to the checklist.\"),\n    Reply(id: \"r2\", time: Date(timeIntervalSince1970: 1_773_140_580), authorID: \"Ben Okafor\", text: \"I can move last quarter’s notes there too.\"),\n    Reply(id: \"r3\", time: Date(timeIntervalSince1970: 1_773_141_600), authorID: \"Chen Li\", text: \"Sounds good to me.\"),\n]\n@State private var isFollowing = true\n@State private var draft = \"\"",
+      "code": "NavigationStack {\n    MonarchThreadPanel(\n        replies,\n        isFollowing: isFollowing,\n        now: Date(timeIntervalSince1970: 1_773_144_000),\n        onClose: {},\n        onFollowingChange: { isFollowing = $0 },\n        onRepliesSeen: { _ in },\n        root: {\n            MonarchMessageRow(MonarchMessageRowAuthor(\"Ana Ruiz\"), time: Date(timeIntervalSince1970: 1_773_140_400), now: Date(timeIntervalSince1970: 1_773_144_000)) {\n                Text(\"Where should the launch notes live?\")\n            }\n        },\n        composer: {\n            MonarchMessageComposer(\"Reply\", text: $draft, placeholder: \"Reply…\", showsEmojiButton: false, showsFormatting: false) { message in\n                replies.append(Reply(id: UUID().uuidString, time: Date(timeIntervalSince1970: 1_773_144_000), authorID: \"You\", text: message.text))\n            }\n        },\n        reply: { reply, context in\n            MonarchMessageRow(\n                MonarchMessageRowAuthor(reply.authorID ?? \"\"),\n                time: reply.time,\n                now: Date(timeIntervalSince1970: 1_773_144_000),\n                isGrouped: context.isGrouped\n            ) {\n                Text(reply.text)\n            }\n        }\n    )\n}\n.frame(height: 640)"
+    },
+    {
+      "title": "A deleted thread",
+      "setup": "struct Reply: MonarchVirtualMessageListItem {\n    let id: String\n    let time: Date\n    let authorID: String?\n    let text: String\n}",
+      "code": "NavigationStack {\n    MonarchThreadPanel(\n        [Reply](),\n        status: .deleted,\n        onClose: {},\n        root: { EmptyView() },\n        composer: { EmptyView() },\n        reply: { reply, _ in Text(reply.text) }\n    )\n}\n.frame(height: 240)"
+    },
+    {
+      "title": "Typing, a reply count and an extra toolbar button",
+      "setup": "struct Reply: MonarchVirtualMessageListItem {\n    let id: String\n    let time: Date\n    let authorID: String?\n    let text: String\n}",
+      "code": "NavigationStack {\n    MonarchThreadPanel(\n        [Reply](),\n        replyCount: 12,\n        onClose: {},\n        root: { Text(\"The message the thread answers\") },\n        typing: { MonarchTypingIndicator([\"Ana\"]) },\n        composer: { EmptyView() },\n        headerActions: { Button(\"Mute\", systemImage: \"speaker.slash\") {} },\n        reply: { reply, _ in Text(reply.text) }\n    )\n}\n.frame(height: 320)"
+    }
+  ],
+  "webEquivalent": "ThreadPanel",
+  "dependsOn": [
+    "message-row",
+    "message-composer",
+    "virtual-message-list",
+    "typing-indicator",
+    "loading-state",
+    "inline-error-retry",
+    "button"
+  ],
+  "icons": {
+    "following": "BellGlyph",
+    "close": "CloseGlyph"
+  }
+}

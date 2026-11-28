@@ -1,0 +1,158 @@
+{
+  "id": "ai-tool-result-card",
+  "name": "MonarchAiToolResultCard",
+  "title": "AiToolResultCard",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchCard (androidx.compose.material3.Surface) with androidx.compose.foundation.layout.Row and Column, androidx.compose.material3.Text, MonarchKeyValue, MonarchLink and MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A preview of what an AI tool did (a record created, an email sent, an event booked, a ticket filed): the kind, the title, a line of detail, key facts, a link to open the result and an optional Undo.",
+  "whenToUse": "In an AI conversation, under a tool call that succeeded and changed something the person may want to see or reverse, such as a record the assistant created.",
+  "whenNotToUse": "For a tool call still waiting for approval or running, show the call's state instead. For a change to fields the person is looking at, use MonarchAiUndoBanner, which lists before and after.",
+  "api": [
+    "@Composable fun MonarchAiToolResultCard(title: String, modifier: Modifier = Modifier, kind: MonarchAiToolResultKind = MonarchAiToolResultKind.Generic, description: String? = null, meta: List<MonarchKeyValueItem> = emptyList(), icon: (@Composable () -> Unit)? = null, onOpen: (() -> Unit)? = null, onUndo: (suspend () -> Unit)? = null, labels: MonarchAiToolResultCardLabels = MonarchAiToolResultCardLabels())",
+    "enum class MonarchAiToolResultKind { RecordCreated, EmailSent, EventBooked, TicketFiled, Generic }",
+    "class MonarchAiToolResultCardLabels(kind: ((MonarchAiToolResultKind) -> String?)? = null, open: String? = null, openLabel: ((title: String) -> String)? = null, undo: String? = null, undone: String? = null, undoFailed: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "What the tool made or changed: the record's name, the email's subject."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the card."
+    },
+    {
+      "name": "kind",
+      "type": "MonarchAiToolResultKind",
+      "default": "MonarchAiToolResultKind.Generic",
+      "description": "What the tool did; picks the label above the title."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "null",
+      "description": "One line of detail, such as \"To 3 people\"."
+    },
+    {
+      "name": "meta",
+      "type": "List<MonarchKeyValueItem>",
+      "default": "emptyList()",
+      "description": "Short facts, shown with MonarchKeyValue in the stacked layout."
+    },
+    {
+      "name": "icon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "A glyph for the kind, in a tile at the start in the success colors, muted once undone. Hidden from TalkBack. Monarch bundles no icons, so without it there is no tile."
+    },
+    {
+      "name": "onOpen",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Shows an Open link that calls it, for example to open the record. Hidden once undone."
+    },
+    {
+      "name": "onUndo",
+      "type": "(suspend () -> Unit)?",
+      "default": "null",
+      "description": "Shows Undo. Runs in a coroutine of the card; throw to report a failure."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiToolResultCardLabels",
+      "default": "MonarchAiToolResultCardLabels()",
+      "description": "Replacements for the kind labels, Open and its TalkBack name, Undo, Undone and the failure text."
+    }
+  ],
+  "states": [
+    {
+      "name": "result",
+      "description": "The tile, the text, the facts, Open and Undo."
+    },
+    {
+      "name": "undoing",
+      "description": "Undo shows its progress indicator, reads \"Loading\" and ignores taps."
+    },
+    {
+      "name": "undone",
+      "description": "Open and Undo go away, the tile turns muted, and \"Undone\" is shown in the muted text color and announced."
+    },
+    {
+      "name": "undo failed",
+      "description": "\"Couldn’t undo. Try again.\" is shown in the danger strong color and announced; Undo stays and can run again."
+    }
+  ],
+  "appearance": "A MonarchCard on the surface color with the default border. The kind is a caption in the muted text color, the title is in the strong body style, and the icon tile uses the success subtle fill with the success strong glyph, or the muted fill and muted text once undone. Open is a standalone link and Undo a small ghost button. The same roles in light, dark and both high-contrast themes.",
+  "platformNotes": "The web's title and description accept nodes; here they are Strings and the facts are MonarchKeyValueItem values, as on iOS. The web's href and external flag become onOpen: the app opens the record or the URL (for example with LocalUriHandler), so there is no URL filter. The web's onUndo may return a promise; here it is a suspend function run in the card's coroutine scope, and a thrown exception shows the built-in failure text. The web draws a glyph for each kind and iOS uses SF Symbols; Monarch for Android bundles no icons, so the glyph is an optional slot and the kind is always said in text. The web moves focus back to the card when Undo disappears; Compose keeps TalkBack focus on the nearest element and the result is announced through the live region. The card does not read a MonarchAiToolCallPart itself, because a tool's output has no standard title; the app maps the output to the title and facts, as the example shows.",
+  "accessibility": [
+    "The kind, the title and the description are one TalkBack element, read as \"Record created, Acme Ltd, Added to Accounts\".",
+    "Each fact is read as its label and value by MonarchKeyValue.",
+    "Open is a link named \"Open\" and the title, such as \"Open Acme Ltd\"; Undo is a button. Each is a separate element with a 48dp touch target.",
+    "Undo reads \"Loading\" while it runs and ignores taps.",
+    "\"Undone\" and the failure text are shown and announced through a polite live region that is always present.",
+    "The icon tile is hidden from TalkBack; the kind is spoken as text."
+  ],
+  "edgeCases": [
+    "Long titles and descriptions wrap; Open and Undo wrap onto a second line at large font sizes.",
+    "Without onOpen and onUndo the card is a plain summary with no actions.",
+    "An undo cancelled because the card left the composition is not shown as a failure.",
+    "The undone state lives in the card; if the card is recreated (for example scrolled out of a lazy list and back), it shows the result again. Keep the undone state in the app's model and stop passing onUndo when it must survive."
+  ],
+  "tests": [
+    "MonarchAiToolResultCardTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Every kind",
+      "fixture": "ai-tool-result-card",
+      "webExample": "Every kind",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n    MonarchAiToolResultCard(\n        title = {{items.0.title}},\n        kind = MonarchAiToolResultKind.{{items.0.kind|pascal}},\n        description = {{items.0.description}},\n        onOpen = {},\n    )\n    MonarchAiToolResultCard(\n        title = {{items.1.title}},\n        kind = MonarchAiToolResultKind.{{items.1.kind|pascal}},\n        description = {{items.1.description}},\n        onOpen = {},\n    )\n    MonarchAiToolResultCard(\n        title = {{items.2.title}},\n        kind = MonarchAiToolResultKind.{{items.2.kind|pascal}},\n        description = {{items.2.description}},\n        onOpen = {},\n    )\n    MonarchAiToolResultCard(\n        title = {{items.3.title}},\n        kind = MonarchAiToolResultKind.{{items.3.kind|pascal}},\n        description = {{items.3.description}},\n        onOpen = {},\n    )\n    MonarchAiToolResultCard(\n        title = {{items.4.title}},\n        kind = MonarchAiToolResultKind.{{items.4.kind|pascal}},\n        description = {{items.4.description}},\n        onOpen = {},\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.foundation.icon.MonarchIcon",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n    MonarchAiToolResultCard(\n        title = \"Northwind Traders\",\n        kind = MonarchAiToolResultKind.RecordCreated,\n        description = \"Added to Accounts\",\n        onOpen = {},\n    )\n    MonarchAiToolResultCard(\n        title = \"Weekly update\",\n        kind = MonarchAiToolResultKind.EmailSent,\n        description = \"To 3 people\",\n        onOpen = {},\n    )\n    MonarchAiToolResultCard(\n        title = \"Design review\",\n        kind = MonarchAiToolResultKind.EventBooked,\n        description = \"Wed 4 Mar, 10:00–10:30\",\n        onOpen = {},\n    )\n    MonarchAiToolResultCard(\n        title = \"Export fails for large files\",\n        kind = MonarchAiToolResultKind.TicketFiled,\n        description = \"Support queue\",\n        onOpen = {},\n    )\n    MonarchAiToolResultCard(\n        title = \"Settings updated\",\n        kind = MonarchAiToolResultKind.Generic,\n        description = \"Notifications turned on\",\n        onOpen = {},\n    )\n}"
+    },
+    {
+      "title": "From a tool call that succeeded",
+      "setup": "val call = MonarchAiToolCallPart(\n    id = \"call-1\",\n    name = \"send_email\",\n    state = MonarchAiToolCallState.Succeeded,\n    output = MonarchAiJSON.Object(mapOf(\"subject\" to MonarchAiJSON.Text(\"Renewal reminder\"))),\n)",
+      "code": "if (call.state == MonarchAiToolCallState.Succeeded && call.name == \"send_email\") {\n    MonarchAiToolResultCard(\n        title = call.output?.get(\"subject\")?.stringValue ?: \"Email\",\n        kind = MonarchAiToolResultKind.EmailSent,\n        description = \"To 3 people\",\n    )\n}"
+    }
+  ],
+  "webEquivalent": "AiToolResultCard",
+  "dependsOn": [
+    "card",
+    "link",
+    "button"
+  ],
+  "icons": {
+    "record-created": "PlusGlyph",
+    "event-booked": "CalendarGlyph",
+    "generic": "CheckGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "android",
+      "paths": [
+        "href"
+      ],
+      "reason": "Android MonarchAiToolResultCard takes an onOpen callback, not a URL: the app opens the link (the Open link is shown, the destination is the app's)",
+      "convention": "Material 3 / Android: navigation is handled by the app through a callback"
+    }
+  ]
+}

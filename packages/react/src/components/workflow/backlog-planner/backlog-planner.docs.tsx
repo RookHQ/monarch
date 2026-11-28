@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Badge, Button } from '@rookcom/monarch-react';
+import { Badge, Button, type BadgeProps } from '@rookcom/monarch-react';
 import { BacklogPlanner, type BacklogBucket } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './backlog-planner.fixture.json';
 
 interface Item {
   id: string;
@@ -10,42 +12,29 @@ interface Item {
   points: number | null;
 }
 
-const START: BacklogBucket<Item>[] = [
-  {
-    id: 'it-14',
-    title: 'Iteration 14',
-    subtitle: '12 – 23 Jan',
-    badge: (
-      <Badge tone="accent" size="sm">
-        Active
-      </Badge>
-    ),
-    capacity: 13,
-    items: [
-      { id: '1', key: 'WEB-21', title: 'Fix the sign-in redirect', points: 3 },
-      { id: '2', key: 'WEB-24', title: 'Export reports as CSV', points: 5 },
-      { id: '3', key: 'WEB-30', title: 'Keyboard shortcuts help', points: 2 },
-    ],
-  },
-  {
-    id: 'it-15',
-    title: 'Iteration 15',
-    subtitle: '26 Jan – 6 Feb',
-    capacity: 13,
-    actions: <Button size="xs">Start</Button>,
-    items: [{ id: '4', key: 'WEB-33', title: 'Dark mode for charts', points: 8 }],
-    empty: 'Move items here to plan them into this iteration.',
-  },
-  {
-    id: 'backlog',
-    title: 'Backlog',
-    items: [
-      { id: '5', key: 'WEB-35', title: 'Audit log filters', points: 5 },
-      { id: '6', key: 'WEB-36', title: 'Bulk archive', points: null },
-      { id: '7', key: 'WEB-41', title: 'Saved views', points: 3 },
-    ],
-  },
-];
+const START: BacklogBucket<Item>[] = fixture.data.buckets.map((bucket) => ({
+  id: bucket.id,
+  title: bucket.title,
+  ...('subtitle' in bucket ? { subtitle: bucket.subtitle } : {}),
+  ...('badge' in bucket
+    ? {
+        badge: (
+          <Badge tone={bucket.badge.tone as NonNullable<BadgeProps['tone']>} size="sm">
+            {bucket.badge.label}
+          </Badge>
+        ),
+      }
+    : {}),
+  ...('capacity' in bucket ? { capacity: bucket.capacity } : {}),
+  ...('action' in bucket ? { actions: <Button size="xs">{bucket.action}</Button> } : {}),
+  items: bucket.items.map((item) => ({
+    id: item.id,
+    key: item.key,
+    title: item.title,
+    points: 'points' in item ? item.points : null,
+  })),
+  ...(bucket.id === 'it-15' ? { empty: 'Move items here to plan them into this iteration.' } : {}),
+}));
 
 function Row({ item }: { item: Item }) {
   return (

@@ -1,14 +1,13 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- the fixture is a fixed JSON literal; the indices below exist. */
 import { useEffect, useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiChainOfSteps, type AiStep } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-chain-of-steps.fixture.json';
 
-const LABELS = [
-  'Read the attached file',
-  'Search earlier notes',
-  'Compare the figures',
-  'Draft a summary',
-];
+const LABELS = fixture.data.steps.map((s) => s.label);
+const DETAIL = fixture.data.steps[1]!.detail!;
 
 function stepsAt(progress: number, failAt?: number): AiStep[] {
   return LABELS.map((label, i) => ({
@@ -24,7 +23,7 @@ function stepsAt(progress: number, failAt?: number): AiStep[] {
             : i === progress
               ? 'active'
               : 'pending',
-    ...(i === 1 && progress > 1 ? { detail: '3 notes matched' } : {}),
+    ...(i === 1 && progress > 1 ? { detail: DETAIL } : {}),
   }));
 }
 

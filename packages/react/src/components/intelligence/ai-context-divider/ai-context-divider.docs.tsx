@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { AiContextDivider } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-context-divider.fixture.json';
 
 const DAY = 86_400_000;
 
@@ -122,8 +124,9 @@ export default {
           stack: true,
           render: () => (
             <div style={{ width: '100%', maxWidth: '36rem' }}>
-              <AiContextDivider kind="day" date={Date.now() - DAY} />
-              <AiContextDivider kind="day" date={Date.now()} />
+              {fixture.data.days.map((daysAgo) => (
+                <AiContextDivider key={daysAgo} kind="day" date={Date.now() - DAY * daysAgo} />
+              ))}
             </div>
           ),
         },

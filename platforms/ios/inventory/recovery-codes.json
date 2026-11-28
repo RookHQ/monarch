@@ -1,0 +1,137 @@
+{
+  "id": "recovery-codes",
+  "name": "MonarchRecoveryCodes",
+  "title": "RecoveryCodes",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "LazyVGrid of monospaced Text; MonarchCopyButton, ShareLink with a Transferable text file, confirmationDialog, Toggle with .toggleStyle(.monarchCheckbox)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "One-time recovery codes in a monospaced grid, with copy, save or share, an optional show and hide button, generate new codes behind a confirmation, and an acknowledgement for setup flows.",
+  "whenToUse": "When two-step verification is set up or reviewed, to give the person their backup codes and make sure they saved them.",
+  "whenNotToUse": "Not for a single secret such as an API key (use MonarchCopyButton beside the value) and not for one-time passcodes the person types (use MonarchOtpPinInput).",
+  "api": [
+    "init(_ codes: [MonarchRecoveryCode], heading: String? = nil, fileName: String = \"recovery-codes.txt\", startsRevealed: Bool = true, showsRevealToggle: Bool? = nil, labels: MonarchRecoveryCodesLabels = MonarchRecoveryCodesLabels(), onRegenerate: (@MainActor () async -> Void)? = nil, onAcknowledge: (@MainActor () -> Void)? = nil)",
+    "struct MonarchRecoveryCode: ExpressibleByStringLiteral { init(_ code: String, isUsed: Bool = false) }",
+    "struct MonarchRecoveryCodesLabels { init(listLabel:remaining:used:copy:copied:save:reveal:conceal:concealedHint:regenerate:regenerateTitle:regenerateDescription:regenerateConfirm:cancel:regenerated:acknowledge:acknowledgeMissing:continueTitle:), every parameter optional }"
+  ],
+  "options": [
+    {
+      "name": "codes",
+      "type": "[MonarchRecoveryCode]",
+      "default": "required",
+      "description": "The codes, as values or string literals. Used codes are struck through and not copied or saved."
+    },
+    {
+      "name": "heading",
+      "type": "String?",
+      "default": "nil",
+      "description": "A first line for the copied and saved text, such as the product and account, followed by a blank line."
+    },
+    {
+      "name": "fileName",
+      "type": "String",
+      "default": "\"recovery-codes.txt\"",
+      "description": "The name of the text file offered in the share sheet."
+    },
+    {
+      "name": "startsRevealed",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the codes are visible at first."
+    },
+    {
+      "name": "showsRevealToggle",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Whether the show and hide button is shown. By default when the codes start hidden."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchRecoveryCodesLabels",
+      "default": "MonarchRecoveryCodesLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onRegenerate",
+      "type": "(@MainActor () async -> Void)?",
+      "default": "nil",
+      "description": "Replaces the codes after a destructive confirmation; pass the new codes back through codes. The button shows progress until it returns, then the new codes are shown and announced. No button without it."
+    },
+    {
+      "name": "onAcknowledge",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Runs when the person ticks \"I have saved my recovery codes\" and presses Continue. Neither is shown without it."
+    }
+  ],
+  "states": [
+    {
+      "name": "used codes",
+      "description": "Struck through in the subtle text colour, with \"8 of 10 codes left\" above the grid."
+    },
+    {
+      "name": "hidden",
+      "description": "A lock and a hint replace the grid until \"Show codes\" is pressed."
+    },
+    {
+      "name": "all used",
+      "description": "Copy and save are disabled."
+    },
+    {
+      "name": "regenerating",
+      "description": "The regenerate button shows a progress indicator."
+    },
+    {
+      "name": "acknowledgement missing",
+      "description": "Pressing Continue without the checkbox shows an error with an icon in the danger strong colour, and announces it."
+    }
+  ],
+  "appearance": "Codes sit on a panel with the subtle background and subtle border roles, in the code type role. Buttons are Monarch buttons: ghost for show and hide, secondary for copy and save, danger for regenerate, primary for Continue. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web's Download becomes \"Save or share\": a ShareLink with a plain-text file, from which the person can save to Files, a password manager or another app. The web's confirm dialog is the system confirmationDialog. Revealed state is internal (startsRevealed) rather than controlled. The web's formatRecoveryCodes helper is the heading parameter; a fully custom format is not offered. Several closures are optional (onRegenerate, onAcknowledge). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onRegenerate.",
+  "accessibility": [
+    "The grid is a container named \"Recovery codes\".",
+    "Each code is spelled out character by character by VoiceOver.",
+    "A used code has the value \"Used\", so its state does not depend on the strike-through.",
+    "All actions are standard buttons with 44-point touch targets; the acknowledgement is a standard Toggle with the Monarch checkbox style.",
+    "New codes are announced after regenerating.",
+    "A missing acknowledgement is shown with an icon and text and announced."
+  ],
+  "edgeCases": [
+    "The grid has as many columns as fit at 112 points each, scaled with Dynamic Type, so the largest text sizes show one column.",
+    "A new set of codes clears the acknowledgement; marking a code used does not.",
+    "The codes can be selected as text for manual copying."
+  ],
+  "tests": [
+    "MonarchRecoveryCodesTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Setup step with acknowledgement",
+      "fixture": "recovery-codes",
+      "webExample": "Setup step with acknowledgement",
+      "template": "MonarchRecoveryCodes(\n    [{{codes.0}}, {{codes.1}}, {{codes.2}}, {{codes.3}}, {{codes.4}}, {{codes.5}}, {{codes.6}}, {{codes.7}}],\n    labels: MonarchRecoveryCodesLabels(save: {{labels.save}}),\n    onAcknowledge: {}\n)",
+      "code": "MonarchRecoveryCodes(\n    [\"4f7k-29dm\", \"q8zt-mx41\", \"h2vc-0pla\", \"r6yn-3ke8\", \"w1bs-7dqj\", \"c5ug-9fhr\", \"m3xe-6tnw\", \"p0lo-2ziv\"],\n    labels: MonarchRecoveryCodesLabels(save: \"Download\"),\n    onAcknowledge: {}\n)"
+    },
+    {
+      "title": "Settings, hidden at first",
+      "code": "MonarchRecoveryCodes(\n    [\"4f7k-2m9q\", MonarchRecoveryCode(\"8d3r-6t1w\", isUsed: true), \"7n4h-3j8k\"],\n    startsRevealed: false\n)"
+    }
+  ],
+  "webEquivalent": "RecoveryCodes",
+  "dependsOn": [
+    "copy-button",
+    "button",
+    "checkbox",
+    "confirm-dialog",
+    "share-button"
+  ],
+  "icons": {
+    "copy": "CopyGlyph"
+  }
+}

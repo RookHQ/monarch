@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { ReceiptPreview } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './receipt-preview.fixture.json';
 
 const SAMPLE_RECEIPT = `data:image/svg+xml;utf8,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="320" viewBox="0 0 240 320"><rect width="240" height="320" fill="white"/><g font-family="monospace" font-size="12" fill="black"><text x="20" y="40">SAMPLE STORE</text><text x="20" y="80">Coffee        4.50</text><text x="20" y="100">Sandwich      8.25</text><text x="20" y="140">TOTAL        12.75</text></g></svg>',
@@ -21,6 +24,19 @@ const loadSample = () =>
       600,
     ),
   );
+
+function OpenReceipt() {
+  const [open, setOpen] = useState(true);
+  return (
+    <ReceiptPreview
+      mimeType={fixture.data.mimeType}
+      src={SAMPLE_RECEIPT}
+      fileName={fixture.data.fileName}
+      open={open}
+      onOpenChange={setOpen}
+    />
+  );
+}
 
 export default {
   id: 'receipt-preview',
@@ -145,9 +161,8 @@ export default {
       items: [
         {
           title: 'Image from a URL',
-          render: () => (
-            <ReceiptPreview mimeType="image/svg+xml" src={SAMPLE_RECEIPT} fileName="lunch.svg" />
-          ),
+          stage: { align: 'center' },
+          render: () => <OpenReceipt />,
         },
         {
           title: 'Loaded on open',

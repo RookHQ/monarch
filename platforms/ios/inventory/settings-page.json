@@ -1,0 +1,113 @@
+{
+  "id": "settings-page",
+  "name": null,
+  "title": "SettingsPage",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "NavigationStack(path:) with a List of NavigationLink(value:) rows and navigationDestination(for:) that opens each section as a Form screen, a toolbar Save (ToolbarItem(placement: .confirmationAction)), monarchUnsavedChangesGuard on the back button, and confirmationDialog for the danger zone; NavigationSplitView with List(selection:) on iPad",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a settings screen as a list of sections, each opening its own screen with its settings, Save in the toolbar, a guard before leaving unsaved changes, and the danger zone last.",
+  "whenToUse": "An app or workspace has several groups of settings (profile, notifications, members) that people change from time to time.",
+  "whenNotToUse": "For one short group of settings, use the settings-section recipe: one Form with Save and Discard in the toolbar. For settings that apply as soon as they change, leave out Save and the guard.",
+  "api": [
+    "NavigationStack(path: $path) { List { Section { NavigationLink(value: pane) { Label { title; summary } icon: { Image(systemName:) } } }; Section { NavigationLink(value: .danger) { … } } }.navigationTitle(_:).navigationDestination(for: Pane.self) { pane in … } }",
+    "Form { Section { Toggle(_:isOn:); Picker(_:selection:content:) } footer: { … } }.navigationTitle(_:).toolbar { ToolbarItem(placement: .confirmationAction) { Button(\"Save\") { … }.disabled(!isDirty) } }",
+    ".monarchUnsavedChangesGuard(isPresented:hasChanges:onSave:onLeave:)",
+    ".confirmationDialog(_:isPresented:titleVisibility:actions:message:) for the danger zone",
+    "NavigationSplitView(sidebar: { List(selection:) { … } }, detail: { … }) with a selection binding that asks before changing section"
+  ],
+  "options": [
+    {
+      "name": "panes",
+      "type": "A Hashable enum of the app's sections",
+      "default": "required",
+      "description": "One case per group of settings, with a title, a one-line summary of the current value and a symbol; the danger zone is the last case, in its own list section."
+    },
+    {
+      "name": "path",
+      "type": "Binding<[Pane]>",
+      "default": "[]",
+      "description": "The navigation path; empty shows the list. The guard's onLeave removes the last screen."
+    },
+    {
+      "name": "draft and saved",
+      "type": "The section's settings value (Equatable)",
+      "default": "required",
+      "description": "The section edits a draft; Save copies it to the saved value. isDirty is draft != saved and drives Save and the guard."
+    },
+    {
+      "name": "onSave",
+      "type": "@MainActor () async throws -> Void",
+      "default": "required",
+      "description": "Saves the open section, from the toolbar Save and from Save and leave in the guard. A thrown error keeps the person on the screen."
+    }
+  ],
+  "states": [
+    {
+      "name": "list",
+      "description": "The title and one row per section, each with a symbol, its title and a summary, and a disclosure chevron from NavigationLink."
+    },
+    {
+      "name": "detail",
+      "description": "The section's settings in a Form with Save in the toolbar; Save is disabled until something changes."
+    },
+    {
+      "name": "unsaved changes",
+      "description": "Save is enabled; the back button is replaced by MonarchUnsavedChangesGuard's, which asks to save, discard or keep editing; the back swipe is off."
+    },
+    {
+      "name": "danger zone",
+      "description": "The last row, in the strong danger colour with a warning symbol, opens the danger-zone recipe: a destructive button that asks in a confirmation dialog."
+    },
+    {
+      "name": "iPad",
+      "description": "NavigationSplitView shows the list and the open section side by side; changing section with unsaved changes asks first through the guarded selection binding. It collapses to the stack on iPhone."
+    }
+  ],
+  "appearance": "System grouped list and Form in every theme, with Monarch text styles, the summary in the muted text colour, controls tinted with the accent colour and the danger row in the strong danger colour. The navigation bar, toolbar and confirmation dialogs are the system ones.",
+  "platformNotes": "The web ships SettingsPage: a title, a section navigation (a sticky side list, a scrolling strip on phones), all sections on one long page, a page-wide save bar and a guard on leaving. iOS follows the system Settings pattern instead, like Android: the screen is a list of sections, each opens its own screen and saves on its own, and the back button returns to the list. The web's save bar becomes Save in the toolbar (the form-actions-bar entry); Discard is offered by the guard on leaving. On iPad NavigationSplitView (the split-layout entry) replaces the web's side navigation. The web's interceptLinks, guardRef and activeSection have no iOS equivalent: the guard covers the back button and the sheet swipe, and the app owns the navigation path. Android ships the same recipe with ListItem rows, BackHandler, MonarchSectionCard, MonarchFormActionsBar and MonarchUnsavedChangesGuard.",
+  "accessibility": [
+    "Each section row is a NavigationLink, one VoiceOver element with the button trait, its title and summary read together.",
+    "The danger zone is named by its title and a warning symbol, not by colour alone.",
+    "Save is a toolbar button that is read as dimmed while there is nothing to save.",
+    "While there are unsaved changes the guard's back button asks with a system confirmation dialog; the destructive choice has the destructive role, and the escape gesture keeps editing.",
+    "Deleting the workspace asks in a system confirmation dialog whose title and message VoiceOver reads."
+  ],
+  "edgeCases": [
+    "Keep each row's summary to the current value; long summaries wrap at large text sizes.",
+    "Save per section: a change in one section never waits for another.",
+    "When the save throws, the guard shows the error in an alert and the person stays on the screen.",
+    "On iPad, a sidebar change while the guard is asking is kept as the pending section and opened after Save and leave or Discard."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Sections with nav and a danger zone",
+      "fixture": "settings-page",
+      "webExample": "Sections with nav and a danger zone",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    Text({{title}})\n        .monarchTextStyle(.title)\n        .foregroundStyle(theme.colors.textDefault)\n        .accessibilityAddTraits(.isHeader)\n    // The section menu beside the open section, as on the web: the open one marked, the danger zone in red.\n    HStack(alignment: .top, spacing: theme.spacing.space4) {\n        VStack(alignment: .leading, spacing: theme.spacing.space1) {\n            settingsLink({{sections.0.title}}, isOpen: true, isDanger: false)\n            settingsLink({{sections.1.title}}, isOpen: false, isDanger: false)\n            settingsLink(\"Danger zone\", isOpen: false, isDanger: true)\n        }\n        .frame(width: theme.spacing.space24 + theme.spacing.space8)\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            Text({{sections.0.title}}).monarchTextStyle(.bodyStrong).foregroundStyle(theme.colors.textDefault).accessibilityAddTraits(.isHeader)\n            settingsCard {\n                MonarchTextField({{sections.0.row.label}}, text: $workspaceName)\n            }\n            Text({{sections.1.title}}).monarchTextStyle(.bodyStrong).foregroundStyle(theme.colors.textDefault).accessibilityAddTraits(.isHeader)\n            settingsCard {\n                VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                    Text({{sections.1.row.label}}).monarchTextStyle(.label).foregroundStyle(theme.colors.textDefault)\n                    Text({{sections.1.row.description}}).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                    Toggle({{sections.1.row.label}}, isOn: $digest).labelsHidden()\n                }\n            }\n            Text(\"Danger zone\")\n                .monarchTextStyle(.bodyStrong)\n                .foregroundStyle(theme.colors.dangerStrong)\n                .accessibilityAddTraits(.isHeader)\n            settingsCard(isDanger: true) {\n                VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                    Text({{danger.title}}).monarchTextStyle(.label).foregroundStyle(theme.colors.textDefault)\n                    Text({{danger.description}}).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                    MonarchButton({{danger.action}}, variant: .danger, size: .sm) {}\n                }\n            }\n        }\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var workspaceName = {{sections.0.row.value}}\n@State private var digest = {{sections.1.row.on}}\n\nprivate func settingsLink(_ title: String, isOpen: Bool, isDanger: Bool) -> some View {\n    Button {} label: {\n        Text(title)\n            .monarchTextStyle(.label)\n            .foregroundStyle(isDanger || isOpen ? theme.colors.dangerStrong : theme.colors.textMuted)\n            .padding(.horizontal, theme.spacing.space3)\n            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)\n            .background(isOpen ? theme.colors.dangerSubtle : .clear, in: RoundedRectangle(cornerRadius: theme.radius.md))\n    }\n    .buttonStyle(.plain)\n}\n\nprivate func settingsCard<Content: View>(\n    isDanger: Bool = false,\n    @ViewBuilder content: () -> Content\n) -> some View {\n    content()\n        .padding(theme.spacing.space4)\n        .frame(maxWidth: .infinity, alignment: .leading)\n        .background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: theme.radius.lg))\n        .overlay(\n            RoundedRectangle(cornerRadius: theme.radius.lg).strokeBorder(\n                isDanger ? theme.colors.dangerBorder : theme.colors.borderSubtle,\n                lineWidth: 1\n            )\n        )\n        .overlay(alignment: .leading) {\n            if isDanger {\n                Rectangle().fill(theme.colors.dangerStrong).frame(width: 3)\n            }\n        }\n        .clipShape(RoundedRectangle(cornerRadius: theme.radius.lg))\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var workspaceName = \"Northwind\"\n@State private var digest = true\n\nprivate func settingsLink(_ title: String, isOpen: Bool, isDanger: Bool) -> some View {\n    Button {} label: {\n        Text(title)\n            .monarchTextStyle(.label)\n            .foregroundStyle(isDanger || isOpen ? theme.colors.dangerStrong : theme.colors.textMuted)\n            .padding(.horizontal, theme.spacing.space3)\n            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)\n            .background(isOpen ? theme.colors.dangerSubtle : .clear, in: RoundedRectangle(cornerRadius: theme.radius.md))\n    }\n    .buttonStyle(.plain)\n}\n\nprivate func settingsCard<Content: View>(\n    isDanger: Bool = false,\n    @ViewBuilder content: () -> Content\n) -> some View {\n    content()\n        .padding(theme.spacing.space4)\n        .frame(maxWidth: .infinity, alignment: .leading)\n        .background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: theme.radius.lg))\n        .overlay(\n            RoundedRectangle(cornerRadius: theme.radius.lg).strokeBorder(\n                isDanger ? theme.colors.dangerBorder : theme.colors.borderSubtle,\n                lineWidth: 1\n            )\n        )\n        .overlay(alignment: .leading) {\n            if isDanger {\n                Rectangle().fill(theme.colors.dangerStrong).frame(width: 3)\n            }\n        }\n        .clipShape(RoundedRectangle(cornerRadius: theme.radius.lg))\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    Text(\"Workspace settings\")\n        .monarchTextStyle(.title)\n        .foregroundStyle(theme.colors.textDefault)\n        .accessibilityAddTraits(.isHeader)\n    // The section menu beside the open section, as on the web: the open one marked, the danger zone in red.\n    HStack(alignment: .top, spacing: theme.spacing.space4) {\n        VStack(alignment: .leading, spacing: theme.spacing.space1) {\n            settingsLink(\"General\", isOpen: true, isDanger: false)\n            settingsLink(\"Notifications\", isOpen: false, isDanger: false)\n            settingsLink(\"Danger zone\", isOpen: false, isDanger: true)\n        }\n        .frame(width: theme.spacing.space24 + theme.spacing.space8)\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            Text(\"General\").monarchTextStyle(.bodyStrong).foregroundStyle(theme.colors.textDefault).accessibilityAddTraits(.isHeader)\n            settingsCard {\n                MonarchTextField(\"Workspace name\", text: $workspaceName)\n            }\n            Text(\"Notifications\").monarchTextStyle(.bodyStrong).foregroundStyle(theme.colors.textDefault).accessibilityAddTraits(.isHeader)\n            settingsCard {\n                VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                    Text(\"Email digest\").monarchTextStyle(.label).foregroundStyle(theme.colors.textDefault)\n                    Text(\"A summary once a week.\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                    Toggle(\"Email digest\", isOn: $digest).labelsHidden()\n                }\n            }\n            Text(\"Danger zone\")\n                .monarchTextStyle(.bodyStrong)\n                .foregroundStyle(theme.colors.dangerStrong)\n                .accessibilityAddTraits(.isHeader)\n            settingsCard(isDanger: true) {\n                VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                    Text(\"Delete this workspace\").monarchTextStyle(.label).foregroundStyle(theme.colors.textDefault)\n                    Text(\"Removes the workspace and everything in it.\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                    MonarchButton(\"Delete workspace\", variant: .danger, size: .sm) {}\n                }\n            }\n        }\n    }\n}"
+    },
+    {
+      "title": "On iPad: the list beside the open section",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var selection: String? = \"notifications\"\n@State private var pending: String?\n@State private var digest = true\n@State private var savedDigest = true\n@State private var isAsking = false\n\nprivate let sections = [\"profile\": \"Workspace profile\", \"notifications\": \"Notifications\", \"danger\": \"Danger zone\"]\n\nprivate var isDirty: Bool { digest != savedDigest }\n\n/// Changing section with unsaved changes asks first, on iPad and on iPhone.\nprivate var guardedSelection: Binding<String?> {\n    Binding(\n        get: { selection },\n        set: { next in\n            if isDirty && next != selection {\n                pending = next\n                isAsking = true\n            } else {\n                selection = next\n            }\n        }\n    )\n}",
+      "code": "NavigationSplitView(\n    sidebar: {\n        List(selection: guardedSelection) {\n            Section {\n                Label(\"Workspace profile\", systemImage: \"building.2\").tag(\"profile\")\n                Label(\"Notifications\", systemImage: \"bell\").tag(\"notifications\")\n            }\n            Section {\n                Label(\"Danger zone\", systemImage: \"exclamationmark.triangle\")\n                    .foregroundStyle(theme.colors.dangerStrong)\n                    .tag(\"danger\")\n            }\n        }\n        .navigationTitle(\"Settings\")\n        .navigationSplitViewColumnWidth(min: theme.spacing.space24 * 2, ideal: theme.spacing.space24 * 3)\n    },\n    detail: {\n        Form {\n            if selection == \"notifications\" {\n                Toggle(\"Weekly digest\", isOn: $digest)\n            } else {\n                Text(\"Choose a section\").foregroundStyle(theme.colors.textMuted)\n            }\n        }\n        .tint(theme.colors.accentSolid)\n        .navigationTitle(sections[selection ?? \"\"] ?? \"Settings\")\n        .toolbar {\n            ToolbarItem(placement: .confirmationAction) {\n                Button(\"Save\") { savedDigest = digest }\n                    .disabled(!isDirty)\n            }\n            .monarchFlat()\n        }\n        .monarchUnsavedChangesGuard(\n            isPresented: $isAsking,\n            hasChanges: isDirty,\n            onSave: { savedDigest = digest },\n            onLeave: { reason in\n                if reason == .discard { digest = savedDigest }\n                selection = pending\n                pending = nil\n            }\n        )\n    }\n)\n.frame(minHeight: theme.spacing.space24 * 4)"
+    }
+  ],
+  "webEquivalent": "SettingsPage",
+  "dependsOn": [
+    "settings-section",
+    "danger-zone",
+    "form-actions-bar",
+    "unsaved-changes-guard",
+    "split-layout"
+  ]
+}

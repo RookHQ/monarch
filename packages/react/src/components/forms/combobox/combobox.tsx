@@ -13,6 +13,7 @@ import {
   type ReactNode,
 } from 'react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
+import { StagePortal, stagedLayerProps, useOverlayStage } from '../../../internal/overlay-stage.js';
 import { cx } from '../../../internal/cx.js';
 import {
   CheckGlyph,
@@ -424,8 +425,16 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Com
 
   useEffect(() => {
     if (!open) return;
-    const el = listRef.current?.querySelector<HTMLElement>(`[data-index="${active}"]`);
-    el?.scrollIntoView?.({ block: 'nearest' });
+    const list = listRef.current;
+    const el = list?.querySelector<HTMLElement>(`[data-index="${active}"]`);
+    if (!list || !el) return;
+    // Scroll the list only, never the page: an open list (or one shown open in
+    // a docs preview) must not move the window to its active option.
+    const top = el.offsetTop;
+    const bottom = top + el.offsetHeight;
+    if (top < list.scrollTop) list.scrollTop = top;
+    else if (bottom > list.scrollTop + list.clientHeight)
+      list.scrollTop = bottom - list.clientHeight;
   }, [active, open]);
 
   const activeId = open && items[active] ? `${listId}-opt-${active}` : undefined;
@@ -776,6 +785,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Com
     </span>
   ) : null;
 
+  const staged = useOverlayStage();
   if (inline) {
     return (
       <div
@@ -863,7 +873,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Com
           {live}
         </div>
       </PopoverPrimitive.Anchor>
-      <PopoverPrimitive.Portal>
+      <StagePortal portal={PopoverPrimitive.Portal}>
         <PopoverPrimitive.Content
           align="start"
           sideOffset={4}
@@ -875,10 +885,11 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(function Com
           // The popup is the listbox inside, not a dialog: the input keeps focus throughout.
           role="presentation"
           className="mn-menu mn-combobox__content"
+          {...stagedLayerProps(staged)}
         >
           {list}
         </PopoverPrimitive.Content>
-      </PopoverPrimitive.Portal>
+      </StagePortal>
     </PopoverPrimitive.Root>
   );
 });

@@ -1,0 +1,139 @@
+{
+  "id": "ai-attachment-tray",
+  "name": "MonarchAiAttachmentTray",
+  "title": "AiAttachmentTray",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyRow of MonarchAttachmentChip (MonarchFileTypeIcon, MonarchProgress, retry and remove buttons), with a polite live region for announcements",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The files attached to a message for an assistant, in a row that scrolls sideways, each with its type, name and size, upload progress, failure and retry, and a remove button.",
+  "whenToUse": "Above the prompt field of an assistant's composer, for the files the person attached before sending.",
+  "whenNotToUse": "For files already sent in a message, show MonarchAttachmentChip or MonarchFileCard in the message. For a long upload list, use an upload queue.",
+  "api": [
+    "@Composable public fun MonarchAiAttachmentTray(files: List<MonarchAiAttachmentTrayFile>, onRemove: (String) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, onRetry: ((String) -> Unit)? = null, retryIcon: (@Composable () -> Unit)? = null, removeIcon: (@Composable () -> Unit)? = null, labels: MonarchAiAttachmentTrayLabels = MonarchAiAttachmentTrayLabels())",
+    "public data class MonarchAiAttachmentTrayFile(id: String, name: String, sizeBytes: Long? = null, contentType: String? = null, progress: Float? = null, failed: Boolean = false, errorMessage: String? = null) { constructor(part: MonarchAiFilePart, id: String? = null, progress: Float? = null) }",
+    "public class MonarchAiAttachmentTrayLabels(label: String? = null, ready: ((String) -> String)? = null, removed: ((String) -> String)? = null, chip: MonarchAttachmentChipLabels = MonarchAttachmentChipLabels())"
+  ],
+  "options": [
+    {
+      "name": "files",
+      "type": "List<MonarchAiAttachmentTrayFile>",
+      "default": "required",
+      "description": "The attached files in the order they were added: name, size, MIME type, progress and failure (failed or an errorMessage). A conversation's MonarchAiFilePart converts with the secondary constructor."
+    },
+    {
+      "name": "onRemove",
+      "type": "(String) -> Unit",
+      "default": "required",
+      "description": "Removes a file by id; take it out of files."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the tray."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Disables the retry and remove buttons, for example while the message is sending."
+    },
+    {
+      "name": "onRetry",
+      "type": "((String) -> Unit)?",
+      "default": "null",
+      "description": "Retries a failed upload by file id. Without it failed files have no retry button."
+    },
+    {
+      "name": "retryIcon / removeIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "Icons for each chip's buttons. Monarch bundles no icons; without them the buttons show the words Retry and Remove."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiAttachmentTrayLabels",
+      "default": "MonarchAiAttachmentTrayLabels()",
+      "description": "Replacements for the tray's name, the uploaded and removed announcements, and each chip's strings."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "Type icon, name and size."
+    },
+    {
+      "name": "uploading",
+      "description": "The percentage under the name and a linear progress bar."
+    },
+    {
+      "name": "failed",
+      "description": "The error message (or \"Upload failed\") in the danger color, with a retry button when onRetry is set."
+    },
+    {
+      "name": "disabled",
+      "description": "Retry and remove are disabled."
+    },
+    {
+      "name": "empty",
+      "description": "Nothing is drawn; only the empty live region stays, so the last removal is still announced."
+    }
+  ],
+  "appearance": "A row of MonarchAttachmentChip tiles with the chip's control fill and border, each at most 240dp wide before the font scale, scrolling sideways. All colors are theme roles, so dark and both high-contrast themes follow.",
+  "platformNotes": "Same parameters as iOS, with Android types: progress is a Float, the size is sizeBytes, and failed replaces isFailed. The web shows an image thumbnail for picture files; MonarchAttachmentChip has no thumbnail slot in the tray, so every file shows its type icon. The web moves keyboard focus to the next remove button after a removal; on Android the removal is announced and TalkBack focus is left to the system.",
+  "accessibility": [
+    "The row is a traversal group named \"Attachments\".",
+    "Each file's name and the line under it are one element; the type icon is decorative.",
+    "Retry and remove are buttons named with the file name, such as \"Remove report.pdf\", with 48dp touch targets.",
+    "A finished upload (\"photo.png uploaded\") and a file removed with its button (\"photo.png removed\") are announced through a polite live region; a failure is announced by the chip."
+  ],
+  "edgeCases": [
+    "Long names are shortened in the middle, so the extension stays visible.",
+    "A progress outside 0 through 1 is clamped; a progress of 1 counts as uploaded.",
+    "Several changes in one update are announced together, in one message."
+  ],
+  "tests": [
+    "MonarchAiAttachmentTrayTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Progress, error and retry",
+      "fixture": "ai-attachment-tray",
+      "webExample": "Progress, error and retry",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchAiAttachmentTray(\n        files = files,\n        onRemove = { id -> files = files.filterNot { it.id == id } },\n        onRetry = { id -> files = files.map { if (it.id == id) it.copy(errorMessage = null, progress = 0f) else it } },\n        retryIcon = { MonarchIcon(SampleIcons.Retry, contentDescription = null) },\n        removeIcon = { MonarchIcon(SampleIcons.Close, contentDescription = null) },\n    )\n    MonarchButton(\n        text = {{reset}},\n        onClick = { files = initial },\n        variant = MonarchButtonVariant.Ghost,\n        size = MonarchButtonSize.Sm,\n    )\n}",
+      "setupTemplate": "val initial = listOf(\n    MonarchAiAttachmentTrayFile({{files.0.id}}, {{files.0.name}}, sizeBytes = {{files.0.size}}, contentType = {{files.0.type}}),\n    MonarchAiAttachmentTrayFile({{files.1.id}}, {{files.1.name}}, sizeBytes = {{files.1.size}}, contentType = {{files.1.type}}, progress = {{files.1.progress|double}}f),\n    MonarchAiAttachmentTrayFile({{files.2.id}}, {{files.2.name}}, sizeBytes = {{files.2.size}}, contentType = {{files.2.type}}, errorMessage = {{files.2.error}}),\n)\nvar files by remember { mutableStateOf(initial) }",
+      "imports": [
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "val initial = listOf(\n    MonarchAiAttachmentTrayFile(\"brief\", \"Project brief.pdf\", sizeBytes = 2_450_000, contentType = \"application/pdf\"),\n    MonarchAiAttachmentTrayFile(\"data\", \"Survey results.csv\", sizeBytes = 384_000, contentType = \"text/csv\", progress = 0.1f),\n    MonarchAiAttachmentTrayFile(\"deck\", \"Kickoff slides.pptx\", sizeBytes = 48_000_000, contentType = \"application/vnd.openxmlformats-officedocument.presentationml.presentation\", errorMessage = \"Larger than the 25 MB limit\"),\n)\nvar files by remember { mutableStateOf(initial) }",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchAiAttachmentTray(\n        files = files,\n        onRemove = { id -> files = files.filterNot { it.id == id } },\n        onRetry = { id -> files = files.map { if (it.id == id) it.copy(errorMessage = null, progress = 0f) else it } },\n        retryIcon = { MonarchIcon(SampleIcons.Retry, contentDescription = null) },\n        removeIcon = { MonarchIcon(SampleIcons.Close, contentDescription = null) },\n    )\n    MonarchButton(\n        text = \"Reset\",\n        onClick = { files = initial },\n        variant = MonarchButtonVariant.Ghost,\n        size = MonarchButtonSize.Sm,\n    )\n}"
+    },
+    {
+      "title": "From the conversation's file parts",
+      "setup": "val parts = listOf(MonarchAiFilePart(name = \"brief.docx\", mediaType = \"application/vnd.openxmlformats-officedocument.wordprocessingml.document\", size = 18_200, fileId = \"file_1\"))",
+      "code": "MonarchAiAttachmentTray(files = parts.map { MonarchAiAttachmentTrayFile(it) }, onRemove = {})"
+    }
+  ],
+  "webEquivalent": "AiAttachmentTray",
+  "dependsOn": [
+    "attachment-chip",
+    "progress-bar",
+    "button"
+  ],
+  "icons": {
+    "remove": "CloseGlyph",
+    "error": "ErrorGlyph",
+    "retry": "RetryGlyph"
+  }
+}

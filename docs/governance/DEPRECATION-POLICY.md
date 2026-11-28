@@ -7,17 +7,20 @@ product by surprise. Extends [deprecation.md](deprecation.md) and
 
 ## Stages
 
-| Stage      | What happens                                                                                                                                                                                                                         | Minimum time                            |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- |
-| 1. Propose | Issue or ADR naming the API, the reason, the replacement and the products affected (from `monarch registry verify` and conformance reports).                                                                                         | —                                       |
-| 2. Mark    | Add an entry to [`registry/deprecations.json`](../../registry/deprecations.json) (`name`, `package`, `since`, `replacement`, `message`) and an `@deprecated` JSDoc tag. Changelog lists it. The registry shows `status: deprecated`. | Ships in any release (a patch on 0.x)   |
-| 3. Warn    | The conformance rule `api/deprecated` reports every usage at `warn` in apps that import the package. A codemod or a written migration step is published.                                                                             | At least one release **and** 60 days    |
-| 4. Remove  | Deleted in the next major (on 0.x, the next minor), with a migration note in `docs/guides/migration.md`, and the entry removed from `deprecations.json` in the same release.                                                         | Only after stage 3, and only in a major |
+| Stage      | What happens                                                                                                                                                                                                                         | Minimum time                          |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
+| 1. Propose | Issue or ADR naming the API, the reason, the replacement and the products affected (from `monarch registry verify` and conformance reports).                                                                                         | —                                     |
+| 2. Mark    | Add an entry to [`registry/deprecations.json`](../../registry/deprecations.json) (`name`, `package`, `since`, `replacement`, `message`) and an `@deprecated` JSDoc tag. Changelog lists it. The registry shows `status: deprecated`. | Ships in any release (a patch on 0.x) |
+| 3. Warn    | The conformance rule `api/deprecated` reports every usage at `warn` in apps that import the package. A codemod or a written migration step is published.                                                                             | 90 days **and** two patch releases    |
+| 4. Remove  | Deleted in the next `0.14.N` patch after the window, with a migration note in `docs/guides/migration.md`, and the entry removed from `deprecations.json` in the same release.                                                        | Only after stage 3                    |
 
-Monarch is on 0.x. Under the [0.x policy](versioning.md#the-0x-policy) a
-patch never breaks anything and a breaking change ships only in a minor. While
-on 0.x, "major" above means the next minor, which the compatibility matrix
-marks as a new supported line.
+Monarch is on 0.x and stays in the `0.14.x` patch series, which semantic
+versioning allows before 1.0 ([0.x policy](versioning.md#the-0x-policy)). A
+removal therefore ships in a patch, once the window has passed: no sooner
+than 90 days **and** two patch releases after the release that deprecated the
+API. Deprecation notices, JSDoc tags and changelog entries give the date in
+the form "removed no earlier than <date> (90-day window)". None says "removed
+in 0.15.0". From 1.0, removal ships only in a major.
 
 ## Codemods
 
@@ -45,16 +48,18 @@ old import path.
    re-export carries an `@deprecated` JSDoc tag naming the new path.
 2. An entry goes into the `importPaths` list of
    [`registry/deprecations.json`](../../registry/deprecations.json): `names`,
-   `from`, `to`, `since`, `removeIn` (and `pattern`, a regular expression for
+   `from`, `to`, `since`, `removeNoEarlierThan` (and `pattern`, a regular expression for
    the related types). The registry status of the component does not change.
 3. `api/deprecated` and `monarch/no-deprecated-api` report an import of a
    moved name from the old path, with a safe fix that changes only the path.
-4. The old path stops exporting the names in the release named by `removeIn`,
-   never earlier, and the `importPaths` entry is removed in that release.
+4. The old path stops exporting the names in a `0.14.N` patch released after
+   the date in `removeNoEarlierThan`, never earlier and never inside the
+   window, and the `importPaths` entry is removed in that release.
 
 In effect today: the Rook-specific exports moved to
-`@rookcom/monarch-react/rook` in 0.14.5; `/shell`, `/patterns` and `/ai` keep
-exporting them until 0.15.0
+`@rookcom/monarch-react/rook` in 0.14.5 (2026-11-13); `/shell`, `/patterns`
+and `/ai` keep exporting them until they are removed no earlier than
+2027-02-11 (90-day window), not before 0.14.7
 ([rook-specific exports](../guides/rook-specific-exports.md#moving-to-rook)).
 
 ## The conformance rule

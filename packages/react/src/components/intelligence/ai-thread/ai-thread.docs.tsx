@@ -9,6 +9,8 @@ import {
   type AiMessage,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-thread.fixture.json';
 
 const transport = mockTransport({
   delayMs: 60,
@@ -23,8 +25,25 @@ const transport = mockTransport({
   ],
 });
 
-function ChatDemo() {
-  const chat = useAiConversation({ transport });
+/** One finished turn, as a product would restore it from its own storage. */
+const TURN: AiMessage[] = (
+  fixture.data.messages as {
+    id: string;
+    role: AiMessage['role'];
+    text: string;
+    createdAt: string;
+    agent?: { name: string; role: string };
+  }[]
+).map(({ id, role, text, createdAt, agent }) => ({
+  id,
+  role,
+  ...(agent !== undefined && { agent }),
+  parts: [{ type: 'text' as const, text, state: 'done' as const }],
+  createdAt,
+}));
+
+function ChatDemo({ history }: { history?: AiMessage[] }) {
+  const chat = useAiConversation({ transport, ...(history ? { initialMessages: history } : {}) });
   const [editing, setEditing] = useState<string | null>(null);
   const prompts = [
     'Summarise the meeting notes',
@@ -35,6 +54,9 @@ function ChatDemo() {
     <div style={{ display: 'grid', gap: 'var(--mn-space-3)', width: '100%', maxWidth: '44rem' }}>
       <div style={{ height: 360, border: '1px solid var(--mn-color-border-subtle)' }}>
         <AiThread
+          locale={fixture.data.locale}
+          timeZone={fixture.data.timeZone}
+          {...(history ? { now: fixture.data.now } : {})}
           messages={chat.messages}
           status={chat.status}
           error={chat.error}
@@ -269,6 +291,11 @@ export default {
     },
     examples: {
       items: [
+        {
+          title: 'A finished turn',
+          stack: true,
+          render: () => <ChatDemo history={TURN} />,
+        },
         { title: 'Live conversation with mockTransport', stack: true, render: () => <ChatDemo /> },
         { title: 'Load earlier messages, day labels', stack: true, render: () => <EarlierDemo /> },
         {

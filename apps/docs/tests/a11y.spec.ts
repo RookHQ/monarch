@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import {
+  componentPageHydrated,
   componentRoutes,
+  nativeGuideRoutes,
   mountPreviews,
   pageUrl,
   runAxe,
@@ -33,6 +35,17 @@ const PAGES = [
   '/products',
   '/governance',
   '/marketing',
+  '/android',
+  '/android/get-started',
+  '/android/guide',
+  '/android/components',
+  '/android/releases',
+  '/ios',
+  '/ios/get-started',
+  '/ios/guide',
+  '/ios/components',
+  '/ios/releases',
+  ...nativeGuideRoutes(),
   '/__gallery',
   '/__marketing',
 ];
@@ -58,8 +71,12 @@ for (const theme of ['light', 'dark'] as const) {
         await expect(page.locator('main')).toBeVisible({ timeout: heavy ? 45_000 : 5_000 });
         // Pages are lazy chunks: wait for the page itself, not the shell.
         await expect(page.locator('h1').first()).toBeAttached();
-        // Examples mount near the viewport; scan all of them.
-        if (route.startsWith('/components/')) await mountPreviews(page);
+        // The platform tabs replace their prerendered copy once the page has hydrated, and
+        // examples mount near the viewport: scan the page once both are done.
+        if (route.startsWith('/components/')) {
+          await componentPageHydrated(page);
+          await mountPreviews(page);
+        }
         await settle(page);
         const violations = await runAxe(page, route === '/colours' ? ['.docs-swatch__chip'] : []);
         expect(
@@ -135,6 +152,7 @@ test('search: ⌘K / Ctrl K opens the palette and a result navigates', async ({ 
 test('component page: Show code reveals the extracted source', async ({ page }) => {
   await setAppearance(page, 'light');
   await page.goto(pageUrl('/components/button'));
+  await componentPageHydrated(page);
   const show = page.getByRole('button', { name: 'Show code' }).first();
   await show.click();
   await expect(page.getByRole('button', { name: 'Hide code' }).first()).toHaveAttribute(
@@ -144,6 +162,66 @@ test('component page: Show code reveals the extracted source', async ({ page }) 
   await expect(page.getByRole('region', { name: 'Code: Variants' })).toContainText(
     "import { Button } from '@rookcom/monarch-react';",
   );
+});
+
+test('component page: Web, iOS and Android tabs', async ({ page }) => {
+  await setAppearance(page, 'light');
+  // The prerendered HTML has every panel, with Web selected.
+  const html = await (await page.request.get(pageUrl('/components/button'))).text();
+  expect(html).toContain('id="panel-ios"');
+  expect(html).toContain('id="panel-android"');
+  expect(html).toMatch(
+    /id="tab-web"[^>]*aria-selected="true"|aria-selected="true"[^>]*id="tab-web"/,
+  );
+
+  await page.goto(pageUrl('/components/button'));
+  await componentPageHydrated(page);
+  const tabs = page.getByRole('tablist', { name: 'Platform' });
+  const web = tabs.getByRole('tab', { name: 'Web' });
+  const ios = tabs.getByRole('tab', { name: 'iOS' });
+  const android = tabs.getByRole('tab', { name: 'Android' });
+  await expect(web).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#panel-web')).toBeVisible();
+  await expect(page.locator('#panel-ios')).toBeHidden();
+
+  // Roving focus with automatic activation: arrows move and select, and wrap.
+  await web.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(ios).toBeFocused();
+  await expect(ios).toHaveAttribute('aria-selected', 'true');
+  await expect(ios).toHaveAttribute('tabindex', '0');
+  await expect(web).toHaveAttribute('tabindex', '-1');
+  await expect(page.locator('#panel-ios')).toBeVisible();
+  await expect(page.locator('#panel-web')).toBeHidden();
+  expect(new URL(page.url()).hash).toBe('#ios');
+  await page.keyboard.press('End');
+  await expect(android).toBeFocused();
+  await expect(page.locator('#panel-android')).toBeVisible();
+  await page.keyboard.press('ArrowRight');
+  await expect(web).toBeFocused();
+  await expect(page.locator('#panel-web')).toBeVisible();
+  expect(new URL(page.url()).hash).toBe('');
+  await page.keyboard.press('ArrowLeft');
+  await expect(android).toBeFocused();
+  await page.keyboard.press('Home');
+  await expect(web).toBeFocused();
+
+  // "On this page" lists only the sections of the selected tab.
+  await android.click();
+  const toc = page.getByRole('navigation', { name: 'On this page' });
+  if (await toc.isVisible()) {
+    await expect(toc.getByRole('link', { name: 'Android', exact: true })).toBeVisible();
+    await expect(toc.getByRole('link', { name: 'Examples', exact: true })).toHaveCount(0);
+  }
+
+  // A deep link opens its tab, as the existing #ios and #android links expect.
+  await page.goto(`${pageUrl('/components/button')}#ios`);
+  await expect(page.getByRole('tab', { name: 'iOS' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#panel-ios')).toBeVisible();
+  // The sidebar has an iOS heading too (the iOS guides): the one in the page is meant.
+  await expect(
+    page.getByRole('main').getByRole('heading', { level: 2, name: 'iOS' }),
+  ).toBeInViewport();
 });
 
 test('keyboard: skip link, nav and page title', async ({ page, browserName }) => {
@@ -202,26 +280,39 @@ test('toast offsets move the region in from the bottom and end edges', async ({ 
   await page.goto(pageUrl('/components/toast'));
   await waitForFonts(page);
   await mountPreviews(page);
+  // The first example is staged (its toast shows in place), so the window edges are
+  // measured on the other examples' providers.
   const edges = (label: string) =>
     page.evaluate((name) => {
       const region = document.querySelector(`[role="region"][aria-label^="${name}"]`);
+      if (region?.closest('[data-mn-overlay-stage]')) throw new Error(`${name} is staged`);
       const ol = region?.querySelector('.mn-toast-viewport');
       if (!ol) throw new Error(`No toast viewport named ${name}`);
       const r = ol.getBoundingClientRect();
       const root = document.documentElement;
-      return { bottom: root.clientHeight - r.bottom, end: root.clientWidth - r.right };
+      return {
+        top: r.top,
+        bottom: root.clientHeight - r.bottom,
+        end: root.clientWidth - r.right,
+      };
     }, label);
-  // Default provider: flush with the window edges (its padding is inside the box).
-  expect(await edges('Notifications')).toEqual({ bottom: 0, end: 0 });
+  // No offset (top right): flush with the window edges (its padding is inside the box).
+  expect(await edges('Timing example notifications')).toMatchObject({ top: 0, end: 0 });
   // The `offset` prop: blockEnd 4rem, inlineEnd 1rem.
-  expect(await edges('Docked panel example notifications')).toEqual({ bottom: 64, end: 16 });
+  expect(await edges('Docked panel example notifications')).toMatchObject({
+    bottom: 64,
+    end: 16,
+  });
   // A host stylesheet sets the same public variables on an ancestor.
   await page.addStyleTag({
-    content: ':root { --mn-toast-offset-block-end: 68px; --mn-toast-offset-inline-end: 420px; }',
+    content: ':root { --mn-toast-offset-block-start: 68px; --mn-toast-offset-inline-end: 420px; }',
   });
-  expect(await edges('Notifications')).toEqual({ bottom: 68, end: 420 });
+  expect(await edges('Timing example notifications')).toMatchObject({ top: 68, end: 420 });
   // A value given to `offset` wins over the inherited variable.
-  expect(await edges('Docked panel example notifications')).toEqual({ bottom: 64, end: 16 });
+  expect(await edges('Docked panel example notifications')).toMatchObject({
+    bottom: 64,
+    end: 16,
+  });
 });
 
 for (const theme of ['light', 'dark'] as const) {
@@ -229,6 +320,7 @@ for (const theme of ['light', 'dark'] as const) {
     await setAppearance(page, theme);
     await page.goto(pageUrl('/components/toast'));
     await waitForFonts(page);
+    await componentPageHydrated(page);
     const trigger = page.getByRole('button', { name: 'Archive ticket' }).first();
     // Keyboard activation: WebKit does not focus buttons on click.
     await trigger.focus();

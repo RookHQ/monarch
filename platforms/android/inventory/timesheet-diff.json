@@ -1,0 +1,148 @@
+{
+  "id": "timesheet-diff",
+  "name": "MonarchTimesheetDiff",
+  "title": "TimesheetDiff",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column and FlowRow with MonarchBadge, androidx.compose.material3.Text with tabular figures (MonarchTabularNumberStyle) and android.icu.text.MeasureFormat",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "What changed between two versions of a timesheet: added, removed and changed entries, each named in words with its effect on the time, and a totals line.",
+  "whenToUse": "For a resubmitted or corrected timesheet, an approval review or an audit view, where the reviewer needs to see what moved and how much time it adds or removes.",
+  "whenNotToUse": "For the timesheet itself use a list or a table of entries. For a general record of changes use MonarchActivityTimeline.",
+  "api": [
+    "@Composable fun MonarchTimesheetDiff(diff: MonarchTimesheetDiffResult, modifier: Modifier = Modifier, title: String? = null, subtitle: String? = null, showTotals: Boolean = true, showBillable: Boolean = true, labels: MonarchTimesheetDiffLabels = MonarchTimesheetDiffLabels())",
+    "@Composable fun MonarchTimesheetDiff(before: List<MonarchTimesheetDiffEntry>, after: List<MonarchTimesheetDiffEntry>, modifier: Modifier = Modifier, title: String? = null, subtitle: String? = null, showTotals: Boolean = true, showBillable: Boolean = true, labels: MonarchTimesheetDiffLabels = MonarchTimesheetDiffLabels())",
+    "class MonarchTimesheetDiffEntry(id: String, date: Long, minutes: Int, project: String? = null, activity: String? = null, task: String? = null, billable: Boolean? = null, note: String? = null)",
+    "class MonarchTimesheetDiffResult(added: List<MonarchTimesheetDiffEntry> = emptyList(), removed: List<MonarchTimesheetDiffEntry> = emptyList(), changed: List<MonarchTimesheetDiffChange> = emptyList()) { val isEmpty: Boolean; val totals: MonarchTimesheetDiffTotals; companion object { fun between(before: List<MonarchTimesheetDiffEntry>, after: List<MonarchTimesheetDiffEntry>): MonarchTimesheetDiffResult } }",
+    "class MonarchTimesheetDiffChange(id: String, fields: List<String>, before: MonarchTimesheetDiffEntry, after: MonarchTimesheetDiffEntry)",
+    "class MonarchTimesheetDiffTotals(total: Int, billable: Int)",
+    "object MonarchTimesheetDiffFields { const val DATE, MINUTES, PROJECT, ACTIVITY, TASK, BILLABLE, NOTE, START, END: String }",
+    "class MonarchTimesheetDiffLabels(title: String? = null, added: String? = null, removed: String? = null, changed: ((List<String>) -> String)? = null, fields: Map<String, String> = emptyMap(), before: String? = null, after: String? = null, noProject: String? = null, nonBillable: String? = null, noChanges: String? = null, delta: ((Int) -> String)? = null, totals: ((String, String?) -> String)? = null, entry: ((MonarchTimesheetDiffEntry) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "diff",
+      "type": "MonarchTimesheetDiffResult",
+      "default": "required (first overload)",
+      "description": "The entries added, removed and changed, when the product computes the difference itself."
+    },
+    {
+      "name": "before, after",
+      "type": "List<MonarchTimesheetDiffEntry>",
+      "default": "required (second overload)",
+      "description": "The two versions; entries are matched by id and compared on date, minutes, project, activity, task, billable and note."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the diff."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "null",
+      "description": "The heading. Built in: \"What changed\"."
+    },
+    {
+      "name": "subtitle",
+      "type": "String?",
+      "default": "null",
+      "description": "Quiet text after the heading, such as \"since version 3\"."
+    },
+    {
+      "name": "showTotals",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the totals line."
+    },
+    {
+      "name": "showBillable",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Adds the billable change to the totals line. Turn it off when billing does not apply."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchTimesheetDiffLabels",
+      "default": "MonarchTimesheetDiffLabels()",
+      "description": "Replacements for every built-in string, the field names, the delta and totals formats, and the line of an entry (the web's renderEntry, as text)."
+    }
+  ],
+  "states": [
+    {
+      "name": "added",
+      "description": "A success-tinted line with a success bar at the start edge, an \"Added\" badge, the time gained and the entry."
+    },
+    {
+      "name": "removed",
+      "description": "A danger-tinted line with a \"Removed\" badge, the time lost and the entry struck through in the muted color."
+    },
+    {
+      "name": "changed",
+      "description": "A warning-tinted line with a \"Changed time, project\" badge, the old line struck through above the new one, and the change of time when there is one."
+    },
+    {
+      "name": "empty",
+      "description": "\"No changes.\" in the muted color."
+    },
+    {
+      "name": "totals",
+      "description": "\"Total +15m · billable +1h\" in tabular figures."
+    }
+  ],
+  "appearance": "Each line is tinted with its tone's subtle color and has a bar in the tone's solid color at the start edge; the kind is a MonarchBadge in the same tone and the change of time uses the tone's strong color. Entry text is the default text color; struck-through lines use the muted color. High contrast themes use their stronger tone roles.",
+  "platformNotes": "The parity map named a LazyColumn; the diff is a plain Column so that it can sit inside a card or a scrolling review screen (a lazy list there needs a fixed height), and a review has tens of changes. The web takes ISO date strings; here the day is epoch milliseconds of its UTC midnight, as in the Material 3 date picker, shown in UTC. The web's renderEntry returns any content; here labels.entry returns the line as text, which is also what TalkBack reads. The web's open-ended field names are strings, with MonarchTimesheetDiffFields for the built-in ones. The web's headingLevel is heading semantics. Visible durations (\"1h 30m\") follow the web's compact form and are not localised; TalkBack reads them in words in the user's locale through ICU MeasureFormat. The kind is a MonarchBadge (the plan's badge dependency); digits use MonarchTabularNumberStyle. iOS builds the same component with the same name.",
+  "accessibility": [
+    "The title has heading semantics.",
+    "Each line is one element read in words: \"Removed, minus 45 minutes, Mon, Jan 12, 45 minutes, Pulse, non-billable\"; a changed entry reads \"Before:\" and \"After:\" before its two lines.",
+    "Durations and the totals are read in words in the user's locale (\"1 hour, 30 minutes\", \"Total plus 15 minutes · billable plus 1 hour\").",
+    "The kind is a word in a badge as well as a color; a removed entry and the old line of a changed one are struck through.",
+    "Text wraps and scales with the font size setting."
+  ],
+  "edgeCases": [
+    "An empty or missing project is shown as \"No project\".",
+    "billable null counts as billable in the totals, as on the web; only false is non-billable.",
+    "A changed entry whose time did not change shows no change of time.",
+    "A missing value and an empty one are different, so null to \"\" is a change.",
+    "Two dates on the same UTC day are the same date.",
+    "Field names neither labels.fields nor the built-in names know are shown by their raw name.",
+    "Order: added, then removed, then changed, each in the order of its version."
+  ],
+  "tests": [
+    "MonarchTimesheetDiffTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Resubmission review",
+      "fixture": "timesheet-diff",
+      "webExample": "Resubmission review",
+      "template": "CompositionLocalProvider(LocalConfiguration provides locale) {\n    MonarchTimesheetDiff(\n        before = listOf(\n                MonarchTimesheetDiffEntry(id = {{submitted.0.id}}, date = {{submitted.0.date|millis}}, minutes = {{submitted.0.minutes}}, project = {{submitted.0.project}}, activity = {{submitted.0.activity}}),\n                MonarchTimesheetDiffEntry(id = {{submitted.1.id}}, date = {{submitted.1.date|millis}}, minutes = {{submitted.1.minutes}}, project = {{submitted.1.project}}, billable = {{submitted.1.billable}}),\n                MonarchTimesheetDiffEntry(id = {{submitted.2.id}}, date = {{submitted.2.date|millis}}, minutes = {{submitted.2.minutes}}, project = {{submitted.2.project}}),\n        ),\n        after = listOf(\n                MonarchTimesheetDiffEntry(id = {{resubmitted.0.id}}, date = {{resubmitted.0.date|millis}}, minutes = {{resubmitted.0.minutes}}, project = {{resubmitted.0.project}}, activity = {{resubmitted.0.activity}}),\n                MonarchTimesheetDiffEntry(id = {{resubmitted.1.id}}, date = {{resubmitted.1.date|millis}}, minutes = {{resubmitted.1.minutes}}, project = {{resubmitted.1.project}}, activity = {{resubmitted.1.activity}}),\n                MonarchTimesheetDiffEntry(id = {{resubmitted.2.id}}, date = {{resubmitted.2.date|millis}}, minutes = {{resubmitted.2.minutes}}, project = {{resubmitted.2.project}}, task = {{resubmitted.2.task}}),\n        ),\n        title = {{title}},\n        subtitle = {{subtitle}},\n    )\n}",
+      "setupTemplate": "val configuration = LocalConfiguration.current\nval locale = remember(configuration) {\n    Configuration(configuration).apply { setLocale(Locale.forLanguageTag({{locale}})) }\n}",
+      "imports": [
+        "android.content.res.Configuration",
+        "androidx.compose.ui.platform.LocalConfiguration",
+        "java.util.Locale"
+      ],
+      "setup": "val configuration = LocalConfiguration.current\nval locale = remember(configuration) {\n    Configuration(configuration).apply { setLocale(Locale.forLanguageTag(\"en-GB\")) }\n}",
+      "code": "CompositionLocalProvider(LocalConfiguration provides locale) {\n    MonarchTimesheetDiff(\n        before = listOf(\n                MonarchTimesheetDiffEntry(id = \"e1\", date = 1_768_176_000_000L, minutes = 120, project = \"Website refresh\", activity = \"Design\"),\n                MonarchTimesheetDiffEntry(id = \"e2\", date = 1_768_262_400_000L, minutes = 60, project = \"Internal\", billable = false),\n                MonarchTimesheetDiffEntry(id = \"e3\", date = 1_768_348_800_000L, minutes = 90, project = \"Mobile app\"),\n        ),\n        after = listOf(\n                MonarchTimesheetDiffEntry(id = \"e1\", date = 1_768_176_000_000L, minutes = 180, project = \"Website refresh\", activity = \"Design\"),\n                MonarchTimesheetDiffEntry(id = \"e3\", date = 1_768_348_800_000L, minutes = 90, project = \"Mobile app\", activity = \"Testing\"),\n                MonarchTimesheetDiffEntry(id = \"e4\", date = 1_768_435_200_000L, minutes = 45, project = \"Mobile app\", task = \"APP-7\"),\n        ),\n        title = \"Changes in this resubmission\",\n        subtitle = \"since version 2\",\n    )\n}"
+    },
+    {
+      "title": "A difference from the server, without billing",
+      "setup": "val entry = MonarchTimesheetDiffEntry(\"7\", 1_768_176_000_000L, 90, project = \"Internal\")",
+      "code": "MonarchTimesheetDiff(\n    diff = MonarchTimesheetDiffResult(added = listOf(entry)),\n    showBillable = false,\n)"
+    }
+  ],
+  "webEquivalent": "TimesheetDiff",
+  "dependsOn": [
+    "badge",
+    "tabular-number"
+  ]
+}

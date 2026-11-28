@@ -1,0 +1,132 @@
+{
+  "id": "mention-picker",
+  "name": "MonarchMentionPicker",
+  "title": "MentionPicker",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "A full-width VStack of Buttons (MonarchAvatar and Text) in a ScrollView when long, placed with safeAreaInset(edge: .bottom) above the composer and the keyboard; redacted(reason: .placeholder) while loading; MonarchInlineErrorRetry on failure; .task(id:) runs the product's search",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Suggestions for an @mention or #channel: a strip of people and channels above the keyboard, with loading, empty and error states, and helpers that find the mention being typed and replace it.",
+  "whenToUse": "In a message or comment composer where people mention others with @ or channels with #.",
+  "whenNotToUse": "Not for general search suggestions; use searchable(text:) with searchSuggestions. Not for choosing people in a form; use a Picker or a List with a selection.",
+  "api": [
+    "init(_ query: MonarchMentionQuery?, items: [MonarchMentionItem], status: MonarchMentionPickerStatus = .ready, labels: MonarchMentionPickerLabels = MonarchMentionPickerLabels(), onRetry: (@MainActor () -> Void)? = nil, onSelect: @escaping @MainActor (MonarchMentionItem) -> Void)",
+    "static func MonarchMentionQuery.find(in text: String, caret: String.Index? = nil, triggers: Set<Character> = [\"@\"]) -> MonarchMentionQuery?",
+    "func MonarchMentionQuery.replacing(in text: String, with replacement: String) -> String",
+    "MonarchMentionQuery.init(trigger: Character, text: String, range: Range<String.Index>)",
+    "MonarchMentionItem.init(id: String, label: String, kind: MonarchMentionKind = .person, detail: String? = nil, avatarURL: URL? = nil, isDisabled: Bool = false)",
+    "func MonarchMentionItem.token(trigger: Character = \"@\") -> String",
+    "enum MonarchMentionKind { case person, channel }",
+    "enum MonarchMentionPickerStatus { case loading, ready, failed }",
+    "MonarchMentionPickerLabels.init(label: String? = nil, people: String? = nil, channels: String? = nil, loading: String? = nil, empty: String? = nil, error: String? = nil, retry: String? = nil, count: (@Sendable (Int) -> String)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "query",
+      "type": "MonarchMentionQuery?",
+      "default": "required",
+      "description": "The mention being typed, from MonarchMentionQuery.find. Nothing is drawn while it is nil."
+    },
+    {
+      "name": "items",
+      "type": "[MonarchMentionItem]",
+      "default": "required",
+      "description": "The suggestions from the product's search, people and channels."
+    },
+    {
+      "name": "status",
+      "type": "MonarchMentionPickerStatus",
+      "default": ".ready",
+      "description": "loading shows placeholder rows, failed shows the error, ready shows the items or \"No matches\"."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchMentionPickerLabels",
+      "default": "MonarchMentionPickerLabels()",
+      "description": "Replacements for the list's name, the group headings, the state texts, the retry button and the count announcement."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Repeats a failed search; adds a retry button to the error."
+    },
+    {
+      "name": "onSelect",
+      "type": "@MainActor (MonarchMentionItem) -> Void",
+      "default": "required",
+      "description": "Receives the chosen suggestion. Replace the query with query.replacing(in:with:) and close the query."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "No query: nothing is drawn."
+    },
+    {
+      "name": "loading",
+      "description": "Three placeholder rows, redacted, read as \"Searching…\"."
+    },
+    {
+      "name": "results",
+      "description": "A row per suggestion; people and channels under headings when both are present; more than four scroll."
+    },
+    {
+      "name": "disabled suggestion",
+      "description": "Text in the disabled colour; the row cannot be chosen."
+    },
+    {
+      "name": "no matches",
+      "description": "\"No matches\". After a query with a space finds nothing, the picker closes."
+    },
+    {
+      "name": "failed",
+      "description": "\"Couldn’t load suggestions.\" with a retry button when onRetry is given."
+    }
+  ],
+  "appearance": "A strip on the surface colour with a subtle top border; labels in the default text colour, details and headings in the muted text colour, disabled rows in the disabled text colour; avatars with their fallback colours and a square number-sign tile for channels. The same roles in every theme.",
+  "platformNotes": "The web anchors a listbox to the caret with aria-activedescendant and arrow keys, and ships hooks that debounce and abort the search. SwiftUI gives no caret rectangle, so iOS shows a full-width strip above the composer in the bottom safe-area inset, and suggestions are buttons. The product runs its search in .task(id: query), which cancels the previous one; Monarch adds no debounce timer. MonarchMentionQuery.find assumes the caret is at the end unless a caret index is passed, because TextField does not expose its selection on iOS 17. The token format of MonarchMentionItem.token matches the web's formatMentionToken; the web's parseMentionTokens has no iOS counterpart in this release.",
+  "accessibility": [
+    "Each suggestion is a button whose label is its name and detail; a disabled suggestion is dimmed and not activatable.",
+    "The list is a container named \"Suggestions\"; group headings have the header trait.",
+    "The result count, \"Searching…\", \"No matches\" and the error are announced as the state changes, so focus can stay in the text field.",
+    "Avatars and the channel tile are hidden from VoiceOver.",
+    "Rows are at least 44 points high and grow with Dynamic Type."
+  ],
+  "edgeCases": [
+    "A trigger inside a word, such as an email address, does not open the picker.",
+    "A query ends after two words, a line break or a word longer than 40 characters.",
+    "Replacing a query removes one space after it, so a mention typed mid-sentence does not leave two spaces.",
+    "A query's range belongs to the text it was found in; find it again after the text changes."
+  ],
+  "tests": [
+    "MonarchMentionPickerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Suggestions while typing a mention",
+      "fixture": "mention-picker",
+      "webExample": "Suggestions while typing a mention",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    MonarchTextField({{label}}, text: $text, helper: {{hint}}, axis: .vertical, lineLimit: 3...6)\n    // The suggestions float under the field, on a raised card.\n    MonarchMentionPicker(query, items: people) { item in\n        guard let query else { return }\n        text = query.replacing(in: text, with: \"@\\(item.label)\")\n    }\n    .clipShape(RoundedRectangle(cornerRadius: theme.radius.md, style: .continuous))\n    .monarchElevation(.presented, fill: \\.bgRaised, in: RoundedRectangle(cornerRadius: theme.radius.md, style: .continuous))\n}\n.onChange(of: text, initial: true) { _, new in\n    query = MonarchMentionQuery.find(in: new)\n}",
+      "setupTemplate": "@State private var text = {{text}}\n@State private var query: MonarchMentionQuery?\nprivate let people = [\n    MonarchMentionItem(id: {{suggestions.0.id}}, label: {{suggestions.0.label}}, detail: {{suggestions.0.description}}),\n]\n@Environment(\\.monarchTheme) private var theme",
+      "setup": "@State private var text = \"Thanks @Ana Lopez, looping in @be\"\n@State private var query: MonarchMentionQuery?\nprivate let people = [\n    MonarchMentionItem(id: \"u_ben\", label: \"Ben Okafor\", detail: \"Engineering\"),\n]\n@Environment(\\.monarchTheme) private var theme",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    MonarchTextField(\"Comment\", text: $text, helper: \"Type @ for people or # for channels.\", axis: .vertical, lineLimit: 3...6)\n    // The suggestions float under the field, on a raised card.\n    MonarchMentionPicker(query, items: people) { item in\n        guard let query else { return }\n        text = query.replacing(in: text, with: \"@\\(item.label)\")\n    }\n    .clipShape(RoundedRectangle(cornerRadius: theme.radius.md, style: .continuous))\n    .monarchElevation(.presented, fill: \\.bgRaised, in: RoundedRectangle(cornerRadius: theme.radius.md, style: .continuous))\n}\n.onChange(of: text, initial: true) { _, new in\n    query = MonarchMentionQuery.find(in: new)\n}"
+    },
+    {
+      "title": "While the search runs, and when it fails",
+      "code": "VStack {\n    MonarchMentionPicker(MonarchMentionQuery.find(in: \"@an\"), items: [], status: .loading) { _ in }\n    MonarchMentionPicker(\n        MonarchMentionQuery.find(in: \"@an\"),\n        items: [],\n        status: .failed,\n        onRetry: {},\n        onSelect: { _ in }\n    )\n}"
+    }
+  ],
+  "webEquivalent": "MentionPicker",
+  "dependsOn": [
+    "avatar",
+    "skeleton",
+    "inline-error-retry"
+  ]
+}

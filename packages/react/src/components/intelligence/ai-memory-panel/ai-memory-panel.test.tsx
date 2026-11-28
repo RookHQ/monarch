@@ -320,3 +320,20 @@ describe('applyAiMemoryEvent', () => {
     expect(screen.queryByText('Prefers summaries under 200 words')).toBeNull();
   });
 });
+
+describe('AiMemoryPanel dates', () => {
+  it('formats the updated date in the given locale and time zone', () => {
+    render(
+      <AiMemoryPanel
+        memories={MEMORIES.slice(0, 1)}
+        locale="en-GB"
+        timeZone="Pacific/Kiritimati"
+        onEdit={() => {}}
+        onForget={() => {}}
+        onForgetMany={() => {}}
+      />,
+    );
+    // 10:00 UTC on 1 October is already 2 October at UTC+14.
+    expect(screen.getByText('Updated 2 Oct 2026')).toBeTruthy();
+  });
+});

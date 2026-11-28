@@ -7,6 +7,8 @@ import {
   type AiErrorKind,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-error-message.fixture.json';
 
 const failing = mockTransport({
   delayMs: 300,
@@ -172,6 +174,18 @@ export default {
     },
     examples: {
       items: [
+        {
+          title: 'Too many requests',
+          stack: true,
+          render: () => (
+            <AiErrorMessage
+              code={fixture.data.code}
+              onRetry={() => {}}
+              onNewConversation={() => {}}
+              details={fixture.data.details}
+            />
+          ),
+        },
         {
           title: 'From a failed conversation turn',
           stack: true,

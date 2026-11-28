@@ -1,0 +1,87 @@
+{
+  "id": "sign-in-form",
+  "name": null,
+  "title": "SignInForm",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "VStack of MonarchSignInWithRookButton, MonarchButton, MonarchTextField with textContentType(.username), MonarchPasswordInput (the .password content type), Toggle with the Monarch checkbox style and Buttons with the Monarch link style; onSubmit; ASAuthorizationController for the system passkey sheet",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: sign in with an email and password, a passkey or single sign-on, with field errors, a form error, Keep me signed in, and links to reset the password and create an account.",
+  "whenToUse": "For the sign-in screen of an app that has its own accounts.",
+  "whenNotToUse": "When the app signs in only with Rook ID, show MonarchSignInWithRookButton alone. To reset a password use the password reset recipe; to re-confirm a signed-in person use MonarchStepUpAuthDialog.",
+  "api": [
+    "MonarchSignInWithRookButton(fullWidth: true) { … }",
+    "MonarchButton(\"Sign in with a passkey\", systemImage: \"person.badge.key\", variant: .secondary, fullWidth: true) { … }",
+    "MonarchTextField(\"Email\", text: $email, error: emailError).textContentType(.username)",
+    "MonarchPasswordInput(\"Password\", text: $password, error: passwordError, purpose: .current).onSubmit(signIn)",
+    "Toggle(\"Keep me signed in\", isOn: $remembers).toggleStyle(.monarchCheckbox)",
+    "MonarchButton(\"Sign in\", variant: .primary, isLoading: isSigningIn, fullWidth: true, action: signIn)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "ready",
+      "description": "Single sign-on and passkey buttons, an \"or\" divider, the email and password fields, Forgot password?, Keep me signed in, Sign in and the sign-up line."
+    },
+    {
+      "name": "field errors",
+      "description": "An empty or malformed email and an empty password show their errors on the fields before anything is sent."
+    },
+    {
+      "name": "signing in",
+      "description": "Sign in shows its spinner."
+    },
+    {
+      "name": "failed",
+      "description": "A wrong password or a server failure goes in a danger MonarchInlineNotice above the fields."
+    },
+    {
+      "name": "passkey",
+      "description": "The passkey button opens the system passkey sheet; a cancelled sheet changes nothing."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component in the theme: the title style heading, the Rook ID button, a secondary passkey button, subtle dividers, MonarchTextField and MonarchPasswordInput with their own borders and errors, the Monarch checkbox and link styles, and a full-width primary Sign in button.",
+  "platformNotes": "The web's SignInForm is one component with an onSubmit that returns errors and its own messages. On iOS it is a recipe, because the request, the session and navigation belong to the app. Autofill comes from the content types: .username on the email field and the .password content type that MonarchPasswordInput's current purpose sets, together with the app's associated domain (webcredentials), so iOS offers saved passwords and passkeys. Passkey sign-in is the system sheet from ASAuthorizationController with an ASAuthorizationPlatformPublicKeyCredentialProvider assertion request; for passkeys in the keyboard's suggestions, call performAutoFillAssistedRequests() when the screen appears. On a device add keyboardType(.emailAddress), textInputAutocapitalization(.never) and autocorrectionDisabled() to the email field; they are left out of the compiled example because the host build also targets macOS. The web's identifier modes (username, email or username) are the field's label and content type. Android composes the same recipe with Credential Manager.",
+  "accessibility": [
+    "The title has the header trait.",
+    "Field errors come from MonarchTextField and MonarchPasswordInput, which show and announce them in words.",
+    "The \"or\" divider is decorative and hidden from VoiceOver.",
+    "Keep me signed in is a standard toggle in the Monarch checkbox style, read with its on or off value.",
+    "Forgot password? and Create an account are buttons with the Monarch link style and 44-point touch targets.",
+    "The system passkey sheet is the system's."
+  ],
+  "edgeCases": [
+    "Do not say whether the email or the password was wrong; use one form error.",
+    "Trim spaces around the email but never change the password.",
+    "With passkey or single sign-on only, leave out the password field, Forgot password? and Keep me signed in."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Email and password (password: demo-password)",
+      "fixture": "sign-in-form",
+      "webExample": "Email and password (password: demo-password)",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    if let formError {\n        MonarchInlineNotice(formError, tone: .danger)\n    }\n    MonarchTextField(\"Email\", text: $email, error: emailError, isRequired: true)\n        .textContentType(.username)\n    MonarchPasswordInput(\"Password\", text: $password, error: passwordError, purpose: .current, isRequired: true)\n        .onSubmit(signIn)\n        .overlay(alignment: .topTrailing) {\n            Button(\"Forgot password?\") {\n                // Open the password reset recipe.\n            }\n            .buttonStyle(.monarchLink())\n            .monarchTextStyle(.bodySmall)\n            .frame(height: 20)\n        }\n    Toggle(\"Keep me signed in\", isOn: $remembers)\n        .toggleStyle(.monarchCheckbox)\n    MonarchButton(\"Sign in\", variant: .primary, isLoading: isSigningIn, fullWidth: true, action: signIn)\n    HStack(spacing: theme.spacing.space1) {\n        Text(\"New here?\")\n            .monarchTextStyle(.bodySmall)\n            .foregroundStyle(theme.colors.textMuted)\n        Button(\"Create an account\") {\n            // Open sign-up.\n        }\n        .buttonStyle(.monarchLink())\n        .monarchTextStyle(.bodySmall)\n    }\n    .frame(maxWidth: .infinity)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var email = {{email}}\n@State private var password = \"\"\n@State private var remembers = {{keepSignedIn}}\n@State private var emailError: String?\n@State private var passwordError: String?\n@State private var formError: String?\n@State private var isSigningIn = false\n\nprivate func signIn() {\n    let trimmed = email.trimmingCharacters(in: .whitespaces)\n    emailError = trimmed.isEmpty\n        ? \"Enter your email.\"\n        : (trimmed.contains(\"@\") && trimmed.contains(\".\") ? nil : \"Enter an email address like name@example.com.\")\n    passwordError = password.isEmpty ? \"Enter your password.\" : nil\n    guard emailError == nil, passwordError == nil else { return }\n    formError = nil\n    isSigningIn = true\n    Task {\n        // The app signs in. A wrong password goes in formError.\n        try? await Task.sleep(for: .milliseconds(300))\n        isSigningIn = false\n    }\n}\n",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var email = \"\"\n@State private var password = \"\"\n@State private var remembers = false\n@State private var emailError: String?\n@State private var passwordError: String?\n@State private var formError: String?\n@State private var isSigningIn = false\n\nprivate func signIn() {\n    let trimmed = email.trimmingCharacters(in: .whitespaces)\n    emailError = trimmed.isEmpty\n        ? \"Enter your email.\"\n        : (trimmed.contains(\"@\") && trimmed.contains(\".\") ? nil : \"Enter an email address like name@example.com.\")\n    passwordError = password.isEmpty ? \"Enter your password.\" : nil\n    guard emailError == nil, passwordError == nil else { return }\n    formError = nil\n    isSigningIn = true\n    Task {\n        // The app signs in. A wrong password goes in formError.\n        try? await Task.sleep(for: .milliseconds(300))\n        isSigningIn = false\n    }\n}\n",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    if let formError {\n        MonarchInlineNotice(formError, tone: .danger)\n    }\n    MonarchTextField(\"Email\", text: $email, error: emailError, isRequired: true)\n        .textContentType(.username)\n    MonarchPasswordInput(\"Password\", text: $password, error: passwordError, purpose: .current, isRequired: true)\n        .onSubmit(signIn)\n        .overlay(alignment: .topTrailing) {\n            Button(\"Forgot password?\") {\n                // Open the password reset recipe.\n            }\n            .buttonStyle(.monarchLink())\n            .monarchTextStyle(.bodySmall)\n            .frame(height: 20)\n        }\n    Toggle(\"Keep me signed in\", isOn: $remembers)\n        .toggleStyle(.monarchCheckbox)\n    MonarchButton(\"Sign in\", variant: .primary, isLoading: isSigningIn, fullWidth: true, action: signIn)\n    HStack(spacing: theme.spacing.space1) {\n        Text(\"New here?\")\n            .monarchTextStyle(.bodySmall)\n            .foregroundStyle(theme.colors.textMuted)\n        Button(\"Create an account\") {\n            // Open sign-up.\n        }\n        .buttonStyle(.monarchLink())\n        .monarchTextStyle(.bodySmall)\n    }\n    .frame(maxWidth: .infinity)\n}"
+    }
+  ],
+  "webEquivalent": "SignInForm",
+  "dependsOn": [
+    "text-field",
+    "password-input",
+    "button",
+    "checkbox",
+    "link",
+    "sign-in-with-rook-button",
+    "inline-notice",
+    "separator"
+  ]
+}

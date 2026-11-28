@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { MessageComposer, type MessageComposerMessage } from '@rookcom/monarch-react/editor';
 import { Button } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './message-composer.fixture.json';
 
 const PEOPLE = [
   { id: 'p1', label: 'Alex Morgan', description: 'Design' },
@@ -14,10 +16,9 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function ChatDemo() {
   const [sent, setSent] = useState<string[]>([]);
-  const [replyTo, setReplyTo] = useState<{ author: string; excerpt: string } | undefined>({
-    author: 'Sam Rivera',
-    excerpt: 'Can we move the design review to Thursday?',
-  });
+  const [replyTo, setReplyTo] = useState<{ author: string; excerpt: string } | undefined>(
+    fixture.data.replyTo,
+  );
   return (
     <div style={{ display: 'grid', gap: 12, width: '100%' }}>
       {sent.length ? (
@@ -28,8 +29,8 @@ function ChatDemo() {
         </ul>
       ) : null}
       <MessageComposer
-        label="Message #design"
-        placeholder="Message #design"
+        label={fixture.data.label}
+        placeholder={fixture.data.placeholder}
         mentions={{ search: searchPeople }}
         replyTo={replyTo}
         onDismissReply={() => setReplyTo(undefined)}
@@ -38,9 +39,9 @@ function ChatDemo() {
             size="sm"
             variant="ghost"
             aria-label="Insert thumbs up"
-            onClick={() => insert('👍')}
+            onClick={() => insert(fixture.data.emoji)}
           >
-            👍
+            {fixture.data.emoji}
           </Button>
         )}
         onSend={async (m: MessageComposerMessage) => {

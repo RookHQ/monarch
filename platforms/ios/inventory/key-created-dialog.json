@@ -1,0 +1,177 @@
+{
+  "id": "key-created-dialog",
+  "name": "MonarchKeyCreatedDialog",
+  "title": "KeyCreatedDialog",
+  "family": "technical",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Content for sheet(isPresented:) or sheet(item:) with interactiveDismissDisabled(_:), presentationDragIndicator(_:) and Environment(\\.dismiss); MonarchBanner, MonarchCopyField or MonarchSecretField, Toggle with .toggleStyle(.monarchCheckbox), AccessibilityFocusState",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The content of a sheet that shows a newly created secret exactly once: the value with a copy button, a \"store it now\" warning, and an acknowledgement the person must tick before the sheet can close.",
+  "whenToUse": "Right after the server returns a new API key, token, signing secret or client secret that cannot be shown again; with kind public, after creating a publishable key.",
+  "whenNotToUse": "For a secret that stays viewable in settings use MonarchSecretField on the settings screen. For recovery codes use MonarchRecoveryCodes.",
+  "api": [
+    "init(_ secret: String, label: String? = nil, name: String? = nil, title: String? = nil, description: String? = nil, kind: MonarchKeyCreatedDialogKind = .secret, requiresAcknowledgement: Bool? = nil, isMasked: Bool = false, isMultiline: Bool = false, note: String? = nil, labels: MonarchKeyCreatedDialogLabels = MonarchKeyCreatedDialogLabels(), onCopy: (@MainActor (String) -> Void)? = nil, onDone: (@MainActor () -> Void)? = nil)",
+    "enum MonarchKeyCreatedDialogKind { case secret, `public` }",
+    "struct MonarchKeyCreatedDialogLabels { init(title: String? = nil, label: String? = nil, secretNoticeTitle: String? = nil, secretNotice: String? = nil, publicNoticeTitle: String? = nil, publicNotice: String? = nil, acknowledge: (@Sendable (String) -> String)? = nil, acknowledgeRequired: String? = nil, done: String? = nil, copy: String? = nil, copied: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "secret",
+      "type": "String",
+      "default": "required",
+      "description": "The value to show once."
+    },
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "nil",
+      "description": "What the value is, such as \"Signing secret\". Names the copy button (\"Copy Signing secret\") and goes into the acknowledgement. \"API key\" when nil."
+    },
+    {
+      "name": "name",
+      "type": "String?",
+      "default": "nil",
+      "description": "The name the person gave it, shown above the value instead of the label."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the title \"Copy your new key\"."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "Text under the title."
+    },
+    {
+      "name": "kind",
+      "type": "MonarchKeyCreatedDialogKind",
+      "default": ".secret",
+      "description": "secret: a warning notice and an acknowledgement before closing. public: an information notice and nothing to confirm."
+    },
+    {
+      "name": "requiresAcknowledgement",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Overrides whether the checkbox must be ticked before closing (by default only for a secret)."
+    },
+    {
+      "name": "isMasked",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the value in a read-only MonarchSecretField with a reveal toggle; copy works without revealing."
+    },
+    {
+      "name": "isMultiline",
+      "type": "Bool",
+      "default": "false",
+      "description": "Wraps the whole value over several lines, for certificates and private keys. Ignored when masked."
+    },
+    {
+      "name": "note",
+      "type": "String?",
+      "default": "nil",
+      "description": "Extra text under the value, such as when an old key stops working."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchKeyCreatedDialogLabels",
+      "default": "MonarchKeyCreatedDialogLabels()",
+      "description": "Replacements for every built-in string: title, default label, both notices, the acknowledgement, the \"confirm first\" message, Done, Copy and Copied."
+    },
+    {
+      "name": "onCopy",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Runs with the copied text after each copy."
+    },
+    {
+      "name": "onDone",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Runs when Done closes the sheet after the value was acknowledged, before the sheet dismisses itself."
+    }
+  ],
+  "states": [
+    {
+      "name": "unacknowledged",
+      "description": "For a secret: the sheet cannot be swiped down and has no drag indicator; Done stays enabled."
+    },
+    {
+      "name": "nudged",
+      "description": "Done pressed before ticking: \"Confirm that you have saved it before you close this dialog.\" is shown under the checkbox in the danger colour with an icon, announced, given as the checkbox hint, and VoiceOver moves to the checkbox."
+    },
+    {
+      "name": "acknowledged",
+      "description": "The checkbox is ticked: the drag indicator appears, the sheet can be swiped away, and Done calls onDone and closes it."
+    },
+    {
+      "name": "public",
+      "description": "An information notice, no checkbox; the sheet can close at once."
+    },
+    {
+      "name": "masked",
+      "description": "The value is dots until revealed with the eye toggle."
+    },
+    {
+      "name": "new secret",
+      "description": "When the secret changes, the acknowledgement and the message reset."
+    }
+  ],
+  "appearance": "The sheet has the surface fill. The title uses the heading type role, the description and note the muted text colour. The notice is MonarchBanner in the warning or info tone; the value keeps the copy field or secret field look; Done is the primary button. All roles adapt to light, dark and both high-contrast themes.",
+  "platformNotes": "The web dialog blocks Escape, outside clicks and its close button until acknowledged; on iOS the sheet's swipe to dismiss is disabled and there is no close button, only Done. The web passes any content as children under the value; on iOS that is a note string, and other content goes in the app's own view. Copy failures cannot happen with UIPasteboard, so there is no onCopyError. The copy button of the plain field is the secondary copy button rather than the web's primary variant. Android uses the same name. Several closures are optional (onCopy, onDone). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onCopy.",
+  "accessibility": [
+    "The title has the header trait.",
+    "The notice is MonarchBanner, which speaks its tone with the title and message.",
+    "The plain value is read as the label (\"API key\") with the value; the visible name above it is not read twice. Its copy button is \"Copy API key\" and announces the copy.",
+    "The acknowledgement is a Toggle with the checkbox style and a visible label.",
+    "Pressing Done too early announces why, sets the checkbox hint and moves VoiceOver focus to the checkbox.",
+    "Done, the copy button, the reveal toggle and the checkbox have 44-point touch targets."
+  ],
+  "edgeCases": [
+    "The sheet cannot be dismissed by a swipe while unacknowledged, but the app can still close it by changing its presentation state.",
+    "onDone is not called when the app closes the sheet itself.",
+    "Long and multi-line values wrap in full with isMultiline; a single-line value is shortened in the middle on screen and copied whole.",
+    "At the largest text sizes the content scrolls inside the sheet."
+  ],
+  "tests": [
+    "MonarchKeyCreatedDialogTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "New API key",
+      "fixture": "key-created-dialog",
+      "webExample": "New API key",
+      "template": "MonarchButton({{trigger}}, variant: .primary) { isPresented = true }\n    .sheet(isPresented: $isPresented) {\n        MonarchKeyCreatedDialog(\n            {{secret}},\n            name: {{name}},\n            onDone: {\n                isPresented = false\n            }\n        )\n    }",
+      "setupTemplate": "@State private var isPresented = false",
+      "previewPresented": [
+        "isPresented"
+      ],
+      "setup": "@State private var isPresented = false",
+      "code": "MonarchButton(\"Create key\", variant: .primary) { isPresented = true }\n    .sheet(isPresented: $isPresented) {\n        MonarchKeyCreatedDialog(\n            \"sk_live_4f9a1c7e2b8d6035\",\n            name: \"Reporting job\",\n            onDone: {\n                isPresented = false\n            }\n        )\n    }"
+    },
+    {
+      "title": "The sheet content for a signing secret",
+      "code": "MonarchKeyCreatedDialog(\n    \"whsec_9d2f7a61c0b84e3f\",\n    label: \"Signing secret\",\n    isMasked: true,\n    note: \"The previous secret keeps working for 24 hours.\"\n)"
+    }
+  ],
+  "webEquivalent": "KeyCreatedDialog",
+  "dependsOn": [
+    "dialog",
+    "sheet",
+    "secret-field",
+    "copy-field",
+    "copy-button",
+    "checkbox",
+    "alert",
+    "button"
+  ]
+}

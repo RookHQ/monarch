@@ -1,0 +1,146 @@
+{
+  "id": "ai-context-divider",
+  "name": "MonarchAiContextDivider",
+  "title": "AiContextDivider",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Text, a stroked Shape for the lines, DisclosureGroup, Button with MonarchButtonStyle",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A labelled rule between messages in a thread: a calendar day, a context reset, or a point where earlier messages were summarized.",
+  "whenToUse": "Between messages of an AI thread, to start a new day, to mark where the assistant's memory starts again, or to mark messages that were condensed.",
+  "whenNotToUse": "Not as a general separator: use MonarchDivider. Not for a handoff to another agent or person, which is AiHandoff.",
+  "api": [
+    "init(_ kind: MonarchAiContextDividerKind, date: Date? = nil, summary: String? = nil, now: Date? = nil, label: String? = nil, detail: String? = nil, summaryTitle: String? = nil, summaryPrefix: String? = nil, expandTitle: String? = nil, onExpand: (@MainActor () -> Void)? = nil)",
+    "enum MonarchAiContextDividerKind { case day, contextReset, summarized }"
+  ],
+  "options": [
+    {
+      "name": "kind",
+      "type": "MonarchAiContextDividerKind",
+      "default": "required",
+      "description": "day, contextReset or summarized."
+    },
+    {
+      "name": "date",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The day of a day divider. Without it a day divider has an empty label."
+    },
+    {
+      "name": "summary",
+      "type": "String?",
+      "default": "nil",
+      "description": "For summarized: the summary the assistant now works from, shown behind a disclosure."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for Today and Yesterday. nil is the current time."
+    },
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in label of the kind."
+    },
+    {
+      "name": "detail",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in description of a context reset."
+    },
+    {
+      "name": "summaryTitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Show summary\"."
+    },
+    {
+      "name": "summaryPrefix",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"AI-generated summary:\" that VoiceOver reads before the summary."
+    },
+    {
+      "name": "expandTitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Show earlier messages\"."
+    },
+    {
+      "name": "onExpand",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "For summarized: shows a button that runs this to reveal the original messages."
+    }
+  ],
+  "states": [
+    {
+      "name": "day",
+      "description": "The label is Today, Yesterday, a weekday and date for this year, or a full date. Solid lines."
+    },
+    {
+      "name": "contextReset",
+      "description": "The label, dashed lines and one line of description under them."
+    },
+    {
+      "name": "summarized",
+      "description": "The label and the lines in the AI colours. With a summary, a disclosure; with onExpand, a button."
+    },
+    {
+      "name": "summary expanded",
+      "description": "The summary is shown in a tinted box under the disclosure."
+    }
+  ],
+  "appearance": "A centred caption between two hairlines. The lines use the subtle border role for a day, the default border role, dashed, for a reset, and the AI border role for a summary; the label is muted text, or the strong AI role for a summary. The summary box is the subtle AI fill with the AI border. All roles come from the theme, so the four themes differ only in their values.",
+  "platformNotes": "The web takes locale, timeZone and now as props; here the locale, calendar and time zone come from the SwiftUI environment and only now is a parameter. Today and Yesterday come from the system's relative date formatter in the environment locale, so Monarch ships no strings for them and they cannot be overridden separately (use label). The summary is a String, not arbitrary content. The disclosure is the standard DisclosureGroup, so its chevron is at the trailing edge rather than after the centred title as on the web. The web gives the divider the separator role; SwiftUI has no separator trait, so it is read as text.",
+  "accessibility": [
+    "Without controls the divider is one element, read as the label and then the description.",
+    "A context reset has dashed lines as well as its own colour and text, so it does not depend on colour.",
+    "With controls, the label, the disclosure and the button are separate elements in reading order.",
+    "The summary is read after \"AI-generated summary:\", which is not shown.",
+    "The disclosure title and the button each have a touch target at least 44 points high.",
+    "The lines are hidden from VoiceOver. Text scales with Dynamic Type and wraps."
+  ],
+  "edgeCases": [
+    "A day divider without a date has an empty label and shows only the lines.",
+    "A long label wraps and stays centred; the lines keep a least length of 16 points.",
+    "summary and onExpand are ignored for day and contextReset.",
+    "Tomorrow and later days are shown as a date, not as a relative name.",
+    "The day is counted in the time zone of the environment, so the same moment can be Today in one zone and Yesterday in another."
+  ],
+  "tests": [
+    "MonarchAiContextDividerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Days",
+      "fixture": "ai-context-divider",
+      "webExample": "Days",
+      "template": "VStack(spacing: 0) {\n    MonarchAiContextDivider(.day, date: Date().addingTimeInterval(-86_400 * {{days.0}}))\n    MonarchAiContextDivider(.day, date: Date().addingTimeInterval(-86_400 * {{days.1}}))\n}\n.frame(maxWidth: 576)",
+      "code": "VStack(spacing: 0) {\n    MonarchAiContextDivider(.day, date: Date().addingTimeInterval(-86_400 * 1))\n    MonarchAiContextDivider(.day, date: Date().addingTimeInterval(-86_400 * 0))\n}\n.frame(maxWidth: 576)"
+    },
+    {
+      "title": "A context reset",
+      "code": "MonarchAiContextDivider(.contextReset)"
+    },
+    {
+      "title": "Summarized messages with the summary and a way back",
+      "setup": "@State private var isShowingEarlier = false",
+      "code": "MonarchAiContextDivider(\n    .summarized,\n    summary: \"The team agreed to ship the report on Friday.\"\n) {\n    isShowingEarlier = true\n}"
+    }
+  ],
+  "webEquivalent": "AiContextDivider",
+  "dependsOn": [
+    "separator",
+    "text",
+    "button"
+  ]
+}

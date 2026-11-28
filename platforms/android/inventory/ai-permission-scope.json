@@ -1,0 +1,137 @@
+{
+  "id": "ai-permission-scope",
+  "name": "MonarchAiPermissionScope",
+  "title": "AiPermissionScope",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of FlowRow rows; androidx.compose.material3.SingleChoiceSegmentedButtonRow with SegmentedButton for the editable control; MonarchFavicon, MonarchLink",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "What an AI agent may read or edit, app by app: each row names the app and the resources it covers and shows No access, Can read or Can read and edit, or a None / Read / Write control when editable.",
+  "whenToUse": "In assistant settings or before connecting an agent, to show or change what it may see and change in each connected app.",
+  "whenNotToUse": "For a single yes/no permission use MonarchSwitchRow. For the system permissions of the device (microphone, location) use the Android permission request.",
+  "api": [
+    "@Composable fun MonarchAiPermissionScope(scopes: List<MonarchAiPermissionScopeItem>, modifier: Modifier = Modifier, onScopesChange: ((List<MonarchAiPermissionScopeItem>) -> Unit)? = null, enabled: Boolean = true, accessIcon: (@Composable (MonarchAiAccessLevel) -> Unit)? = null, labels: MonarchAiPermissionScopeLabels = MonarchAiPermissionScopeLabels(), onManage: (() -> Unit)? = null)",
+    "data class MonarchAiPermissionScopeItem(app: String, access: MonarchAiAccessLevel, resources: String? = null, icon: Painter? = null)",
+    "enum class MonarchAiAccessLevel { None, Read, Write; fun includes(needed: MonarchAiAccessLevel): Boolean }",
+    "class MonarchAiPermissionScopeLabels(label: String? = null, access: ((MonarchAiAccessLevel) -> String)? = null, option: ((MonarchAiAccessLevel) -> String)? = null, control: ((app: String) -> String)? = null, manage: String? = null, empty: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "scopes",
+      "type": "List<MonarchAiPermissionScopeItem>",
+      "default": "required",
+      "description": "One row per app, each with a unique app name, the access level, optional resources and an optional icon Painter."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the list."
+    },
+    {
+      "name": "onScopesChange",
+      "type": "((List<MonarchAiPermissionScopeItem>) -> Unit)?",
+      "default": "null",
+      "description": "Makes the list editable: called with the whole list, one row changed, when the person picks another level. Pass the new list back in scopes. null shows the access as text."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the editable controls take input."
+    },
+    {
+      "name": "accessIcon",
+      "type": "(@Composable (MonarchAiAccessLevel) -> Unit)?",
+      "default": "null",
+      "description": "An icon before the access text of a read-only row, given the level (for example a lock, an eye or a pencil). Monarch bundles no icons."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiPermissionScopeLabels",
+      "default": "MonarchAiPermissionScopeLabels()",
+      "description": "Replaces the list name, the level texts, the short option names, the control name, the manage text and the empty text."
+    },
+    {
+      "name": "onManage",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Adds a \"Manage permissions\" link under the list."
+    }
+  ],
+  "states": [
+    {
+      "name": "read only",
+      "description": "Each row writes the level: No access in muted text, Can read, Can read and edit, with the optional access icon."
+    },
+    {
+      "name": "editable",
+      "description": "Each row has a None / Read / Write segmented control; the chosen segment is filled and has a check mark."
+    },
+    {
+      "name": "narrow",
+      "description": "When the access or the control does not fit beside the app name, it moves under it."
+    },
+    {
+      "name": "empty",
+      "description": "\"The AI has no access to any app.\" in muted text."
+    },
+    {
+      "name": "disabled",
+      "description": "With enabled false the segments use the disabled roles and take no input."
+    }
+  ],
+  "appearance": "App names are strong body text with resources in muted caption text; rows are separated by the subtle border color. The segmented control is the Material 3 one in the Monarch theme. The manage link is the standalone MonarchLink in the link color. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web's manageHref link becomes an onManage callback, as on iOS, since a native app opens its own settings screen. The web's onChange(scopes, changed) and iOS's binding become onScopesChange with the whole list. The app icon is a Painter shown with MonarchFavicon (iOS takes a URL; Monarch for Android loads no images). The web draws lock, eye and pencil glyphs; Android bundles no icons, so they are the accessIcon slot and the level is always written. The parity map named a LazyColumn; the list is a Column, because a permission list is short and usually sits in a settings screen that already scrolls, where a nested LazyColumn cannot be measured.",
+  "accessibility": [
+    "The list is a TalkBack traversal group named \"What the AI can access\".",
+    "A read-only row is one element read as the app and its resources, with the access (\"Can read\") as its state description.",
+    "The level is always written, so it never depends on color or on an icon.",
+    "An editable row's control is a traversal group named \"Access to <app>\"; each segment keeps the Material 3 radio button role and selected state.",
+    "The favicon is decorative and hidden.",
+    "Segments and the manage link have touch targets of at least 48dp by 48dp; rows wrap and stack at large font sizes."
+  ],
+  "edgeCases": [
+    "App names must be unique: they are the rows' identity.",
+    "An empty or blank resources string is not shown or read.",
+    "Picking the level a row already has does not call onScopesChange.",
+    "Long app names and resources wrap; the control moves under them."
+  ],
+  "tests": [
+    "MonarchAiPermissionScopeTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Read-only",
+      "fixture": "ai-permission-scope",
+      "webExample": "Read-only",
+      "template": "MonarchAiPermissionScope(\n    scopes = listOf(\n        MonarchAiPermissionScopeItem({{scopes.0.app}}, MonarchAiAccessLevel.{{scopes.0.access|pascal}}, resources = {{scopes.0.resources}}),\n        MonarchAiPermissionScopeItem({{scopes.1.app}}, MonarchAiAccessLevel.{{scopes.1.access|pascal}}, resources = {{scopes.1.resources}}),\n        MonarchAiPermissionScopeItem({{scopes.2.app}}, MonarchAiAccessLevel.{{scopes.2.access|pascal}}),\n        MonarchAiPermissionScopeItem({{scopes.3.app}}, MonarchAiAccessLevel.{{scopes.3.access|pascal}}),\n    ),\n    accessIcon = { level ->\n        MonarchIcon(\n            when (level) {\n                MonarchAiAccessLevel.None -> SampleIcons.Lock\n                MonarchAiAccessLevel.Read -> SampleIcons.Eye\n                MonarchAiAccessLevel.Write -> SampleIcons.Pencil\n            },\n            contentDescription = null,\n        )\n    },\n)",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "code": "MonarchAiPermissionScope(\n    scopes = listOf(\n        MonarchAiPermissionScopeItem(\"Calendar\", MonarchAiAccessLevel.Read, resources = \"Your events only\"),\n        MonarchAiPermissionScopeItem(\"Documents\", MonarchAiAccessLevel.Write, resources = \"Shared projects\"),\n        MonarchAiPermissionScopeItem(\"Contacts\", MonarchAiAccessLevel.Read),\n        MonarchAiPermissionScopeItem(\"Billing\", MonarchAiAccessLevel.None),\n    ),\n    accessIcon = { level ->\n        MonarchIcon(\n            when (level) {\n                MonarchAiAccessLevel.None -> SampleIcons.Lock\n                MonarchAiAccessLevel.Read -> SampleIcons.Eye\n                MonarchAiAccessLevel.Write -> SampleIcons.Pencil\n            },\n            contentDescription = null,\n        )\n    },\n)"
+    },
+    {
+      "title": "Editable, with a manage link",
+      "setup": "var scopes by remember {\n    mutableStateOf(\n        listOf(\n            MonarchAiPermissionScopeItem(\"Calendar\", MonarchAiAccessLevel.Read),\n            MonarchAiPermissionScopeItem(\"Drive\", MonarchAiAccessLevel.Write),\n        ),\n    )\n}",
+      "code": "MonarchAiPermissionScope(\n    scopes = scopes,\n    onScopesChange = { scopes = it },\n    onManage = {},\n)"
+    }
+  ],
+  "webEquivalent": "AiPermissionScope",
+  "dependsOn": [
+    "segmented-control",
+    "favicon"
+  ],
+  "icons": {
+    "access.read": "EyeGlyph",
+    "access.write": "PencilGlyph",
+    "access.none": "LockGlyph"
+  }
+}

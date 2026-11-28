@@ -1,0 +1,179 @@
+{
+  "id": "region-select",
+  "name": "MonarchRegionSelect",
+  "title": "RegionSelect",
+  "family": "geo",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchCombobox (a .sheet with a List and .searchable) over supplied, loaded (.task(id:)) or built-in lists; MonarchTextField with .textContentType(.addressState) for a country without a list",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A picker for a state, province or territory of a country, from the app's list, an async loader or compact built-in lists, with a text field for countries without a list.",
+  "whenToUse": "In an address form after the country, so the region matches the chosen country.",
+  "whenNotToUse": "Not for cities or postal codes; use a MonarchTextField with the matching text content type. For a whole address, use the app's own address search.",
+  "api": [
+    "init(_ label: String, selection: Binding<String?>, country: String?, prompt: String? = nil, helper: String? = nil, error: String? = nil, regions: [MonarchRegion]? = nil, isRequired: Bool = false, isClearable: Bool = true, allowsTextEntry: Bool = true, showsCode: Bool = false, labels: MonarchRegionSelectLabels = MonarchRegionSelectLabels(), loadRegions: (@Sendable (String) async throws -> [MonarchRegion])? = nil)",
+    "static func builtInRegions(for country: String) -> [MonarchRegion]?",
+    "static func fieldLabel(for country: String?) -> String?",
+    "struct MonarchRegion: Identifiable { let code: String; let name: String; init(code: String, name: String) }",
+    "struct MonarchRegionSelectLabels { init(chooseCountryFirst: String? = nil, textEntry: String? = nil, loadFailed: String? = nil, combobox: MonarchComboboxLabels = MonarchComboboxLabels()) }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The visible label, already localised. fieldLabel(for:) gives the country's word, such as State."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<String?>",
+      "default": "required",
+      "description": "The chosen region's code, or the typed text for a country without a list; nil when empty."
+    },
+    {
+      "name": "country",
+      "type": "String?",
+      "default": "required",
+      "description": "The ISO 3166-1 alpha-2 code whose regions are listed, in any case. nil disables the field with Choose a country first. A new country starts a fresh field."
+    },
+    {
+      "name": "prompt",
+      "type": "String?",
+      "default": "nil",
+      "description": "Shown in the field while nothing is chosen."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Help text under the field."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "An error message, shown with an icon and announced."
+    },
+    {
+      "name": "regions",
+      "type": "[MonarchRegion]?",
+      "default": "nil",
+      "description": "The country's regions from the app's own data. They win over the loader and the built-in lists."
+    },
+    {
+      "name": "isRequired",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows a mark after the label and adds Required to the hint."
+    },
+    {
+      "name": "isClearable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows a clear button in the field while a region is chosen."
+    },
+    {
+      "name": "allowsTextEntry",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows a text field when the country has no list; off shows an empty list instead."
+    },
+    {
+      "name": "showsCode",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows each region's code without the country (CA for US-CA) at the end of its row."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchRegionSelectLabels",
+      "default": "MonarchRegionSelectLabels()",
+      "description": "Replaces Choose a country first, Type the region, the load error and the combobox strings; the combobox's empty text is built in as No regions match."
+    },
+    {
+      "name": "loadRegions",
+      "type": "(@Sendable (String) async throws -> [MonarchRegion])?",
+      "default": "nil",
+      "description": "Loads a country's regions from the app's service, once per country while the view is shown. Return [] for a text field. It wins over the built-in lists; call builtInRegions(for:) inside it to keep them."
+    }
+  ],
+  "states": [
+    {
+      "name": "no country",
+      "description": "A disabled field with the prompt Choose a country first."
+    },
+    {
+      "name": "list",
+      "description": "A MonarchCombobox of the regions in their given order."
+    },
+    {
+      "name": "text entry",
+      "description": "A MonarchTextField with the prompt Type the region, for a country without a list."
+    },
+    {
+      "name": "loading",
+      "description": "The combobox's list shows Loading... while the loader runs."
+    },
+    {
+      "name": "load failed",
+      "description": "A MonarchInlineErrorRetry with Couldn't load the regions. and Try again under the field."
+    },
+    {
+      "name": "error",
+      "description": "The field border and message use the danger colour, with an icon; the error is announced."
+    },
+    {
+      "name": "disabled",
+      "description": "Label, value and border use the disabled roles."
+    }
+  ],
+  "appearance": "The field is MonarchCombobox's, or MonarchTextField's for text entry; the load error is MonarchInlineErrorRetry in the danger tone. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "The built-in lists are the web's: US, CA, AU, GB and IN with English names. The web's AbortSignal is Swift task cancellation: the load is cancelled when the view goes away or the country changes. On the web a failed load shows the combobox's own Try again; MonarchCombobox has none, so MonarchInlineErrorRetry is shown under the field. MonarchTextField has no required mark, so isRequired applies to the list field only. The country's word for a region is fieldLabel(for:) instead of a field on the list.",
+  "accessibility": [
+    "The field is the combobox's button, or a standard text field, labelled with the label.",
+    "With no country the field is disabled and its prompt says Choose a country first.",
+    "A failed load is an inline error with a Try again button.",
+    "The text field tells AutoFill it holds the state or region of an address."
+  ],
+  "edgeCases": [
+    "Changing the country resets the field; the app clears selection itself if it should not carry over.",
+    "Supplied and loaded regions keep their order; the built-in lists are in alphabetical order of their English names, as on the web.",
+    "A loader that returns [] gives a text field, unless allowsTextEntry is off.",
+    "A failed loader is asked again only after Try again."
+  ],
+  "tests": [
+    "MonarchRegionSelectTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "With CountrySelect and built-in lists",
+      "fixture": "region-select",
+      "webExample": "With CountrySelect and built-in lists",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    MonarchCountrySelect(\n        {{country.label}},\n        selection: $country,\n        countries: [{{country.options.0}}, {{country.options.1}}, {{country.options.2}}, {{country.options.3}}, {{country.options.4}}, {{country.options.5}}],\n        isClearable: false\n    )\n    MonarchRegionSelect(\n        MonarchRegionSelect.fieldLabel(for: country) ?? \"Region\",\n        selection: $region,\n        country: country,\n        prompt: \"\",\n        isClearable: false\n    )\n}\n.onChange(of: country) { region = nil }",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var country: String? = {{country.value}}\n@State private var region: String? = {{region.value}}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var country: String? = \"US\"\n@State private var region: String? = nil",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    MonarchCountrySelect(\n        \"Country\",\n        selection: $country,\n        countries: [\"AU\", \"CA\", \"FR\", \"GB\", \"IN\", \"US\"],\n        isClearable: false\n    )\n    MonarchRegionSelect(\n        MonarchRegionSelect.fieldLabel(for: country) ?? \"Region\",\n        selection: $region,\n        country: country,\n        prompt: \"\",\n        isClearable: false\n    )\n}\n.onChange(of: country) { region = nil }"
+    },
+    {
+      "title": "Text entry for a country without a list",
+      "setup": "@State private var region: String?",
+      "code": "MonarchRegionSelect(\"Region\", selection: $region, country: \"PT\")"
+    },
+    {
+      "title": "Regions from the app's data",
+      "setup": "@State private var canton: String?",
+      "code": "MonarchRegionSelect(\n    \"Canton\",\n    selection: $canton,\n    country: \"CH\",\n    regions: [\n        MonarchRegion(code: \"CH-GE\", name: \"Genève\"),\n        MonarchRegion(code: \"CH-ZH\", name: \"Zürich\"),\n    ]\n)"
+    }
+  ],
+  "webEquivalent": "RegionSelect",
+  "dependsOn": [
+    "combobox",
+    "text-field",
+    "inline-error-retry"
+  ]
+}

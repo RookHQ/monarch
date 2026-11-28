@@ -1,33 +1,23 @@
 import { useState } from 'react';
 import { AiSettingsSection, type AiSettingsValue } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-settings-section.fixture.json';
 
-const APPS = [
-  { id: 'docs', label: 'Documents', description: 'Summaries, drafts and answers about pages.' },
-  { id: 'mail', label: 'Mail', description: 'Reply suggestions and thread summaries.' },
-  { id: 'calendar', label: 'Calendar' },
-];
-const PROVIDERS = [
-  { id: 'provider-a', label: 'Provider A' },
-  { id: 'provider-b', label: 'Provider B' },
-];
+const APPS = fixture.data.apps;
+const PROVIDERS = fixture.data.providers;
 
 function Demo({ readOnly = false }: { readOnly?: boolean }) {
-  const [value, setValue] = useState<AiSettingsValue>({
-    apps: { docs: true, mail: false, calendar: true },
-    dataSharing: false,
-    memory: true,
-    retention: '90d',
-    provider: '',
-  });
+  const [value, setValue] = useState<AiSettingsValue>(fixture.data.value);
   return (
     <div style={{ width: '100%' }}>
       <AiSettingsSection
         value={value}
         apps={APPS}
         providers={PROVIDERS}
+        retentionOptions={fixture.data.retentionOptions}
         readOnly={readOnly}
-        {...(readOnly ? { messages: { title: 'AI for members' } } : {})}
+        messages={{ ...fixture.data.messages, ...(readOnly ? { title: 'AI for members' } : {}) }}
         onSave={async ({ apiKey, ...draft }) => {
           await new Promise((r) => setTimeout(r, 600));
           setValue({ ...draft, keyConfigured: Boolean(apiKey) || value.keyConfigured });

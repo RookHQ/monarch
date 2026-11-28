@@ -1,0 +1,127 @@
+{
+  "id": "editor-toolbar",
+  "name": "MonarchEditorToolbar",
+  "title": "EditorToolbar",
+  "family": "files",
+  "category": "B",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Toggle with .toggleStyle(.monarchButton) and Button per tool, Menu with a Picker for the text style, alert with a TextField for links, in a horizontal ScrollView; placed with ToolbarItemGroup(placement: .keyboard)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A formatting toolbar for a text editor: undo and redo, a text style menu, inline styles, lists, quotes, code and links, plus product controls.",
+  "whenToUse": "Above the keyboard or above an editor where people format rich text, such as notes, comments or documents.",
+  "whenNotToUse": "Not for a plain text field (no formatting) and not for the actions of a screen (use the navigation bar's toolbar items).",
+  "api": [
+    "init(groups: [[MonarchEditorTool]] = MonarchEditorTool.defaultGroups, active: Set<MonarchEditorTool> = [], disabled: Set<MonarchEditorTool> = [], labels: MonarchEditorToolbarLabels = MonarchEditorToolbarLabels(), onLink: (@MainActor (URL?) -> Void)? = nil, action: @escaping @MainActor (MonarchEditorTool) -> Void)",
+    "enum MonarchEditorTool: Hashable { case undo, redo, paragraph, heading(Int), bold, italic, strikethrough, code, link, bulletList, orderedList, taskList, blockquote, codeBlock, custom(id: String, title: String, systemImage: String); static let defaultGroups: [[MonarchEditorTool]]; static let inlineGroups: [[MonarchEditorTool]] }",
+    "struct MonarchEditorToolbarLabels { init(toolbar: String? = nil, tools: [MonarchEditorTool: String] = [:], textStyle: String? = nil, linkTitle: String? = nil, linkAddress: String? = nil, linkApply: String? = nil, linkRemove: String? = nil, linkCancel: String? = nil, linkHelp: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "groups",
+      "type": "[[MonarchEditorTool]]",
+      "default": "MonarchEditorTool.defaultGroups",
+      "description": "The tools in groups separated by dividers. Neighbouring paragraph and heading tools become one text style menu. MonarchEditorTool.inlineGroups gives inline formatting only."
+    },
+    {
+      "name": "active",
+      "type": "Set<MonarchEditorTool>",
+      "default": "[]",
+      "description": "The formats that are on at the caret or selection, and the current text style. The app's editor works these out."
+    },
+    {
+      "name": "disabled",
+      "type": "Set<MonarchEditorTool>",
+      "default": "[]",
+      "description": "Tools that cannot be used now, such as undo with nothing to undo."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchEditorToolbarLabels",
+      "default": "MonarchEditorToolbarLabels()",
+      "description": "Replacements for the toolbar name, every tool name (by tool), the text style menu and the link form."
+    },
+    {
+      "name": "onLink",
+      "type": "(@MainActor (URL?) -> Void)?",
+      "default": "nil",
+      "description": "Makes the link tool open a form for the address. Receives a safe URL to apply, or nil when Remove link is pressed. Without it, the link tool goes to action."
+    },
+    {
+      "name": "action",
+      "type": "@MainActor (MonarchEditorTool) -> Void",
+      "default": "required",
+      "description": "Runs when a tool is pressed or a text style is chosen. The app applies it to its editor."
+    }
+  ],
+  "states": [
+    {
+      "name": "on",
+      "description": "A toggle whose format is active has the accent fill and border of the Monarch toggle button style."
+    },
+    {
+      "name": "disabled tool",
+      "description": "Drawn in the disabled colours and cannot be pressed."
+    },
+    {
+      "name": "link form",
+      "description": "A system alert with an address field, Apply (disabled until the address is valid), Remove link when a link is active, and Cancel."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true) every control is disabled, for example while the editor loads."
+    }
+  ],
+  "appearance": "Small ghost Monarch buttons and toggle buttons with SF Symbols, separated by thin dividers in the subtle border role, in a row that scrolls sideways. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web toolbar drives a Tiptap editor directly. iOS has no Monarch rich text editor yet, so this toolbar is editor-agnostic: the app passes which formats are on and applies what is pressed (for example to an AttributedString in its own editor). Headings are one text style menu instead of a button per level, to fit a phone. The link popover is a system alert with a text field. The web's arrow-key roving focus and keyboard shortcut hints are not offered; iOS moves through the controls with VoiceOver and Full Keyboard Access, and hardware shortcuts belong to the app's text view.",
+  "accessibility": [
+    "The toolbar is a container named \"Formatting\".",
+    "Format tools are standard toggles with the Monarch toggle button style, so VoiceOver reads their name and on or off value; the on state is also a filled surface.",
+    "Undo, redo and product tools are standard buttons named by their title.",
+    "The text style menu is a standard menu named \"Text style\" whose value is the current style; its entries are a picker with a check mark on the current one.",
+    "Group dividers are hidden from VoiceOver.",
+    "Every control has a 44-point touch target; icons have spoken names through their Label titles."
+  ],
+  "edgeCases": [
+    "Empty groups are dropped, so two dividers never meet.",
+    "Heading levels outside 1 through 6 use the level 6 symbol.",
+    "A link typed as a bare domain becomes https; an email becomes mailto; javascript, data and other schemes are refused."
+  ],
+  "tests": [
+    "MonarchEditorToolbarTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Every control",
+      "fixture": "editor-toolbar",
+      "webExample": "Every control",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    MonarchEditorToolbar(\n        groups: [\n            [.undo, .redo],\n            [.paragraph, .heading(1), .heading(2), .heading(3)],\n            [.bold, .italic, .strikethrough, .code, .link],\n            [.bulletList, .orderedList],\n            [.blockquote, .codeBlock],\n        ],\n        active: active,\n        disabled: [{{disabledTool|case}}],\n        onLink: { url in\n            if url == nil { active.remove(.link) } else { active.insert(.link) }\n        },\n        action: { tool in\n            if active.contains(tool) { active.remove(tool) } else { active.insert(tool) }\n        }\n    )\n    Text({{heading}}).monarchTextStyle(.heading)\n    Text({{paragraph.before}}) + Text({{paragraph.bold}}).bold() + Text({{paragraph.after}})\n    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n        Text(\"\\u{2022} \" + {{bullets.0}})\n        Text(\"\\u{2022} \" + {{bullets.1}})\n    }\n}\n.padding(theme.spacing.space2)\n.overlay(\n    RoundedRectangle(cornerRadius: theme.radius.md)\n        .strokeBorder(theme.colors.borderDefault)\n)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var active: Set<MonarchEditorTool> = [.heading({{activeHeading}})]",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var active: Set<MonarchEditorTool> = [.heading(2)]",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    MonarchEditorToolbar(\n        groups: [\n            [.undo, .redo],\n            [.paragraph, .heading(1), .heading(2), .heading(3)],\n            [.bold, .italic, .strikethrough, .code, .link],\n            [.bulletList, .orderedList],\n            [.blockquote, .codeBlock],\n        ],\n        active: active,\n        disabled: [.redo],\n        onLink: { url in\n            if url == nil { active.remove(.link) } else { active.insert(.link) }\n        },\n        action: { tool in\n            if active.contains(tool) { active.remove(tool) } else { active.insert(tool) }\n        }\n    )\n    Text(\"Meeting notes\").monarchTextStyle(.heading)\n    Text(\"Agree the \") + Text(\"release date\").bold() + Text(\" and who owns the help article.\")\n    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n        Text(\"\\u{2022} \" + \"Draft the announcement\")\n        Text(\"\\u{2022} \" + \"Review the checklist\")\n    }\n}\n.padding(theme.spacing.space2)\n.overlay(\n    RoundedRectangle(cornerRadius: theme.radius.md)\n        .strokeBorder(theme.colors.borderDefault)\n)"
+    },
+    {
+      "title": "Inline tools above the keyboard",
+      "setup": "@State private var text = \"\"",
+      "code": "TextField(\"Notes\", text: $text, axis: .vertical)\n    .toolbar {\n        ToolbarItemGroup(placement: .keyboard) {\n            MonarchEditorToolbar(groups: MonarchEditorTool.inlineGroups) { _ in }\n        }\n    }"
+    }
+  ],
+  "webEquivalent": "EditorToolbar",
+  "dependsOn": [
+    "toggle-button",
+    "dropdown-menu",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web toolbar shows every tool in one row at its width; on iPhone the toolbar is a horizontally scrolling row of 44 pt buttons (the usual keyboard-accessory pattern), so the tools after the first seven are reached by scrolling.",
+      "convention": "HIG: formatting bars scroll horizontally"
+    }
+  ]
+}

@@ -6,11 +6,19 @@ import {
   type AiCanvasArtifact,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-artifact-canvas.fixture.json';
 
-const DOC_VERSIONS: Record<number, string> = {
-  1: '# Q3 summary\n\nRevenue grew in every region.\n\n- New customers: 140\n- Churn: 2.1%',
-  2: '# Q3 summary\n\nRevenue grew **12%**, led by the north region.\n\n- New customers: 140\n- Churn: 2.1%\n\n## Next steps\n\nReview pricing before the planning meeting.',
-};
+const FIXTURE_VERSIONS = fixture.data.versions as {
+  version: number;
+  createdAt: string;
+  label?: string;
+  content: string;
+}[];
+
+const DOC_VERSIONS: Record<number, string> = Object.fromEntries(
+  FIXTURE_VERSIONS.map((v) => [v.version, v.content]),
+);
 
 const PAGE: AiCanvasArtifact = {
   id: 'page',
@@ -32,21 +40,21 @@ const CODE: AiCanvasArtifact = {
 };
 
 function SplitDemo() {
-  const [open, setOpen] = useState(false);
-  const [version, setVersion] = useState(2);
+  const [open, setOpen] = useState(true);
+  const [version, setVersion] = useState(fixture.data.artifact.version);
   const artifact: AiCanvasArtifact = {
-    id: 'q3',
-    kind: 'document',
-    title: 'Q3 summary',
+    id: fixture.data.artifact.id,
+    kind: fixture.data.artifact.kind as AiCanvasArtifact['kind'],
+    title: fixture.data.artifact.title,
     version,
     content: DOC_VERSIONS[version] ?? '',
   };
   const part: AiArtifactPart = {
     type: 'artifact',
-    id: 'q3',
-    kind: 'document',
-    title: 'Q3 summary',
-    version: 2,
+    id: fixture.data.artifact.id,
+    kind: fixture.data.artifact.kind as AiArtifactPart['kind'],
+    title: fixture.data.artifact.title,
+    version: fixture.data.artifact.version,
   };
   return (
     <div
@@ -58,21 +66,24 @@ function SplitDemo() {
       }}
     >
       <div style={{ display: 'grid', gap: 'var(--mn-space-2)' }}>
-        <p style={{ margin: 0 }}>Here is the summary you asked for.</p>
+        <p style={{ margin: 0 }}>{fixture.data.reply}</p>
         <AiArtifactCard part={part} active={open} onOpen={() => setOpen(true)} />
       </div>
       <AiArtifactCanvas
         artifact={artifact}
-        versions={[
-          { version: 1, createdAt: '2026-03-12T09:00:00Z' },
-          { version: 2, createdAt: '2026-03-12T09:20:00Z', label: 'Added next steps' },
-        ]}
+        locale={fixture.data.locale}
+        timeZone={fixture.data.timeZone}
+        versions={FIXTURE_VERSIONS.map(({ version, createdAt, label }) => ({
+          version,
+          createdAt,
+          ...(label !== undefined && { label }),
+        }))}
         onVersionChange={setVersion}
         open={open}
         onOpenChange={setOpen}
         onDownload={() => {}}
         onSave={() => new Promise((resolve) => setTimeout(resolve, 800))}
-        saveLabel="Save to library"
+        saveLabel={fixture.data.saveLabel}
       />
     </div>
   );
@@ -200,6 +211,7 @@ export default {
         {
           title: 'Beside a reply, with versions and save',
           stack: true,
+          stage: true,
           render: () => <SplitDemo />,
         },
         {

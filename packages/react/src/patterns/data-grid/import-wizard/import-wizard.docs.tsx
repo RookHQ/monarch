@@ -1,5 +1,7 @@
 import { ImportWizard, type ImportField, type ImportRowCheck } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './import-wizard.fixture.json';
 
 const FIELDS: ImportField[] = [
   { id: 'name', label: 'Name', required: true, aliases: ['Full name'] },
@@ -32,8 +34,18 @@ function Demo() {
   return (
     <ImportWizard
       fields={FIELDS}
-      maxSize={2 * 1024 * 1024}
-      maxRows={5000}
+      maxSize={fixture.data.maxSize}
+      maxRows={fixture.data.maxRows}
+      messages={{
+        steps: {
+          upload: fixture.data.steps[0] ?? 'Upload',
+          map: fixture.data.steps[1] ?? 'Map columns',
+          preview: fixture.data.steps[2] ?? 'Preview',
+          results: fixture.data.steps[3] ?? 'Results',
+        },
+        uploadTitle: fixture.data.title,
+        template: fixture.data.template,
+      }}
       templateHref={TEMPLATE}
       validate={checkRows}
       duplicateRules={[

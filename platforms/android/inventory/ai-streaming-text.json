@@ -1,0 +1,152 @@
+{
+  "id": "ai-streaming-text",
+  "name": "MonarchAiStreamingText",
+  "title": "AiStreamingText",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of keyed MonarchAiMarkdown blocks (androidx.compose.runtime.key) with an incremental parse",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Renders a Markdown answer while it streams: finished blocks stay put, half-written syntax never flashes, and TalkBack hears whole sentences, not tokens.",
+  "whenToUse": "For the text of an assistant message while it streams and after it finishes, or any growing Markdown string such as a live summary.",
+  "whenNotToUse": "When the text is complete and will not change, MonarchAiMarkdown is enough. For text people type use MonarchRichTextEditor or MonarchMessageComposer.",
+  "api": [
+    "@Composable fun MonarchAiStreamingText(text: String, streaming: Boolean, modifier: Modifier = Modifier, announces: Boolean = true, announceComplete: Boolean = true, showCaret: Boolean = true, showLinkHosts: Boolean = true, onOpenLink: ((url: String) -> Unit)? = null, image: (@Composable (url: String, alt: String) -> Unit)? = null, codeBlock: (@Composable (language: String, code: String, complete: Boolean) -> Unit)? = null, labels: MonarchAiStreamingTextLabels = MonarchAiStreamingTextLabels(), markdownLabels: MonarchAiMarkdownLabels = MonarchAiMarkdownLabels())",
+    "class MonarchAiStreamingTextLabels(complete: String? = null, codeBlock: String? = null, table: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "text",
+      "type": "String",
+      "default": "required",
+      "description": "The Markdown received so far. It normally only grows while streaming."
+    },
+    {
+      "name": "streaming",
+      "type": "Boolean",
+      "default": "required",
+      "description": "Whether more text is arriving: the last block is repaired for display, the caret shows and sentences are announced."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the column."
+    },
+    {
+      "name": "announces",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether new sentences and the end are announced through a polite live region. Turn it off when the thread announces messages itself."
+    },
+    {
+      "name": "announceComplete",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether \"Response complete\" may be announced when this text stops streaming. Pass false while the reply goes on (a tool runs after this text), then true once it finishes."
+    },
+    {
+      "name": "showCaret",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the still caret after the text while streaming."
+    },
+    {
+      "name": "showLinkHosts",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Passed to MonarchAiMarkdown."
+    },
+    {
+      "name": "onOpenLink",
+      "type": "((url: String) -> Unit)?",
+      "default": "null",
+      "description": "Passed to MonarchAiMarkdown."
+    },
+    {
+      "name": "image",
+      "type": "(@Composable (url: String, alt: String) -> Unit)?",
+      "default": "null",
+      "description": "Passed to MonarchAiMarkdown."
+    },
+    {
+      "name": "codeBlock",
+      "type": "(@Composable (language: String, code: String, complete: Boolean) -> Unit)?",
+      "default": "null",
+      "description": "Passed to MonarchAiMarkdown; complete is false for a code block still arriving."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiStreamingTextLabels",
+      "default": "MonarchAiStreamingTextLabels()",
+      "description": "Replacements for \"Response complete\", \"Code block\" and \"Table\"."
+    },
+    {
+      "name": "markdownLabels",
+      "type": "MonarchAiMarkdownLabels",
+      "default": "MonarchAiMarkdownLabels()",
+      "description": "Passed to MonarchAiMarkdown as its labels."
+    }
+  ],
+  "states": [
+    {
+      "name": "streaming",
+      "description": "The last block is drawn with open emphasis and code spans closed, link targets hidden and unconfirmed table rows held back; a caret follows the text."
+    },
+    {
+      "name": "finished",
+      "description": "The text is drawn as written, without the caret; the rest of the last sentence and \"Response complete\" are announced."
+    },
+    {
+      "name": "history",
+      "description": "Text that was never streamed in this composition is drawn without any announcement."
+    },
+    {
+      "name": "footnotes",
+      "description": "An answer with footnote syntax is drawn as one MonarchAiMarkdown, so footnote numbers run across the whole answer."
+    }
+  ],
+  "appearance": "The text is MonarchAiMarkdown's: default text role, headings, code blocks and tables as there. The caret is a 2dp bar in the solid AI role. All colors are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "iOS has no entry for this id yet. The web passes completed blocks to AiMarkdown; Compose draws each block with its own keyed MonarchAiMarkdown so recomposition skips finished blocks, with the gaps MonarchAiMarkdown uses between blocks. The web's caret sits inline after the last character and blinks; here it is a still bar on its own line under the text, because MonarchAiMarkdown has no trailing slot and an endless blink adds nothing on touch. Compose has no aria-busy, so nothing marks the text as busy for TalkBack; the announcements carry the progress. The announcement interval is fixed at the web's minimum of one second instead of an announceInterval option. headingLevelOffset, allowImageHosts, resolveImageUrl, renderMath and codeBlockProps have no counterpart: MonarchAiMarkdown takes image and codeBlock slots instead.",
+  "accessibility": [
+    "A polite live region on an always-present node announces new complete sentences and paragraphs, never single tokens, at most once a second.",
+    "Code blocks and tables are announced as \"Code block\" and \"Table\" instead of being read out.",
+    "When streaming stops, the rest of the text and \"Response complete\" are announced; with announceComplete false the end is held until it is true.",
+    "Text that was never streamed here is not announced, and announces false turns announcements off.",
+    "The caret is hidden from TalkBack.",
+    "Each block keeps MonarchAiMarkdown's semantics: headings, task states and table positions; text wraps at font scale 2.0."
+  ],
+  "edgeCases": [
+    "A table header that has no delimiter row yet is not shown, so it never flashes as a paragraph of pipes.",
+    "An unfinished link shows its text until the closing bracket of its target arrives.",
+    "A regenerated answer that does not start with the previous text starts the announcements over.",
+    "Text that changes in the middle rather than growing is parsed again from the start; finished blocks then get new identities.",
+    "Empty text while streaming shows only the caret."
+  ],
+  "tests": [
+    "MonarchAiStreamingTextTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Partway through an answer",
+      "fixture": "ai-streaming-text",
+      "webExample": "Partway through an answer",
+      "template": "MonarchAiStreamingText(\n    text = {{text}},\n    streaming = {{streaming}},\n    announces = false,\n)",
+      "code": "MonarchAiStreamingText(\n    text = \"## Summary\\n\\nThe sample project has **three open tasks** and one is overdue. Here is the order I suggest:\\n\\n1. Review the *migration plan* first, since two tasks depend on it.\\n2. Update the changelog.\",\n    streaming = true,\n    announces = false,\n)"
+    },
+    {
+      "title": "Text before a tool call: the end is announced with the reply",
+      "code": "MonarchAiStreamingText(\n    text = \"Let me check the calendar.\",\n    streaming = false,\n    announceComplete = false,\n    showCaret = false,\n)"
+    }
+  ],
+  "webEquivalent": "AiStreamingText",
+  "dependsOn": [
+    "ai-markdown"
+  ]
+}

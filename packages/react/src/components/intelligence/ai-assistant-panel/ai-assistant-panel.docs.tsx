@@ -8,6 +8,8 @@ import {
   useAiConversation,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-assistant-panel.fixture.json';
 
 const transport = mockTransport({
   delayMs: 50,
@@ -20,11 +22,11 @@ const transport = mockTransport({
   ],
 });
 
-const STARTERS = ['Summarise this page', 'What changed this week?', 'Draft a status update'];
+const STARTERS = fixture.data.starters;
 
 function LauncherDemo() {
   const chat = useAiConversation({ transport });
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   return (
     <div style={{ display: 'grid', gap: 'var(--mn-space-3)', width: '100%', maxWidth: '28rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--mn-space-3)' }}>
@@ -35,7 +37,7 @@ function LauncherDemo() {
           aria-controls="docs-ai-assistant-panel"
           badge={chat.busy ? 'working' : undefined}
         />
-        <span style={{ color: 'var(--mn-color-text-muted)' }}>or press ⌘J / Ctrl+J</span>
+        <span style={{ color: 'var(--mn-color-text-muted)' }}>{fixture.data.hint}</span>
       </div>
       {/* The inline panel fills its parent: give it room only while it is open. */}
       <div style={{ height: open ? 520 : undefined }}>
@@ -43,14 +45,11 @@ function LauncherDemo() {
           id="docs-ai-assistant-panel"
           placement="inline"
           conversation={chat}
-          title="Assistant"
+          title={fixture.data.title}
           open={open}
           onOpenChange={setOpen}
           starters={STARTERS}
-          context={[
-            { label: 'Page', items: 'Quarterly plan' },
-            { label: 'Selected', items: '3 rows' },
-          ]}
+          context={fixture.data.context}
         />
       </div>
     </div>

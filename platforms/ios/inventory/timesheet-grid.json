@@ -1,0 +1,199 @@
+{
+  "id": "timesheet-grid",
+  "name": "MonarchTimesheetGrid",
+  "title": "TimesheetGrid",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Grid with GridRow inside a horizontal ScrollView at regular width; at compact width one day per page with MonarchDurationInput (TextField and Stepper) per row; Menu for row actions",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A period of time entry, usually a week: rows of projects or tasks against days, with typed durations, row, day and period totals, locked days and a daily limit.",
+  "whenToUse": "For weekly time entry and review in time-tracking, payroll and project apps, where people log time per project per day and see the totals as they type.",
+  "whenNotToUse": "Not for a single duration; use MonarchDurationInput. Not for showing what changed between versions of a timesheet; use MonarchTimesheetDiff. Not for general tabular data; use MonarchDataTable.",
+  "api": [
+    "init(days: [MonarchTimesheetGridDay], rows: [MonarchTimesheetGridRow], summaryRows: [MonarchTimesheetGridSummaryRow] = [], maximumMinutesPerDay: Int = 1440, layout: MonarchTimesheetGridLayout = .automatic, isReadOnly: Bool = false, emptyMessage: String? = nil, labels: MonarchTimesheetGridLabels = MonarchTimesheetGridLabels(), rowActions: ((MonarchTimesheetGridRow) -> [MonarchDataTableRowAction])? = nil, onDayActivate: (@MainActor (Date) -> Void)? = nil, onCellActivate: (@MainActor (String, Date) -> Void)? = nil, onCellChange: (@MainActor (String, Date, Int) async throws -> Void)? = nil)",
+    "struct MonarchTimesheetGridDay: Identifiable { init(_ date: Date, label: String? = nil, isToday: Bool = false, isNonWorking: Bool = false, isLocked: Bool = false, lockReason: String? = nil, note: String? = nil, expectedMinutes: Int? = nil) }",
+    "struct MonarchTimesheetGridRow: Identifiable { init(id: String, label: String, description: String? = nil, cells: [Date: Int] = [:], isReadOnly: Bool = false); func minutes(on date: Date) -> Int }",
+    "struct MonarchTimesheetGridSummaryRow: Identifiable { init(id: String, label: String, cells: [Date: String], total: String? = nil) }",
+    "enum MonarchTimesheetGridLayout { case automatic, grid, day }",
+    "struct MonarchTimesheetGridLabels { init(caption:rowHeader:total:dayTotal:rowActions:cellLabel:locked:noTime:invalid:tooLong:saveFailed:expected:overLimit:empty:today:saving:previousDay:nextDay:rowTotal:duration:shortDay:longDay:), every parameter optional }"
+  ],
+  "options": [
+    {
+      "name": "days",
+      "type": "[MonarchTimesheetGridDay]",
+      "default": "required",
+      "description": "The days in order, usually a week. A day can be today, non-working, locked (with a reason), carry a note and an expected number of minutes."
+    },
+    {
+      "name": "rows",
+      "type": "[MonarchTimesheetGridRow]",
+      "default": "required",
+      "description": "The rows with their minutes per day, keyed by the day's date. A read-only row never takes typing."
+    },
+    {
+      "name": "summaryRows",
+      "type": "[MonarchTimesheetGridSummaryRow]",
+      "default": "[]",
+      "description": "Display-only footer rows with text per day, such as attendance."
+    },
+    {
+      "name": "maximumMinutesPerDay",
+      "type": "Int",
+      "default": "1440",
+      "description": "The largest value a cell accepts, and the day total above which a day is flagged."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchTimesheetGridLayout",
+      "default": ".automatic",
+      "description": "A grid at regular width and one day per page at compact width and the accessibility text sizes; .grid or .day forces one."
+    },
+    {
+      "name": "isReadOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Makes every cell read-only, for example after submission."
+    },
+    {
+      "name": "emptyMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Shown when there are no rows. Built in: \"No time logged for this period.\""
+    },
+    {
+      "name": "labels",
+      "type": "MonarchTimesheetGridLabels",
+      "default": "MonarchTimesheetGridLabels()",
+      "description": "Replacements for every built-in string, the duration formatter and the day formatters."
+    },
+    {
+      "name": "rowActions",
+      "type": "((MonarchTimesheetGridRow) -> [MonarchDataTableRowAction])?",
+      "default": "nil",
+      "description": "The actions of a row, in a menu beside its name, such as clearing the row."
+    },
+    {
+      "name": "onDayActivate",
+      "type": "(@MainActor (Date) -> Void)?",
+      "default": "nil",
+      "description": "Makes day headings buttons, for example to open a day view."
+    },
+    {
+      "name": "onCellActivate",
+      "type": "(@MainActor (String, Date) -> Void)?",
+      "default": "nil",
+      "description": "Makes read-only cells with time buttons, for example to open the entries behind them. Receives the row identifier and the day."
+    },
+    {
+      "name": "onCellChange",
+      "type": "(@MainActor (String, Date, Int) async throws -> Void)?",
+      "default": "nil",
+      "description": "Saves a typed value: row identifier, day and minutes (0 clears). The cell is disabled while it runs; a thrown error is shown on the cell. Without it, every cell is read-only."
+    }
+  ],
+  "states": [
+    {
+      "name": "editable",
+      "description": "Open cells are bordered fields; typing is read on Return or when focus leaves, and the value is passed to onCellChange."
+    },
+    {
+      "name": "saving",
+      "description": "The cell is disabled, its text muted, and its hint reads \"Saving\" until onCellChange returns."
+    },
+    {
+      "name": "error",
+      "description": "Text that cannot be read, a value above the daily maximum or a failed save gives the cell a danger border and shows the message with a warning symbol under the grid (in the day layout, under the field); the message is announced and the typed text is kept."
+    },
+    {
+      "name": "locked day",
+      "description": "The day's heading shows a lock symbol and the reason; its cells are shaded, muted and read-only, and read with the reason."
+    },
+    {
+      "name": "read-only row or grid",
+      "description": "Cells show the time as text (a dash when empty). With onCellActivate, cells with time are link-coloured buttons."
+    },
+    {
+      "name": "today",
+      "description": "The heading is in the accent colour with an accent bar under it and is read with \"Today\"."
+    },
+    {
+      "name": "non-working day",
+      "description": "The column (or the day page header) is shaded; entry is still allowed."
+    },
+    {
+      "name": "over the daily limit",
+      "description": "The day total is in the danger colour with a warning symbol and is read with \"Over the daily limit\"."
+    },
+    {
+      "name": "empty",
+      "description": "Without rows the grid shows the empty message in place of the rows; without days the day layout shows only the message."
+    }
+  ],
+  "appearance": "The grid sits on the surface with subtle-border separators between rows; headings and the first column use the label style, with the muted text colour for the column headings, descriptions, notes and summary rows. Locked and non-working columns use the subtle background; today's heading uses the strong accent colour with a bar in the solid accent; errors and over-limit totals use the strong danger colour with a symbol. Fields use the input border on the surface, like MonarchTextField. All roles come from the theme, so dark and high-contrast themes follow.",
+  "platformNotes": "The web always renders a table that scrolls sideways; on a phone that is hard to use, so at compact width (and at the accessibility text sizes) this shows one day per page with previous and next buttons, a MonarchDurationInput with its system Stepper for each editable row, and the row's period total under its name. The web keys days and cells by ISO date strings; here the key is the day's Date, the same value in days and in each row's cells. The web's label, markers and summary cells accept any content; here they are text. The web's row-actions slot takes any content; here row actions are MonarchDataTableRowAction values in a Menu beside the row name, the same type MonarchDataTable uses, and they sit in the first column rather than a separate actions column. The web moves between cells with all four arrow keys; here, with a hardware keyboard, Return saves and moves down, up and down arrows move between cells, Tab follows the system order and left and right arrows move the text cursor. VoiceOver has no table navigation over a SwiftUI Grid; each cell is named by its row and day instead. Android uses the same name, MonarchTimesheetGrid. Several closures are optional (rowActions, onDayActivate, onCellActivate, onCellChange). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is rowActions.",
+  "accessibility": [
+    "The grid is a container named \"Time per row and day\" (overridable with labels.caption).",
+    "Column headings, day headings and row names have the header trait; a day heading is one element read as the day, \"Today\", the lock reason and the note, such as \"Mon, Jan 12, Approved, Payroll closed\".",
+    "Each cell is named by its row and day, such as \"Atlas, Tue, Jan 13\"; a read-only cell's value is the time in words in the person's locale and the lock reason, such as \"No time, Approved\".",
+    "An editable cell is a text field whose hint is its error (\"Error: …\") or \"Saving\" while it is being saved.",
+    "Day totals are named \"Day total, <day>\" and read the time in words, the expected time and \"Over the daily limit\"; row totals are named \"<row>, Total\".",
+    "Errors are announced when they appear, and shown with a symbol and text, not colour alone. Locked days have a lock symbol, today a bar, over-limit totals a warning symbol.",
+    "In the day layout the day title is adjustable (swipe up or down to change day), and the previous and next buttons are labelled \"Previous day\" and \"Next day\" and disabled at the ends.",
+    "Day headings with onDayActivate and cells with onCellActivate have the button trait.",
+    "Cells, fields and buttons are at least 44 points high; text scales with Dynamic Type and the column widths scale with it."
+  ],
+  "edgeCases": [
+    "Negative minutes in cells count as 0.",
+    "Cells keyed by a date that is not in days are ignored in every total.",
+    "Empty text clears the cell: onCellChange receives 0.",
+    "A value equal to the saved one is not passed to onCellChange.",
+    "If onCellChange succeeds but the app does not update rows, the typed text stays in the cell.",
+    "A lockReason locks the day even when isLocked is false.",
+    "The first day page is today, else the first day; the page stays where the person moved it.",
+    "Long row names and notes wrap; the grid scrolls sideways when the columns do not fit.",
+    "isReadOnly wins over onCellChange."
+  ],
+  "tests": [
+    "MonarchTimesheetGridTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Editable week with a locked day, read-only row and attendance",
+      "fixture": "timesheet-grid",
+      "webExample": "Editable week with a locked day, read-only row and attendance",
+      "template": "MonarchTimesheetGrid(\n    days: [\n        MonarchTimesheetGridDay({{days.0.date|date}}, expectedMinutes: {{days.0.expectedMinutes}}),\n        MonarchTimesheetGridDay({{days.1.date|date}}, isToday: {{days.1.today}}, expectedMinutes: {{days.1.expectedMinutes}}),\n        MonarchTimesheetGridDay({{days.2.date|date}}, expectedMinutes: {{days.2.expectedMinutes}}),\n        MonarchTimesheetGridDay({{days.3.date|date}}, isLocked: true, lockReason: {{days.3.locked}}, expectedMinutes: {{days.3.expectedMinutes}}),\n        MonarchTimesheetGridDay({{days.4.date|date}}, expectedMinutes: {{days.4.expectedMinutes}}),\n        MonarchTimesheetGridDay({{days.5.date|date}}, isNonWorking: {{days.5.nonWorking}}),\n        MonarchTimesheetGridDay({{days.6.date|date}}, isNonWorking: {{days.6.nonWorking}}),\n    ],\n    rows: [\n        MonarchTimesheetGridRow(id: {{rows.0.id}}, label: {{rows.0.label}}, description: {{rows.0.description}}, cells: cells[{{rows.0.id}}] ?? [:]),\n        MonarchTimesheetGridRow(id: {{rows.1.id}}, label: {{rows.1.label}}, description: {{rows.1.description}}, cells: cells[{{rows.1.id}}] ?? [:]),\n        MonarchTimesheetGridRow(id: {{rows.2.id}}, label: {{rows.2.label}}, description: {{rows.2.description}}, cells: cells[{{rows.2.id}}] ?? [:]),\n        MonarchTimesheetGridRow(id: {{rows.3.id}}, label: {{rows.3.label}}, description: {{rows.3.description}}, cells: cells[{{rows.3.id}}] ?? [:], isReadOnly: {{rows.3.readOnly}}),\n    ],\n    summaryRows: [\n        MonarchTimesheetGridSummaryRow(id: {{summary.id}}, label: {{summary.label}}, cells: [{{summary.cells.0.date|date}}: {{summary.cells.0.text}}, {{summary.cells.1.date|date}}: {{summary.cells.1.text}}, {{summary.cells.2.date|date}}: {{summary.cells.2.text}}], total: {{summary.total}}),\n    ],\n    layout: .grid,\n    onCellChange: { rowID, date, minutes in\n        cells[rowID, default: [:]][date] = minutes == 0 ? nil : minutes\n    }\n)",
+      "setupTemplate": "@State private var cells: [String: [Date: Int]] = [\n    {{rows.0.id}}: [{{rows.0.cells.0.date|date}}: {{rows.0.cells.0.minutes}}, {{rows.0.cells.1.date|date}}: {{rows.0.cells.1.minutes}}],\n    {{rows.1.id}}: [{{rows.1.cells.0.date|date}}: {{rows.1.cells.0.minutes}}, {{rows.1.cells.1.date|date}}: {{rows.1.cells.1.minutes}}],\n    {{rows.2.id}}: [{{rows.2.cells.0.date|date}}: {{rows.2.cells.0.minutes}}],\n    {{rows.3.id}}: [{{rows.3.cells.0.date|date}}: {{rows.3.cells.0.minutes}}],\n]",
+      "setup": "@State private var cells: [String: [Date: Int]] = [\n    \"web\": [Date(timeIntervalSince1970: 1_768_176_000): 240, Date(timeIntervalSince1970: 1_768_262_400): 180],\n    \"app\": [Date(timeIntervalSince1970: 1_768_176_000): 180, Date(timeIntervalSince1970: 1_768_348_800): 300],\n    \"internal\": [Date(timeIntervalSince1970: 1_768_262_400): 60],\n    \"timer\": [Date(timeIntervalSince1970: 1_768_348_800): 75],\n]",
+      "code": "MonarchTimesheetGrid(\n    days: [\n        MonarchTimesheetGridDay(Date(timeIntervalSince1970: 1_768_176_000), expectedMinutes: 480),\n        MonarchTimesheetGridDay(Date(timeIntervalSince1970: 1_768_262_400), isToday: true, expectedMinutes: 480),\n        MonarchTimesheetGridDay(Date(timeIntervalSince1970: 1_768_348_800), expectedMinutes: 480),\n        MonarchTimesheetGridDay(Date(timeIntervalSince1970: 1_768_435_200), isLocked: true, lockReason: \"Leave\", expectedMinutes: 480),\n        MonarchTimesheetGridDay(Date(timeIntervalSince1970: 1_768_521_600), expectedMinutes: 480),\n        MonarchTimesheetGridDay(Date(timeIntervalSince1970: 1_768_608_000), isNonWorking: true),\n        MonarchTimesheetGridDay(Date(timeIntervalSince1970: 1_768_694_400), isNonWorking: true),\n    ],\n    rows: [\n        MonarchTimesheetGridRow(id: \"web\", label: \"Website refresh\", description: \"Design · Billable\", cells: cells[\"web\"] ?? [:]),\n        MonarchTimesheetGridRow(id: \"app\", label: \"Mobile app\", description: \"Development · Billable\", cells: cells[\"app\"] ?? [:]),\n        MonarchTimesheetGridRow(id: \"internal\", label: \"Internal\", description: \"Meetings · Non-billable\", cells: cells[\"internal\"] ?? [:]),\n        MonarchTimesheetGridRow(id: \"timer\", label: \"Timer and imported entries\", description: \"Edit these in the day view\", cells: cells[\"timer\"] ?? [:], isReadOnly: true),\n    ],\n    summaryRows: [\n        MonarchTimesheetGridSummaryRow(id: \"attendance\", label: \"Attendance\", cells: [Date(timeIntervalSince1970: 1_768_176_000): \"7h 55m\", Date(timeIntervalSince1970: 1_768_262_400): \"4h 10m\", Date(timeIntervalSince1970: 1_768_348_800): \"6h 30m\"], total: \"18h 35m\"),\n    ],\n    layout: .grid,\n    onCellChange: { rowID, date, minutes in\n        cells[rowID, default: [:]][date] = minutes == 0 ? nil : minutes\n    }\n)"
+    },
+    {
+      "title": "A submitted week, one day per page",
+      "setup": "private static let monday = Date(timeIntervalSince1970: 1_768_176_000)",
+      "code": "MonarchTimesheetGrid(\n    days: [MonarchTimesheetGridDay(Self.monday, isToday: true, expectedMinutes: 480)],\n    rows: [MonarchTimesheetGridRow(id: \"atlas\", label: \"Atlas\", cells: [Self.monday: 450])],\n    summaryRows: [MonarchTimesheetGridSummaryRow(id: \"in\", label: \"Attendance\", cells: [Self.monday: \"9:00–17:00\"])],\n    layout: .day,\n    isReadOnly: true\n)"
+    }
+  ],
+  "webEquivalent": "TimesheetGrid",
+  "dependsOn": [
+    "number-input",
+    "duration-input",
+    "tabular-number",
+    "data-table"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "rowAction"
+      ],
+      "reason": "The web row action sits in a menu that is closed in the primary example and shows nothing in it, so the iOS example leaves the row menu out as well (it would also narrow the row name column on a phone).",
+      "convention": "closed menu content is not part of the primary example"
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "id": "file-list",
+  "name": "MonarchFileList",
+  "title": "FileList",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "LazyVStack or LazyVGrid(columns: [GridItem(.adaptive(minimum:))]) of MonarchFileCard, Toggle(sources:isOn:label:) for select all, MonarchBulkActionBar, .onKeyPress(.escape)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A list or grid of files with optional selection, a menu of actions per file, a bar of actions for the selected files and an empty state.",
+  "whenToUse": "For the files of a project, a record or a folder, where people open files, act on one, or select several and act on them together.",
+  "whenNotToUse": "Not for a single file (use MonarchFileCard), not for files being uploaded (use MonarchUploadQueue), and not for a full-screen file browser with navigation and swipe actions (use a List with selection and EditMode).",
+  "api": [
+    "init(_ items: [MonarchFileListItem], selection: Binding<Set<String>>? = nil, layout: MonarchFileListLayout = .list, label: String? = nil, bulkActions: [MonarchBulkAction] = [], labels: MonarchFileListLabels = MonarchFileListLabels(), onOpen: (@MainActor (MonarchFileListItem) -> Void)? = nil, @ViewBuilder menu: @escaping (MonarchFileListItem) -> MenuItems)",
+    "init(_ items: [MonarchFileListItem], selection: Binding<Set<String>>? = nil, layout: MonarchFileListLayout = .list, label: String? = nil, bulkActions: [MonarchBulkAction] = [], labels: MonarchFileListLabels = MonarchFileListLabels(), onOpen: (@MainActor (MonarchFileListItem) -> Void)? = nil) where MenuItems == EmptyView",
+    "struct MonarchFileListItem: Identifiable { init(id: String, name: String, size: Int64? = nil, contentType: String? = nil, meta: String? = nil, thumbnail: Image? = nil, thumbnailURL: URL? = nil, badges: [String] = [], isDisabled: Bool = false) }",
+    "enum MonarchFileListLayout { case list, grid }",
+    "struct MonarchFileListLabels { init(selectAll: String? = nil, empty: String? = nil, card: MonarchFileCardLabels = MonarchFileCardLabels(), bulkActionBar: MonarchBulkActionBarLabels = MonarchBulkActionBarLabels()) }"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "[MonarchFileListItem]",
+      "default": "required",
+      "description": "The files in display order: id, name, size, MIME type, meta, thumbnail or thumbnailURL, badges and isDisabled."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<Set<String>>?",
+      "default": "nil",
+      "description": "The ids of the selected files. Adds a checkbox to each file, \"Select all files\" and the bulk action bar."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchFileListLayout",
+      "default": ".list",
+      "description": "list: one row per file. grid: cards with previews in an adaptive grid whose column width grows with Dynamic Type."
+    },
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "nil",
+      "description": "The spoken name of the files container, such as \"Project files\"."
+    },
+    {
+      "name": "bulkActions",
+      "type": "[MonarchBulkAction]",
+      "default": "[]",
+      "description": "Actions for the selection (Download, Move, Delete), shown in MonarchBulkActionBar while any file is selected."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchFileListLabels",
+      "default": "MonarchFileListLabels()",
+      "description": "Replacements for \"Select all files\", the empty title, and the strings of the cards and the bar."
+    },
+    {
+      "name": "onOpen",
+      "type": "(@MainActor (MonarchFileListItem) -> Void)?",
+      "default": "nil",
+      "description": "Opens a file, for example with Quick Look. Makes each file a button."
+    },
+    {
+      "name": "menu",
+      "type": "@ViewBuilder (MonarchFileListItem) -> MenuItems",
+      "default": "none (no menu)",
+      "description": "The items of each file's actions menu."
+    }
+  ],
+  "states": [
+    {
+      "name": "read only",
+      "description": "Without selection: the files only, as rows or cards."
+    },
+    {
+      "name": "selectable",
+      "description": "Each file has a checkbox and \"Select all files\" heads the list."
+    },
+    {
+      "name": "some selected",
+      "description": "Select all is mixed and the bulk action bar shows the count, the actions and Clear selection."
+    },
+    {
+      "name": "all selected",
+      "description": "Select all is checked; pressing it clears the selection."
+    },
+    {
+      "name": "file disabled",
+      "description": "The file cannot be opened or selected and is left out of select all."
+    },
+    {
+      "name": "empty",
+      "description": "MonarchEmptyState with \"No files yet\" and a document symbol."
+    }
+  ],
+  "appearance": "MonarchFileCard rows or cards on the surface with subtle borders, selected files in the accent subtle and accent border roles, the bar as MonarchBulkActionBar. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "The web toolbar shows \"3 files selected\" next to select all; on iOS the count, the actions and Clear selection are MonarchBulkActionBar, which also announces each change. The web's renderActions and bulkActions slots take free content; here the per-file menu is standard Menu items and bulk actions are MonarchBulkAction values. Shift-click ranges have no touch equivalent and are not offered. Escape clears the selection with a hardware keyboard. The parity map named List with EditMode selection; the list is drawn as stacked MonarchFileCards instead, because each card already has its own checkbox and menu, the grid layout has no List equivalent, and the file list usually sits inside a scrolling page with other content. A full-screen browser should use List(selection:) with EditMode directly.",
+  "accessibility": [
+    "The files are one container named by label.",
+    "Each file is read as in MonarchFileCard: the name, then the type, size, meta and badges; with onOpen it is a button.",
+    "Each checkbox is a standard toggle named \"Select\" and the file name, and each menu \"Actions for\" and the file name, with 44-point touch targets.",
+    "Select all is a standard Toggle(sources:isOn:) with on, off and mixed values; it is disabled when no file can be selected.",
+    "The bulk action bar announces each change of the selection count."
+  ],
+  "edgeCases": [
+    "Selected ids that are not in items are kept in the binding but not counted.",
+    "Disabled files keep their selection state when select all is pressed.",
+    "The list does not scroll by itself: put it in a ScrollView, where the lazy stacks create rows as they appear.",
+    "Long names are shortened in the middle so the extension stays visible."
+  ],
+  "tests": [
+    "MonarchFileListTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Selectable list and grid with actions",
+      "fixture": "file-list",
+      "webExample": "Selectable list and grid with actions",
+      "template": "VStack(spacing: MonarchTokens.Space.space3) {\n    MonarchSegmentedControl(\n        \"Layout\",\n        selection: $layout,\n        items: [\n            MonarchSegmentedItem({{layouts.0.label}}, value: MonarchFileListLayout{{layouts.0.value|case}}),\n            MonarchSegmentedItem({{layouts.1.label}}, value: MonarchFileListLayout{{layouts.1.value|case}}),\n        ]\n    )\n    MonarchFileList(\n        [\n            MonarchFileListItem(id: {{files.0.id}}, name: {{files.0.name}}, size: {{files.0.size}}, meta: {{files.0.meta}}),\n            MonarchFileListItem(id: {{files.1.id}}, name: {{files.1.name}}, size: {{files.1.size}}, meta: {{files.1.meta}}),\n            MonarchFileListItem(id: {{files.2.id}}, name: {{files.2.name}}, size: {{files.2.size}}, meta: {{files.2.meta}}),\n            MonarchFileListItem(id: {{files.3.id}}, name: {{files.3.name}}, size: {{files.3.size}}, meta: {{files.3.meta}}),\n            MonarchFileListItem(id: {{files.4.id}}, name: {{files.4.name}}, size: {{files.4.size}}, meta: {{files.4.meta}}),\n        ],\n        selection: $selection,\n        layout: layout,\n        label: {{label}},\n        bulkActions: [\n            MonarchBulkAction(id: \"download\", title: {{bulkActions.0}}) {},\n            MonarchBulkAction(id: \"trash\", title: {{bulkActions.1}}, isDestructive: true) {},\n        ],\n        onOpen: { _ in },\n        menu: { _ in\n            Button({{menu.0}}) {}\n            Button({{menu.1}}) {}\n            Button({{menu.2}}, role: .destructive) {}\n        }\n    )\n}",
+      "setupTemplate": "@State private var layout: MonarchFileListLayout = {{layout|case}}\n@State private var selection: Set<String> = []",
+      "setup": "@State private var layout: MonarchFileListLayout = .list\n@State private var selection: Set<String> = []",
+      "code": "VStack(spacing: MonarchTokens.Space.space3) {\n    MonarchSegmentedControl(\n        \"Layout\",\n        selection: $layout,\n        items: [\n            MonarchSegmentedItem(\"List\", value: MonarchFileListLayout.list),\n            MonarchSegmentedItem(\"Grid\", value: MonarchFileListLayout.grid),\n        ]\n    )\n    MonarchFileList(\n        [\n            MonarchFileListItem(id: \"1\", name: \"project-brief.pdf\", size: 1_800_000, meta: \"Edited yesterday\"),\n            MonarchFileListItem(id: \"2\", name: \"wireframes.png\", size: 4_200_000, meta: \"Edited 3 days ago\"),\n            MonarchFileListItem(id: \"3\", name: \"estimates.xlsx\", size: 96_000, meta: \"Edited last week\"),\n            MonarchFileListItem(id: \"4\", name: \"kickoff-recording.mp4\", size: 182_000_000, meta: \"Edited last week\"),\n            MonarchFileListItem(id: \"5\", name: \"source-assets.zip\", size: 54_000_000, meta: \"Edited last month\"),\n        ],\n        selection: $selection,\n        layout: layout,\n        label: \"Project files\",\n        bulkActions: [\n            MonarchBulkAction(id: \"download\", title: \"Download\") {},\n            MonarchBulkAction(id: \"trash\", title: \"Move to trash\", isDestructive: true) {},\n        ],\n        onOpen: { _ in },\n        menu: { _ in\n            Button(\"Download\") {}\n            Button(\"Rename\") {}\n            Button(\"Move to trash\", role: .destructive) {}\n        }\n    )\n}"
+    },
+    {
+      "title": "A grid of cards",
+      "code": "MonarchFileList(\n    [\n        MonarchFileListItem(id: \"1\", name: \"photo.heic\", thumbnail: Image(systemName: \"photo\")),\n        MonarchFileListItem(id: \"2\", name: \"notes.txt\", size: 900),\n    ],\n    layout: .grid\n)"
+    },
+    {
+      "title": "No files yet",
+      "code": "MonarchFileList([], labels: MonarchFileListLabels(empty: \"Nothing uploaded\"))"
+    }
+  ],
+  "webEquivalent": "FileList",
+  "dependsOn": [
+    "file-card",
+    "bulk-action-bar",
+    "empty-state",
+    "checkbox"
+  ],
+  "icons": {
+    "actions": "MoreGlyph"
+  }
+}

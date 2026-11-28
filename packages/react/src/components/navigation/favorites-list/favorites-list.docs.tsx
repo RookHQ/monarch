@@ -1,19 +1,25 @@
 import { useState } from 'react';
 import { FavoriteToggle, FavoritesList, type FavoriteItem } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './favorites-list.fixture.json';
 import { BoardIcon, ListIcon, InboxIcon } from '../../../internal/docs-demo.js';
 
-const pinned: FavoriteItem[] = [
-  {
-    id: 'project:1',
-    label: 'Website refresh',
-    href: '#favorites',
-    icon: <BoardIcon />,
-    current: true,
-  },
-  { id: 'view:2', label: 'My open tasks', href: '#favorites', icon: <ListIcon /> },
-  { id: 'doc:3', label: 'Launch checklist', href: '#favorites', icon: <InboxIcon /> },
-];
+const ICONS = { board: <BoardIcon />, list: <ListIcon />, inbox: <InboxIcon /> };
+const pinned: FavoriteItem[] = (
+  fixture.data.items as readonly {
+    id: string;
+    label: string;
+    icon: keyof typeof ICONS;
+    current?: boolean;
+  }[]
+).map((item) => ({
+  id: item.id,
+  label: item.label,
+  href: '#favorites',
+  icon: ICONS[item.icon],
+  ...(item.current && { current: true }),
+}));
 
 function EditableFavorites() {
   const [items, setItems] = useState(pinned);

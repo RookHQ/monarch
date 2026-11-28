@@ -21,7 +21,9 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    # 10 to 15 minutes on a hosted runner with the native docs pages; the limit leaves room for a
+    # slow runner without letting a hung step run on.
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with: { fetch-depth: 0 }
@@ -42,6 +44,9 @@ jobs:
       - run: npm run registry:validate
       - run: npm run registry:components:check
       - run: npm run docs:generate:check
+      # Native token files and the golden brand vectors, checked on Linux as well as in Native.
+      - run: npm run native:tokens:check
+      - run: npm run native:brand:check
       - run: npm run build:docs
       - name: Docs site performance budget
         run: npm run docs:budget -- --report
@@ -53,7 +58,7 @@ jobs:
         if: always() && hashFiles('reports/monarch.sarif') != ''
         with: { name: monarch-conformance-sarif, path: reports/monarch.sarif }
       # Pull requests from forks cannot upload to code scanning (read-only token); never fail the build on it.
-      - uses: github/codeql-action/upload-sarif@a3d1b77a1ba1550fbb5c74db1dc3a11f4a481126 # v3.39.2
+      - uses: github/codeql-action/upload-sarif@74c1aea9df7c0f02e9b7bfe4a8935abf2e5e3aa6 # v3.39.5
         if: always() && hashFiles('reports/monarch.sarif') != ''
         continue-on-error: true
         with: { sarif_file: reports/monarch.sarif, category: monarch-conformance }
@@ -88,7 +93,7 @@ jobs:
     # Parallel legs instead of one long job: axe in each engine (three shards
     # each), the visual baselines, and the device shapes. Each leg builds the site itself (about 3 minutes), which
     # is simpler and faster overall than passing a build artifact around.
-    name: Docs site (${{ matrix.suite }}${{ (startsWith(matrix.suite, 'a11y-') || startsWith(matrix.suite, 'devices-')) && format(' {0}/3', matrix.shard) || '' }})
+    name: Docs site (${{ matrix.suite }}${{ (startsWith(matrix.suite, 'a11y-') || startsWith(matrix.suite, 'devices')) && format(' {0}/3', matrix.shard) || '' }})
     runs-on: ubuntu-24.04
     # Pinned browser and fonts make screenshots deterministic. Keep the tag in
     # sync with @playwright/test in package.json.
@@ -108,15 +113,13 @@ jobs:
             devices-firefox,
             devices-webkit,
           ]
-        # Axe runs every docs page (500+) in two themes, and the Firefox and WebKit device
-        # legs run every page in five shapes: three shards each keep every leg well inside
-        # the timeout. Visual and the Chromium device leg are one leg each.
+        # Axe runs every docs page (500+) in two themes, and the device legs run every page in
+        # five shapes: three shards each keep every leg well inside the timeout (one Chromium
+        # device leg passed Playwright's 21-minute limit with every component native). Visual is one leg.
         shard: [1, 2, 3]
         exclude:
           - { suite: visual, shard: 2 }
           - { suite: visual, shard: 3 }
-          - { suite: devices, shard: 2 }
-          - { suite: devices, shard: 3 }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -132,7 +135,7 @@ jobs:
         run: npx playwright test --project ${{ matrix.suite }} --shard=${{ matrix.shard }}/3
       - name: Phone and tablet shapes, upright and on their side
         if: ${{ startsWith(matrix.suite, 'devices') }}
-        run: npx playwright test --project ${{ matrix.suite }}${{ startsWith(matrix.suite, 'devices-') && format(' --shard={0}/3', matrix.shard) || '' }}
+        run: npx playwright test --project ${{ matrix.suite }} --shard=${{ matrix.shard }}/3
       - name: Visual baselines
         if: ${{ matrix.suite == 'visual' && !inputs.update_snapshots }}
         run: npm run test:visual

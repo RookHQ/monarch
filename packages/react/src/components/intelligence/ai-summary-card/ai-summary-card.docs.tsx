@@ -2,36 +2,29 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiSummaryCard, type AiSourcePart } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-summary-card.fixture.json';
 
 const SUMMARIES = [
-  'The customer renewed for another year in **January** and added two seats.\n\n- Usage is steady at about 40 active people a week.\n- One open support ticket about exports.',
+  fixture.data.summary,
   'Renewal is confirmed and the two extra seats are active.\n\n- Weekly active people rose to **46**.\n- The export ticket was closed yesterday.',
 ];
 
-const sources: AiSourcePart[] = [
-  {
-    type: 'source',
-    id: 'notes',
-    title: 'Renewal call notes',
-    url: 'https://example.com/notes/renewal',
-    kind: 'doc',
-  },
-  {
-    type: 'source',
-    id: 'ticket',
-    title: 'Ticket 2041: CSV export',
-    kind: 'record',
-    product: 'Support',
-  },
-];
+const sources = fixture.data.sources.map((source) => ({
+  type: 'source' as const,
+  ...source,
+})) as AiSourcePart[];
+
+// How long before "now" the summary was generated, from the fixture.
+const GENERATED_AGO_MS = Date.parse(fixture.data.now) - Date.parse(fixture.data.generatedAt);
 
 function RefreshDemo() {
   const [index, setIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [generatedAt, setGeneratedAt] = useState(() => Date.now() - 3 * 3_600_000);
+  const [generatedAt, setGeneratedAt] = useState(() => Date.now() - GENERATED_AGO_MS);
   return (
     <AiSummaryCard
-      title="Account summary"
+      title={fixture.data.title}
       summary={SUMMARIES[index] ?? ''}
       generatedAt={generatedAt}
       sources={sources}
@@ -46,7 +39,7 @@ function RefreshDemo() {
       }}
       actions={
         <Button size="sm" variant="ghost">
-          Open in assistant
+          {fixture.data.actionLabel}
         </Button>
       }
     />

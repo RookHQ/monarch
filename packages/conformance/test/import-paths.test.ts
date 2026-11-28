@@ -21,7 +21,7 @@ const SHELL: ImportPathDeprecation = {
   from: '@rookcom/monarch-react/shell',
   to: '@rookcom/monarch-react/rook',
   since: '0.14.5',
-  removeIn: '0.15.0',
+  removeNoEarlierThan: '2027-02-11',
 };
 
 /** Applies the fixes of every finding to the text, as `monarch check --fix` does. */
@@ -72,7 +72,7 @@ describe('scanImportPaths', () => {
     const [f] = scanImportPaths(text, [SHELL]);
     expect(f).toMatchObject({ line: 1, column: 1 });
     expect(f?.message).toContain('`RookRail`, `RookRailProps` have moved');
-    expect(f?.message).toContain('0.15.0');
+    expect(f?.message).toContain('no earlier than 2027-02-11');
     expect(f?.fix?.safety).toBe('safe');
     expect(fixed(text)).toBe(
       `import { RookRail, type RookRailProps } from '@rookcom/monarch-react/rook';\n`,
@@ -121,7 +121,7 @@ describe('scanImportPaths', () => {
 });
 
 describe('bundled import-path deprecations', () => {
-  it('send every Rook-specific export to /rook, with removal in the next minor', () => {
+  it('send every Rook-specific export to /rook, with removal no earlier than 2027-02-11', () => {
     expect(BUNDLED_IMPORT_PATH_DEPRECATIONS.map((d) => d.from).sort()).toEqual([
       '@rookcom/monarch-react/ai',
       '@rookcom/monarch-react/patterns',
@@ -129,7 +129,7 @@ describe('bundled import-path deprecations', () => {
     ]);
     for (const d of BUNDLED_IMPORT_PATH_DEPRECATIONS) {
       expect(d.to).toBe('@rookcom/monarch-react/rook');
-      expect(d.removeIn).toBe('0.15.0');
+      expect(d.removeNoEarlierThan).toBe('2027-02-11');
       for (const n of d.names) expect(n).toMatch(/Rook|^rook|^ROOK_/);
     }
     expect(loadImportPathDeprecations()).toEqual([...BUNDLED_IMPORT_PATH_DEPRECATIONS]);

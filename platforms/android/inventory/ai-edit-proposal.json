@@ -1,0 +1,192 @@
+{
+  "id": "ai-edit-proposal",
+  "name": "MonarchAiEditProposal",
+  "title": "AiEditProposal",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of word-diff androidx.compose.material3.Text with MonarchButton, MonarchBadge and MonarchAiGeneratedBadge, on MonarchDiffViewer's word diff",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A reviewable diff of edits an AI proposes to a document or record, accepted or rejected per change or all at once, and revertible once applied.",
+  "whenToUse": "When an assistant proposes changes to something outside the conversation (a document, a record, a form) and a person must decide before anything is applied.",
+  "whenNotToUse": "For comparing two versions of a file without decisions use MonarchDiffViewer. For a suggestion inside a text field use MonarchAiGhostText or MonarchAiAutofillField.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchAiEditProposal(part: MonarchAiEditProposalPart, hunks: List<MonarchAiEditHunk>, modifier: Modifier = Modifier, title: String? = null, onAcceptAll: (() -> Unit)? = null, onRejectAll: (() -> Unit)? = null, onAcceptHunk: ((id: String) -> Unit)? = null, onRejectHunk: ((id: String) -> Unit)? = null, onRevert: (() -> Unit)? = null, statusIcon: (@Composable (MonarchAiEditHunkStatus) -> Unit)? = null, labels: MonarchAiEditProposalLabels = MonarchAiEditProposalLabels())",
+    "class MonarchAiEditHunk(id: String, before: String, after: String, label: String? = null, status: MonarchAiEditHunkStatus? = null)",
+    "enum class MonarchAiEditHunkStatus { Proposed, Accepted, Rejected }",
+    "enum class MonarchAiEditProposalEvent { Accepted, Rejected, AcceptedAll, RejectedAll }",
+    "class MonarchAiEditProposalLabels(badge: String? = null, state: ((MonarchAiEditProposalState) -> String)? = null, hunkState: ((MonarchAiEditHunkStatus) -> String)? = null, count: ((total: Int, pending: Int) -> String)? = null, hunkName: ((index: Int, total: Int) -> String)? = null, acceptAll: String? = null, rejectAll: String? = null, accept: String? = null, reject: String? = null, revert: String? = null, deleted: String? = null, inserted: String? = null, unchanged: String? = null, announcement: ((event: MonarchAiEditProposalEvent, left: Int) -> String)? = null, readOnly: ((MonarchAiEditProposalState) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "part",
+      "type": "MonarchAiEditProposalPart",
+      "default": "required",
+      "description": "The edit-proposal part of the message. Its state decides whether the edits can change; its id scopes remembered decisions."
+    },
+    {
+      "name": "hunks",
+      "type": "List<MonarchAiEditHunk>",
+      "default": "required",
+      "description": "The changes in document order, each with the text before and after."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the card."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "null",
+      "description": "Replaces \"Suggested edits\"; the title is a heading."
+    },
+    {
+      "name": "onAcceptAll",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Accepts every undecided change; shows Accept all while proposed."
+    },
+    {
+      "name": "onRejectAll",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Rejects every undecided change; shows Reject all while proposed."
+    },
+    {
+      "name": "onAcceptHunk",
+      "type": "((id: String) -> Unit)?",
+      "default": "null",
+      "description": "Accepts one change by id; shows Accept on each undecided change."
+    },
+    {
+      "name": "onRejectHunk",
+      "type": "((id: String) -> Unit)?",
+      "default": "null",
+      "description": "Rejects one change by id; shows Reject on each undecided change."
+    },
+    {
+      "name": "onRevert",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Undoes applied edits; shows Revert once the part is applied."
+    },
+    {
+      "name": "statusIcon",
+      "type": "(@Composable (MonarchAiEditHunkStatus) -> Unit)?",
+      "default": "null",
+      "description": "An icon before a change's decision, tinted like the decision. Monarch bundles no icons; the decision is always written."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiEditProposalLabels",
+      "default": "MonarchAiEditProposalLabels()",
+      "description": "Replacements for every built-in string."
+    }
+  ],
+  "states": [
+    {
+      "name": "proposed",
+      "description": "Info state badge, the count of changes left, per-change and all buttons."
+    },
+    {
+      "name": "change accepted",
+      "description": "\"Accepted\" in the strong success color; the removed text turns subtle and the added text plain, still underlined."
+    },
+    {
+      "name": "change rejected",
+      "description": "\"Rejected\" in the muted color; the original text is plain without the strike and the proposed text subtle, still underlined."
+    },
+    {
+      "name": "applied",
+      "description": "Success badge, \"These edits were applied.\", every change accepted unless rejected, and Revert."
+    },
+    {
+      "name": "rejected",
+      "description": "Neutral badge and every change rejected; no buttons."
+    },
+    {
+      "name": "reverted",
+      "description": "Warning badge; every change shows undecided because none of it is in the document."
+    },
+    {
+      "name": "no change",
+      "description": "A change whose text is the same shows it with \"(No change)\"."
+    }
+  ],
+  "appearance": "A card on the surface color with the default border and a 3dp start accent in the AI border role; each change on the subtle background with the subtle border. Removed words use the AI diff-remove fill and strong text and are struck through; added words use the AI diff-add fill and strong text and are underlined. Light, dark and both high-contrast themes follow the roles.",
+  "platformNotes": "The web takes the title as a node; here it is a String. The web's word tokens keep inner apostrophes in one word and group neighbouring changes; this component reuses MonarchDiffViewer's word diff, which splits at apostrophes, so a changed contraction can show a smaller change, as on iOS. The web moves keyboard focus to the next undecided change; Compose requests input focus on the next Accept button with a FocusRequester; buttons take focus only outside touch mode (keyboard), TalkBack focus is not moved, and the announcement says what changed. The web and iOS show check and cross glyphs; Monarch for Android bundles no icons, so they are the optional statusIcon slot. Decisions are kept with rememberSaveable per part id. The part is the conversation model's MonarchAiEditProposalPart. Marked experimental because it is a domain composite that no Rook app has adopted yet.",
+  "accessibility": [
+    "The card is a traversal group; its title is a heading.",
+    "Each change is one TalkBack element read as its name, its decision, then the diff with \"Deleted:\" and \"Inserted:\" before removed and added words.",
+    "Per-change buttons are named with the change, for example \"Accept, Change 2 of 3\".",
+    "After a decision the result is announced through a polite live region (\"Change accepted. 1 left.\") and input focus is requested on the next undecided change's Accept button, which takes effect with a keyboard (outside touch mode).",
+    "Removed text is struck through and added text underlined, and decisions are written words, so nothing depends on color.",
+    "Buttons are MonarchButton with 48dp touch targets; text wraps at font scale 2.0."
+  ],
+  "edgeCases": [
+    "A change with empty before is a pure addition and reads \"Inserted:\" only; empty after reads \"Deleted:\" only.",
+    "A new part id (a regenerated proposal that reuses change ids) starts undecided.",
+    "A change's status, when given by the app, wins over the remembered decision.",
+    "Without any callbacks the card is read-only even while proposed."
+  ],
+  "tests": [
+    "MonarchAiEditProposalTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Review and apply",
+      "fixture": "ai-edit-proposal",
+      "webExample": "Review and apply",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiEditProposal(\n    part = MonarchAiEditProposalPart(id = \"edit-1\", target = \"doc-1\", diff = MonarchAiJSON.Null),\n    hunks = listOf(\n        MonarchAiEditHunk({{hunks.0.id}}, before = {{hunks.0.before}}, after = {{hunks.0.after}}, label = {{hunks.0.label}}),\n        MonarchAiEditHunk({{hunks.1.id}}, before = {{hunks.1.before}}, after = {{hunks.1.after}}, label = {{hunks.1.label}}),\n        MonarchAiEditHunk({{hunks.2.id}}, before = {{hunks.2.before}}, after = {{hunks.2.after}}, label = {{hunks.2.label}}),\n    ),\n    onAcceptAll = {},\n    onRejectAll = {},\n    onAcceptHunk = {},\n    onRejectHunk = {},\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ],
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiEditProposal(\n    part = MonarchAiEditProposalPart(id = \"edit-1\", target = \"doc-1\", diff = MonarchAiJSON.Null),\n    hunks = listOf(\n        MonarchAiEditHunk(\"title\", before = \"Quarterly plan\", after = \"Quarterly roadmap\", label = \"Title\"),\n        MonarchAiEditHunk(\"summary\", before = \"The team will ship the new onboarding flow in May.\", after = \"The team will ship the redesigned onboarding flow in early June.\", label = \"Summary\"),\n        MonarchAiEditHunk(\"owner\", before = \"Sam\", after = \"Sam Lee\", label = \"Owner\"),\n    ),\n    onAcceptAll = {},\n    onRejectAll = {},\n    onAcceptHunk = {},\n    onRejectHunk = {},\n)"
+    },
+    {
+      "title": "Applied edits that can be reverted",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiEditProposal(\n    part = MonarchAiEditProposalPart(\n        id = \"proposal-2\",\n        target = \"doc-1\",\n        diff = MonarchAiJSON.Null,\n        state = MonarchAiEditProposalState.Applied,\n    ),\n    hunks = listOf(MonarchAiEditHunk(\"1\", before = \"The fee is 2%.\", after = \"The fee is 3%.\")),\n    onRevert = {},\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ]
+    }
+  ],
+  "webEquivalent": "AiEditProposal",
+  "dependsOn": [
+    "diff-viewer",
+    "button"
+  ],
+  "icons": {
+    "badge": "BotGlyph",
+    "accept": "CheckGlyph",
+    "reject": "CloseGlyph",
+    "acceptAll": "CheckGlyph"
+  },
+  "toneMap": {
+    "STATE_TONE": {
+      "proposed": "info",
+      "applied": "success",
+      "rejected": "neutral",
+      "reverted": "warning"
+    }
+  },
+  "parityExceptions": [
+    {
+      "rule": "fixture-text",
+      "platform": "android",
+      "reason": "The web docs page has a Reset demo button that restores the example state; it is page chrome, not part of the component.",
+      "convention": "docs-page chrome is not part of a native example",
+      "paths": [
+        "Reset demo"
+      ]
+    }
+  ]
+}

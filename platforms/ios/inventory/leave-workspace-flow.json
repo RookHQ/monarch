@@ -1,0 +1,77 @@
+{
+  "id": "leave-workspace-flow",
+  "name": null,
+  "title": "LeaveWorkspaceFlow",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "alert(_:isPresented:actions:message:) for the blocked case; sheet(isPresented:content:) with presentationDetents and interactiveDismissDisabled for the confirmation, holding MonarchConsequenceList, MonarchInlineNotice and MonarchButtons",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a member leaves a workspace after a confirmation that lists what they lose and what stays, or learns why they cannot leave yet and how to fix it.",
+  "whenToUse": "In workspace settings, for a member who wants to leave a shared workspace.",
+  "whenNotToUse": "To remove someone else, use the revoke access recipe. To delete the workspace for everyone, ask with MonarchStepUpAuthDialog and a type-to-confirm field.",
+  "api": [
+    "MonarchButton(\"Leave workspace\", systemImage: \"rectangle.portrait.and.arrow.right\", variant: .danger) { … }",
+    ".alert(\"You can’t leave yet\", isPresented: $isBlocked) { Button(\"Transfer ownership\") { … }; Button(\"Close\", role: .cancel) {} } message: { Text(reason) }",
+    ".sheet(isPresented: $isConfirming) { MonarchConsequenceList([…]); MonarchButton(\"Leave workspace\", variant: .danger, isLoading: isLeaving, fullWidth: true) { … } }",
+    ".interactiveDismissDisabled(isLeaving)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "confirm",
+      "description": "A sheet with the title naming the workspace, a line saying it happens at once, the consequence list and a danger Leave workspace button with Cancel."
+    },
+    {
+      "name": "leaving",
+      "description": "Leave workspace shows its spinner; Cancel is disabled and the sheet cannot be swiped away."
+    },
+    {
+      "name": "failed",
+      "description": "A danger MonarchInlineNotice in the sheet; the person can try again."
+    },
+    {
+      "name": "blocked",
+      "description": "When the person is the last owner, or the app has another reason, the button opens an alert that says why and offers the fix (Transfer ownership) instead of leaving."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component or a system alert in the theme: the heading style title, MonarchConsequenceList with its kind icons, the danger and ghost MonarchButtons.",
+  "platformNotes": "The web's LeaveWorkspaceFlow is one component built on ConfirmDialog and Dialog. On iOS it is a recipe: a system alert cannot hold a list or stay open while a request runs, so the confirmation is a sheet (which keeps the pending and error states inside it), and the blocked case, which only needs a sentence and two buttons, is a system alert. The web's default consequences and messages are written in the app here. The web's fixAction can be any element; in the alert it is a button. The parity map lists alert (MonarchBanner on iOS) as a part; the blocked explanation is a short modal message with a fix, which on iOS is the system alert, so MonarchBanner is not used. Android composes the same recipe.",
+  "accessibility": [
+    "The sheet's title has the header trait.",
+    "MonarchConsequenceList reads each consequence with its kind, so removed, kept and warning do not depend on the icon.",
+    "The alert is the system's, read in full by VoiceOver with its buttons; Close has the cancel role.",
+    "Buttons are MonarchButtons with 44-point touch targets and a busy state while leaving.",
+    "The sheet cannot be dismissed while leaving, so the result is not lost."
+  ],
+  "edgeCases": [
+    "Check whether the person is the last owner on the server as well; the recipe's check only decides which dialog opens.",
+    "After leaving, navigate away from the workspace: its screens are no longer available.",
+    "List the apps the person loses by name when the workspace has several."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Leave from a danger zone",
+      "fixture": "leave-workspace-flow",
+      "webExample": "Leave from a danger zone",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    // The heading sits outside the card, which has a red edge and its button at the right, as on the web.\n    Text({{heading}}).monarchTextStyle(.bodyStrong).foregroundStyle(theme.colors.dangerStrong)\n    HStack(alignment: .center, spacing: theme.spacing.space3) {\n        VStack(alignment: .leading, spacing: theme.spacing.space1) {\n            Text({{title}}).monarchTextStyle(.label).fontWeight(.medium)\n            Text({{description}})\n                .monarchTextStyle(.caption)\n                .foregroundStyle(theme.colors.textMuted)\n        }\n        .frame(maxWidth: .infinity, alignment: .leading)\n        MonarchButton({{action}}, variant: .danger, size: .sm) {\n            if isLastOwner {\n                isBlocked = true\n            } else {\n                isConfirming = true\n            }\n        }\n        .fixedSize()\n    }\n    .padding(theme.spacing.space3)\n    .background(theme.colors.bgSurface)\n    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))\n    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(theme.colors.dangerBorder))\n    .overlay(alignment: .leading) { Rectangle().fill(theme.colors.dangerSolid).frame(width: 3) }\n    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))\n}\n.alert(\"You can’t leave yet\", isPresented: $isBlocked) {\n    Button(\"Transfer ownership\") {\n        // Open the app's transfer ownership flow.\n    }\n    Button(\"Close\", role: .cancel) {}\n} message: {\n    Text(\"You are the only owner. Transfer ownership to another member before you leave.\")\n}\n.sheet(isPresented: $isConfirming) {\n    ScrollView {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            Text(\"Leave \" + {{workspaceName}} + \"?\")\n                .monarchTextStyle(.heading)\n                .accessibilityAddTraits(.isHeader)\n            Text(\"You are removed from the workspace straight away.\")\n                .monarchTextStyle(.body)\n            MonarchConsequenceList([\n                MonarchConsequence(.removed, \"You lose access to \" + apps.joined(separator: \", \")),\n                MonarchConsequence(.kept, \"What you created stays in the workspace for the other members\"),\n                MonarchConsequence(.warning, \"You need a new invite to come back\"),\n            ])\n            if let failure {\n                MonarchInlineNotice(failure, tone: .danger)\n            }\n            MonarchButton(\"Leave workspace\", variant: .danger, isLoading: isLeaving, fullWidth: true, action: leave)\n            MonarchButton(\"Cancel\", variant: .ghost, fullWidth: true) { isConfirming = false }\n                .disabled(isLeaving)\n        }\n        .padding(theme.spacing.space6)\n    }\n    .interactiveDismissDisabled(isLeaving)\n    .presentationDetents([.medium, .large])\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isConfirming = false\n@State private var isBlocked = false\n@State private var isLeaving = false\n@State private var failure: String?\nprivate let isLastOwner = false\nprivate let apps = [{{apps.0}}, {{apps.1}}, {{apps.2}}]\n\nprivate func leave() {\n    isLeaving = true\n    failure = nil\n    Task {\n        do {\n            // The app removes the person from the workspace here.\n            try await Task.sleep(for: .milliseconds(300))\n            isLeaving = false\n            isConfirming = false\n        } catch {\n            isLeaving = false\n            failure = \"Couldn’t leave the workspace. Try again.\"\n        }\n    }\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isConfirming = false\n@State private var isBlocked = false\n@State private var isLeaving = false\n@State private var failure: String?\nprivate let isLastOwner = false\nprivate let apps = [\"Projects\", \"Docs\", \"Calendar\"]\n\nprivate func leave() {\n    isLeaving = true\n    failure = nil\n    Task {\n        do {\n            // The app removes the person from the workspace here.\n            try await Task.sleep(for: .milliseconds(300))\n            isLeaving = false\n            isConfirming = false\n        } catch {\n            isLeaving = false\n            failure = \"Couldn’t leave the workspace. Try again.\"\n        }\n    }\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    // The heading sits outside the card, which has a red edge and its button at the right, as on the web.\n    Text(\"Danger zone\").monarchTextStyle(.bodyStrong).foregroundStyle(theme.colors.dangerStrong)\n    HStack(alignment: .center, spacing: theme.spacing.space3) {\n        VStack(alignment: .leading, spacing: theme.spacing.space1) {\n            Text(\"Leave this workspace\").monarchTextStyle(.label).fontWeight(.medium)\n            Text(\"You lose access to its projects and documents.\")\n                .monarchTextStyle(.caption)\n                .foregroundStyle(theme.colors.textMuted)\n        }\n        .frame(maxWidth: .infinity, alignment: .leading)\n        MonarchButton(\"Leave workspace\", variant: .danger, size: .sm) {\n            if isLastOwner {\n                isBlocked = true\n            } else {\n                isConfirming = true\n            }\n        }\n        .fixedSize()\n    }\n    .padding(theme.spacing.space3)\n    .background(theme.colors.bgSurface)\n    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))\n    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(theme.colors.dangerBorder))\n    .overlay(alignment: .leading) { Rectangle().fill(theme.colors.dangerSolid).frame(width: 3) }\n    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))\n}\n.alert(\"You can’t leave yet\", isPresented: $isBlocked) {\n    Button(\"Transfer ownership\") {\n        // Open the app's transfer ownership flow.\n    }\n    Button(\"Close\", role: .cancel) {}\n} message: {\n    Text(\"You are the only owner. Transfer ownership to another member before you leave.\")\n}\n.sheet(isPresented: $isConfirming) {\n    ScrollView {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            Text(\"Leave \" + \"Northfield\" + \"?\")\n                .monarchTextStyle(.heading)\n                .accessibilityAddTraits(.isHeader)\n            Text(\"You are removed from the workspace straight away.\")\n                .monarchTextStyle(.body)\n            MonarchConsequenceList([\n                MonarchConsequence(.removed, \"You lose access to \" + apps.joined(separator: \", \")),\n                MonarchConsequence(.kept, \"What you created stays in the workspace for the other members\"),\n                MonarchConsequence(.warning, \"You need a new invite to come back\"),\n            ])\n            if let failure {\n                MonarchInlineNotice(failure, tone: .danger)\n            }\n            MonarchButton(\"Leave workspace\", variant: .danger, isLoading: isLeaving, fullWidth: true, action: leave)\n            MonarchButton(\"Cancel\", variant: .ghost, fullWidth: true) { isConfirming = false }\n                .disabled(isLeaving)\n        }\n        .padding(theme.spacing.space6)\n    }\n    .interactiveDismissDisabled(isLeaving)\n    .presentationDetents([.medium, .large])\n}"
+    }
+  ],
+  "webEquivalent": "LeaveWorkspaceFlow",
+  "dependsOn": [
+    "confirm-dialog",
+    "consequence-list",
+    "button",
+    "inline-notice",
+    "sheet"
+  ]
+}

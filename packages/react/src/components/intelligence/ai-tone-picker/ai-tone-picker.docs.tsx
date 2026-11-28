@@ -6,13 +6,17 @@ import {
   AI_TONE_CUSTOM,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-tone-picker.fixture.json';
 
 function CardsDemo() {
-  const [tone, setTone] = useState('professional');
+  const [tone, setTone] = useState(fixture.data.value);
   const [custom, setCustom] = useState('');
   return (
     <div style={{ display: 'grid', gap: 'var(--mn-space-2)', width: '100%', maxWidth: '40rem' }}>
       <AiTonePicker
+        tones={fixture.data.tones}
+        messages={fixture.data.messages}
         value={tone}
         onChange={setTone}
         allowCustom

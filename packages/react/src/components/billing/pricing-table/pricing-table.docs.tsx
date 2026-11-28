@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from '@rookcom/monarch-react';
+import { Button, type ButtonProps } from '@rookcom/monarch-react';
 import {
   BillingPeriodToggle,
   PricingTable,
@@ -8,54 +8,29 @@ import {
   type PricingPlan,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './pricing-table.fixture.json';
 
-const periods: BillingPeriodOption[] = [
-  { value: 'monthly', label: 'Monthly', priceSuffix: '/ month' },
-  { value: 'yearly', label: 'Yearly', priceSuffix: '/ year', priceNote: 'Billed yearly' },
-];
+const periods = fixture.data.periods as unknown as BillingPeriodOption[];
 
-const plans: PricingPlan[] = [
-  {
-    id: 'starter',
-    name: 'Starter',
-    description: 'For individuals.',
-    prices: { monthly: '₹A', yearly: '₹B' },
-    action: <Button variant="secondary">Choose Starter</Button>,
-  },
-  {
-    id: 'team',
-    name: 'Team',
-    description: 'For small teams.',
-    prices: { monthly: '₹C', yearly: '₹D' },
-    highlighted: true,
-    badge: 'Recommended',
-    action: <Button variant="primary">Choose Team</Button>,
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    description: 'For larger organisations.',
-    price: 'Contact us',
-    action: <Button variant="secondary">Talk to sales</Button>,
-  },
-];
+const plans: PricingPlan[] = (
+  fixture.data.plans as unknown as readonly (Omit<PricingPlan, 'action'> & {
+    action: {
+      label: string;
+      variant: NonNullable<ButtonProps['variant']>;
+      size: NonNullable<ButtonProps['size']>;
+    };
+  })[]
+).map(({ action, ...plan }) => ({
+  ...plan,
+  action: (
+    <Button variant={action.variant} size={action.size}>
+      {action.label}
+    </Button>
+  ),
+}));
 
-const features: PricingFeature[] = [
-  {
-    id: 'projects',
-    label: 'Projects',
-    values: { starter: 'Up to 3', team: true, enterprise: true },
-  },
-  { id: 'members', label: 'Members', values: { starter: '1', team: 'Up to 25', enterprise: true } },
-  {
-    id: 'sso',
-    label: 'Single sign-on',
-    description: 'SAML and OIDC',
-    group: 'Security',
-    values: { starter: false, team: true, enterprise: true },
-  },
-  { id: 'audit', label: 'Audit log', group: 'Security', values: { enterprise: true } },
-];
+const features = fixture.data.features as unknown as PricingFeature[];
 
 function ControlledPeriod() {
   const [period, setPeriod] = useState('yearly');
@@ -192,7 +167,7 @@ export default {
     responsive: {
       items: [
         'At 390px the page does not scroll sideways: the table area does, with the feature column sticky on the inline start.',
-        'Column widths shrink below 640px; long values wrap.',
+        'Column widths shrink when the table itself is narrower than 44rem (a query on its own width, not the window), so three plans fit a 620px column without scrolling; long values wrap between words.',
         'The toggle meets 44px touch targets on coarse pointers (SegmentedControl).',
         'RTL: the sticky column and alignment use logical properties.',
       ],
@@ -213,7 +188,7 @@ export default {
               plans={plans}
               features={features}
               periods={periods}
-              caption="Compare plans"
+              caption={fixture.data.caption}
             />
           ),
         },

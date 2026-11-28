@@ -1,0 +1,121 @@
+{
+  "id": "kpi-row",
+  "name": null,
+  "title": "KPIRow",
+  "family": "data-display",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "LazyVGrid with two GridItem(.flexible()) columns (one at accessibility text sizes), or ScrollView(.horizontal) with LazyHStack, containerRelativeFrame(.horizontal, count:span:spacing:), scrollTargetLayout() and scrollTargetBehavior(.viewAligned); accessibilityElement(children: .contain) with accessibilityLabel names the row",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the row of key figures at the top of a dashboard, as MonarchStatCards in a two-column grid or in a sideways row that snaps card by card, with one loading and error state for the whole row.",
+  "whenToUse": "At the top of a dashboard or a report screen, for three to six figures with their change against the previous period.",
+  "whenNotToUse": "For a single figure use MonarchStatCard on its own. For figures that belong to one record use LabeledContent with the Monarch style. For a trend over time use a chart.",
+  "api": [
+    "LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: theme.spacing.space3), count: dynamicTypeSize.isAccessibilitySize ? 1 : 2), spacing: theme.spacing.space3) { MonarchStatCard(…) }",
+    "ScrollView(.horizontal) { LazyHStack(spacing: theme.spacing.space3) { MonarchStatCard(…).containerRelativeFrame(.horizontal, count: 5, span: 4, spacing: theme.spacing.space3) }.scrollTargetLayout() }.scrollTargetBehavior(.viewAligned)",
+    ".accessibilityElement(children: .contain).accessibilityLabel(\"This month\")",
+    "MonarchStatCard(_:value:isLoading: true) for each placeholder; MonarchInlineErrorRetry(_:variant: .banner, onRetry:) in place of the row"
+  ],
+  "options": [
+    {
+      "name": "columns",
+      "type": "[GridItem]",
+      "default": "two flexible columns",
+      "description": "Two on a phone, one at accessibility text sizes; an iPad layout can use GridItem(.adaptive(minimum:)) for as many as fit."
+    },
+    {
+      "name": "scroll",
+      "type": "ScrollView(.horizontal) with viewAligned snapping",
+      "default": "off",
+      "description": "Keeps one row: each card takes four fifths of the width so the next one shows, and scrolling stops on a card."
+    },
+    {
+      "name": "size / variant",
+      "type": "MonarchMetricSize / MonarchStatCardVariant",
+      "default": ".md / .card",
+      "description": "Passed to every MonarchStatCard: .sm for dense rows, .lg for a hero row, .plain inside another card."
+    },
+    {
+      "name": "loading",
+      "type": "Bool (app state)",
+      "default": "false",
+      "description": "Every card's isLoading; with no figures yet, four placeholder cards labelled Loading."
+    },
+    {
+      "name": "error",
+      "type": "String? (app state)",
+      "default": "nil",
+      "description": "Replaces the row with MonarchInlineErrorRetry in its banner variant."
+    },
+    {
+      "name": "label",
+      "type": "String",
+      "default": "none",
+      "description": "Names the group for VoiceOver, for example This month."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The cards with their values, changes and sparklines."
+    },
+    {
+      "name": "loading",
+      "description": "Each card shows its own loading placeholder; with no figures yet, placeholder cards keep the row's height."
+    },
+    {
+      "name": "error",
+      "description": "One banner with Try again in place of the row, not an error per card."
+    },
+    {
+      "name": "scrolling",
+      "description": "A sideways row that stops on each card, with the next card partly visible."
+    }
+  ],
+  "appearance": "Every part is MonarchStatCard: the surface, border, value, change and sparkline in their roles, so light, dark and both high-contrast themes follow. Cards are spaced by space3.",
+  "platformNotes": "The web ships KPIRow as a component over StatCardGroup with columns, minItemWidth, overflow, loading and error props. On iOS it is a recipe: a LazyVGrid or a snapping horizontal ScrollView already lays out the cards, and MonarchStatCard owns the loading, error and value states, so a wrapper would only rename SwiftUI's layout parameters. The web's minItemWidth breakpoint becomes two columns on a phone and one at accessibility text sizes; its overflow scroll becomes scrollTargetBehavior(.viewAligned), the system's snapping. The web's role group with aria-label is an accessibility container with a label. The web makes a scrolling row a tab stop for the keyboard; on iOS the scroll view scrolls with swipes and VoiceOver moves into it card by card. Android has not covered this entry yet.",
+  "accessibility": [
+    "The row is a container named by its label, so VoiceOver says This month when it moves into it.",
+    "Each card keeps MonarchStatCard's reading: label, value and change in one element, with the change direction spoken.",
+    "In the scrolling row VoiceOver moves card by card and scrolls the next one into view.",
+    "One column at accessibility text sizes, so values are never truncated."
+  ],
+  "edgeCases": [
+    "An odd number of cards leaves the last grid row half filled; use an even number or the scrolling row.",
+    "Cards in one grid row take the height of the tallest; a long hint in one card makes its row taller.",
+    "Keep the figures to six or fewer; more belong in a report."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Headline figures with changes",
+      "fixture": "kpi-row",
+      "webExample": "Headline figures with changes",
+      "template": "LazyVGrid(\n    columns: Array(\n        repeating: GridItem(.flexible(), spacing: theme.spacing.space3),\n        count: dynamicTypeSize.isAccessibilitySize ? 1 : 2\n    ),\n    spacing: theme.spacing.space3\n) {\n    MonarchStatCard(\n        {{items.0.label}},\n        value: {{items.0.value}},\n        change: MonarchMetricChange({{items.0.change}}, comparison: {{items.0.caption}}, goodDirection: {{items.0.goodDirection|case}}),\n        format: {{items.0.format|case}}\n    )\n    MonarchStatCard(\n        {{items.1.label}},\n        value: {{items.1.value}},\n        change: MonarchMetricChange({{items.1.change}}),\n        format: {{items.1.format|case}}\n    )\n    MonarchStatCard(\n        {{items.2.label}},\n        value: {{items.2.value}},\n        unit: {{items.2.unit}},\n        change: MonarchMetricChange({{items.2.change}}, goodDirection: {{items.2.goodDirection|case}})\n    )\n    MonarchStatCard({{items.3.label}}, value: {{items.3.value}}, hint: {{items.3.hint}})\n}\n.accessibilityElement(children: .contain)\n.accessibilityLabel({{label}})",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@Environment(\\.dynamicTypeSize) private var dynamicTypeSize",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@Environment(\\.dynamicTypeSize) private var dynamicTypeSize",
+      "code": "LazyVGrid(\n    columns: Array(\n        repeating: GridItem(.flexible(), spacing: theme.spacing.space3),\n        count: dynamicTypeSize.isAccessibilitySize ? 1 : 2\n    ),\n    spacing: theme.spacing.space3\n) {\n    MonarchStatCard(\n        \"Open tickets\",\n        value: 128,\n        change: MonarchMetricChange(0.12, comparison: \"vs previous 30 days\", goodDirection: .down),\n        format: .number\n    )\n    MonarchStatCard(\n        \"Within target\",\n        value: 0.94,\n        change: MonarchMetricChange(0.02),\n        format: .percent\n    )\n    MonarchStatCard(\n        \"First reply\",\n        value: 42,\n        unit: \"min\",\n        change: MonarchMetricChange(-0.08, goodDirection: .down)\n    )\n    MonarchStatCard(\"Satisfaction\", value: nil, hint: \"No survey answers yet\")\n}\n.accessibilityElement(children: .contain)\n.accessibilityLabel(\"Last 30 days\")"
+    },
+    {
+      "title": "A row that scrolls sideways and snaps",
+      "setup": "@Environment(\\.monarchTheme) private var theme",
+      "code": "ScrollView(.horizontal) {\n    LazyHStack(spacing: theme.spacing.space3) {\n        ForEach([\"Revenue\", \"Orders\", \"Refunds\"], id: \\.self) { label in\n            MonarchStatCard(label, value: 1_280, change: MonarchMetricChange(0.05))\n                .containerRelativeFrame(.horizontal, count: 5, span: 4, spacing: theme.spacing.space3)\n        }\n    }\n    .scrollTargetLayout()\n}\n.scrollTargetBehavior(.viewAligned)\n.scrollIndicators(.hidden)\n.accessibilityElement(children: .contain)\n.accessibilityLabel(\"Today\")"
+    },
+    {
+      "title": "Loading, and an error for the whole row",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isRetrying = false",
+      "code": "VStack(spacing: theme.spacing.space4) {\n    LazyVGrid(\n        columns: Array(repeating: GridItem(.flexible(), spacing: theme.spacing.space3), count: 2),\n        spacing: theme.spacing.space3\n    ) {\n        ForEach(0..<4, id: \\.self) { _ in\n            MonarchStatCard(\"Loading\", value: nil, isLoading: true)\n        }\n    }\n    MonarchInlineErrorRetry(\"The figures didn't load.\", variant: .banner, isRetrying: isRetrying) {\n        isRetrying = true\n    }\n}"
+    }
+  ],
+  "webEquivalent": "KPIRow",
+  "dependsOn": [
+    "stat-card",
+    "grid",
+    "inline-error-retry"
+  ]
+}

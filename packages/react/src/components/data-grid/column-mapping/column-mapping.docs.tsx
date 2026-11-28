@@ -6,25 +6,12 @@ import {
   type ColumnMappingValue,
 } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './column-mapping.fixture.json';
 
-const FIELDS: ColumnMappingField[] = [
-  { id: 'name', label: 'Name', required: true },
-  { id: 'email', label: 'Email', required: true, aliases: ['E-mail', 'Mail'] },
-  {
-    id: 'phone',
-    label: 'Phone number',
-    description: 'International format, e.g. +44 20 7946 0000',
-  },
-  { id: 'company', label: 'Company' },
-];
+const FIELDS: ColumnMappingField[] = fixture.data.fields;
 
-const SOURCES = [
-  { name: 'Full Name', samples: ['Sam Lee', 'Ana Ruiz'] },
-  { name: 'E-mail', samples: ['sam@example.com', 'ana@example.org'] },
-  { name: 'Phone', samples: ['+44 20 7946 0000'] },
-  { name: 'Organisation name', samples: ['Example Ltd'] },
-  { name: 'Notes', samples: [] },
-];
+const SOURCES = fixture.data.sources;
 
 function Controlled() {
   const [value, setValue] = useState<ColumnMappingValue | undefined>(undefined);

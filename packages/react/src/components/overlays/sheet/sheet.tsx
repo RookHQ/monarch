@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Fragment,
   forwardRef,
   type ComponentPropsWithoutRef,
   type ElementRef,
@@ -12,6 +13,7 @@ import { cx } from '../../../internal/cx.js';
 import { CloseGlyph } from '../../../internal/icons.js';
 import { dismissHandlers } from '../../../internal/dismiss.js';
 import { useDirectionContext } from '../../../internal/direction.js';
+import { stagedDismiss, useOverlayStage } from '../../../internal/overlay-stage.js';
 import {
   DialogBody,
   DialogDescription,
@@ -26,7 +28,11 @@ import {
  * focus is trapped, the page behind does not scroll, Escape closes it and
  * focus returns to the trigger. Every sheet needs a SheetTitle.
  */
-export const Sheet = DialogPrimitive.Root;
+export function Sheet(props: DialogPrimitive.DialogProps) {
+  // In a docs preview stage the sheet is a picture in the page: never modal.
+  const staged = useOverlayStage();
+  return <DialogPrimitive.Root {...props} {...(staged ? { modal: false } : {})} />;
+}
 export const SheetTrigger = DialogPrimitive.Trigger;
 export const SheetClose = DialogPrimitive.Close;
 
@@ -89,21 +95,32 @@ export const SheetContent = forwardRef<
   },
   ref,
 ) {
-  const guards = dismissHandlers(
-    { busy, closeOnOutsideClick, escapeGuard },
-    { onEscapeKeyDown, onInteractOutside },
+  const staged = useOverlayStage();
+  const guards = stagedDismiss(
+    staged,
+    dismissHandlers(
+      { busy, closeOnOutsideClick, escapeGuard },
+      { onEscapeKeyDown, onInteractOutside },
+    ),
   );
+  const Portal = staged ? Fragment : DialogPrimitive.Portal;
   const showHandle = handle ?? side === 'bottom';
   // The portal leaves the subtree that carries `dir`; take it from a DirectionProvider.
   const dir = useDirectionContext();
   return (
-    <DialogPrimitive.Portal>
+    <Portal>
       <DialogPrimitive.Overlay className="mn-overlay" />
       <DialogPrimitive.Content
         ref={ref}
         {...(dir ? { dir } : {})}
         {...rest}
         {...guards}
+        {...(staged
+          ? {
+              // A staged overlay is a picture: nothing in it takes focus on mount.
+              onOpenAutoFocus: (event: Event) => event.preventDefault(),
+            }
+          : {})}
         aria-busy={busy || rest['aria-busy'] || undefined}
         data-side={side}
         data-size={size}
@@ -123,7 +140,7 @@ export const SheetContent = forwardRef<
           </DialogPrimitive.Close>
         ) : null}
       </DialogPrimitive.Content>
-    </DialogPrimitive.Portal>
+    </Portal>
   );
 });
 

@@ -1,0 +1,120 @@
+{
+  "id": "dashboard-portfolio",
+  "name": null,
+  "title": "DashboardPortfolio",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchDashboardGrid (androidx.compose.foundation.lazy.grid.LazyVerticalGrid) of MonarchDonutChart, MonarchWidget sections with MonarchBadge, MonarchBarList and MonarchActivityTimeline",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The home screen of a portfolio product (assets, contracts, intellectual property): what the portfolio is made of, what needs attention, the largest items and recent activity, as sections of a MonarchDashboardGrid.",
+  "whenToUse": "As the home screen of a product that manages a portfolio of assets, contracts or rights, for people who watch its make-up, deadlines and changes.",
+  "whenNotToUse": "For a person's own tasks use the DashboardPersonalWork recipe; for one detailed report use a report screen with full charts.",
+  "api": [
+    "MonarchDashboardGrid(items = sections, key = { it }, itemLabel = { it }, modifier = Modifier.fillMaxSize()) { section -> when (section) { \"composition\" -> MonarchDonutChart(title = …, segments = …); \"attention\" -> MonarchWidget(title = \"Needs attention\", onViewAll = …) { rows with MonarchBadge(tone = Warning or Danger) }; \"ranking\" -> MonarchWidget(title = \"Largest contracts\") { MonarchBarList(items = …, label = …) }; else -> MonarchWidget(title = \"Recent activity\") { MonarchActivityTimeline(…) } } }"
+  ],
+  "options": [
+    {
+      "name": "sections",
+      "type": "List<String>",
+      "default": "required",
+      "description": "The sections in order; leave out what the product has no data for."
+    },
+    {
+      "name": "composition",
+      "type": "MonarchDonutChart",
+      "default": "optional",
+      "description": "What the portfolio is made of, with its legend and table view."
+    },
+    {
+      "name": "attention / coming up",
+      "type": "MonarchWidget",
+      "default": "optional",
+      "description": "Items with deadlines (renewals, expiries, fees) and a status badge in words."
+    },
+    {
+      "name": "ranking",
+      "type": "MonarchBarList or MonarchLeaderboard",
+      "default": "optional",
+      "description": "The largest items by value."
+    },
+    {
+      "name": "activity",
+      "type": "MonarchWidget with MonarchActivityTimeline",
+      "default": "optional",
+      "description": "Recent changes (the ActivityWidget recipe)."
+    },
+    {
+      "name": "MonarchWidget.state",
+      "type": "MonarchWidgetState",
+      "default": "Ready",
+      "description": "Loading, Empty or Failed per section."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "Each section shows its data."
+    },
+    {
+      "name": "loading or failed section",
+      "description": "MonarchWidget with state = Loading or Failed and onRetry, or the chart's status, per section."
+    },
+    {
+      "name": "editing",
+      "description": "MonarchDashboardGrid with editing = true shows arrange bars to move sections."
+    }
+  ],
+  "appearance": "Widgets on the surface color with the subtle border; the donut chart and bar list use the data colors; badges use their tones. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web DashboardPortfolio is one server-safe template with a header (title, period, actions), a KPI row, an insight strip and named slots laid out in a responsive grid. On Android it is a recipe the app owns: MonarchDashboardGrid is the screen's scrolling list (one column on a phone, more from 1024dp, and rearrangeable with editing), and each section is a MonarchWidget or another Monarch part. The title and actions belong to the screen's TopAppBar; add a KPI row (MonarchStatCard in a FlowRow) as the first full-span item when the product has key figures. Lazy parts such as MonarchActivityTimeline get a bounded height inside a grid item. iOS has no entry yet.",
+  "accessibility": [
+    "Each section's title is a heading.",
+    "The donut chart has a summary and a table view; the bar list reads each label with its value.",
+    "Deadlines and problems are badges in words, not colors alone.",
+    "Events are read by MonarchActivityTimeline with their times."
+  ],
+  "edgeCases": [
+    "Keep each section short and link to the full list with View all.",
+    "A lazy timeline inside a grid item needs a bounded height.",
+    "Very small segments of the donut are grouped into Other by maxSegments."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Supplier contracts, arrangeable",
+      "fixture": "dashboard-portfolio",
+      "webExample": "Supplier contracts, arrangeable",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    MonarchText(text = {{title}}, style = MonarchTextStyle.Title)\n    MonarchText(text = {{description}}, color = MonarchTheme.colors.textMuted)\n    MonarchPeriodSelector(\n        value = period,\n        onValueChange = { period = it },\n        today = {{today|millis}},\n        locale = Locale.forLanguageTag({{locale}}),\n    )\n    MonarchButton(\n        text = {{arrange}},\n        onClick = { arranging = !arranging },\n        variant = MonarchButtonVariant.Secondary,\n        size = MonarchButtonSize.Sm,\n    )\n    FlowRow(\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n    ) {\n        MonarchStatCard(label = {{kpis.0.label}}, value = {{kpis.0.value|double}})\n        MonarchStatCard(\n            label = {{kpis.1.label}},\n            value = {{kpis.1.value|double}},\n            format = MonarchMetricFormat.Currency({{kpis.1.currency}}),\n            compact = {{kpis.1.compact}},\n            locale = Locale.forLanguageTag({{locale}}),\n        )\n        MonarchStatCard(label = {{kpis.2.label}}, value = {{kpis.2.value|double}})\n    }\n    MonarchInsightStrip(\n        insights = listOf(\n            MonarchInsight(\n                id = {{insight.id}},\n                title = {{insight.title}},\n                why = {{insight.why}},\n                origin = MonarchInsightOrigin.{{insight.origin|pascal}},\n                tone = {{insight.severity|tone}},\n                actionLabel = {{insight.action}},\n                onAction = {},\n            ),\n        ),\n        title = {{headings.insights}},\n        layout = MonarchInsightStripLayout.Stack,\n    )\n    MonarchDashboardGrid(\n        items = sections,\n        key = { it },\n        itemLabel = { it },\n        editing = arranging,\n        modifier = Modifier.fillMaxSize(),\n    ) { section ->\n        when (section) {\n            {{headings.composition}} -> Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n            MonarchText(text = section, style = MonarchTextStyle.Subheading)\n            MonarchDonutChart(\n                    title = {{composition.title}},\n                    segments = listOf(\n                        MonarchDonutChartSegment({{composition.segments.0.key}}, {{composition.segments.0.label}}, value = {{composition.segments.0.value|double}}),\n                        MonarchDonutChartSegment({{composition.segments.1.key}}, {{composition.segments.1.label}}, value = {{composition.segments.1.value|double}}),\n                        MonarchDonutChartSegment({{composition.segments.2.key}}, {{composition.segments.2.label}}, value = {{composition.segments.2.value|double}}),\n                        MonarchDonutChartSegment({{composition.segments.3.key}}, {{composition.segments.3.label}}, value = {{composition.segments.3.value|double}}),\n                    ),\n                    centerValue = {{composition.centerValue}},\n                    centerLabel = {{composition.centerLabel}},\n                )\n        }\n            {{headings.attention}} -> MonarchWidget(title = section) {\n                Row(modifier = Modifier.padding(vertical = MonarchTheme.spacing.space2), verticalAlignment = Alignment.CenterVertically) {\n                    MonarchText(text = {{attention.0.label}}, modifier = Modifier.weight(1f))\n                    MonarchBadge(text = {{attention.0.badge}}, tone = {{attention.0.tone|tone}})\n                }\n                MonarchDivider(variant = MonarchDividerVariant.Subtle)\n                Row(modifier = Modifier.padding(vertical = MonarchTheme.spacing.space2), verticalAlignment = Alignment.CenterVertically) {\n                    MonarchText(text = {{attention.1.label}}, modifier = Modifier.weight(1f))\n                    MonarchBadge(text = {{attention.1.badge}}, tone = {{attention.1.tone|tone}})\n                }\n            }\n            {{headings.upcoming}} -> MonarchWidget(title = section) {\n                Row(modifier = Modifier.padding(vertical = MonarchTheme.spacing.space2)) {\n                    MonarchText(text = {{upcoming.0.label}}, modifier = Modifier.weight(1f))\n                    MonarchText(text = {{upcoming.0.value}})\n                }\n                MonarchDivider(variant = MonarchDividerVariant.Subtle)\n                Row(modifier = Modifier.padding(vertical = MonarchTheme.spacing.space2)) {\n                    MonarchText(text = {{upcoming.1.label}}, modifier = Modifier.weight(1f))\n                    MonarchText(text = {{upcoming.1.value}})\n                }\n                MonarchDivider(variant = MonarchDividerVariant.Subtle)\n                Row(modifier = Modifier.padding(vertical = MonarchTheme.spacing.space2)) {\n                    MonarchText(text = {{upcoming.2.label}}, modifier = Modifier.weight(1f))\n                    MonarchText(text = {{upcoming.2.value}})\n                }\n            }\n            {{headings.breakdown}} -> MonarchWidget(title = section) {\n                MonarchBarList(\n                    items = listOf(\n                        MonarchBarListItem({{breakdown.items.0.label}}, value = {{breakdown.items.0.value|double}}, id = {{breakdown.items.0.id}}),\n                        MonarchBarListItem({{breakdown.items.1.label}}, value = {{breakdown.items.1.value|double}}, id = {{breakdown.items.1.id}}),\n                        MonarchBarListItem({{breakdown.items.2.label}}, value = {{breakdown.items.2.value|double}}, id = {{breakdown.items.2.id}}),\n                        MonarchBarListItem({{breakdown.items.3.label}}, value = {{breakdown.items.3.value|double}}, id = {{breakdown.items.3.id}}),\n                    ),\n                    label = {{breakdown.label}},\n                )\n            }\n            {{headings.ranking}} -> MonarchWidget(title = section) {\n                MonarchLeaderboard(\n                    entries = listOf(\n                        MonarchLeaderboardEntry({{ranking.entries.0.name}}, {{ranking.entries.0.value|double}}, id = {{ranking.entries.0.id}}, display = {{ranking.entries.0.display}}),\n                        MonarchLeaderboardEntry({{ranking.entries.1.name}}, {{ranking.entries.1.value|double}}, id = {{ranking.entries.1.id}}, display = {{ranking.entries.1.display}}),\n                        MonarchLeaderboardEntry({{ranking.entries.2.name}}, {{ranking.entries.2.value|double}}, id = {{ranking.entries.2.id}}, display = {{ranking.entries.2.display}}),\n                    ),\n                    valueLabel = {{ranking.valueLabel}},\n                    showAvatars = false,\n                )\n            }\n            else -> MonarchWidget(title = section) {\n                MonarchActivityTimeline(\n                    events = events,\n                    modifier = Modifier\n                        .fillMaxWidth()\n                        .heightIn(max = 900.dp),\n                    groupByDay = false,\n                    density = MonarchActivityTimelineDensity.Compact,\n                    now = now,\n                    timeZone = \"UTC\",\n                )\n            }\n        }\n    }\n}",
+      "setupTemplate": "val now = {{now|millis}}\nvar period by remember { mutableStateOf(MonarchPeriodValue(MonarchPeriodPreset.Last7Days)) }\nvar arranging by remember { mutableStateOf(false) }\nval sections = listOf({{headings.composition}}, {{headings.attention}}, {{headings.upcoming}}, {{headings.breakdown}}, {{headings.ranking}}, {{headings.activity}})\nval events = listOf(\n    MonarchActivityTimelineEvent(\n        id = {{events.0.id}},\n        verb = {{events.0.verb}},\n        time = {{events.0.time|millis}},\n        actor = MonarchActivityTimelineActor({{events.0.actor}}),\n        target = {{events.0.object}},\n    ),\n    MonarchActivityTimelineEvent(\n        id = {{events.1.id}},\n        verb = {{events.1.verb}},\n        time = {{events.1.time|millis}},\n        actor = MonarchActivityTimelineActor({{events.1.actor}}),\n        target = {{events.1.object}},\n    ),\n)",
+      "imports": [
+        "com.rookhq.monarch.components.layout.divider.MonarchDivider",
+        "com.rookhq.monarch.components.layout.divider.MonarchDividerVariant",
+        "java.util.Locale"
+      ],
+      "setup": "val now = 1_781_517_600_000L\nvar period by remember { mutableStateOf(MonarchPeriodValue(MonarchPeriodPreset.Last7Days)) }\nvar arranging by remember { mutableStateOf(false) }\nval sections = listOf(\"Composition\", \"Needs attention\", \"Coming up\", \"Breakdown\", \"Top items\", \"Recent activity\")\nval events = listOf(\n    MonarchActivityTimelineEvent(\n        id = \"e1\",\n        verb = \"renewed\",\n        time = 1_781_516_400_000L,\n        actor = MonarchActivityTimelineActor(\"Mei Chen\"),\n        target = \"Payroll software\",\n    ),\n    MonarchActivityTimelineEvent(\n        id = \"e2\",\n        verb = \"added\",\n        time = 1_781_510_700_000L,\n        actor = MonarchActivityTimelineActor(\"Lucas Martin\"),\n        target = \"Laptop leasing\",\n    ),\n)",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    MonarchText(text = \"Home\", style = MonarchTextStyle.Title)\n    MonarchText(text = \"Supplier contracts\", color = MonarchTheme.colors.textMuted)\n    MonarchPeriodSelector(\n        value = period,\n        onValueChange = { period = it },\n        today = 1_781_481_600_000L,\n        locale = Locale.forLanguageTag(\"en-GB\"),\n    )\n    MonarchButton(\n        text = \"Arrange\",\n        onClick = { arranging = !arranging },\n        variant = MonarchButtonVariant.Secondary,\n        size = MonarchButtonSize.Sm,\n    )\n    FlowRow(\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n    ) {\n        MonarchStatCard(label = \"Active contracts\", value = 64.0)\n        MonarchStatCard(\n            label = \"Annual value\",\n            value = 2_400_000.0,\n            format = MonarchMetricFormat.Currency(\"GBP\"),\n            compact = true,\n            locale = Locale.forLanguageTag(\"en-GB\"),\n        )\n        MonarchStatCard(label = \"Renewing in 90 days\", value = 9.0)\n    }\n    MonarchInsightStrip(\n        insights = listOf(\n            MonarchInsight(\n                id = \"renewals\",\n                title = \"3 contracts renew within 30 days\",\n                why = \"None of them has an owner yet.\",\n                origin = MonarchInsightOrigin.Rule,\n                tone = MonarchTone.Warning,\n                actionLabel = \"Review renewals\",\n                onAction = {},\n            ),\n        ),\n        title = \"Insights\",\n        layout = MonarchInsightStripLayout.Stack,\n    )\n    MonarchDashboardGrid(\n        items = sections,\n        key = { it },\n        itemLabel = { it },\n        editing = arranging,\n        modifier = Modifier.fillMaxSize(),\n    ) { section ->\n        when (section) {\n            \"Composition\" -> Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n            MonarchText(text = section, style = MonarchTextStyle.Subheading)\n            MonarchDonutChart(\n                    title = \"Contracts by type\",\n                    segments = listOf(\n                        MonarchDonutChartSegment(\"software\", \"Software\", value = 28.0),\n                        MonarchDonutChartSegment(\"services\", \"Services\", value = 19.0),\n                        MonarchDonutChartSegment(\"facilities\", \"Facilities\", value = 11.0),\n                        MonarchDonutChartSegment(\"hardware\", \"Hardware\", value = 6.0),\n                    ),\n                    centerValue = \"64\",\n                    centerLabel = \"contracts\",\n                )\n        }\n            \"Needs attention\" -> MonarchWidget(title = section) {\n                Row(modifier = Modifier.padding(vertical = MonarchTheme.spacing.space2), verticalAlignment = Alignment.CenterVertically) {\n                    MonarchText(text = \"Cleaning services, Leeds\", modifier = Modifier.weight(1f))\n                    MonarchBadge(text = \"No owner\", tone = MonarchTone.Danger)\n                }\n                MonarchDivider(variant = MonarchDividerVariant.Subtle)\n                Row(modifier = Modifier.padding(vertical = MonarchTheme.spacing.space2), verticalAlignment = Alignment.CenterVertically) {\n                    MonarchText(text = \"Laptop leasing\", modifier = Modifier.weight(1f))\n                    MonarchBadge(text = \"No end date\", tone = MonarchTone.Warning)\n                }\n            }\n            \"Coming up\" -> MonarchWidget(title = section) {\n                Row(modifier = Modifier.padding(vertical = MonarchTheme.spacing.space2)) {\n                    MonarchText(text = \"Office lease, York\", modifier = Modifier.weight(1f))\n                    MonarchText(text = \"1 Jul 2026\")\n                }\n                MonarchDivider(variant = MonarchDividerVariant.Subtle)\n                Row(modifier = Modifier.padding(vertical = MonarchTheme.spacing.space2)) {\n                    MonarchText(text = \"CRM licences\", modifier = Modifier.weight(1f))\n                    MonarchText(text = \"14 Jul 2026\")\n                }\n                MonarchDivider(variant = MonarchDividerVariant.Subtle)\n                Row(modifier = Modifier.padding(vertical = MonarchTheme.spacing.space2)) {\n                    MonarchText(text = \"Cleaning services, Leeds\", modifier = Modifier.weight(1f))\n                    MonarchText(text = \"31 Jul 2026\")\n                }\n            }\n            \"Breakdown\" -> MonarchWidget(title = section) {\n                MonarchBarList(\n                    items = listOf(\n                        MonarchBarListItem(\"London\", value = 31.0, id = \"london\"),\n                        MonarchBarListItem(\"Leeds\", value = 18.0, id = \"leeds\"),\n                        MonarchBarListItem(\"York\", value = 9.0, id = \"york\"),\n                        MonarchBarListItem(\"Remote\", value = 6.0, id = \"remote\"),\n                    ),\n                    label = \"Contracts by location\",\n                )\n            }\n            \"Top items\" -> MonarchWidget(title = section) {\n                MonarchLeaderboard(\n                    entries = listOf(\n                        MonarchLeaderboardEntry(\"Office lease, London\", 420_000.0, id = \"lease\", display = \"£420k\"),\n                        MonarchLeaderboardEntry(\"CRM licences\", 186_000.0, id = \"crm\", display = \"£186k\"),\n                        MonarchLeaderboardEntry(\"Cleaning services\", 74_000.0, id = \"cleaning\", display = \"£74k\"),\n                    ),\n                    valueLabel = \"Annual value\",\n                    showAvatars = false,\n                )\n            }\n            else -> MonarchWidget(title = section) {\n                MonarchActivityTimeline(\n                    events = events,\n                    modifier = Modifier\n                        .fillMaxWidth()\n                        .heightIn(max = 900.dp),\n                    groupByDay = false,\n                    density = MonarchActivityTimelineDensity.Compact,\n                    now = now,\n                    timeZone = \"UTC\",\n                )\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "DashboardPortfolio",
+  "dependsOn": [
+    "dashboard-grid",
+    "widget",
+    "donut-chart",
+    "bar-list",
+    "activity-widget"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "layout",
+      "platform": "android",
+      "reason": "The web example is a 614px desktop page: the three key figures share one row, the period buttons and Arrange sit on one line, and the donut sits beside its legend. The phone window is 344dp wide, so the key figures stack, Arrange goes under the period selector (which scrolls sideways), and the legend goes above the donut. The sections, their order, the figures and the copy are the web's.",
+      "convention": "Material adaptive layout: a compact window uses one column"
+    }
+  ]
+}

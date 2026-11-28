@@ -1,0 +1,110 @@
+{
+  "id": "csat-survey",
+  "name": null,
+  "title": "CSATSurvey",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "VStack of a header Text, two Toggles with .toggleStyle(.monarchButton(.outline, size: .lg)) or MonarchRatingPicker, a MonarchFormField around TextField(_:text:axis: .vertical), MonarchButton and MonarchSaveStatusIndicator; MonarchLoadingState, MonarchErrorState and MonarchBanner for the other states",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a customer-satisfaction survey that saves the rating as soon as it is chosen, then an optional comment, with every saving state, a locked answer, a thank-you, loading and a failed load.",
+  "whenToUse": "After a support conversation, a delivery or an onboarding step, to ask one satisfaction question with an optional comment.",
+  "whenNotToUse": "For several questions, use a Form. For a quick rating inside a row, use MonarchRatingPicker alone.",
+  "api": [
+    "Toggle(_ title: String, systemImage: String, isOn: Binding<Bool>).toggleStyle(.monarchButton(.outline, size: .lg))",
+    "MonarchRatingPicker.init(_ label: String, value: Binding<Int?>, options: [MonarchRatingOption], …, isReadOnly: Bool = false, …)",
+    "MonarchFormField.init(_ label: String, helper: String? = nil, …, @ViewBuilder control: () -> Control)",
+    "TextField(_ title: String, text: Binding<String>, axis: Axis)",
+    "MonarchButton.init(_ title: String, …, variant: MonarchButtonVariant = .secondary, …, isLoading: Bool = false, …, action: @escaping @MainActor () -> Void)",
+    "MonarchSaveStatusIndicator.init(_ status: MonarchSaveStatus, savedAt: Date? = nil, errorMessage: String? = nil, …, onRetry: (@MainActor () -> Void)? = nil)",
+    "MonarchLoadingState.init(_ label: String, variant: MonarchLoadingStateVariant = .list, rows: Int = 4)",
+    "MonarchErrorState.init(_ title: String, message: String? = nil, …, kind: MonarchErrorStateKind = .error, …)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "unanswered",
+      "description": "The question, Good and Bad (or a 1–5 scale) and a hint to choose first."
+    },
+    {
+      "name": "saving",
+      "description": "MonarchSaveStatusIndicator shows Saving… after a choice or Save comment."
+    },
+    {
+      "name": "saved",
+      "description": "Saved with the relative time; the comment field appears."
+    },
+    {
+      "name": "save failed",
+      "description": "Couldn’t save with the reason and Retry."
+    },
+    {
+      "name": "locked",
+      "description": "The choices are read-only or disabled and a notice says the answer can no longer change."
+    },
+    {
+      "name": "submitted",
+      "description": "A success banner thanks the person."
+    },
+    {
+      "name": "loading",
+      "description": "MonarchLoadingState with a spinner."
+    },
+    {
+      "name": "load failed",
+      "description": "MonarchErrorState (not found) for an expired or invalid link."
+    }
+  ],
+  "appearance": "Monarch components on the surface background role: the question in the heading style, outline toggle buttons with the accent when chosen, the rating picker's tiles, the save status in its tone, the success banner and the error state.",
+  "platformNotes": "The web CSATSurvey is one component with scale, mode (instant or form), messages and promise handling. On iOS it composes existing parts: the app holds the rating, comment and save status and calls its server; the `form` mode is the same recipe with one Send feedback button instead of saving on choice. Thumbs are SF Symbols on toggle buttons, so the chosen answer is the toggle's on state. MonarchTextField is single-line, so the comment is a standard multi-line TextField inside MonarchFormField. Android uses the same recipe.",
+  "accessibility": [
+    "The question has the header trait.",
+    "Good and Bad are toggles, so VoiceOver reads the chosen one as on; the five-point scale is one adjustable element that reads \"4 of 5, Good\".",
+    "MonarchSaveStatusIndicator announces Saved and save failures; its Retry is a separate button.",
+    "The comment field is labelled by MonarchFormField and its helper reads the characters left.",
+    "Every control has a 44-point touch target and scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Save the rating on choice so a one-tap answer from a notification or email link is not lost; the comment is optional.",
+    "Turning a toggle off clears the choice; do not save a cleared rating unless the server supports it.",
+    "Limit the comment length (here 500 characters) and say how many are left.",
+    "After a failed save keep the person's rating and comment so Retry sends them again."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "One-click page with a comment",
+      "fixture": "csat-survey",
+      "webExample": "One-click page with a comment",
+      "template": "VStack(spacing: theme.spacing.space4) {\n    Text({{context}})\n        .monarchTextStyle(.caption)\n        .foregroundStyle(theme.colors.textMuted)\n    Text({{question}})\n        .monarchTextStyle(.heading)\n        .multilineTextAlignment(.center)\n        .accessibilityAddTraits(.isHeader)\n    HStack(spacing: theme.spacing.space3) {\n        choiceCard({{choices.0}}, symbol: \"hand.thumbsup\", value: 2)\n        choiceCard({{choices.1}}, symbol: \"hand.thumbsdown\", value: 1)\n    }\n    if rating == nil {\n        Text({{hint}})\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textMuted)\n            .multilineTextAlignment(.center)\n    } else {\n        MonarchFormField(\"Anything you’d like to add?\", helper: \"\\(500 - comment.count) characters left\") {\n            TextField(\"Comment\", text: $comment, axis: .vertical)\n                .lineLimit(3...6)\n                .textFieldStyle(.roundedBorder)\n        }\n        HStack {\n            MonarchButton(\"Save comment\", isLoading: status == .saving) { save() }\n                .disabled(comment.isEmpty)\n            MonarchSaveStatusIndicator(status) { save() }\n        }\n    }\n}\n.padding(theme.spacing.space4)\n.frame(maxWidth: .infinity)\n.background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous))\n.overlay(\n    RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous)\n        .strokeBorder(theme.colors.borderSubtle)\n)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var rating: Int?\n@State private var comment = \"\"\n@State private var status = MonarchSaveStatus.idle\n\nprivate func choiceCard(_ title: String, symbol: String, value: Int) -> some View {\n    let isOn = rating == value\n    return Button {\n        rating = isOn ? nil : value\n        if !isOn { save() }\n    } label: {\n        VStack(spacing: theme.spacing.space2) {\n            Image(systemName: symbol)\n            Text(title).monarchTextStyle(.label)\n        }\n        .foregroundStyle(isOn ? theme.colors.accentStrong : theme.colors.textDefault)\n        .frame(maxWidth: .infinity, minHeight: 72)\n        .background(\n            isOn ? theme.colors.accentSubtle : Color.clear,\n            in: RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous)\n        )\n        .overlay(\n            RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous)\n                .strokeBorder(isOn ? theme.colors.accentBorder : theme.colors.borderDefault, lineWidth: 1.5)\n        )\n        .contentShape(Rectangle())\n    }\n    .buttonStyle(.plain)\n    .accessibilityAddTraits(isOn ? .isSelected : [])\n}\n\nprivate func save() {\n    status = .saving\n    Task {\n        // Send the rating and comment to the server here.\n        try? await Task.sleep(for: .milliseconds(200))\n        status = .saved\n    }\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var rating: Int?\n@State private var comment = \"\"\n@State private var status = MonarchSaveStatus.idle\n\nprivate func choiceCard(_ title: String, symbol: String, value: Int) -> some View {\n    let isOn = rating == value\n    return Button {\n        rating = isOn ? nil : value\n        if !isOn { save() }\n    } label: {\n        VStack(spacing: theme.spacing.space2) {\n            Image(systemName: symbol)\n            Text(title).monarchTextStyle(.label)\n        }\n        .foregroundStyle(isOn ? theme.colors.accentStrong : theme.colors.textDefault)\n        .frame(maxWidth: .infinity, minHeight: 72)\n        .background(\n            isOn ? theme.colors.accentSubtle : Color.clear,\n            in: RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous)\n        )\n        .overlay(\n            RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous)\n                .strokeBorder(isOn ? theme.colors.accentBorder : theme.colors.borderDefault, lineWidth: 1.5)\n        )\n        .contentShape(Rectangle())\n    }\n    .buttonStyle(.plain)\n    .accessibilityAddTraits(isOn ? .isSelected : [])\n}\n\nprivate func save() {\n    status = .saving\n    Task {\n        // Send the rating and comment to the server here.\n        try? await Task.sleep(for: .milliseconds(200))\n        status = .saved\n    }\n}",
+      "code": "VStack(spacing: theme.spacing.space4) {\n    Text(\"Request #1042 · Billing question\")\n        .monarchTextStyle(.caption)\n        .foregroundStyle(theme.colors.textMuted)\n    Text(\"How would you rate the support you received?\")\n        .monarchTextStyle(.heading)\n        .multilineTextAlignment(.center)\n        .accessibilityAddTraits(.isHeader)\n    HStack(spacing: theme.spacing.space3) {\n        choiceCard(\"Good\", symbol: \"hand.thumbsup\", value: 2)\n        choiceCard(\"Bad\", symbol: \"hand.thumbsdown\", value: 1)\n    }\n    if rating == nil {\n        Text(\"Choose an answer above. You can add a comment afterwards.\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textMuted)\n            .multilineTextAlignment(.center)\n    } else {\n        MonarchFormField(\"Anything you’d like to add?\", helper: \"\\(500 - comment.count) characters left\") {\n            TextField(\"Comment\", text: $comment, axis: .vertical)\n                .lineLimit(3...6)\n                .textFieldStyle(.roundedBorder)\n        }\n        HStack {\n            MonarchButton(\"Save comment\", isLoading: status == .saving) { save() }\n                .disabled(comment.isEmpty)\n            MonarchSaveStatusIndicator(status) { save() }\n        }\n    }\n}\n.padding(theme.spacing.space4)\n.frame(maxWidth: .infinity)\n.background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous))\n.overlay(\n    RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous)\n        .strokeBorder(theme.colors.borderSubtle)\n)"
+    },
+    {
+      "title": "A five-point scale, locked after answering",
+      "code": "VStack(alignment: .leading) {\n    MonarchRatingPicker(\n        \"Your rating\",\n        value: .constant(4),\n        options: [\n            MonarchRatingOption(1, label: \"Very poor\"),\n            MonarchRatingOption(2, label: \"Poor\"),\n            MonarchRatingOption(3, label: \"Okay\"),\n            MonarchRatingOption(4, label: \"Good\"),\n            MonarchRatingOption(5, label: \"Excellent\"),\n        ],\n        isReadOnly: true\n    )\n    MonarchInlineNotice(\"Thanks for your feedback. This answer can no longer be changed.\")\n}"
+    },
+    {
+      "title": "A survey link that expired",
+      "code": "MonarchErrorState(\n    \"We couldn’t load this survey\",\n    message: \"The link has expired. Ask for a new one.\",\n    kind: .notFound\n)"
+    }
+  ],
+  "webEquivalent": "CSATSurvey",
+  "dependsOn": [
+    "rating-picker",
+    "text-field",
+    "button",
+    "save-status-indicator",
+    "toggle-button",
+    "form-field",
+    "loading-state",
+    "error-state",
+    "inline-notice"
+  ]
+}

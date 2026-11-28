@@ -1,0 +1,80 @@
+{
+  "id": "sheet",
+  "name": null,
+  "title": "Sheet",
+  "family": "overlays",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "sheet(isPresented:onDismiss:content:) with presentationDetents, presentationDragIndicator and interactiveDismissDisabled; inspector(isPresented:content:) for a panel at the side",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A modal panel attached to an edge of the screen is the system sheet, which rises from the bottom, with detents for its height. A panel at the side is the inspector. Monarch ships nothing.",
+  "whenToUse": "For a task that is finished or cancelled before going back: a longer form, filters, a picker, details of a record on a phone. Use detents to keep part of the screen behind it in view.",
+  "whenNotToUse": "Not for a short question (use alert or confirmationDialog), not for content that must cover the whole screen (use fullScreenCover), and not for a preview beside a list at regular width (use inspector).",
+  "api": [
+    "func sheet<Content: View>(isPresented: Binding<Bool>, onDismiss: (() -> Void)? = nil, content: @escaping () -> Content) -> some View",
+    "func sheet<Item: Identifiable, Content: View>(item: Binding<Item?>, onDismiss: (() -> Void)? = nil, content: @escaping (Item) -> Content) -> some View",
+    "func presentationDetents(_ detents: Set<PresentationDetent>) -> some View",
+    "func presentationDragIndicator(_ visibility: Visibility) -> some View",
+    "func interactiveDismissDisabled(_ isDisabled: Bool = true) -> some View",
+    "func presentationBackground<S: ShapeStyle>(_ style: S) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "presented",
+      "description": "The sheet covers the lower part of the screen or all of it, by detent. The content behind is dimmed and not interactive."
+    },
+    {
+      "name": "resting at a detent",
+      "description": "With several detents the person drags the sheet between heights; a detent selection binding reports the current one."
+    },
+    {
+      "name": "dismissal blocked",
+      "description": "interactiveDismissDisabled(true) stops the swipe down, for unsaved changes or while saving."
+    }
+  ],
+  "appearance": "The system draws the sheet, its corner radius, the grabber and the dimming in every theme. presentationBackground with a theme colour sets the fill; the content uses Monarch components.",
+  "platformNotes": "The web Sheet attaches to any edge (right by default) and has sizes sm to full, a header, body and footer, a close button, a drag handle and a busy state. An iOS sheet always rises from the bottom; the web's sizes are detents (.medium, .large, .height, .fraction), handle is presentationDragIndicator, busy and escapeGuard are interactiveDismissDisabled, and closeOnOutsideClick is the system's swipe and tap behaviour. The header, body and footer are ordinary content: a NavigationStack with a title and toolbar buttons, or a VStack. A side panel (the web's start and end sides) is the inspector, which is a column at regular width; there is no top sheet. Android uses ModalBottomSheet in the same way.",
+  "accessibility": [
+    "System behaviour: the sheet confines VoiceOver, Switch Control and keyboard focus until it is dismissed, and returns focus to the presenting screen.",
+    "System behaviour: the escape gesture and a swipe down dismiss it unless interactiveDismissDisabled is set.",
+    "Keep a visible button that closes the sheet (Done or Cancel); the swipe is not available to everyone.",
+    "Mark the title of the sheet as a header so VoiceOver users can find the start of it."
+  ],
+  "edgeCases": [
+    "At compact height (a phone in landscape) the system presents the sheet at full height.",
+    "On iPad at regular width the system presents a sheet as a centred card.",
+    "A sheet presented from inside another sheet stacks; avoid more than two levels.",
+    "presentationBackgroundInteraction(.enabled(upThrough:)) lets the content behind a low detent be used, which makes the sheet non-modal up to that height."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Record details",
+      "fixture": "sheet",
+      "webExample": "Record details",
+      "template": "MonarchButton({{trigger}}) { isOpen = true }\n    .sheet(isPresented: $isOpen) {\n        VStack(alignment: .leading, spacing: 0) {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            HStack(alignment: .top) {\n                Text({{title}})\n                    .monarchTextStyle(.heading)\n                    .accessibilityAddTraits(.isHeader)\n                Spacer(minLength: 0)\n                Button { isOpen = false } label: {\n                    MonarchIcon(systemName: \"xmark\", size: .sm).monarchMinimumHitTarget()\n                }\n                .buttonStyle(.plain)\n                .accessibilityLabel({{close}})\n            }\n            Text({{description}})\n                .monarchTextStyle(.caption)\n                .foregroundStyle(theme.colors.textMuted)\n            LazyVGrid(columns: [GridItem(.flexible(), alignment: .topLeading), GridItem(.flexible(), alignment: .topLeading)], alignment: .leading, spacing: theme.spacing.space3) {\n                LabeledContent({{details.0.term}}, value: {{details.0.value}})\n                    .labeledContentStyle(.monarch)\n                LabeledContent({{details.1.term}}, value: {{details.1.value}})\n                    .labeledContentStyle(.monarch)\n                LabeledContent({{details.2.term}}, value: {{details.2.value}})\n                    .labeledContentStyle(.monarch)\n            }\n        }\n        .padding(theme.spacing.space4)\n            // The footer is a bar of its own, with the actions at the end, as on the web.\n            HStack(spacing: theme.spacing.space2) {\n                Spacer(minLength: 0)\n                MonarchButton({{close}}) { isOpen = false }\n                MonarchButton({{action}}, variant: .primary) { isOpen = false }\n            }\n            .padding(theme.spacing.space3)\n            .background(theme.colors.bgSubtle)\n        }\n        .foregroundStyle(theme.colors.textDefault)\n        .frame(maxHeight: .infinity, alignment: .top)\n        .presentationDetents([.medium, .large])\n        .presentationDragIndicator(.visible)\n        .presentationBackground(theme.colors.bgSurface)\n    }",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = true",
+      "previewPresented": [
+        "isEditing"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = true",
+      "code": "MonarchButton(\"Open details\") { isOpen = true }\n    .sheet(isPresented: $isOpen) {\n        VStack(alignment: .leading, spacing: 0) {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            HStack(alignment: .top) {\n                Text(\"Invoice INV-1042\")\n                    .monarchTextStyle(.heading)\n                    .accessibilityAddTraits(.isHeader)\n                Spacer(minLength: 0)\n                Button { isOpen = false } label: {\n                    MonarchIcon(systemName: \"xmark\", size: .sm).monarchMinimumHitTarget()\n                }\n                .buttonStyle(.plain)\n                .accessibilityLabel(\"Close\")\n            }\n            Text(\"Sent on 12 March to the billing contact.\")\n                .monarchTextStyle(.caption)\n                .foregroundStyle(theme.colors.textMuted)\n            LazyVGrid(columns: [GridItem(.flexible(), alignment: .topLeading), GridItem(.flexible(), alignment: .topLeading)], alignment: .leading, spacing: theme.spacing.space3) {\n                LabeledContent(\"Status\", value: \"Awaiting payment\")\n                    .labeledContentStyle(.monarch)\n                LabeledContent(\"Due\", value: \"26 March\")\n                    .labeledContentStyle(.monarch)\n                LabeledContent(\"Owner\", value: \"Priya Raman\")\n                    .labeledContentStyle(.monarch)\n            }\n        }\n        .padding(theme.spacing.space4)\n            // The footer is a bar of its own, with the actions at the end, as on the web.\n            HStack(spacing: theme.spacing.space2) {\n                Spacer(minLength: 0)\n                MonarchButton(\"Close\") { isOpen = false }\n                MonarchButton(\"Send reminder\", variant: .primary) { isOpen = false }\n            }\n            .padding(theme.spacing.space3)\n            .background(theme.colors.bgSubtle)\n        }\n        .foregroundStyle(theme.colors.textDefault)\n        .frame(maxHeight: .infinity, alignment: .top)\n        .presentationDetents([.medium, .large])\n        .presentationDragIndicator(.visible)\n        .presentationBackground(theme.colors.bgSurface)\n    }"
+    },
+    {
+      "title": "A sheet that cannot be swiped away while saving",
+      "setup": "@State private var isShown = false\n@State private var isSaving = false",
+      "code": "MonarchButton(\"Import contacts\") { isShown = true }\n    .sheet(isPresented: $isShown) {\n        VStack {\n            MonarchButton(\"Import\", variant: .primary, isLoading: isSaving) { isSaving = true }\n            MonarchButton(\"Cancel\", variant: .ghost) { isShown = false }\n                .disabled(isSaving)\n        }\n        .padding()\n        .interactiveDismissDisabled(isSaving)\n    }"
+    }
+  ],
+  "webEquivalent": "Sheet",
+  "dependsOn": [
+    "button",
+    "text-field"
+  ]
+}

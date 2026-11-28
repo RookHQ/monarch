@@ -172,7 +172,7 @@ export const Roadmap = forwardRef<HTMLDivElement, RoadmapProps>(function Roadmap
       end: g.end ?? null,
       meta: (
         <>
-          <span>{messages.count(perGroup.get(g.id) ?? 0)}</span>
+          <span className="mn-roadmap__count">{messages.count(perGroup.get(g.id) ?? 0)}</span>
           {healthBadge(g.health)}
         </>
       ),

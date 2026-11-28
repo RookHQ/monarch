@@ -1,5 +1,7 @@
 import { PasswordResetForm } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './password-reset-form.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
@@ -116,6 +118,7 @@ export default {
           title: 'Request a link',
           render: () => (
             <PasswordResetForm
+              defaultEmail={fixture.data.email}
               onRequest={() => wait(700)}
               signInHref="#sign-in"
               cooldownSeconds={20}

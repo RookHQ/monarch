@@ -1,7 +1,11 @@
 import { RichTextEditor, TableBlock, TableBlockExtension } from '@rookcom/monarch-react/editor';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './table-block.fixture.json';
 
 const EXTENSIONS = [TableBlockExtension];
+
+const [header = [], ...body] = fixture.data.rows;
 
 export default {
   id: 'table-block',
@@ -128,21 +132,23 @@ export default {
           stack: true,
           render: () => (
             <div style={{ width: '100%', maxWidth: 560 }}>
-              <TableBlock caption="Support hours">
+              <TableBlock caption={fixture.data.caption}>
                 <table>
                   <tbody>
                     <tr>
-                      <th scope="col">Day</th>
-                      <th scope="col">Hours</th>
+                      {header.map((cell) => (
+                        <th key={cell} scope="col">
+                          {cell}
+                        </th>
+                      ))}
                     </tr>
-                    <tr>
-                      <td>Monday to Friday</td>
-                      <td>08:00–18:00</td>
-                    </tr>
-                    <tr>
-                      <td>Saturday</td>
-                      <td>10:00–14:00</td>
-                    </tr>
+                    {body.map((row) => (
+                      <tr key={row[0]}>
+                        {row.map((cell) => (
+                          <td key={cell}>{cell}</td>
+                        ))}
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </TableBlock>

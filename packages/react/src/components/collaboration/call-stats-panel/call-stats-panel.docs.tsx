@@ -1,12 +1,10 @@
-import { CallStatsPanel } from '@rookcom/monarch-react/collaboration';
+import { CallStatsPanel, type CallStatsPanelProps } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './call-stats-panel.fixture.json';
 
-const usage = {
-  sentBytes: 6_200_000,
-  receivedBytes: 9_400_000,
-  upBps: 420_000,
-  downBps: 1_250_000,
-};
+const usage = fixture.data.usage;
+const peers = fixture.data.peers as unknown as CallStatsPanelProps['peers'];
 
 export default {
   id: 'call-stats-panel',
@@ -97,29 +95,7 @@ export default {
           title: 'During a group call',
           render: () => (
             <div style={{ maxWidth: 360 }}>
-              <CallStatsPanel
-                usage={usage}
-                peers={[
-                  {
-                    id: 'a',
-                    name: 'Robin Park',
-                    rttMs: 38,
-                    inboundLossPct: 0.2,
-                    outboundLossPct: 0.1,
-                    quality: 'good',
-                  },
-                  {
-                    id: 'b',
-                    name: 'Alex Chen',
-                    rttMs: 186,
-                    inboundLossPct: 3.4,
-                    outboundLossPct: 1.2,
-                    quality: 'fair',
-                  },
-                  { id: 'c', name: 'Jordan Diaz', quality: 'unknown' },
-                ]}
-                footnote="Example footnote: say here how your product routes and protects call media."
-              />
+              <CallStatsPanel usage={usage} peers={peers} footnote={fixture.data.footnote} />
             </div>
           ),
           stack: true,

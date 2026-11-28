@@ -1,27 +1,37 @@
 import { useState } from 'react';
 import { ResizableHandle, ResizablePanel, ResizablePanels } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './resizable-panels.fixture.json';
+
+const [folders, messages] = fixture.data.panels as unknown as readonly [
+  { label: string; minSize: number; maxSize: number },
+  { label: string; minSize: number },
+];
 
 const frame = {
   width: '100%',
-  height: 240,
+  height: fixture.data.height,
   border: '1px solid var(--mn-color-border-default)',
   borderRadius: 'var(--mn-radius-lg)',
 } as const;
 const pad = { padding: 12, fontSize: 'var(--mn-text-sm)' } as const;
 
 function SavedLayoutDemo() {
-  const [saved, setSaved] = useState<number[]>([30, 70]);
+  const [saved, setSaved] = useState<number[]>([
+    fixture.data.firstSize,
+    100 - fixture.data.firstSize,
+  ]);
   return (
     <div style={{ display: 'grid', gap: 8, width: '100%' }}>
       <div style={frame}>
         <ResizablePanels defaultSizes={saved} onLayout={setSaved}>
-          <ResizablePanel minSize={20} maxSize={50} collapsible>
-            <div style={pad}>Folders</div>
+          <ResizablePanel minSize={folders.minSize} maxSize={folders.maxSize} collapsible>
+            <div style={pad}>{folders.label}</div>
           </ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel minSize={30}>
-            <div style={pad}>Messages</div>
+          <ResizablePanel minSize={messages.minSize}>
+            <div style={pad}>{messages.label}</div>
           </ResizablePanel>
         </ResizablePanels>
       </div>

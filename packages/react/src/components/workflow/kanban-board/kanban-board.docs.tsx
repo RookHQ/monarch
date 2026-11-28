@@ -3,6 +3,8 @@ import { Badge, IconButton } from '@rookcom/monarch-react';
 import { KanbanBoard, type KanbanColumn } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { PlusIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './kanban-board.fixture.json';
 
 interface Task {
   id: string;
@@ -11,33 +13,7 @@ interface Task {
   tone: 'neutral' | 'info' | 'warning' | 'success';
 }
 
-const TASKS: KanbanColumn<Task>[] = [
-  {
-    id: 'backlog',
-    title: 'Backlog',
-    items: [
-      { id: 'k1', title: 'Draft release notes', tag: 'Docs', tone: 'neutral' },
-      { id: 'k2', title: 'Audit colour contrast', tag: 'Design', tone: 'info' },
-      { id: 'k3', title: 'Plan onboarding survey', tag: 'Research', tone: 'neutral' },
-    ],
-  },
-  {
-    id: 'doing',
-    title: 'In progress',
-    wipLimit: 2,
-    items: [
-      { id: 'k4', title: 'Fix export timeout', tag: 'Bug', tone: 'warning' },
-      { id: 'k5', title: 'Billing settings page', tag: 'Feature', tone: 'info' },
-      { id: 'k6', title: 'Update help articles', tag: 'Docs', tone: 'neutral' },
-    ],
-  },
-  {
-    id: 'review',
-    title: 'Review',
-    items: [{ id: 'k7', title: 'Keyboard shortcuts', tag: 'Feature', tone: 'info' }],
-  },
-  { id: 'done', title: 'Done', items: [] },
-];
+const TASKS = fixture.data.columns as KanbanColumn<Task>[];
 
 function TaskCard({ task }: { task: Task }) {
   return (

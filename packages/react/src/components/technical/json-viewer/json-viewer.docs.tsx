@@ -1,25 +1,9 @@
 import { JSONViewer } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './json-viewer.fixture.json';
 
-const payload = {
-  id: 'evt_3c91a0',
-  type: 'order.created',
-  created: '2026-01-05T09:30:00Z',
-  livemode: false,
-  data: {
-    order: {
-      id: 'ord_1001',
-      total: 42.5,
-      currency: 'EUR',
-      note: null,
-      items: [
-        { sku: 'A-1', name: 'Sample item', qty: 2 },
-        { sku: 'B-7', name: 'Second item', qty: 1 },
-      ],
-      'shipping address': { city: 'Example City', country: 'NL' },
-    },
-  },
-};
+const payload = JSON.parse(fixture.data.payload) as { data: unknown };
 
 const largeArray = Array.from({ length: 1200 }, (_, i) => ({
   index: i,
@@ -171,7 +155,9 @@ export default {
         {
           title: 'Webhook payload',
           stack: true,
-          render: () => <JSONViewer value={payload} defaultExpandDepth={2} />,
+          render: () => (
+            <JSONViewer value={payload} defaultExpandDepth={fixture.data.expandDepth} />
+          ),
         },
         {
           title: 'Large array in batches',

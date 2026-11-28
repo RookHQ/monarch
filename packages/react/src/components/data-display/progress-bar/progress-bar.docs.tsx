@@ -1,5 +1,15 @@
-import { Progress } from '@rookcom/monarch-react';
+import { Progress, type ProgressProps } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './progress-bar.fixture.json';
+
+type Tone = NonNullable<ProgressProps['tone']>;
+type Size = NonNullable<ProgressProps['size']>;
+const bars = fixture.data.bars as unknown as readonly [
+  { label: string; value: number; tone: Tone; size: Size },
+  { label: string; value: number; tone: Tone; size: Size },
+  { label: string; tone: Tone; size: Size },
+];
 
 export default {
   id: 'progress-bar',
@@ -124,9 +134,19 @@ export default {
           stack: true,
           render: () => (
             <>
-              <Progress label="Upload progress" value={40} />
-              <Progress label="Import progress" value={100} tone="success" size="sm" />
-              <Progress label="Syncing members" />
+              <Progress
+                label={bars[0].label}
+                value={bars[0].value}
+                tone={bars[0].tone}
+                size={bars[0].size}
+              />
+              <Progress
+                label={bars[1].label}
+                value={bars[1].value}
+                tone={bars[1].tone}
+                size={bars[1].size}
+              />
+              <Progress label={bars[2].label} tone={bars[2].tone} size={bars[2].size} />
             </>
           ),
         },

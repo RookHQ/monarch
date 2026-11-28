@@ -6,6 +6,8 @@ import {
   type AiImageGenerationStatus,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-image-generation.fixture.json';
 
 /** Neutral placeholder art: monochrome shapes as local `blob:` URLs, so nothing is hotlinked. */
 function useDemoArt(count: number): string[] {
@@ -23,20 +25,19 @@ function useDemoArt(count: number): string[] {
 }
 
 function GenerationDemo() {
-  const art = useDemoArt(4);
-  const [status, setStatus] = useState<AiImageGenerationStatus>('done');
+  const art = useDemoArt(fixture.data.images.length);
+  const [status, setStatus] = useState<AiImageGenerationStatus>(
+    fixture.data.status as AiImageGenerationStatus,
+  );
   const [progress, setProgress] = useState<number | undefined>(undefined);
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
-  const [alts, setAlts] = useState<Record<string, string>>({
-    a: 'Abstract hills under a round sun',
-    b: '',
-    c: 'Two overlapping shapes on a pale ground',
-    d: '',
-  });
+  const [alts, setAlts] = useState<Record<string, string>>(
+    Object.fromEntries(fixture.data.images.map((image) => [image.id, image.alt])),
+  );
   const timers = useRef<number[]>([]);
   useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
 
-  const images: AiGeneratedImage[] = ['a', 'b', 'c', 'd'].map((id, i) => ({
+  const images: AiGeneratedImage[] = fixture.data.images.map(({ id }, i) => ({
     id,
     src: status === 'pending' ? undefined : art[i],
     alt: alts[id] ?? '',

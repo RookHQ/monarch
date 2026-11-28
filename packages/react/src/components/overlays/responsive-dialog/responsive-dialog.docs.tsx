@@ -14,6 +14,8 @@ import {
   ResponsiveDialogTrigger,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './responsive-dialog.fixture.json';
 
 export default {
   id: 'responsive-dialog',
@@ -130,27 +132,28 @@ export default {
       items: [
         {
           title: 'Invite form',
+          stage: { align: 'center' },
           render: () => (
-            <ResponsiveDialog>
+            <ResponsiveDialog defaultOpen>
               <ResponsiveDialogTrigger asChild>
-                <Button>Invite people</Button>
+                <Button>{fixture.data.trigger}</Button>
               </ResponsiveDialogTrigger>
               <ResponsiveDialogContent closeOnOutsideClick={false}>
                 <DialogHeader>
-                  <DialogTitle>Invite people</DialogTitle>
-                  <DialogDescription>They get an email with a link to join.</DialogDescription>
+                  <DialogTitle>{fixture.data.title}</DialogTitle>
+                  <DialogDescription>{fixture.data.description}</DialogDescription>
                 </DialogHeader>
                 <DialogBody>
                   <Field>
-                    <FieldLabel>Email address</FieldLabel>
-                    <Input type="email" placeholder="name@example.com" />
+                    <FieldLabel>{fixture.data.field}</FieldLabel>
+                    <Input type="email" placeholder={fixture.data.placeholder} />
                   </Field>
                 </DialogBody>
                 <DialogFooter>
                   <ResponsiveDialogClose asChild>
-                    <Button>Cancel</Button>
+                    <Button>{fixture.data.cancel}</Button>
                   </ResponsiveDialogClose>
-                  <Button variant="primary">Send invite</Button>
+                  <Button variant="primary">{fixture.data.confirm}</Button>
                 </DialogFooter>
               </ResponsiveDialogContent>
             </ResponsiveDialog>

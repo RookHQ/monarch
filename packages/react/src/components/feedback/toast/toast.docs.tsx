@@ -1,22 +1,26 @@
+import { useEffect, useRef } from 'react';
 import { Button, ToastProvider, getErrorMessage, useToast } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './toast.fixture.json';
 
-function ArchiveButton() {
+function ArchiveButton({ archived = false }: { archived?: boolean }) {
   const { toast } = useToast();
-  return (
-    <Button
-      onClick={() =>
-        toast({
-          title: 'Ticket archived',
-          description: 'You can undo this.',
-          tone: 'success',
-          action: { label: 'Undo', onClick: () => {} },
-        })
-      }
-    >
-      Archive ticket
-    </Button>
-  );
+  const archive = () =>
+    toast({
+      title: fixture.data.toast.title,
+      description: fixture.data.toast.description,
+      tone: fixture.data.toast.tone as 'success',
+      action: { label: fixture.data.toast.action, onClick: () => {} },
+    });
+  // The headline preview starts just after the ticket was archived.
+  const shown = useRef(false);
+  useEffect(() => {
+    if (!archived || shown.current) return;
+    shown.current = true;
+    archive();
+  });
+  return <Button onClick={archive}>{fixture.data.trigger}</Button>;
 }
 
 function ErrorButton() {
@@ -182,9 +186,10 @@ export default {
       items: [
         {
           title: 'Success with undo',
+          stage: true,
           render: () => (
             <ToastProvider>
-              <ArchiveButton />
+              <ArchiveButton archived />
             </ToastProvider>
           ),
         },

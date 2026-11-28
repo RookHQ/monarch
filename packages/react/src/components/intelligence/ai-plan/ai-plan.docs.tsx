@@ -8,14 +8,12 @@ import {
   type AiPlanStep,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-plan.fixture.json';
 
 const PLAN: AiPlanPart = {
   type: 'plan',
-  steps: [
-    { id: 's1', label: 'Collect last quarter’s figures', state: 'todo' },
-    { id: 's2', label: 'Compare them with the forecast', state: 'todo' },
-    { id: 's3', label: 'Draft a one-page summary', state: 'todo' },
-  ],
+  steps: fixture.data.steps.map((step) => ({ ...step, state: 'todo' as const })),
 };
 
 function message(plan: AiPlanPart): AiMessage {

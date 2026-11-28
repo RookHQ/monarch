@@ -1,0 +1,153 @@
+{
+  "id": "reorderable-list",
+  "name": "MonarchReorderableList",
+  "title": "ReorderableList",
+  "family": "interaction",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyColumn with androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress, LazyItemScope.animateItem and LazyListState.scrollBy for auto-scroll; MonarchDragHandle for the TalkBack actions and arrow keys",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A list the user reorders by long-pressing and dragging rows, with TalkBack actions, arrow keys and optional move buttons as alternatives, and every step announced.",
+  "whenToUse": "When the order of a short or medium list is the person's to decide: priorities, pipeline stages, the order of steps or of favourites.",
+  "whenNotToUse": "For tiles in two dimensions use MonarchSortableGrid. For a list sorted by a field use a sort control instead of manual order. For moving items between lists use Compose drag and drop (dragAndDropSource and dragAndDropTarget).",
+  "api": [
+    "@Composable public fun <T> MonarchReorderableList(items: List<T>, key: (T) -> Any, itemLabel: (T) -> String, onReorder: (from: Int, to: Int) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, itemEnabled: (T) -> Boolean = { true }, moveButtons: Boolean = false, state: LazyListState = rememberLazyListState(), labels: MonarchReorderableListLabels = MonarchReorderableListLabels(), itemContent: @Composable RowScope.(item: T, state: MonarchReorderableListItemState) -> Unit)",
+    "public class MonarchReorderableListItemState(index: Int, dragged: Boolean, enabled: Boolean)",
+    "public class MonarchReorderableListLabels(handle: ((label: String) -> String)? = null, moveUp: ((label: String) -> String)? = null, moveDown: ((label: String) -> String)? = null, up: String? = null, down: String? = null, pickedUp: ((label: String, position: Int, total: Int) -> String)? = null, moved: ((label: String, position: Int, total: Int) -> String)? = null, dropped: ((label: String, position: Int, total: Int) -> String)? = null, cancelled: ((label: String, position: Int, total: Int) -> String)? = null, actions: Map<MonarchDragHandleDirection, String> = emptyMap())"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "List<T>",
+      "default": "required",
+      "description": "The items, in order."
+    },
+    {
+      "name": "key",
+      "type": "(T) -> Any",
+      "default": "required",
+      "description": "A stable, unique key for an item; also the LazyColumn key."
+    },
+    {
+      "name": "itemLabel",
+      "type": "(T) -> String",
+      "default": "required",
+      "description": "The plain-text name of an item, used in the handle's name, the move buttons and the announcements."
+    },
+    {
+      "name": "onReorder",
+      "type": "(from: Int, to: Int) -> Unit",
+      "default": "required",
+      "description": "Called once per finished move (drop, action, arrow key or button) with the old and the new index. Move the item in items, for example items.add(to, items.removeAt(from))."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the list. Give it a bounded height to make it scroll."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether any row can be moved."
+    },
+    {
+      "name": "itemEnabled",
+      "type": "(T) -> Boolean",
+      "default": "{ true }",
+      "description": "Whether an item can be moved. Other rows can still move past it."
+    },
+    {
+      "name": "moveButtons",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Also shows Up and Down buttons on every row, a one-tap alternative to dragging."
+    },
+    {
+      "name": "state",
+      "type": "LazyListState",
+      "default": "rememberLazyListState()",
+      "description": "The scroll state of the list."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchReorderableListLabels",
+      "default": "MonarchReorderableListLabels()",
+      "description": "Replacements for the handle and button names, the button texts, the four announcements and the handle's action names."
+    },
+    {
+      "name": "itemContent",
+      "type": "@Composable RowScope.(item: T, state: MonarchReorderableListItemState) -> Unit",
+      "default": "required",
+      "description": "The content of a row after the handle. The state gives the index as shown, whether the row is dragged and whether it can move."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "Rows on the surface fill with a subtle border, each with an idle drag handle."
+    },
+    {
+      "name": "dragged",
+      "description": "The held row follows the finger above the others with the medium shadow, the accent border and a grabbed handle (Picked up); the other rows slide out of its way."
+    },
+    {
+      "name": "locked row",
+      "description": "itemEnabled false: the handle is disabled and has no actions, its move buttons are disabled, and a long press does not pick it up."
+    },
+    {
+      "name": "disabled",
+      "description": "enabled false: no row can be moved."
+    },
+    {
+      "name": "empty",
+      "description": "An empty list draws nothing."
+    }
+  ],
+  "appearance": "Each row is the surface fill with a 1dp subtle border and medium corners. The held row has the medium shadow and the accent border; its handle uses the grabbed colors of MonarchDragHandle. Every color comes from the theme roles, so light, dark and both high-contrast themes follow the theme.",
+  "platformNotes": "The web list picks a row up from its handle with the pointer or with Space, moves it with the arrow keys and drops it with Space, and keeps uncontrolled items itself. On Android a long press anywhere on the row picks it up, as Android lists do, so the rest of the row stays free for scrolling and taps; TalkBack, Switch Access and hardware keyboards use the handle's Move up and Move down actions and arrow keys, which move one place at once and announce the new position. The order is always hoisted: the list reports from and to, and the app moves the item. iOS ships no type and uses the system list's edit mode. If the items change during a drag, the drag continues with the held row's original index and the drop reports from and to against the list as it was when the drag started; keep items stable during a drag.",
+  "accessibility": [
+    "Every row has a MonarchDragHandle named Reorder and the item's label, with the TalkBack actions Move up and Move down; the arrow keys move the row while the handle has focus.",
+    "Picking up, moving by an action or a button, dropping and cancelling are announced through a polite live region: \"Design review moved to position 2 of 3.\"",
+    "The held row is shown by a border, a shadow and the grabbed handle, not by color alone, and its handle reads Picked up.",
+    "The move buttons are named \"Move Design review up\" and \"Move Design review down\" and are disabled at the ends.",
+    "The handle and the move buttons have 48dp touch targets; the handle comes before the content in both reading directions; row text wraps at font scale 2.0."
+  ],
+  "edgeCases": [
+    "A drop at the place it started reports nothing to onReorder but still announces the drop.",
+    "Move up on the first row and Move down on the last row do nothing.",
+    "The list scrolls by at most 16dp a frame while the held row is past its top or bottom edge, and stops at the ends.",
+    "Animations are immediate when the person has turned animations off.",
+    "Keys must be unique; the same key twice breaks the LazyColumn."
+  ],
+  "tests": [
+    "MonarchReorderableListTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Drag or keyboard",
+      "fixture": "reorderable-list",
+      "webExample": "Drag or keyboard",
+      "template": "MonarchReorderableList(\n    items = stages,\n    key = { it.first },\n    itemLabel = { it.second },\n    onReorder = { from, to -> stages.add(to, stages.removeAt(from)) },\n) { stage, _ ->\n    MonarchText(text = stage.second, modifier = Modifier.weight(1f))\n    MonarchBadge(text = stage.third.toString())\n}",
+      "setupTemplate": "val stages = remember {\n    mutableStateListOf(\n        Triple({{items.0.id}}, {{items.0.name}}, {{items.0.count}}),\n        Triple({{items.1.id}}, {{items.1.name}}, {{items.1.count}}),\n        Triple({{items.2.id}}, {{items.2.name}}, {{items.2.count}}),\n        Triple({{items.3.id}}, {{items.3.name}}, {{items.3.count}}),\n    )\n}",
+      "setup": "val stages = remember {\n    mutableStateListOf(\n        Triple(\"new\", \"New\", 12),\n        Triple(\"contacted\", \"Contacted\", 8),\n        Triple(\"proposal\", \"Proposal sent\", 5),\n        Triple(\"negotiation\", \"Negotiation\", 3),\n    )\n}",
+      "code": "MonarchReorderableList(\n    items = stages,\n    key = { it.first },\n    itemLabel = { it.second },\n    onReorder = { from, to -> stages.add(to, stages.removeAt(from)) },\n) { stage, _ ->\n    MonarchText(text = stage.second, modifier = Modifier.weight(1f))\n    MonarchBadge(text = stage.third.toString())\n}"
+    },
+    {
+      "title": "Stages with move buttons and a locked last stage",
+      "setup": "val stages = remember { mutableStateListOf(\"Lead\", \"Qualified\", \"Proposal\", \"Won\") }",
+      "code": "MonarchReorderableList(\n    items = stages,\n    key = { it },\n    itemLabel = { it },\n    onReorder = { from, to -> stages.add(to, stages.removeAt(from)) },\n    itemEnabled = { it != \"Won\" },\n    moveButtons = true,\n) { stage, state ->\n    MonarchText(text = \"${state.index + 1}. $stage\")\n}"
+    }
+  ],
+  "webEquivalent": "ReorderableList",
+  "dependsOn": [
+    "drag-handle"
+  ]
+}

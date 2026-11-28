@@ -1,0 +1,143 @@
+{
+  "id": "marketing-consent-checkbox",
+  "name": "MonarchMarketingConsentCheckbox",
+  "title": "MarketingConsentCheckbox",
+  "family": "forms",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Toggle with MonarchCheckboxToggleStyle, one per channel; SwiftUI.Link for the policy",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "An opt-in to marketing messages: one checkbox, or one per channel, with the notes that belong to it, that reports the exact wording shown with every change.",
+  "whenToUse": "On sign-up, checkout and contact forms where the person may agree to marketing by email, text message, phone or post.",
+  "whenNotToUse": "For agreeing to terms, or any other checkbox, use Toggle with the monarchCheckbox style. For notification settings that take effect at once, use a standard Toggle.",
+  "api": [
+    "init(_ label: String? = nil, selection: Binding<Set<MonarchMarketingChannel>>, channels: [MonarchMarketingChannel] = [.email], description: String? = nil, policyTitle: String? = nil, policyURL: URL? = nil, showsUnsubscribeNote: Bool = true, unsubscribeNote: String? = nil, channelLabels: [MonarchMarketingChannel: String] = [:], onChange: (@MainActor (MonarchMarketingConsent) -> Void)? = nil)",
+    "enum MonarchMarketingChannel: String, Sendable, Hashable, CaseIterable { case email, sms, phone, post }",
+    "struct MonarchMarketingConsent: Sendable, Hashable { let channels: [MonarchMarketingChannel: Bool]; let text: String; let date: Date; var granted: Set<MonarchMarketingChannel>; init(channels:text:date:) }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "nil",
+      "description": "The question. Built in: \"Send me product news by email\" for one channel, \"Send me product news\" for several."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<Set<MonarchMarketingChannel>>",
+      "default": "required",
+      "description": "The channels the person agreed to. Start it empty."
+    },
+    {
+      "name": "channels",
+      "type": "[MonarchMarketingChannel]",
+      "default": "[.email]",
+      "description": "The channels to ask about. One checkbox each when there are several."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "What is sent and how often."
+    },
+    {
+      "name": "policyTitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "The title of a link to the privacy policy. Shown only with policyURL."
+    },
+    {
+      "name": "policyURL",
+      "type": "URL?",
+      "default": "nil",
+      "description": "Where the privacy policy is."
+    },
+    {
+      "name": "showsUnsubscribeNote",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the note that consent can be withdrawn."
+    },
+    {
+      "name": "unsubscribeNote",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"You can unsubscribe at any time.\""
+    },
+    {
+      "name": "channelLabels",
+      "type": "[MonarchMarketingChannel: String]",
+      "default": "[:]",
+      "description": "Replaces the built-in labels of the channel checkboxes."
+    },
+    {
+      "name": "onChange",
+      "type": "(@MainActor (MonarchMarketingConsent) -> Void)?",
+      "default": "nil",
+      "description": "Runs on every change with the channels, the wording shown and the time."
+    }
+  ],
+  "states": [
+    {
+      "name": "one channel",
+      "description": "One checkbox whose label is the question, with the notes under it."
+    },
+    {
+      "name": "several channels",
+      "description": "The question as a heading, the notes, then one checkbox per channel."
+    },
+    {
+      "name": "ticked",
+      "description": "The checkbox look of MonarchCheckboxToggleStyle: an accent box with a check mark."
+    },
+    {
+      "name": "disabled",
+      "description": "With disabled(_:) the checkboxes, the question and the notes use the disabled colours and the link does not open."
+    }
+  ],
+  "appearance": "Checkboxes are drawn by MonarchCheckboxToggleStyle. The question above several checkboxes is label text; the notes are caption text in the muted colour; the policy link is underlined caption text in the link colour. The same roles are used in light, dark and both high-contrast themes.",
+  "platformNotes": "The web ignores defaultChecked so the boxes cannot start ticked. On iOS the state is a binding the app owns, as it is for every SwiftUI control, so the component cannot enforce that: the documentation tells the app to start the set empty and to bind a stored choice only on a settings screen. The web posts hidden form inputs (name, textName) and listens for a form reset; a native app has no form post, so the app sends the MonarchMarketingConsent it receives in onChange. The wording is built from the strings the component draws, not read back from the screen. The web takes React nodes for the label and notes; here they are plain strings and the policy is one title and one URL.",
+  "accessibility": [
+    "Each checkbox is a standard Toggle behind the Monarch checkbox look: toggle role, on and off values, and the whole row as the touch target.",
+    "With several channels the question has the header trait.",
+    "The notes are read as text after the question; the policy link is a standard Link with a 44-point touch target.",
+    "The link is underlined, so it does not depend on colour.",
+    "Text scales with Dynamic Type and wraps."
+  ],
+  "edgeCases": [
+    "An empty channels array asks about email; a channel listed twice is shown once.",
+    "The record lists every shown channel, ticked or not, so a withdrawal is recorded as well as a grant.",
+    "policyTitle without policyURL shows no link and is left out of the recorded wording.",
+    "A channel in the selection that is not shown stays in the selection untouched.",
+    "onChange does not run when the app changes the binding itself."
+  ],
+  "tests": [
+    "MonarchMarketingConsentCheckboxTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "In a contact form",
+      "fixture": "marketing-consent-checkbox",
+      "webExample": "In a contact form",
+      "template": "VStack(alignment: .leading, spacing: 12) {\n    MonarchMarketingConsentCheckbox(\n        selection: $channels,\n        description: {{description}},\n        policyTitle: {{policy.label}},\n        policyURL: URL(string: {{policy.href}})\n    )\n    MonarchButton({{submit}}, variant: .primary) {}\n}",
+      "setupTemplate": "@State private var channels: Set<MonarchMarketingChannel> = []",
+      "setup": "@State private var channels: Set<MonarchMarketingChannel> = []",
+      "code": "VStack(alignment: .leading, spacing: 12) {\n    MonarchMarketingConsentCheckbox(\n        selection: $channels,\n        description: \"Product updates and event invitations, about twice a month.\",\n        policyTitle: \"How we use your data\",\n        policyURL: URL(string: \"#privacy\")\n    )\n    MonarchButton(\"Send message\", variant: .primary) {}\n}"
+    },
+    {
+      "title": "One checkbox per channel",
+      "setup": "@State private var channels: Set<MonarchMarketingChannel> = []",
+      "code": "MonarchMarketingConsentCheckbox(selection: $channels, channels: [.email, .sms, .post])"
+    }
+  ],
+  "webEquivalent": "MarketingConsentCheckbox",
+  "dependsOn": [
+    "checkbox",
+    "text"
+  ]
+}

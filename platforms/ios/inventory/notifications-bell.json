@@ -1,0 +1,131 @@
+{
+  "id": "notifications-bell",
+  "name": "MonarchNotificationsBell",
+  "title": "NotificationsBell",
+  "family": "layout",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Button with a private ButtonStyle, overlay(alignment:) with alignment guides for the count",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The button that opens an app's notifications: a bell with the unread count on it, or a full-width row with the title and the count.",
+  "whenToUse": "In a toolbar, a header, a menu or a sidebar, as the one entry to the app's in-app notifications. The app presents the notifications in the action.",
+  "whenNotToUse": "For the count on a tab of a TabView use the system badge(_:) modifier. For a status that is not a count of notifications use MonarchBadge.",
+  "api": [
+    "MonarchNotificationsBell.init(unreadCount: Int = 0, variant: MonarchNotificationsBellVariant = .icon, title: String? = nil, unreadLabel: String? = nil, action: @escaping @MainActor () -> Void)",
+    "enum MonarchNotificationsBellVariant { case icon, row }"
+  ],
+  "options": [
+    {
+      "name": "unreadCount",
+      "type": "Int",
+      "default": "0",
+      "description": "The number of unread notifications. Zero or less shows no badge. Above 99 the badge reads \"99+\"."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchNotificationsBellVariant",
+      "default": ".icon",
+      "description": "icon: a square icon button with the count on the bell. row: a full-width row with the title and the count at the trailing edge."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in name \"Notifications\", which is also the visible title of a row."
+    },
+    {
+      "name": "unreadLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in spoken value \"3 unread\". Pass the whole phrase for the current count."
+    },
+    {
+      "name": "action",
+      "type": "() -> Void",
+      "default": "required",
+      "description": "Opens the notifications: present a sheet or a popover, or push a screen."
+    }
+  ],
+  "states": [
+    {
+      "name": "no unread",
+      "description": "The bell alone, in the muted text colour. No badge and no spoken value."
+    },
+    {
+      "name": "unread",
+      "description": "A solid danger badge with the count: on the bell's top trailing corner for icon, at the trailing edge for row."
+    },
+    {
+      "name": "more than 99 unread",
+      "description": "The badge reads \"99+\". VoiceOver still reads the exact count."
+    },
+    {
+      "name": "pressed",
+      "description": "A muted fill appears and the bell and title take the default text colour."
+    },
+    {
+      "name": "disabled",
+      "description": "The bell and title use the disabled text colour, set with the standard disabled(_:) modifier. The badge keeps its colours."
+    }
+  ],
+  "appearance": "No fill at rest; the bell and title use the muted text role and, while pressed, the default text role on a muted background with the control corner radius. The count is a solid MonarchBadge in the danger roles with a ring in the surface colour where it overlaps the bell. The same roles resolve to stronger colours in the high-contrast themes.",
+  "platformNotes": "On the web the bell owns the NotificationCenter panel and passes its props through (items, filters, mark as read, load more, a See all link). On iOS the button and the presentation are separate: this component is the trigger with the count, and the app presents its notifications from the action, so there is no open state, panel side, closeOnSelect or seeAllHref. The web derives the count from unread items when unreadCount is missing; here the app always passes it. The web's collapsed row (icon only, with a tooltip, for a collapsed rail) is the icon variant; iOS has no tooltips. Android ships the same two variants.",
+  "accessibility": [
+    "A standard Button named \"Notifications\", or by title.",
+    "The unread count is the accessibility value (\"3 unread\"), not part of the name. It is the exact count even when the badge shows \"99+\", and it is empty when nothing is unread.",
+    "The bell and the badge are hidden from VoiceOver, so the count is read once.",
+    "The touch target is at least 44 by 44 points in both variants.",
+    "The bell, the title and the count scale with Dynamic Type; a long title wraps.",
+    "The unread state is a badge with a number, not a colour change."
+  ],
+  "edgeCases": [
+    "A negative count is treated as zero.",
+    "The badge on the icon variant extends past the trailing and top edges of the button's 36-point box; leave space2 around it.",
+    "The built-in \"%@ unread\" is one string for every count. Languages with plural forms pass unreadLabel.",
+    "The ring around the badge is the surface colour. On another background it shows as a thin ring of that colour.",
+    "The numbers are formatted for the current locale."
+  ],
+  "tests": [
+    "MonarchNotificationsBellTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Icon button with See all",
+      "fixture": "notifications-bell",
+      "webExample": "Icon button with See all",
+      "template": "MonarchNotificationsBell(unreadCount: {{unreadCount}}) {\n    showsNotifications = true\n}\n.sheet(isPresented: $showsNotifications) {\n    NavigationStack {\n        MonarchNotificationCenter(\n            items,\n            now: {{now|date}},\n            onMarkRead: { id in read.insert(id) },\n            onMarkAllRead: { read = Set(items.map(\\.id)) }\n        ) {\n            Button({{seeAll}}) {}\n                .buttonStyle(.monarchLink(.inline))\n        }\n    }\n    .environment(\\.timeZone, .gmt)\n}",
+      "setupTemplate": "@State private var read: Set<String> = []\n@State private var showsNotifications = false\n\nprivate let source = [\n    MonarchNotificationCenterItem(\n        id: {{items.0.id}},\n        title: {{items.0.title}},\n        time: {{items.0.time|date}},\n        actorName: {{items.0.actor}}\n    ),\n    MonarchNotificationCenterItem(\n        id: {{items.1.id}},\n        title: {{items.1.title}},\n        message: {{items.1.description}},\n        time: {{items.1.time|date}},\n        actorName: {{items.1.actor}}\n    ),\n    MonarchNotificationCenterItem(\n        id: {{items.2.id}},\n        title: {{items.2.title}},\n        time: {{items.2.time|date}},\n        isRead: {{items.2.read}}\n    ),\n]\n\nprivate var items: [MonarchNotificationCenterItem] {\n    source.map {\n        MonarchNotificationCenterItem(\n            id: $0.id,\n            title: $0.title,\n            message: $0.message,\n            time: $0.time,\n            isRead: $0.isRead || read.contains($0.id),\n            actorName: $0.actorName\n        )\n    }\n}",
+      "previewPresented": [
+        "showsNotifications"
+      ],
+      "setup": "@State private var read: Set<String> = []\n@State private var showsNotifications = false\n\nprivate let source = [\n    MonarchNotificationCenterItem(\n        id: \"n1\",\n        title: \"Ana Lopez assigned you “Quarterly plan”\",\n        time: Date(timeIntervalSince1970: 1_772_451_600),\n        actorName: \"Ana Lopez\"\n    ),\n    MonarchNotificationCenterItem(\n        id: \"n2\",\n        title: \"Sam Lee replied to your comment\",\n        message: \"Looks good to me, shipping it after lunch.\",\n        time: Date(timeIntervalSince1970: 1_772_442_900),\n        actorName: \"Sam Lee\"\n    ),\n    MonarchNotificationCenterItem(\n        id: \"n3\",\n        title: \"Your export is ready\",\n        time: Date(timeIntervalSince1970: 1_772_384_700),\n        isRead: true\n    ),\n]\n\nprivate var items: [MonarchNotificationCenterItem] {\n    source.map {\n        MonarchNotificationCenterItem(\n            id: $0.id,\n            title: $0.title,\n            message: $0.message,\n            time: $0.time,\n            isRead: $0.isRead || read.contains($0.id),\n            actorName: $0.actorName\n        )\n    }\n}",
+      "code": "MonarchNotificationsBell(unreadCount: 2) {\n    showsNotifications = true\n}\n.sheet(isPresented: $showsNotifications) {\n    NavigationStack {\n        MonarchNotificationCenter(\n            items,\n            now: Date(timeIntervalSince1970: 1_772_452_800),\n            onMarkRead: { id in read.insert(id) },\n            onMarkAllRead: { read = Set(items.map(\\.id)) }\n        ) {\n            Button(\"See all notifications\") {}\n                .buttonStyle(.monarchLink(.inline))\n        }\n    }\n    .environment(\\.timeZone, .gmt)\n}"
+    },
+    {
+      "title": "A row in a menu or a sidebar",
+      "code": "MonarchNotificationsBell(unreadCount: 12, variant: .row) {\n    openNotifications()\n}",
+      "setup": "private func openNotifications() {}"
+    }
+  ],
+  "webEquivalent": "NotificationsBell",
+  "dependsOn": [
+    "badge",
+    "icon"
+  ],
+  "icons": {
+    "bell": "BellGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web opens the list in a popover under the bell; on iPhone the bell opens the same list as a sheet that covers it, so the bell and its count are not in the same picture as the open list.",
+      "convention": "HIG: a sheet is dismissed by its own Done button"
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "id": "query-builder",
+  "name": "MonarchQueryBuilder",
+  "title": "QueryBuilder",
+  "family": "search",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Nested androidx.compose.foundation.layout.Column groups, each with an androidx.compose.material3.SingleChoiceSegmentedButtonRow for AND / OR and a MonarchConditionEditor for its rules; MonarchButton for Add group",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Builds a filter query from AND / OR groups of field, operator and value rules, nested to a set depth.",
+  "whenToUse": "For an advanced filter or a saved segment where people combine rules with AND and OR, such as \"open and (amount at least 500 or flagged)\".",
+  "whenNotToUse": "For one flat list of conditions with all / any, use MonarchConditionEditor. For everyday list filtering, use filter chips or a filter sheet, which people expect on a phone.",
+  "api": [
+    "@Composable fun MonarchQueryBuilder(value: MonarchQueryGroup, onValueChange: (MonarchQueryGroup) -> Unit, fields: List<MonarchConditionField>, modifier: Modifier = Modifier, maxDepth: Int = 3, maxRulesPerGroup: Int = 20, showErrors: Boolean = false, enabled: Boolean = true, createId: (() -> String)? = null, removeIcon: (@Composable () -> Unit)? = null, addIcon: (@Composable () -> Unit)? = null, labels: MonarchQueryBuilderLabels = MonarchQueryBuilderLabels(), ruleLabels: MonarchConditionEditorLabels = MonarchConditionEditorLabels())",
+    "data class MonarchQueryGroup(id: String, combinator: MonarchQueryCombinator = MonarchQueryCombinator.And, rules: List<MonarchCondition> = emptyList(), groups: List<MonarchQueryGroup> = emptyList()) { fun allRules(): List<MonarchCondition>; fun problems(fields: List<MonarchConditionField>): Map<String, MonarchConditionProblem>; fun matches(values: Map<String, Any?>): Boolean }",
+    "enum class MonarchQueryCombinator { And, Or }",
+    "class MonarchQueryBuilderLabels(label: String? = null, group: ((path: List<Int>) -> String)? = null, combinatorBefore: String? = null, and: String? = null, or: String? = null, combinatorLabel: ((group: String) -> String)? = null, rule: ((position: Int) -> String)? = null, removeRule: ((group: String, position: Int) -> String)? = null, addRule: String? = null, addGroup: String? = null, removeGroup: ((group: String) -> String)? = null, remove: String? = null, emptyGroup: String? = null, maxDepthReached: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "value",
+      "type": "MonarchQueryGroup",
+      "default": "required",
+      "description": "The query: the top group. Group and rule ids must be unique across the query."
+    },
+    {
+      "name": "onValueChange",
+      "type": "(MonarchQueryGroup) -> Unit",
+      "default": "required",
+      "description": "Called with the whole new query after every change."
+    },
+    {
+      "name": "fields",
+      "type": "List<MonarchConditionField>",
+      "default": "required",
+      "description": "The fields a rule can test, as in MonarchConditionEditor. Without fields, Add rule and Add group are disabled."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the builder."
+    },
+    {
+      "name": "maxDepth",
+      "type": "Int",
+      "default": "3",
+      "description": "How many levels of groups are allowed, counting the top group. At the deepest level a note replaces Add group; 1 turns sub-groups off."
+    },
+    {
+      "name": "maxRulesPerGroup",
+      "type": "Int",
+      "default": "20",
+      "description": "The most rules in one group; at the limit the group's Add rule becomes a note."
+    },
+    {
+      "name": "showErrors",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows what is missing on each incomplete rule, for example after a submit attempt."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "When false nothing can change: switches, menus, inputs and buttons are disabled."
+    },
+    {
+      "name": "createId",
+      "type": "(() -> String)?",
+      "default": "null",
+      "description": "Makes the id of a new rule or group. By default the first q-<n> no group or rule in the query has."
+    },
+    {
+      "name": "removeIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The icon of each remove button. Monarch bundles no icons; without it the buttons read \"Remove\"."
+    },
+    {
+      "name": "addIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "An icon before Add rule and Add group."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchQueryBuilderLabels",
+      "default": "MonarchQueryBuilderLabels()",
+      "description": "Replacements for the builder's strings: group names, the switch, rule headings, remove names, add buttons and notes."
+    },
+    {
+      "name": "ruleLabels",
+      "type": "MonarchConditionEditorLabels",
+      "default": "MonarchConditionEditorLabels()",
+      "description": "Replacements for the rule editors' strings, such as operator names, problems and the Field, Operator and Value labels."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty group",
+      "description": "\"No rules in this group.\" above Add rule."
+    },
+    {
+      "name": "rules",
+      "description": "Each rule is a MonarchConditionEditor card headed \"Rule 1\", with field, operator and value one per line."
+    },
+    {
+      "name": "nested",
+      "description": "Sub-groups follow the rules inside their parent, indented and on the alternate fill, each with its own switch, rules and remove button."
+    },
+    {
+      "name": "deepest level",
+      "description": "\"Groups cannot be nested any deeper.\" replaces Add group."
+    },
+    {
+      "name": "errors",
+      "description": "With showErrors, incomplete rules show their problem as in MonarchConditionEditor."
+    },
+    {
+      "name": "disabled",
+      "description": "Everything takes its disabled colors and does nothing."
+    }
+  ],
+  "appearance": "Groups are cards with the default border; levels alternate between the subtle and the muted fill so nesting reads without indentation lines. Group names use the subheading style, the join text and notes the muted text color, and rules are MonarchConditionEditor cards. Light, dark and both high-contrast themes follow from those roles.",
+  "platformNotes": "The web shows rules as rows of field, operator and value side by side; on Android each rule is a card with one control per line, and nesting is shown by cards inside cards with alternating fills. Rule headings are \"Rule 1\" under the group's heading instead of the web's \"Top group, rule 1\" accessible names; remove buttons keep the group in their names. Rules share the types of MonarchConditionEditor (MonarchCondition, MonarchConditionField), as on the web. The web moves focus after a removal; Compose leaves focus to the system. The web's messages and conditionMessages are labels and ruleLabels. Same name as iOS's plan; iOS has not built it yet.",
+  "accessibility": [
+    "The builder is named \"Query\"; group names and rule titles are headings, so TalkBack can move through the structure by heading.",
+    "Each group's AND / OR switch is a Material 3 segmented button row named after the group (\"Top group combinator\"), with the chosen segment read as selected.",
+    "Remove buttons name what they remove (\"Remove Group 1\", \"Remove rule 1 of Top group\") and have 48dp touch targets.",
+    "Problems are set on the rule controls as text, as in MonarchConditionEditor."
+  ],
+  "edgeCases": [
+    "Deep nesting narrows the controls: keep maxDepth at 3 or less on phones.",
+    "A query loaded from storage keeps its ids; generated ids skip every id already in the query.",
+    "An empty group matches every record in matches, as on the web.",
+    "Evaluation is for previews only; the server stays the authority."
+  ],
+  "tests": [
+    "MonarchQueryBuilderTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Nested AND / OR",
+      "fixture": "query-builder",
+      "webExample": "Nested AND / OR",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\nMonarchQueryBuilder(\n    value = query,\n    onValueChange = { query = it },\n    fields = fields,\n)\nMonarchText(\n    text = \"Sample record (open, amount 120, flagged) \" + if (query.matches(mapOf(\"status\" to \"open\", \"amount\" to 120.0, \"flagged\" to true))) \"matches.\" else \"does not match.\",\n    style = MonarchTextStyle.Caption,\n)\n}",
+      "setupTemplate": "val fields = listOf(\n    MonarchConditionField(\n        key = {{fields.0.value}},\n        label = {{fields.0.label}},\n        type = MonarchConditionFieldType.{{fields.0.type|pascal}},\n        options = listOf(\n            MonarchSelectOption({{fields.0.options.0.value}}, {{fields.0.options.0.label}}),\n            MonarchSelectOption({{fields.0.options.1.value}}, {{fields.0.options.1.label}}),\n            MonarchSelectOption({{fields.0.options.2.value}}, {{fields.0.options.2.label}}),\n        ),\n    ),\n    MonarchConditionField(\n        key = {{fields.1.value}},\n        label = {{fields.1.label}},\n        type = MonarchConditionFieldType.{{fields.1.type|pascal}},\n    ),\n    MonarchConditionField(\n        key = {{fields.2.value}},\n        label = {{fields.2.label}},\n        type = MonarchConditionFieldType.{{fields.2.type|pascal}},\n        placeholder = {{fields.2.placeholder}},\n    ),\n    MonarchConditionField(\n        key = {{fields.3.value}},\n        label = {{fields.3.label}},\n        type = MonarchConditionFieldType.{{fields.3.type|pascal}},\n    ),\n    MonarchConditionField(\n        key = {{fields.4.value}},\n        label = {{fields.4.label}},\n        type = MonarchConditionFieldType.{{fields.4.type|pascal}},\n    ),\n)\nvar query by remember {\n    mutableStateOf(\n        MonarchQueryGroup(\n            id = {{query.id}},\n            combinator = MonarchQueryCombinator.{{query.combinator|pascal}},\n            rules = listOf(\n                MonarchCondition({{query.rules.0.id}}, {{query.rules.0.field}}, MonarchConditionOperator.{{query.rules.0.operator|pascal}}, MonarchConditionValue.Text({{query.rules.0.value}})),\n            ),\n            groups = listOf(\n                MonarchQueryGroup(\n                    id = {{query.groups.0.id}},\n                    combinator = MonarchQueryCombinator.{{query.groups.0.combinator|pascal}},\n                    rules = listOf(\n                        MonarchCondition({{query.groups.0.rules.0.id}}, {{query.groups.0.rules.0.field}}, MonarchConditionOperator.{{query.groups.0.rules.0.operator|pascal}}, MonarchConditionValue.Number({{query.groups.0.rules.0.value|double}})),\n                        MonarchCondition({{query.groups.0.rules.1.id}}, {{query.groups.0.rules.1.field}}, MonarchConditionOperator.{{query.groups.0.rules.1.operator|pascal}}),\n                    ),\n                ),\n            ),\n        ),\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "val fields = listOf(\n    MonarchConditionField(\n        key = \"status\",\n        label = \"Status\",\n        type = MonarchConditionFieldType.Select,\n        options = listOf(\n            MonarchSelectOption(\"open\", \"Open\"),\n            MonarchSelectOption(\"pending\", \"Pending\"),\n            MonarchSelectOption(\"closed\", \"Closed\"),\n        ),\n    ),\n    MonarchConditionField(\n        key = \"title\",\n        label = \"Title\",\n        type = MonarchConditionFieldType.Text,\n    ),\n    MonarchConditionField(\n        key = \"amount\",\n        label = \"Amount\",\n        type = MonarchConditionFieldType.Number,\n        placeholder = \"Amount\",\n    ),\n    MonarchConditionField(\n        key = \"created\",\n        label = \"Created\",\n        type = MonarchConditionFieldType.Date,\n    ),\n    MonarchConditionField(\n        key = \"flagged\",\n        label = \"Flagged\",\n        type = MonarchConditionFieldType.Boolean,\n    ),\n)\nvar query by remember {\n    mutableStateOf(\n        MonarchQueryGroup(\n            id = \"root\",\n            combinator = MonarchQueryCombinator.And,\n            rules = listOf(\n                MonarchCondition(\"r1\", \"status\", MonarchConditionOperator.Eq, MonarchConditionValue.Text(\"open\")),\n            ),\n            groups = listOf(\n                MonarchQueryGroup(\n                    id = \"g1\",\n                    combinator = MonarchQueryCombinator.Or,\n                    rules = listOf(\n                        MonarchCondition(\"r2\", \"amount\", MonarchConditionOperator.Gte, MonarchConditionValue.Number(500.0)),\n                        MonarchCondition(\"r3\", \"flagged\", MonarchConditionOperator.IsTrue),\n                    ),\n                ),\n            ),\n        ),\n    )\n}",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\nMonarchQueryBuilder(\n    value = query,\n    onValueChange = { query = it },\n    fields = fields,\n)\nMonarchText(\n    text = \"Sample record (open, amount 120, flagged) \" + if (query.matches(mapOf(\"status\" to \"open\", \"amount\" to 120.0, \"flagged\" to true))) \"matches.\" else \"does not match.\",\n    style = MonarchTextStyle.Caption,\n)\n}"
+    },
+    {
+      "title": "A flat query without sub-groups",
+      "setup": "val fields = listOf(MonarchConditionField(key = \"title\", label = \"Title\", type = MonarchConditionFieldType.Text))\nvar query by remember { mutableStateOf(MonarchQueryGroup(id = \"flat\", combinator = MonarchQueryCombinator.Or)) }",
+      "code": "MonarchQueryBuilder(value = query, onValueChange = { query = it }, fields = fields, maxDepth = 1)"
+    }
+  ],
+  "webEquivalent": "QueryBuilder",
+  "dependsOn": [
+    "select",
+    "text-field",
+    "segmented-control",
+    "button",
+    "condition-editor"
+  ],
+  "icons": {
+    "remove": "CloseGlyph",
+    "add": "PlusGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "layout",
+      "platform": "android",
+      "reason": "The web draws a condition as one row: field, operator, value and remove, about 520px wide in the docs window. A phone window of 392dp leaves 344dp for the row (24dp margins). One row needs the field picker at 120dp, the operator picker at 120dp, the value at 96dp, the remove button at 48dp and three 8dp gaps, 408dp, which does not fit. The row therefore stacks in the web's order (field, operator, value) with the remove button at the top right.",
+      "convention": "Material text fields keep a 48dp touch height and a readable width; three pickers and a button do not share one line on a compact window"
+    }
+  ]
+}

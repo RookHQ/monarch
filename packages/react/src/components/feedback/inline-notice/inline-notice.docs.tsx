@@ -1,5 +1,16 @@
-import { Button, InlineNotice } from '@rookcom/monarch-react';
+import { Button, InlineNotice, type InlineNoticeProps } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './inline-notice.fixture.json';
+
+type Tone = NonNullable<InlineNoticeProps['tone']>;
+const notices = fixture.data.notices as unknown as readonly [
+  { tone: Tone; message: string },
+  { tone: Tone; message: string },
+  { tone: Tone; title: string; message: string },
+  { tone: Tone; message: string; action: string; live: boolean },
+  { tone: Tone; message: string; dismissible: boolean },
+];
 
 export default {
   id: 'inline-notice',
@@ -116,24 +127,24 @@ export default {
           stack: true,
           render: () => (
             <>
-              <InlineNotice tone="info">Members sync from Rook ID every 15 minutes.</InlineNotice>
-              <InlineNotice tone="success">Connected to the shared inbox.</InlineNotice>
-              <InlineNotice tone="warning" title="Unverified.">
-                Emails from this domain may land in spam.
+              <InlineNotice tone={notices[0].tone}>{notices[0].message}</InlineNotice>
+              <InlineNotice tone={notices[1].tone}>{notices[1].message}</InlineNotice>
+              <InlineNotice tone={notices[2].tone} title={notices[2].title}>
+                {notices[2].message}
               </InlineNotice>
               <InlineNotice
-                tone="danger"
-                live
+                tone={notices[3].tone}
+                live={notices[3].live}
                 action={
                   <Button size="xs" onClick={() => {}}>
-                    Retry
+                    {notices[3].action}
                   </Button>
                 }
               >
-                Could not load comments.
+                {notices[3].message}
               </InlineNotice>
-              <InlineNotice tone="neutral" dismissible>
-                Draft restored from this device.
+              <InlineNotice tone={notices[4].tone} dismissible={notices[4].dismissible}>
+                {notices[4].message}
               </InlineNotice>
             </>
           ),

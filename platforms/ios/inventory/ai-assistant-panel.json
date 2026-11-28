@@ -1,0 +1,229 @@
+{
+  "id": "ai-assistant-panel",
+  "name": "MonarchAiAssistantPanel",
+  "title": "AiAssistantPanel",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": ".sheet with .presentationDetents([.medium, .large]) and a NavigationStack (Close as ToolbarItem(placement: .cancellationAction)) in a compact width, .inspector in a regular width (View.monarchAiAssistantPanel(isPresented:panel:) picks one), with MonarchAiThread over MonarchAiPromptInput and MonarchAiContextChips in .safeAreaInset(edge: .bottom), MonarchAiWelcome with MonarchAiStarterPrompts when empty, and MonarchAiAgentAvatar",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The assistant surface any app mounts: the title with the agent and Close, a thread over a prompt input with chips for what the assistant can see, and a welcome with starter prompts while empty, as a sheet on iPhone or an inspector pane on iPad.",
+  "whenToUse": "A product adds a general assistant beside its screens. Hold the MonarchAiConversation above the navigation so it survives moving between screens, open the panel from MonarchAiLauncher, and present it with .monarchAiAssistantPanel(isPresented:panel:).",
+  "whenNotToUse": "A full-screen chat product: use the ai-chat-page recipe. A single AI action on a record: use the action's own button and show the result with MonarchAiSummaryCard or MonarchAiInlinePrompt.",
+  "api": [
+    "public struct MonarchAiAssistantPanel<HeaderActions: View, Toolbar: View, Footer: View, Empty: View>: View",
+    "extension MonarchAiAssistantPanel where Empty == EmptyView { public init(_ title: String, conversation: MonarchAiConversation, isPresented: Binding<Bool>, prompt: Binding<String>? = nil, placement: MonarchAiAssistantPanelPlacement = .automatic, agent: MonarchAiAgentRef? = nil, agentImage: Image? = nil, context: [MonarchAiContextItem] = [], starters: [MonarchAiStarterPrompt] = [], labels: MonarchAiAssistantPanelLabels = MonarchAiAssistantPanelLabels(), onRemoveContext: (@MainActor (String) -> Void)? = nil, @ViewBuilder headerActions: () -> HeaderActions, @ViewBuilder toolbar: () -> Toolbar, @ViewBuilder footer: () -> Footer) }",
+    "extension MonarchAiAssistantPanel where Empty == EmptyView { public init(_ title: String, messages: [MonarchAiConversationMessage], isPresented: Binding<Bool>, prompt: Binding<String>? = nil, placement: MonarchAiAssistantPanelPlacement = .automatic, status: MonarchAiConversationStatus = .idle, error: MonarchAiConversationError? = nil, isOffline: Bool = false, queuedCount: Int = 0, isSlow: Bool = false, agent: MonarchAiAgentRef? = nil, agentImage: Image? = nil, context: [MonarchAiContextItem] = [], starters: [MonarchAiStarterPrompt] = [], labels: MonarchAiAssistantPanelLabels = MonarchAiAssistantPanelLabels(), onStop: (@MainActor () -> Void)? = nil, onRemoveContext: (@MainActor (String) -> Void)? = nil, @ViewBuilder headerActions: () -> HeaderActions, @ViewBuilder toolbar: () -> Toolbar, @ViewBuilder footer: () -> Footer, onSend: @escaping @MainActor (String) async throws -> Void) }",
+    "extension MonarchAiAssistantPanel where HeaderActions == EmptyView, Toolbar == EmptyView, Footer == EmptyView, Empty == EmptyView { the same two initialisers without headerActions, toolbar and footer }",
+    "public func emptyState<NewEmpty: View>(@ViewBuilder _ content: () -> NewEmpty) -> MonarchAiAssistantPanel<HeaderActions, Toolbar, Footer, NewEmpty>",
+    "public enum MonarchAiAssistantPanelPlacement: Sendable, Hashable, CaseIterable { case automatic, inline, sheet }",
+    "public struct MonarchAiAssistantPanelLabels: Sendable { public init(close: String? = nil, inputLabel: String? = nil, context: String? = nil, welcome: String? = nil, starters: String? = nil, assistant: String? = nil) }",
+    "extension View { public func monarchAiAssistantPanel<Panel: View>(isPresented: Binding<Bool>, @ViewBuilder panel: () -> Panel) -> some View }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The heading, such as \"Assistant\": the navigation title in a sheet, a heading in a pane, and the name of the pane for VoiceOver."
+    },
+    {
+      "name": "conversation",
+      "type": "MonarchAiConversation",
+      "default": "required (first initialiser)",
+      "description": "The conversation the panel shows and sends to. Its messages, status, error, connection, queue, slowness and agent are read; sending calls send, and a refused send gives the text back to the prompt input; Stop calls stop."
+    },
+    {
+      "name": "messages",
+      "type": "[MonarchAiConversationMessage]",
+      "default": "required (second initialiser)",
+      "description": "The conversation, oldest first, shown by MonarchAiThread."
+    },
+    {
+      "name": "isPresented",
+      "type": "Binding<Bool>",
+      "default": "required",
+      "description": "Whether the panel shows. Close sets it to false; a sheet also clears it when swiped down."
+    },
+    {
+      "name": "prompt",
+      "type": "Binding<String>?",
+      "default": "nil",
+      "description": "The draft. Without it the panel keeps a draft only while it stays on screen; a sheet's content is rebuilt each time it opens, so hoist it to keep drafts."
+    },
+    {
+      "name": "placement",
+      "type": "MonarchAiAssistantPanelPlacement",
+      "default": ".automatic",
+      "description": "sheet draws a NavigationStack with the title and Close in the navigation bar and the medium and large detents; inline draws its own header row for an inspector or a split view column; automatic follows .monarchAiAssistantPanel, otherwise sheet in a compact width and inline in a regular one."
+    },
+    {
+      "name": "status / error / isOffline / queuedCount / isSlow",
+      "type": "MonarchAiConversationStatus / MonarchAiConversationError? / Bool / Int / Bool",
+      "default": ".idle / nil / false / 0 / false",
+      "description": "Second initialiser only. Passed to MonarchAiThread. While submitted or streaming the avatar reads working and Send becomes Stop; while a reply runs or a tool call awaits approval the starters are disabled."
+    },
+    {
+      "name": "agent",
+      "type": "MonarchAiAgentRef?",
+      "default": "nil",
+      "description": "The agent in the header (name · role under the title) and in the welcome. With a conversation, its agent is used when this is nil. Without one the avatar is named \"Assistant\" and no line is shown under the title."
+    },
+    {
+      "name": "agentImage",
+      "type": "Image?",
+      "default": "nil",
+      "description": "The agent's picture, loaded by the app; initials are shown without it."
+    },
+    {
+      "name": "context",
+      "type": "[MonarchAiContextItem]",
+      "default": "[]",
+      "description": "What the assistant can see on the current screen, shown as MonarchAiContextChips above the thread (web and Android parity)."
+    },
+    {
+      "name": "starters",
+      "type": "[MonarchAiStarterPrompt]",
+      "default": "[]",
+      "description": "Suggested first prompts under the welcome while the conversation is empty, as MonarchAiStarterPrompts in its list layout. Choosing one sends its prompt."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiAssistantPanelLabels",
+      "default": "MonarchAiAssistantPanelLabels()",
+      "description": "Replacements for the built-in strings: close, inputLabel, context, welcome, starters, assistant."
+    },
+    {
+      "name": "onStop",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Second initialiser only. Stops the running reply, from the prompt input's Stop, the Escape key and the Magic Tap."
+    },
+    {
+      "name": "onRemoveContext",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Lets the person remove a context chip by id."
+    },
+    {
+      "name": "headerActions",
+      "type": "@ViewBuilder () -> HeaderActions",
+      "default": "none (initialisers without it)",
+      "description": "Buttons beside Close, such as New conversation: the primary action of the navigation bar in a sheet, the header row in a pane."
+    },
+    {
+      "name": "toolbar / footer",
+      "type": "@ViewBuilder () -> Toolbar / Footer",
+      "default": "none (initialisers without them)",
+      "description": "Passed to MonarchAiPromptInput: controls in its bar (a model picker) and content under it (MonarchAiDisclaimer)."
+    },
+    {
+      "name": "onSend",
+      "type": "@MainActor (String) async throws -> Void",
+      "default": "required (second initialiser)",
+      "description": "Sends the typed prompt or a chosen starter's prompt. Throw to give the typed text back to the prompt input."
+    },
+    {
+      "name": "emptyState(_:)",
+      "type": "@ViewBuilder () -> NewEmpty",
+      "default": "MonarchAiWelcome with the starters",
+      "description": "Replaces the whole empty state."
+    },
+    {
+      "name": "monarchAiAssistantPanel(isPresented:panel:)",
+      "type": "View modifier",
+      "default": "none",
+      "description": "Presents the panel as a .sheet in a compact width and as an .inspector in a regular width, and tells an automatic panel which chrome to draw."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "Nothing is shown. A hoisted prompt keeps the draft; the conversation keeps the messages."
+    },
+    {
+      "name": "sheet",
+      "description": "A system sheet at the medium detent, which the person can drag to large. The navigation bar shows the avatar, the title and the agent line, Close as the cancellation action and the header actions as the primary action. Swiping down closes it."
+    },
+    {
+      "name": "pane",
+      "description": "A column on the surface colour with a header row (avatar, title, agent line, header actions, Close) and a divider under it."
+    },
+    {
+      "name": "empty",
+      "description": "MonarchAiWelcome with \"How can I help?\", the agent and the starters, scrolling when the panel is short; or the emptyState content."
+    },
+    {
+      "name": "running",
+      "description": "The avatar reads working, Send becomes Stop, the starters are disabled, and Escape stops the reply instead of closing."
+    },
+    {
+      "name": "awaiting approval",
+      "description": "The starters are disabled; a typed prompt that the conversation refuses comes back into the prompt input."
+    },
+    {
+      "name": "offline / slow / error",
+      "description": "MonarchAiThread shows and announces its notice or the error."
+    }
+  ],
+  "appearance": "Every part is an existing component: the small decorative agent avatar, the title in the subheading style in the default text colour with the agent line in the muted text colour, a ghost close button, and the thread, chips and prompt input on the surface colour. A sheet uses the system sheet and navigation bar; a pane has a system divider under its header. Light, dark and both high-contrast themes follow from those roles and components.",
+  "platformNotes": "The web panel docks to the right or left edge and becomes a full-screen modal sheet under 640px. On iOS the phone form is a system sheet with the medium and large detents and a NavigationStack, and the regular-width form is an .inspector column (or a column the app places), so the web's side option is not offered: the system puts the inspector at the trailing edge. Android shows a full-height ModalBottomSheet and a SupportingPaneScaffold pane. iOS has no minimize: a sheet already drags between detents and closes with a swipe, and an inspector is shown or hidden by isPresented, so Android's minimized and onMinimizedChange and the minimize and expand strings are not offered. The context chips sit above the thread, as on Android and the web (decision D6). The web moves focus to the input on open; iOS does not focus it, as Android, so the keyboard does not cover the conversation. Escape closes the panel while no reply runs (Close carries the cancel keyboard shortcut) and stops a running reply, as the web. Swift idiom: isPresented is a Binding instead of open and onOpenChange; the prompt is a Binding<String> instead of TextFieldState; the empty slot is the emptyState(_:) modifier; closeIcon and minimizeIcon are not offered because SF Symbols are available. The thread's scroll position is MonarchAiThread's own and is not exposed (Android's threadState). The web's messageProps, threadProps and promptProps pass-throughs are not offered; compose MonarchAiThread and MonarchAiPromptInput directly for that.",
+  "accessibility": [
+    "The title is a header: the navigation title of the sheet, or a heading in the pane, which is a container named by the title.",
+    "Close is a button named \"Close assistant\" with a 44-point touch target and the cancel keyboard shortcut (Escape) while no reply runs.",
+    "While a reply runs, Escape and the Magic Tap stop it through MonarchAiThread and MonarchAiPromptInput.",
+    "The avatar is decorative; the agent's name and role are text under the title.",
+    "The prompt input is named \"Message the assistant\"; Send becomes Stop while a reply runs.",
+    "The thread announces new replies, errors and the offline notice.",
+    "The context chips are a group named \"Context\" and the starters a group named \"Suggested prompts\".",
+    "Starters are disabled, not hidden, while a reply runs or a tool call waits for approval.",
+    "The input is not focused when the panel opens.",
+    "The header row mirrors right to left: Close sits at the leading edge."
+  ],
+  "edgeCases": [
+    "Give an inline panel a bounded height: the thread is a scroll view and cannot sit in a vertically scrolling parent.",
+    "A sheet's content is rebuilt every time it opens: hoist the prompt binding and the conversation to keep the draft and the messages.",
+    "A starter that the conversation refuses (while a tool call waits for approval) is not sent and shows no error; the starters are disabled then anyway.",
+    "A long title and a long agent line wrap at the largest text size; Close keeps its size.",
+    "With no agent and no role, no line is shown under the title and the avatar is named Assistant.",
+    "How the medium detent and the keyboard interact (the system moves the sheet to make room) was not checked on a device for this entry."
+  ],
+  "tests": [
+    "MonarchAiAssistantPanelTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "With AiLauncher and ⌘/Ctrl+J (inline placement)",
+      "fixture": "ai-assistant-panel",
+      "webExample": "With AiLauncher and ⌘/Ctrl+J (inline placement)",
+      "template": "HStack {\n    MonarchButton({{title}}) { showsAssistant = true }\n    Text({{hint}})\n        .monarchTextStyle(.body)\n}\n    .monarchAiAssistantPanel(isPresented: $showsAssistant) {\n        MonarchAiAssistantPanel(\n            {{title}},\n            conversation: conversation,\n            isPresented: $showsAssistant,\n            prompt: $draft,\n            context: [\n                MonarchAiContextItem(id: \"page\", kind: .page, label: {{context.0.items}}, group: {{context.0.label}}),\n                MonarchAiContextItem(id: \"selection\", kind: .selection, label: {{context.1.items}}, group: {{context.1.label}}),\n            ],\n            starters: [\n                MonarchAiStarterPrompt(id: \"sum\", title: {{starters.0}}, prompt: {{starters.0}}),\n                MonarchAiStarterPrompt(id: \"week\", title: {{starters.1}}, prompt: {{starters.1}}),\n                MonarchAiStarterPrompt(id: \"status\", title: {{starters.2}}, prompt: {{starters.2}}),\n            ]\n        )\n    }",
+      "setupTemplate": "private struct EchoTransport: MonarchAiTransport {\n    func stream(_ request: MonarchAiTransportRequest) -> MonarchAiEventStream {\n        MonarchAiEventStream { continuation in\n            continuation.yield(.textDelta(\"You asked: \" + (request.messages.last?.text ?? \"\")))\n            continuation.yield(.done())\n            continuation.finish()\n        }\n    }\n}\n\n// Hold the conversation above the navigation so it survives moving between screens.\n@State private var conversation = MonarchAiConversation(transport: EchoTransport())\n@State private var showsAssistant = false\n@State private var draft = \"\"",
+      "previewPresented": [
+        "showsAssistant"
+      ],
+      "setup": "private struct EchoTransport: MonarchAiTransport {\n    func stream(_ request: MonarchAiTransportRequest) -> MonarchAiEventStream {\n        MonarchAiEventStream { continuation in\n            continuation.yield(.textDelta(\"You asked: \" + (request.messages.last?.text ?? \"\")))\n            continuation.yield(.done())\n            continuation.finish()\n        }\n    }\n}\n\n// Hold the conversation above the navigation so it survives moving between screens.\n@State private var conversation = MonarchAiConversation(transport: EchoTransport())\n@State private var showsAssistant = false\n@State private var draft = \"\"",
+      "code": "HStack {\n    MonarchButton(\"Assistant\") { showsAssistant = true }\n    Text(\"or press ⌘J / Ctrl+J\")\n        .monarchTextStyle(.body)\n}\n    .monarchAiAssistantPanel(isPresented: $showsAssistant) {\n        MonarchAiAssistantPanel(\n            \"Assistant\",\n            conversation: conversation,\n            isPresented: $showsAssistant,\n            prompt: $draft,\n            context: [\n                MonarchAiContextItem(id: \"page\", kind: .page, label: \"Quarterly plan\", group: \"Page\"),\n                MonarchAiContextItem(id: \"selection\", kind: .selection, label: \"3 rows\", group: \"Selected\"),\n            ],\n            starters: [\n                MonarchAiStarterPrompt(id: \"sum\", title: \"Summarise this page\", prompt: \"Summarise this page\"),\n                MonarchAiStarterPrompt(id: \"week\", title: \"What changed this week?\", prompt: \"What changed this week?\"),\n                MonarchAiStarterPrompt(id: \"status\", title: \"Draft a status update\", prompt: \"Draft a status update\"),\n            ]\n        )\n    }"
+    },
+    {
+      "title": "A pane beside the content, with plain state",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var messages: [MonarchAiConversationMessage] = []\n@State private var isOpen = true",
+      "code": "MonarchAiAssistantPanel(\n    \"Assistant\",\n    messages: messages,\n    isPresented: $isOpen,\n    placement: .inline,\n    agent: MonarchAiAgentRef(name: \"Dossier\", role: \"Workspace assistant\"),\n    onSend: { text in\n        // With a MonarchAiConversation, use the initialiser that takes it instead.\n        messages.append(\n            MonarchAiConversationMessage(\n                id: \"u\\(messages.count)\",\n                role: .user,\n                parts: [.text(MonarchAiTextPart(text: text))],\n                createdAt: MonarchAiConversationMessage.timestamp(.now)\n            )\n        )\n    }\n)\n.frame(height: theme.spacing.space24 * 4)"
+    }
+  ],
+  "webEquivalent": "AiAssistantPanel",
+  "dependsOn": [
+    "ai-thread",
+    "ai-prompt-input",
+    "ai-context-chips",
+    "ai-conversation",
+    "sheet"
+  ],
+  "icons": {
+    "launcher": "BotGlyph"
+  }
+}

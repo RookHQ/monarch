@@ -70,6 +70,7 @@ function Basic() {
     <Stage>
       {src ? (
         <ChatDock
+          defaultOpen
           src={src}
           allowedOrigins={[window.location.origin]}
           appName="Example Desk"

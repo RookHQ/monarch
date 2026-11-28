@@ -1,0 +1,128 @@
+{
+  "id": "ai-onboarding-tour",
+  "name": "MonarchAiOnboardingTour",
+  "title": "AiOnboardingTour",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "TabView with .tabViewStyle(.page(indexDisplayMode: .never)) for the steps, MonarchStepper for the position, MonarchButton for Back, Next and Turn off AI; presented by the app in sheet(isPresented:content:) with presentationDetents",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A short, step-by-step introduction to AI in a product (what it can see, what it can do, how to turn it off) with Back, Next and Turn off AI on every step.",
+  "whenToUse": "The first time people meet AI features in a product, in a sheet or at the top of a screen, to explain what the assistant sees and does and how to switch it off.",
+  "whenNotToUse": "To point at one control use TipKit's popoverTip(_:arrowEdge:). For a general setup checklist use MonarchOnboardingChecklist.",
+  "api": [
+    "MonarchAiOnboardingTour.init(_ steps: [MonarchAiOnboardingTourStep], labels: MonarchAiOnboardingTourLabels = MonarchAiOnboardingTourLabels(), onSkip: (@MainActor () -> Void)? = nil, onDisable: @escaping @MainActor () -> Void, onFinish: @escaping @MainActor () -> Void)",
+    "MonarchAiOnboardingTour.init(_ steps: [MonarchAiOnboardingTourStep], step: Binding<Int>, labels: MonarchAiOnboardingTourLabels = MonarchAiOnboardingTourLabels(), onSkip: (@MainActor () -> Void)? = nil, onDisable: @escaping @MainActor () -> Void, onFinish: @escaping @MainActor () -> Void)",
+    "MonarchAiOnboardingTourStep.init(_ title: String, id: String? = nil, body: String, systemImage: String? = nil)",
+    "MonarchAiOnboardingTourLabels.init(eyebrow: String? = nil, stepOf: (@Sendable (_ step: Int, _ total: Int) -> String)? = nil, back: String? = nil, next: String? = nil, finish: String? = nil, skip: String? = nil, disable: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "steps",
+      "type": "[MonarchAiOnboardingTourStep]",
+      "default": "required",
+      "description": "The steps, each with a title, a body and an optional SF Symbol."
+    },
+    {
+      "name": "step",
+      "type": "Binding<Int>",
+      "default": "internal state",
+      "description": "The position of the current step, from 0, when the app keeps it. Kept inside the steps."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiOnboardingTourLabels",
+      "default": "MonarchAiOnboardingTourLabels()",
+      "description": "Replaces \"AI\", \"Step … of …\", Back, Next, Got it, Skip introduction and Turn off AI."
+    },
+    {
+      "name": "onSkip",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds a close button that skips the tour."
+    },
+    {
+      "name": "onDisable",
+      "type": "@MainActor () -> Void",
+      "default": "required",
+      "description": "Runs for Turn off AI, which is on every step."
+    },
+    {
+      "name": "onFinish",
+      "type": "@MainActor () -> Void",
+      "default": "required",
+      "description": "Runs for the last step's Got it button."
+    }
+  ],
+  "states": [
+    {
+      "name": "first step",
+      "description": "Next and Turn off AI; no Back."
+    },
+    {
+      "name": "middle step",
+      "description": "Back, Next and Turn off AI."
+    },
+    {
+      "name": "last step",
+      "description": "Back, Got it and Turn off AI."
+    },
+    {
+      "name": "one step",
+      "description": "Got it and Turn off AI, without the stepper."
+    },
+    {
+      "name": "no steps",
+      "description": "The header and the buttons only."
+    }
+  ],
+  "appearance": "The AI strong colour on the glyph and the \"AI\" eyebrow, headings in default text and bodies in muted text, the stepper's colours, a primary Next button, a secondary Back button and a ghost Turn off AI button. No surface of its own: the sheet or a MonarchCard provides it. The high-contrast themes resolve the same roles to stronger colours.",
+  "platformNotes": "The web's target option, which outlines an element on the page, has no equivalent: use TipKit's popoverTip to point at a control. The web's floating placement becomes a sheet presented by the app. Steps are swiped as pages as well as moved with Back and Next. On the macOS host build, which is not a supported product, the current step is shown without paging. Android uses the same names.",
+  "accessibility": [
+    "Each step's heading has the header trait, and VoiceOver focus moves to it when the step changes.",
+    "The stepper reads the position and the name of the step.",
+    "The close button is named \"Skip introduction\".",
+    "Turn off AI is on every step, so the opt-out is always reachable.",
+    "Every button has a 44-point touch target; the buttons stack when they do not fit on one line."
+  ],
+  "edgeCases": [
+    "The tour takes the height of its tallest step, so pages do not jump in height and long text at large sizes is not clipped.",
+    "A step outside the range is clamped to the first or the last step.",
+    "Step ids default to the title; the stepper gets unique ids even when titles repeat."
+  ],
+  "tests": [
+    "MonarchAiOnboardingTourTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Inline, pointing at a button",
+      "fixture": "ai-onboarding-tour",
+      "webExample": "Inline, pointing at a button",
+      "template": "VStack(spacing: theme.spacing.space4) {\n    MonarchButton({{askLabel}}, variant: .secondary, size: .md, fullWidth: true) {}\n    VStack {\n        MonarchAiOnboardingTour(\n            [\n                MonarchAiOnboardingTourStep({{steps.0.title}}, body: {{steps.0.body}}),\n                MonarchAiOnboardingTourStep({{steps.1.title}}, body: {{steps.1.body}}),\n                MonarchAiOnboardingTourStep({{steps.2.title}}, body: {{steps.2.body}}),\n            ],\n            onSkip: {},\n            onDisable: {},\n            onFinish: {}\n        )\n    }\n    .padding(theme.spacing.space4)\n    .background(\n        RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous)\n            .strokeBorder(theme.colors.aiBorder, lineWidth: 1)\n    )\n}\n.padding(.horizontal)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme",
+      "setup": "@Environment(\\.monarchTheme) private var theme",
+      "code": "VStack(spacing: theme.spacing.space4) {\n    MonarchButton(\"Ask the assistant\", variant: .secondary, size: .md, fullWidth: true) {}\n    VStack {\n        MonarchAiOnboardingTour(\n            [\n                MonarchAiOnboardingTourStep(\"What the assistant can see\", body: \"The page you have open, the records you select and any files you attach. It does not see other workspaces.\"),\n                MonarchAiOnboardingTourStep(\"What it can do\", body: \"Summarise pages, draft text and answer questions about your records. It asks before it changes anything.\"),\n                MonarchAiOnboardingTourStep(\"How to turn it off\", body: \"Use “Turn off AI” below at any time, or switch it off per app in workspace settings.\"),\n            ],\n            onSkip: {},\n            onDisable: {},\n            onFinish: {}\n        )\n    }\n    .padding(theme.spacing.space4)\n    .background(\n        RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous)\n            .strokeBorder(theme.colors.aiBorder, lineWidth: 1)\n    )\n}\n.padding(.horizontal)"
+    },
+    {
+      "title": "Controlled position",
+      "setup": "@State private var step = 1",
+      "code": "MonarchAiOnboardingTour(\n    [\n        MonarchAiOnboardingTourStep(\"What it can do\", body: \"Summarise pages and draft text.\"),\n        MonarchAiOnboardingTourStep(\"How to turn it off\", body: \"Use Turn off AI at any time.\"),\n    ],\n    step: $step,\n    onDisable: {},\n    onFinish: {}\n)"
+    }
+  ],
+  "webEquivalent": "AiOnboardingTour",
+  "dependsOn": [
+    "sheet",
+    "button",
+    "stepper",
+    "card"
+  ],
+  "icons": {
+    "pill": "BotGlyph",
+    "skip": "CloseGlyph"
+  }
+}

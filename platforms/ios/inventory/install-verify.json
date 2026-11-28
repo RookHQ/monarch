@@ -1,0 +1,187 @@
+{
+  "id": "install-verify",
+  "name": "MonarchInstallVerify",
+  "title": "InstallVerify",
+  "family": "technical",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of MonarchCodeSnippetTabs, MonarchCopyButton and a mailto Link for the developer handoff, ProgressView while waiting, Link for the test page, AccessibilityNotification.Announcement when connected",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Install a snippet on a website and wait for it to report: code for each platform with copy, a handoff to a developer (copy the instructions or email them), then a waiting status until the product sees the code.",
+  "whenToUse": "In an onboarding or settings screen where a person adds a script, tag or plugin to their own website and the product confirms it is live.",
+  "whenNotToUse": "For code examples with nothing to verify use MonarchCodeSnippetTabs. For a key alone use MonarchCopyField or MonarchKeyCreatedDialog. For domain records use MonarchDnsRecordTable and MonarchDomainProgress.",
+  "api": [
+    "init(snippets: [MonarchInstallSnippet], status: MonarchInstallVerifyStatus, selection: Binding<String>? = nil, targets: [MonarchInstallTarget] = [], connectedOn: [String]? = nil, developerInstructions: String? = nil, testURL: URL? = nil, isTestDisabled: Bool = false, testHint: String? = nil, part: MonarchInstallVerifyPart = .all, now: Date? = nil, labels: MonarchInstallVerifyLabels = MonarchInstallVerifyLabels(), onConnected: (@MainActor () -> Void)? = nil, @ViewBuilder credential: () -> Credential)",
+    "init(snippets:status:selection:targets:connectedOn:developerInstructions:testURL:isTestDisabled:testHint:part:now:labels:onConnected:) where Credential == EmptyView",
+    "struct MonarchInstallSnippet { init(_ label: String, code: String, language: String? = nil, description: String? = nil, id: String? = nil) }",
+    "struct MonarchInstallTarget { init(_ label: String, lastSeen: Date? = nil, id: String? = nil) }",
+    "enum MonarchInstallVerifyStatus { case waiting, connected, unavailable }",
+    "enum MonarchInstallVerifyPart { case all, install, verify }",
+    "struct MonarchInstallVerifyLabels { var installHeading, verifyHeading, platforms, shareInstructions, emailDeveloper, shareSubject, waitingTitle, connectedBody, unavailableTitle, unavailableBody, targets, notSeen, openTest, openTestHint: String?; var waitingBody, connectedTitle: (@Sendable ([String]) -> String)?; var seen: (@Sendable (String) -> String)? }"
+  ],
+  "options": [
+    {
+      "name": "snippets",
+      "type": "[MonarchInstallSnippet]",
+      "default": "required",
+      "description": "The ways to install, one tab each, with an optional line on where the code goes. One snippet shows without tabs."
+    },
+    {
+      "name": "status",
+      "type": "MonarchInstallVerifyStatus",
+      "default": "required",
+      "description": "waiting, connected or unavailable. The app changes it when the code reports."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<String>?",
+      "default": "nil",
+      "description": "The selected snippet's id, when the app controls it. Kept inside otherwise."
+    },
+    {
+      "name": "targets",
+      "type": "[MonarchInstallTarget]",
+      "default": "[]",
+      "description": "The sites the install is expected on, each with when it last reported."
+    },
+    {
+      "name": "connectedOn",
+      "type": "[String]?",
+      "default": "nil",
+      "description": "The sites named in the connected title. By default the targets that reported."
+    },
+    {
+      "name": "developerInstructions",
+      "type": "String?",
+      "default": "nil",
+      "description": "Plain text for a developer. Shows a copy button and an Email them link."
+    },
+    {
+      "name": "testURL",
+      "type": "URL?",
+      "default": "nil",
+      "description": "A page where the install can be tried, opened in the browser. Addresses that are not http or https are not shown."
+    },
+    {
+      "name": "isTestDisabled",
+      "type": "Bool",
+      "default": "false",
+      "description": "Disables the test button; say why in testHint."
+    },
+    {
+      "name": "testHint",
+      "type": "String?",
+      "default": "nil",
+      "description": "One line under the test button."
+    },
+    {
+      "name": "part",
+      "type": "MonarchInstallVerifyPart",
+      "default": ".all",
+      "description": "Both halves under Install and Verify headings, or one half without a heading for a step of a wizard."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The time relative times are measured from. By default the time of drawing; inject it in tests."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchInstallVerifyLabels",
+      "default": "MonarchInstallVerifyLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "onConnected",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Runs once, the first time this view shows the connected status, for example to move a wizard on."
+    },
+    {
+      "name": "credential",
+      "type": "@ViewBuilder () -> Credential",
+      "default": "EmptyView",
+      "description": "The key or credential the snippet needs and its state, above the snippets, such as a MonarchCopyField."
+    }
+  ],
+  "states": [
+    {
+      "name": "waiting",
+      "description": "An info-tinted box with a system progress indicator, \"Waiting for your site…\" and which sites to open."
+    },
+    {
+      "name": "connected",
+      "description": "A success-tinted box with a check mark and \"Connected on www.example.com\"; the change is announced."
+    },
+    {
+      "name": "unavailable",
+      "description": "A neutral box with an info symbol, \"Live verification isn’t available\" and how to check by hand."
+    },
+    {
+      "name": "site seen or not",
+      "description": "Each site has a dot (success once seen, neutral before) and \"seen 5 minutes ago\" or \"not seen yet\"."
+    },
+    {
+      "name": "test disabled",
+      "description": "The Open a test page button is disabled with the hint under it."
+    },
+    {
+      "name": "install or verify only",
+      "description": "One half, without headings."
+    }
+  ],
+  "appearance": "Headings in the default text role. The snippets are MonarchCodeSnippetTabs with the pill tabs. The status box is the subtle surface of its tone (info, success or neutral) with the tone's border; help text and times use the muted text role. The copy button and the test button are secondary Monarch buttons and Email them a ghost link. All follow light, dark and both high-contrast themes.",
+  "platformNotes": "The copy button and the Email them mailto link are the web's. The web's snippet box is a multi-line copy field; on iOS it is a code block with its copy button inside MonarchCodeSnippetTabs. The test page opens in the browser with Link instead of a new tab. The web's headingLevel has no iOS equivalent: headings carry the header trait. Times are RelativeDateTimeFormatter text instead of RelativeTime with a tooltip. Android has no entry yet. Marked experimental as a product composite until a Rook app adopts it.",
+  "accessibility": [
+    "\"Install\" and \"Verify\" have the header trait.",
+    "The status box is one element read as its title and text; while waiting it has the updates-frequently trait.",
+    "A change to connected is announced with the connected title.",
+    "Each site is one element read as its name with \"seen 5 minutes ago\" or \"Not seen\" as its value; the dot is hidden.",
+    "The test button is a link with the hint \"Opens in Safari.\"",
+    "The code block, tabs and buttons are standard controls with 44-point touch targets."
+  ],
+  "edgeCases": [
+    "A test URL with another scheme (javascript:, file:) or no host is not shown.",
+    "onConnected runs once for the life of the view, including when it first appears already connected.",
+    "Site names are joined with commas; pass labels.waitingBody and labels.connectedTitle for \"a, b and c\" in other languages.",
+    "Long host names wrap; the code block scrolls sideways inside itself."
+  ],
+  "tests": [
+    "MonarchInstallVerifyTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Install and verify",
+      "fixture": "install-verify",
+      "webExample": "Install and verify",
+      "template": "VStack(spacing: theme.spacing.space4) {\n    MonarchInstallVerify(\n        snippets: [\n            MonarchInstallSnippet({{snippets.0.label}}, code: {{snippets.0.code}}, description: {{snippets.0.description}}, id: {{snippets.0.id}}),\n            MonarchInstallSnippet({{snippets.1.label}}, code: {{snippets.1.code}}, description: {{snippets.1.description}}, id: {{snippets.1.id}}),\n            MonarchInstallSnippet({{snippets.2.label}}, code: {{snippets.2.code}}, description: {{snippets.2.description}}, id: {{snippets.2.id}}),\n        ],\n        status: connected ? .connected : .waiting,\n        targets: [MonarchInstallTarget({{target.label}}, lastSeen: connected ? {{target.lastSeenAt|date}} : nil)],\n        developerInstructions: {{developerInstructions}},\n        testURL: URL(string: {{testHref}}),\n        testHint: {{testHint}},\n        now: {{now|date}}\n    ) {\n        MonarchInlineNotice({{credential}}, tone: .success)\n    }\n    MonarchButton(connected ? {{reset}} : {{simulate}}, variant: .secondary, size: .sm) {\n        connected.toggle()\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var connected = false",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var connected = false",
+      "code": "VStack(spacing: theme.spacing.space4) {\n    MonarchInstallVerify(\n        snippets: [\n            MonarchInstallSnippet(\"HTML\", code: \"<script src=\\\"https://cdn.example.com/widget.js\\\" data-key=\\\"pk_test_4f1a9c\\\" async></script>\", description: \"Paste it before the closing </body> tag on every page.\", id: \"html\"),\n            MonarchInstallSnippet(\"React\", code: \"import { Widget } from 'example-widget';\\n\\nexport function App() {\\n  return <Widget publishableKey=\\\"pk_test_4f1a9c\\\" />;\\n}\", description: \"Render it once, near the root of your app.\", id: \"react\"),\n            MonarchInstallSnippet(\"npm\", code: \"npm install example-widget\", description: \"Install the package, then use the React snippet.\", id: \"npm\"),\n        ],\n        status: connected ? .connected : .waiting,\n        targets: [MonarchInstallTarget(\"www.example.com\", lastSeen: connected ? Date(timeIntervalSince1970: 1_768_046_340) : nil)],\n        developerInstructions: \"Add this snippet to every page of www.example.com: <script src=…>\",\n        testURL: URL(string: \"https://example.com/try\"),\n        testHint: \"A page running the real widget, so you can try it yourself.\",\n        now: Date(timeIntervalSince1970: 1_768_046_400)\n    ) {\n        MonarchInlineNotice(\"Publishable key ready. It only works on your listed websites.\", tone: .success)\n    }\n    MonarchButton(connected ? \"Reset demo\" : \"Simulate the site reporting in\", variant: .secondary, size: .sm) {\n        connected.toggle()\n    }\n}"
+    },
+    {
+      "title": "Connected, as the last step of a wizard",
+      "setup": "private let now = Date(timeIntervalSinceReferenceDate: 800_000_000)",
+      "code": "MonarchInstallVerify(\n    snippets: [MonarchInstallSnippet(\"HTML\", code: \"<script src=\\\"w.js\\\"></script>\")],\n    status: .connected,\n    targets: [MonarchInstallTarget(\"www.example.com\", lastSeen: now.addingTimeInterval(-120))],\n    part: .verify,\n    now: now\n)"
+    },
+    {
+      "title": "With the key the snippet needs",
+      "code": "MonarchInstallVerify(\n    snippets: [MonarchInstallSnippet(\"npm\", code: \"npm install @example/widget\", language: \"bash\")],\n    status: .waiting,\n    part: .install\n) {\n    MonarchCopyField(\"Site key\", value: \"pk_live_51H8example\")\n}"
+    }
+  ],
+  "webEquivalent": "InstallVerify",
+  "dependsOn": [
+    "code-snippet-tabs",
+    "copy-button",
+    "spinner",
+    "share-button",
+    "status-dot",
+    "button"
+  ]
+}

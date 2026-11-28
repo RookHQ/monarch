@@ -1,0 +1,117 @@
+{
+  "id": "ai-slash-commands",
+  "name": "MonarchAiSlashCommands",
+  "title": "AiSlashCommands",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchSlashMenu (a VStack of Button rows in the bottom safeAreaInset above the prompt) driven by MonarchSlashMenuQuery.find(in:trigger:position: .wordStart) on the prompt's text binding",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The / command menu of an assistant prompt: typing a slash shows commands such as /summarize above the prompt, filtered as you type, and choosing one rewrites the typed command.",
+  "whenToUse": "Above an assistant prompt or composer that offers commands such as /summarize, /translate or /search.",
+  "whenNotToUse": "For inserting blocks in a document editor use MonarchSlashMenu. For @ mentions use the mentions of MonarchMessageComposer (MonarchMentionPicker). For starting suggestions in an empty conversation use MonarchAiStarterPrompts.",
+  "api": [
+    "init(text: Binding<String>, commands: [MonarchSlashMenuItem], trigger: Character = \"/\", groupOrder: [String] = [], labels: MonarchSlashMenuLabels = MonarchSlashMenuLabels(), onSelect: @escaping @MainActor (MonarchSlashMenuItem) -> String?)"
+  ],
+  "options": [
+    {
+      "name": "text",
+      "type": "Binding<String>",
+      "default": "required",
+      "description": "The prompt's text. The menu reads the command being typed (a slash at the start of a word) and writes the result back."
+    },
+    {
+      "name": "commands",
+      "type": "[MonarchSlashMenuItem]",
+      "default": "required",
+      "description": "Every command. label is the name typed after the slash, with or without the slash; description, systemImage, group, keywords and isDisabled are used as in MonarchSlashMenu."
+    },
+    {
+      "name": "trigger",
+      "type": "Character",
+      "default": "\"/\"",
+      "description": "The character that opens the menu."
+    },
+    {
+      "name": "groupOrder",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Group headings in display order, for commands with a group."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSlashMenuLabels",
+      "default": "MonarchSlashMenuLabels()",
+      "description": "Replacements for the list name (\"Commands\"), the empty text (\"No commands match “/x”\") and the count (\"3 commands\")."
+    },
+    {
+      "name": "onSelect",
+      "type": "@MainActor (MonarchSlashMenuItem) -> String?",
+      "default": "required",
+      "description": "Receives the chosen command (as passed in commands) and returns the text that replaces the typed /query, or nil to remove it and run the command at once."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "No command is being typed: nothing is drawn."
+    },
+    {
+      "name": "open",
+      "description": "A slash at the start of a word: every command, with its icon, /name and description."
+    },
+    {
+      "name": "filtered",
+      "description": "Names that start with the query first, then names that contain it, then matches in descriptions and keywords."
+    },
+    {
+      "name": "empty",
+      "description": "\"No commands match “/xyz”\" in muted text."
+    },
+    {
+      "name": "disabled command",
+      "description": "Shown in the disabled colours and cannot be chosen."
+    },
+    {
+      "name": "long list",
+      "description": "More than four rows scroll (MonarchSlashMenu)."
+    }
+  ],
+  "appearance": "A full-width strip on the surface background with a subtle top border; names in strong body text, descriptions muted, icons in the muted icon colour; disabled rows use the disabled text role. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web hook wires a listbox beside the caret of AiPromptInput, with focus kept in the textarea and Arrow keys, Enter and Tab to choose; iOS gives no caret position, so the menu is the MonarchSlashMenu strip above the prompt and each command is a button. The web takes a separate AiSlashCommand type; iOS reuses MonarchSlashMenuItem, with label as the command name. The web's combineAiPromptMenus is not needed: put this strip and the composer's mention picker in the same inset. Escape to dismiss has no touch equivalent: typing a space or deleting the slash closes the menu. Android uses the same name and options.",
+  "accessibility": [
+    "The list is a container named \"Commands\" (labels.label).",
+    "Each command is a button read as its /name and its description; disabled commands are not activatable.",
+    "The number of commands, or the empty text, is announced as it changes, so focus can stay in the prompt.",
+    "Rows are at least 44 points high and grow with Dynamic Type; icons are decorative."
+  ],
+  "edgeCases": [
+    "A slash inside a word (and/or) does not open the menu; a space after the command closes it.",
+    "Queries longer than 24 characters close the menu (MonarchSlashMenuQuery's maxLength).",
+    "Return text ending in a space, such as \"/summarize \", so the menu closes after the choice.",
+    "Command ids must be unique: the chosen row is matched back to the command by id."
+  ],
+  "tests": [
+    "MonarchAiSlashCommandsTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Insert the command",
+      "fixture": "ai-slash-commands",
+      "webExample": "Insert the command",
+      "template": "VStack(spacing: 0) {\n    MonarchAiSlashCommands(text: $prompt, commands: commands) { command in\n        \"/\\(command.label) \"\n    }\n    TextField({{label}}, text: $prompt, prompt: Text({{placeholder}}), axis: .vertical)\n}",
+      "setupTemplate": "@State private var prompt = {{typed}}\n\nprivate let commands = [\n    MonarchSlashMenuItem(id: {{commands.0.id}}, label: {{commands.0.name}}, description: {{commands.0.description}}, systemImage: \"list.bullet\", keywords: [\"shorten\", \"recap\"]),\n    MonarchSlashMenuItem(id: {{commands.1.id}}, label: {{commands.1.name}}, description: {{commands.1.description}}, systemImage: \"pencil\"),\n    MonarchSlashMenuItem(id: {{commands.2.id}}, label: {{commands.2.name}}, description: {{commands.2.description}}, systemImage: \"magnifyingglass\"),\n    MonarchSlashMenuItem(id: {{commands.3.id}}, label: {{commands.3.name}}, description: {{commands.3.description}}, systemImage: \"calendar\", isDisabled: {{commands.3.disabled}}),\n]",
+      "setup": "@State private var prompt = \"/\"\n\nprivate let commands = [\n    MonarchSlashMenuItem(id: \"summarize\", label: \"summarize\", description: \"Summarize the open document\", systemImage: \"list.bullet\", keywords: [\"shorten\", \"recap\"]),\n    MonarchSlashMenuItem(id: \"rewrite\", label: \"rewrite\", description: \"Rewrite the selection in a different tone\", systemImage: \"pencil\"),\n    MonarchSlashMenuItem(id: \"search\", label: \"search\", description: \"Search connected documents\", systemImage: \"magnifyingglass\"),\n    MonarchSlashMenuItem(id: \"schedule\", label: \"schedule\", description: \"Needs a calendar connection\", systemImage: \"calendar\", isDisabled: true),\n]",
+      "code": "VStack(spacing: 0) {\n    MonarchAiSlashCommands(text: $prompt, commands: commands) { command in\n        \"/\\(command.label) \"\n    }\n    TextField(\"Message the assistant\", text: $prompt, prompt: Text(\"Type / for commands\"), axis: .vertical)\n}"
+    }
+  ],
+  "webEquivalent": "AiSlashCommands",
+  "dependsOn": [
+    "slash-menu"
+  ]
+}

@@ -1,0 +1,177 @@
+{
+  "id": "uptime-bar",
+  "name": "MonarchUptimeBar",
+  "title": "UptimeBar",
+  "family": "charts",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "HStack of RoundedRectangle segments in a GeometryReader with a SpatialTapGesture; popover(isPresented:) with presentationCompactAdaptation(.popover) for the details; accessibilityAdjustableAction and accessibilityChartDescriptor(_:) for VoiceOver",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A row of per-period status segments, usually one per day, with the details of a period one tap away and the overall uptime under it.",
+  "whenToUse": "On status pages, monitor lists and service tiles, to show the state of each day (or hour) of a period at a glance.",
+  "whenNotToUse": "For a trend of a measured value, such as response time, use MonarchLineChart. For the share of monitors in each state right now, use MonarchStackedProportionBar.",
+  "api": [
+    "MonarchUptimeBar.init(_ label: String? = nil, segments: [MonarchUptimeBarSegment], description: String? = nil, overallUptime: Double? = nil, showsOverallUptime: Bool = true, startLabel: String? = nil, endLabel: String? = nil, thresholds: MonarchUptimeBarThresholds = MonarchUptimeBarThresholds(), size: MonarchUptimeBarSize = .md, showsLegend: Bool = false, uptimeDigits: Int = 2, activeIndex: Binding<Int?>? = nil, summary: String? = nil, labels: MonarchUptimeBarLabels = MonarchUptimeBarLabels(), onSegmentSelect: (@MainActor (MonarchUptimeBarSegment) -> Void)? = nil)",
+    "MonarchUptimeBarSegment.init(id: String, label: String, status: MonarchUptimeBarStatus? = nil, uptime: Double? = nil, details: [MonarchUptimeBarDetail] = [], note: String? = nil)",
+    "MonarchUptimeBarDetail.init(_ label: String, value: String)",
+    "MonarchUptimeBarThresholds.init(operational: Double = 99.9, degraded: Double = 99)",
+    "enum MonarchUptimeBarStatus { case operational, degraded, partial, down, maintenance, noData }",
+    "enum MonarchUptimeBarSize { case sm, md }",
+    "MonarchUptimeBarLabels.init(statusNames: [MonarchUptimeBarStatus: String] = [:], uptime: String? = nil, overall: (@Sendable (String) -> String)? = nil, period: String? = nil, status: String? = nil, legend: String? = nil, summary: (@Sendable (Int, [MonarchUptimeBarStatus: Int], String?) -> String)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "nil",
+      "description": "What is monitored, such as a service name, shown above the bar and spoken first."
+    },
+    {
+      "name": "segments",
+      "type": "[MonarchUptimeBarSegment]",
+      "default": "required",
+      "description": "The periods, oldest first. Each has an id, a label, and a status or an uptime (or neither, for no data), with optional details and a note."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "A short line under the label, such as \"Last 30 days\"."
+    },
+    {
+      "name": "overallUptime",
+      "type": "Double?",
+      "default": "nil",
+      "description": "The overall uptime in percent. The mean of the measured segments when nil."
+    },
+    {
+      "name": "showsOverallUptime",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the overall uptime is written under the bar."
+    },
+    {
+      "name": "startLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Text under the oldest segment, such as \"30 days ago\"."
+    },
+    {
+      "name": "endLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Text under the newest segment, such as \"Today\"."
+    },
+    {
+      "name": "thresholds",
+      "type": "MonarchUptimeBarThresholds",
+      "default": "99.9 / 99",
+      "description": "The cut points for segments with an uptime but no status: at or above operational is operational, at or above degraded is degraded, below is down."
+    },
+    {
+      "name": "size",
+      "type": "MonarchUptimeBarSize",
+      "default": ".md",
+      "description": "The height of the segments: md 32 points for status pages, sm 20 points for tiles and rows. The touch area is at least 44 points high either way."
+    },
+    {
+      "name": "showsLegend",
+      "type": "Bool",
+      "default": "false",
+      "description": "Lists the names of the colours under the bar. With several bars on a page, show it on one."
+    },
+    {
+      "name": "uptimeDigits",
+      "type": "Int",
+      "default": "2",
+      "description": "The decimal places of uptime percentages."
+    },
+    {
+      "name": "activeIndex",
+      "type": "Binding<Int?>?",
+      "default": "nil",
+      "description": "The inspected segment. Bind several bars to one value to inspect the same period on each. Kept inside when nil."
+    },
+    {
+      "name": "summary",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the generated summary that VoiceOver reads."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchUptimeBarLabels",
+      "default": "MonarchUptimeBarLabels()",
+      "description": "Replacements for the built-in strings: state names, \"Uptime\", the overall line, axis names, \"Legend\" and the summary."
+    },
+    {
+      "name": "onSegmentSelect",
+      "type": "((MonarchUptimeBarSegment) -> Void)?",
+      "default": "nil",
+      "description": "Runs when a segment is tapped, or double-tapped with VoiceOver while inspected, such as to open that day's incidents."
+    }
+  ],
+  "states": [
+    {
+      "name": "default",
+      "description": "Every segment in its state's colour; no data is a muted, outlined segment."
+    },
+    {
+      "name": "inspected",
+      "description": "The inspected segment has a 2-point ring in the default text colour."
+    },
+    {
+      "name": "details open",
+      "description": "After a tap, a popover over the segment shows the period, the state with its marker and uptime, the details and the note."
+    },
+    {
+      "name": "empty",
+      "description": "No segments: an empty touch area, and a summary of zero periods."
+    }
+  ],
+  "appearance": "Operational is the solid success colour, degraded the solid warning colour, partial outage the strong warning colour, down the solid danger colour and maintenance the solid info colour; no data is the muted background with the default border. The ring is the default text colour; labels are default and muted text. The roles follow the light, dark and high-contrast themes.",
+  "platformNotes": "Touch replaces hover: the web shows a tooltip while the pointer moves and keyboard arrows move through the days; here a tap opens a popover (a popover on iPhone too, through presentationCompactAdaptation) and VoiceOver swipes move through the days. The web dims the other segments while one is inspected; here only the ring marks it, because Monarch does not dim colours with opacity. The web meta slot (a badge in the header) is not offered: put the bar in an HStack with the badge. The web exports a separate UptimeLegend; here showsLegend draws the same list. The web keeps a hidden data table; here VoiceOver gets the accessibility chart descriptor. The web locale option is the environment locale. Segments run from the leading edge, so the oldest day is on the right in right-to-left layouts. Android uses the same names.",
+  "accessibility": [
+    "The bar is one adjustable element. Its label is the label and the summary, such as \"Search API, Periods: 30. Operational 28, Down 2. Uptime 99.83%.\" Only the states present are counted.",
+    "Swiping up or down inspects the next or previous period; the value is that period's details, such as \"Mar 12: Degraded, Uptime 99.42%, Checks 1,440, Slow responses from the search index\". The popover does not open for VoiceOver.",
+    "With onSegmentSelect, double-tapping selects the inspected period.",
+    "The periods are given as an accessibility chart descriptor: the uptime of each period on a 0 to 100 axis, with its state as a second, categorical value (Audio Graphs and the chart's data table).",
+    "Every state has a name in the details, the legend, the summary and the descriptor, so colour never carries it alone; no data is drawn hollow.",
+    "The touch area is at least 44 points high. The start, end and overall line under the bar are hidden, because the summary says the overall uptime.",
+    "The legend is a container named \"Legend\"; each entry is read as its state name."
+  ],
+  "edgeCases": [
+    "A segment's own status wins over its uptime.",
+    "A segment with neither status nor a finite uptime is no data.",
+    "The overall uptime averages only the measured segments; with none it is not shown.",
+    "With many segments (90 days) each segment can be about 2 points wide; a tap still finds the nearest one from its position.",
+    "An activeIndex outside the segments is ignored.",
+    "Tapping outside the popover closes it and clears the inspected segment."
+  ],
+  "tests": [
+    "MonarchUptimeBarTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Status page row",
+      "fixture": "uptime-bar",
+      "webExample": "Status page row",
+      "template": "MonarchUptimeBar(\n    {{label}},\n    segments: (1...{{days}}).map { day in\n        MonarchUptimeBarSegment(\n            id: \"\\({{monthKey}})-\\(day)\",\n            label: \"\\({{month}}) \\(day)\",\n            status: day == {{maintenanceDay}} ? .maintenance : nil,\n            uptime: day == {{noDataDay}} ? nil : day == {{down.day}} ? {{down.uptime}} : day == {{degraded.day}} ? {{degraded.uptime}} : 100,\n            details: day == {{noDataDay}} ? [] : [MonarchUptimeBarDetail({{detailLabel}}, value: \"\\({{checks}})\")],\n            note: day == {{down.day}} ? {{down.note}} : nil\n        )\n    },\n    description: {{description}},\n    startLabel: {{startLabel}},\n    endLabel: {{endLabel}},\n    showsLegend: true\n)",
+      "code": "MonarchUptimeBar(\n    \"Public API\",\n    segments: (1...30).map { day in\n        MonarchUptimeBarSegment(\n            id: \"\\(\"2026-03\")-\\(day)\",\n            label: \"\\(\"Mar\") \\(day)\",\n            status: day == 25 ? .maintenance : nil,\n            uptime: day == 1 ? nil : day == 12 ? 97.8 : day == 20 ? 99.4 : 100,\n            details: day == 1 ? [] : [MonarchUptimeBarDetail(\"Checks\", value: \"\\(1440)\")],\n            note: day == 12 ? \"Elevated error rate\" : nil\n        )\n    },\n    description: \"api.example.com\",\n    startLabel: \"30 days ago\",\n    endLabel: \"Today\",\n    showsLegend: true\n)"
+    },
+    {
+      "title": "Two small bars sharing one inspected day",
+      "code": "VStack(alignment: .leading) {\n    MonarchUptimeBar(\"API\", segments: days, size: .sm, activeIndex: $active)\n    MonarchUptimeBar(\"Website\", segments: days, size: .sm, activeIndex: $active)\n}",
+      "setup": "@State private var active: Int? = 3\nprivate let days: [MonarchUptimeBarSegment] = (1...14).map {\n    MonarchUptimeBarSegment(id: \"\\($0)\", label: \"Day \\($0)\", status: $0 == 4 ? .down : .operational)\n}"
+    }
+  ],
+  "webEquivalent": "UptimeBar",
+  "dependsOn": [
+    "chart-legend"
+  ]
+}

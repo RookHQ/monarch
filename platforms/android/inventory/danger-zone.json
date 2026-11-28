@@ -1,0 +1,102 @@
+{
+  "id": "danger-zone",
+  "name": null,
+  "title": "DangerZone",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchSectionCard with the danger tone holding androidx.compose.foundation.layout.Column rows separated by MonarchDivider; each action is a danger MonarchButton that opens a MonarchDialog",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the settings section that holds irreversible actions (delete a workspace, transfer ownership, leave), as a danger-toned section card with one row per action and a confirmation before each.",
+  "whenToUse": "At the end of a settings screen, for actions that cannot be undone or that hand the workspace or account to someone else.",
+  "whenNotToUse": "For a single destructive action next to the thing it affects, use a danger MonarchButton with a confirmation (confirm-dialog). For ordinary settings, use the settings-section recipe.",
+  "api": [
+    "MonarchSectionCard(title = \"Danger zone\", description = …, tone = MonarchTone.Danger) { rows }",
+    "Column(Modifier.semantics { isTraversalGroup = true }) { MonarchText(title, style = MonarchTextStyle.BodyStrong, heading = true); MonarchText(consequence, style = MonarchTextStyle.Caption); MonarchText(disabledReason); MonarchButton(…, variant = MonarchButtonVariant.Danger, size = MonarchButtonSize.Sm, enabled = …) }",
+    "HorizontalDivider(color = MonarchTheme.colors.borderSubtle)",
+    "AlertDialog(onDismissRequest = …, title = …, text = …, confirmButton = { MonarchButton(…, variant = MonarchButtonVariant.Danger) }, dismissButton = { MonarchButton(…, variant = MonarchButtonVariant.Ghost) })"
+  ],
+  "options": [
+    {
+      "name": "heading",
+      "type": "String",
+      "default": "\"Danger zone\"",
+      "description": "The title of the MonarchSectionCard; the danger tone is spoken with it."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "null",
+      "description": "One or two sentences under the heading, such as who can use these actions."
+    },
+    {
+      "name": "disabled reason",
+      "type": "String?",
+      "default": "null",
+      "description": "Why an action is unavailable: a caption under the consequence, with the action's MonarchButton disabled."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "Each action is a titled row with its consequence and a danger button under the text."
+    },
+    {
+      "name": "unavailable",
+      "description": "The row shows why in a caption and its button is disabled."
+    },
+    {
+      "name": "confirming",
+      "description": "The button opens a MonarchDialog with a danger confirm button and Cancel."
+    },
+    {
+      "name": "done",
+      "description": "The app reflects the result, for example by disabling the row's button or leaving the screen."
+    }
+  ],
+  "appearance": "A MonarchSectionCard with the danger border; item titles are strong body text, consequences and reasons muted captions, actions small danger buttons, rows split by a subtle divider. Every part is an existing component, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web ships DangerZone and DangerZoneItem with heading levels and a layout that places the action beside the text, or under it in a narrow container. On a phone the action always sits under the text, so long titles and font scale 2.0 never squeeze it; MonarchSectionCard already gives the titled card and the danger tone, so Android, like the settings-section recipe, keeps it a recipe. TalkBack has no heading levels, so item titles are headings without a level. The web adds the disabled reason to the row's description; on Android it is a visible caption read in the row's traversal group. Confirmation is a MonarchDialog of the confirm-dialog entry.",
+  "accessibility": [
+    "The card title is a heading and the danger tone is spoken with it, from MonarchSectionCard.",
+    "Each item title is a heading, and each row is a traversal group, so the title, consequence, reason and action are read together.",
+    "The reason an action is unavailable is visible text, not only a disabled button.",
+    "Actions are MonarchButtons with 48dp targets; destructive ones are confirmed in a MonarchDialog that TalkBack focuses."
+  ],
+  "edgeCases": [
+    "Keep each consequence to one or two sentences; long text wraps above the button.",
+    "After a destructive action succeeds, the app usually leaves the screen; keep the dialog open with a loading confirm button while it runs.",
+    "Put the danger zone last on the settings screen."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Workspace danger zone",
+      "fixture": "danger-zone",
+      "webExample": "Workspace danger zone",
+      "template": "MonarchSectionCard(\n    title = {{heading}},\n    description = {{description}},\n    tone = MonarchTone.Danger,\n) {\n    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n        Row(\n            modifier = Modifier.semantics { isTraversalGroup = true },\n            horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n            verticalAlignment = Alignment.CenterVertically,\n        ) {\n          Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n            MonarchText(text = {{items.0.title}}, style = MonarchTextStyle.BodyStrong, heading = true)\n            MonarchText(\n                text = {{items.0.description}},\n                style = MonarchTextStyle.Caption,\n                color = MonarchTheme.colors.textMuted,\n            )\n          }\n            MonarchButton(\n                text = {{items.0.action.label}},\n                onClick = {},\n                variant = MonarchButtonVariant.{{items.0.action.variant|pascal}},\n            )\n        }\n        MonarchDivider(variant = MonarchDividerVariant.Subtle)\n        Row(\n            modifier = Modifier.semantics { isTraversalGroup = true },\n            horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n            verticalAlignment = Alignment.CenterVertically,\n        ) {\n          Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n            MonarchText(text = {{items.1.title}}, style = MonarchTextStyle.BodyStrong, heading = true)\n            MonarchText(\n                text = {{items.1.description}},\n                style = MonarchTextStyle.Caption,\n                color = MonarchTheme.colors.textMuted,\n            )\n          }\n            MonarchButton(\n                text = {{items.1.action.label}},\n                onClick = { confirming = true },\n                variant = MonarchButtonVariant.{{items.1.action.variant|pascal}},\n                enabled = !deleted,\n            )\n        }\n    }\n}\nif (confirming) {\n    MonarchDialog(\n        onDismissRequest = { confirming = false },\n        title = \"Delete this workspace?\",\n        description = \"Every project, file and member is deleted. This cannot be undone.\",\n        actions = {\n            MonarchButton(text = \"Cancel\", onClick = { confirming = false }, variant = MonarchButtonVariant.Secondary)\n            MonarchButton(\n                text = \"Delete\",\n                onClick = {\n                    deleted = true\n                    confirming = false\n                },\n                variant = MonarchButtonVariant.Danger,\n            )\n        },\n    )\n}",
+      "setupTemplate": "var confirming by remember { mutableStateOf(false) }\nvar deleted by remember { mutableStateOf(false) }",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.foundation.*",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.ui.Alignment"
+      ],
+      "setup": "var confirming by remember { mutableStateOf(false) }\nvar deleted by remember { mutableStateOf(false) }",
+      "code": "MonarchSectionCard(\n    title = \"Danger zone\",\n    description = \"These actions affect everyone in the workspace and cannot be undone.\",\n    tone = MonarchTone.Danger,\n) {\n    Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n        Row(\n            modifier = Modifier.semantics { isTraversalGroup = true },\n            horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n            verticalAlignment = Alignment.CenterVertically,\n        ) {\n          Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n            MonarchText(text = \"Transfer ownership\", style = MonarchTextStyle.BodyStrong, heading = true)\n            MonarchText(\n                text = \"Another member becomes the owner. You stay on as an admin.\",\n                style = MonarchTextStyle.Caption,\n                color = MonarchTheme.colors.textMuted,\n            )\n          }\n            MonarchButton(\n                text = \"Transfer ownership\",\n                onClick = {},\n                variant = MonarchButtonVariant.Secondary,\n            )\n        }\n        MonarchDivider(variant = MonarchDividerVariant.Subtle)\n        Row(\n            modifier = Modifier.semantics { isTraversalGroup = true },\n            horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n            verticalAlignment = Alignment.CenterVertically,\n        ) {\n          Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n            MonarchText(text = \"Delete this workspace\", style = MonarchTextStyle.BodyStrong, heading = true)\n            MonarchText(\n                text = \"Projects, tasks and files are deleted for everyone.\",\n                style = MonarchTextStyle.Caption,\n                color = MonarchTheme.colors.textMuted,\n            )\n          }\n            MonarchButton(\n                text = \"Delete workspace\",\n                onClick = { confirming = true },\n                variant = MonarchButtonVariant.Danger,\n                enabled = !deleted,\n            )\n        }\n    }\n}\nif (confirming) {\n    MonarchDialog(\n        onDismissRequest = { confirming = false },\n        title = \"Delete this workspace?\",\n        description = \"Every project, file and member is deleted. This cannot be undone.\",\n        actions = {\n            MonarchButton(text = \"Cancel\", onClick = { confirming = false }, variant = MonarchButtonVariant.Secondary)\n            MonarchButton(\n                text = \"Delete\",\n                onClick = {\n                    deleted = true\n                    confirming = false\n                },\n                variant = MonarchButtonVariant.Danger,\n            )\n        },\n    )\n}"
+    }
+  ],
+  "webEquivalent": "DangerZone",
+  "dependsOn": [
+    "settings-section",
+    "button",
+    "confirm-dialog",
+    "section-card",
+    "separator"
+  ]
+}

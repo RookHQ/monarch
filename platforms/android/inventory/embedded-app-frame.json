@@ -1,0 +1,119 @@
+{
+  "id": "embedded-app-frame",
+  "name": "MonarchEmbeddedAppFrame",
+  "title": "EmbeddedAppFrame",
+  "family": "technical",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Box, MonarchSpinner, MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A framed area that shows a screen owned by another app or module, such as another Rook app's settings page, with its loading and error states.",
+  "whenToUse": "When a screen hosts content it does not own: another module's settings, a partner's page in a WebView, or a screen that may fail to load.",
+  "whenNotToUse": "For content the screen owns, compose it directly. For a full-screen web page, open Custom Tabs.",
+  "api": [
+    "@Composable fun MonarchEmbeddedAppFrame(title: String, state: MonarchEmbeddedAppFrameState, modifier: Modifier = Modifier, height: Dp? = null, onRetry: (() -> Unit)? = null, onOpen: (() -> Unit)? = null, labels: MonarchEmbeddedAppFrameLabels = MonarchEmbeddedAppFrameLabels(), content: @Composable BoxScope.() -> Unit)",
+    "enum class MonarchEmbeddedAppFrameState { Loading, Ready, Error }",
+    "class MonarchEmbeddedAppFrameLabels(loading: String? = null, errorTitle: String? = null, errorDescription: String? = null, retry: String? = null, open: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The name of what the frame shows, such as \"Example Desk: Email notifications\"; the frame's pane name."
+    },
+    {
+      "name": "state",
+      "type": "MonarchEmbeddedAppFrameState",
+      "default": "required",
+      "description": "Loading, Ready or Error, reported by the app."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the frame."
+    },
+    {
+      "name": "height",
+      "type": "Dp?",
+      "default": "null",
+      "description": "A fixed height; null wraps the content, and loading and error keep at least 160dp."
+    },
+    {
+      "name": "onRetry",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Called by \"Try again\"; null hides it."
+    },
+    {
+      "name": "onOpen",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Called by \"Open the page\" to open the screen outside the frame; null hides it."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchEmbeddedAppFrameLabels",
+      "default": "MonarchEmbeddedAppFrameLabels()",
+      "description": "Replacements for \"Loading…\", the error title and explanation, \"Try again\" and \"Open the page\"."
+    },
+    {
+      "name": "content",
+      "type": "@Composable BoxScope.() -> Unit",
+      "default": "required",
+      "description": "The embedded screen, shown when ready: native content, or a WebView through AndroidView."
+    }
+  ],
+  "states": [
+    {
+      "name": "loading",
+      "description": "A spinner and \"Loading…\" in the middle."
+    },
+    {
+      "name": "ready",
+      "description": "The content."
+    },
+    {
+      "name": "error",
+      "description": "\"This page didn’t open\", the explanation, \"Try again\" and \"Open the page\"."
+    }
+  ],
+  "appearance": "The frame is the surface with the default border and the large radius; loading and error text is muted, the error title the default text. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web EmbeddedAppFrame is an iframe with a postMessage handshake (the App Settings embed contract): it detects readiness and resizes to the page height. Android has no iframe contract, so the app composes the content (natively, or a WebView it manages) and reports the state; there is no automatic timeout or resize. The web's \"Open in a new tab\" is \"Open the page\", and onOpen decides where it goes.",
+  "accessibility": [
+    "The frame is a traversal group and a pane named by title.",
+    "While loading, the spinner is read as \"Loading…\".",
+    "The error title and explanation are read together as a polite live region; the buttons are separate with 48dp touch targets."
+  ],
+  "edgeCases": [
+    "A fixed height smaller than the content clips it; the app scrolls inside.",
+    "Without onRetry and onOpen the error shows only its message."
+  ],
+  "tests": [
+    "MonarchEmbeddedAppFrameTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "An embedded settings page (ready, auto-height)",
+      "setup": "var tickets by remember { mutableStateOf(true) }\nvar summary by remember { mutableStateOf(false) }\nvar mentions by remember { mutableStateOf(true) }\nvar opened by remember { mutableStateOf(false) }",
+      "code": "MonarchEmbeddedAppFrame(\n    title = \"Example Desk: Email notifications\",\n    state = MonarchEmbeddedAppFrameState.Ready,\n    onOpen = { opened = true },\n) {\n    Column(Modifier.padding(20.dp)) {\n        MonarchText(text = \"Email notifications\", style = MonarchTextStyle.Subheading)\n        MonarchText(text = \"Choose which updates reach your inbox.\", color = MonarchTheme.colors.textMuted)\n        MonarchCheckboxRow(checked = tickets, onCheckedChange = { tickets = it }, label = \"New tickets assigned to me\")\n        MonarchCheckboxRow(checked = summary, onCheckedChange = { summary = it }, label = \"Daily summary\")\n        MonarchCheckboxRow(checked = mentions, onCheckedChange = { mentions = it }, label = \"Mentions\")\n    }\n}"
+    },
+    {
+      "title": "A page that never answers",
+      "setup": "var attempts by remember { mutableStateOf(0) }\nvar opened by remember { mutableStateOf(false) }",
+      "code": "MonarchEmbeddedAppFrame(\n    title = \"Example Desk: Billing\",\n    state = MonarchEmbeddedAppFrameState.Error,\n    height = 220.dp,\n    onRetry = { attempts++ },\n    onOpen = { opened = true },\n    labels = MonarchEmbeddedAppFrameLabels(open = \"Open in Example Desk\"),\n) {}"
+    }
+  ],
+  "webEquivalent": "EmbeddedAppFrame",
+  "dependsOn": [
+    "spinner",
+    "button"
+  ]
+}

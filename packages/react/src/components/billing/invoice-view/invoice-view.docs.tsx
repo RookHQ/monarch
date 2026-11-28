@@ -2,23 +2,26 @@ import { Button, StatusBadge } from '@rookcom/monarch-react';
 import { InvoiceView } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
-const sampleItems = [
-  {
-    id: '1',
-    description: 'Discovery workshop',
-    detail: 'Two sessions',
-    quantity: 2,
-    unitPrice: '400.00',
-  },
-  { id: '2', description: 'Design system setup', quantity: 1, unitPrice: '1200.00' },
-  {
-    id: '3',
-    description: 'Support hours',
-    detail: 'Billed hourly',
-    quantity: 6.5,
-    unitPrice: '80.00',
-  },
-];
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './invoice-view.fixture.json';
+
+const { data } = fixture;
+const day = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+const sampleItems = (
+  data.items as unknown as {
+    id: string;
+    description: string;
+    detail?: string;
+    quantity: number;
+    unitPrice: number;
+  }[]
+).map(({ unitPrice, ...item }) => ({ ...item, unitPrice: unitPrice.toFixed(2) }));
 
 export default {
   id: 'invoice-view',
@@ -141,18 +144,18 @@ export default {
           title: 'Issued invoice, totals worked out',
           render: () => (
             <InvoiceView
-              number="INV-0042"
-              status={<StatusBadge status="info" label="Sent" size="sm" />}
-              issueDate="1 June 2026"
-              dueDate="15 June 2026"
-              details={[{ label: 'Payment terms', value: 'Net 14' }]}
-              from={{ name: 'Studio A', details: ['Street address', 'City, postcode'] }}
-              to={{ name: 'Client B', details: ['accounts@example.com'] }}
+              number={data.number}
+              status={<StatusBadge status={data.status.tone} label={data.status.label} size="sm" />}
+              issueDate={day(data.issueDate)}
+              dueDate={day(data.dueDate)}
+              details={[data.detail]}
+              from={data.from}
+              to={data.to}
               items={sampleItems}
-              currency="USD"
-              locale="en-US"
-              taxRate={10}
-              notes="Pay by bank transfer to the account on file."
+              currency={data.currency}
+              locale={data.locale}
+              taxRate={data.taxRate}
+              notes={data.notes}
               showPrintButton
             />
           ),

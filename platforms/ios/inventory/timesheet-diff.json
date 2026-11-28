@@ -1,0 +1,131 @@
+{
+  "id": "timesheet-diff",
+  "name": "MonarchTimesheetDiff",
+  "title": "TimesheetDiff",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of Text lines with strikethrough, MonarchIcon, Date.FormatStyle and Duration.UnitsFormatStyle",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "What changed between two versions of a timesheet: added, removed and changed entries, each named in words with its effect on the time, and a totals line.",
+  "whenToUse": "When a timesheet is resubmitted or corrected, and in approval review, so the approver sees exactly which entries changed and how the total moved.",
+  "whenNotToUse": "Not for the timesheet itself; use a list or grid of entries. Not for the change history of any record; use an activity feed.",
+  "api": [
+    "init(_ diff: MonarchTimesheetDiffResult, title: String? = nil, subtitle: String? = nil, showsTotals: Bool = true, showsBillable: Bool = true, labels: MonarchTimesheetDiffLabels = MonarchTimesheetDiffLabels())",
+    "init(before: [MonarchTimesheetDiffEntry], after: [MonarchTimesheetDiffEntry], title: String? = nil, subtitle: String? = nil, showsTotals: Bool = true, showsBillable: Bool = true, labels: MonarchTimesheetDiffLabels = MonarchTimesheetDiffLabels())",
+    "struct MonarchTimesheetDiffEntry: Identifiable { init(id: String, date: Date, minutes: Int, project: String? = nil, activity: String? = nil, task: String? = nil, isBillable: Bool? = nil, note: String? = nil) }",
+    "struct MonarchTimesheetDiffResult { init(added: [MonarchTimesheetDiffEntry] = [], removed: [MonarchTimesheetDiffEntry] = [], changed: [MonarchTimesheetDiffChange] = []); init(before: [MonarchTimesheetDiffEntry], after: [MonarchTimesheetDiffEntry]); var isEmpty: Bool; var totals: MonarchTimesheetDiffTotals }",
+    "struct MonarchTimesheetDiffChange: Identifiable { init(id: String, fields: [MonarchTimesheetDiffField], before: MonarchTimesheetDiffEntry, after: MonarchTimesheetDiffEntry) }",
+    "struct MonarchTimesheetDiffField: RawRepresentable { init(_ name: String); static let date, minutes, project, activity, task, billable, note, start, end }",
+    "struct MonarchTimesheetDiffTotals { init(total: Int, billable: Int) }",
+    "struct MonarchTimesheetDiffLabels { init(title:added:removed:changed:fields:before:after:noProject:nonBillable:noChanges:delta:totals:entry:), every parameter optional }"
+  ],
+  "options": [
+    {
+      "name": "diff",
+      "type": "MonarchTimesheetDiffResult",
+      "default": "required (first initialiser)",
+      "description": "The entries added, removed and changed, when the product computes the difference itself."
+    },
+    {
+      "name": "before, after",
+      "type": "[MonarchTimesheetDiffEntry]",
+      "default": "required (second initialiser)",
+      "description": "The two versions; entries are matched by id and compared on date, minutes, project, activity, task, isBillable and note."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "The heading. Built in: \"What changed\"."
+    },
+    {
+      "name": "subtitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "Quiet text after the heading, such as \"since version 3\"."
+    },
+    {
+      "name": "showsTotals",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the totals line."
+    },
+    {
+      "name": "showsBillable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Adds the billable change to the totals line. Turn it off when billing does not apply."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchTimesheetDiffLabels",
+      "default": "MonarchTimesheetDiffLabels()",
+      "description": "Replacements for every built-in string, the field names, the delta and totals formats, and the line of an entry (the web's renderEntry, as text)."
+    }
+  ],
+  "states": [
+    {
+      "name": "added",
+      "description": "A success-tinted line with a success bar, a plus symbol and \"Added\"; the entry and the time gained."
+    },
+    {
+      "name": "removed",
+      "description": "A danger-tinted line with a minus symbol and \"Removed\"; the entry struck through in the muted colour and the time lost."
+    },
+    {
+      "name": "changed",
+      "description": "A warning-tinted line with a pencil symbol and \"Changed time, project\"; the old line struck through above the new one, and the change of time when there is one."
+    },
+    {
+      "name": "empty",
+      "description": "\"No changes.\" in the muted colour."
+    }
+  ],
+  "appearance": "Each change is a rounded line on the subtle fill of its tone (success, danger or warning) with a bar in the tone's border colour at the leading edge; the kind is in the tone's strong colour with a symbol. Changes of time and the totals are captions in the muted colour with tabular digits. The heading is the label type role, semibold, with the subtitle muted. All colours are theme roles, so the dark and high-contrast themes need nothing else.",
+  "platformNotes": "The web takes ISO date strings; here the day is a Date shown in the environment's time zone. The web's renderEntry returns any content; here labels.entry returns the line as text, which is also what VoiceOver reads. The web's open-ended field names are a MonarchTimesheetDiffField value, with the compared fields built in and room for a product's own. The web's headingLevel has no iOS equivalent; the title has the header trait. Durations (\"1h 30m\") follow the web's compact form and are not localised; replace them with labels.delta and labels.entry, or rely on VoiceOver, which reads durations in words in the user's locale. The parity map named the badge and tabular-number components; the kind is shown as text with a symbol, as on the web, and digits use monospacedDigit.",
+  "accessibility": [
+    "The title is a heading.",
+    "Each change is one element: \"Removed, minus 45 minutes, Mon, Jan 12, 45 minutes, Pulse, non-billable\"; a changed entry adds \"Before\" and \"After\" before its two lines.",
+    "Durations are read in words in the user's locale (\"1 hour, 30 minutes\").",
+    "The kind is a word and a symbol as well as a colour; a removed entry and the old line of a changed one are struck through.",
+    "Text wraps and scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "An empty project is shown as \"No project\".",
+    "isBillable nil counts as billable in the totals, as on the web; only false is non-billable.",
+    "A changed entry whose time did not change shows no change of time.",
+    "A missing value and an empty one are different, so nil to \"\" is a change.",
+    "Field names the strings table does not know are shown by their raw name.",
+    "Order: added, then removed, then changed, each in the order of its version."
+  ],
+  "tests": [
+    "MonarchTimesheetDiffTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Resubmission review",
+      "fixture": "timesheet-diff",
+      "webExample": "Resubmission review",
+      "template": "MonarchTimesheetDiff(before: submitted, after: resubmitted, title: {{title}}, subtitle: {{subtitle}})\n    .environment(\\.locale, Locale(identifier: {{locale}}))",
+      "setupTemplate": "private var submitted: [MonarchTimesheetDiffEntry] {\n    [\n        MonarchTimesheetDiffEntry(id: {{submitted.0.id}}, date: {{submitted.0.date|date}}, minutes: {{submitted.0.minutes}}, project: {{submitted.0.project}}, activity: {{submitted.0.activity}}),\n        MonarchTimesheetDiffEntry(id: {{submitted.1.id}}, date: {{submitted.1.date|date}}, minutes: {{submitted.1.minutes}}, project: {{submitted.1.project}}, isBillable: {{submitted.1.billable}}),\n        MonarchTimesheetDiffEntry(id: {{submitted.2.id}}, date: {{submitted.2.date|date}}, minutes: {{submitted.2.minutes}}, project: {{submitted.2.project}}),\n    ]\n}\nprivate var resubmitted: [MonarchTimesheetDiffEntry] {\n    [\n        MonarchTimesheetDiffEntry(id: {{resubmitted.0.id}}, date: {{resubmitted.0.date|date}}, minutes: {{resubmitted.0.minutes}}, project: {{resubmitted.0.project}}, activity: {{resubmitted.0.activity}}),\n        MonarchTimesheetDiffEntry(id: {{resubmitted.1.id}}, date: {{resubmitted.1.date|date}}, minutes: {{resubmitted.1.minutes}}, project: {{resubmitted.1.project}}, activity: {{resubmitted.1.activity}}),\n        MonarchTimesheetDiffEntry(id: {{resubmitted.2.id}}, date: {{resubmitted.2.date|date}}, minutes: {{resubmitted.2.minutes}}, project: {{resubmitted.2.project}}, task: {{resubmitted.2.task}}),\n    ]\n}",
+      "setup": "private var submitted: [MonarchTimesheetDiffEntry] {\n    [\n        MonarchTimesheetDiffEntry(id: \"e1\", date: Date(timeIntervalSince1970: 1_768_176_000), minutes: 120, project: \"Website refresh\", activity: \"Design\"),\n        MonarchTimesheetDiffEntry(id: \"e2\", date: Date(timeIntervalSince1970: 1_768_262_400), minutes: 60, project: \"Internal\", isBillable: false),\n        MonarchTimesheetDiffEntry(id: \"e3\", date: Date(timeIntervalSince1970: 1_768_348_800), minutes: 90, project: \"Mobile app\"),\n    ]\n}\nprivate var resubmitted: [MonarchTimesheetDiffEntry] {\n    [\n        MonarchTimesheetDiffEntry(id: \"e1\", date: Date(timeIntervalSince1970: 1_768_176_000), minutes: 180, project: \"Website refresh\", activity: \"Design\"),\n        MonarchTimesheetDiffEntry(id: \"e3\", date: Date(timeIntervalSince1970: 1_768_348_800), minutes: 90, project: \"Mobile app\", activity: \"Testing\"),\n        MonarchTimesheetDiffEntry(id: \"e4\", date: Date(timeIntervalSince1970: 1_768_435_200), minutes: 45, project: \"Mobile app\", task: \"APP-7\"),\n    ]\n}",
+      "code": "MonarchTimesheetDiff(before: submitted, after: resubmitted, title: \"Changes in this resubmission\", subtitle: \"since version 2\")\n    .environment(\\.locale, Locale(identifier: \"en-GB\"))"
+    },
+    {
+      "title": "A difference the server computed, without billing",
+      "setup": "private let day = Calendar.current.startOfDay(for: .now)",
+      "code": "MonarchTimesheetDiff(\n    MonarchTimesheetDiffResult(\n        removed: [MonarchTimesheetDiffEntry(id: \"b\", date: day, minutes: 45, project: \"Pulse\")]\n    ),\n    showsBillable: false\n)"
+    }
+  ],
+  "webEquivalent": "TimesheetDiff",
+  "dependsOn": [
+    "text",
+    "icon"
+  ]
+}

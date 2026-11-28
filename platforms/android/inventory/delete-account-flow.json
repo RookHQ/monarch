@@ -1,0 +1,151 @@
+{
+  "id": "delete-account-flow",
+  "name": null,
+  "title": "DeleteAccountFlow",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet (confirmValueChange keeps it open while deleting) with a scrolling androidx.compose.foundation.layout.Column of MonarchConsequenceList, MonarchInlineNotice, MonarchDataExportRequest, MonarchSelect, MonarchTextField, MonarchTypeToConfirmInput, MonarchStepUpAuthDialog and MonarchButtons",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a person deletes their own account after resolving the workspaces they own alone, with an optional data export and reason, typing their email and confirming who they are.",
+  "whenToUse": "In account settings, for a person who wants their account gone. Google Play and the App Store require apps that let people create an account to let them delete it from the app.",
+  "whenNotToUse": "To delete a workspace, use the delete-workspace recipe. To leave one workspace, use the leave-workspace recipe. To pause an account, use the deactivate recipe.",
+  "api": [
+    "ModalBottomSheet(onDismissRequest = { if (!deleting) open = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { !deleting })) { … }",
+    "MonarchConsequenceList(items = listOf(MonarchConsequence(MonarchConsequenceKind.Removed, \"Your profile and settings\"), …), heading = \"What happens\")",
+    "MonarchDataExportRequest(status = export, onRequest = { … }) // @ExperimentalMonarchApi, opted in at the call",
+    "MonarchSelect(options = …, selected = reason, onSelect = { reason = it }, label = \"Reason\", placeholder = \"Choose a reason\")",
+    "MonarchTypeToConfirmInput(phrase = email, value = typed, onValueChange = { typed = it }, label = \"Type $email to confirm\")",
+    "MonarchStepUpAuthDialog(onVerify = …, description = \"Deleting your account needs you to confirm your identity.\", onCancel = …, onVerified = …, onVerifyingChange = { deleting = it })"
+  ],
+  "options": [
+    {
+      "name": "confirmPhrase",
+      "type": "String",
+      "default": "required",
+      "description": "What the person types to confirm, usually their account email. Matching is case-sensitive and ignores spaces around it (MonarchTypeToConfirmInputDefaults.matches)."
+    },
+    {
+      "name": "ownedWorkspaces",
+      "type": "List<workspace>",
+      "default": "empty",
+      "description": "Workspaces the person owns alone. While the list is not empty the review step lists them, each with Transfer or delete, and Continue is disabled. Update it as they are resolved."
+    },
+    {
+      "name": "consequences",
+      "type": "List<MonarchConsequence>",
+      "default": "none",
+      "description": "What deleting the account does, shown on the review step."
+    },
+    {
+      "name": "export",
+      "type": "MonarchDataExportStatus",
+      "default": "Idle",
+      "description": "Offer the optional export step with MonarchDataExportRequest; leave the step out when the product has no export."
+    },
+    {
+      "name": "reasons",
+      "type": "List<MonarchSelectOption<String>>",
+      "default": "none",
+      "description": "Choices for \"Why are you leaving?\"; leave the step out to skip it."
+    },
+    {
+      "name": "stepUp",
+      "type": "MonarchStepUpAuthDialog",
+      "default": "none",
+      "description": "Re-authentication before the delete; biometric through onRequestBiometric, which the app backs with BiometricPrompt."
+    },
+    {
+      "name": "deleting, failure",
+      "type": "Boolean, String?",
+      "default": "false, null",
+      "description": "While the request runs the sheet cannot be dismissed; a failure goes back to the confirm step with a danger notice."
+    }
+  ],
+  "states": [
+    {
+      "name": "review",
+      "description": "The title, what happens (consequence list) and, when the person owns workspaces alone, a warning notice with each workspace and Transfer or delete; Continue is disabled until none is left."
+    },
+    {
+      "name": "export",
+      "description": "MonarchDataExportRequest offers a copy of the data; Continue goes on with or without it."
+    },
+    {
+      "name": "reason",
+      "description": "An optional reason in a MonarchSelect and a multi-line comment field."
+    },
+    {
+      "name": "confirm",
+      "description": "The email field and a danger Delete account button, disabled until the email matches; a failure shows here."
+    },
+    {
+      "name": "verify",
+      "description": "MonarchStepUpAuthDialog asks for the password, a code or the device's lock; Cancel returns to confirm."
+    },
+    {
+      "name": "deleting",
+      "description": "After verification the request runs; the sheet cannot be swiped or backed away."
+    },
+    {
+      "name": "done",
+      "description": "\"Account deleted\" and Done; the app then signs the person out."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component on the Material 3 sheet surface: title styles, the consequence list with its kind marks, a warning notice, the export card, the select and text fields, the type-to-confirm field, and full-width primary, danger and ghost buttons. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web's DeleteAccountFlow is one component on WizardDialog with review, export, reason and confirm steps, step-up and a farewell screen. On Android it is a recipe, as on iOS: a MonarchBottomSheet holds the steps as a when over the app's step state, because a dialog has no room for the lists and fields. The web's renderWorkspaceAction and onResolveWorkspace are the app's Transfer or delete button, which opens the workspace's settings. The web's step progress (\"Step 2 of 4\") and Back are the app's to add when it wants them. Biometric step-up uses onRequestBiometric on MonarchStepUpAuthDialog; the app owns BiometricPrompt. The web's member counts are formatted by the app.",
+  "accessibility": [
+    "Each step starts with a title in the title style, which MonarchText marks as a heading.",
+    "MonarchConsequenceList reads each line with its kind, so removed and kept do not depend on the mark.",
+    "Each Transfer or delete button is named with its workspace, \"Transfer or delete Acme\"; Continue is announced as disabled while workspaces remain, and the warning notice says why in words.",
+    "MonarchTypeToConfirmInput announces when the email matches; Delete account is disabled until then.",
+    "MonarchStepUpAuthDialog labels its fields and announces errors; the sheet cannot be dismissed while deleting.",
+    "Every button has a 48dp target; the steps scroll at font scale 2.0."
+  ],
+  "edgeCases": [
+    "Check ownership, the email and the step-up on the server as well; the recipe only gates the buttons.",
+    "When the person owns no workspace alone, the review step shows only the consequences and Continue.",
+    "A grace period (deleted in 30 days) changes the done text; offer a way to cancel by signing in again.",
+    "After deletion sign the person out and leave every account screen: the account no longer exists."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "From a danger zone, with export, reason and step-up",
+      "fixture": "delete-account-flow",
+      "webExample": "From a danger zone, with export, reason and step-up",
+      "template": "MonarchSectionCard(title = {{zone.title}}, description = {{zone.description}}, tone = MonarchTone.Danger) {\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3), verticalAlignment = Alignment.CenterVertically) {\n        Column(modifier = Modifier.weight(1f)) {\n            MonarchText(text = {{item.title}}, style = MonarchTextStyle.BodyStrong)\n            MonarchText(text = {{item.description}}, style = MonarchTextStyle.Caption)\n        }\n    MonarchButton(\n            text = {{item.action}},\n            onClick = {\n                step = \"review\"\n                typed = \"\"\n                open = true\n            },\n            variant = MonarchButtonVariant.Danger,\n        )\n    }\n}\nif (open) {\n    // While the work runs, a swipe, back or a tap outside does not close the sheet.\n    MonarchBottomSheet(onDismissRequest = { open = false }, title = {{item.action}}, dismissible = !deleting) {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            val stepNumber = listOf(\"review\", \"export\", \"reason\", \"confirm\").indexOf(step) + 1\n            if (stepNumber in 1..4 && step != \"verify\") {\n                MonarchText(text = \"Step $stepNumber of 4\", style = MonarchTextStyle.Caption)\n                Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n                    repeat(4) { index ->\n                        MonarchProgress(\n                            modifier = Modifier.weight(1f),\n                            progress = if (index < stepNumber) 1f else 0f,\n                            size = MonarchProgressSize.Sm,\n                        )\n                    }\n                }\n            }\n            when (step) {\n                \"review\" -> {\n                    MonarchText(text = {{review.title}}, style = MonarchTextStyle.Title)\n                    MonarchText(text = {{review.description}})\n                    MonarchConsequenceList(\n                        items = listOf(\n                            MonarchConsequence(MonarchConsequenceKind.{{consequences.0.kind|pascal}}, {{consequences.0.label}}),\n                            MonarchConsequence(MonarchConsequenceKind.{{consequences.1.kind|pascal}}, {{consequences.1.label}}),\n                            MonarchConsequence(MonarchConsequenceKind.{{consequences.2.kind|pascal}}, {{consequences.2.label}}),\n                        ),\n                        grouped = true,\n                    )\n                    if (owned.isNotEmpty()) {\n                        MonarchInlineNotice(\n                            message = \"You are the only owner of these workspaces. Transfer each one, or delete it, first.\",\n                            tone = MonarchTone.Warning,\n                        )\n                        owned.forEach { (name, members) ->\n                            Row(verticalAlignment = Alignment.CenterVertically) {\n                                MonarchText(text = \"$name, $members members\", modifier = Modifier.weight(1f))\n                                MonarchButton(\n                                    text = \"Transfer or delete\",\n                                    onClick = {\n                                        // Open the workspace's settings; once it is transferred or deleted:\n                                        owned = owned.filterNot { it.first == name }\n                                    },\n                                    modifier = Modifier.semantics { contentDescription = \"Transfer or delete $name\" },\n                                    size = MonarchButtonSize.Sm,\n                                )\n                            }\n                        }\n                    }\n                    MonarchButton(\n                        text = \"Continue\",\n                        onClick = { step = \"export\" },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Primary,\n                        enabled = owned.isEmpty(),\n                    )\n                }\n                \"export\" -> {\n                    @OptIn(ExperimentalMonarchApi::class)\n                    MonarchDataExportRequest(\n                        status = export,\n                        onRequest = { export = MonarchDataExportStatus.Requested },\n                    )\n                    MonarchButton(\n                        text = \"Continue\",\n                        onClick = { step = \"reason\" },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Primary,\n                    )\n                }\n                \"reason\" -> {\n                    MonarchText(text = \"Why are you leaving?\", style = MonarchTextStyle.Title)\n                    MonarchText(text = \"Optional. Your answer helps us improve.\")\n                    MonarchSelect(\n                        options = listOf(\n                            MonarchSelectOption({{reasons.0.value}}, {{reasons.0.label}}),\n                            MonarchSelectOption({{reasons.1.value}}, {{reasons.1.label}}),\n                            MonarchSelectOption({{reasons.2.value}}, {{reasons.2.label}}),\n                            MonarchSelectOption({{reasons.3.value}}, {{reasons.3.label}}),\n                        ),\n                        selected = reason,\n                        onSelect = { reason = it },\n                        label = \"Reason\",\n                        placeholder = \"Choose a reason\",\n                    )\n                    MonarchTextField(\n                        value = details,\n                        onValueChange = { details = it },\n                        label = \"Anything else you want to tell us?\",\n                        singleLine = false,\n                    )\n                    MonarchButton(\n                        text = \"Continue\",\n                        onClick = { step = \"confirm\" },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Primary,\n                    )\n                }\n                \"confirm\" -> {\n                    MonarchText(text = \"Confirm deletion\", style = MonarchTextStyle.Title)\n                    failure?.let { MonarchInlineNotice(message = it, tone = MonarchTone.Danger) }\n                    MonarchTypeToConfirmInput(\n                        phrase = email,\n                        value = typed,\n                        onValueChange = { typed = it },\n                        label = \"Type $email to confirm\",\n                    )\n                    MonarchButton(\n                        text = \"Delete account\",\n                        onClick = { step = \"verify\" },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Danger,\n                        enabled = MonarchTypeToConfirmInputDefaults.matches(typed, email),\n                    )\n                }\n                \"verify\" -> MonarchStepUpAuthDialog(\n                    onVerify = { _ ->\n                        // Send the credential to the server; throw if it is refused.\n                    },\n                    description = \"Deleting your account needs you to confirm your identity.\",\n                    methods = listOf(MonarchStepUpMethod.{{stepUp.methods.0|pascal}}, MonarchStepUpMethod.{{stepUp.methods.1|pascal}}),\n                    onCancel = { step = \"confirm\" },\n                    onVerified = {\n                        deleting = true\n                        failure = null\n                        scope.launch {\n                            // Delete on the server with reason and details.trim(). On failure:\n                            // failure = \"Your account couldn’t be deleted. Try again.\"; step = \"confirm\"\n                            deleting = false\n                            step = \"done\"\n                        }\n                    },\n                    onVerifyingChange = { deleting = it },\n                )\n                else -> {\n                    MonarchText(text = \"Account deleted\", style = MonarchTextStyle.Title)\n                    MonarchText(text = \"Your account has been removed. Thank you for the time you spent with us.\")\n                    MonarchButton(\n                        text = \"Done\",\n                        onClick = { open = false /* then sign out */ },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Primary,\n                    )\n                }\n            }\n            if (step != \"done\" && step != \"verify\") {\n                MonarchButton(\n                    text = \"Cancel\",\n                    onClick = { open = false },\n                    modifier = Modifier.fillMaxWidth(),\n                    variant = MonarchButtonVariant.Ghost,\n                )\n            }\n        }\n    }\n}",
+      "setupTemplate": "val email = {{email}}\nval scope = rememberCoroutineScope()\nvar open by rememberSaveable { mutableStateOf(true) }\nvar step by rememberSaveable { mutableStateOf(\"review\") } // review, export, reason, confirm, verify, done\nvar owned by remember { mutableStateOf(emptyList<Pair<String, Int>>()) } // workspaces the person owns alone, with members\nvar export by remember { mutableStateOf(MonarchDataExportStatus.Idle) }\nvar reason by rememberSaveable { mutableStateOf<String?>(null) }\nvar details by rememberSaveable { mutableStateOf(\"\") }\nvar typed by rememberSaveable { mutableStateOf(\"\") }\nvar deleting by remember { mutableStateOf(false) }\nvar failure by remember { mutableStateOf<String?>(null) }\n",
+      "imports": [
+        "kotlinx.coroutines.launch",
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "val email = \"sam@example.com\"\nval scope = rememberCoroutineScope()\nvar open by rememberSaveable { mutableStateOf(true) }\nvar step by rememberSaveable { mutableStateOf(\"review\") } // review, export, reason, confirm, verify, done\nvar owned by remember { mutableStateOf(emptyList<Pair<String, Int>>()) } // workspaces the person owns alone, with members\nvar export by remember { mutableStateOf(MonarchDataExportStatus.Idle) }\nvar reason by rememberSaveable { mutableStateOf<String?>(null) }\nvar details by rememberSaveable { mutableStateOf(\"\") }\nvar typed by rememberSaveable { mutableStateOf(\"\") }\nvar deleting by remember { mutableStateOf(false) }\nvar failure by remember { mutableStateOf<String?>(null) }\n",
+      "code": "MonarchSectionCard(title = \"Danger zone\", description = \"Deleting your account cannot be undone.\", tone = MonarchTone.Danger) {\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3), verticalAlignment = Alignment.CenterVertically) {\n        Column(modifier = Modifier.weight(1f)) {\n            MonarchText(text = \"Delete your account\", style = MonarchTextStyle.BodyStrong)\n            MonarchText(text = \"Removes your profile and your access to every workspace.\", style = MonarchTextStyle.Caption)\n        }\n    MonarchButton(\n            text = \"Delete account\",\n            onClick = {\n                step = \"review\"\n                typed = \"\"\n                open = true\n            },\n            variant = MonarchButtonVariant.Danger,\n        )\n    }\n}\nif (open) {\n    // While the work runs, a swipe, back or a tap outside does not close the sheet.\n    MonarchBottomSheet(onDismissRequest = { open = false }, title = \"Delete account\", dismissible = !deleting) {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            val stepNumber = listOf(\"review\", \"export\", \"reason\", \"confirm\").indexOf(step) + 1\n            if (stepNumber in 1..4 && step != \"verify\") {\n                MonarchText(text = \"Step $stepNumber of 4\", style = MonarchTextStyle.Caption)\n                Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n                    repeat(4) { index ->\n                        MonarchProgress(\n                            modifier = Modifier.weight(1f),\n                            progress = if (index < stepNumber) 1f else 0f,\n                            size = MonarchProgressSize.Sm,\n                        )\n                    }\n                }\n            }\n            when (step) {\n                \"review\" -> {\n                    MonarchText(text = \"Before you delete your account\", style = MonarchTextStyle.Title)\n                    MonarchText(text = \"Your account and your access to every workspace will be removed. This cannot be undone.\")\n                    MonarchConsequenceList(\n                        items = listOf(\n                            MonarchConsequence(MonarchConsequenceKind.Removed, \"Your profile and sign-in methods\"),\n                            MonarchConsequence(MonarchConsequenceKind.Changed, \"You leave 3 workspaces\"),\n                            MonarchConsequence(MonarchConsequenceKind.Kept, \"Content you created stays in its workspace\"),\n                        ),\n                        grouped = true,\n                    )\n                    if (owned.isNotEmpty()) {\n                        MonarchInlineNotice(\n                            message = \"You are the only owner of these workspaces. Transfer each one, or delete it, first.\",\n                            tone = MonarchTone.Warning,\n                        )\n                        owned.forEach { (name, members) ->\n                            Row(verticalAlignment = Alignment.CenterVertically) {\n                                MonarchText(text = \"$name, $members members\", modifier = Modifier.weight(1f))\n                                MonarchButton(\n                                    text = \"Transfer or delete\",\n                                    onClick = {\n                                        // Open the workspace's settings; once it is transferred or deleted:\n                                        owned = owned.filterNot { it.first == name }\n                                    },\n                                    modifier = Modifier.semantics { contentDescription = \"Transfer or delete $name\" },\n                                    size = MonarchButtonSize.Sm,\n                                )\n                            }\n                        }\n                    }\n                    MonarchButton(\n                        text = \"Continue\",\n                        onClick = { step = \"export\" },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Primary,\n                        enabled = owned.isEmpty(),\n                    )\n                }\n                \"export\" -> {\n                    @OptIn(ExperimentalMonarchApi::class)\n                    MonarchDataExportRequest(\n                        status = export,\n                        onRequest = { export = MonarchDataExportStatus.Requested },\n                    )\n                    MonarchButton(\n                        text = \"Continue\",\n                        onClick = { step = \"reason\" },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Primary,\n                    )\n                }\n                \"reason\" -> {\n                    MonarchText(text = \"Why are you leaving?\", style = MonarchTextStyle.Title)\n                    MonarchText(text = \"Optional. Your answer helps us improve.\")\n                    MonarchSelect(\n                        options = listOf(\n                            MonarchSelectOption(\"not-needed\", \"I no longer need it\"),\n                            MonarchSelectOption(\"other-tool\", \"I use another tool\"),\n                            MonarchSelectOption(\"too-complex\", \"It is too complicated\"),\n                            MonarchSelectOption(\"other\", \"Something else\"),\n                        ),\n                        selected = reason,\n                        onSelect = { reason = it },\n                        label = \"Reason\",\n                        placeholder = \"Choose a reason\",\n                    )\n                    MonarchTextField(\n                        value = details,\n                        onValueChange = { details = it },\n                        label = \"Anything else you want to tell us?\",\n                        singleLine = false,\n                    )\n                    MonarchButton(\n                        text = \"Continue\",\n                        onClick = { step = \"confirm\" },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Primary,\n                    )\n                }\n                \"confirm\" -> {\n                    MonarchText(text = \"Confirm deletion\", style = MonarchTextStyle.Title)\n                    failure?.let { MonarchInlineNotice(message = it, tone = MonarchTone.Danger) }\n                    MonarchTypeToConfirmInput(\n                        phrase = email,\n                        value = typed,\n                        onValueChange = { typed = it },\n                        label = \"Type $email to confirm\",\n                    )\n                    MonarchButton(\n                        text = \"Delete account\",\n                        onClick = { step = \"verify\" },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Danger,\n                        enabled = MonarchTypeToConfirmInputDefaults.matches(typed, email),\n                    )\n                }\n                \"verify\" -> MonarchStepUpAuthDialog(\n                    onVerify = { _ ->\n                        // Send the credential to the server; throw if it is refused.\n                    },\n                    description = \"Deleting your account needs you to confirm your identity.\",\n                    methods = listOf(MonarchStepUpMethod.Passkey, MonarchStepUpMethod.Password),\n                    onCancel = { step = \"confirm\" },\n                    onVerified = {\n                        deleting = true\n                        failure = null\n                        scope.launch {\n                            // Delete on the server with reason and details.trim(). On failure:\n                            // failure = \"Your account couldn’t be deleted. Try again.\"; step = \"confirm\"\n                            deleting = false\n                            step = \"done\"\n                        }\n                    },\n                    onVerifyingChange = { deleting = it },\n                )\n                else -> {\n                    MonarchText(text = \"Account deleted\", style = MonarchTextStyle.Title)\n                    MonarchText(text = \"Your account has been removed. Thank you for the time you spent with us.\")\n                    MonarchButton(\n                        text = \"Done\",\n                        onClick = { open = false /* then sign out */ },\n                        modifier = Modifier.fillMaxWidth(),\n                        variant = MonarchButtonVariant.Primary,\n                    )\n                }\n            }\n            if (step != \"done\" && step != \"verify\") {\n                MonarchButton(\n                    text = \"Cancel\",\n                    onClick = { open = false },\n                    modifier = Modifier.fillMaxWidth(),\n                    variant = MonarchButtonVariant.Ghost,\n                )\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "DeleteAccountFlow",
+  "dependsOn": [
+    "sheet",
+    "consequence-list",
+    "type-to-confirm-input",
+    "step-up-auth-dialog",
+    "data-export-request",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "scenario",
+      "platform": "android",
+      "reason": "The web shows the steps in a centred dialog with a close button, and Cancel and Continue side by side at the bottom. Android shows them in a modal bottom sheet with the dialog's title, one full-width Continue button and Cancel under it, because a sheet is the phone's surface for a task of several steps. The Danger zone card, the four-part step progress, the review list and the copy are the web's.",
+      "convention": "Material 3 modal bottom sheet for a task of several steps"
+    }
+  ]
+}

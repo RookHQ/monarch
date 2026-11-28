@@ -2,80 +2,31 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { CalendarMonthView, type CalendarEvent } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './calendar-month-view.fixture.json';
 
-const at = (day: string, time: string) => `${day}T${time}:00Z`;
+const rgb = (c: { r: number; g: number; b: number }) =>
+  `#${[c.r, c.g, c.b].map((n) => n.toString(16).padStart(2, '0')).join('')}`;
 
-const EVENTS: CalendarEvent[] = [
-  { id: 'm1', title: 'Release day', start: '2026-11-04', allDay: true, color: '#16a34a' },
-  {
-    id: 'm2',
-    title: 'Stand-up',
-    start: at('2026-11-04', '09:00'),
-    end: at('2026-11-04', '09:15'),
-    color: '#0f766e',
-  },
-  {
-    id: 'm3',
-    title: 'Design review',
-    start: at('2026-11-04', '11:00'),
-    end: at('2026-11-04', '12:00'),
-    color: '#7c3aed',
-  },
-  {
-    id: 'm4',
-    title: 'Lunch & learn',
-    start: at('2026-11-04', '12:30'),
-    end: at('2026-11-04', '13:30'),
-    color: '#2563eb',
-  },
-  {
-    id: 'm5',
-    title: 'Retrospective',
-    start: at('2026-11-04', '16:00'),
-    end: at('2026-11-04', '17:00'),
-    status: 'cancelled',
-    color: '#c2410c',
-  },
-  {
-    id: 'm6',
-    title: 'Interview',
-    start: at('2026-11-09', '10:00'),
-    end: at('2026-11-09', '11:00'),
-    color: '#0891b2',
-  },
-  {
-    id: 'm7',
-    title: 'Vendor call',
-    start: at('2026-11-12', '14:00'),
-    end: at('2026-11-12', '14:30'),
-    status: 'tentative',
-    color: '#2563eb',
-  },
-  {
-    id: 'm8',
-    title: 'Board meeting',
-    start: at('2026-11-18', '15:00'),
-    end: at('2026-11-18', '17:00'),
-    color: '#db2777',
-  },
-  {
-    id: 'm9',
-    title: 'Conference',
-    start: '2026-11-24',
-    end: '2026-11-26',
-    allDay: true,
-    color: '#ca8a04',
-  },
-  {
-    id: 'm10',
-    title: 'Quarter close',
-    start: at('2026-11-30', '17:00'),
-    end: at('2026-11-30', '18:00'),
-    color: '#7c3aed',
-  },
-];
+const EVENTS: CalendarEvent[] = fixture.data.events.map((event) => {
+  const result: CalendarEvent = {
+    id: event.id,
+    title: event.title,
+    start: event.start,
+    color: rgb(event.color),
+  };
+  if ('end' in event) result.end = event.end;
+  if ('allDay' in event) result.allDay = event.allDay;
+  if ('status' in event) result.status = event.status as NonNullable<CalendarEvent['status']>;
+  return result;
+});
 
-const base = { timeZone: 'UTC', locale: 'en-GB', today: '2026-11-04', weekStartsOn: 1 } as const;
+const base = {
+  timeZone: fixture.data.timeZone,
+  locale: fixture.data.locale,
+  today: fixture.data.today,
+  weekStartsOn: 1,
+} as const;
 
 function NavigableMonth() {
   const [month, setMonth] = useState('2026-11-01');
@@ -262,10 +213,12 @@ export default {
             <div style={{ width: '100%' }}>
               <CalendarMonthView
                 {...base}
-                month="2026-11-01"
+                month={fixture.data.month}
                 events={EVENTS}
                 dayState={(d) =>
-                  d === '2026-11-20' ? { hatched: true, badge: 'Holiday' } : undefined
+                  d === fixture.data.holiday.date
+                    ? { hatched: fixture.data.holiday.hatched, badge: fixture.data.holiday.badge }
+                    : undefined
                 }
               />
             </div>

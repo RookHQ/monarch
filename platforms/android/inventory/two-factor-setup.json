@@ -1,0 +1,101 @@
+{
+  "id": "two-factor-setup",
+  "name": null,
+  "title": "TwoFactorSetup",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchDialog with a close button and Cancel and Next actions over three steps: an optional androidx.compose.foundation.Image of a QR code the app draws and MonarchCopyField for the setup key; MonarchOtpPinInput; MonarchRecoveryCodes",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a dialog that turns on two-step verification in three steps: scan a QR code or enter a key in an authenticator app, enter a code from it, and save the recovery codes.",
+  "whenToUse": "In account security settings, when a person turns on two-step verification with an authenticator app.",
+  "whenNotToUse": "To ask for a code at sign-in, use MonarchOtpPinInput alone. To re-confirm a signed-in person, use MonarchStepUpAuthDialog.",
+  "api": [
+    "MonarchDialog(onDismissRequest = { open = false }, title = title, description = description, closeButton = true, actions = { Cancel and Next }, content = { … })",
+    "Image(painter = qrCode, contentDescription = \"QR code for the authenticator app\") — qrCode drawn by the app",
+    "MonarchCopyField(value = secret, label = \"Setup key\")",
+    "MonarchOtpPinInput(value = code, onValueChange = …, label = \"6-digit code\", errorText = codeError)",
+    "MonarchRecoveryCodes(codes = codes, onAcknowledge = { … })"
+  ],
+  "options": [
+    {
+      "name": "secret / account",
+      "type": "String",
+      "default": "required",
+      "description": "The shared key from the server and the name of the account it belongs to, shown under the QR code."
+    },
+    {
+      "name": "qrCode",
+      "type": "Painter?",
+      "default": "null",
+      "description": "A QR code of the otpauth address for scanning, drawn by the app's own generator. Without it only the key is shown."
+    },
+    {
+      "name": "step",
+      "type": "Int",
+      "default": "0",
+      "description": "The current step, kept with rememberSaveable. The dialog title and the Next button follow it."
+    }
+  ],
+  "states": [
+    {
+      "name": "scan",
+      "description": "The QR code when the app provides one, the account, and the setup key with a copy button."
+    },
+    {
+      "name": "verify",
+      "description": "A six-cell code field; an incomplete or rejected code shows the field's error."
+    },
+    {
+      "name": "recovery",
+      "description": "The recovery codes with copy, save or share, and the \"I have saved my recovery codes\" acknowledgement, which finishes the setup."
+    }
+  ],
+  "appearance": "Existing Monarch components in the theme: the dialog's title, description and footer actions, the copy field's monospaced key, the code cells and the recovery codes panel. A QR code must stay dark on light in every theme so scanners can read it; draw it that way in the app.",
+  "platformNotes": "The web's TwoFactorSetup is a dialog with a QR code as its first step, and so is this recipe: a centred MonarchDialog with a close button, a step count, Cancel and Next. iOS draws the QR code with Core Image; Android has no first-party QR generator and Monarch adds no dependency, so the recipe shows an app-supplied Painter when there is one (for example from ZXing in the app); the setup key stays as the fallback for entering it in the app by hand.",
+  "accessibility": [
+    "The dialog is named by its title, which follows the step, and the step count is read with it.",
+    "The key is copied with a button and spelled out by the copy field; the QR image has a description when shown.",
+    "The code field reads its error.",
+    "Recovery codes are read character by character, and a missing acknowledgement is announced."
+  ],
+  "edgeCases": [
+    "Without a QR painter the step shows the key alone.",
+    "Long keys wrap in the copy field; the code field accepts the keyboard's one-time code suggestion."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Full setup (enter 000000 to see a wrong code)",
+      "fixture": "two-factor-setup",
+      "webExample": "Full setup (enter 000000 to see a wrong code)",
+      "template": "MonarchButton(\n    text = {{trigger}},\n    onClick = {\n        step = 0\n        open = true\n    },\n    variant = MonarchButtonVariant.Primary,\n)\nif (open) {\n    MonarchDialog(\n        onDismissRequest = { open = false },\n        title = when (step) {\n            0 -> \"Set up two-step verification\"\n            1 -> \"Enter the code from the app\"\n            else -> \"Save your recovery codes\"\n        },\n        description = if (step == 0) {\n            \"Scan this QR code with an authenticator app, such as 1Password, Google Authenticator or Microsoft Authenticator.\"\n        } else {\n            null\n        },\n        closeButton = true,\n        actions = {\n            MonarchButton(text = \"Cancel\", onClick = { open = false }, variant = MonarchButtonVariant.Secondary)\n            MonarchButton(\n                text = if (step == 2) \"Done\" else \"Next\",\n                onClick = {\n                    if (step == 1 && code.length < 6) {\n                        codeError = \"Enter all 6 digits\"\n                    } else if (step == 2) {\n                        open = false\n                    } else {\n                        step++\n                    }\n                },\n                variant = MonarchButtonVariant.Primary,\n            )\n        },\n        content = {\n            Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n                MonarchText(text = \"Step ${step + 1} of 3\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n                when (step) {\n                    0 -> {\n                        qrCode?.let { qr ->\n                            Image(\n                                painter = qr,\n                                contentDescription = \"QR code for the authenticator app\",\n                                modifier = Modifier.size(MonarchTheme.spacing.space24 * 2).align(Alignment.CenterHorizontally),\n                            )\n                        }\n                        MonarchText(\n                            text = account,\n                            style = MonarchTextStyle.Caption,\n                            color = MonarchTheme.colors.textMuted,\n                            modifier = Modifier.align(Alignment.CenterHorizontally),\n                        )\n                        MonarchText(text = \"Can’t scan it? Enter this key in the app instead.\")\n                        MonarchCopyField(value = secret, label = \"Setup key\")\n                    }\n                    1 -> MonarchOtpPinInput(\n                        value = code,\n                        onValueChange = {\n                            code = it\n                            codeError = null\n                        },\n                        label = \"6-digit code\",\n                        errorText = codeError,\n                    )\n                    else -> MonarchRecoveryCodes(\n                        codes = listOf({{recoveryCodes.0}}, {{recoveryCodes.1}}, {{recoveryCodes.2}}, {{recoveryCodes.3}}, {{recoveryCodes.4}}, {{recoveryCodes.5}}).map { MonarchRecoveryCode(it) },\n                        onAcknowledge = { /* Two-step verification is on. */ },\n                    )\n                }\n            }\n        },\n    )\n}",
+      "setupTemplate": "val secret = {{secret}}\nval account = {{accountName}}\n// A QR code of the otpauth address drawn by the app's own generator; Android has no built-in one.\nval qrCode: Painter? = sampleQrPainter()\nvar open by rememberSaveable { mutableStateOf(true) }\nvar step by rememberSaveable { mutableIntStateOf(0) }\nvar code by rememberSaveable { mutableStateOf(\"\") }\nvar codeError by remember { mutableStateOf<String?>(null) }",
+      "imports": [
+        "androidx.compose.foundation.Image",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.ui.graphics.painter.Painter",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.testing.sampleQrPainter"
+      ],
+      "setup": "val secret = \"JBSWY3DPEHPK3PXPJBSWY3DP\"\nval account = \"sam@example.com\"\n// A QR code of the otpauth address drawn by the app's own generator; Android has no built-in one.\nval qrCode: Painter? = sampleQrPainter()\nvar open by rememberSaveable { mutableStateOf(true) }\nvar step by rememberSaveable { mutableIntStateOf(0) }\nvar code by rememberSaveable { mutableStateOf(\"\") }\nvar codeError by remember { mutableStateOf<String?>(null) }",
+      "code": "MonarchButton(\n    text = \"Turn on two-step verification\",\n    onClick = {\n        step = 0\n        open = true\n    },\n    variant = MonarchButtonVariant.Primary,\n)\nif (open) {\n    MonarchDialog(\n        onDismissRequest = { open = false },\n        title = when (step) {\n            0 -> \"Set up two-step verification\"\n            1 -> \"Enter the code from the app\"\n            else -> \"Save your recovery codes\"\n        },\n        description = if (step == 0) {\n            \"Scan this QR code with an authenticator app, such as 1Password, Google Authenticator or Microsoft Authenticator.\"\n        } else {\n            null\n        },\n        closeButton = true,\n        actions = {\n            MonarchButton(text = \"Cancel\", onClick = { open = false }, variant = MonarchButtonVariant.Secondary)\n            MonarchButton(\n                text = if (step == 2) \"Done\" else \"Next\",\n                onClick = {\n                    if (step == 1 && code.length < 6) {\n                        codeError = \"Enter all 6 digits\"\n                    } else if (step == 2) {\n                        open = false\n                    } else {\n                        step++\n                    }\n                },\n                variant = MonarchButtonVariant.Primary,\n            )\n        },\n        content = {\n            Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n                MonarchText(text = \"Step ${step + 1} of 3\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n                when (step) {\n                    0 -> {\n                        qrCode?.let { qr ->\n                            Image(\n                                painter = qr,\n                                contentDescription = \"QR code for the authenticator app\",\n                                modifier = Modifier.size(MonarchTheme.spacing.space24 * 2).align(Alignment.CenterHorizontally),\n                            )\n                        }\n                        MonarchText(\n                            text = account,\n                            style = MonarchTextStyle.Caption,\n                            color = MonarchTheme.colors.textMuted,\n                            modifier = Modifier.align(Alignment.CenterHorizontally),\n                        )\n                        MonarchText(text = \"Can’t scan it? Enter this key in the app instead.\")\n                        MonarchCopyField(value = secret, label = \"Setup key\")\n                    }\n                    1 -> MonarchOtpPinInput(\n                        value = code,\n                        onValueChange = {\n                            code = it\n                            codeError = null\n                        },\n                        label = \"6-digit code\",\n                        errorText = codeError,\n                    )\n                    else -> MonarchRecoveryCodes(\n                        codes = listOf(\"k7f2-9qd4\", \"m3x8-2hp6\", \"r5c1-8vt3\", \"w9n4-6bz2\", \"a2j7-4ls9\", \"e6y3-1gu5\").map { MonarchRecoveryCode(it) },\n                        onAcknowledge = { /* Two-step verification is on. */ },\n                    )\n                }\n            }\n        },\n    )\n}"
+    }
+  ],
+  "webEquivalent": "TwoFactorSetup",
+  "dependsOn": [
+    "otp-pin-input",
+    "recovery-codes",
+    "copy-field",
+    "dialog",
+    "button"
+  ]
+}

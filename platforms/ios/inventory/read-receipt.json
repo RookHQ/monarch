@@ -1,0 +1,115 @@
+{
+  "id": "read-receipt",
+  "name": "MonarchReadReceipt",
+  "title": "ReadReceipt",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "HStack of an SF Symbol or MonarchAvatarGroup and Text; Button when it opens the list of readers",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "\"Seen\", \"Seen by 3\" or the readers' avatars under the newest message the other people have read, with the full list of names for VoiceOver.",
+  "whenToUse": "Under the newest message of a conversation that the other people have read, fed by the product with who has read it.",
+  "whenNotToUse": "Not for delivery or sending states of a message; show those in the message itself. Not for presence in a document; use MonarchPresenceAvatars.",
+  "api": [
+    "init(_ readers: [MonarchReadReceiptReader], display: MonarchReadReceiptDisplay = .text, maxAvatars: Int = 3, labels: MonarchReadReceiptLabels = MonarchReadReceiptLabels(), onShowReaders: (@MainActor () -> Void)? = nil)",
+    "MonarchReadReceiptReader.init(id: String? = nil, name: String, avatarURL: URL? = nil)",
+    "enum MonarchReadReceiptDisplay { case text, count, avatars }",
+    "MonarchReadReceiptLabels.init(seen: String? = nil, seenByCount: (@Sendable (Int) -> String)? = nil, seenBy: (@Sendable (String) -> String)? = nil, list: (@Sendable ([String]) -> String)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "readers",
+      "type": "[MonarchReadReceiptReader]",
+      "default": "required",
+      "description": "The people who have read the message, without the sender. Nothing is drawn while it is empty."
+    },
+    {
+      "name": "display",
+      "type": "MonarchReadReceiptDisplay",
+      "default": ".text",
+      "description": "\"Seen\" with a check mark, \"Seen by 3\" with a check mark, or the readers' avatars with \"Seen\"."
+    },
+    {
+      "name": "maxAvatars",
+      "type": "Int",
+      "default": "3",
+      "description": "With the avatars display, at most this many faces, then a \"+N\" tile. At least one face is shown, and a \"+1\" tile is replaced by the face it would hide."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchReadReceiptLabels",
+      "default": "MonarchReadReceiptLabels()",
+      "description": "Replacements for \"Seen\", \"Seen by 3\", \"Seen by …\" and the joining of names."
+    },
+    {
+      "name": "onShowReaders",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Makes the receipt a button, for example to open the list of readers with times."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "Nothing is drawn and nothing is read."
+    },
+    {
+      "name": "text",
+      "description": "A check mark and \"Seen\"."
+    },
+    {
+      "name": "count",
+      "description": "A check mark and \"Seen by 3\"."
+    },
+    {
+      "name": "avatars",
+      "description": "Overlapping avatars of the readers, a \"+N\" tile for the rest, and \"Seen\"."
+    },
+    {
+      "name": "button",
+      "description": "With onShowReaders the receipt is a button with a 44-point tall touch target."
+    }
+  ],
+  "appearance": "Caption text and the check mark in the muted text colour; avatars with a ring in the surface colour. The same roles in light, dark and both high-contrast themes.",
+  "platformNotes": "Same displays and wording as the web. The web's align property is not offered: the conversation's own stack aligns the receipt. Avatars are 24 points, the smallest MonarchAvatar size, where the web uses 16 pixels. The web's double check glyph is a single check mark SF Symbol, because SF Symbols has no double check. Names are joined with the locale's list format, so English locales may add a serial comma. The full sentence is shown on pointer hover with help(_:).",
+  "accessibility": [
+    "The receipt is one element whose label is the full sentence, \"Seen by Ana, Ben and Chen\", in every display.",
+    "The mark and the avatars are hidden from VoiceOver.",
+    "With onShowReaders the element has the button trait and a touch target at least 44 points high; without it, the static text trait.",
+    "The text and the avatars scale with Dynamic Type."
+  ],
+  "edgeCases": [
+    "An empty list draws nothing.",
+    "A maxAvatars of 0 or less still shows one face.",
+    "With one reader more than maxAvatars, all faces are shown instead of a \"+1\" tile.",
+    "Long custom text wraps."
+  ],
+  "tests": [
+    "MonarchReadReceiptTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Displays",
+      "fixture": "read-receipt",
+      "webExample": "Displays",
+      "template": "VStack(alignment: .trailing, spacing: 12) {\n    MonarchReadReceipt(Array(readers.prefix({{displays.0.readerCount}})), display: .{{displays.0.display|raw}})\n    MonarchReadReceipt(Array(readers.prefix({{displays.1.readerCount}})), display: .{{displays.1.display|raw}})\n    MonarchReadReceipt(Array(readers.prefix({{displays.2.readerCount}})), display: .{{displays.2.display|raw}})\n}",
+      "setupTemplate": "private let readers = [\n    MonarchReadReceiptReader(id: {{readers.0.id}}, name: {{readers.0.name}}),\n    MonarchReadReceiptReader(id: {{readers.1.id}}, name: {{readers.1.name}}),\n    MonarchReadReceiptReader(id: {{readers.2.id}}, name: {{readers.2.name}}),\n    MonarchReadReceiptReader(id: {{readers.3.id}}, name: {{readers.3.name}}),\n    MonarchReadReceiptReader(id: {{readers.4.id}}, name: {{readers.4.name}}),\n]",
+      "setup": "private let readers = [\n    MonarchReadReceiptReader(id: \"u1\", name: \"Ana Lopez\"),\n    MonarchReadReceiptReader(id: \"u2\", name: \"Ben Okafor\"),\n    MonarchReadReceiptReader(id: \"u3\", name: \"Chloé Martin\"),\n    MonarchReadReceiptReader(id: \"u4\", name: \"Dev Patel\"),\n    MonarchReadReceiptReader(id: \"u5\", name: \"Eve Stone\"),\n]",
+      "code": "VStack(alignment: .trailing, spacing: 12) {\n    MonarchReadReceipt(Array(readers.prefix(1)), display: .text)\n    MonarchReadReceipt(Array(readers.prefix(5)), display: .count)\n    MonarchReadReceipt(Array(readers.prefix(5)), display: .avatars)\n}"
+    },
+    {
+      "title": "Avatars in a group, opening the list of readers",
+      "setup": "@State private var showsReaders = false\nprivate let readers = [\"Ana\", \"Ben\", \"Chen\", \"Dara\", \"Eli\"].map { MonarchReadReceiptReader(name: $0) }",
+      "code": "MonarchReadReceipt(readers, display: .avatars) { showsReaders = true }\n    .sheet(isPresented: $showsReaders) {\n        List(readers) { Text($0.name) }\n    }"
+    }
+  ],
+  "webEquivalent": "ReadReceipt",
+  "dependsOn": [
+    "avatar"
+  ]
+}
