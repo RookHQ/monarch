@@ -172,8 +172,9 @@ jobs:
         run: ./gradlew --version
       # Inventory check, detekt, lint, unit and Compose UI tests (Robolectric), API check,
       # debug and minified sample builds, publish to the local repository. Memory comes from
-      # platforms/android/gradle.properties (Gradle 3 GB, Kotlin daemon 4 GB; about 7 GB for a
-      # clean build), the same values as a local build; nothing here overrides them.
+      # platforms/android/gradle.properties (Gradle 3 GB, Kotlin daemon 4 GB), except that CI gives
+      # the Gradle daemon 4 GB: packaging the sample app ran out of heap at 3 GB on a hosted runner.
+      # The runner has 16 GB, so 4 + 4 GB plus one 1 GB test JVM still fits.
       - name: Every Android gate
         if: needs.changes.outputs.android == 'true'
         # Maven Central and the Gradle plugin portal answer 429 (Too Many Requests) to busy hosted
@@ -181,6 +182,7 @@ jobs:
         # such answers with more attempts and a longer first wait.
         run: >
           ./gradlew verifyMonarch --stacktrace
+          "-Dorg.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8"
           --init-script ../../.github/gradle/maven-central-mirror.init.gradle
           -Dorg.gradle.internal.repository.max.retries=6
           -Dorg.gradle.internal.repository.initial.backoff=5000
