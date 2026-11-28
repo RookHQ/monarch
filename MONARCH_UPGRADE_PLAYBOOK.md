@@ -450,7 +450,7 @@ In this repository that means:
    in its own pull request ([section 4](#4-upgrade-compose-and-its-compiler-integration)).
    If it needs a newer compile SDK, raise `[versions] compileSdk` first.
 3. Put the boundary in one internal function inside
-   `platforms/android/monarch-compose/src/main/kotlin/com/rookhq/monarch/`,
+   `platforms/android/monarch-compose/src/main/kotlin/dev/monarchui/`,
    with the new branch in a function annotated `@RequiresApi(<level>)` and
    the decision as a pure function. `theme/SystemContrast.kt` is the model:
    `isSystemInHighContrast()` checks `Build.VERSION.SDK_INT`, the newer call
@@ -529,10 +529,10 @@ Android, from `platforms/android`:
   where an app would.
 - Consume the artefact the way an app does: point a scratch app at
   `platforms/android/build/repo` as in the README's "Install from source",
-  depend on `com.rookhq.monarch:monarch-compose:<version>`, and build it.
+  depend on `dev.monarchui:monarch-compose:<version>`, and build it.
   There is no scratch consumer project in the repository; this is a manual
   step.
-- Check the POM in `build/repo/com/rookhq/monarch/monarch-compose/<version>/`
+- Check the POM in `build/repo/dev/monarchui/monarch-compose/<version>/`
   names the Apache License 2.0 and only the intended dependencies.
 
 iOS, from `platforms/ios`:
@@ -696,7 +696,7 @@ one does.
    - Android: check out the release tag of this repository, run
      `./gradlew publishAllPublicationsToLocalRepository` in
      `platforms/android`, and change the version in the app's dependency on
-     `com.rookhq.monarch:monarch-compose`.
+     `dev.monarchui:monarch-compose`.
    - iOS: check out the release tag; the app's local package reference to
      `platforms/ios` then builds the new version.
 4. Build the app. Fix every Monarch deprecation warning the compiler

@@ -45,7 +45,7 @@ that says so.
 | iOS      | `MonarchUI.version` in `platforms/ios/Sources/MonarchUI/MonarchUI.swift`, written the same way, and the plain `0.14.N` git tag, which is what Swift Package Manager reads |
 
 Both Android modules (`monarch-tokens`, `monarch-compose`, group
-`com.rookhq.monarch`) and both Swift products (`MonarchTokens`, `MonarchUI`)
+`dev.monarchui`) and both Swift products (`MonarchTokens`, `MonarchUI`)
 share that one version.
 
 What a version number promises:
@@ -188,8 +188,8 @@ Rules:
   `platforms/ios/Package.swift` (its target paths prefixed with
   `platforms/ios/`) and a drift check fails when the two disagree. Edit
   `platforms/ios/Package.swift` only.
-- The Maven version of `com.rookhq.monarch:monarch-tokens` and
-  `com.rookhq.monarch:monarch-compose` is the same `0.14.N`.
+- The Maven version of `dev.monarchui:monarch-tokens` and
+  `dev.monarchui:monarch-compose` is the same `0.14.N`.
 - Tags are annotated, point at the release commit on `main`, are created
   after CI has passed on it, and are never moved or deleted.
 - The earlier proposal of `android-v…` and `ios-v…` prefixes is withdrawn. No
@@ -199,8 +199,8 @@ Rules:
 
 | Platform | Artefact                                                                             | State                                                                                                                    |
 | -------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
-| Android  | `com.rookhq.monarch:monarch-tokens` (JAR, sources, POM)                              | Published to Maven Central by the release workflow, signed, when the `maven-central` environment has its secrets (below) |
-| Android  | `com.rookhq.monarch:monarch-compose` (AAR, sources, POM)                             | Same                                                                                                                     |
+| Android  | `dev.monarchui:monarch-tokens` (JAR, sources, POM)                                   | Published to Maven Central by the release workflow, signed, when the `maven-central` environment has its secrets (below) |
+| Android  | `dev.monarchui:monarch-compose` (AAR, sources, POM)                                  | Same                                                                                                                     |
 | iOS      | The Swift package source at the `0.14.N` tag (products `MonarchTokens`, `MonarchUI`) | Resolved by URL from the root `Package.swift` once the tag exists                                                        |
 | Both     | The changelog entry, the compatibility row and, if needed, the migration guide       | Written by hand                                                                                                          |
 
@@ -268,7 +268,7 @@ belongs in it.
    reviewers if wanted. Add the four secrets only when Maven Central
    publishing is wanted: `MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`,
    `MAVEN_SIGNING_KEY` and `MAVEN_SIGNING_KEY_PASSWORD`. Before that, verify
-   the `com.rookhq` namespace in the Central Portal with the DNS TXT record the
+   the `dev.monarchui` namespace in the Central Portal with the DNS TXT record on monarchui.dev that the
    portal shows, and publish the public half of the signing key to a key
    server. Without the secrets, the Maven job ends with a notice and the
    release is complete for npm and SwiftPM.

@@ -1,5 +1,5 @@
 import com.android.build.api.variant.ApplicationAndroidComponentsExtension
-import com.rookhq.monarch.buildlogic.inventory.GenerateCatalogueRegistry
+import dev.monarchui.buildlogic.inventory.GenerateCatalogueRegistry
 
 // The sample catalogue: its list of families and pages is generated from the
 // section files, so adding a page only adds a file.

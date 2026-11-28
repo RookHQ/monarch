@@ -1,5 +1,5 @@
 // Keeps the native version equal to the monarch-react version (decision D7):
-// Maven publishes com.rookhq.monarch:*:<version>, SwiftPM is tagged <version>,
+// Maven publishes dev.monarchui:*:<version>, SwiftPM is tagged <version>,
 // and MonarchUI.version reports it. packages/react/package.json is the only
 // place the version is written by hand (Changesets bumps it).
 //

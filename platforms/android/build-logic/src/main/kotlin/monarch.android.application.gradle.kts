@@ -1,8 +1,8 @@
-import com.rookhq.monarch.buildlogic.failFastOnHungTests
-import com.rookhq.monarch.buildlogic.intVersion
-import com.rookhq.monarch.buildlogic.library
-import com.rookhq.monarch.buildlogic.libs
-import com.rookhq.monarch.buildlogic.version
+import dev.monarchui.buildlogic.failFastOnHungTests
+import dev.monarchui.buildlogic.intVersion
+import dev.monarchui.buildlogic.library
+import dev.monarchui.buildlogic.libs
+import dev.monarchui.buildlogic.version
 import java.time.Duration
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension

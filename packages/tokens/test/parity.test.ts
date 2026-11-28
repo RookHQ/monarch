@@ -23,7 +23,7 @@ const swift = readFileSync(
 const kotlin = readFileSync(
   join(
     repo,
-    'platforms/android/monarch-tokens/src/main/kotlin/com/rookhq/monarch/tokens/MonarchTokens.kt',
+    'platforms/android/monarch-tokens/src/main/kotlin/dev/monarchui/tokens/MonarchTokens.kt',
   ),
   'utf8',
 );

@@ -43,11 +43,11 @@ Examples, showcases, tests and the sample app draw their icons from `SampleIcons
 (`monarch-sample-icons`, never published and never a dependency of `monarch-compose`): the Material icons in
 the Outlined style, 24dp, tinted with the content colour. Names follow the role (`SampleIcons.Search`,
 `SampleIcons.Close`, `SampleIcons.ChevronRight`), so the icon source can change in one place. An inventory
-example adds `com.rookhq.monarch.sampleicons.SampleIcons` to its `imports`.
+example adds `dev.monarchui.sampleicons.SampleIcons` to its `imports`.
 
 - An icon slot: `MonarchIcon(SampleIcons.Search, contentDescription = null)`.
 - A slot that takes a painter: `rememberVectorPainter(SampleIcons.BulletList)`.
-- A photo (avatar, lightbox, file preview, link card): `samplePainter()` from `com.rookhq.monarch.testing` in
+- A photo (avatar, lightbox, file preview, link card): `samplePainter()` from `dev.monarchui.testing` in
   examples, `CataloguePictures.landscape()` in the sample app.
 - Directional icons (`ChevronLeft`, `ChevronRight`, `ArrowBack`, `Undo`, `Send`) mirror themselves in
   right-to-left layouts; do not add `mirrorInRtl` or a `graphicsLayer(scaleX = -1f)`.

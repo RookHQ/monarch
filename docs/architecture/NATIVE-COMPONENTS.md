@@ -55,7 +55,7 @@ have `kind` `native` and class A, a `compose` entry must have `kind`
 `recipe`, a `web-only` entry must have `kind` `none`, and `native`,
 `compose` and `web-only` entries must not name a Monarch type. The checks are
 in `platforms/ios/Scripts/generate.py` and
-`platforms/android/build-logic/src/main/kotlin/com/rookhq/monarch/buildlogic/inventory/Conventions.kt`.
+`platforms/android/build-logic/src/main/kotlin/dev/monarchui/buildlogic/inventory/Conventions.kt`.
 
 ## Where the classification is recorded
 

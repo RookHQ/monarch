@@ -92,7 +92,7 @@ iOS. Apps pay no size cost for a font they do not use.
 
 Poppins, the brand typeface on the web, is an optional separate package:
 
-- Android: the artifact `com.rookhq.monarch:monarch-fonts-poppins`.
+- Android: the artifact `dev.monarchui:monarch-fonts-poppins`.
 - iOS: the SwiftPM product `MonarchFontsPoppins`.
 
 The font files are licensed under the SIL Open Font License 1.1, and the licence

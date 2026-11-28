@@ -17,11 +17,11 @@ patch series. Maven uses the same `0.14.N`. Replace `0.14.N` below with the
 version in the [changelog](../CHANGELOG.md) (the first native release is
 `0.14.6`).
 
-| Artifact                                          | What it is                                                                                   |
-| ------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `com.rookhq.monarch:monarch-compose:0.14.N`       | The theme, foundations, accessibility helpers and components. Brings `monarch-tokens`        |
-| `com.rookhq.monarch:monarch-tokens:0.14.N`        | Generated token constants. Pure Kotlin, no Android and no Compose                            |
-| `com.rookhq.monarch:monarch-fonts-poppins:0.14.N` | Optional. The Poppins typeface (SIL Open Font License 1.1). See [Poppins](#poppins-optional) |
+| Artifact                                     | What it is                                                                                   |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `dev.monarchui:monarch-compose:0.14.N`       | The theme, foundations, accessibility helpers and components. Brings `monarch-tokens`        |
+| `dev.monarchui:monarch-tokens:0.14.N`        | Generated token constants. Pure Kotlin, no Android and no Compose                            |
+| `dev.monarchui:monarch-fonts-poppins:0.14.N` | Optional. The Poppins typeface (SIL Open Font License 1.1). See [Poppins](#poppins-optional) |
 
 ```kts
 // settings.gradle.kts
@@ -34,7 +34,7 @@ dependencyResolutionManagement {
 
 // the module's build.gradle.kts
 dependencies {
-    implementation("com.rookhq.monarch:monarch-compose:0.14.N")
+    implementation("dev.monarchui:monarch-compose:0.14.N")
 }
 ```
 
@@ -59,7 +59,7 @@ artifact, so an app that keeps the system font pays no size cost.
 
 ```kts
 dependencies {
-    implementation("com.rookhq.monarch:monarch-fonts-poppins:0.14.N")
+    implementation("dev.monarchui:monarch-fonts-poppins:0.14.N")
 }
 ```
 

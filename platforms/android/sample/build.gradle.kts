@@ -3,10 +3,10 @@ plugins {
 }
 
 android {
-    namespace = "com.rookhq.monarch.sample"
+    namespace = "dev.monarchui.sample"
 
     defaultConfig {
-        applicationId = "com.rookhq.monarch.sample"
+        applicationId = "dev.monarchui.sample"
     }
 }
 

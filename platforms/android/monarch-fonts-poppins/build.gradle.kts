@@ -1,4 +1,4 @@
-import com.rookhq.monarch.buildlogic.configureMonarchPom
+import dev.monarchui.buildlogic.configureMonarchPom
 
 // Optional Poppins typeface for Monarch. A separate artifact so an app that keeps the system font
 // pays no size cost. The font files are SIL Open Font License 1.1 (OFL.txt).
@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.rookhq.monarch.fonts.poppins"
+    namespace = "dev.monarchui.fonts.poppins"
     lint {
         // The font files are used through R.font; the licence text is shipped for the OFL, not read by code.
         disable += "UnusedResources"
