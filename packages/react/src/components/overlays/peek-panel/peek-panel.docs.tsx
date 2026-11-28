@@ -1,22 +1,24 @@
 import { useState } from 'react';
 import { Button, PeekPanel } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './peek-panel.fixture.json';
 
-const ORDERS = [
-  { id: 'Order 1001', status: 'Paid', total: '€120.00' },
-  { id: 'Order 1002', status: 'Awaiting payment', total: '€48.50' },
-  { id: 'Order 1003', status: 'Refunded', total: '€15.00' },
-];
+const ORDERS = fixture.data.orders;
 
 function OrdersWithPreview() {
-  const [index, setIndex] = useState<number | null>(null);
+  const [index, setIndex] = useState<number | null>(fixture.data.selected);
   const order = index === null ? null : ORDERS[index];
   return (
-    <div>
-      <ul>
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 16 }}>
+      <ul style={{ display: 'grid', gap: 4, margin: 0, padding: 0, listStyle: 'none' }}>
         {ORDERS.map((o, i) => (
           <li key={o.id}>
-            <Button variant="ghost" onClick={() => setIndex(i)}>
+            <Button
+              variant={i === index ? 'secondary' : 'ghost'}
+              aria-current={i === index || undefined}
+              onClick={() => setIndex(i)}
+            >
               {o.id}
             </Button>
           </li>
@@ -33,7 +35,7 @@ function OrdersWithPreview() {
         hasNext={index !== null && index < ORDERS.length - 1}
         position={index === null ? undefined : { index: index + 1, total: ORDERS.length }}
         href="#orders"
-        footer={<Button variant="primary">Send receipt</Button>}
+        footer={<Button variant="primary">{fixture.data.footer}</Button>}
       >
         <p>Total {order?.total}</p>
       </PeekPanel>
@@ -161,7 +163,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Preview orders from a list', stack: true, render: () => <OrdersWithPreview /> },
+        {
+          title: 'Preview orders from a list',
+          stage: true,
+          render: () => <OrdersWithPreview />,
+        },
       ],
     },
     doDont: {

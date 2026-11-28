@@ -7,21 +7,23 @@ import {
   type RegionOption,
 } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './region-select.fixture.json';
 
 function CountryAndRegion() {
-  const [country, setCountry] = useState<string | null>('US');
-  const [region, setRegion] = useState<string | null>(null);
+  const [country, setCountry] = useState<string | null>(fixture.data.country.value);
+  const [region, setRegion] = useState<string | null>(fixture.data.region.value);
   return (
     <div style={{ display: 'grid', gap: 12, width: '100%', maxWidth: 320 }}>
       <Field>
-        <FieldLabel>Country</FieldLabel>
+        <FieldLabel>{fixture.data.country.label}</FieldLabel>
         <CountrySelect
           value={country}
           onValueChange={(next) => {
             setCountry(next);
             setRegion(null);
           }}
-          countries={['AU', 'CA', 'FR', 'GB', 'IN', 'US']}
+          countries={fixture.data.country.options}
         />
       </Field>
       <Field>

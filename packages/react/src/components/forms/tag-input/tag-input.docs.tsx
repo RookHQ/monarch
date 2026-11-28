@@ -1,15 +1,10 @@
 import { useState } from 'react';
 import { Field, FieldDescription, FieldLabel, TagInput } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './tag-input.fixture.json';
 
-const SKILLS = [
-  'Accessibility',
-  'Copywriting',
-  'Data analysis',
-  'Illustration',
-  'Research',
-  'TypeScript',
-];
+const SKILLS = fixture.data.suggestions;
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 function RecipientsDemo() {
@@ -173,12 +168,12 @@ export default {
           render: () => (
             <div style={{ width: '100%', maxWidth: 300 }}>
               <Field>
-                <FieldLabel>Skills</FieldLabel>
+                <FieldLabel>{fixture.data.label}</FieldLabel>
                 <TagInput
-                  defaultValue={['Research', 'TypeScript']}
+                  defaultValue={fixture.data.tags}
                   suggestions={SKILLS}
-                  max={8}
-                  placeholder="Add a skill"
+                  max={fixture.data.max}
+                  placeholder={fixture.data.placeholder}
                 />
               </Field>
             </div>

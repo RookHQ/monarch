@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { AiMessageActions, type AiFeedback } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-message-actions.fixture.json';
 
 function Demo() {
   const [feedback, setFeedback] = useState<AiFeedback | undefined>();
@@ -9,7 +11,7 @@ function Demo() {
     <div style={{ display: 'grid', gap: 'var(--mn-space-2)' }}>
       <AiMessageActions
         visibility="always"
-        messageText="The draft has three sections and a list of next steps."
+        messageText={fixture.data.messageText}
         onCopy={(text) => navigator.clipboard?.writeText(text)}
         onRegenerate={() => setLast('Regenerate')}
         feedback={feedback}

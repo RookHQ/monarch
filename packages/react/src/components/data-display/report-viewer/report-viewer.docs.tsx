@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Badge } from '@rookcom/monarch-react';
+import { useState, type ComponentProps } from 'react';
+import { Badge, Link } from '@rookcom/monarch-react';
 import {
   KPIRow,
   PeriodSelector,
@@ -7,65 +7,61 @@ import {
   type ReportColumn,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './report-viewer.fixture.json';
 
 type Row = { team: string; headcount: number; joiners: number; leavers: number; remote: boolean };
-const columns: ReportColumn<Row>[] = [
-  { key: 'team', label: 'Team' },
-  { key: 'headcount', label: 'Headcount' },
-  { key: 'joiners', label: 'Joined' },
-  { key: 'leavers', label: 'Left' },
-  { key: 'remote', label: 'Remote' },
-];
-const rows: Row[] = [
-  { team: 'Design', headcount: 14, joiners: 2, leavers: 0, remote: true },
-  { team: 'Engineering', headcount: 41, joiners: 5, leavers: 1, remote: true },
-  { team: 'Support', headcount: 18, joiners: 1, leavers: 2, remote: false },
-];
+const columns = fixture.data.columns as ReportColumn<Row>[];
+const rows: Row[] = fixture.data.rows;
+const kpiIds = ['h', 'j', 'l'];
 
 function ReportDemo() {
   const [refreshing, setRefreshing] = useState(false);
   return (
     <ReportViewer
-      title="Headcount by team"
-      description="People on the payroll at the end of the period."
-      back={<a href="#reports">All reports</a>}
+      title={fixture.data.title}
+      description={fixture.data.description}
+      back={<Link href="#reports">{fixture.data.back}</Link>}
       filters={
         <PeriodSelector
-          today="2026-11-07"
-          presets={['30d', 'this-quarter', 'this-year', 'custom']}
+          today={fixture.data.periods.today}
+          presets={
+            fixture.data.periods.presets as NonNullable<
+              ComponentProps<typeof PeriodSelector>['presets']
+            >
+          }
           onValueChange={() => {
             setRefreshing(true);
             setTimeout(() => setRefreshing(false), 600);
           }}
         />
       }
-      scope="All locations"
-      generatedAt="2026-11-07T10:00:00Z"
-      timeZone="UTC"
+      scope={fixture.data.scope}
+      generatedAt={fixture.data.generatedAt}
+      locale={fixture.data.locale}
+      timeZone={fixture.data.timeZone}
       badges={
-        <Badge tone="warning" size="sm">
-          Contains pay figures
+        <Badge tone={fixture.data.badge.tone as 'warning'} size="sm">
+          {fixture.data.badge.text}
         </Badge>
       }
       summary={
         <KPIRow
           size="sm"
-          items={[
-            { id: 'h', label: 'Headcount', value: 73, format: 'number' },
-            { id: 'j', label: 'Joined', value: 8, format: 'number' },
-            { id: 'l', label: 'Left', value: 3, format: 'number' },
-          ]}
+          items={fixture.data.kpis.map((kpi, index) => ({
+            id: kpiIds[index] as string,
+            label: kpi.label,
+            value: kpi.value,
+            format: 'number' as const,
+          }))}
         />
       }
       columns={columns}
       rows={rows}
       refreshing={refreshing}
-      notes={['Contractors are excluded.']}
+      notes={fixture.data.notes}
       download={{
-        formats: [
-          { id: 'csv', label: 'CSV' },
-          { id: 'xlsx', label: 'Excel' },
-        ],
+        formats: fixture.data.download.formats,
         onDownload: () => new Promise((resolve) => setTimeout(resolve, 600)),
       }}
     />

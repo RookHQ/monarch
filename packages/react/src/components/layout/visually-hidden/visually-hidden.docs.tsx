@@ -1,5 +1,7 @@
 import { Button, VisuallyHidden } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './visually-hidden.fixture.json';
 
 export default {
   id: 'visually-hidden',
@@ -46,7 +48,7 @@ export default {
           title: 'Screen-reader-only text',
           render: () => (
             <Button>
-              Save <VisuallyHidden>changes to the ticket</VisuallyHidden>
+              {fixture.data.visible} <VisuallyHidden>{fixture.data.hidden}</VisuallyHidden>
             </Button>
           ),
         },

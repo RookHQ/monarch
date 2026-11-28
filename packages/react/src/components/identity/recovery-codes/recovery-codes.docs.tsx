@@ -1,19 +1,12 @@
 import { useState } from 'react';
 import { RecoveryCodes, formatRecoveryCodes } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './recovery-codes.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
-const SAMPLE = [
-  '4f7k-29dm',
-  'q8zt-mx41',
-  'h2vc-0pla',
-  'r6yn-3ke8',
-  'w1bs-7dqj',
-  'c5ug-9fhr',
-  'm3xe-6tnw',
-  'p0lo-2ziv',
-];
+const SAMPLE: string[] = fixture.data.codes;
 
 function fakeCodes() {
   return SAMPLE.map((code) => code.split('').reverse().join(''));
@@ -149,7 +142,9 @@ export default {
         {
           title: 'Setup step with acknowledgement',
           stack: true,
-          render: () => <RecoveryCodes codes={SAMPLE} onAcknowledge={() => undefined} />,
+          render: () => (
+            <RecoveryCodes codes={fixture.data.codes} onAcknowledge={() => undefined} />
+          ),
         },
         {
           title: 'Settings: hidden, some used, regenerate',

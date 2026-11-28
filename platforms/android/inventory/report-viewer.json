@@ -1,0 +1,152 @@
+{
+  "id": "report-viewer",
+  "name": null,
+  "title": "ReportViewer",
+  "family": "data-display",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.material3.TopAppBar, MonarchTabs and Tab, androidx.compose.foundation.layout.Column with verticalScroll; MonarchDownloadReportButton, MonarchPeriodSelector (or the filter-bar recipe), MonarchStatCard rows (kpi-row), MonarchBarChart in its MonarchChartFrame, MonarchDataTable, MonarchLoadingState and MonarchErrorState",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: one report on its own screen, with its title and download in the top app bar, the generated-at line and filters under it, and the summary figures, chart and table of the result.",
+  "whenToUse": "When a person opens one report from a list of reports and needs its figures, its chart, its rows and a download.",
+  "whenNotToUse": "For a dashboard of several live widgets use KPI rows and chart frames directly; for a table alone use MonarchDataTable; for the list of reports use a list of rows.",
+  "api": [
+    "TopAppBar(title = { Text(title) }, navigationIcon = { MonarchIconButton(label = \"Back to reports\", onClick = back) { MonarchIcon(…, contentDescription = null, mirrorInRtl = true) } }, actions = { MonarchDownloadReportButton(onDownload = …, formats = …) })",
+    "MonarchText(text = \"Generated …\", style = MonarchTextStyle.Caption); MonarchPeriodSelector(value = period, onValueChange = …, variant = MonarchPeriodSelectorVariant.Select)",
+    "MonarchTabs(selectedIndex = currentTab, onSelectedIndexChange = { currentTab = it }) { tab(\"Summary\"); tab(\"Table\") }",
+    "Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) { FlowRow { MonarchStatCard(…) }; MonarchBarChart(…); notes }",
+    "MonarchDataTable(caption = title, rows = rows, columns = columns, rowKey = …, modifier = Modifier.weight(1f), loading = …, errorMessage = …, footer = { truncated note })",
+    "MonarchLoadingState(label = \"Loading report\", variant = MonarchLoadingStateVariant.Rows); MonarchErrorState(title = …, kind = MonarchErrorStateKind.Forbidden, onRetry = …)"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The report's name, the top app bar's title."
+    },
+    {
+      "name": "generatedAt and scope",
+      "type": "String",
+      "default": "none",
+      "description": "The generated-at time (DateUtils or ICU, in the report's zone) and the scope in words, in a caption under the bar."
+    },
+    {
+      "name": "filters",
+      "type": "composables",
+      "default": "none",
+      "description": "MonarchPeriodSelector, MonarchSelect or the filter-bar recipe; the app re-runs the report when they change."
+    },
+    {
+      "name": "download",
+      "type": "MonarchDownloadReportButton",
+      "default": "none",
+      "description": "The download, in the bar's actions."
+    },
+    {
+      "name": "summary and chart",
+      "type": "composables",
+      "default": "none",
+      "description": "MonarchStatCard rows and a chart on the Summary tab, which scrolls."
+    },
+    {
+      "name": "rows and columns",
+      "type": "MonarchDataTable",
+      "default": "none",
+      "description": "The rows on the Table tab, filling the rest of the screen; on a phone the table shows as rows of fields."
+    },
+    {
+      "name": "truncated",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Pass a footer to MonarchDataTable saying only the first rows are shown."
+    },
+    {
+      "name": "loading / refreshing / error",
+      "type": "state",
+      "default": "none",
+      "description": "MonarchLoadingState on the first run, a LinearProgressIndicator under the bar while re-running, MonarchErrorState (Forbidden and NotFound without retry) when the run fails."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "Bar, caption and filters, then the Summary and Table tabs."
+    },
+    {
+      "name": "loading",
+      "description": "MonarchLoadingState with the Rows variant, read as \"Loading report\"."
+    },
+    {
+      "name": "refreshing",
+      "description": "The previous result stays; a LinearProgressIndicator named \"Updating report\" shows under the bar."
+    },
+    {
+      "name": "empty",
+      "description": "MonarchDataTable shows its empty state; with filtered = true it offers to clear the filters."
+    },
+    {
+      "name": "error",
+      "description": "MonarchErrorState replaces the body: Error with Try again, Forbidden and NotFound without it."
+    }
+  ],
+  "appearance": "Each part is an existing Monarch or Material 3 component on the screen background: the top app bar, caption text in the muted color, outlined period select, tabs with the accent indicator, stat cards, the chart frame and the table. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships ReportViewer as one component with title, description, back, actions, download, filters, generatedAt, scope, badges, summary, chart, columns and rows, truncated, notes, loading, refreshing, error and messages props, laid out as one long page. On a phone, as on iOS, it is a recipe: the title, back and download go in the top app bar, the body splits into a Summary tab (scrolling) and a Table tab (MonarchDataTable fills the screen), because a lazy table cannot sit inside a scrolling page. The web's built-in simple table is MonarchDataTable. Times are formatted by the app (minSdk 24, no java.time).",
+  "accessibility": [
+    "The top app bar title is the screen's title; Back has a content description and mirrors right to left.",
+    "The download button announces preparing, done and errors itself.",
+    "Tabs are Material 3 tabs with the Tab role and selected state.",
+    "MonarchDataTable and MonarchBarChart expose their own captions, headers and a data table for the chart.",
+    "Loading is one element read as \"Loading report\"; the refreshing indicator is named \"Updating report\"."
+  ],
+  "edgeCases": [
+    "Many columns: the table shows rows as stacked fields on a phone (MonarchDataTableLayout.Automatic).",
+    "A long title wraps in LargeTopAppBar; use it when titles are long.",
+    "Keep the previous result on screen while refreshing instead of the loading state.",
+    "Forbidden and not found get no retry."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Report with filters, figures, table and download",
+      "fixture": "report-viewer",
+      "webExample": "Report with filters, figures, table and download",
+      "template": "Column(\n    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n) {\n    MonarchLink(text = {{back}}, onClick = { /* Back to the report list. */ })\n    Row(\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        verticalAlignment = Alignment.Top,\n    ) {\n        Column(modifier = Modifier.weight(1f)) {\n            MonarchText(text = {{title}}, style = MonarchTextStyle.Title)\n            MonarchText(\n                text = {{description}},\n                color = MonarchTheme.colors.textMuted,\n            )\n        }\n        MonarchDownloadReportButton(\n            onDownload = { MonarchDownloadReportResult.Downloaded },\n            formats = listOf(\n                MonarchDownloadReportFormat(label = {{download.formats.0.label}}, id = {{download.formats.0.id}}),\n                MonarchDownloadReportFormat(label = {{download.formats.1.label}}, id = {{download.formats.1.id}}),\n            ),\n            labels = MonarchDownloadReportButtonLabels(label = {{download.label}}),\n        )\n    }\n    MonarchPeriodSelector(\n        value = period,\n        onValueChange = { period = it },\n        presets = presets.map { it.second },\n        today = {{periods.today|millis}},\n        locale = Locale.forLanguageTag({{locale}}),\n        timeZone = {{timeZone}},\n    )\n    Row(\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n        verticalAlignment = Alignment.CenterVertically,\n    ) {\n        MonarchText(text = {{scope}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n        MonarchText(text = generated, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n        MonarchBadge(text = {{badge.text}}, tone = {{badge.tone|tone}})\n    }\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n        MonarchStatCard(label = {{kpis.0.label}}, value = {{kpis.0.value|double}}, modifier = Modifier.weight(1f), size = MonarchStatCardSize.Sm)\n        MonarchStatCard(label = {{kpis.1.label}}, value = {{kpis.1.value|double}}, modifier = Modifier.weight(1f), size = MonarchStatCardSize.Sm)\n        MonarchStatCard(label = {{kpis.2.label}}, value = {{kpis.2.value|double}}, modifier = Modifier.weight(1f), size = MonarchStatCardSize.Sm)\n    }\n    MonarchDataTable(\n        caption = {{title}},\n        rows = rows,\n        columns = listOf(\n            MonarchDataTableColumn<TeamRow>({{columns.0.label}}, id = {{columns.0.key}}, hideable = false) { it.team },\n            MonarchDataTableColumn<TeamRow>({{columns.1.label}}, id = {{columns.1.key}}, numeric = true) { it.headcount.toString() },\n            MonarchDataTableColumn<TeamRow>({{columns.2.label}}, id = {{columns.2.key}}, numeric = true) { it.joiners.toString() },\n            MonarchDataTableColumn<TeamRow>({{columns.3.label}}, id = {{columns.3.key}}, numeric = true) { it.leavers.toString() },\n            MonarchDataTableColumn<TeamRow>({{columns.4.label}}, id = {{columns.4.key}}) { if (it.remote) \"Yes\" else \"No\" },\n        ),\n        rowKey = { it.team },\n        layout = MonarchDataTableLayout.Table,\n    )\n    MonarchText(text = {{notes.0}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n}",
+      "setupTemplate": "data class TeamRow(val team: String, val headcount: Int, val joiners: Int, val leavers: Int, val remote: Boolean)\nval rows = listOf(\n    TeamRow({{rows.0.team}}, {{rows.0.headcount}}, {{rows.0.joiners}}, {{rows.0.leavers}}, {{rows.0.remote}}),\n    TeamRow({{rows.1.team}}, {{rows.1.headcount}}, {{rows.1.joiners}}, {{rows.1.leavers}}, {{rows.1.remote}}),\n    TeamRow({{rows.2.team}}, {{rows.2.headcount}}, {{rows.2.joiners}}, {{rows.2.leavers}}, {{rows.2.remote}}),\n)\n// The web preset values, as Monarch presets.\nval presets = listOf(\n    {{periods.presets.0}} to MonarchPeriodPreset.Last30Days,\n    {{periods.presets.1}} to MonarchPeriodPreset.ThisQuarter,\n    {{periods.presets.2}} to MonarchPeriodPreset.ThisYear,\n    {{periods.presets.3}} to MonarchPeriodPreset.Custom,\n)\nvar period by remember { mutableStateOf(MonarchPeriodValue(presets.first().second)) }\nval generated = remember {\n    \"Generated \" + DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, Locale.forLanguageTag({{locale}}))\n        .apply { timeZone = TimeZone.getTimeZone({{timeZone}}) }\n        .format(Date({{generatedAt|millis}}))\n}",
+      "imports": [
+        "java.text.DateFormat",
+        "java.util.Date",
+        "java.util.Locale",
+        "java.util.TimeZone",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "data class TeamRow(val team: String, val headcount: Int, val joiners: Int, val leavers: Int, val remote: Boolean)\nval rows = listOf(\n    TeamRow(\"Design\", 14, 2, 0, true),\n    TeamRow(\"Engineering\", 41, 5, 1, true),\n    TeamRow(\"Support\", 18, 1, 2, false),\n)\n// The web preset values, as Monarch presets.\nval presets = listOf(\n    \"30d\" to MonarchPeriodPreset.Last30Days,\n    \"this-quarter\" to MonarchPeriodPreset.ThisQuarter,\n    \"this-year\" to MonarchPeriodPreset.ThisYear,\n    \"custom\" to MonarchPeriodPreset.Custom,\n)\nvar period by remember { mutableStateOf(MonarchPeriodValue(presets.first().second)) }\nval generated = remember {\n    \"Generated \" + DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, Locale.forLanguageTag(\"en-GB\"))\n        .apply { timeZone = TimeZone.getTimeZone(\"UTC\") }\n        .format(Date(1_794_045_600_000L))\n}",
+      "code": "Column(\n    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n) {\n    MonarchLink(text = \"All reports\", onClick = { /* Back to the report list. */ })\n    Row(\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        verticalAlignment = Alignment.Top,\n    ) {\n        Column(modifier = Modifier.weight(1f)) {\n            MonarchText(text = \"Headcount by team\", style = MonarchTextStyle.Title)\n            MonarchText(\n                text = \"People on the payroll at the end of the period.\",\n                color = MonarchTheme.colors.textMuted,\n            )\n        }\n        MonarchDownloadReportButton(\n            onDownload = { MonarchDownloadReportResult.Downloaded },\n            formats = listOf(\n                MonarchDownloadReportFormat(label = \"CSV\", id = \"csv\"),\n                MonarchDownloadReportFormat(label = \"Excel\", id = \"xlsx\"),\n            ),\n            labels = MonarchDownloadReportButtonLabels(label = \"Download\"),\n        )\n    }\n    MonarchPeriodSelector(\n        value = period,\n        onValueChange = { period = it },\n        presets = presets.map { it.second },\n        today = 1_794_009_600_000L,\n        locale = Locale.forLanguageTag(\"en-GB\"),\n        timeZone = \"UTC\",\n    )\n    Row(\n        horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n        verticalAlignment = Alignment.CenterVertically,\n    ) {\n        MonarchText(text = \"All locations\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n        MonarchText(text = generated, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n        MonarchBadge(text = \"Contains pay figures\", tone = MonarchTone.Warning)\n    }\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n        MonarchStatCard(label = \"Headcount\", value = 73.0, modifier = Modifier.weight(1f), size = MonarchStatCardSize.Sm)\n        MonarchStatCard(label = \"Joined\", value = 8.0, modifier = Modifier.weight(1f), size = MonarchStatCardSize.Sm)\n        MonarchStatCard(label = \"Left\", value = 3.0, modifier = Modifier.weight(1f), size = MonarchStatCardSize.Sm)\n    }\n    MonarchDataTable(\n        caption = \"Headcount by team\",\n        rows = rows,\n        columns = listOf(\n            MonarchDataTableColumn<TeamRow>(\"Team\", id = \"team\", hideable = false) { it.team },\n            MonarchDataTableColumn<TeamRow>(\"Headcount\", id = \"headcount\", numeric = true) { it.headcount.toString() },\n            MonarchDataTableColumn<TeamRow>(\"Joined\", id = \"joiners\", numeric = true) { it.joiners.toString() },\n            MonarchDataTableColumn<TeamRow>(\"Left\", id = \"leavers\", numeric = true) { it.leavers.toString() },\n            MonarchDataTableColumn<TeamRow>(\"Remote\", id = \"remote\") { if (it.remote) \"Yes\" else \"No\" },\n        ),\n        rowKey = { it.team },\n        layout = MonarchDataTableLayout.Table,\n    )\n    MonarchText(text = \"Contractors are excluded.\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n}"
+    },
+    {
+      "title": "A failed run, then the first run",
+      "setup": "var failed by rememberSaveable { mutableStateOf(true) }",
+      "code": "Column(Modifier.fillMaxSize()) {\n    TopAppBar(title = { Text(\"Payroll summary\") })\n    if (failed) {\n        MonarchErrorState(\n            title = \"This report could not be run.\",\n            onRetry = { failed = false /* Run the report again. */ },\n        )\n    } else {\n        // A first run: placeholders, read as one busy element.\n        MonarchLoadingState(label = \"Loading report\", variant = MonarchLoadingStateVariant.Rows)\n    }\n}"
+    }
+  ],
+  "webEquivalent": "ReportViewer",
+  "dependsOn": [
+    "page-header",
+    "filter-bar",
+    "kpi-row",
+    "data-table",
+    "chart-frame",
+    "download-report-button"
+  ],
+  "icons": {
+    "download": "ArrowDownGlyph",
+    "download.menu": "ChevronDownGlyph"
+  }
+}

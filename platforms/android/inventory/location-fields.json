@@ -1,0 +1,191 @@
+{
+  "id": "location-fields",
+  "name": "MonarchLocationFields",
+  "title": "LocationFields",
+  "family": "geo",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchCountrySelect and MonarchRegionSelect (androidx.compose.material3.ExposedDropdownMenuBox with a menu or androidx.compose.material3.ModalBottomSheet), a MonarchCombobox sheet for the city search, and MonarchTextField (androidx.compose.material3.OutlinedTextField) with ContentType.AddressLocality and ContentType.PostalCode, stacked in androidx.compose.foundation.layout.Column",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Country, region, city and postal code as one address block, with the city list (and optionally the country and region lists) supplied by the app through an adapter.",
+  "whenToUse": "In an address, billing or shipping form that stores the country and region as codes and the city from the product's own place data or as typed text.",
+  "whenNotToUse": "For one address search with suggestions use MonarchAddressAutocomplete; for only a country or only a region use MonarchCountrySelect or MonarchRegionSelect.",
+  "api": [
+    "@Composable fun MonarchLocationFields(value: MonarchLocationValue, onValueChange: (value: MonarchLocationValue, changed: MonarchLocationField) -> Unit, modifier: Modifier = Modifier, adapter: MonarchLocationAdapter = MonarchLocationAdapter(), fields: List<MonarchLocationField> = MonarchLocationField.entries, errors: Map<MonarchLocationField, String> = emptyMap(), enabled: Boolean = true, legend: String? = null, locale: Locale? = null, cityMinQuery: Int = 2, cityDebounceMillis: Long = 250L, allowCustomCity: Boolean = true, labels: MonarchLocationFieldsLabels = MonarchLocationFieldsLabels())",
+    "data class MonarchLocationValue(val country: String? = null, val region: String? = null, val regionName: String = \"\", val city: String = \"\", val cityId: String? = null, val postalCode: String = \"\")",
+    "enum class MonarchLocationField { Country, Region, City, PostalCode }",
+    "class MonarchLocationAdapter(val countries: List<String>? = null, val regions: (suspend (country: String) -> List<MonarchRegionSelectRegion>)? = null, val regionLabel: ((country: String) -> String?)? = null, val cities: (suspend (query: MonarchLocationCityQuery) -> List<MonarchLocationCity>)? = null)",
+    "class MonarchLocationCity(val id: String, val name: String, val description: String? = null, val region: MonarchRegionSelectRegion? = null)",
+    "data class MonarchLocationCityQuery(val country: String, val region: String?, val query: String)",
+    "class MonarchLocationFieldsLabels(country: String? = null, region: String? = null, city: String? = null, postalCode: String? = null, chooseCountryFirst: String? = null, typeMore: ((minLength: Int) -> String)? = null, noMatch: String? = null, citiesLoadFailed: String? = null, useTyped: ((text: String) -> String)? = null, combobox: MonarchComboboxLabels = MonarchComboboxLabels())"
+  ],
+  "options": [
+    {
+      "name": "value",
+      "type": "MonarchLocationValue",
+      "default": "required",
+      "description": "The address: country and region codes, region and city as read, the city id when chosen from the list, and the postal code. The app keeps it."
+    },
+    {
+      "name": "onValueChange",
+      "type": "(MonarchLocationValue, MonarchLocationField) -> Unit",
+      "default": "required",
+      "description": "Called with the whole new address and the part that changed. A new country clears every other part; a new region clears the city."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the column."
+    },
+    {
+      "name": "adapter",
+      "type": "MonarchLocationAdapter",
+      "default": "MonarchLocationAdapter()",
+      "description": "Where the lists come from: countries to offer, a region loader and the country's word for its regions, and the city search. Without a city search the city is a text field."
+    },
+    {
+      "name": "fields",
+      "type": "List<MonarchLocationField>",
+      "default": "MonarchLocationField.entries",
+      "description": "The parts to show, in order."
+    },
+    {
+      "name": "errors",
+      "type": "Map<MonarchLocationField, String>",
+      "default": "emptyMap()",
+      "description": "An error message per part; that field is in the error state."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the fields can be used."
+    },
+    {
+      "name": "legend",
+      "type": "String?",
+      "default": "null",
+      "description": "A heading above the fields, such as \"Shipping address\"."
+    },
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "null",
+      "description": "The language of the country names and their order; null uses the configuration's first locale."
+    },
+    {
+      "name": "cityMinQuery",
+      "type": "Int",
+      "default": "2",
+      "description": "The letters needed before cities are searched while no region is chosen."
+    },
+    {
+      "name": "cityDebounceMillis",
+      "type": "Long",
+      "default": "250L",
+      "description": "The wait after the last keystroke before cities are searched."
+    },
+    {
+      "name": "allowCustomCity",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Offers \"Use “text”\" for a city that is not in the list; it is stored with a null cityId."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchLocationFieldsLabels",
+      "default": "MonarchLocationFieldsLabels()",
+      "description": "Replacements for the field labels and the city list messages."
+    }
+  ],
+  "states": [
+    {
+      "name": "no country",
+      "description": "The region field is disabled and says \"Choose a country first\"; so does the city search. A city text field stays usable."
+    },
+    {
+      "name": "region list",
+      "description": "For a country with a list (built in, or from adapter.regions) the region is a combobox under the country's own word; otherwise a text field."
+    },
+    {
+      "name": "loading",
+      "description": "The region combobox and the city list show their loading state while the adapter answers."
+    },
+    {
+      "name": "too short",
+      "description": "Without a region, the city list says \"Type at least 2 letters to search.\" and nothing is searched."
+    },
+    {
+      "name": "search failed",
+      "description": "The city list says \"Couldn’t load cities. Type again to retry.\"; the next keystroke searches again. A failed region load shows MonarchRegionSelect's Try again."
+    },
+    {
+      "name": "error",
+      "description": "A field with a message in errors shows it under the field in the danger color."
+    },
+    {
+      "name": "disabled",
+      "description": "Every field is disabled."
+    }
+  ],
+  "appearance": "Each field keeps its own appearance: MonarchTextField's surface fill and input border, the danger strong color in error, and the combobox list on the surface color with muted second lines. The legend is a subheading in the default text color. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web LocationFields lays the four fields in a responsive grid inside a fieldset and takes an adapter whose countries, regions and cities calls are promises with an AbortSignal. On Android the fields stack in one column, as address forms do on a phone; the adapter's functions are suspending and a newer request cancels the older coroutine. The country list is synchronous here: MonarchCountrySelect names every ISO country in the locale, and adapter.countries only limits it. adapter.regions is optional because MonarchRegionSelect has built-in lists, and the country's word for its regions is adapter.regionLabel instead of a field of the regions answer. The city search opens a bottom sheet (MonarchCombobox's sheet), not an inline list. The web's required marks and the uncontrolled defaultValue are not offered: the value is always hoisted, and the app shows required errors through errors. The web's Try again button after a failed city search is replaced by searching again on the next keystroke. No iOS entry exists yet.",
+  "accessibility": [
+    "The fields form one traversal group; the legend is a heading.",
+    "Each field has a visible label that TalkBack reads as its name; the region field is named by the country's word for its regions.",
+    "Errors are shown under their field and read with it.",
+    "Each field carries its autofill type (country through MonarchCountrySelect, region, city as AddressLocality, postal code as PostalCode).",
+    "Every field is at least 48dp tall."
+  ],
+  "edgeCases": [
+    "Changing the country clears the region, city and postal code; choosing the same country again changes nothing.",
+    "A city chosen before a region fills the region from the city; a region already chosen is kept.",
+    "A typed city is stored with cityId = null; a chosen city keeps its id and stays shown even when it is not in the latest results.",
+    "Without adapter.cities the city is a plain text field.",
+    "With adapter.regions, a country whose loader returns no regions gets a text field."
+  ],
+  "tests": [
+    "MonarchLocationFieldsTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Controlled address",
+      "fixture": "location-fields",
+      "webExample": "Controlled address",
+      "template": "MonarchLocationFields(\n    value = address,\n    onValueChange = { next, _ -> address = next },\n    legend = {{legend}},\n    labels = MonarchLocationFieldsLabels(region = \"Province\"),\n    required = setOf(MonarchLocationField.Country, MonarchLocationField.City),\n)",
+      "setupTemplate": "var address by remember { mutableStateOf(MonarchLocationValue(country = {{value.country}}, region = {{value.region}}, regionName = {{value.regionName}}, city = {{value.city}}, cityId = {{value.cityId}}, postalCode = {{value.postalCode}})) }",
+      "setup": "var address by remember { mutableStateOf(MonarchLocationValue(country = \"CA\", region = \"CA-ON\", regionName = \"Ontario\", city = \"Toronto\", cityId = \"ca-tor\", postalCode = \"\")) }",
+      "code": "MonarchLocationFields(\n    value = address,\n    onValueChange = { next, _ -> address = next },\n    legend = \"Billing address\",\n    labels = MonarchLocationFieldsLabels(region = \"Province\"),\n    required = setOf(MonarchLocationField.Country, MonarchLocationField.City),\n)"
+    },
+    {
+      "title": "Some parts, with errors",
+      "setup": "var address by remember { mutableStateOf(MonarchLocationValue(country = \"PT\")) }",
+      "code": "MonarchLocationFields(\n    value = address,\n    onValueChange = { next, _ -> address = next },\n    fields = listOf(MonarchLocationField.City, MonarchLocationField.PostalCode),\n    errors = mapOf(MonarchLocationField.PostalCode to \"Enter a postal code.\"),\n)"
+    }
+  ],
+  "webEquivalent": "LocationFields",
+  "dependsOn": [
+    "country-select",
+    "region-select",
+    "combobox",
+    "text-field"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "android",
+      "paths": [
+        "required"
+      ],
+      "reason": "NATIVE GAP: the Android MonarchLocationFields has no required parameter, so the web required marks on Country and City are not drawn; the app shows required errors through errors.",
+      "convention": "none: recorded in native-gaps.json"
+    }
+  ]
+}

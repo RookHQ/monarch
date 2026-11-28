@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- the fixture is a fixed JSON literal; the indices below exist. */
 import { useState } from 'react';
 import {
   AiCitation,
@@ -9,20 +10,24 @@ import {
   type AiSourcePart,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-citation.fixture.json';
 
 const handbook: AiSourcePart = {
   type: 'source',
-  id: 's1',
-  title: 'Team handbook',
-  url: 'https://example.com/handbook',
+  id: fixture.data.sources[0]!.id,
+  title: fixture.data.sources[0]!.title,
+  url: fixture.data.sources[0]!.url,
   kind: 'doc',
-  product: 'Docs',
+  ...(fixture.data.sources[0]!.product !== undefined
+    ? { product: fixture.data.sources[0]!.product }
+    : {}),
 };
 const policy: AiSourcePart = {
   type: 'source',
-  id: 's2',
-  title: 'Support policy',
-  url: 'https://example.com/support-policy',
+  id: fixture.data.sources[1]!.id,
+  title: fixture.data.sources[1]!.title,
+  url: fixture.data.sources[1]!.url,
   kind: 'web',
 };
 
@@ -31,23 +36,17 @@ function InlineDemo() {
   return (
     <>
       <p style={{ margin: 0, maxWidth: '36rem' }}>
-        Requests are answered within two working days
-        <AiCitation
-          index={1}
-          source={handbook}
-          quote="Requests are answered within two working days."
-          onOpen={setPreview}
-        />
-        , and urgent issues have a separate queue
-        <AiCitation index={2} source={policy} />.
+        {fixture.data.before}
+        <AiCitation index={1} source={handbook} quote={fixture.data.quote} onOpen={setPreview} />
+        {fixture.data.between}
+        <AiCitation index={2} source={policy} />
+        {fixture.data.after}
       </p>
       {preview ? (
         <AiSourcePreview
           source={preview}
-          quote="Requests are answered within two working days."
-          content={
-            'Welcome to the team.\n\nRequests are answered within two working days. Urgent issues go to the on-call queue.\n\nSee the support policy for details.'
-          }
+          quote={fixture.data.quote}
+          content={fixture.data.preview}
           open
           onOpenChange={(open) => {
             if (!open) setPreview(null);

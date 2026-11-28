@@ -8,6 +8,8 @@ import {
   useConfirm,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './confirm-dialog.fixture.json';
 import { MoreIcon, TrashIcon } from '../../../internal/docs-demo.js';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
@@ -42,17 +44,15 @@ function SignOutEverywhere() {
 function DeleteProject() {
   return (
     <ConfirmDialog
-      trigger={<Button variant="danger">Delete project</Button>}
+      trigger={<Button variant="danger">{fixture.data.trigger}</Button>}
+      defaultOpen
       tone="danger"
-      title="Delete this project?"
-      description="This cannot be undone."
-      consequences={[
-        '48 tasks and their comments are deleted',
-        '6 people lose access',
-        'Shared links stop working',
-      ]}
-      confirmPhrase="q3-launch"
-      confirmLabel="Delete project"
+      title={fixture.data.title}
+      description={fixture.data.description}
+      consequences={fixture.data.consequences}
+      confirmPhrase={fixture.data.confirmPhrase}
+      confirmLabel={fixture.data.confirmLabel}
+      cancelLabel={fixture.data.cancelLabel}
       onConfirm={() => wait(1200)}
     />
   );
@@ -287,6 +287,7 @@ export default {
       items: [
         {
           title: 'Type to confirm, with consequences',
+          stage: { align: 'center' },
           render: () => <DeleteProject />,
         },
         {

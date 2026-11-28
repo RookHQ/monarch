@@ -1,0 +1,120 @@
+{
+  "id": "ai-context-chips",
+  "name": "MonarchAiContextChips",
+  "title": "AiContextChips",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchFlowLayout (a SwiftUI Layout) of capsule chips with a Button for removal; Int.formatted(.number.notation(.compactName)) for counts",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "What the AI will see with the next prompt, as removable chips with a kind, a name, a token count with a weight mark, and a total.",
+  "whenToUse": "Above or inside a prompt composer, to show and trim the files, selection, page, records, apps and people that go with the next prompt.",
+  "whenNotToUse": "Not for general tags or filters (use MonarchTag) and not for attachments that are uploaded as files in a message (show them as file parts).",
+  "api": [
+    "init(_ items: [MonarchAiContextItem], budget: Int? = nil, showsTotal: Bool? = nil, emptyText: String? = nil, locale: Locale = .current, labels: MonarchAiContextChipsLabels = MonarchAiContextChipsLabels(), onRemove: (@MainActor (String) -> Void)? = nil)",
+    "struct MonarchAiContextItem { init(id: String, kind: MonarchAiContextKind, label: String, tokens: Int? = nil, description: String? = nil, isRemovable: Bool = true, group: String? = nil) }",
+    "enum MonarchAiContextKind: String { case file, selection, page, record, app, person }",
+    "enum MonarchAiContextWeight { case light, medium, heavy; init(tokens: Int, reference: Int) }",
+    "struct MonarchAiContextChipsLabels { init(label: String? = nil, kind: ((MonarchAiContextKind) -> String)? = nil, tokens: ((String, Int) -> String)? = nil, total: ((String, Int) -> String)? = nil, remove: ((String) -> String)? = nil, removed: ((String) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "[MonarchAiContextItem]",
+      "default": "required",
+      "description": "What the AI will see, in the order it was added."
+    },
+    {
+      "name": "budget",
+      "type": "Int?",
+      "default": "nil",
+      "description": "Tokens the context may use. When set, each weight is the item's share of the budget instead of the total."
+    },
+    {
+      "name": "showsTotal",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Whether the total is shown after the chips. By default when any item has a token count; never with no items."
+    },
+    {
+      "name": "emptyText",
+      "type": "String?",
+      "default": "nil",
+      "description": "Shown when items is empty. Without it nothing is shown."
+    },
+    {
+      "name": "locale",
+      "type": "Locale",
+      "default": ".current",
+      "description": "The locale of the compact numbers."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiContextChipsLabels",
+      "default": "MonarchAiContextChipsLabels()",
+      "description": "Replacements for the built-in strings: list name, kind names, count and total texts, remove name and removal announcement."
+    },
+    {
+      "name": "onRemove",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Runs with the id of the item to remove; take it out of items. No remove buttons without it. Items with isRemovable false never get one."
+    }
+  ],
+  "states": [
+    {
+      "name": "weight",
+      "description": "Light, medium or heavy fill one, two or three bars of the mark; heavy also draws the count in the default text colour."
+    },
+    {
+      "name": "empty",
+      "description": "Shows emptyText in the subtle text colour, or nothing."
+    },
+    {
+      "name": "disabled",
+      "description": "Apply disabled(_:): muted fill, subtle border, disabled text, and the remove buttons stop responding."
+    }
+  ],
+  "appearance": "Capsules in the AI subtle fill with the AI border; the kind icon and the filled bars in the AI strong role, empty bars in the default border role, counts in the muted text role. All are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "Same kinds, weights, compact counts and strings as the web. The web shows the description as a tooltip; on iOS it is the VoiceOver hint and a pointer tooltip through help(_:). The web moves keyboard focus to the next remove button or a fallback element; on iOS VoiceOver focus moves to the next chip (or the previous one) and there is no fallback element parameter. The kind icons are SF Symbols rather than the web's drawn glyphs.",
+  "accessibility": [
+    "The chips are a container named \"Context\".",
+    "Each chip is one element read as kind, name and count, \"File: contract.pdf, 1.2K tokens\"; the full name is read even when it is truncated on screen.",
+    "The description is the hint of the chip.",
+    "The weight is shown by the number of filled bars and by the count, not by colour alone.",
+    "Each remove button is a separate button named \"Remove contract.pdf from context\" with a 44-point touch target.",
+    "After a removal VoiceOver announces \"contract.pdf removed from context\" and moves to the next chip, or the previous one."
+  ],
+  "edgeCases": [
+    "A long name truncates in the middle at 192 points, scaled with Dynamic Type.",
+    "Chips wrap onto new rows; a chip wider than the row gets a row of its own.",
+    "Exactly one token reads \"1 token\"; negative counts are shown as 0."
+  ],
+  "tests": [
+    "MonarchAiContextChipsTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Removable context with weights",
+      "fixture": "ai-context-chips",
+      "webExample": "Removable context with weights",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n    MonarchAiContextChips(items, emptyText: {{empty}}) { id in\n        items.removeAll { $0.id == id }\n    }\n    if items.count < initial.count {\n        MonarchButton({{reset}}, variant: .ghost, size: .sm) { items = initial }\n    }\n}\n.frame(maxWidth: 640)\n.onAppear { items = initial }",
+      "setupTemplate": "private let initial = [\n        MonarchAiContextItem(\n            id: {{items.0.id}},\n            kind: .{{items.0.kind|raw}},\n            label: {{items.0.label}},\n            tokens: {{items.0.tokens}},\n            isRemovable: {{items.0.removable}}\n        ),\n        MonarchAiContextItem(\n            id: {{items.1.id}},\n            kind: .{{items.1.kind|raw}},\n            label: {{items.1.label}},\n            tokens: {{items.1.tokens}},\n            description: {{items.1.description}}\n        ),\n        MonarchAiContextItem(\n            id: {{items.2.id}},\n            kind: .{{items.2.kind|raw}},\n            label: {{items.2.label}},\n            tokens: {{items.2.tokens}}\n        ),\n        MonarchAiContextItem(\n            id: {{items.3.id}},\n            kind: .{{items.3.kind|raw}},\n            label: {{items.3.label}},\n            tokens: {{items.3.tokens}}\n        ),\n        MonarchAiContextItem(\n            id: {{items.4.id}},\n            kind: .{{items.4.kind|raw}},\n            label: {{items.4.label}},\n            tokens: {{items.4.tokens}}\n        ),\n]\n@State private var items: [MonarchAiContextItem] = []",
+      "setup": "private let initial = [\n        MonarchAiContextItem(\n            id: \"page\",\n            kind: .page,\n            label: \"Project overview\",\n            tokens: 640,\n            isRemovable: false\n        ),\n        MonarchAiContextItem(\n            id: \"sel\",\n            kind: .selection,\n            label: \"Selected text\",\n            tokens: 90,\n            description: \"“The launch moves to the second week of May…”\"\n        ),\n        MonarchAiContextItem(\n            id: \"file\",\n            kind: .file,\n            label: \"Quarterly plan.pdf\",\n            tokens: 4200\n        ),\n        MonarchAiContextItem(\n            id: \"rec\",\n            kind: .record,\n            label: \"Account 1042\",\n            tokens: 310\n        ),\n        MonarchAiContextItem(\n            id: \"person\",\n            kind: .person,\n            label: \"Ana Lopez\",\n            tokens: 60\n        ),\n]\n@State private var items: [MonarchAiContextItem] = []",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n    MonarchAiContextChips(items, emptyText: \"Nothing attached. The assistant only sees your message.\") { id in\n        items.removeAll { $0.id == id }\n    }\n    if items.count < initial.count {\n        MonarchButton(\"Reset\", variant: .ghost, size: .sm) { items = initial }\n    }\n}\n.frame(maxWidth: 640)\n.onAppear { items = initial }"
+    }
+  ],
+  "webEquivalent": "AiContextChips",
+  "dependsOn": [
+    "tag",
+    "inline"
+  ],
+  "icons": {
+    "remove": "CloseGlyph"
+  }
+}

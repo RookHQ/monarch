@@ -1,0 +1,125 @@
+{
+  "id": "audit-log-viewer",
+  "name": null,
+  "title": "AuditLogViewer",
+  "family": "technical",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "NavigationStack with MonarchCursorList rows (Buttons), searchable(text:prompt:), safeAreaInset(edge: .top) with MonarchTag filter chips (the filter-bar recipe), a toolbar ShareLink for export, and sheet(item:) with presentationDetents([.medium, .large]) holding a List of LabeledContent (the log-drawer recipe) with a relative time",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: security and audit events (who did what, to what, from where and when) as a searchable, filterable list that loads more, with a detail sheet for each event and an export.",
+  "whenToUse": "In workspace or product settings, an audit log for admins and security reviews: sign-ins, key use, permission changes and exports.",
+  "whenNotToUse": "For a record's own history in context use MonarchActivityTimeline. For an API request log use the log-drawer recipe with MonarchDataTable or a List. Audit entries are read-only; do not offer editing.",
+  "api": [
+    "NavigationStack { MonarchCursorList(events, label: \"Audit events\", hasMore:, isLoading:, onLoadMore: { … }, row: { event in Button { selected = event } label: { … } }).searchable(text: $query, prompt: \"Search events\").safeAreaInset(edge: .top) { MonarchTag(…, isSelected: $filter) }.navigationTitle(\"Audit log\").toolbar { ShareLink(item: csv) { … } }.sheet(item: $selected) { event in NavigationStack { List { LabeledContent(\"Actor\") { … } … Section(\"Changes\") { … } }.navigationTitle(\"Event details\") }.presentationDetents([.medium, .large]) } }"
+  ],
+  "options": [
+    {
+      "name": "events",
+      "type": "MonarchCursorList",
+      "default": "required",
+      "description": "One row per event, newest first: the sentence \"actor action target\" and, muted, the actor kind and the absolute time. hasMore, isLoading and onLoadMore page through the log with the service's cursor."
+    },
+    {
+      "name": "search",
+      "type": "searchable(text:prompt:)",
+      "default": "none",
+      "description": "The system search field in the navigation bar; the app filters on the server for large logs."
+    },
+    {
+      "name": "filters",
+      "type": "MonarchTag chips",
+      "default": "none",
+      "description": "Quick filters such as actor kind or action in the top safe-area inset; more filters in a sheet, as in the filter-bar recipe."
+    },
+    {
+      "name": "export",
+      "type": "ShareLink",
+      "default": "none",
+      "description": "Shares the loaded events as CSV; export everything on the server for large logs."
+    },
+    {
+      "name": "details",
+      "type": "sheet(item:)",
+      "default": "none",
+      "description": "The full record of an event: actor and its kind, action, target, origin (IP and device), the time as relative with the absolute time spoken, and the before and after of a change."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "The rows, newest first, with Load more while there are more."
+    },
+    {
+      "name": "loading",
+      "description": "MonarchCursorList shows its loading rows."
+    },
+    {
+      "name": "failed",
+      "description": "MonarchCursorList shows its error with Try again (onRetry)."
+    },
+    {
+      "name": "empty",
+      "description": "MonarchCursorList's end text, or a MonarchEmptyState of the filtered kind with Clear filters when filters hide everything."
+    },
+    {
+      "name": "no access",
+      "description": "Replace the list with MonarchEmptyState explaining who can see the audit log."
+    },
+    {
+      "name": "details open",
+      "description": "A sheet at medium height that can be pulled to large, with Close in the confirmation slot."
+    }
+  ],
+  "appearance": "System navigation bar, search field and sheet; rows use the default text colour for the sentence and the muted text colour for kind and time; the actor kind in the sheet is a neutral MonarchBadge. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web ships AuditLogViewer as one component: a table with time, actor, action, target and origin columns, a density option, column choice, a side drawer, filters, export and paging. On a phone a multi-column table does not fit, so each event is a list row written as a sentence with its kind and time, and the drawer is a sheet with detents (the log-drawer recipe). Columns and density have no meaning in a list. The web's auditLogToCsv helper is the app's: the recipe shares a simple CSV with ShareLink, and large exports belong on the server. Absolute times in the list and a relative time in the details follow the web; in tests and screenshots give the relative formatter a fixed reference time. Actor kinds are text, never colour alone. Android has the same recipe coverage and status (available).",
+  "accessibility": [
+    "Each row is one button read as the sentence, then the actor kind and the time, with the hint \"Shows the event details\".",
+    "Rows are at least 44 points high.",
+    "MonarchCursorList announces new pages and its end, and Load more is a standard button.",
+    "In the sheet each fact is one element read as the term and the value; the relative time is spoken as the full date and time.",
+    "People, automations, systems and API keys are told apart by text in a badge, not by colour.",
+    "Close is in the standard place, and the escape gesture closes the sheet."
+  ],
+  "edgeCases": [
+    "Leave out facts an event does not have, such as the before and after of an export.",
+    "Long targets and origins wrap; IP addresses and ids stay on one line where they fit.",
+    "Deep links to an event set selected to open its sheet.",
+    "At the largest text sizes the rows grow taller and the sheet content scrolls."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Workspace audit log",
+      "fixture": "audit-log-viewer",
+      "webExample": "Workspace audit log",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    HStack(spacing: theme.spacing.space2) {\n        MonarchSelectField(\n            {{toolbar.filter}},\n            selection: $area,\n            options: [MonarchSelectOption({{toolbar.filter}}, value: \"all\")],\n            labelVisibility: .hidden\n        )\n        .frame(maxWidth: 160)\n        Spacer()\n        ShareLink(item: Self.events.map { \"\\($0.time),\\($0.actor),\\($0.action),\\($0.target ?? \"\")\" }.joined(separator: \"\\n\")) {\n            Text({{toolbar.export}})\n        }\n        .buttonStyle(.monarch(.secondary, size: .sm))\n    }\n    // Five narrow columns that fit a phone, so none is cut off; the Details link is the last.\n    Group {\n        Grid(alignment: .topLeading, horizontalSpacing: theme.spacing.space1, verticalSpacing: 0) {\n            GridRow {\n                ForEach([\"Time\", \"Actor\", \"Action\", \"Target\", \"Details\"], id: \\.self) { title in\n                    Text(title == \"Details\" ? \"\" : title)\n                        .monarchTextStyle(.caption)\n                        .foregroundStyle(theme.colors.textMuted)\n                        .frame(width: Self.columnWidths[title], alignment: .leading)\n                }\n            }\n            .padding(.vertical, theme.spacing.space2)\n            .padding(.horizontal, theme.spacing.space2)\n            .background(theme.colors.bgSubtle)\n            ForEach(Self.events) { event in\n                Divider().gridCellUnsizedAxes(.horizontal)\n                GridRow {\n                    Text(Self.timeText(event.time))\n                        .foregroundStyle(theme.colors.textMuted)\n                        .frame(width: Self.columnWidths[\"Time\"], alignment: .leading)\n                    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                        Text(event.actor).fontWeight(.medium)\n                        if let kind = event.kind { MonarchBadge(Self.kindLabel(kind)).lineLimit(1).minimumScaleFactor(0.6) }\n                    }\n                    .frame(width: Self.columnWidths[\"Actor\"], alignment: .leading)\n                    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                        Text(event.action)\n                        if let source = event.source { MonarchBadge(source).lineLimit(1).minimumScaleFactor(0.6) }\n                    }\n                    .frame(width: Self.columnWidths[\"Action\"], alignment: .leading)\n                    Text(event.target ?? \"—\")\n                        .frame(width: Self.columnWidths[\"Target\"], alignment: .leading)\n                    Button(\"Details\") {}\n                        .buttonStyle(.plain)\n                        .underline()\n                        .lineLimit(1)\n                        .minimumScaleFactor(0.7)\n                        .frame(width: Self.columnWidths[\"Details\"], alignment: .leading)\n                }\n                .monarchTextStyle(.caption)\n                .padding(.vertical, theme.spacing.space3)\n                .padding(.horizontal, theme.spacing.space2)\n            }\n        }\n    }\n    MonarchLoadMore(\n        hasMore: true,\n        loadedCount: Self.events.count,\n        labels: MonarchLoadMoreLabels(count: { count, _ in \"Showing \\(count) events\" })\n    ) {\n        // Fetch the next page with the cursor of the last event.\n    }\n}\n.frame(maxWidth: .infinity)",
+      "setupTemplate": "struct AuditEvent: Identifiable, Sendable {\n    let id: String\n    let actor: String\n    let kind: String?\n    let action: String\n    let target: String?\n    let source: String?\n    let time: Date\n}\n\nprivate static let columnWidths: [String: CGFloat] = [\"Time\": 62, \"Actor\": 60, \"Action\": 66, \"Target\": 48, \"Details\": 46]\n\nprivate static let events = [\n    AuditEvent(\n        id: {{events.0.id}}, actor: {{events.0.actor}}, kind: nil, action: {{events.0.action}}, target: {{events.0.target}},\n        source: nil, time: {{events.0.time|date}}\n    ),\n    AuditEvent(\n        id: {{events.1.id}}, actor: {{events.1.actor}}, kind: nil, action: {{events.1.action}}, target: nil,\n        source: nil, time: {{events.1.time|date}}\n    ),\n    AuditEvent(\n        id: {{events.2.id}}, actor: {{events.2.actor}}, kind: {{events.2.kind}}, action: {{events.2.action}}, target: {{events.2.target}},\n        source: {{events.2.source}}, time: {{events.2.time|date}}\n    ),\n    AuditEvent(\n        id: {{events.3.id}}, actor: {{events.3.actor}}, kind: {{events.3.kind}}, action: {{events.3.action}}, target: {{events.3.target}},\n        source: nil, time: {{events.3.time|date}}\n    ),\n]\n\n/// The kind of actor as a label: \"automation\" is Automation, \"api\" is API.\nprivate nonisolated static func kindLabel(_ kind: String) -> String { kind == \"api\" ? \"API\" : kind.capitalized }\n\nprivate nonisolated static func timeText(_ date: Date) -> String {\n    {\n        let locale = Locale(identifier: {{locale}})\n        let zone = TimeZone(identifier: {{timeZone}}) ?? .gmt\n        let day = date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, locale: locale, timeZone: zone))\n        let clock = date.formatted(\n            Date.FormatStyle(locale: locale, timeZone: zone).hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).second(.twoDigits)\n        )\n        return day + \", \" + clock\n    }()\n}\n\n@Environment(\\.monarchTheme) private var theme\n@State private var area = \"all\"",
+      "setup": "struct AuditEvent: Identifiable, Sendable {\n    let id: String\n    let actor: String\n    let kind: String?\n    let action: String\n    let target: String?\n    let source: String?\n    let time: Date\n}\n\nprivate static let columnWidths: [String: CGFloat] = [\"Time\": 62, \"Actor\": 60, \"Action\": 66, \"Target\": 48, \"Details\": 46]\n\nprivate static let events = [\n    AuditEvent(\n        id: \"a1\", actor: \"Ana Lopez\", kind: nil, action: \"Changed a member’s role\", target: \"Ben Okafor\",\n        source: nil, time: Date(timeIntervalSince1970: 1_772_449_452)\n    ),\n    AuditEvent(\n        id: \"a2\", actor: \"Chloé Martin\", kind: nil, action: \"Signed in\", target: nil,\n        source: nil, time: Date(timeIntervalSince1970: 1_772_444_871)\n    ),\n    AuditEvent(\n        id: \"a3\", actor: \"Retention policy\", kind: \"automation\", action: \"Deleted 14 expired exports\", target: \"Exports\",\n        source: \"Scheduled\", time: Date(timeIntervalSince1970: 1_772_420_400)\n    ),\n    AuditEvent(\n        id: \"a4\", actor: \"Deploy key\", kind: \"api\", action: \"Updated a webhook\", target: \"Billing events\",\n        source: nil, time: Date(timeIntervalSince1970: 1_772_378_529)\n    ),\n]\n\n/// The kind of actor as a label: \"automation\" is Automation, \"api\" is API.\nprivate nonisolated static func kindLabel(_ kind: String) -> String { kind == \"api\" ? \"API\" : kind.capitalized }\n\nprivate nonisolated static func timeText(_ date: Date) -> String {\n    {\n        let locale = Locale(identifier: \"en-GB\")\n        let zone = TimeZone(identifier: \"UTC\") ?? .gmt\n        let day = date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, locale: locale, timeZone: zone))\n        let clock = date.formatted(\n            Date.FormatStyle(locale: locale, timeZone: zone).hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).second(.twoDigits)\n        )\n        return day + \", \" + clock\n    }()\n}\n\n@Environment(\\.monarchTheme) private var theme\n@State private var area = \"all\"",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    HStack(spacing: theme.spacing.space2) {\n        MonarchSelectField(\n            \"All areas\",\n            selection: $area,\n            options: [MonarchSelectOption(\"All areas\", value: \"all\")],\n            labelVisibility: .hidden\n        )\n        .frame(maxWidth: 160)\n        Spacer()\n        ShareLink(item: Self.events.map { \"\\($0.time),\\($0.actor),\\($0.action),\\($0.target ?? \"\")\" }.joined(separator: \"\\n\")) {\n            Text(\"Export CSV\")\n        }\n        .buttonStyle(.monarch(.secondary, size: .sm))\n    }\n    // Five narrow columns that fit a phone, so none is cut off; the Details link is the last.\n    Group {\n        Grid(alignment: .topLeading, horizontalSpacing: theme.spacing.space1, verticalSpacing: 0) {\n            GridRow {\n                ForEach([\"Time\", \"Actor\", \"Action\", \"Target\", \"Details\"], id: \\.self) { title in\n                    Text(title == \"Details\" ? \"\" : title)\n                        .monarchTextStyle(.caption)\n                        .foregroundStyle(theme.colors.textMuted)\n                        .frame(width: Self.columnWidths[title], alignment: .leading)\n                }\n            }\n            .padding(.vertical, theme.spacing.space2)\n            .padding(.horizontal, theme.spacing.space2)\n            .background(theme.colors.bgSubtle)\n            ForEach(Self.events) { event in\n                Divider().gridCellUnsizedAxes(.horizontal)\n                GridRow {\n                    Text(Self.timeText(event.time))\n                        .foregroundStyle(theme.colors.textMuted)\n                        .frame(width: Self.columnWidths[\"Time\"], alignment: .leading)\n                    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                        Text(event.actor).fontWeight(.medium)\n                        if let kind = event.kind { MonarchBadge(Self.kindLabel(kind)).lineLimit(1).minimumScaleFactor(0.6) }\n                    }\n                    .frame(width: Self.columnWidths[\"Actor\"], alignment: .leading)\n                    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                        Text(event.action)\n                        if let source = event.source { MonarchBadge(source).lineLimit(1).minimumScaleFactor(0.6) }\n                    }\n                    .frame(width: Self.columnWidths[\"Action\"], alignment: .leading)\n                    Text(event.target ?? \"—\")\n                        .frame(width: Self.columnWidths[\"Target\"], alignment: .leading)\n                    Button(\"Details\") {}\n                        .buttonStyle(.plain)\n                        .underline()\n                        .lineLimit(1)\n                        .minimumScaleFactor(0.7)\n                        .frame(width: Self.columnWidths[\"Details\"], alignment: .leading)\n                }\n                .monarchTextStyle(.caption)\n                .padding(.vertical, theme.spacing.space3)\n                .padding(.horizontal, theme.spacing.space2)\n            }\n        }\n    }\n    MonarchLoadMore(\n        hasMore: true,\n        loadedCount: Self.events.count,\n        labels: MonarchLoadMoreLabels(count: { count, _ in \"Showing \\(count) events\" })\n    ) {\n        // Fetch the next page with the cursor of the last event.\n    }\n}\n.frame(maxWidth: .infinity)"
+    }
+  ],
+  "webEquivalent": "AuditLogViewer",
+  "dependsOn": [
+    "filter-bar",
+    "cursor-list",
+    "log-drawer",
+    "relative-time"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "toolbar.filter"
+      ],
+      "reason": "NATIVE GAP: the web toolbar has an area Select (\"All areas\"); native has the People only tag filter and a search field instead, with no per-area select.",
+      "convention": "none: recorded in native-gaps.json"
+    }
+  ]
+}

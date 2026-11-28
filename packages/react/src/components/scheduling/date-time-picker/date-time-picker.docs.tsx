@@ -2,21 +2,26 @@ import { useState } from 'react';
 import { Field, FieldLabel, FieldDescription } from '@rookcom/monarch-react';
 import { DateTimePicker } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './date-time-picker.fixture.json';
 
 // Examples pin `today` so the page and its visual baselines never change with the date.
 const TODAY = '2026-11-04';
 
 function Interview() {
-  const [value, setValue] = useState<string | null>('2026-11-10T14:30');
+  const [value, setValue] = useState<string | null>(
+    // The fixture holds the wall-clock time as a UTC instant; the picker takes it without the zone.
+    fixture.data.value.slice(0, 16),
+  );
   return (
     <Field>
-      <FieldLabel>Interview</FieldLabel>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
       <DateTimePicker
-        locale="en-GB"
+        locale={fixture.data.locale}
         today={TODAY}
-        min="2026-11-04T09:00"
-        step={15}
-        timeZone="IST"
+        min={fixture.data.min.slice(0, 16)}
+        step={fixture.data.step}
+        timeZone={fixture.data.timeZone}
         value={value}
         onValueChange={setValue}
       />

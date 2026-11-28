@@ -1,11 +1,13 @@
 import { NoAppAccess } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './no-app-access.fixture.json';
 
 function Basic() {
   return (
     <NoAppAccess
-      appName="Example Desk"
-      workspaceName="Acme"
+      appName={fixture.data.appName}
+      workspaceName={fixture.data.workspaceName}
       headingLevel="h2"
       onRequestAccess={() => new Promise((resolve) => setTimeout(resolve, 800))}
       homeHref="#workspace-home"

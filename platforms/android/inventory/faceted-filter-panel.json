@@ -1,0 +1,172 @@
+{
+  "id": "faceted-filter-panel",
+  "name": "MonarchFacetedFilterPanel",
+  "title": "FacetedFilterPanel",
+  "family": "search",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchCheckbox rows with androidx.compose.foundation.selection.toggleable, androidx.compose.material3.RangeSlider, MonarchButton, androidx.compose.animation.AnimatedVisibility; shown by the app in MonarchBottomSheet on a phone",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A panel of filter groups: checkboxes with match counts and minimum to maximum range sliders, each group collapsible and clearable, with a Clear all button.",
+  "whenToUse": "To narrow a list of results by several properties at once: status, owner, size, date. On a phone open it in a MonarchBottomSheet from a Filters button.",
+  "whenNotToUse": "For one or two quick filters, use a MonarchChip in a row above the results. For saved combinations of filters, use MonarchSavedViews. For a single choice, use MonarchSelect.",
+  "api": [
+    "@Composable fun MonarchFacetedFilterPanel(facets: List<MonarchFacet>, value: Map<String, MonarchFacetSelection>, onValueChange: (Map<String, MonarchFacetSelection>) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, showTitle: Boolean = true, expandIcon: (@Composable () -> Unit)? = null, labels: MonarchFacetedFilterPanelLabels = MonarchFacetedFilterPanelLabels(), footer: (@Composable ColumnScope.() -> Unit)? = null)",
+    "class MonarchFacet(id: String, label: String, kind: MonarchFacetKind, initiallyExpanded: Boolean = true)",
+    "fun MonarchFacet.Companion.options(id: String, label: String, options: List<MonarchFacetOption>, maxVisible: Int = 6, initiallyExpanded: Boolean = true): MonarchFacet",
+    "fun MonarchFacet.Companion.range(id: String, label: String, bounds: ClosedFloatingPointRange<Float>, step: Float = 1f, unit: String? = null, initiallyExpanded: Boolean = true): MonarchFacet",
+    "sealed interface MonarchFacetKind { class Options(options: List<MonarchFacetOption>, maxVisible: Int = 6); class Range(bounds: ClosedFloatingPointRange<Float>, step: Float = 1f, unit: String? = null) }",
+    "class MonarchFacetOption(id: String, label: String, count: Int? = null, enabled: Boolean = true)",
+    "sealed interface MonarchFacetSelection { class Options(ids: Set<String>); class Range(range: ClosedFloatingPointRange<Float>) }",
+    "class MonarchFacetedFilterPanelLabels(title: String? = null, clearAll: String? = null, clearGroup: String? = null, clearGroupLabel: ((String) -> String)? = null, activeCount: ((Int) -> String)? = null, showMore: ((Int) -> String)? = null, showFewer: String? = null, noOptions: String? = null, range: ((String, String) -> String)? = null, expanded: String? = null, collapsed: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "facets",
+      "type": "List<MonarchFacet>",
+      "default": "required",
+      "description": "The groups in order: MonarchFacet.options with choices, their counts and how many show before Show more, or MonarchFacet.range with bounds, step and unit."
+    },
+    {
+      "name": "value",
+      "type": "Map<String, MonarchFacetSelection>",
+      "default": "required",
+      "description": "The active filters by facet id. A facet without a filter has no entry: no checked options, or a range equal to the bounds."
+    },
+    {
+      "name": "onValueChange",
+      "type": "(Map<String, MonarchFacetSelection>) -> Unit",
+      "default": "required",
+      "description": "Called with the whole new value after every change."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the panel."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether filters can be changed and groups opened."
+    },
+    {
+      "name": "showTitle",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the Filters heading. Hide it inside a sheet whose title already says it; Clear all stays."
+    },
+    {
+      "name": "expandIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "An icon at the start of each group header, such as a chevron pointing down; it turns half a turn while open. Monarch bundles no icons."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchFacetedFilterPanelLabels",
+      "default": "MonarchFacetedFilterPanelLabels()",
+      "description": "Replacements for the title, Clear all, Clear, the spoken group clear name, the active count, Show more, Show fewer, No options, the range text and the Expanded and Collapsed states."
+    },
+    {
+      "name": "footer",
+      "type": "(@Composable ColumnScope.() -> Unit)?",
+      "default": "null",
+      "description": "Content after the groups, such as a Show results button in a sheet."
+    }
+  ],
+  "states": [
+    {
+      "name": "no filters",
+      "description": "Clear all is disabled; group headers show only their names."
+    },
+    {
+      "name": "active",
+      "description": "A group with filters shows \"2 selected\" under its name in the strong accent color, and a Clear button beside its header."
+    },
+    {
+      "name": "collapsed",
+      "description": "The group shows only its header; initiallyExpanded sets the first state, and opening and closing animates unless animations are off."
+    },
+    {
+      "name": "more options",
+      "description": "Past maxVisible, a Show 1 more button reveals the rest and becomes Show fewer. Checked options stay visible."
+    },
+    {
+      "name": "empty facet",
+      "description": "An options facet with no options shows \"No options\"."
+    },
+    {
+      "name": "disabled",
+      "description": "enabled = false gives every control its disabled colors and stops changes."
+    }
+  ],
+  "appearance": "Headings and labels use the default text color, counts and the range text the muted text color, the active count the strong accent color, and groups are separated by subtle dividers. Checkboxes and the range slider are Material 3 controls in the theme's accent roles. Disabled text uses the disabled text role. All colors come from the theme, in every theme.",
+  "platformNotes": "The web FacetedFilterPanel is a sidebar with typed minimum and maximum number inputs and an invalid state when the minimum is above the maximum. On Android a range is a Material 3 RangeSlider between known bounds, so it cannot be inverted and has no invalid state; a range facet needs bounds, and values are Float, as RangeSlider takes. On a phone the panel goes in a MonarchBottomSheet rather than a sidebar, and the web's heading levels are a single heading semantics. The web value is an object of arrays and min/max pairs; here it is a map of MonarchFacetSelection, as on iOS, which builds the same component with the same name (value with onValueChange instead of a selection binding, showTitle instead of showsTitle, enabled instead of isDisabled). Group headers are drawn here rather than with MonarchAccordion because they carry the active count and a Clear button. Option rows are Material 3 Checkboxes in toggleable rows instead of MonarchCheckboxGroup, so the count can sit at the end of the row. The chevron is a slot because Monarch bundles no icons. The web's accent color for the active count is the strong accent role directly, because MonarchTone has no accent tone.",
+  "accessibility": [
+    "The title is a heading; without the title the panel is a traversal group named \"Filters\".",
+    "Each group header is one button with heading semantics that reads the group name and the active count (\"Status, 2 selected\"), with the state Expanded or Collapsed.",
+    "Each option is one checkbox element read with its label and its count in the locale's digits (\"Done, 1,204\"); a disabled option is read as disabled.",
+    "A group's clear button is named after the group (\"Clear Status filter\").",
+    "A range slider is named with the facet's label and its state is the range with its unit (\"10 MB – 50 MB\"); each thumb is a Material 3 slider thumb that TalkBack adjusts.",
+    "Checked options are never hidden behind Show more.",
+    "Headers, options and buttons have 48dp touch targets, and text wraps at the largest font size; right to left the rows mirror."
+  ],
+  "edgeCases": [
+    "A value for a facet id that is not in facets is kept and passed back unchanged.",
+    "A step that gives more than 1,000 positions, or a step of 0, makes the slider continuous.",
+    "Clearing a group or reaching the bounds removes the facet's entry, so an empty value means no filters.",
+    "The panel does not scroll: put it in a verticalScroll inside the sheet."
+  ],
+  "tests": [
+    "MonarchFacetedFilterPanelTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Checkbox and range facets",
+      "fixture": "faceted-filter-panel",
+      "webExample": "Checkbox and range facets",
+      "template": "MonarchFacetedFilterPanel(\n    facets = listOf(\n        MonarchFacet.options(\n            id = {{facets.0.id}},\n            label = {{facets.0.label}},\n            options = listOf(\n                MonarchFacetOption({{facets.0.options.0.value}}, {{facets.0.options.0.label}}, count = {{facets.0.options.0.count}}),\n                MonarchFacetOption({{facets.0.options.1.value}}, {{facets.0.options.1.label}}, count = {{facets.0.options.1.count}}),\n                MonarchFacetOption({{facets.0.options.2.value}}, {{facets.0.options.2.label}}, count = {{facets.0.options.2.count}}),\n                MonarchFacetOption({{facets.0.options.3.value}}, {{facets.0.options.3.label}}, count = {{facets.0.options.3.count}}),\n            ),\n        ),\n        MonarchFacet.options(\n            id = {{facets.1.id}},\n            label = {{facets.1.label}},\n            options = listOf(\n                MonarchFacetOption({{facets.1.options.0.value}}, {{facets.1.options.0.label}}, count = {{facets.1.options.0.count}}),\n                MonarchFacetOption({{facets.1.options.1.value}}, {{facets.1.options.1.label}}, count = {{facets.1.options.1.count}}),\n                MonarchFacetOption({{facets.1.options.2.value}}, {{facets.1.options.2.label}}, count = {{facets.1.options.2.count}}),\n                MonarchFacetOption({{facets.1.options.3.value}}, {{facets.1.options.3.label}}, count = {{facets.1.options.3.count}}),\n                MonarchFacetOption({{facets.1.options.4.value}}, {{facets.1.options.4.label}}, count = {{facets.1.options.4.count}}),\n            ),\n            maxVisible = {{facets.1.maxVisible}},\n        ),\n        MonarchFacet.range(id = {{facets.2.id}}, label = {{facets.2.label}}, bounds = {{facets.2.min|double}}f..100f, step = {{facets.2.step|double}}f, unit = {{facets.2.unit}}),\n        MonarchFacet.options(\n            id = {{facets.3.id}},\n            label = {{facets.3.label}},\n            options = listOf(\n                MonarchFacetOption({{facets.3.options.0.value}}, {{facets.3.options.0.label}}, count = {{facets.3.options.0.count}}),\n                MonarchFacetOption({{facets.3.options.1.value}}, {{facets.3.options.1.label}}, count = {{facets.3.options.1.count}}),\n            ),\n            initiallyExpanded = {{facets.3.defaultOpen}},\n        ),\n    ),\n    value = filters,\n    onValueChange = { filters = it },\n)",
+      "setupTemplate": "var filters by remember { mutableStateOf<Map<String, MonarchFacetSelection>>(mapOf({{selected.0.facet}} to MonarchFacetSelection.Options(setOf({{selected.0.values.0}})))) }",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "var filters by remember { mutableStateOf<Map<String, MonarchFacetSelection>>(mapOf(\"owner\" to MonarchFacetSelection.Options(setOf(\"morgan\")))) }",
+      "code": "MonarchFacetedFilterPanel(\n    facets = listOf(\n        MonarchFacet.options(\n            id = \"status\",\n            label = \"Status\",\n            options = listOf(\n                MonarchFacetOption(\"open\", \"Open\", count = 128),\n                MonarchFacetOption(\"in-review\", \"In review\", count = 42),\n                MonarchFacetOption(\"done\", \"Done\", count = 1204),\n                MonarchFacetOption(\"archived\", \"Archived\", count = 0),\n            ),\n        ),\n        MonarchFacet.options(\n            id = \"owner\",\n            label = \"Owner\",\n            options = listOf(\n                MonarchFacetOption(\"alex\", \"Alex Kim\", count = 64),\n                MonarchFacetOption(\"sam\", \"Sam Rivera\", count = 51),\n                MonarchFacetOption(\"priya\", \"Priya Shah\", count = 38),\n                MonarchFacetOption(\"jordan\", \"Jordan Lee\", count = 22),\n                MonarchFacetOption(\"morgan\", \"Morgan Diaz\", count = 9),\n            ),\n            maxVisible = 3,\n        ),\n        MonarchFacet.range(id = \"size\", label = \"File size\", bounds = 0.0f..100f, step = 1.0f, unit = \"MB\"),\n        MonarchFacet.options(\n            id = \"type\",\n            label = \"Type\",\n            options = listOf(\n                MonarchFacetOption(\"doc\", \"Document\", count = 310),\n                MonarchFacetOption(\"sheet\", \"Spreadsheet\", count = 88),\n            ),\n            initiallyExpanded = false,\n        ),\n    ),\n    value = filters,\n    onValueChange = { filters = it },\n)"
+    },
+    {
+      "title": "Inline, with Show more and a collapsed group",
+      "setup": "var filters by remember { mutableStateOf<Map<String, MonarchFacetSelection>>(emptyMap()) }",
+      "code": "MonarchFacetedFilterPanel(\n    facets = listOf(\n        MonarchFacet.options(\n            id = \"owner\",\n            label = \"Owner\",\n            options = listOf(\n                MonarchFacetOption(\"alex\", \"Alex Kim\", count = 64),\n                MonarchFacetOption(\"sam\", \"Sam Rivera\", count = 51),\n                MonarchFacetOption(\"priya\", \"Priya Shah\", count = 38),\n            ),\n            maxVisible = 2,\n        ),\n        MonarchFacet.options(\n            id = \"type\",\n            label = \"Type\",\n            options = listOf(MonarchFacetOption(\"doc\", \"Document\")),\n            initiallyExpanded = false,\n        ),\n    ),\n    value = filters,\n    onValueChange = { filters = it },\n)"
+    }
+  ],
+  "webEquivalent": "FacetedFilterPanel",
+  "dependsOn": [
+    "sheet",
+    "accordion",
+    "checkbox-group",
+    "range-slider",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "android",
+      "paths": [
+        "facets.0.type",
+        "facets.1.type",
+        "facets.2.type",
+        "facets.3.type"
+      ],
+      "reason": "The web facet type (checkbox or range) is a discriminator field; the native API states the kind by the factory it calls, MonarchFacet.options or MonarchFacet.range, so the value is shown through that choice.",
+      "convention": "Native API shape: the facet kind is the factory function, not a string field."
+    }
+  ]
+}

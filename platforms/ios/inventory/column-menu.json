@@ -1,0 +1,79 @@
+{
+  "id": "column-menu",
+  "name": null,
+  "title": "ColumnMenu",
+  "family": "data-grid",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "Menu with a Section of Toggle items (one per column; on iOS .menuActionDismissBehavior(.disabled) keeps the menu open) and a Show all Button; the trigger takes .menuStyle(.button) and .buttonStyle(.monarch(.secondary, size: .sm)). Table(columnCustomization:) at regular width",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A Columns menu with one checkable item per column, to show and hide table columns, is the standard SwiftUI Menu with Toggle items. Monarch ships nothing; the trigger takes the Monarch button style.",
+  "whenToUse": "Above a table or a list with optional columns or fields, when people choose which ones they see. On iPad at regular width with a SwiftUI Table, Table(columnCustomization:) gives the same choice in the column headers' own menu and saves it with @SceneStorage.",
+  "whenNotToUse": "When people also reorder or search columns, use a sheet with a List in edit mode (onMove). For choosing one view of the data, use a segmented Picker (see view-switcher). For filters, use a Menu with a Picker.",
+  "api": [
+    "Menu(content: () -> Content, label: () -> Label)",
+    "Section(_ title: String, content: () -> Content)",
+    "Toggle(_ title: String, isOn: Binding<Bool>)",
+    "func menuActionDismissBehavior(_ behavior: MenuActionDismissBehavior) -> some View",
+    "Table(_ data:, columnCustomization: Binding<TableColumnCustomization<Value>>, columns:)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "shown",
+      "description": "A Toggle that is on shows a checkmark before the column's name."
+    },
+    {
+      "name": "last column",
+      "description": "The last visible column's Toggle is disabled with disabled(_:), so the table is never empty (the web's minVisible of 1)."
+    },
+    {
+      "name": "all shown",
+      "description": "Show all columns is disabled when every column is visible."
+    }
+  ],
+  "appearance": "The menu is drawn by the system in every theme, with light, dark and Increase Contrast; Monarch colours do not apply inside it. The trigger is a small secondary MonarchButtonStyle button; the theme's tint colours the checkmarks.",
+  "platformNotes": "The web ColumnMenu is a component that takes DataTable's column state and offers minVisible, showAll, onReset and a trigger size. On iOS the same result is a few lines of standard Menu, Toggle and Button in the app, so Monarch adds no type: minVisible is disabled(_:) on the last visible Toggle, Show all and Reset are Buttons after a Divider, and the trigger size is the button style's size. The web keeps the menu open while items are checked; on iOS that is menuActionDismissBehavior(.disabled). Android plans a Compose recipe for the same menu.",
+  "accessibility": [
+    "System behaviour: the trigger is a button and each column is a toggle item read with its checked state.",
+    "The trigger's value says how many columns are shown (\"3 of 4 shown\"), set with accessibilityValue, like the web's hidden count.",
+    "A disabled last column is read as dimmed, so VoiceOver users know it cannot be hidden.",
+    "The system gives each item a row at least 44 points high."
+  ],
+  "edgeCases": [
+    "Keep at least one column visible by disabling the last visible Toggle.",
+    "Keep the menu open on iOS with menuActionDismissBehavior(.disabled) on each Toggle (the catalogue page does), or the menu closes after every change. That modifier does not exist on macOS, so the compiled example leaves it out.",
+    "Store the visible set with @AppStorage or @SceneStorage (as a joined string) if it should survive a relaunch."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "With DataTable",
+      "fixture": "column-menu",
+      "webExample": "With DataTable",
+      "template": "VStack(alignment: .trailing, spacing: MonarchTokens.Space.space3) {\n    Menu {\n        Section(\"Visible columns\") {\n            ForEach(Self.columns, id: \\.id) { column in\n                Toggle(column.title, isOn: shown(column.id))\n                    .disabled(!column.isHideable || (visible.count == 1 && visible.contains(column.id)))\n            }\n        }\n        Divider()\n        Button({{menu.showAll}}) { visible = Set(Self.columns.map(\\.id)) }\n            .disabled(visible.count == Self.columns.count)\n        Button(\"Reset columns\") { visible = Set(Self.columns.filter { !$0.isHidden }.map(\\.id)) }\n    } label: {\n        Label({{menu.trigger}}, systemImage: \"tablecells\")\n    }\n    .menuStyle(.button)\n    .buttonStyle(.monarch(.secondary, size: .sm))\n    .accessibilityValue(\"\\(visible.count) of \\(Self.columns.count) shown\")\n    MonarchDataTable(\n        {{caption}},\n        rows: domains,\n        columns: Self.columns.map { column in\n            MonarchDataTableColumn<Domain>(column.title, id: column.id, isHideable: column.isHideable, value: { $0.value(column.id) })\n        },\n        hiddenColumns: Set(Self.columns.map(\\.id)).subtracting(visible),\n        layout: .table\n    )\n}",
+      "setupTemplate": "private struct Domain: Identifiable, Sendable {\n    let id: String\n    let name: String\n    let status: String\n    let owner: String\n    let expires: String\n\n    func value(_ column: String) -> String {\n        switch column {\n        case \"name\": name\n        case \"status\": status\n        case \"owner\": owner\n        default: expires\n        }\n    }\n}\n\nprivate static let columns: [(id: String, title: String, isHideable: Bool, isHidden: Bool)] = [\n    ({{columns.0.id}}, {{columns.0.header}}, {{columns.0.hideable}}, {{columns.0.defaultHidden}}),\n    ({{columns.1.id}}, {{columns.1.header}}, {{columns.1.hideable}}, {{columns.1.defaultHidden}}),\n    ({{columns.2.id}}, {{columns.2.header}}, {{columns.2.hideable}}, {{columns.2.defaultHidden}}),\n    ({{columns.3.id}}, {{columns.3.header}}, {{columns.3.hideable}}, {{columns.3.defaultHidden}}),\n]\nprivate let domains = [\n    Domain(id: {{rows.0.id}}, name: {{rows.0.name}}, status: {{rows.0.status}}, owner: {{rows.0.owner}}, expires: {{rows.0.expires}}),\n    Domain(id: {{rows.1.id}}, name: {{rows.1.name}}, status: {{rows.1.status}}, owner: {{rows.1.owner}}, expires: {{rows.1.expires}}),\n]\n@State private var visible = Set(Self.columns.filter { !$0.isHidden }.map(\\.id))\n\nprivate func shown(_ id: String) -> Binding<Bool> {\n    Binding(\n        get: { visible.contains(id) },\n        set: { isOn in\n            if isOn { visible.insert(id) } else { visible.remove(id) }\n        }\n    )\n}",
+      "previewMenu": true,
+      "setup": "private struct Domain: Identifiable, Sendable {\n    let id: String\n    let name: String\n    let status: String\n    let owner: String\n    let expires: String\n\n    func value(_ column: String) -> String {\n        switch column {\n        case \"name\": name\n        case \"status\": status\n        case \"owner\": owner\n        default: expires\n        }\n    }\n}\n\nprivate static let columns: [(id: String, title: String, isHideable: Bool, isHidden: Bool)] = [\n    (\"name\", \"Name\", false, false),\n    (\"status\", \"Status\", true, false),\n    (\"owner\", \"Owner\", true, true),\n    (\"expires\", \"Expires\", true, false),\n]\nprivate let domains = [\n    Domain(id: \"1\", name: \"example.com\", status: \"Active\", owner: \"Sam Lee\", expires: \"1 Feb 2027\"),\n    Domain(id: \"2\", name: \"example.org\", status: \"Expiring\", owner: \"Ana Ruiz\", expires: \"1 Dec 2026\"),\n]\n@State private var visible = Set(Self.columns.filter { !$0.isHidden }.map(\\.id))\n\nprivate func shown(_ id: String) -> Binding<Bool> {\n    Binding(\n        get: { visible.contains(id) },\n        set: { isOn in\n            if isOn { visible.insert(id) } else { visible.remove(id) }\n        }\n    )\n}",
+      "code": "VStack(alignment: .trailing, spacing: MonarchTokens.Space.space3) {\n    Menu {\n        Section(\"Visible columns\") {\n            ForEach(Self.columns, id: \\.id) { column in\n                Toggle(column.title, isOn: shown(column.id))\n                    .disabled(!column.isHideable || (visible.count == 1 && visible.contains(column.id)))\n            }\n        }\n        Divider()\n        Button(\"Show all columns\") { visible = Set(Self.columns.map(\\.id)) }\n            .disabled(visible.count == Self.columns.count)\n        Button(\"Reset columns\") { visible = Set(Self.columns.filter { !$0.isHidden }.map(\\.id)) }\n    } label: {\n        Label(\"Columns\", systemImage: \"tablecells\")\n    }\n    .menuStyle(.button)\n    .buttonStyle(.monarch(.secondary, size: .sm))\n    .accessibilityValue(\"\\(visible.count) of \\(Self.columns.count) shown\")\n    MonarchDataTable(\n        \"Domains\",\n        rows: domains,\n        columns: Self.columns.map { column in\n            MonarchDataTableColumn<Domain>(column.title, id: column.id, isHideable: column.isHideable, value: { $0.value(column.id) })\n        },\n        hiddenColumns: Set(Self.columns.map(\\.id)).subtracting(visible),\n        layout: .table\n    )\n}"
+    }
+  ],
+  "webEquivalent": "ColumnMenu",
+  "dependsOn": [
+    "dropdown-menu",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web opens a styled popover under the trigger with the table behind it; on iPhone the menu is the system Menu, whose surface, section header and check marks are drawn by iOS, and the open menu covers the table in the image. The trigger label, the items, their order and the checked items match the web.",
+      "convention": "HIG: a menu of toggles is the system Menu"
+    }
+  ]
+}

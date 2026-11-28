@@ -1,13 +1,9 @@
 import { FunnelChart } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './funnel-chart.fixture.json';
 
-const SIGNUP = [
-  { key: 'visit', label: 'Visited pricing', value: 12480 },
-  { key: 'start', label: 'Started sign-up', value: 3920 },
-  { key: 'verify', label: 'Verified email', value: 3105 },
-  { key: 'trial', label: 'Started trial', value: 1870 },
-  { key: 'paid', label: 'Became customer', value: 412 },
-];
+const SIGNUP = fixture.data.stages;
 const HIRING = [
   { key: 'applied', label: 'Applied', value: 240 },
   { key: 'screen', label: 'Screened', value: 96 },
@@ -138,10 +134,10 @@ export default {
           stack: true,
           render: () => (
             <FunnelChart
-              title="Sign-up conversion"
-              description="Last 30 days"
+              title={fixture.data.title}
+              description={fixture.data.description}
               stages={SIGNUP}
-              locale="en-US"
+              locale={fixture.data.locale}
             />
           ),
         },

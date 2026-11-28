@@ -17,6 +17,7 @@ import * as ToastPrimitive from '@radix-ui/react-toast';
 import { cx } from '../../../internal/cx.js';
 import { CloseGlyph, InfoGlyph, SuccessGlyph, WarningGlyph } from '../../../internal/icons.js';
 import { useDirection } from '../../../internal/direction.js';
+import { useOverlayStage } from '../../../internal/overlay-stage.js';
 
 export type ToastTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 
@@ -221,6 +222,9 @@ export function ToastProvider({
   children,
 }: ToastProviderProps) {
   const readDir = useDirection();
+  // In a docs preview stage the region sits in the page and its toasts stay
+  // until closed: the preview is a picture of a toast, not a timed one.
+  const staged = useOverlayStage();
   const [toasts, setToasts] = useState<ToastRecord[]>([]);
   // Right positions sit at the inline end, so in a right-to-left page they are
   // on the left and are swiped away to the left.
@@ -318,7 +322,7 @@ export function ToastProvider({
           <ToastItem
             key={t.id}
             record={t}
-            durationScale={durationScale}
+            durationScale={staged ? Infinity : durationScale}
             dismissLabel={dismissLabel}
             onOpenChange={(open) => (open ? undefined : dismiss(t.id))}
             onNotified={() => {

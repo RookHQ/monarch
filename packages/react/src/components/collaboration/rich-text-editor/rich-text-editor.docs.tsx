@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { RichTextEditor, type RichTextMentionItem } from '@rookcom/monarch-react/editor';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './rich-text-editor.fixture.json';
 
 const PEOPLE: RichTextMentionItem[] = [
   { id: 'p1', label: 'Alex Morgan', description: 'Design' },
@@ -11,7 +13,10 @@ const PEOPLE: RichTextMentionItem[] = [
 const searchPeople = (text: string) =>
   PEOPLE.filter((p) => p.label.toLowerCase().includes(text.toLowerCase()));
 
-const NOTES = `<h2>Release checklist</h2><p>Ship the <strong>new onboarding</strong> after the review on Thursday. See the <a href="https://example.com/guide">rollout guide</a>.</p><ul data-type="taskList"><li data-type="taskItem" data-checked="true"><p>Update the help article</p></li><li data-type="taskItem" data-checked="false"><p>Tell the support team</p></li></ul><blockquote><p>Keep the old flow behind a setting for one release.</p></blockquote>`;
+const { intro, tasks } = fixture.data;
+const NOTES = `<h2>${fixture.data.heading}</h2><p>${intro.before}<strong>${intro.bold}</strong>${intro.after}<a href="${intro.href}">${intro.link}</a>${intro.end}</p><ul data-type="taskList">${tasks
+  .map((task) => `<li data-type="taskItem" data-checked="${task.done}"><p>${task.label}</p></li>`)
+  .join('')}</ul><blockquote><p>${fixture.data.quote}</p></blockquote>`;
 
 function ControlledDemo() {
   const [html, setHtml] = useState('<p>Edit me, then look below.</p>');
@@ -225,9 +230,9 @@ export default {
           render: () => (
             <div style={{ width: '100%', maxWidth: 560 }}>
               <RichTextEditor
-                aria-label="Release notes"
+                aria-label={fixture.data.label}
                 defaultValue={NOTES}
-                placeholder="Write notes…"
+                placeholder={fixture.data.prompt}
               />
             </div>
           ),

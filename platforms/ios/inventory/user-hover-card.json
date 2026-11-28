@@ -1,0 +1,76 @@
+{
+  "id": "user-hover-card",
+  "name": null,
+  "title": "UserHoverCard",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "Button with the Monarch link style and popover(isPresented:arrowEdge:content:) with presentationCompactAdaptation(.popover), holding MonarchAvatar, Text and MonarchButton; .redacted(reason: .placeholder) while the profile loads",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: tapping a person's name or avatar opens a small profile preview with their photo, name, handle, role, status and actions.",
+  "whenToUse": "Where people's names appear in content (assignees, comments, mentions) and a quick look at who they are saves opening the profile.",
+  "whenNotToUse": "Not for the full profile (push a profile screen). Not for your own status (use MonarchMyStatus).",
+  "api": [
+    "Button(name) { isShown = true }.buttonStyle(.monarchLink(.inline))",
+    ".popover(isPresented: $isShown, arrowEdge: .top) { … }",
+    ".presentationCompactAdaptation(.popover)",
+    "MonarchAvatar(url: user.photoURL, name: user.name, seed: user.id, size: .lg, status: user.presence)",
+    "MonarchButton(\"Message\", systemImage: \"bubble.left\", variant: .secondary, size: .sm) { … }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "closed",
+      "description": "The name in the inline link style."
+    },
+    {
+      "name": "open",
+      "description": "A popover with the avatar and presence, the name, handle and role, the status line, details and actions."
+    },
+    {
+      "name": "loading",
+      "description": "Details fetched on open are drawn with .redacted(reason: .placeholder) and read as \"Loading profile\"."
+    }
+  ],
+  "appearance": "The popover takes the raised background role; the avatar uses its presence dot; text uses the subheading and caption styles; actions are small secondary and ghost buttons.",
+  "platformNotes": "The web's UserHoverCard opens when a pointer rests on a name or when it gets keyboard focus. Touch has no hover, so on iOS a tap opens the preview, and presentationCompactAdaptation(.popover) keeps it a popover on iPhone instead of a sheet. For a long-press preview of a whole row, use contextMenu(menuItems:preview:) instead. Android composes the same recipe.",
+  "accessibility": [
+    "The name is a button with the hint \"Shows a profile preview\" and a 44-point touch target.",
+    "The popover is a container named \"Profile of Sam Rivera\"; the name in it has the header trait.",
+    "The avatar is read with its presence, such as \"Sam Rivera, Busy\".",
+    "VoiceOver moves into the popover when it opens, and the escape gesture closes it.",
+    "Message and View profile are buttons with 44-point touch targets."
+  ],
+  "edgeCases": [
+    "Fetch the profile when the popover opens, and show the placeholder until it arrives.",
+    "A long role or status wraps inside the popover.",
+    "On iPad with a pointer, the same popover can also open from onHover."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Name link with actions",
+      "fixture": "user-hover-card",
+      "webExample": "Name link with actions",
+      "template": "HStack(spacing: theme.spacing.space1) {\n    Text({{prefix}})\n    Button({{user.name}}) { isShown = true }\n        .buttonStyle(.monarchLink(.inline))\n        .accessibilityHint(\"Shows a profile preview\")\n        .popover(isPresented: $isShown, arrowEdge: .top) {\n            VStack(alignment: .leading, spacing: theme.spacing.space3) {\n                HStack(spacing: theme.spacing.space3) {\n                    MonarchAvatar(image: nil, name: {{user.name}}, seed: {{user.id}}, size: .lg, status: {{user.status|case}})\n                    VStack(alignment: .leading, spacing: theme.spacing.space0_5) {\n                        Text({{user.name}})\n                            .monarchTextStyle(.subheading)\n                            .accessibilityAddTraits(.isHeader)\n                        Text({{user.handle}}).monarchTextStyle(.bodySmall).foregroundStyle(theme.colors.textMuted)\n                        Text({{user.title}}).monarchTextStyle(.bodySmall)\n                        Text({{user.statusText}}).monarchTextStyle(.bodySmall).foregroundStyle(theme.colors.textMuted)\n                    }\n                }\n                MonarchDivider()\n                HStack(spacing: theme.spacing.space2) {\n                    MonarchButton({{message}}, variant: .primary, size: .sm) { isShown = false }\n                    MonarchButton({{profile}}, variant: .ghost, size: .sm) { isShown = false }\n                }\n            }\n            .foregroundStyle(theme.colors.textDefault)\n            .padding(theme.spacing.space4)\n            .accessibilityElement(children: .contain)\n            .accessibilityLabel(\"Profile of {{user.name|raw}}\")\n            .presentationCompactAdaptation(.popover)\n            .presentationBackground(theme.colors.bgRaised)\n        }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isShown = false",
+      "previewPresented": [
+        "isShown"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isShown = false",
+      "code": "HStack(spacing: theme.spacing.space1) {\n    Text(\"Assigned to\")\n    Button(\"Sam Rivera\") { isShown = true }\n        .buttonStyle(.monarchLink(.inline))\n        .accessibilityHint(\"Shows a profile preview\")\n        .popover(isPresented: $isShown, arrowEdge: .top) {\n            VStack(alignment: .leading, spacing: theme.spacing.space3) {\n                HStack(spacing: theme.spacing.space3) {\n                    MonarchAvatar(image: nil, name: \"Sam Rivera\", seed: \"person-1\", size: .lg, status: .online)\n                    VStack(alignment: .leading, spacing: theme.spacing.space0_5) {\n                        Text(\"Sam Rivera\")\n                            .monarchTextStyle(.subheading)\n                            .accessibilityAddTraits(.isHeader)\n                        Text(\"@sam\").monarchTextStyle(.bodySmall).foregroundStyle(theme.colors.textMuted)\n                        Text(\"Design lead\").monarchTextStyle(.bodySmall)\n                        Text(\"Working from the north office\").monarchTextStyle(.bodySmall).foregroundStyle(theme.colors.textMuted)\n                    }\n                }\n                MonarchDivider()\n                HStack(spacing: theme.spacing.space2) {\n                    MonarchButton(\"Message\", variant: .primary, size: .sm) { isShown = false }\n                    MonarchButton(\"View profile\", variant: .ghost, size: .sm) { isShown = false }\n                }\n            }\n            .foregroundStyle(theme.colors.textDefault)\n            .padding(theme.spacing.space4)\n            .accessibilityElement(children: .contain)\n            .accessibilityLabel(\"Profile of Sam Rivera\")\n            .presentationCompactAdaptation(.popover)\n            .presentationBackground(theme.colors.bgRaised)\n        }\n}"
+    }
+  ],
+  "webEquivalent": "UserHoverCard",
+  "dependsOn": [
+    "avatar",
+    "popover",
+    "button",
+    "link"
+  ]
+}

@@ -108,3 +108,19 @@ describe('AiArtifactDiff', () => {
     expect(renderToString(<AiArtifactDiff before="a" after="b" />)).toContain('<ins');
   });
 });
+
+describe('AiArtifactVersions dates', () => {
+  it('formats the version dates in the given locale and time zone', () => {
+    render(
+      <AiArtifactVersions
+        versions={versions}
+        value={3}
+        onChange={() => {}}
+        locale="en-GB"
+        timeZone="Asia/Tokyo"
+      />,
+    );
+    const options = screen.getAllByRole('option').map((o) => o.textContent);
+    expect(options).toContain('v3 · Shorter intro · 12 Mar 2026, 23:05');
+  });
+});

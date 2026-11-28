@@ -1,0 +1,196 @@
+{
+  "id": "time-off-panel",
+  "name": "MonarchTimeOffPanel",
+  "title": "TimeOffPanel",
+  "family": "scheduling",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "A VStack of rows with MonarchBadge, MonarchFlowLayout and MonarchDivider; Toggle with .toggleStyle(.monarchCheckbox) for Include past; sheet(isPresented:) holding a NavigationStack and Form with Picker, Toggle, DatePicker (.date, and date and time) and TextField(axis: .vertical) for the add form; confirmationDialog(_:isPresented:titleVisibility:presenting:actions:message:) with Button(role: .destructive) to remove; MonarchBanner, MonarchEmptyState and MonarchLoadingState for the states; Date.FormatStyle in the panel's time zone",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Lists time off (holidays, sickness, training, closures) and adds or removes it: an Include past checkbox, an add form in a sheet and a destructive confirmation to remove; the app saves.",
+  "whenToUse": "In a booking or staffing product, on the screen where people or a manager plan the periods when nobody can be booked.",
+  "whenNotToUse": "For the calendar view of who is away, use MonarchTeamCalendar. For a single date range in a form, use MonarchDateRangePicker. For working hours, use the availability editor.",
+  "api": [
+    "init(entries: [MonarchTimeOffEntry], timeZone: TimeZone? = nil, now: Date = Date(), people: [MonarchTimeOffOption] = [], allowsClosure: Bool = false, types: [MonarchTimeOffOption] = [], showsPast: Binding<Bool>? = nil, isLoading: Bool = false, errorMessage: String? = nil, notice: String? = nil, labels: MonarchTimeOffPanelLabels = MonarchTimeOffPanelLabels(), canRemove: ((MonarchTimeOffEntry) -> Bool)? = nil, onRetry: (@MainActor () -> Void)? = nil, onAdd: (@MainActor (MonarchTimeOffDraft) async throws -> Void)? = nil, onRemove: (@MainActor (MonarchTimeOffEntry) async throws -> Void)? = nil)",
+    "MonarchTimeOffEntry.init(id: String, personID: String?, personName: String? = nil, isAllDay: Bool, start: Date, end: Date, type: String? = nil, reason: String? = nil, status: String? = nil)",
+    "MonarchTimeOffOption.init(_ label: String, value: String)",
+    "MonarchTimeOffDraft.init(personID: String?, isAllDay: Bool, start: Date, end: Date, type: String? = nil, reason: String? = nil)",
+    "struct MonarchTimeOffPanelLabels { var title, message, add, includePast, closure, everyone, past, allDay, allDayToggle, removeTitle, removeMessage, removeConfirm, emptyTitle, emptyMessage, retry, loading, formTitle, formMessage, who, type, closureNotice, from, until, start, end, reason, reasonHelper, cancel, save, endBeforeStart, failed: String?; var remove: (@Sendable (String, String) -> String)? }"
+  ],
+  "options": [
+    {
+      "name": "entries",
+      "type": "[MonarchTimeOffEntry]",
+      "default": "required",
+      "description": "The periods to list, in display order. A nil personID is a closure for everyone."
+    },
+    {
+      "name": "timeZone",
+      "type": "TimeZone?",
+      "default": "nil",
+      "description": "The time zone entries are shown and entered in; the add form's pickers use it. nil is the device's zone (.autoupdatingCurrent), read each time."
+    },
+    {
+      "name": "now",
+      "type": "Date",
+      "default": "Date()",
+      "description": "Now, to mark and hide past entries and to start the add form."
+    },
+    {
+      "name": "people",
+      "type": "[MonarchTimeOffOption]",
+      "default": "[]",
+      "description": "The people the add form offers in Who. With one person and no closure, Who is hidden."
+    },
+    {
+      "name": "allowsClosure",
+      "type": "Bool",
+      "default": "false",
+      "description": "Adds Everyone to Who: a closure that blocks bookings for everyone."
+    },
+    {
+      "name": "types",
+      "type": "[MonarchTimeOffOption]",
+      "default": "[]",
+      "description": "The kinds of time off the add form offers in Type, such as leave types."
+    },
+    {
+      "name": "showsPast",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Whether past entries are listed; load past entries when it turns on if the product pages them. nil keeps it inside the panel, off at first."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows placeholder rows instead of the list."
+    },
+    {
+      "name": "errorMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Shows a danger banner with this message instead of the list."
+    },
+    {
+      "name": "notice",
+      "type": "String?",
+      "default": "nil",
+      "description": "An information banner above the list, such as \"2 appointments fall in this period\"."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchTimeOffPanelLabels",
+      "default": "MonarchTimeOffPanelLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "canRemove",
+      "type": "((MonarchTimeOffEntry) -> Bool)?",
+      "default": "nil",
+      "description": "Whether an entry can be removed. By default every entry, when onRemove is set."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds Try again to the error banner."
+    },
+    {
+      "name": "onAdd",
+      "type": "(@MainActor (MonarchTimeOffDraft) async throws -> Void)?",
+      "default": "nil",
+      "description": "Adds time off from the form and shows the Add time off button. Throw to keep the form open with the error's description."
+    },
+    {
+      "name": "onRemove",
+      "type": "(@MainActor (MonarchTimeOffEntry) async throws -> Void)?",
+      "default": "nil",
+      "description": "Removes an entry after the confirmation. Throw to show the error above the list."
+    }
+  ],
+  "states": [
+    {
+      "name": "list",
+      "description": "A row per entry: who (or Everyone) with badges for a closure (warning), the type (neutral), the status (info) and Past (neutral outline), then the dates and the reason, and a remove button."
+    },
+    {
+      "name": "past hidden",
+      "description": "With Include past off, entries that ended (all-day ones before today, timed ones before now) are not listed."
+    },
+    {
+      "name": "empty",
+      "description": "MonarchEmptyState \"No time off planned\" with its message."
+    },
+    {
+      "name": "loading",
+      "description": "Placeholder rows named \"Loading time off\"."
+    },
+    {
+      "name": "error",
+      "description": "A danger MonarchBanner with the message and, with onRetry, Try again."
+    },
+    {
+      "name": "adding",
+      "description": "A sheet with Who, a closure notice, Type, All day, From and Until (or Start and End with times), the time zone, and a reason of at most 200 characters. Add is disabled while the end is before the start; while onAdd runs it shows progress and the sheet cannot be dismissed; a failure is a danger banner in the form and is announced."
+    },
+    {
+      "name": "removing",
+      "description": "The system confirmation dialog \"Remove this time off?\" with the entry, a destructive Remove and Cancel; while onRemove runs the row's button is a progress indicator; a failure is a danger banner above the list and is announced."
+    }
+  ],
+  "appearance": "The title in the subheading style with a muted description, the primary add button, rows separated by dividers with the name in the default text role and the dates in the muted role, badges in their tone roles, and the remove symbol in the muted role. Every colour is a theme role, so dark and both high-contrast themes follow; the form and the dialog are the system's.",
+  "platformNotes": "The web shows the add form in a Dialog; iOS uses a sheet with a Form and toolbar buttons, and removes with the system confirmation dialog instead of the web's ConfirmDialog. The panel is a column of rows rather than a List, so it can sit in a scroll view with other content, and removing is a button and a VoiceOver action rather than a swipe, which needs a List. Entries hold Date values instead of ISO strings: all-day entries are the first moment of the first and last day in timeZone. The web's hourCycle is not offered (the locale and the person's 24-hour setting decide), nor headingLevel (the title has the header trait). The web keeps the confirmation open while onRemove runs; on iOS the dialog closes and the row shows progress. Add is disabled while the dates are wrong instead of reporting it after a submit, and the web's \"Fill in the dates.\" never applies because the pickers always hold a date. Android has no TimeOffPanel yet. Experimental until a Rook app adopts it. Several closures are optional (canRemove, onRetry, onAdd, onRemove). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is canRemove.",
+  "accessibility": [
+    "The title has the header trait.",
+    "Each entry is one element read as who, the badges and the dates, such as \"Ana Lima, Annual leave, Pending, Mon, Nov 9, 2026 – Fri, Nov 13, 2026 (all day) · Family visit\"; Closure and Past are words, not colour alone.",
+    "The remove button is named \"Remove time off for Ana Lima, …\", has a 44-point touch target, and is also a VoiceOver action on the entry.",
+    "Include past is a checkbox-styled Toggle, read as a switch with its value.",
+    "The add form uses system pickers, a switch and a text field, each with its label; the date problem is shown with an icon and text.",
+    "A failure to add or remove is announced."
+  ],
+  "edgeCases": [
+    "An all-day entry that ends today is not past until tomorrow; a timed entry is past once its end has passed.",
+    "A timed entry that runs over midnight shows both days; the same entry can fall on another day in another time zone.",
+    "Moving From after Until moves Until with it.",
+    "The reason is trimmed, sent as nil when empty, and kept to 200 characters.",
+    "With no people and no closure, the draft's personID is nil; the app decides whose time off it is.",
+    "Long names, types and statuses wrap; badges flow onto the next line."
+  ],
+  "tests": [
+    "MonarchTimeOffPanelTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Add and remove",
+      "fixture": "time-off-panel",
+      "webExample": "Add and remove",
+      "template": "MonarchTimeOffPanel(\n    entries: entries,\n    timeZone: TimeZone(identifier: {{timeZone}}),\n    now: {{now|date}},\n    people: [MonarchTimeOffOption({{people.0.label}}, value: {{people.0.value}}), MonarchTimeOffOption({{people.1.label}}, value: {{people.1.value}})],\n    allowsClosure: true,\n    onAdd: { draft in\n        entries.append(\n            MonarchTimeOffEntry(\n                id: UUID().uuidString,\n                personID: draft.personID,\n                isAllDay: draft.isAllDay,\n                start: draft.start,\n                end: draft.end,\n                reason: draft.reason\n            )\n        )\n    },\n    onRemove: { entry in entries.removeAll { $0.id == entry.id } }\n)\n.environment(\\.locale, Locale(identifier: {{locale}}))",
+      "setupTemplate": "@State private var entries = [\n    MonarchTimeOffEntry(id: \"1\", personID: {{entries.0.personId}}, personName: {{entries.0.personName}}, isAllDay: {{entries.0.allDay}}, start: {{entries.0.start|date}}, end: {{entries.0.end|date}}, type: {{entries.0.type}}),\n    MonarchTimeOffEntry(id: \"2\", personID: nil, isAllDay: {{entries.1.allDay}}, start: {{entries.1.start|date}}, end: {{entries.1.end|date}}, reason: {{entries.1.reason}}),\n    MonarchTimeOffEntry(id: \"3\", personID: {{entries.2.personId}}, personName: {{entries.2.personName}}, isAllDay: {{entries.2.allDay}}, start: {{entries.2.start|date}}, end: {{entries.2.end|date}}, reason: {{entries.2.reason}}),\n    MonarchTimeOffEntry(id: \"4\", personID: {{entries.3.personId}}, personName: {{entries.3.personName}}, isAllDay: {{entries.3.allDay}}, start: {{entries.3.start|date}}, end: {{entries.3.end|date}}),\n]",
+      "setup": "@State private var entries = [\n    MonarchTimeOffEntry(id: \"1\", personID: \"p1\", personName: \"Alex Kim\", isAllDay: true, start: Date(timeIntervalSince1970: 1_794_182_400), end: Date(timeIntervalSince1970: 1_794_528_000), type: \"Annual leave\"),\n    MonarchTimeOffEntry(id: \"2\", personID: nil, isAllDay: true, start: Date(timeIntervalSince1970: 1_798_156_800), end: Date(timeIntervalSince1970: 1_798_243_200), reason: \"Office closed\"),\n    MonarchTimeOffEntry(id: \"3\", personID: \"p2\", personName: \"Sam Lee\", isAllDay: false, start: Date(timeIntervalSince1970: 1_793_869_200), end: Date(timeIntervalSince1970: 1_793_883_600), reason: \"Training\"),\n    MonarchTimeOffEntry(id: \"4\", personID: \"p2\", personName: \"Sam Lee\", isAllDay: true, start: Date(timeIntervalSince1970: 1_791_763_200), end: Date(timeIntervalSince1970: 1_791_763_200)),\n]",
+      "code": "MonarchTimeOffPanel(\n    entries: entries,\n    timeZone: TimeZone(identifier: \"Europe/London\"),\n    now: Date(timeIntervalSince1970: 1_793_793_600),\n    people: [MonarchTimeOffOption(\"Alex Kim\", value: \"p1\"), MonarchTimeOffOption(\"Sam Lee\", value: \"p2\")],\n    allowsClosure: true,\n    onAdd: { draft in\n        entries.append(\n            MonarchTimeOffEntry(\n                id: UUID().uuidString,\n                personID: draft.personID,\n                isAllDay: draft.isAllDay,\n                start: draft.start,\n                end: draft.end,\n                reason: draft.reason\n            )\n        )\n    },\n    onRemove: { entry in entries.removeAll { $0.id == entry.id } }\n)\n.environment(\\.locale, Locale(identifier: \"en-GB\"))"
+    },
+    {
+      "title": "Read-only, with past entries and a notice",
+      "setup": "@State private var showsPast = true",
+      "code": "MonarchTimeOffPanel(\n    entries: [\n        MonarchTimeOffEntry(id: \"c\", personID: nil, isAllDay: true, start: Date(), end: Date()),\n    ],\n    timeZone: TimeZone(identifier: \"Europe/Paris\") ?? .current,\n    showsPast: $showsPast,\n    notice: \"2 appointments fall in this period.\"\n)"
+    }
+  ],
+  "webEquivalent": "TimeOffPanel",
+  "dependsOn": [
+    "date-range-picker",
+    "sheet",
+    "button",
+    "confirm-dialog",
+    "badge",
+    "alert",
+    "empty-state",
+    "loading-state",
+    "checkbox"
+  ]
+}

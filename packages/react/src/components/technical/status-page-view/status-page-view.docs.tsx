@@ -5,6 +5,8 @@ import {
   type StatusPageService,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './status-page-view.fixture.json';
 
 const frame = { width: '100%', maxWidth: '44rem' } as const;
 
@@ -22,98 +24,76 @@ function history(seed: number, bad: Record<number, StatusPageDay['state']> = {})
   });
 }
 
-const services: StatusPageService[] = [
-  {
-    id: 'api',
-    name: 'API',
-    group: 'Platform',
-    state: 'operational',
-    uptimePercent: 99.97,
-    responseTimeMs: 128,
-    history: history(3, { 11: 'degraded' }),
-  },
-  {
-    id: 'web',
-    name: 'Web app',
-    group: 'Platform',
-    state: 'degraded',
-    uptimePercent: 99.62,
-    responseTimeMs: 410,
-    history: history(5, { 29: 'degraded', 4: 'down' }),
-  },
-  {
-    id: 'auth',
-    name: 'Sign-in',
-    group: 'Platform',
-    state: 'operational',
-    uptimePercent: 100,
-    responseTimeMs: 96,
-    history: history(7),
-  },
-  {
-    id: 'mail',
-    name: 'Email delivery',
-    description: 'Outbound notifications',
-    state: 'operational',
-    uptimePercent: 99.99,
-    history: history(2, { 20: 'maintenance' }),
-  },
-];
+type Mark = { day: number; state: StatusPageDay['state'] };
+const SEEDS = [3, 5, 7, 2] as const;
+const marks = (history: readonly { day: number; state: string }[]) =>
+  Object.fromEntries(history.map((m) => [m.day - 1, m.state])) as Record<
+    number,
+    StatusPageDay['state']
+  >;
 
+type FixtureService = {
+  name: string;
+  description?: string;
+  state: StatusPageService['state'];
+  uptimePercent: number;
+  responseTimeMs?: number;
+  history: readonly Mark[];
+};
+type FixtureUpdate = { stage: string; body: string; time: string; automated: boolean };
+
+const IDS = ['api', 'web', 'auth', 'mail'] as const;
+const services: StatusPageService[] = (fixture.data.services as readonly FixtureService[]).map(
+  (s, i) => ({
+    id: IDS[i] ?? s.name,
+    name: s.name,
+    ...(i < 3 && { group: fixture.data.group }),
+    ...(s.description !== undefined && { description: s.description }),
+    state: s.state,
+    uptimePercent: s.uptimePercent,
+    ...(s.responseTimeMs !== undefined && { responseTimeMs: s.responseTimeMs }),
+    history: history(SEEDS[i] ?? 1, marks(s.history)),
+  }),
+);
+
+const toUpdates = (prefix: string, updates: readonly FixtureUpdate[]) =>
+  updates.map((u, i) => ({
+    id: `${prefix}${i + 1}`,
+    stage: u.stage as NonNullable<StatusPageIncident['updates']>[number]['stage'],
+    body: u.body,
+    time: u.time,
+    ...(u.automated && { automated: true }),
+  }));
+
+const activeData = fixture.data.activeIncident;
 const active: StatusPageIncident[] = [
   {
     id: 'i1',
-    title: 'Slow page loads in the web app',
-    component: 'Web app',
+    title: activeData.title,
+    component: activeData.component,
     status: 'acknowledged',
     severity: 'warning',
-    openedAt: '2026-03-30T08:40:00Z',
-    updates: [
-      {
-        id: 'u1',
-        stage: 'investigating',
-        body: 'Response times are higher than usual. We are looking into it.',
-        time: '2026-03-30T08:45:00Z',
-        automated: true,
-      },
-      {
-        id: 'u2',
-        stage: 'identified',
-        body: 'A slow database query is the cause. A fix is being deployed.',
-        time: '2026-03-30T09:10:00Z',
-      },
-    ],
+    openedAt: activeData.openedAt,
+    updates: toUpdates('u', activeData.updates),
   },
 ];
 
+const pastData = fixture.data.pastIncident;
 const past: StatusPageIncident[] = [
   {
     id: 'i0',
-    title: 'Sign-in errors',
-    component: 'Sign-in',
+    title: pastData.title,
+    component: pastData.component,
     status: 'resolved',
     severity: 'critical',
-    openedAt: '2026-03-05T14:02:00Z',
+    openedAt: pastData.openedAt,
     resolvedAt: '2026-03-05T14:49:00Z',
-    durationSeconds: 2820,
-    updates: [
-      {
-        id: 'p1',
-        stage: 'investigating',
-        body: 'Some people cannot sign in.',
-        time: '2026-03-05T14:05:00Z',
-      },
-      {
-        id: 'p2',
-        stage: 'resolved',
-        body: 'Sign-in is working again for everyone.',
-        time: '2026-03-05T14:49:00Z',
-      },
-    ],
+    durationSeconds: pastData.durationSeconds,
+    updates: toUpdates('p', pastData.updates),
   },
 ];
 
-const now = '2026-03-30T09:30:00Z';
+const now = fixture.data.now;
 
 export default {
   id: 'status-page-view',
@@ -257,15 +237,15 @@ export default {
           render: () => (
             <div style={frame}>
               <StatusPageView
-                title="Example status"
-                description="Live health of our services."
+                title={fixture.data.title}
+                description={fixture.data.description}
                 supportHref="https://example.com/support"
                 services={services}
                 activeIncidents={active}
                 pastIncidents={past}
-                overallUptimePercent={99.89}
+                overallUptimePercent={fixture.data.overallUptimePercent}
                 showResponseTime
-                updatedAt="2026-03-30T09:29:00Z"
+                updatedAt={fixture.data.updatedAt}
                 now={now}
                 headingLevel={2}
                 onSubscribe={async () => 'sent'}

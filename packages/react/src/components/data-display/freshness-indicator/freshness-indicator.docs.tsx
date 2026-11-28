@@ -1,19 +1,22 @@
 import { useState } from 'react';
-import { FreshnessIndicator } from '@rookcom/monarch-react';
+import { FreshnessIndicator, Link } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './freshness-indicator.fixture.json';
 
 const HOUR = 3_600_000;
+const fx = fixture.data;
 
 function RefreshDemo() {
-  const [updatedAt, setUpdatedAt] = useState(() => Date.now() - 5 * HOUR);
+  const [updatedAt, setUpdatedAt] = useState(() => Date.now() - fx.updatedHoursAgo * HOUR);
   return (
     <FreshnessIndicator
-      variant="banner"
-      source="Directory"
+      variant={fx.variant as 'banner'}
+      source={fx.source}
       updatedAt={updatedAt}
-      staleAfter={HOUR}
-      expiredAfter={24 * HOUR}
-      details={['Live updates on']}
+      staleAfter={fx.staleAfterSeconds * 1000}
+      expiredAfter={fx.expiredAfterSeconds * 1000}
+      details={fx.details}
       onRefresh={() =>
         new Promise<void>((resolve) =>
           setTimeout(() => {
@@ -22,7 +25,7 @@ function RefreshDemo() {
           }, 800),
         )
       }
-      actions={<a href="#manage">Manage source</a>}
+      actions={<Link href="#manage">{fx.manageSource}</Link>}
     />
   );
 }

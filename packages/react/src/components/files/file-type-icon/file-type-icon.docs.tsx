@@ -1,5 +1,7 @@
-import { FILE_TYPE_FAMILIES, FileTypeIcon } from '@rookcom/monarch-react/data';
+import { FILE_TYPE_FAMILIES, FileTypeIcon, type FileTypeFamily } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './file-type-icon.fixture.json';
 
 export default {
   id: 'file-type-icon',
@@ -92,7 +94,7 @@ export default {
           title: 'Every family',
           render: () => (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-              {FILE_TYPE_FAMILIES.map((f) => (
+              {(fixture.data.families as FileTypeFamily[]).map((f) => (
                 <FileTypeIcon key={f} family={f} size="lg" />
               ))}
             </div>

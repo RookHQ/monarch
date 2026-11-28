@@ -1,0 +1,127 @@
+{
+  "id": "consequence-list",
+  "name": "MonarchConsequenceList",
+  "title": "ConsequenceList",
+  "family": "feedback",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack, ForEach, Text; .redacted(reason: .placeholder) while loading",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A list of what an action deletes, changes and keeps, to read before confirming.",
+  "whenToUse": "In a confirmation sheet or dialog for a destructive or far-reaching action, above the confirm button.",
+  "whenNotToUse": "For a single sentence of consequence, write it in the dialog message. For a status after the action, use MonarchBanner.",
+  "api": [
+    "init(_ items: [MonarchConsequence], heading: String? = nil, isGrouped: Bool = false, isLoading: Bool = false, loadingRowCount: Int = 3, loadingLabel: String? = nil, kindLabel: (@Sendable (MonarchConsequenceKind) -> String)? = nil, groupTitle: (@Sendable (MonarchConsequenceKind) -> String)? = nil)",
+    "struct MonarchConsequence { init(_ kind: MonarchConsequenceKind, _ label: String, detail: String? = nil, count: Int? = nil, id: String? = nil) }",
+    "enum MonarchConsequenceKind { case removed, changed, warning, kept }"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "[MonarchConsequence]",
+      "default": "required",
+      "description": "The consequences, in reading order."
+    },
+    {
+      "name": "heading",
+      "type": "String?",
+      "default": "nil",
+      "description": "A heading above the list."
+    },
+    {
+      "name": "isGrouped",
+      "type": "Bool",
+      "default": "false",
+      "description": "Splits the items by kind under headings, in the order deleted, changed, warnings, kept."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows placeholder rows instead of the items."
+    },
+    {
+      "name": "loadingRowCount",
+      "type": "Int",
+      "default": "3",
+      "description": "The number of placeholder rows. At least 1."
+    },
+    {
+      "name": "loadingLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Checking what will change\" spoken text."
+    },
+    {
+      "name": "kindLabel",
+      "type": "((MonarchConsequenceKind) -> String)?",
+      "default": "nil",
+      "description": "Replaces the built-in spoken name of each kind."
+    },
+    {
+      "name": "groupTitle",
+      "type": "((MonarchConsequenceKind) -> String)?",
+      "default": "nil",
+      "description": "Replaces the built-in heading of each group."
+    }
+  ],
+  "states": [
+    {
+      "name": "ungrouped",
+      "description": "Rows in the given order; VoiceOver reads the kind before each row."
+    },
+    {
+      "name": "grouped",
+      "description": "One block per kind that has items, each under its heading."
+    },
+    {
+      "name": "loading",
+      "description": "Placeholder rows drawn by the system redaction, read as one element."
+    }
+  ],
+  "appearance": "Each row has an icon in the strong colour of its kind (danger for removed, info for changed, warning, success for kept), the text in the default text colour and the detail in the muted text colour. Group headings are muted label text.",
+  "platformNotes": "The web error slot is not offered: when the consequences cannot be worked out, show MonarchInlineErrorRetry in place of the list. The loading rows are the system placeholder redaction and do not shimmer. The count is formatted for the environment's locale; there is no locale parameter. label and detail are Strings where the web takes any content. The heading level option has no equivalent: headings have the header trait. Android builds the same component. Several closures are optional (kindLabel, groupTitle). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is kindLabel.",
+  "accessibility": [
+    "Each row is one element. Ungrouped, it is read as the kind name, a colon, the count and label, then the detail.",
+    "Grouped, the kind name is left out of the row, because the group heading, which has the header trait, says it.",
+    "Each kind has its own icon shape, so the kind does not depend on colour. The icons are hidden from VoiceOver.",
+    "While loading, the rows are one element read as \"Checking what will change\". Nothing is announced when loading starts or ends."
+  ],
+  "edgeCases": [
+    "Two items with the same kind and label need explicit ids.",
+    "A count of 0 is shown as 0.",
+    "A kind with no items has no group heading.",
+    "An empty list shows only the heading, if there is one."
+  ],
+  "tests": [
+    "MonarchConsequenceListTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Mixed consequences",
+      "fixture": "consequence-list",
+      "webExample": "Mixed consequences",
+      "template": "MonarchConsequenceList(\n    [\n        MonarchConsequence(.{{items.0.kind|raw}}, {{items.0.label}}, count: {{items.0.count}}, id: {{items.0.id}}),\n        MonarchConsequence(.{{items.1.kind|raw}}, {{items.1.label}}, count: {{items.1.count}}, id: {{items.1.id}}),\n        MonarchConsequence(.{{items.2.kind|raw}}, {{items.2.label}}, count: {{items.2.count}}, id: {{items.2.id}}),\n        MonarchConsequence(.{{items.3.kind|raw}}, {{items.3.label}}, detail: {{items.3.detail}}, id: {{items.3.id}}),\n        MonarchConsequence(.{{items.4.kind|raw}}, {{items.4.label}}, id: {{items.4.id}}),\n    ],\n    heading: {{heading}}\n)",
+      "code": "MonarchConsequenceList(\n    [\n        MonarchConsequence(.removed, \"tasks and their comments will be deleted\", count: 48, id: \"tasks\"),\n        MonarchConsequence(.removed, \"files will be deleted\", count: 1312, id: \"files\"),\n        MonarchConsequence(.changed, \"people lose access immediately\", count: 6, id: \"access\"),\n        MonarchConsequence(.kept, \"Invoices are kept for 7 years\", detail: \"They stay available to workspace owners under Billing.\", id: \"invoices\"),\n        MonarchConsequence(.warning, \"Shared links stop working\", id: \"links\"),\n    ],\n    heading: \"What happens\"\n)"
+    },
+    {
+      "title": "Grouped by kind, while the counts load",
+      "code": "MonarchConsequenceList(\n    [\n        MonarchConsequence(.removed, \"files will be deleted\", detail: \"Shared links stop working\", count: 48),\n        MonarchConsequence(.warning, \"This cannot be undone\"),\n    ],\n    isGrouped: true,\n    isLoading: isLoading\n)",
+      "setup": "@State private var isLoading = false"
+    }
+  ],
+  "webEquivalent": "ConsequenceList",
+  "dependsOn": [
+    "text",
+    "icon"
+  ],
+  "icons": {
+    "kept": "SuccessGlyph",
+    "warning": "WarningGlyph"
+  }
+}

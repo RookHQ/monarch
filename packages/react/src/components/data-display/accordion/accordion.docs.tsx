@@ -5,6 +5,8 @@ import {
   AccordionTrigger,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './accordion.fixture.json';
 
 export default {
   id: 'accordion',
@@ -112,19 +114,13 @@ export default {
           title: 'Single, collapsible',
           stack: true,
           render: () => (
-            <Accordion type="single" collapsible defaultValue="billing">
-              <AccordionItem value="billing">
-                <AccordionTrigger>When am I billed?</AccordionTrigger>
-                <AccordionContent>
-                  On the first of each month, for the seats in use.
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="cancel">
-                <AccordionTrigger>Can I cancel at any time?</AccordionTrigger>
-                <AccordionContent>
-                  Yes. Access continues to the end of the paid period.
-                </AccordionContent>
-              </AccordionItem>
+            <Accordion type="single" collapsible defaultValue={fixture.data.open}>
+              {fixture.data.items.map((item) => (
+                <AccordionItem key={item.id} value={item.id}>
+                  <AccordionTrigger>{item.title}</AccordionTrigger>
+                  <AccordionContent>{item.body}</AccordionContent>
+                </AccordionItem>
+              ))}
             </Accordion>
           ),
         },

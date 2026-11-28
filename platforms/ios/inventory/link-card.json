@@ -1,0 +1,155 @@
+{
+  "id": "link-card",
+  "name": "MonarchLinkCard",
+  "title": "LinkCard",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchCard with Link(destination:), AsyncImage through MonarchRemoteImage, MonarchFavicon",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A preview of a shared link from data the app unfurled: picture, site, title and description as one link, with an optional remove button.",
+  "whenToUse": "Under a message, post or comment that contains a link the app's server has unfurled, so people see where it leads before opening it.",
+  "whenNotToUse": "For a plain link in text, use Link or Text with Markdown. For a record inside the app with its own actions, build a product card. LPLinkView (LinkPresentation) is the system alternative when the app lets the system fetch the preview itself.",
+  "api": [
+    "init(_ title: String, url: URL, description: String? = nil, siteName: String? = nil, image: Image?, imageSize: CGSize? = nil, favicon: Image? = nil, isVideo: Bool = false, size: MonarchLinkCardSize = .md, dismissLabel: String? = nil, videoLabel: String? = nil, onDismiss: (@MainActor () -> Void)? = nil)",
+    "init(_ title: String, url: URL, description: String? = nil, siteName: String? = nil, imageURL: URL?, imageSize: CGSize? = nil, faviconURL: URL? = nil, isVideo: Bool = false, size: MonarchLinkCardSize = .md, dismissLabel: String? = nil, videoLabel: String? = nil, onDismiss: (@MainActor () -> Void)? = nil)",
+    "enum MonarchLinkCardSize { case sm, md }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The page title."
+    },
+    {
+      "name": "url",
+      "type": "URL",
+      "default": "required",
+      "description": "The link. Only http, https and mailto open; anything else shows the card as plain text."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "The page description, up to two lines."
+    },
+    {
+      "name": "siteName",
+      "type": "String?",
+      "default": "nil",
+      "description": "The site above the title; the host name without www by default."
+    },
+    {
+      "name": "image / imageURL",
+      "type": "Image? / URL?",
+      "default": "required",
+      "description": "The page's picture, or nil for none. A URL is loaded with AsyncImage."
+    },
+    {
+      "name": "imageSize",
+      "type": "CGSize?",
+      "default": "nil",
+      "description": "The picture's natural size; its ratio is kept between 1.2 and 2.2, and 2.2 when unknown."
+    },
+    {
+      "name": "favicon / faviconURL",
+      "type": "Image? / URL?",
+      "default": "nil",
+      "description": "The site's icon; without it MonarchFavicon draws a letter tile."
+    },
+    {
+      "name": "isVideo",
+      "type": "Bool",
+      "default": "false",
+      "description": "Draws a play mark on the picture and adds \"Video\" to the spoken name."
+    },
+    {
+      "name": "size",
+      "type": "MonarchLinkCardSize",
+      "default": ".md",
+      "description": "md: banner above the text. sm: thumbnail beside it."
+    },
+    {
+      "name": "dismissLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Remove the preview of\" and the title."
+    },
+    {
+      "name": "videoLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in spoken word \"Video\"."
+    },
+    {
+      "name": "onDismiss",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows a remove button in the corner."
+    }
+  ],
+  "states": [
+    {
+      "name": "loading picture",
+      "description": "A muted placeholder keeps the picture's space while AsyncImage loads; it stays if loading fails."
+    },
+    {
+      "name": "not a safe link",
+      "description": "The card is shown as plain text and does not open."
+    },
+    {
+      "name": "dismissible",
+      "description": "A remove button with a surface-coloured circle sits in the top trailing corner."
+    }
+  ],
+  "appearance": "A MonarchCard (surface fill, subtle border). The site is caption text in the muted colour with a small favicon, the title body-strong text in the default colour, the description caption text in the muted colour. The picture has the control corner radius; its placeholder uses the muted background fill. The play mark is the inverse text colour on the inverse background. Colours come from theme roles in every theme.",
+  "platformNotes": "The web LinkCard opens in a new tab with rel attributes, has a footer slot, and comes with LinkCardList and LinkCardSkeleton. On iOS the link opens through the openURL environment (the app can intercept it); there is no footer (place product actions below the card); a list is a VStack of cards; and a skeleton is the card with redacted(reason: .placeholder). A failed picture keeps its placeholder instead of disappearing, per the Monarch image convention. Android ships the same MonarchLinkCard.",
+  "accessibility": [
+    "A safe link is the standard Link, one element with the link role, read as the site, the title, the description and \"Video\" for a video.",
+    "A link that does not open is one plain element with the same spoken text.",
+    "The picture, the play mark and the favicon are hidden from VoiceOver.",
+    "The remove button is a separate element named \"Remove the preview of\" and the title, with a 44-point touch target.",
+    "Text scales with Dynamic Type; the thumbnail and play mark scale with it."
+  ],
+  "edgeCases": [
+    "Long titles are limited to two lines and descriptions to two lines; VoiceOver reads them in full.",
+    "Very tall or very wide pictures are cropped to the 1.2 to 2.2 ratio range.",
+    "Without a site name and with a URL that has no host (mailto), the site line is left out.",
+    "Opening the link was not tried on a device; the card uses the standard Link."
+  ],
+  "tests": [
+    "MonarchLinkCardTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Link preview",
+      "fixture": "link-card",
+      "webExample": "Link preview",
+      "template": "MonarchLinkCard(\n    {{title}},\n    url: url,\n    description: {{description}},\n    siteName: {{siteName}},\n    image: picture,\n    imageSize: CGSize(width: {{image.width}}, height: {{image.height}})\n)",
+      "setupTemplate": "private let url = URL(string: {{url}}) ?? URL(fileURLWithPath: \"/\")\nprivate let picture: Image = {\n    let width = 1200, height = 630\n    guard let context = CGContext(\n        data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,\n        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue\n    ) else { return Image(systemName: \"photo\") }\n    // Core Graphics counts up from the bottom: flip it so the picture is drawn from the top left.\n    context.translateBy(x: 0, y: CGFloat(height))\n    context.scaleBy(x: 1, y: -1)\n    context.setFillColor(red: 0.86, green: 0.86, blue: 0.86, alpha: 1)\n    context.fill(CGRect(x: 0, y: 0, width: width, height: height))\n    context.setFillColor(red: 0.75, green: 0.75, blue: 0.75, alpha: 1)\n    context.fillEllipse(in: CGRect(x: 800, y: 80, width: 240, height: 240))\n    context.setFillColor(red: 0.67, green: 0.67, blue: 0.67, alpha: 1)\n    context.move(to: CGPoint(x: 0, y: 630))\n    context.addLine(to: CGPoint(x: 400, y: 180))\n    context.addLine(to: CGPoint(x: 700, y: 480))\n    context.addLine(to: CGPoint(x: 880, y: 330))\n    context.addLine(to: CGPoint(x: 1200, y: 630))\n    context.fillPath()\n    guard let picture = context.makeImage() else { return Image(systemName: \"photo\") }\n    return Image(decorative: picture, scale: 1)\n}()",
+      "setup": "private let url = URL(string: \"https://example.com/guides/first-week\") ?? URL(fileURLWithPath: \"/\")\nprivate let picture: Image = {\n    let width = 1200, height = 630\n    guard let context = CGContext(\n        data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,\n        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue\n    ) else { return Image(systemName: \"photo\") }\n    // Core Graphics counts up from the bottom: flip it so the picture is drawn from the top left.\n    context.translateBy(x: 0, y: CGFloat(height))\n    context.scaleBy(x: 1, y: -1)\n    context.setFillColor(red: 0.86, green: 0.86, blue: 0.86, alpha: 1)\n    context.fill(CGRect(x: 0, y: 0, width: width, height: height))\n    context.setFillColor(red: 0.75, green: 0.75, blue: 0.75, alpha: 1)\n    context.fillEllipse(in: CGRect(x: 800, y: 80, width: 240, height: 240))\n    context.setFillColor(red: 0.67, green: 0.67, blue: 0.67, alpha: 1)\n    context.move(to: CGPoint(x: 0, y: 630))\n    context.addLine(to: CGPoint(x: 400, y: 180))\n    context.addLine(to: CGPoint(x: 700, y: 480))\n    context.addLine(to: CGPoint(x: 880, y: 330))\n    context.addLine(to: CGPoint(x: 1200, y: 630))\n    context.fillPath()\n    guard let picture = context.makeImage() else { return Image(systemName: \"photo\") }\n    return Image(decorative: picture, scale: 1)\n}()",
+      "code": "MonarchLinkCard(\n    \"Your first week: a practical guide\",\n    url: url,\n    description: \"What to set up, who to meet and where to find things in your first five days.\",\n    siteName: \"Example Guides\",\n    image: picture,\n    imageSize: CGSize(width: 1200, height: 630)\n)"
+    },
+    {
+      "title": "A small card the author can remove",
+      "setup": "@State private var isShown = true\nprivate let pricing = URL(string: \"https://example.com/pricing\") ?? URL(fileURLWithPath: \"/\")",
+      "code": "MonarchLinkCard(\n    \"Pricing\",\n    url: pricing,\n    siteName: \"Example\",\n    imageURL: nil,\n    size: .sm\n) {\n    isShown = false\n}"
+    },
+    {
+      "title": "Two previews of one message",
+      "setup": "@Environment(\\.monarchTheme) private var theme\nprivate let docs = URL(string: \"https://example.com/docs\") ?? URL(fileURLWithPath: \"/\")\nprivate let status = URL(string: \"https://status.example.com\") ?? URL(fileURLWithPath: \"/\")",
+      "code": "VStack(spacing: theme.spacing.space2) {\n    MonarchLinkCard(\"Docs\", url: docs, image: nil, size: .sm)\n    MonarchLinkCard(\"Status\", url: status, image: nil, size: .sm)\n        .redacted(reason: .placeholder)\n}"
+    }
+  ],
+  "webEquivalent": "LinkCard",
+  "dependsOn": [
+    "card",
+    "favicon"
+  ]
+}

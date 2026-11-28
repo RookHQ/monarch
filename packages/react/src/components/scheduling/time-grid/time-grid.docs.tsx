@@ -1,75 +1,41 @@
 import { useState } from 'react';
 import { TimeGrid, type CalendarEvent } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './time-grid.fixture.json';
 
-const at = (day: string, time: string) => `${day}T${time}:00Z`;
-const WEEK = ['2026-11-02', '2026-11-03', '2026-11-04', '2026-11-05', '2026-11-06'];
-const HOURS = [1, 2, 3, 4, 5].flatMap((day) => [
-  { day, start: 540, end: 720 },
-  { day, start: 780, end: 1080 },
-]);
+const day = (iso: string) => iso.slice(0, 10);
+const WEEK = fixture.data.days.map(day);
+const HOURS = fixture.data.workingDays.flatMap((d) =>
+  fixture.data.workingHours.map((range) => ({ day: d, ...range })),
+);
 
-const EVENTS: CalendarEvent[] = [
-  {
-    id: 't1',
-    title: 'Conference',
-    start: '2026-11-03',
-    end: '2026-11-04',
-    allDay: true,
-    color: '#ca8a04',
-  },
-  {
-    id: 't2',
-    title: 'Stand-up',
-    start: at('2026-11-02', '09:00'),
-    end: at('2026-11-02', '09:15'),
-    color: '#0f766e',
-  },
-  {
-    id: 't3',
-    title: 'Design review',
-    start: at('2026-11-04', '09:30'),
-    end: at('2026-11-04', '11:00'),
-    detail: 'Room 4',
-    color: '#7c3aed',
-  },
-  {
-    id: 't4',
-    title: 'Interview',
-    start: at('2026-11-04', '10:00'),
-    end: at('2026-11-04', '11:00'),
-    status: 'tentative',
-    color: '#0891b2',
-  },
-  {
-    id: 't5',
-    title: 'Lunch & learn',
-    start: at('2026-11-05', '12:00'),
-    end: at('2026-11-05', '13:00'),
-    color: '#2563eb',
-  },
-  {
-    id: 't6',
-    title: 'Retrospective',
-    start: at('2026-11-06', '15:00'),
-    end: at('2026-11-06', '16:00'),
-    status: 'cancelled',
-    color: '#c2410c',
-  },
-  {
-    id: 't7',
-    title: 'Planning',
-    start: at('2026-11-03', '14:00'),
-    end: at('2026-11-03', '15:30'),
-    color: '#db2777',
-  },
-];
+type FixtureEvent = {
+  title: string;
+  start: string;
+  end: string;
+  allDay?: boolean;
+  detail?: string;
+  status?: NonNullable<CalendarEvent['status']>;
+  color: string;
+};
+
+const EVENTS: CalendarEvent[] = (fixture.data.events as FixtureEvent[]).map((event, i) => ({
+  id: `t${i + 1}`,
+  title: event.title,
+  start: event.allDay ? day(event.start) : event.start,
+  end: event.allDay ? day(event.end) : event.end,
+  ...(event.allDay && { allDay: true }),
+  ...(event.detail !== undefined && { detail: event.detail }),
+  ...(event.status !== undefined && { status: event.status }),
+  color: event.color,
+}));
 
 const base = {
-  timeZone: 'UTC',
-  locale: 'en-GB',
-  now: at('2026-11-04', '10:40'),
-  scrollToMinutes: 8 * 60,
+  timeZone: fixture.data.timeZone,
+  locale: fixture.data.locale,
+  now: fixture.data.now,
+  scrollToMinutes: fixture.data.scrollToMinutes,
 } as const;
 
 function CreateDemo() {
@@ -271,9 +237,9 @@ export default {
                 unavailable={[
                   {
                     id: 'off',
-                    start: at('2026-11-06', '09:00'),
-                    end: at('2026-11-06', '12:00'),
-                    label: 'Time off',
+                    start: fixture.data.unavailable[0]?.start ?? '',
+                    end: fixture.data.unavailable[0]?.end ?? '',
+                    label: fixture.data.unavailable[0]?.label ?? '',
                   },
                 ]}
                 onDayClick={() => {}}

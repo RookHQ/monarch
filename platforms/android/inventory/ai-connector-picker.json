@@ -1,0 +1,193 @@
+{
+  "id": "ai-connector-picker",
+  "name": "MonarchAiConnectorPicker",
+  "title": "AiConnectorPicker",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Content for MonarchBottomSheet: MonarchSwitch on a Modifier.toggleable row, MonarchMenu with MonarchMenuItem, MonarchSearchBar, MonarchFavicon, MonarchBadge, MonarchButton and MonarchEmptyState",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A searchable list, for a sheet, where a person chooses which connected apps and data sources an assistant may use in this conversation, and whether each tool runs, asks first or never runs.",
+  "whenToUse": "From the composer of an AI chat, when the assistant can reach the person's apps (drive, mail, calendar, CRM) and the person should choose which it may use and how its tools run.",
+  "whenNotToUse": "For the scopes an assistant asks for once, at install, use MonarchAiPermissionScope. For a single on or off setting, use MonarchSwitchRow.",
+  "api": [
+    "@Composable fun MonarchAiConnectorPicker(connectors: List<MonarchAiConnector>, onConnectorsChange: (List<MonarchAiConnector>) -> Unit, modifier: Modifier = Modifier, title: String? = null, allowsDestructiveAutoApprove: Boolean = false, searchable: Boolean = true, onConnect: ((String) -> Unit)? = null, onManage: ((String) -> Unit)? = null, onDone: (() -> Unit)? = null, labels: MonarchAiConnectorPickerLabels = MonarchAiConnectorPickerLabels())",
+    "data class MonarchAiConnector(id: String, name: String, status: MonarchAiConnectorStatus, enabled: Boolean, description: String? = null, account: String? = null, reason: String? = null, tools: List<MonarchAiConnectorTool> = emptyList(), image: Painter? = null)",
+    "data class MonarchAiConnectorTool(id: String, name: String, risk: MonarchAiConnectorToolRisk, permission: MonarchAiConnectorToolPermission, description: String? = null)",
+    "enum class MonarchAiConnectorStatus { Connected, NeedsSignIn, Error, Unavailable }",
+    "enum class MonarchAiConnectorToolRisk { Read, Write, Destructive }",
+    "enum class MonarchAiConnectorToolPermission { Allow, Ask, Never }",
+    "class MonarchAiConnectorPickerLabels(title: String? = null, searchPrompt: String? = null, done: String? = null, summary: ((on: Int, total: Int, asking: Int) -> String)? = null, results: ((count: Int) -> String)? = null, noResults: ((query: String) -> String)? = null, clearSearch: String? = null, empty: String? = null, status: ((MonarchAiConnectorStatus) -> String)? = null, account: ((account: String) -> String)? = null, enable: ((name: String) -> String)? = null, disabledReason: ((MonarchAiConnectorStatus) -> String?)? = null, signIn: String? = null, reconnect: String? = null, manage: String? = null, actionLabel: ((action: String, connector: String) -> String)? = null, tools: ((count: Int) -> String)? = null, permissionLabel: ((tool: String) -> String)? = null, permission: ((MonarchAiConnectorToolPermission) -> String)? = null, risk: ((MonarchAiConnectorToolRisk) -> String)? = null, destructiveLocked: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "connectors",
+      "type": "List<MonarchAiConnector>",
+      "default": "required",
+      "description": "The connectors with their state, icon and tools."
+    },
+    {
+      "name": "onConnectorsChange",
+      "type": "(List<MonarchAiConnector>) -> Unit",
+      "default": "required",
+      "description": "Called with the whole new list when a switch or a permission changes. Store and enforce the values in the app."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the picker; give it the sheet's padding and, for long lists, a vertical scroll."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "null",
+      "description": "Replaces the heading \"Connectors\"."
+    },
+    {
+      "name": "allowsDestructiveAutoApprove",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Lets a tool that can delete data be set to Allow. By default Allow is not offered for such a tool and a line says why."
+    },
+    {
+      "name": "searchable",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows a MonarchSearchBar that filters connectors by name."
+    },
+    {
+      "name": "onConnect",
+      "type": "((String) -> Unit)?",
+      "default": "null",
+      "description": "Signs in to a connector that needs it, or reconnects one with a problem, given its id. Shows Sign in or Reconnect on those rows."
+    },
+    {
+      "name": "onManage",
+      "type": "((String) -> Unit)?",
+      "default": "null",
+      "description": "Opens a connector's settings, given its id. Shows Manage on every row."
+    },
+    {
+      "name": "onDone",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Shows Done next to the heading. Close the sheet in it."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiConnectorPickerLabels",
+      "default": "MonarchAiConnectorPickerLabels()",
+      "description": "Replacements for every built-in string, including the summary, counts, statuses, reasons, permissions and risks."
+    }
+  ],
+  "states": [
+    {
+      "name": "connected",
+      "description": "The switch can be used; the status in the strong success color, \"Connected as <account>\" when the account is known."
+    },
+    {
+      "name": "sign-in needed",
+      "description": "The switch is disabled; \"Sign-in needed\" in the strong warning color, the reason, and Sign in with onConnect."
+    },
+    {
+      "name": "connection problem",
+      "description": "The switch is disabled; \"Connection problem\" in the strong danger color, the reason, and Reconnect with onConnect."
+    },
+    {
+      "name": "unavailable",
+      "description": "The switch is disabled; \"Unavailable\" in the muted text color and the reason."
+    },
+    {
+      "name": "tools",
+      "description": "A \"4 tools\" button opens the tools under the row; each has its name, a risk MonarchBadge (neutral Reads data, warning Changes data, danger Can delete data) and a permission button with a menu of Allow, Ask first and Never. The menus are disabled while the connector is off."
+    },
+    {
+      "name": "destructive locked",
+      "description": "Allow is not in the menu and \"Tools that can delete data can’t run without asking.\" is shown under it."
+    },
+    {
+      "name": "no results",
+      "description": "A filtered MonarchEmptyState naming the search, with Clear search."
+    },
+    {
+      "name": "empty",
+      "description": "A small MonarchEmptyState: \"No connectors are available.\""
+    }
+  ],
+  "appearance": "The heading in the heading style with a caption summary in the muted text color; each connector row has its favicon, the name in the strong body style, the status in the strong color of its tone and descriptions in the muted text color, and a Material 3 switch at the end. All colors are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "Same names as iOS. iOS binds the connectors; Android hoists them as connectors with onConnectorsChange, which receives the whole new list (the web reports onEnabledChange and onPermissionChange separately). The picker is the content of a MonarchBottomSheet, with Done next to the heading instead of a navigation bar button. The web's radio group of Allow, Ask first and Never is a MonarchMenu behind a button, which stays readable at large font sizes; a disabled Allow radio is Allow left out of the menu, unless it is already the stored value. Connector icons are a Painter the app loads (Monarch has no image loader), with MonarchFavicon's letter tile otherwise. Monarch bundles no icons, so the status is words in the status color without a symbol. The tools open under a button rather than in a disclosure group. The web's controlled query and expandedIds are internal state.",
+  "accessibility": [
+    "Each connector row is one switch element (Modifier.toggleable with the switch role) named \"Use <name> in this conversation\" followed by its status and, when it cannot be turned on, the reason; the inner Switch has no callback of its own.",
+    "A connector that is not connected has a disabled switch, and the reason is written under it.",
+    "Status and risk are always words next to their colors.",
+    "Sign in, Reconnect, Manage and the tools button are MonarchButtons named with the action and the connector, such as \"Sign in: Mail\", with 48dp targets; the tools button has the expand or collapse action.",
+    "Each permission button is named \"Permission for <tool>\" with the current choice as its state description.",
+    "The number of connectors found is announced through a polite live region when the search text changes.",
+    "The heading has the heading semantics."
+  ],
+  "edgeCases": [
+    "The summary counts every connector, whatever the search, and only connected connectors that are turned on count as on.",
+    "Search ignores case, accents and spaces around the text.",
+    "A connector stored as enabled while not connected shows its switch on but disabled and does not count as on.",
+    "Turning on a connector that is not connected is refused by the rules, not only by the disabled switch.",
+    "Setting Allow on a locked destructive tool is refused even if the menu was bypassed."
+  ],
+  "tests": [
+    "MonarchAiConnectorPickerTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Connectors with tools",
+      "fixture": "ai-connector-picker",
+      "webExample": "Connectors with tools",
+      "template": "MonarchAiConnectorPicker(\n    connectors = connectors,\n    onConnectorsChange = { connectors = it },\n    initiallyExpandedIds = setOf({{expanded.0}}),\n    onConnect = { },\n    modifier = Modifier.widthIn(max = 640.dp),\n)",
+      "setupTemplate": "var connectors by remember {\n    mutableStateOf(\n        listOf(\n            MonarchAiConnector(\n                id = {{connectors.0.id}},\n                name = {{connectors.0.name}},\n                status = MonarchAiConnectorStatus.{{connectors.0.status|pascal}},\n                enabled = {{connectors.0.enabled}},\n                description = {{connectors.0.description}},\n                account = {{connectors.0.account}},\n                tools = listOf(\n                    MonarchAiConnectorTool({{connectors.0.tools.0.id}}, {{connectors.0.tools.0.name}}, MonarchAiConnectorToolRisk.{{connectors.0.tools.0.risk|pascal}}, MonarchAiConnectorToolPermission.{{connectors.0.tools.0.permission|pascal}}, {{connectors.0.tools.0.description}}),\n                    MonarchAiConnectorTool({{connectors.0.tools.1.id}}, {{connectors.0.tools.1.name}}, MonarchAiConnectorToolRisk.{{connectors.0.tools.1.risk|pascal}}, MonarchAiConnectorToolPermission.{{connectors.0.tools.1.permission|pascal}}, {{connectors.0.tools.1.description}}),\n                    MonarchAiConnectorTool({{connectors.0.tools.2.id}}, {{connectors.0.tools.2.name}}, MonarchAiConnectorToolRisk.{{connectors.0.tools.2.risk|pascal}}, MonarchAiConnectorToolPermission.{{connectors.0.tools.2.permission|pascal}}, {{connectors.0.tools.2.description}}),\n                ),\n            ),\n            MonarchAiConnector(\n                id = {{connectors.1.id}},\n                name = {{connectors.1.name}},\n                status = MonarchAiConnectorStatus.{{connectors.1.status|pascal}},\n                enabled = {{connectors.1.enabled}},\n                description = {{connectors.1.description}},\n                account = {{connectors.1.account}},\n                tools = listOf(\n                    MonarchAiConnectorTool({{connectors.1.tools.0.id}}, {{connectors.1.tools.0.name}}, MonarchAiConnectorToolRisk.{{connectors.1.tools.0.risk|pascal}}, MonarchAiConnectorToolPermission.{{connectors.1.tools.0.permission|pascal}}, {{connectors.1.tools.0.description}}),\n                    MonarchAiConnectorTool({{connectors.1.tools.1.id}}, {{connectors.1.tools.1.name}}, MonarchAiConnectorToolRisk.{{connectors.1.tools.1.risk|pascal}}, MonarchAiConnectorToolPermission.{{connectors.1.tools.1.permission|pascal}}, {{connectors.1.tools.1.description}}),\n                ),\n            ),\n            MonarchAiConnector(\n                id = {{connectors.2.id}},\n                name = {{connectors.2.name}},\n                status = MonarchAiConnectorStatus.{{connectors.2.status|pascal}},\n                enabled = {{connectors.2.enabled}},\n                description = {{connectors.2.description}},\n            ),\n            MonarchAiConnector(\n                id = {{connectors.3.id}},\n                name = {{connectors.3.name}},\n                status = MonarchAiConnectorStatus.{{connectors.3.status|pascal}},\n                enabled = {{connectors.3.enabled}},\n                description = {{connectors.3.description}},\n            ),\n            MonarchAiConnector(\n                id = {{connectors.4.id}},\n                name = {{connectors.4.name}},\n                status = MonarchAiConnectorStatus.{{connectors.4.status|pascal}},\n                enabled = {{connectors.4.enabled}},\n                description = {{connectors.4.description}},\n            ),\n        ),\n    )\n}",
+      "imports": [
+        "androidx.compose.foundation.layout.widthIn",
+        "androidx.compose.ui.unit.dp"
+      ],
+      "setup": "var connectors by remember {\n    mutableStateOf(\n        listOf(\n            MonarchAiConnector(\n                id = \"calendar\",\n                name = \"Calendar\",\n                status = MonarchAiConnectorStatus.Connected,\n                enabled = true,\n                description = \"Events and availability\",\n                account = \"ada@example.com\",\n                tools = listOf(\n                    MonarchAiConnectorTool(\"list\", \"List events\", MonarchAiConnectorToolRisk.Read, MonarchAiConnectorToolPermission.Allow, \"Reads the events in a date range.\"),\n                    MonarchAiConnectorTool(\"create\", \"Create event\", MonarchAiConnectorToolRisk.Write, MonarchAiConnectorToolPermission.Ask, \"Adds an event and invites guests.\"),\n                    MonarchAiConnectorTool(\"delete\", \"Delete event\", MonarchAiConnectorToolRisk.Destructive, MonarchAiConnectorToolPermission.Ask, \"Removes an event for everyone invited.\"),\n                ),\n            ),\n            MonarchAiConnector(\n                id = \"files\",\n                name = \"Files\",\n                status = MonarchAiConnectorStatus.Connected,\n                enabled = false,\n                description = \"Documents in the shared drive\",\n                account = \"ada@example.com\",\n                tools = listOf(\n                    MonarchAiConnectorTool(\"search\", \"Search files\", MonarchAiConnectorToolRisk.Read, MonarchAiConnectorToolPermission.Allow, \"Finds documents by name or content.\"),\n                    MonarchAiConnectorTool(\"edit\", \"Edit document\", MonarchAiConnectorToolRisk.Write, MonarchAiConnectorToolPermission.Never, \"Changes the text of a document.\"),\n                ),\n            ),\n            MonarchAiConnector(\n                id = \"mail\",\n                name = \"Mail\",\n                status = MonarchAiConnectorStatus.NeedsSignIn,\n                enabled = false,\n                description = \"Read and draft messages\",\n            ),\n            MonarchAiConnector(\n                id = \"tracker\",\n                name = \"Issue tracker\",\n                status = MonarchAiConnectorStatus.Error,\n                enabled = true,\n                description = \"Tickets and their comments\",\n            ),\n            MonarchAiConnector(\n                id = \"records\",\n                name = \"Customer records\",\n                status = MonarchAiConnectorStatus.Unavailable,\n                enabled = false,\n                description = \"Turned off by your administrator\",\n            ),\n        ),\n    )\n}",
+      "code": "MonarchAiConnectorPicker(\n    connectors = connectors,\n    onConnectorsChange = { connectors = it },\n    initiallyExpandedIds = setOf(\"calendar\"),\n    onConnect = { },\n    modifier = Modifier.widthIn(max = 640.dp),\n)"
+    },
+    {
+      "title": "In a sheet",
+      "setup": "var open by rememberSaveable { mutableStateOf(false) }\nvar connectors by remember { mutableStateOf(emptyList<MonarchAiConnector>()) }",
+      "code": "MonarchButton(text = \"Connectors\", onClick = { open = true })\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }) {\n        MonarchAiConnectorPicker(\n            connectors = connectors,\n            onConnectorsChange = { connectors = it },\n            onDone = { open = false },\n        )\n    }\n}",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ]
+    }
+  ],
+  "webEquivalent": "AiConnectorPicker",
+  "dependsOn": [
+    "sheet",
+    "switch",
+    "favicon",
+    "search-input"
+  ],
+  "toneMap": {
+    "RISK_TONE": {
+      "read": "neutral",
+      "write": "warning",
+      "destructive": "danger"
+    }
+  },
+  "icons": {
+    "search": "SearchGlyph",
+    "status.connected": "SuccessGlyph",
+    "tools.toggle": "ChevronDownGlyph",
+    "risk.read": "EyeGlyph",
+    "risk.write": "PencilGlyph",
+    "risk.destructive": "WarningGlyph",
+    "status.needsSignIn": "LockGlyph",
+    "status.error": "ErrorGlyph",
+    "status.unavailable": "OfflineGlyph"
+  }
+}

@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToString } from 'react-dom/server';
@@ -169,5 +171,14 @@ describe('SubscriptionsTable', () => {
       />,
     );
     expect(screen.getAllByText('Renews soon').length).toBeGreaterThan(0);
+  });
+
+  it('folds customer and renewal under the name before the columns stop fitting', () => {
+    // At 620px (a docs column) the five columns needed sideways scrolling and the
+    // renewal column was cut off; they fold from 42rem down.
+    const css = readFileSync(join(dirname(__filename), 'subscriptions-table.css'), 'utf8');
+    expect(css).toMatch(
+      /@container \(max-width: 42rem\) \{\s*\.mn-subscriptions-table \[data-priority='medium'\]/,
+    );
   });
 });

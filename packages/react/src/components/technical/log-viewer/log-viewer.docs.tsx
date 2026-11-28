@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { LogViewer, type LogLine, type LogLevel } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './log-viewer.fixture.json';
 
 const start = Date.UTC(2026, 0, 5, 9, 30, 0);
 const steps = [
@@ -27,10 +29,21 @@ const sampleLines: LogLine[] = Array.from({ length: 2000 }, (_, i) => ({
   message: `${steps[i % steps.length]} (step ${i + 1})`,
 }));
 
+/** The first lines of the build log, as the primary example shows them. */
+const firstLines: LogLine[] = (
+  fixture.data.lines as {
+    id: string;
+    level: LogLevel;
+    time: string;
+    source: string;
+    message: string;
+  }[]
+).map((line) => ({ ...line, time: Date.parse(line.time) }));
+
 const utcTime = (d: Date) => d.toISOString().slice(11, 23);
 
 function Streaming() {
-  const [lines, setLines] = useState<LogLine[]>(() => sampleLines.slice(0, 20));
+  const [lines, setLines] = useState<LogLine[]>(() => firstLines);
   const [running, setRunning] = useState(true);
   useEffect(() => {
     if (!running) return;
@@ -48,7 +61,7 @@ function Streaming() {
       formatTime={utcTime}
       actions={
         <Button size="sm" variant="ghost" onClick={() => setRunning((r) => !r)}>
-          {running ? 'Pause stream' : 'Resume stream'}
+          {running ? fixture.data.pause : 'Resume stream'}
         </Button>
       }
     />

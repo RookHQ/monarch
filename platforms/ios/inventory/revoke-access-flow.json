@@ -1,0 +1,89 @@
+{
+  "id": "revoke-access-flow",
+  "name": null,
+  "title": "RevokeAccessFlow",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:content:) with interactiveDismissDisabled holding the item, Date.RelativeFormatStyle, MonarchConsequenceList, MonarchTypeToConfirmInput, MonarchInlineNotice and MonarchButtons; a second sheet with MonarchStepUpAuthDialog when re-authentication is required",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: confirm revoking an API key, an OAuth client, portal access, sessions or devices, listing what is revoked, when it was last used and what happens, with optional type-to-confirm and re-authentication.",
+  "whenToUse": "Behind every Revoke, Sign out or Remove action on keys, connected apps, sessions, devices or someone's portal access.",
+  "whenNotToUse": "For a device list with its own simple confirmation, MonarchDeviceList's built-in alert is enough. For leaving a workspace yourself, use the leave workspace recipe.",
+  "api": [
+    ".sheet(isPresented: $isConfirming) { … }",
+    "Text(lastUsed.formatted(.relative(presentation: .named)))",
+    "MonarchConsequenceList([MonarchConsequence(.removed, \"…\"), MonarchConsequence(.warning, \"…\")], heading: \"What happens\")",
+    "MonarchTypeToConfirmInput(phrase: keyName, text: $phrase)",
+    "MonarchButton(\"Revoke key\", variant: .danger, isLoading: isRevoking, fullWidth: true) { … }",
+    "MonarchStepUpAuthDialog(description: \"Revoking access needs you to confirm it’s you.\", onVerified: revoke, onVerify: { credential in … })"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "confirm",
+      "description": "The question naming what is revoked, a line on what it means, the item with its prefix and last-used time, the consequences, and a danger button naming the action."
+    },
+    {
+      "name": "type to confirm",
+      "description": "For keys and OAuth clients, the danger button stays disabled until the name is typed exactly."
+    },
+    {
+      "name": "step-up",
+      "description": "When re-authentication is required, the danger button opens MonarchStepUpAuthDialog; the revocation runs after it verifies."
+    },
+    {
+      "name": "revoking",
+      "description": "The danger button shows its spinner; Cancel is disabled and the sheet cannot be swiped away."
+    },
+    {
+      "name": "failed",
+      "description": "A danger MonarchInlineNotice in the sheet; the person can try again."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component in the theme: the heading style title, the code style for the key prefix, MonarchConsequenceList, MonarchTypeToConfirmInput and danger and ghost MonarchButtons.",
+  "platformNotes": "The web's RevokeAccessFlow is one component with built-in copy for five kinds (api-key, oauth-client, portal-access, session, device) and plural forms. On iOS it is a recipe: the copy is the app's, written for its kind and count, and the step is a sheet because a system alert cannot hold a list, a text field with a match check, or a pending state. Danger is the default for keys and OAuth clients (they cannot be undone); for sessions, devices and portal access, which can sign in again, use a plain confirmation alert or the same sheet with warning wording. The web's stepUp prop is the second sheet with MonarchStepUpAuthDialog. Android composes the same recipe.",
+  "accessibility": [
+    "The title has the header trait; the item is one element read as its name, prefix and last-used time.",
+    "MonarchConsequenceList reads each consequence with its kind.",
+    "MonarchTypeToConfirmInput announces when the typed name matches.",
+    "The row's Revoke button is named with the item (\"Revoke CI deploy key\").",
+    "Buttons are MonarchButtons with 44-point touch targets and a busy state while revoking; the sheet cannot be dismissed while revoking."
+  ],
+  "edgeCases": [
+    "For several items, list each one and put the count in the title and the button (\"Revoke 3 keys\").",
+    "An item never used reads \"Never used\" instead of a time.",
+    "Reset the typed phrase each time the sheet opens."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "API key with type-to-confirm and step-up",
+      "fixture": "revoke-access-flow",
+      "webExample": "API key with type-to-confirm and step-up",
+      "template": "MonarchButton({{trigger}}, variant: .danger) {\n    phrase = \"\"\n    isConfirming = true\n}\n.accessibilityLabel(\"Revoke \\(keyName)\")\n.sheet(isPresented: $isConfirming) {\n    ScrollView {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            MonarchIcon(systemName: \"exclamationmark.triangle\")\n                .foregroundStyle(theme.colors.dangerStrong)\n                .frame(width: 40, height: 40)\n                .background(Circle().fill(theme.colors.dangerSubtle))\n                .accessibilityHidden(true)\n            Text(\"Revoke API key?\")\n                .monarchTextStyle(.heading)\n                .accessibilityAddTraits(.isHeader)\n            Text(\"A revoked key cannot be restored. Create a new key if you still need access.\")\n                .monarchTextStyle(.body)\n                .foregroundStyle(theme.colors.textMuted)\n            MonarchCard {\n                VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                    Text(keyName).monarchTextStyle(.bodyStrong)\n                    Text(keyPrefix)\n                        .monarchTextStyle(.caption)\n                        .foregroundStyle(theme.colors.textMuted)\n                    Text(\"Last used \\(lastUsed.formatted(.relative(presentation: .named)))\")\n                        .monarchTextStyle(.caption)\n                        .foregroundStyle(theme.colors.textMuted)\n                }\n                .frame(maxWidth: .infinity, alignment: .leading)\n            }\n            .accessibilityElement(children: .combine)\n            MonarchConsequenceList(\n                [MonarchConsequence(.removed, \"Apps and scripts using this key stop working immediately\")],\n                heading: \"What happens\"\n            )\n            MonarchTypeToConfirmInput(phrase: keyName, text: $phrase)\n            if let failure {\n                MonarchInlineNotice(failure, tone: .danger)\n            }\n            HStack(spacing: theme.spacing.space2) {\n                Spacer(minLength: 0)\n                MonarchButton(\"Cancel\", variant: .secondary) { isConfirming = false }\n                    .disabled(isRevoking)\n                MonarchButton(\"Revoke key\", variant: .danger, isLoading: isRevoking) {\n                    isSteppingUp = true\n                }\n                .disabled(phrase != keyName)\n            }\n        }\n        .padding(theme.spacing.space6)\n    }\n    .interactiveDismissDisabled(isRevoking)\n    .sheet(isPresented: $isSteppingUp) {\n        MonarchStepUpAuthDialog(\n            description: \"Revoking access needs you to confirm it’s you.\",\n            onVerified: revoke,\n            onVerify: { credential in\n                // Send the credential to the server; throw if it is refused.\n                try await Task.sleep(for: .milliseconds(300))\n            }\n        )\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isConfirming = false\n@State private var isSteppingUp = false\n@State private var phrase = \"\"\n@State private var isRevoking = false\n@State private var failure: String?\nprivate let keyName = {{item.label}}\nprivate let keyPrefix = {{item.detail}}\nprivate let lastUsed = Date().addingTimeInterval(-{{item.lastUsedHoursAgo|double}} * 3_600)\n\nprivate func revoke() {\n    isRevoking = true\n    failure = nil\n    Task {\n        do {\n            // The app revokes the key on the server here.\n            try await Task.sleep(for: .milliseconds(300))\n            isRevoking = false\n            isConfirming = false\n        } catch {\n            isRevoking = false\n            failure = \"Couldn’t revoke the key. Try again.\"\n        }\n    }\n}",
+      "previewPresented": [
+        "isConfirming"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isConfirming = false\n@State private var isSteppingUp = false\n@State private var phrase = \"\"\n@State private var isRevoking = false\n@State private var failure: String?\nprivate let keyName = \"Build server\"\nprivate let keyPrefix = \"sk_live_…4f2a · read and write\"\nprivate let lastUsed = Date().addingTimeInterval(-3.0 * 3_600)\n\nprivate func revoke() {\n    isRevoking = true\n    failure = nil\n    Task {\n        do {\n            // The app revokes the key on the server here.\n            try await Task.sleep(for: .milliseconds(300))\n            isRevoking = false\n            isConfirming = false\n        } catch {\n            isRevoking = false\n            failure = \"Couldn’t revoke the key. Try again.\"\n        }\n    }\n}",
+      "code": "MonarchButton(\"Revoke key\", variant: .danger) {\n    phrase = \"\"\n    isConfirming = true\n}\n.accessibilityLabel(\"Revoke \\(keyName)\")\n.sheet(isPresented: $isConfirming) {\n    ScrollView {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            MonarchIcon(systemName: \"exclamationmark.triangle\")\n                .foregroundStyle(theme.colors.dangerStrong)\n                .frame(width: 40, height: 40)\n                .background(Circle().fill(theme.colors.dangerSubtle))\n                .accessibilityHidden(true)\n            Text(\"Revoke API key?\")\n                .monarchTextStyle(.heading)\n                .accessibilityAddTraits(.isHeader)\n            Text(\"A revoked key cannot be restored. Create a new key if you still need access.\")\n                .monarchTextStyle(.body)\n                .foregroundStyle(theme.colors.textMuted)\n            MonarchCard {\n                VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                    Text(keyName).monarchTextStyle(.bodyStrong)\n                    Text(keyPrefix)\n                        .monarchTextStyle(.caption)\n                        .foregroundStyle(theme.colors.textMuted)\n                    Text(\"Last used \\(lastUsed.formatted(.relative(presentation: .named)))\")\n                        .monarchTextStyle(.caption)\n                        .foregroundStyle(theme.colors.textMuted)\n                }\n                .frame(maxWidth: .infinity, alignment: .leading)\n            }\n            .accessibilityElement(children: .combine)\n            MonarchConsequenceList(\n                [MonarchConsequence(.removed, \"Apps and scripts using this key stop working immediately\")],\n                heading: \"What happens\"\n            )\n            MonarchTypeToConfirmInput(phrase: keyName, text: $phrase)\n            if let failure {\n                MonarchInlineNotice(failure, tone: .danger)\n            }\n            HStack(spacing: theme.spacing.space2) {\n                Spacer(minLength: 0)\n                MonarchButton(\"Cancel\", variant: .secondary) { isConfirming = false }\n                    .disabled(isRevoking)\n                MonarchButton(\"Revoke key\", variant: .danger, isLoading: isRevoking) {\n                    isSteppingUp = true\n                }\n                .disabled(phrase != keyName)\n            }\n        }\n        .padding(theme.spacing.space6)\n    }\n    .interactiveDismissDisabled(isRevoking)\n    .sheet(isPresented: $isSteppingUp) {\n        MonarchStepUpAuthDialog(\n            description: \"Revoking access needs you to confirm it’s you.\",\n            onVerified: revoke,\n            onVerify: { credential in\n                // Send the credential to the server; throw if it is refused.\n                try await Task.sleep(for: .milliseconds(300))\n            }\n        )\n    }\n}"
+    }
+  ],
+  "webEquivalent": "RevokeAccessFlow",
+  "dependsOn": [
+    "confirm-dialog",
+    "consequence-list",
+    "relative-time",
+    "type-to-confirm-input",
+    "step-up-auth-dialog",
+    "button",
+    "inline-notice",
+    "sheet"
+  ]
+}

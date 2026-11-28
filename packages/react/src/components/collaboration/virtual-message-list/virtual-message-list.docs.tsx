@@ -7,21 +7,16 @@ import {
   type VirtualMessageListHandle,
 } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './virtual-message-list.fixture.json';
 
 interface DemoMessage extends VirtualMessageItem {
   author: string;
   body: string;
 }
 
-const PEOPLE = ['Alex Morgan', 'Sam Lee', 'Riley Chen'];
-const LINES = [
-  'Morning! Is the release still on for Thursday?',
-  'Yes, the checklist is nearly done.',
-  'I will update the notes after lunch.',
-  'Can someone review the new onboarding copy?',
-  'Looks good to me.',
-  'Shipping the fix now.',
-];
+const PEOPLE = fixture.data.people;
+const LINES = fixture.data.lines;
 const START = new Date(2026, 4, 1, 9).getTime();
 
 /** Built on demand: a long, deterministic history. */
@@ -42,7 +37,9 @@ function makeHistory(from: number, count: number): DemoMessage[] {
 const NOW = new Date(START + 2000 * 7 * 60_000);
 
 function LongHistoryDemo() {
-  const [items, setItems] = useState(() => makeHistory(1500, 500));
+  const [items, setItems] = useState(() =>
+    makeHistory(fixture.data.history.from, fixture.data.history.count),
+  );
   const [loadingOlder, setLoadingOlder] = useState(false);
   const handle = useRef<VirtualMessageListHandle>(null);
   const first = Number(items[0]?.id.slice(4) ?? 0);
@@ -56,10 +53,14 @@ function LongHistoryDemo() {
             setItems((list) => [...list, ...makeHistory(Number(list.at(-1)?.id.slice(4)) + 1, 1)])
           }
         >
-          Receive a message
+          {fixture.data.receive}
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => handle.current?.scrollToItem('msg-1600')}>
-          Go to message 1601
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => handle.current?.scrollToItem(fixture.data.goTo.id)}
+        >
+          {fixture.data.goTo.label}
         </Button>
       </div>
       <div
@@ -73,7 +74,8 @@ function LongHistoryDemo() {
           items={items}
           handleRef={handle}
           now={NOW}
-          firstUnreadId="msg-1995"
+          locale={fixture.data.locale}
+          firstUnreadId={fixture.data.firstUnreadId}
           hasOlder={first > 0}
           loadingOlder={loadingOlder}
           onLoadOlder={() => {
@@ -87,7 +89,13 @@ function LongHistoryDemo() {
             }, 500);
           }}
           renderItem={(m, { grouped }) => (
-            <MessageRow author={{ name: m.author }} time={m.time} grouped={grouped} now={NOW}>
+            <MessageRow
+              author={{ name: m.author }}
+              time={m.time}
+              grouped={grouped}
+              now={NOW}
+              locale="en-GB"
+            >
               {m.body}
             </MessageRow>
           )}

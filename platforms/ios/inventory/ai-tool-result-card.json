@@ -1,0 +1,134 @@
+{
+  "id": "ai-tool-result-card",
+  "name": "MonarchAiToolResultCard",
+  "title": "AiToolResultCard",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchCard with MonarchIcon, MonarchKeyValue, a Link with MonarchLinkStyle and a MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A preview of what a tool did (a record created, an email sent, an event booked, a ticket filed): the kind, the title, a line of detail, key facts, a link to open the result and an optional Undo.",
+  "whenToUse": "In an assistant reply after a tool call that created or changed something, so the person sees the result and can open or revert it.",
+  "whenNotToUse": "Not for the call in progress or its arguments: show the tool call itself. Not for several fields changed on the current screen: use MonarchAiUndoBanner.",
+  "api": [
+    "init(_ title: String, kind: MonarchAiToolResultKind = .generic, description: String? = nil, url: URL? = nil, meta: [MonarchKeyValueItem] = [], systemImage: String? = nil, labels: MonarchAiToolResultCardLabels = MonarchAiToolResultCardLabels(), onUndo: (@MainActor () async throws -> Void)? = nil)",
+    "enum MonarchAiToolResultKind { case recordCreated, emailSent, eventBooked, ticketFiled, generic }",
+    "MonarchAiToolResultCardLabels.init(kind: (@Sendable (MonarchAiToolResultKind) -> String)? = nil, open: String? = nil, undo: String? = nil, undone: String? = nil, undoFailed: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "What the tool made or changed: the record's name, the email's subject."
+    },
+    {
+      "name": "kind",
+      "type": "MonarchAiToolResultKind",
+      "default": ".generic",
+      "description": "What the tool did; picks the icon and the label above the title."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "One line of detail, such as \"To 3 people\"."
+    },
+    {
+      "name": "url",
+      "type": "URL?",
+      "default": "nil",
+      "description": "Opens the result. Only http, https and mailto are shown."
+    },
+    {
+      "name": "meta",
+      "type": "[MonarchKeyValueItem]",
+      "default": "[]",
+      "description": "Short facts, shown with MonarchKeyValue in the stack layout."
+    },
+    {
+      "name": "systemImage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the kind's SF Symbol."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiToolResultCardLabels",
+      "default": "MonarchAiToolResultCardLabels()",
+      "description": "Replacements for the kind labels, Open, Undo, Undone and the failure text."
+    },
+    {
+      "name": "onUndo",
+      "type": "(@MainActor () async throws -> Void)?",
+      "default": "nil",
+      "description": "Shows Undo. Throw to report a failure."
+    }
+  ],
+  "states": [
+    {
+      "name": "result",
+      "description": "The success tile, the text, the facts, Open and Undo."
+    },
+    {
+      "name": "undoing",
+      "description": "Undo shows a progress indicator and does not run again."
+    },
+    {
+      "name": "undone",
+      "description": "Open and Undo go away, the tile turns muted and Undone is shown and announced."
+    },
+    {
+      "name": "undo failed",
+      "description": "Couldn’t undo. Try again. is shown in the danger strong role and announced; Undo stays."
+    }
+  ],
+  "appearance": "A MonarchCard with no shadow. The icon tile uses the success subtle fill and success strong icon, the muted fill and muted icon once undone. The kind label is muted caption text, the title strong body text, the description muted. Open is a standalone link; Undo a ghost small button.",
+  "platformNotes": "The web's title and description accept nodes; here they are Strings and the facts are MonarchKeyValueItem values. The web's onUndo may return a promise; here it is async throws. The web's external flag is dropped: a Link opens through openURL, so a universal link opens its app. The kinds use SF Symbols instead of the web's drawn glyphs.",
+  "accessibility": [
+    "The kind, title and description are one element, read as \"Record created, Acme Ltd, Added to Accounts\".",
+    "Each fact is read as its key and value by MonarchKeyValue.",
+    "Open is a link and Undo a button, each separate with a 44-point touch target.",
+    "Undone and the failure are shown as text and announced.",
+    "The icon is decorative; the kind is spoken."
+  ],
+  "edgeCases": [
+    "A javascript: or custom-scheme url shows no Open.",
+    "Without url and onUndo there is no action row.",
+    "Long titles and descriptions wrap.",
+    "The undo state lives in the view; give the card a new id to show a new result in the same place."
+  ],
+  "tests": [
+    "MonarchAiToolResultCardTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Every kind",
+      "fixture": "ai-tool-result-card",
+      "webExample": "Every kind",
+      "template": "VStack(spacing: 12) {\n    MonarchAiToolResultCard({{items.0.title}}, kind: {{items.0.kind|case}}, description: {{items.0.description}}, url: URL(string: \"https://example.com/\" + {{href}}))\n    MonarchAiToolResultCard({{items.1.title}}, kind: {{items.1.kind|case}}, description: {{items.1.description}}, url: URL(string: \"https://example.com/\" + {{href}}))\n    MonarchAiToolResultCard({{items.2.title}}, kind: {{items.2.kind|case}}, description: {{items.2.description}}, url: URL(string: \"https://example.com/\" + {{href}}))\n    MonarchAiToolResultCard({{items.3.title}}, kind: {{items.3.kind|case}}, description: {{items.3.description}}, url: URL(string: \"https://example.com/\" + {{href}}))\n    MonarchAiToolResultCard({{items.4.title}}, kind: {{items.4.kind|case}}, description: {{items.4.description}}, url: URL(string: \"https://example.com/\" + {{href}}))\n}",
+      "code": "VStack(spacing: 12) {\n    MonarchAiToolResultCard(\"Northwind Traders\", kind: .recordCreated, description: \"Added to Accounts\", url: URL(string: \"https://example.com/\" + \"#\"))\n    MonarchAiToolResultCard(\"Weekly update\", kind: .emailSent, description: \"To 3 people\", url: URL(string: \"https://example.com/\" + \"#\"))\n    MonarchAiToolResultCard(\"Design review\", kind: .eventBooked, description: \"Wed 4 Mar, 10:00–10:30\", url: URL(string: \"https://example.com/\" + \"#\"))\n    MonarchAiToolResultCard(\"Export fails for large files\", kind: .ticketFiled, description: \"Support queue\", url: URL(string: \"https://example.com/\" + \"#\"))\n    MonarchAiToolResultCard(\"Settings updated\", kind: .generic, description: \"Notifications turned on\", url: URL(string: \"https://example.com/\" + \"#\"))\n}"
+    },
+    {
+      "title": "An event booked",
+      "code": "MonarchAiToolResultCard(\"Design review\", kind: .eventBooked, description: \"Tue 14 Oct, 10:00–10:30\")"
+    }
+  ],
+  "webEquivalent": "AiToolResultCard",
+  "dependsOn": [
+    "card",
+    "link",
+    "button",
+    "key-value"
+  ],
+  "icons": {
+    "record-created": "PlusGlyph",
+    "event-booked": "CalendarGlyph",
+    "generic": "CheckGlyph"
+  }
+}

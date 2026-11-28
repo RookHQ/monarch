@@ -1,5 +1,7 @@
 import { ScoreRing } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './score-ring.fixture.json';
 
 export default {
   id: 'score-ring',
@@ -105,10 +107,9 @@ export default {
           title: 'Bands',
           render: () => (
             <>
-              <ScoreRing value={92} label="Visibility" />
-              <ScoreRing value={67} label="Coverage" />
-              <ScoreRing value={44} label="Speed" />
-              <ScoreRing value={18} label="Links" />
+              {fixture.data.rings.map((ring) => (
+                <ScoreRing key={ring.label} value={ring.value} label={ring.label} />
+              ))}
             </>
           ),
         },

@@ -1,0 +1,113 @@
+{
+  "id": "csat-survey",
+  "name": null,
+  "title": "CSATSurvey",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of MonarchText, MonarchChip toggles or MonarchRatingPicker, MonarchTextField (singleLine = false), MonarchButton and MonarchSaveStatusIndicator; MonarchLoadingState, MonarchErrorState and MonarchInlineNotice for the other states",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a customer-satisfaction survey that saves the rating as soon as it is chosen, then an optional comment, with every saving state, a locked answer, a thank-you, loading and a failed load.",
+  "whenToUse": "After a support conversation, a delivery or a booking, on a screen opened from a notification or a link, to ask one satisfaction question.",
+  "whenNotToUse": "For a full feedback form with several questions, compose MonarchFormField rows. For rating an item in a list, use MonarchRatingPicker alone.",
+  "api": [
+    "@Composable fun MonarchChip(text: String, selected: Boolean, onSelectedChange: (Boolean) -> Unit, modifier: Modifier = Modifier, size: MonarchTagSize = MonarchTagSize.Md, enabled: Boolean = true, leadingIcon: (@Composable () -> Unit)? = null, selectedIcon: (@Composable () -> Unit)? = null, interactionSource: MutableInteractionSource? = null)",
+    "@Composable fun MonarchRatingPicker(value: Int?, onValueChange: (Int?) -> Unit, modifier: Modifier = Modifier, label: String? = null, options: List<MonarchRatingOption> = MonarchRatingOption.range(), …, readOnly: Boolean = false, …)",
+    "@Composable fun MonarchTextField(value: String, onValueChange: (String) -> Unit, modifier: Modifier = Modifier, label: String? = null, …, helperText: String? = null, errorText: String? = null, enabled: Boolean = true, readOnly: Boolean = false, singleLine: Boolean = true, …)",
+    "@Composable fun MonarchButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, variant: MonarchButtonVariant = MonarchButtonVariant.Secondary, …, loading: Boolean = false, …)",
+    "@Composable fun MonarchSaveStatusIndicator(status: MonarchSaveStatus, modifier: Modifier = Modifier, announceSaving: Boolean = false, savedAt: Long? = null, errorMessage: String? = null, icon: (@Composable (MonarchSaveStatus) -> Unit)? = null, onRetry: (() -> Unit)? = null, labels: MonarchSaveStatusIndicatorLabels = MonarchSaveStatusIndicatorLabels())",
+    "@Composable fun MonarchLoadingState(label: String, modifier: Modifier = Modifier, variant: MonarchLoadingStateVariant = MonarchLoadingStateVariant.List, rows: Int = 4)",
+    "@Composable fun MonarchErrorState(title: String, modifier: Modifier = Modifier, kind: MonarchErrorStateKind = MonarchErrorStateKind.Error, …, message: String? = null, …)",
+    "@Composable fun MonarchInlineNotice(message: String, modifier: Modifier = Modifier, tone: MonarchTone = MonarchTone.Info, …)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "unanswered",
+      "description": "The question, Good and Bad (or a 1 to 5 scale) and a hint to choose first."
+    },
+    {
+      "name": "saving",
+      "description": "MonarchSaveStatusIndicator shows Saving after a choice or Save comment."
+    },
+    {
+      "name": "saved",
+      "description": "Saved with the relative time; the comment field appears."
+    },
+    {
+      "name": "save failed",
+      "description": "The indicator shows the error with Retry; the choice stays selected."
+    },
+    {
+      "name": "locked",
+      "description": "The choices are read-only or disabled and a MonarchInlineNotice says the answer can no longer change."
+    },
+    {
+      "name": "submitted",
+      "description": "A success MonarchInlineNotice thanks the person."
+    },
+    {
+      "name": "loading",
+      "description": "MonarchLoadingState with the Spinner variant."
+    },
+    {
+      "name": "load failed",
+      "description": "MonarchErrorState with the NotFound kind for an expired or invalid link."
+    }
+  ],
+  "appearance": "The question is a heading in default text; Good and Bad are Material 3 filter chips in the theme, selected with the accent container; the comment is a multi-line MonarchTextField; status, notices and errors take their own Monarch appearance in every theme, including both high-contrast themes.",
+  "platformNotes": "The web CSATSurvey is one component with scale, mode (instant or form), messages and promise handling. On Android, as on iOS, it composes existing parts: the app holds the rating, comment and save status and calls its server; the form mode is the same recipe with one Send feedback button instead of saving on choice. Good and Bad are filter chips (the Android toggle button), so the chosen answer is the chip's selected state; the web's thumbs are app icons passed to the chips' leadingIcon because Monarch bundles none. MonarchTextField takes singleLine = false for the comment, so no separate form field is needed. The app supplies all the words.",
+  "accessibility": [
+    "The question is a heading (MonarchText with the Heading style).",
+    "Good and Bad are filter chips whose selected state is read; the five-point scale is MonarchRatingPicker, one adjustable element read as \"4 of 5, Good\".",
+    "MonarchSaveStatusIndicator announces Saved and save failures; its Retry is a separate button.",
+    "The comment field is labelled and its helper text reads the characters left.",
+    "Every control has a 48dp touch target and wraps at font scale 2.0."
+  ],
+  "edgeCases": [
+    "Save the rating on choice so a person who leaves after one tap is still counted.",
+    "Limit the comment in onValueChange; the helper text counts down.",
+    "An expired link replaces the whole survey with MonarchErrorState."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "One-click page with a comment",
+      "fixture": "csat-survey",
+      "webExample": "One-click page with a comment",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n    MonarchText(text = {{context}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)\n    MonarchText(text = {{question}}, style = MonarchTextStyle.Heading, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n        listOf({{choices.0}}, {{choices.1}}).forEachIndexed { index, choice ->\n            val selected = answer == choice\n            val shape = MonarchTheme.shapes.md\n            Column(\n                modifier = Modifier\n                    .weight(1f)\n                    .clip(shape)\n                    .background(if (selected) MonarchTheme.colors.accentSubtle else MonarchTheme.colors.bgSurface)\n                    .border(1.dp, if (selected) MonarchTheme.colors.accentBorder else MonarchTheme.colors.borderDefault, shape)\n                    .selectable(\n                        selected = selected,\n                        role = Role.RadioButton,\n                        onClick = {\n                            answer = choice\n                            status = MonarchSaveStatus.Saving // the app saves, then sets Saved or Error\n                        },\n                    )\n                    .padding(vertical = MonarchTheme.spacing.space4),\n                horizontalAlignment = Alignment.CenterHorizontally,\n                verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n            ) {\n                MonarchIcon(\n                    imageVector = if (index == 0) SampleIcons.ThumbUp else SampleIcons.ThumbDown,\n                    contentDescription = null,\n                )\n                MonarchText(text = choice, style = MonarchTextStyle.BodyStrong)\n            }\n        }\n    }\n    if (answer == null) {\n        MonarchText(text = {{hint}}, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MonarchTheme.colors.textMuted)\n    } else {\n        MonarchTextField(\n            value = comment,\n            onValueChange = { comment = it.take(500) },\n            label = \"Anything you would like to add? (optional)\",\n            helperText = \"${500 - comment.length} characters left\",\n            singleLine = false,\n        )\n        MonarchButton(text = \"Save comment\", onClick = { status = MonarchSaveStatus.Saving })\n    }\n    MonarchSaveStatusIndicator(status = status, onRetry = { status = MonarchSaveStatus.Saving })\n}",
+      "setupTemplate": "var answer by remember { mutableStateOf<String?>(null) }\nvar comment by remember { mutableStateOf(\"\") }\nvar status by remember { mutableStateOf(MonarchSaveStatus.Idle) }",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "androidx.compose.ui.draw.clip"
+      ],
+      "setup": "var answer by remember { mutableStateOf<String?>(null) }\nvar comment by remember { mutableStateOf(\"\") }\nvar status by remember { mutableStateOf(MonarchSaveStatus.Idle) }",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n    MonarchText(text = \"Request #1042 · Billing question\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)\n    MonarchText(text = \"How would you rate the support you received?\", style = MonarchTextStyle.Heading, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n        listOf(\"Good\", \"Bad\").forEachIndexed { index, choice ->\n            val selected = answer == choice\n            val shape = MonarchTheme.shapes.md\n            Column(\n                modifier = Modifier\n                    .weight(1f)\n                    .clip(shape)\n                    .background(if (selected) MonarchTheme.colors.accentSubtle else MonarchTheme.colors.bgSurface)\n                    .border(1.dp, if (selected) MonarchTheme.colors.accentBorder else MonarchTheme.colors.borderDefault, shape)\n                    .selectable(\n                        selected = selected,\n                        role = Role.RadioButton,\n                        onClick = {\n                            answer = choice\n                            status = MonarchSaveStatus.Saving // the app saves, then sets Saved or Error\n                        },\n                    )\n                    .padding(vertical = MonarchTheme.spacing.space4),\n                horizontalAlignment = Alignment.CenterHorizontally,\n                verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n            ) {\n                MonarchIcon(\n                    imageVector = if (index == 0) SampleIcons.ThumbUp else SampleIcons.ThumbDown,\n                    contentDescription = null,\n                )\n                MonarchText(text = choice, style = MonarchTextStyle.BodyStrong)\n            }\n        }\n    }\n    if (answer == null) {\n        MonarchText(text = \"Choose an answer above. You can add a comment afterwards.\", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = MonarchTheme.colors.textMuted)\n    } else {\n        MonarchTextField(\n            value = comment,\n            onValueChange = { comment = it.take(500) },\n            label = \"Anything you would like to add? (optional)\",\n            helperText = \"${500 - comment.length} characters left\",\n            singleLine = false,\n        )\n        MonarchButton(text = \"Save comment\", onClick = { status = MonarchSaveStatus.Saving })\n    }\n    MonarchSaveStatusIndicator(status = status, onRetry = { status = MonarchSaveStatus.Saving })\n}"
+    },
+    {
+      "title": "A five-point scale, locked after answering",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n    MonarchRatingPicker(\n        value = 4,\n        onValueChange = {},\n        label = \"Your rating\",\n        options = listOf(\n            MonarchRatingOption(1, \"Very poor\"),\n            MonarchRatingOption(2, \"Poor\"),\n            MonarchRatingOption(3, \"Okay\"),\n            MonarchRatingOption(4, \"Good\"),\n            MonarchRatingOption(5, \"Excellent\"),\n        ),\n        readOnly = true,\n    )\n    MonarchInlineNotice(\n        message = \"Thanks for your feedback. This answer can no longer be changed.\",\n        tone = MonarchTone.Success,\n    )\n}"
+    },
+    {
+      "title": "Loading, then a survey link that expired",
+      "setup": "var loading by remember { mutableStateOf(false) }",
+      "code": "if (loading) {\n    MonarchLoadingState(label = \"Loading survey\", variant = MonarchLoadingStateVariant.Spinner)\n} else {\n    MonarchErrorState(\n        title = \"We could not load this survey\",\n        kind = MonarchErrorStateKind.NotFound,\n        message = \"This link has expired. Ask the team for a new one.\",\n    )\n}"
+    }
+  ],
+  "webEquivalent": "CSATSurvey",
+  "dependsOn": [
+    "rating-picker",
+    "text-field",
+    "button",
+    "save-status-indicator",
+    "loading-state",
+    "error-state",
+    "inline-notice"
+  ]
+}

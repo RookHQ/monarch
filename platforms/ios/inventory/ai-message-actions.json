@@ -1,0 +1,152 @@
+{
+  "id": "ai-message-actions",
+  "name": "MonarchAiMessageActions",
+  "title": "AiMessageActions",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "HStack of Button with .buttonStyle(.monarch(.ghost, size: .sm)), Toggle with .toggleStyle(.monarchButton(.ghost, size: .sm)) for the thumbs, ShareLink(item:) for Share, MonarchCopyButton for Copy, Menu for More, inside ViewThatFits(in: .horizontal)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The row of actions under a chat message: copy, regenerate, edit, thumbs up and down, share, read aloud and a More menu; each action appears only when it is turned on.",
+  "whenToUse": "Under each assistant message in a conversation, and under the person's own messages with Copy and Edit.",
+  "whenNotToUse": "For rating with reasons and a comment use MonarchAiFeedback. For actions on any chat message (reply, react, delete) use the actions slot of MonarchMessageRow or a .contextMenu.",
+  "api": [
+    "init(_ messageText: String, feedback: Binding<MonarchAiMessageFeedback?>? = nil, isReadingAloud: Binding<Bool>? = nil, isCopyable: Bool = true, isShareable: Bool = false, labels: MonarchAiMessageActionsLabels = MonarchAiMessageActionsLabels(), onCopy: (@MainActor (String) -> Void)? = nil, onRegenerate: (@MainActor () -> Void)? = nil, onEdit: (@MainActor () -> Void)? = nil, @ViewBuilder more: () -> More)",
+    "init(_ messageText: String, feedback: Binding<MonarchAiMessageFeedback?>? = nil, isReadingAloud: Binding<Bool>? = nil, isCopyable: Bool = true, isShareable: Bool = false, labels: MonarchAiMessageActionsLabels = MonarchAiMessageActionsLabels(), onCopy: (@MainActor (String) -> Void)? = nil, onRegenerate: (@MainActor () -> Void)? = nil, onEdit: (@MainActor () -> Void)? = nil) where More == EmptyView",
+    "MonarchAiMessageActionsLabels.init(toolbar:copy:copied:regenerate:edit:good:bad:share:readAloud:stopReading:more:), every parameter String? = nil"
+  ],
+  "options": [
+    {
+      "name": "messageText",
+      "type": "String",
+      "default": "required",
+      "description": "The message's plain text: what Copy copies and Share shares."
+    },
+    {
+      "name": "feedback",
+      "type": "Binding<MonarchAiMessageFeedback?>?",
+      "default": "nil",
+      "description": "The rating. Shows the thumbs when set; pressing the pressed thumb sets it to nil."
+    },
+    {
+      "name": "isReadingAloud",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Whether the app is reading the message aloud. Shows Read aloud when set; the button only flips the value, the app speaks."
+    },
+    {
+      "name": "isCopyable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows Copy (MonarchCopyButton)."
+    },
+    {
+      "name": "isShareable",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows Share, the system share sheet with the message text."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiMessageActionsLabels",
+      "default": "MonarchAiMessageActionsLabels()",
+      "description": "Replacements for the row name and every button title."
+    },
+    {
+      "name": "onCopy",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Runs with the copied text after each copy, for analytics. Copy writes to the pasteboard itself."
+    },
+    {
+      "name": "onRegenerate",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows Regenerate and runs when it is pressed."
+    },
+    {
+      "name": "onEdit",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows Edit and runs when it is pressed."
+    },
+    {
+      "name": "more",
+      "type": "@ViewBuilder () -> More",
+      "default": "EmptyView",
+      "description": "Extra menu items at the end of the More menu. Without them, More appears only when actions do not fit."
+    }
+  ],
+  "states": [
+    {
+      "name": "rated",
+      "description": "The pressed thumb is filled and selected; the other is an outline."
+    },
+    {
+      "name": "copied",
+      "description": "Copy shows a checkmark and is named \"Copied\" for two seconds (MonarchCopyButton)."
+    },
+    {
+      "name": "reading aloud",
+      "description": "Read aloud shows a stop symbol and is named \"Stop reading\"."
+    },
+    {
+      "name": "narrow",
+      "description": "When the full row does not fit, Copy and the thumbs stay and Regenerate, Edit, Share and Read aloud move into the More menu."
+    },
+    {
+      "name": "disabled",
+      "description": "Every button takes the disabled colours with .disabled(true)."
+    }
+  ],
+  "appearance": "Ghost icon buttons in the small size: the icons use the default text colour, the pressed thumb uses the selected toggle colours and a filled symbol. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web row appears on hover by default; phones have no hover, so the iOS row is always visible. The web speaks the text with the browser's speech synthesis; on iOS the app owns speech (AVSpeechSynthesizer) and the row only flips isReadingAloud, because Monarch adds no audio session handling. The web's onShare callback becomes the system ShareLink with the message text. The web moves between buttons with the arrow keys as one tab stop; on iOS each button is its own VoiceOver element in a container named \"Message actions\". When the row does not fit the width the iOS row moves the less common actions into a More menu, which the web does not do. Android uses the same name and options.",
+  "accessibility": [
+    "The row is a container named \"Message actions\".",
+    "Every action is a standard button named by its title; icons are not read separately.",
+    "The thumbs are toggles named \"Good response\" and \"Bad response\" with the selected state; a pressed thumb is filled, so the state is a shape as well as a colour.",
+    "Read aloud is named \"Stop reading\" while reading.",
+    "Copy announces \"Copied to clipboard\" and plays the success haptic; a rating plays the selection haptic.",
+    "Every button is at least 44 by 44 points."
+  ],
+  "edgeCases": [
+    "With no callbacks and isCopyable false the row is empty.",
+    "An empty message text still copies and shares an empty string; hide the row while the answer streams.",
+    "At the accessibility text sizes the buttons grow and the less common actions move into More.",
+    "The app must set isReadingAloud back to false when speech ends or is interrupted."
+  ],
+  "tests": [
+    "MonarchAiMessageActionsTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "All actions",
+      "fixture": "ai-message-actions",
+      "webExample": "All actions",
+      "template": "MonarchAiMessageActions(\n    {{messageText}},\n    feedback: $feedback,\n    isReadingAloud: $isReading,\n    isShareable: true,\n    onRegenerate: {}\n)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var feedback: MonarchAiMessageFeedback?\n@State private var isReading = false",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var feedback: MonarchAiMessageFeedback?\n@State private var isReading = false",
+      "code": "MonarchAiMessageActions(\n    \"The draft has three sections and a list of next steps.\",\n    feedback: $feedback,\n    isReadingAloud: $isReading,\n    isShareable: true,\n    onRegenerate: {}\n)"
+    },
+    {
+      "title": "The person's own message",
+      "code": "MonarchAiMessageActions(\"Where is the Louvre?\", onEdit: {})"
+    }
+  ],
+  "webEquivalent": "AiMessageActions",
+  "dependsOn": [
+    "copy-button",
+    "share-button",
+    "ai-feedback",
+    "dropdown-menu"
+  ],
+  "icons": {
+    "copy": "CopyGlyph",
+    "regenerate": "RetryGlyph"
+  }
+}

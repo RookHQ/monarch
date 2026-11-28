@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { ScreenShareView } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './screen-share-view.fixture.json';
 
 /** Draws a fake slide on a canvas and shares it as a stream, so the example needs no permission. */
 function useDemoStream() {
@@ -16,11 +18,9 @@ function useDemoStream() {
     ctx.fillRect(0, 0, 1280, 720);
     ctx.fillStyle = 'black';
     ctx.font = '600 56px sans-serif';
-    ctx.fillText('Quarterly planning', 80, 140);
+    ctx.fillText(fixture.data.slide.title, 80, 140);
     ctx.font = '32px sans-serif';
-    ['Goals for the next quarter', 'Hiring plan', 'Open questions'].forEach((line, i) =>
-      ctx.fillText(`• ${line}`, 100, 260 + i * 70),
-    );
+    fixture.data.slide.bullets.forEach((line, i) => ctx.fillText(`• ${line}`, 100, 260 + i * 70));
     const s = canvas.captureStream(1);
     setStream(s);
     return () => s.getTracks().forEach((t) => t.stop());
@@ -32,7 +32,7 @@ function RemoteShare() {
   const stream = useDemoStream();
   return (
     <div style={{ width: '100%', maxWidth: 640 }}>
-      <ScreenShareView stream={stream} presenterName="Jordan Lee" />
+      <ScreenShareView stream={stream} presenterName={fixture.data.presenter} />
     </div>
   );
 }

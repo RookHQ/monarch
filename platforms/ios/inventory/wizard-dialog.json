@@ -1,0 +1,77 @@
+{
+  "id": "wizard-dialog",
+  "name": null,
+  "title": "WizardDialog",
+  "family": "overlays",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:) holding a NavigationStack with MonarchStepper, the step's content and a bottom bar of MonarchButton Back and Continue; interactiveDismissDisabled once the person has started",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a task of a few steps in a sheet, with a stepper showing progress, the current step's content, Back and Continue, and a danger last step.",
+  "whenToUse": "For a short task with two to five ordered steps that belongs over the current screen: setting up an integration, moving a project, deleting a workspace with checks.",
+  "whenNotToUse": "For one step use a sheet (see responsive-dialog). For a long onboarding flow use pushed screens in a NavigationStack. For a form whose steps are independent, use one scrolling form with sections.",
+  "api": [
+    "MonarchStepper.init(_ steps: [MonarchStepperStep], current: Int, furthest: Int? = nil, orientation: MonarchStepperOrientation = .horizontal, compact: MonarchStepperCompactMode = .automatic, labels: MonarchStepperLabels = MonarchStepperLabels(), onSelect: (@MainActor (MonarchStepperStep, Int) -> Void)? = nil)",
+    "func sheet(isPresented: Binding<Bool>, content: () -> some View) -> some View",
+    "func interactiveDismissDisabled(_ isDisabled: Bool = true) -> some View",
+    "MonarchButton.init(_ title: String, …, variant: MonarchButtonVariant = .secondary, …, action: @escaping @MainActor () -> Void)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "step",
+      "description": "The stepper marks the current step; the content shows the step's title (a header) and fields; Back and Continue are at the bottom."
+    },
+    {
+      "name": "blocked",
+      "description": "Continue is disabled while the step is not valid, with the reason shown as caption text next to the buttons."
+    },
+    {
+      "name": "destructive last step",
+      "description": "Continue is named after the action (\"Delete workspace\") and uses the danger variant."
+    },
+    {
+      "name": "started",
+      "description": "After the first step the sheet cannot be swiped away; Cancel in the toolbar closes it."
+    }
+  ],
+  "appearance": "A system sheet on the theme's surface colour with MonarchStepper (accent for the current step), Monarch text styles, a secondary Back button and a primary or danger Continue button.",
+  "platformNotes": "The web WizardDialog is a component that takes steps with content, canContinue, blockedReason, a per-step async onContinue with pending and error states, and a done step. On iOS the app holds the step index and composes MonarchStepper and MonarchButton in a sheet; a step's async work uses the button's isLoading and shows failures with MonarchInlineNotice. The web moves focus to the step heading; on iOS post an AccessibilityNotification.Announcement of the new step or use AccessibilityFocusState. Android plans the same recipe.",
+  "accessibility": [
+    "MonarchStepper reads \"Step 2 of 4\" and each step's state; the step title has the header trait.",
+    "Announce the new step with AccessibilityNotification.Announcement when Continue or Back changes it, since focus stays on the button.",
+    "A disabled Continue has its reason shown as text, not only a dimmed button.",
+    "Cancel is in the toolbar with the cancellationAction placement, so the escape gesture is not the only way out once dismissal is disabled."
+  ],
+  "edgeCases": [
+    "At compact widths the stepper switches to its compact form by itself.",
+    "Keep the entered values in the parent's state so Back shows them again.",
+    "Reset the step to the first when the sheet is dismissed."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Review, export, confirm, done",
+      "fixture": "wizard-dialog",
+      "webExample": "Review, export, confirm, done",
+      "template": "MonarchButton({{trigger}}, variant: .danger) {\n    step = 0\n    isOpen = true\n}\n.sheet(isPresented: $isOpen) {\n    NavigationStack {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            Text({{description}})\n                .monarchTextStyle(.body)\n            if step < steps.count {\n                MonarchStepper(steps, current: step, compact: .always)\n            }\n            Text(step < steps.count ? steps[step].label : {{done.title}})\n                .monarchTextStyle(.subheading)\n                .accessibilityAddTraits(.isHeader)\n            switch step {\n            case 0:\n                HStack(alignment: .firstTextBaseline, spacing: theme.spacing.space2) {\n                    Text(\"•\")\n                    Text({{review.items.0}})\n                }\n                .monarchTextStyle(.body)\n                HStack(alignment: .firstTextBaseline, spacing: theme.spacing.space2) {\n                    Text(\"•\")\n                    Text({{review.items.1}})\n                }\n                .monarchTextStyle(.body)\n            case 1:\n                Text({{export.description}}).monarchTextStyle(.body)\n                Toggle({{export.label}}, isOn: $exported)\n                    .toggleStyle(.monarchCheckbox)\n                if !exported {\n                    Text({{export.blocked}}).monarchTextStyle(.caption)\n                }\n            case 2:\n                Text({{confirm.content}}).monarchTextStyle(.body)\n            default:\n                Text({{done.content}}).monarchTextStyle(.body)\n            }\n            Spacer(minLength: 0)\n            HStack {\n                if step > 0 && step < steps.count {\n                    MonarchButton(\"Back\") { step -= 1 }\n                }\n                Spacer(minLength: 0)\n                if step < steps.count {\n                    MonarchButton(\n                        step == steps.count - 1 ? {{confirm.continueLabel}} : \"Continue\",\n                        variant: step == steps.count - 1 ? .danger : .primary\n                    ) {\n                        step += 1\n                    }\n                    .disabled(step == 1 && !exported)\n                } else {\n                    MonarchButton(\"Close\") { isOpen = false }\n                }\n            }\n        }\n        .padding(theme.spacing.space4)\n        .navigationTitle({{title}})\n        #if os(iOS)\n        .navigationBarTitleDisplayMode(.inline)\n        #endif\n        .toolbar {\n            ToolbarItem(placement: .cancellationAction) {\n                Button(\"Cancel\") { isOpen = false }\n            }\n        }\n    }\n    .interactiveDismissDisabled(step > 0 && step < steps.count)\n    .presentationBackground(theme.colors.bgSurface)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = true\n@State private var step = 0\n@State private var exported = false\nprivate let steps = [\n    MonarchStepperStep(id: \"review\", label: {{review.title}}),\n    MonarchStepperStep(id: \"export\", label: {{export.title}}),\n    MonarchStepperStep(id: \"confirm\", label: {{confirm.title}}),\n]",
+      "previewPresented": [
+        "isOpen"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = true\n@State private var step = 0\n@State private var exported = false\nprivate let steps = [\n    MonarchStepperStep(id: \"review\", label: \"What happens\"),\n    MonarchStepperStep(id: \"export\", label: \"Keep a copy\"),\n    MonarchStepperStep(id: \"confirm\", label: \"Close the project\"),\n]",
+      "code": "MonarchButton(\"Close project\", variant: .danger) {\n    step = 0\n    isOpen = true\n}\n.sheet(isPresented: $isOpen) {\n    NavigationStack {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            Text(\"Closing removes the project for everyone.\")\n                .monarchTextStyle(.body)\n            if step < steps.count {\n                MonarchStepper(steps, current: step, compact: .always)\n            }\n            Text(step < steps.count ? steps[step].label : \"Project closed\")\n                .monarchTextStyle(.subheading)\n                .accessibilityAddTraits(.isHeader)\n            switch step {\n            case 0:\n                HStack(alignment: .firstTextBaseline, spacing: theme.spacing.space2) {\n                    Text(\"•\")\n                    Text(\"48 tasks are archived\")\n                }\n                .monarchTextStyle(.body)\n                HStack(alignment: .firstTextBaseline, spacing: theme.spacing.space2) {\n                    Text(\"•\")\n                    Text(\"6 people lose access\")\n                }\n                .monarchTextStyle(.body)\n            case 1:\n                Text(\"Download the tasks and comments before you continue.\").monarchTextStyle(.body)\n                Toggle(\"I have downloaded a copy, or I do not need one\", isOn: $exported)\n                    .toggleStyle(.monarchCheckbox)\n                if !exported {\n                    Text(\"Tick the box to continue.\").monarchTextStyle(.caption)\n                }\n            case 2:\n                Text(\"You can reopen it from Archive for 30 days.\").monarchTextStyle(.body)\n            default:\n                Text(\"It is in Archive.\").monarchTextStyle(.body)\n            }\n            Spacer(minLength: 0)\n            HStack {\n                if step > 0 && step < steps.count {\n                    MonarchButton(\"Back\") { step -= 1 }\n                }\n                Spacer(minLength: 0)\n                if step < steps.count {\n                    MonarchButton(\n                        step == steps.count - 1 ? \"Close project\" : \"Continue\",\n                        variant: step == steps.count - 1 ? .danger : .primary\n                    ) {\n                        step += 1\n                    }\n                    .disabled(step == 1 && !exported)\n                } else {\n                    MonarchButton(\"Close\") { isOpen = false }\n                }\n            }\n        }\n        .padding(theme.spacing.space4)\n        .navigationTitle(\"Close project\")\n        #if os(iOS)\n        .navigationBarTitleDisplayMode(.inline)\n        #endif\n        .toolbar {\n            ToolbarItem(placement: .cancellationAction) {\n                Button(\"Cancel\") { isOpen = false }\n            }\n        }\n    }\n    .interactiveDismissDisabled(step > 0 && step < steps.count)\n    .presentationBackground(theme.colors.bgSurface)\n}"
+    }
+  ],
+  "webEquivalent": "WizardDialog",
+  "dependsOn": [
+    "sheet",
+    "stepper",
+    "button"
+  ]
+}

@@ -11,6 +11,8 @@ import {
   type AiPromptTriggerState,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-prompt-input.fixture.json';
 
 const transport = mockTransport({
   delayMs: 50,
@@ -37,7 +39,7 @@ function ChatDemo() {
         ))}
       </ol>
       <AiPromptInput
-        label="Message the assistant"
+        label={fixture.data.label}
         value={draft}
         onValueChange={setDraft}
         status={chat.status}
@@ -54,9 +56,9 @@ function ChatDemo() {
           clear();
         }}
         accept="image/*,.pdf,.txt"
-        maxLength={4000}
+        maxLength={fixture.data.maxLength}
         countTokens={(t) => Math.ceil(t.length / 4)}
-        footer="Answers can be wrong. Check important facts."
+        footer={fixture.data.footer}
       />
     </div>
   );

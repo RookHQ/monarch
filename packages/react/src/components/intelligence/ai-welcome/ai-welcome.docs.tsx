@@ -9,6 +9,8 @@ import {
   useAiConversation,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-welcome.fixture.json';
 
 const transport = mockTransport({
   delayMs: 40,
@@ -20,7 +22,7 @@ const transport = mockTransport({
   ],
 });
 
-const AGENT = { name: 'Assistant', role: 'Workspace assistant' };
+const AGENT = fixture.data.agent;
 
 function Demo() {
   const chat = useAiConversation({ transport });
@@ -35,18 +37,11 @@ function Demo() {
           empty={
             <AiWelcome
               agent={AGENT}
-              title="How can I help?"
-              description="I can read the page you are on and the documents you share with me."
+              title={fixture.data.title}
+              description={fixture.data.description}
               starters={
                 <AiStarterPrompts
-                  prompts={[
-                    { id: 'sum', title: 'Summarise this page', prompt: 'Summarise this page.' },
-                    {
-                      id: 'next',
-                      title: 'Suggest next steps',
-                      prompt: 'What should I do next on this project?',
-                    },
-                  ]}
+                  prompts={fixture.data.prompts}
                   onSelect={(prompt) => void chat.send(prompt)}
                 />
               }

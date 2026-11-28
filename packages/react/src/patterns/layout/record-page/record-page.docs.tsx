@@ -1,12 +1,16 @@
 import { Button, StatusBadge } from '@rookcom/monarch-react';
 import { RecordPage } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './record-page.fixture.json';
 
-const sampleTabs = [
-  { value: 'overview', label: 'Overview', content: <p>Overview content for the sample record.</p> },
-  { value: 'notes', label: 'Notes', count: 2, content: <p>Two sample notes.</p> },
-  { value: 'files', label: 'Files', content: <p>No files yet.</p> },
-];
+const record = fixture.data;
+const sampleTabs = record.tabs.map((tab) => ({
+  value: tab.value,
+  label: tab.label,
+  ...('count' in tab && { count: tab.count }),
+  content: <p>{tab.content}</p>,
+}));
 
 export default {
   id: 'record-page',
@@ -125,20 +129,23 @@ export default {
           title: 'Record with tabs, details and activity',
           render: () => (
             <RecordPage
-              title="Sample record"
+              title={record.title}
               headerProps={{
                 headingLevel: 'h2',
-                status: <StatusBadge status="success" label="Active" size="sm" />,
-                subtitle: 'REC-0001',
-                facts: [
-                  { term: 'Owner', value: 'Person A' },
-                  { term: 'Created', value: '1 June 2026' },
-                ],
-                actions: <Button size="sm">Edit</Button>,
+                status: (
+                  <StatusBadge
+                    status={record.status.tone as 'success'}
+                    label={record.status.label}
+                    size="sm"
+                  />
+                ),
+                subtitle: record.subtitle,
+                facts: record.facts,
+                actions: <Button size="sm">{record.action}</Button>,
               }}
               tabs={sampleTabs}
-              aside={<p>Properties and related records go here.</p>}
-              activity={<p>Sample activity entries go here.</p>}
+              aside={<p>{record.aside}</p>}
+              activity={<p>{record.activity}</p>}
             />
           ),
         },

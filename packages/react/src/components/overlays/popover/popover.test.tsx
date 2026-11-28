@@ -6,8 +6,29 @@ import { expectNoA11yViolations } from '../../../../test/a11y.js';
 import { DirectionProvider } from '../../../internal/direction.js';
 import { Button } from '../../actions/button/index.js';
 import { Popover, PopoverContent, PopoverTrigger } from './index.js';
+import { OverlayStage } from '../../../internal/overlay-stage.js';
 
 describe('Popover', () => {
+  it('is never modal in an overlay stage, even when asked to be', () => {
+    render(
+      <>
+        <button type="button">Elsewhere</button>
+        <OverlayStage>
+          <Popover defaultOpen modal>
+            <PopoverTrigger asChild>
+              <Button>Filters</Button>
+            </PopoverTrigger>
+            <PopoverContent aria-label="Filters">Only mine</PopoverContent>
+          </Popover>
+        </OverlayStage>
+      </>,
+    );
+    const stage = document.querySelector('[data-mn-overlay-stage]');
+    expect(stage?.contains(screen.getByText('Only mine'))).toBe(true);
+    expect(screen.getByRole('button', { name: 'Elsewhere' }).closest('[aria-hidden]')).toBeNull();
+    expect(stage?.contains(document.activeElement)).toBe(false);
+  });
+
   it('opens and closes with Escape, returning focus', async () => {
     render(
       <Popover>

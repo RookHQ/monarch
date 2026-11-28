@@ -2,44 +2,13 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { FacetedFilterPanel, type Facet, type FacetValue } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './faceted-filter-panel.fixture.json';
 
-const FACETS: Facet[] = [
-  {
-    id: 'status',
-    label: 'Status',
-    type: 'checkbox',
-    options: [
-      { value: 'open', label: 'Open', count: 128 },
-      { value: 'in-review', label: 'In review', count: 42 },
-      { value: 'done', label: 'Done', count: 1204 },
-      { value: 'archived', label: 'Archived', count: 0 },
-    ],
-  },
-  {
-    id: 'owner',
-    label: 'Owner',
-    type: 'checkbox',
-    maxVisible: 3,
-    options: [
-      { value: 'alex', label: 'Alex Kim', count: 64 },
-      { value: 'sam', label: 'Sam Rivera', count: 51 },
-      { value: 'priya', label: 'Priya Shah', count: 38 },
-      { value: 'jordan', label: 'Jordan Lee', count: 22 },
-      { value: 'morgan', label: 'Morgan Diaz', count: 9 },
-    ],
-  },
-  { id: 'size', label: 'File size', type: 'range', min: 0, step: 1, unit: 'MB' },
-  {
-    id: 'type',
-    label: 'Type',
-    type: 'checkbox',
-    defaultOpen: false,
-    options: [
-      { value: 'doc', label: 'Document', count: 310 },
-      { value: 'sheet', label: 'Spreadsheet', count: 88 },
-    ],
-  },
-];
+const FACETS = fixture.data.facets as Facet[];
+const SELECTED: FacetValue = Object.fromEntries(
+  fixture.data.selected.map((entry) => [entry.facet, entry.values]),
+);
 
 function ControlledDemo() {
   const [value, setValue] = useState<FacetValue>({ status: ['open'], size: { max: 25 } });
@@ -192,7 +161,7 @@ export default {
           title: 'Checkbox and range facets',
           render: () => (
             <div style={{ maxWidth: '18rem', width: '100%' }}>
-              <FacetedFilterPanel facets={FACETS} defaultValue={{ owner: ['morgan'] }} />
+              <FacetedFilterPanel facets={FACETS} defaultValue={SELECTED} />
             </div>
           ),
         },

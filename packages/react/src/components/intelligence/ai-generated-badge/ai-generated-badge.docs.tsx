@@ -1,5 +1,7 @@
-import { AiGeneratedBadge } from '@rookcom/monarch-react/ai';
+import { AiGeneratedBadge, type AiGeneratedKind } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-generated-badge.fixture.json';
 
 export default {
   id: 'ai-generated-badge',
@@ -112,9 +114,9 @@ export default {
           title: 'Kinds',
           render: () => (
             <>
-              <AiGeneratedBadge kind="generated" />
-              <AiGeneratedBadge kind="assisted" />
-              <AiGeneratedBadge kind="edited" />
+              {fixture.data.kinds.map((kind) => (
+                <AiGeneratedBadge key={kind} kind={kind as AiGeneratedKind} />
+              ))}
             </>
           ),
         },

@@ -2,20 +2,17 @@ import { useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiContextChips, type AiContextChip } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-context-chips.fixture.json';
 
-const CONTEXT: AiContextChip[] = [
-  { id: 'page', kind: 'page', label: 'Project overview', removable: false, tokens: 640 },
-  {
-    id: 'sel',
-    kind: 'selection',
-    label: 'Selected text',
-    description: '“The launch moves to the second week of May…”',
-    tokens: 90,
-  },
-  { id: 'file', kind: 'file', label: 'Quarterly plan.pdf', tokens: 4200 },
-  { id: 'rec', kind: 'record', label: 'Account 1042', tokens: 310 },
-  { id: 'person', kind: 'person', label: 'Ana Lopez', tokens: 60 },
-];
+const CONTEXT: AiContextChip[] = fixture.data.items.map((item) => ({
+  id: item.id,
+  kind: item.kind as AiContextChip['kind'],
+  label: item.label,
+  tokens: item.tokens,
+  ...('description' in item ? { description: item.description } : {}),
+  ...('removable' in item ? { removable: item.removable } : {}),
+}));
 
 function RemovableDemo() {
   const [items, setItems] = useState(CONTEXT);
@@ -23,12 +20,12 @@ function RemovableDemo() {
     <div style={{ display: 'grid', gap: 'var(--mn-space-2)', width: '100%', maxWidth: '40rem' }}>
       <AiContextChips
         items={items}
-        empty="Nothing attached. The assistant only sees your message."
+        empty={fixture.data.empty}
         onRemove={(id) => setItems((list) => list.filter((i) => i.id !== id))}
       />
       {items.length < CONTEXT.length ? (
         <Button size="sm" variant="ghost" onClick={() => setItems(CONTEXT)}>
-          Reset
+          {fixture.data.reset}
         </Button>
       ) : null}
     </div>

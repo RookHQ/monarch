@@ -1,6 +1,13 @@
 import { useState } from 'react';
-import { AppearancePanel, type AppearancePreferences } from '@rookcom/monarch-react/shell';
+import {
+  AppearancePanel,
+  type AppearancePreferences,
+  type AppearanceSection,
+} from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+// The panel starts from its own defaults, which are the fixture's `preferences`.
+import fixture from './appearance-panel.fixture.json';
 
 function ControlledDemo() {
   const [prefs, setPrefs] = useState<AppearancePreferences>({
@@ -135,7 +142,11 @@ export default {
           stack: true,
           render: () => (
             <div style={{ width: '100%', maxWidth: 560 }}>
-              <AppearancePanel cookies={null} heading="Appearance" />
+              <AppearancePanel
+                cookies={null}
+                heading={fixture.data.heading}
+                sections={fixture.data.rows as AppearanceSection[]}
+              />
             </div>
           ),
         },

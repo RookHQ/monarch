@@ -1,0 +1,106 @@
+{
+  "id": "theme-toggle",
+  "name": "MonarchThemeToggle",
+  "title": "ThemeToggle",
+  "family": "interaction",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Picker with .pickerStyle(.segmented); Menu with an inline Picker and .menuStyle(.button), drawn with MonarchButtonStyle (ghost)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Light, dark or system appearance, bound to the MonarchSchemePreference that the app passes to .monarchTheme(scheme:).",
+  "whenToUse": "On a settings screen (segmented) or in a toolbar or account menu (menu) to let people choose the app's appearance.",
+  "whenNotToUse": "Not for contrast or accent choices; use a standard Picker bound to MonarchContrastPreference or the accent. Not needed when the app always follows the device.",
+  "api": [
+    "init(selection: Binding<MonarchSchemePreference>, variant: MonarchThemeToggleVariant = .segmented, size: MonarchThemeToggleSize = .md, showsLabel: Bool = true, labels: MonarchThemeToggleLabels = MonarchThemeToggleLabels())",
+    "static func storageValue(for preference: MonarchSchemePreference) -> String",
+    "static func preference(storageValue: String?) -> MonarchSchemePreference?",
+    "enum MonarchThemeToggleVariant { case segmented, menu }",
+    "enum MonarchThemeToggleSize { case sm, md }",
+    "struct MonarchThemeToggleLabels { var title, light, dark, system: String? }"
+  ],
+  "options": [
+    {
+      "name": "selection",
+      "type": "Binding<MonarchSchemePreference>",
+      "default": "required",
+      "description": "The chosen scheme: .light, .dark or .system. The app applies it with .monarchTheme(scheme:) and stores it."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchThemeToggleVariant",
+      "default": ".segmented",
+      "description": "segmented shows three segments; menu shows one button that opens the three choices."
+    },
+    {
+      "name": "size",
+      "type": "MonarchThemeToggleSize",
+      "default": ".md",
+      "description": "sm or md. Segmented: the regular or the large system control. Menu: the sm or md Monarch button."
+    },
+    {
+      "name": "showsLabel",
+      "type": "Bool",
+      "default": "true",
+      "description": "menu only: whether the button shows the current choice's name beside its symbol. Without it the name is still spoken."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchThemeToggleLabels",
+      "default": "MonarchThemeToggleLabels()",
+      "description": "Replacements for the built-in strings Theme, Light, Dark and System."
+    }
+  ],
+  "states": [
+    {
+      "name": "light, dark, system",
+      "description": "The selected segment, or the checked menu item and the symbol and name on the menu button (sun, moon, half-filled circle)."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true) the system dims the segmented control; the menu button uses the disabled roles of the Monarch button style."
+    }
+  ],
+  "appearance": "The segmented variant is the system segmented control, whose selected segment follows the system look in light, dark and increased contrast. The menu variant is a ghost Monarch button: default text colour on no fill, a subtle fill while pressed, and the system menu with a checkmark on the current choice.",
+  "platformNotes": "The web toggle reads and writes the shared rook_theme cookie and applies the theme to the html element itself. On iOS there is no shared cookie: the toggle only changes its binding, and the app stores the choice (for example with @AppStorage) and applies it with .monarchTheme(scheme:). storageValue(for:) and preference(storageValue:) use the same light, dark and system values as the cookie. The web menu variant's side and align options have no meaning for a system menu, which the system places. Segments show names only, because a system segmented control shows either text or an image per segment.",
+  "accessibility": [
+    "Both variants are standard Pickers, so VoiceOver reads the choices as items with the current one selected, and the menu's choices carry the system checkmark.",
+    "The menu button is named Theme (or labels.title) and its value is the current choice's name, also when showsLabel is false.",
+    "The choices are named in words; the symbols are not the only sign of the choice.",
+    "The menu button has a touch target of at least 44 by 44 points; the segmented control keeps the system control height.",
+    "Names scale with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Long translated names are truncated by the system segmented control; use the menu variant when names are long.",
+    "preference(storageValue:) returns nil for a missing or unknown stored value, so the app chooses its own default.",
+    "The toggle can sit inside a view whose theme it changes; the change applies as soon as the binding changes."
+  ],
+  "tests": [
+    "MonarchThemeToggleTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Appearance setting",
+      "fixture": "theme-toggle",
+      "webExample": "Appearance setting",
+      "template": "MonarchThemeToggle(selection: $scheme)",
+      "setupTemplate": "@State private var scheme: MonarchSchemePreference = {{preference|case}}",
+      "setup": "@State private var scheme: MonarchSchemePreference = .system",
+      "code": "MonarchThemeToggle(selection: $scheme)"
+    },
+    {
+      "title": "A menu kept in UserDefaults",
+      "setup": "@AppStorage(\"theme\") private var stored = \"system\"",
+      "code": "MonarchThemeToggle(\n    selection: Binding(\n        get: { MonarchThemeToggle.preference(storageValue: stored) ?? .system },\n        set: { stored = MonarchThemeToggle.storageValue(for: $0) }\n    ),\n    variant: .menu\n)"
+    }
+  ],
+  "webEquivalent": "ThemeToggle",
+  "dependsOn": [
+    "segmented-control",
+    "button"
+  ]
+}

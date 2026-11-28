@@ -1,0 +1,122 @@
+{
+  "id": "my-status",
+  "name": "MonarchMyStatus",
+  "title": "MyStatus",
+  "family": "identity",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Button with a private ButtonStyle around MonarchAvatar (with its presence dot) and two Text lines; TimelineView with a schedule that ends at the status's until time",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The signed-in person's avatar, presence and custom status, as one row that opens their status settings.",
+  "whenToUse": "At the top of a sidebar, an account screen or a workspace switcher, where people check and change their own status.",
+  "whenNotToUse": "Not for other people (use MonarchAvatar with a presence, or a member row). Not for the account menu itself (use the account menu).",
+  "api": [
+    "init(_ name: String, url: URL?, presence: MonarchPresenceStatus, customStatus: MonarchMyStatusCustomStatus? = nil, now: Date? = nil, labels: MonarchMyStatusLabels = MonarchMyStatusLabels(), action: @escaping @MainActor () -> Void)",
+    "init(_ name: String, image: Image?, presence: MonarchPresenceStatus, customStatus: MonarchMyStatusCustomStatus? = nil, now: Date? = nil, labels: MonarchMyStatusLabels = MonarchMyStatusLabels(), action: @escaping @MainActor () -> Void)",
+    "struct MonarchMyStatusCustomStatus { init(_ text: String? = nil, emoji: String? = nil, until: Date? = nil) }",
+    "struct MonarchMyStatusLabels { init(hint: String? = nil, setStatus: String? = nil, presence: (@Sendable (MonarchPresenceStatus) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "name",
+      "type": "String",
+      "default": "required",
+      "description": "The person's display name, already localised. Also the avatar's initials."
+    },
+    {
+      "name": "url / image",
+      "type": "URL? / Image?",
+      "default": "required",
+      "description": "The avatar, loaded with AsyncImage from a URL or given as an Image; nil shows the initials."
+    },
+    {
+      "name": "presence",
+      "type": "MonarchPresenceStatus",
+      "default": "required",
+      "description": "Online, away, busy, do not disturb or offline. Drawn as the avatar's presence dot."
+    },
+    {
+      "name": "customStatus",
+      "type": "MonarchMyStatusCustomStatus?",
+      "default": "nil",
+      "description": "The person's own message and emoji, with an optional until time after which it is hidden."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The time until is compared with. Without it the row reads the current time and draws itself again when the status ends; pass it for a fixed rendering."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchMyStatusLabels",
+      "default": "MonarchMyStatusLabels()",
+      "description": "Replacements for the hint, the \"Set a status\" invitation and the presence names."
+    },
+    {
+      "name": "action",
+      "type": "@MainActor () -> Void",
+      "default": "required",
+      "description": "Opens the status settings, usually a sheet the app presents."
+    }
+  ],
+  "states": [
+    {
+      "name": "custom status",
+      "description": "The emoji and message under the name, in the muted text colour."
+    },
+    {
+      "name": "presence only",
+      "description": "Without a status, away, busy and do not disturb are written under the name."
+    },
+    {
+      "name": "no status",
+      "description": "Online or offline without a status shows \"Set a status\" in the subtle text colour."
+    },
+    {
+      "name": "expired",
+      "description": "A status whose until has passed is hidden, at that moment, without the app doing anything."
+    },
+    {
+      "name": "pressed",
+      "description": "The row gets the muted background."
+    }
+  ],
+  "appearance": "A small avatar with its presence dot, the name in the strong body style and a caption line under it, on no background until pressed (the muted background role). All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web renders a link with href or a button; on iOS the row is always a button and the app navigates or presents a sheet in the action. The web re-renders with a timer when until passes; on iOS a TimelineView schedule ends at until. The web reads \"Your status and settings\" before the name; on iOS that is the hint. Android has the same parameters.",
+  "accessibility": [
+    "The row is one button, named by the person's name.",
+    "Its value is the presence and the status line, such as \"Online, On holiday\", or just the presence when the line is the presence.",
+    "Its hint is \"Opens your status and settings\".",
+    "The presence is always in words, so it never depends on the dot's colour; the avatar is hidden as decorative.",
+    "The row is at least 44 points high and the text wraps at large sizes."
+  ],
+  "edgeCases": [
+    "A status made of spaces is treated as no status.",
+    "An emoji without a message shows the emoji alone.",
+    "An until in the past hides the status at once."
+  ],
+  "tests": [
+    "MonarchMyStatusTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "With a custom status, away, and no status",
+      "fixture": "my-status",
+      "webExample": "With a custom status, away, and no status",
+      "template": "VStack(alignment: .leading, spacing: 4) {\n    MonarchMyStatus(\n        {{people.0.name}},\n        url: nil,\n        presence: {{people.0.presence|case}},\n        customStatus: MonarchMyStatusCustomStatus({{people.0.customStatus.text}}, emoji: {{people.0.customStatus.emoji}}),\n        now: {{now|date}}\n    ) {}\n    MonarchMyStatus(\n        {{people.1.name}},\n        url: nil,\n        presence: {{people.1.presence|case}},\n        now: {{now|date}}\n    ) {}\n    MonarchMyStatus(\n        {{people.2.name}},\n        url: nil,\n        presence: {{people.2.presence|case}},\n        now: {{now|date}}\n    ) {}\n}",
+      "code": "VStack(alignment: .leading, spacing: 4) {\n    MonarchMyStatus(\n        \"Ada Lovelace\",\n        url: nil,\n        presence: .online,\n        customStatus: MonarchMyStatusCustomStatus(\"In a workshop until 3pm\", emoji: \"📅\"),\n        now: Date(timeIntervalSince1970: 1_772_445_600)\n    ) {}\n    MonarchMyStatus(\n        \"Grace Hopper\",\n        url: nil,\n        presence: .away,\n        now: Date(timeIntervalSince1970: 1_772_445_600)\n    ) {}\n    MonarchMyStatus(\n        \"Alan Turing\",\n        url: nil,\n        presence: .online,\n        now: Date(timeIntervalSince1970: 1_772_445_600)\n    ) {}\n}"
+    }
+  ],
+  "webEquivalent": "MyStatus",
+  "dependsOn": [
+    "avatar",
+    "presence-dot",
+    "sheet"
+  ]
+}

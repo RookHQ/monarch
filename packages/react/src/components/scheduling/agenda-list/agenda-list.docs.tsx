@@ -1,46 +1,56 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- the fixture is a fixed JSON literal; the indices below exist. */
 import { Button } from '@rookcom/monarch-react';
 import { AgendaList, type CalendarEvent } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './agenda-list.fixture.json';
 
-const at = (day: string, time: string) => `${day}T${time}:00Z`;
+const rgb = (c: { r: number; g: number; b: number }) =>
+  `#${[c.r, c.g, c.b].map((n) => n.toString(16).padStart(2, '0')).join('')}`;
+
+const { events: E, dayNotes: NOTES } = fixture.data;
 
 const EVENTS: CalendarEvent[] = [
-  { id: 'e1', title: 'Team offsite', start: '2026-11-04', allDay: true, color: '#16a34a' },
+  { id: E[0]!.id, title: E[0]!.title, start: E[0]!.start, allDay: true, color: rgb(E[0]!.color) },
   {
-    id: 'e2',
-    title: 'Stand-up',
-    start: at('2026-11-04', '09:00'),
-    end: at('2026-11-04', '09:15'),
-    color: '#0f766e',
+    id: E[1]!.id,
+    title: E[1]!.title,
+    start: E[1]!.start,
+    end: E[1]!.end as string,
+    color: rgb(E[1]!.color),
   },
   {
-    id: 'e3',
-    title: 'Design review',
-    start: at('2026-11-04', '11:00'),
-    end: at('2026-11-04', '12:00'),
-    detail: 'Room 4',
-    color: '#7c3aed',
+    id: E[2]!.id,
+    title: E[2]!.title,
+    start: E[2]!.start,
+    end: E[2]!.end as string,
+    detail: E[2]!.detail as string,
+    color: rgb(E[2]!.color),
   },
   {
-    id: 'e4',
-    title: 'Vendor call',
-    start: at('2026-11-05', '14:00'),
-    end: at('2026-11-05', '14:30'),
+    id: E[3]!.id,
+    title: E[3]!.title,
+    start: E[3]!.start,
+    end: E[3]!.end as string,
     status: 'tentative',
-    detail: 'Video call',
-    color: '#2563eb',
+    detail: E[3]!.detail as string,
+    color: rgb(E[3]!.color),
   },
   {
-    id: 'e5',
-    title: 'Retrospective',
-    start: at('2026-11-06', '16:00'),
-    end: at('2026-11-06', '17:00'),
+    id: E[4]!.id,
+    title: E[4]!.title,
+    start: E[4]!.start,
+    end: E[4]!.end as string,
     status: 'cancelled',
-    color: '#c2410c',
+    color: rgb(E[4]!.color),
   },
 ];
 
-const base = { timeZone: 'UTC', locale: 'en-GB', today: '2026-11-04' } as const;
+const base = {
+  timeZone: fixture.data.timeZone,
+  locale: fixture.data.locale,
+  today: fixture.data.today,
+} as const;
 
 export default {
   id: 'agenda-list',
@@ -171,7 +181,7 @@ export default {
                 {...base}
                 events={EVENTS}
                 aria-label="Agenda"
-                dayNotes={(day) => (day === '2026-11-05' ? ['Time off · Priya'] : undefined)}
+                dayNotes={(day) => (day === NOTES[0]!.day ? NOTES[0]!.notes : undefined)}
                 style={{ maxHeight: 360 }}
               />
             </div>

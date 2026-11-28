@@ -1,15 +1,10 @@
-import { Button } from '@rookcom/monarch-react';
+import { Button, Link } from '@rookcom/monarch-react';
 import { UserHoverCard, type UserHoverCardUser } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './user-hover-card.fixture.json';
 
-const PERSON: UserHoverCardUser = {
-  id: 'person-1',
-  name: 'Sam Rivera',
-  handle: '@sam',
-  title: 'Design lead',
-  status: 'online',
-  statusText: 'Working from the north office',
-};
+const PERSON = fixture.data.user as UserHoverCardUser;
 
 export default {
   id: 'user-hover-card',
@@ -121,25 +116,29 @@ export default {
       items: [
         {
           title: 'Name link with actions',
+          stage: true,
           render: () => (
-            <p>
-              Assigned to{' '}
+            <div
+              style={{ display: 'flex', flexWrap: 'wrap', columnGap: '0.3em', rowGap: '0.375rem' }}
+            >
+              <span>{fixture.data.prefix}</span>
               <UserHoverCard
+                defaultOpen
                 user={PERSON}
                 actions={
                   <>
                     <Button size="sm" variant="primary">
-                      Message
+                      {fixture.data.message}
                     </Button>
                     <Button size="sm" variant="ghost">
-                      View profile
+                      {fixture.data.profile}
                     </Button>
                   </>
                 }
               >
-                <a href="#profile">Sam Rivera</a>
+                <Link href="#profile">{fixture.data.user.name}</Link>
               </UserHoverCard>
-            </p>
+            </div>
           ),
         },
         {
@@ -157,7 +156,7 @@ export default {
           title: 'Loading the profile on open',
           render: () => (
             <UserHoverCard user={{ name: 'Alex Kim' }} loading>
-              <a href="#alex">Alex Kim</a>
+              <Link href="#alex">Alex Kim</Link>
             </UserHoverCard>
           ),
         },

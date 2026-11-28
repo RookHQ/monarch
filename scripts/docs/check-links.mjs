@@ -96,6 +96,13 @@ for (const [file, html] of read) {
     const url = new URL(ref, pageUrl);
     if (url.origin !== origin) continue;
     checked++;
+    // The generated API references (DocC, Dokka) are added to the site by the deploy
+    // workflow after this build, which then checks that their index pages exist.
+    if (
+      url.pathname.startsWith(base) &&
+      /^(?:ios|android)\/api(?:\/|$)/.test(url.pathname.slice(base.length))
+    )
+      continue;
     const dest = target(url.pathname);
     if (!dest) {
       errors.push(`${rel}: ${ref} → no such page or file`);

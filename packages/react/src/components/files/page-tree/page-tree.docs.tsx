@@ -2,32 +2,15 @@ import { useRef, useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { PageTree, type PageTreeGroup } from '@rookcom/monarch-react/editor';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './page-tree.fixture.json';
 
-const GROUPS: PageTreeGroup[] = [
-  {
-    id: 'start',
-    label: 'Getting started',
-    pages: [
-      { id: 'welcome', title: 'Welcome' },
-      { id: 'setup', title: 'Set up your account' },
-    ],
-  },
-  {
-    id: 'guides',
-    label: 'Guides',
-    pages: [
-      { id: 'invite', title: 'Invite your team' },
-      { id: 'import', title: 'Import data' },
-      { id: 'reports', title: 'Build a report' },
-    ],
-  },
-  { id: 'reference', label: 'Reference', pages: [{ id: 'glossary', title: 'Glossary' }] },
-];
+const GROUPS: PageTreeGroup[] = fixture.data.groups;
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
 function Reader() {
-  const [active, setActive] = useState('setup');
+  const [active, setActive] = useState(fixture.data.active);
   return (
     <div style={{ maxWidth: 280 }}>
       <PageTree
@@ -36,7 +19,7 @@ function Reader() {
         onSelectPage={setActive}
         footer={
           <Button size="sm" variant="ghost">
-            All documents
+            {fixture.data.footer}
           </Button>
         }
       />

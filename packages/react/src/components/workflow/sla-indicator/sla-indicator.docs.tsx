@@ -1,9 +1,25 @@
-import { SlaIndicator, SlaTargetList } from '@rookcom/monarch-react/patterns';
+import {
+  SlaIndicator,
+  SlaTargetList,
+  type SlaIndicatorProps,
+} from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './sla-indicator.fixture.json';
 
 /** A fixed reference time so the examples read the same on every visit. */
-const NOW = Date.UTC(2026, 0, 12, 10, 0);
+const NOW = Date.parse(fixture.data.now);
 const MIN = 60_000;
+
+type State = SlaIndicatorProps['state'];
+const states = fixture.data.indicators as unknown as readonly [
+  { state: State; dueInMinutes: number },
+  { state: State; dueInMinutes: number },
+  { state: State; dueInMinutes: number },
+  { state: State },
+  { state: State },
+  { state: State; showNone: boolean },
+];
 
 export default {
   id: 'sla-indicator',
@@ -138,12 +154,27 @@ export default {
           title: 'Every state',
           render: () => (
             <>
-              <SlaIndicator state="on-track" dueAt={NOW + 135 * MIN} now={NOW} />
-              <SlaIndicator state="at-risk" dueAt={NOW + 20 * MIN} now={NOW} />
-              <SlaIndicator state="breached" dueAt={NOW - 40 * MIN} now={NOW} />
-              <SlaIndicator state="paused" />
-              <SlaIndicator state="met" />
-              <SlaIndicator state="none" showNone />
+              <SlaIndicator
+                locale="en-GB"
+                state={states[0].state}
+                dueAt={NOW + states[0].dueInMinutes * MIN}
+                now={NOW}
+              />
+              <SlaIndicator
+                locale="en-GB"
+                state={states[1].state}
+                dueAt={NOW + states[1].dueInMinutes * MIN}
+                now={NOW}
+              />
+              <SlaIndicator
+                locale="en-GB"
+                state={states[2].state}
+                dueAt={NOW + states[2].dueInMinutes * MIN}
+                now={NOW}
+              />
+              <SlaIndicator state={states[3].state} />
+              <SlaIndicator state={states[4].state} />
+              <SlaIndicator state={states[5].state} showNone={states[5].showNone} />
             </>
           ),
         },
@@ -151,6 +182,7 @@ export default {
           title: 'At risk from warnBefore, text variant',
           render: () => (
             <SlaIndicator
+              locale="en-GB"
               state="on-track"
               dueAt={NOW + 25 * MIN}
               now={NOW}

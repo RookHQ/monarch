@@ -1,0 +1,91 @@
+{
+  "id": "record-header",
+  "name": null,
+  "title": "RecordHeader",
+  "family": "crm",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "NavigationStack with navigationTitle and toolbar (ToolbarItemGroup of Buttons and a Menu) for the title, previous and next, and actions; a ScrollView with a VStack of MonarchAvatar, MonarchInlineEditText, MonarchStatusBadge, MonarchBadge, MonarchKeyValue, MonarchCalloutBanner and MonarchTabs",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The header of a record screen, such as a contact, ticket or deal: avatar, editable title, status and badges, key facts, a state banner and section tabs, with the title, previous and next, and actions in the navigation bar.",
+  "whenToUse": "At the top of a record's detail screen in a CRM, help desk or admin app, under a navigation bar.",
+  "whenNotToUse": "Not for the header of a list or a settings page; use navigationTitle with a MonarchSectionHeader. Not for a summary card in a list; use MonarchCard.",
+  "api": [
+    "navigationTitle(_ title: String)",
+    "toolbar { ToolbarItemGroup(placement: .primaryAction) { Button; Menu } }",
+    "MonarchInlineEditText.init(_ label: String, text: Binding<String>, …, onSave: @escaping @MainActor (String) async throws -> Void)",
+    "MonarchStatusBadge.init(_ definition: MonarchStatusDefinition, showsIcon: Bool = true, variant: MonarchStatusBadgeVariant = .subtle, size: MonarchStatusBadgeSize = .md)",
+    "MonarchKeyValue.init(_ items: [MonarchKeyValueItem], separator: MonarchKeyValueSeparator = .dot, size: MonarchKeyValueSize = .sm, layout: MonarchKeyValueLayout = .wrap, emptyLabel: String? = nil, onCopy: (@MainActor (String) -> Void)? = nil)",
+    "MonarchCalloutBanner.init(_ title: String? = nil, message: String, systemImage: String? = nil, tone: MonarchTone = .info, …)",
+    "MonarchTabs.init(_ label: String, selection: Binding<Value>, items: [MonarchTabsItem<Value>], variant: MonarchTabsVariant = .line)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "default",
+      "description": "Avatar, title, status and badges, a subtitle, key facts and tabs; the title also in the navigation bar, and actions in a More menu."
+    },
+    {
+      "name": "editing the title",
+      "description": "MonarchInlineEditText swaps to a text field with Save and Cancel; saving updates the navigation title."
+    },
+    {
+      "name": "previous and next",
+      "description": "Toolbar buttons move between records of the list the person came from, disabled at either end."
+    },
+    {
+      "name": "state banner",
+      "description": "A warning MonarchCalloutBanner for an archived, merged or deleted record."
+    },
+    {
+      "name": "empty fact",
+      "description": "MonarchKeyValue shows its placeholder for a fact without a value."
+    }
+  ],
+  "appearance": "Each part keeps its own component's colour roles: the avatar's fallback colours, badges in their tones, facts in the muted and default text colours, the banner in its tone, and the tabs' accent indicator. The navigation bar is the system's.",
+  "platformNotes": "The web RecordHeader is one component with slots for back link, previous and next, avatar, title, badges, facts, actions, banner and tabs. On iOS the back button, the title and the actions belong to the navigation bar, so Monarch ships a recipe instead of a type: the back link is the navigation stack's own, the previous and next buttons and the More menu are toolbar items, and the rest is composed in the scroll view. The web's position text \"3 of 40\" is plain caption text in the recipe. The heading level option has no iOS meaning; the title carries the header trait.",
+  "accessibility": [
+    "The navigation bar title is read by VoiceOver when the screen appears.",
+    "The editable title carries the header trait, so the headings rotor reaches it.",
+    "Previous, next and More actions are toolbar buttons named after the record type, such as \"Previous contact\" and \"More actions for Ada Lovelace\".",
+    "Each composed component keeps its own accessibility: status and badges read their text, facts are label and value pairs, the banner is announced as a group, and the tabs are a tab bar.",
+    "Everything wraps and scales with Dynamic Type; toolbar buttons are system-sized."
+  ],
+  "edgeCases": [
+    "A long title wraps in the header and is truncated by the system in the navigation bar.",
+    "Many badges wrap onto new lines in MonarchFlowLayout.",
+    "On the first and last record the previous and next buttons are disabled.",
+    "With no facts, leave MonarchKeyValue out rather than passing an empty list."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Contact with facts, actions and tabs",
+      "fixture": "record-header",
+      "webExample": "Contact with facts, actions and tabs",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    MonarchButton({{back}}, systemImage: \"chevron.left\", variant: .ghost, size: .sm) {}\n    HStack(alignment: .top, spacing: MonarchTokens.Space.space3) {\n        MonarchAvatar(image: nil, name: {{name}}, size: .lg, isDecorative: true)\n        VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n            Text({{name}})\n                .monarchTextStyle(.title)\n                .accessibilityAddTraits(.isHeader)\n            MonarchFlowLayout(spacing: MonarchTokens.Space.space2) {\n                MonarchStatusBadge(MonarchStatusDefinition({{status.label}}, tone: {{status.tone|tone}}, systemImage: \"checkmark.circle\"))\n                MonarchBadge({{badge.label}}, tone: {{badge.tone|tone}})\n            }\n            Text(verbatim: {{subtitle}})\n                .monarchTextStyle(.bodySmall)\n                .foregroundStyle(theme.colors.textMuted)\n            HStack(spacing: MonarchTokens.Space.space2) {\n                MonarchButton({{action}}, variant: .secondary) {}\n                Menu {\n                    Button({{menu.0}}) {}\n                    Button({{menu.1}}) {}\n                    Button({{menu.2}}, role: .destructive) {}\n                } label: {\n                    Label(\"More actions for \" + {{name}}, systemImage: \"ellipsis\")\n                        .labelStyle(.iconOnly)\n                }\n                .buttonStyle(.monarch(.secondary))\n            }\n        }\n        .frame(maxWidth: .infinity, alignment: .leading)\n    }\n    MonarchKeyValue(\n        [\n            MonarchKeyValueItem({{facts.0.term}}, value: {{facts.0.value}}),\n            MonarchKeyValueItem({{facts.1.term}}, value: {{facts.1.value}}),\n            MonarchKeyValueItem({{facts.2.term}}, value: {{facts.2.value}}, isCopyable: {{facts.2.copyable}}),\n            MonarchKeyValueItem({{facts.3.term}}, value: {{facts.3.value}}),\n        ],\n        separator: .none,\n        layout: .stack,\n        emptyLabel: \"—\"\n    )\n    MonarchTabs(\n        \"Contact sections\",\n        selection: $section,\n        items: [\n            MonarchTabsItem({{tabs.0}}, value: {{tabs.0}}),\n            MonarchTabsItem({{tabs.1}}, value: {{tabs.1}}),\n            MonarchTabsItem({{tabs.2}}, value: {{tabs.2}}),\n        ]\n    )\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var section = {{tabs.0}}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var section = \"Overview\"",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    MonarchButton(\"All contacts\", systemImage: \"chevron.left\", variant: .ghost, size: .sm) {}\n    HStack(alignment: .top, spacing: MonarchTokens.Space.space3) {\n        MonarchAvatar(image: nil, name: \"Ada Lovelace\", size: .lg, isDecorative: true)\n        VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n            Text(\"Ada Lovelace\")\n                .monarchTextStyle(.title)\n                .accessibilityAddTraits(.isHeader)\n            MonarchFlowLayout(spacing: MonarchTokens.Space.space2) {\n                MonarchStatusBadge(MonarchStatusDefinition(\"Active\", tone: .success, systemImage: \"checkmark.circle\"))\n                MonarchBadge(\"Enterprise\", tone: .neutral)\n            }\n            Text(verbatim: \"ada@example.com · Head of Engineering, Northfield\")\n                .monarchTextStyle(.bodySmall)\n                .foregroundStyle(theme.colors.textMuted)\n            HStack(spacing: MonarchTokens.Space.space2) {\n                MonarchButton(\"Email\", variant: .secondary) {}\n                Menu {\n                    Button(\"Merge\") {}\n                    Button(\"Archive\") {}\n                    Button(\"Delete contact\", role: .destructive) {}\n                } label: {\n                    Label(\"More actions for \" + \"Ada Lovelace\", systemImage: \"ellipsis\")\n                        .labelStyle(.iconOnly)\n                }\n                .buttonStyle(.monarch(.secondary))\n            }\n        }\n        .frame(maxWidth: .infinity, alignment: .leading)\n    }\n    MonarchKeyValue(\n        [\n            MonarchKeyValueItem(\"Owner\", value: \"Grace Hopper\"),\n            MonarchKeyValueItem(\"Lifecycle\", value: \"Customer\"),\n            MonarchKeyValueItem(\"Contact ID\", value: \"c_1042\", isCopyable: true),\n            MonarchKeyValueItem(\"Phone\", value: nil),\n        ],\n        separator: .none,\n        layout: .stack,\n        emptyLabel: \"—\"\n    )\n    MonarchTabs(\n        \"Contact sections\",\n        selection: $section,\n        items: [\n            MonarchTabsItem(\"Overview\", value: \"Overview\"),\n            MonarchTabsItem(\"Activity\", value: \"Activity\"),\n            MonarchTabsItem(\"Deals\", value: \"Deals\"),\n        ]\n    )\n}"
+    }
+  ],
+  "webEquivalent": "RecordHeader",
+  "dependsOn": [
+    "avatar",
+    "inline-edit-text",
+    "status-badge",
+    "key-value",
+    "tabs",
+    "dropdown-menu",
+    "callout-banner"
+  ],
+  "icons": {
+    "status.success": "SuccessGlyph",
+    "copy": "CopyGlyph"
+  }
+}

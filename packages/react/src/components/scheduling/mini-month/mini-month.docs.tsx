@@ -1,22 +1,27 @@
 import { useState } from 'react';
 import { MiniMonth, type MiniMonthDayInfo } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './mini-month.fixture.json';
 
 // Examples pin `today` so the page and its visual baselines never change with the date.
-const TODAY = '2026-11-04';
+const TODAY = fixture.data.today.slice(0, 10);
 
-const EVENTS: Record<string, MiniMonthDayInfo> = {
-  '2026-11-05': { dots: ['accent'], description: '1 event' },
-  '2026-11-10': { dots: ['accent', 'info'], description: '2 events' },
-  '2026-11-18': { dots: ['warning'], description: 'Deadline' },
-  '2026-11-24': { dots: ['accent', 'success', 'danger'], description: '3 events' },
-};
+const EVENTS: Record<string, MiniMonthDayInfo> = Object.fromEntries(
+  (
+    fixture.data.events as {
+      date: string;
+      dots: NonNullable<MiniMonthDayInfo['dots']>;
+      description: string;
+    }[]
+  ).map((e) => [e.date.slice(0, 10), { dots: e.dots, description: e.description }]),
+);
 
 function SidebarCalendar() {
-  const [value, setValue] = useState<string | null>('2026-11-10');
+  const [value, setValue] = useState<string | null>(fixture.data.value.slice(0, 10));
   return (
     <MiniMonth
-      locale="en-GB"
+      locale={fixture.data.locale}
       today={TODAY}
       value={value}
       onValueChange={setValue}

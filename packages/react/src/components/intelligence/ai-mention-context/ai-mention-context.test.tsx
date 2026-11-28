@@ -100,7 +100,7 @@ describe('AiMentionContext', () => {
     await expectNoA11yViolations();
   });
 
-  it('is a focusable, named region only while the results scroll', async () => {
+  it('is a focusable, named group only while the results scroll', async () => {
     const scrollHeight = vi
       .spyOn(HTMLElement.prototype, 'scrollHeight', 'get')
       .mockImplementation(function (this: HTMLElement) {
@@ -111,9 +111,10 @@ describe('AiMentionContext', () => {
       .mockReturnValue(200);
     try {
       render(<AiMentionContext items={ITEMS} onSelect={() => {}} />);
-      const region = screen.getByRole('region', { name: 'Add context' });
-      expect(region).toHaveAttribute('tabindex', '0');
-      expect(region).toHaveAttribute('data-scrolls', 'true');
+      const group = screen.getByRole('group', { name: 'Add context' });
+      expect(group).toHaveAttribute('tabindex', '0');
+      expect(group).toHaveAttribute('data-scrolls', 'true');
+      expect(screen.queryByRole('region')).toBeNull();
       await expectNoA11yViolations();
     } finally {
       scrollHeight.mockRestore();
@@ -121,9 +122,9 @@ describe('AiMentionContext', () => {
     }
   });
 
-  it('is not a region while everything fits', () => {
+  it('is not a group while everything fits', () => {
     render(<AiMentionContext items={ITEMS} onSelect={() => {}} data-testid="root" />);
-    expect(screen.queryByRole('region')).toBeNull();
+    expect(screen.getByTestId('root')).not.toHaveAttribute('role');
     expect(screen.getByTestId('root')).not.toHaveAttribute('tabindex');
   });
 

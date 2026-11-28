@@ -1,12 +1,19 @@
 import { useState } from 'react';
-import { Button } from '@rookcom/monarch-react';
+import { Button, type ButtonProps } from '@rookcom/monarch-react';
 import { CalendarToolbar, type CalendarToolbarView } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './calendar-toolbar.fixture.json';
 
-const MONTHS = ['October 2026', 'November 2026', 'December 2026'];
+const MONTHS = ['October 2026', fixture.data.title, 'December 2026'];
+const action = fixture.data.action as {
+  label: string;
+  variant: NonNullable<ButtonProps['variant']>;
+  size: NonNullable<ButtonProps['size']>;
+};
 
 function Demo() {
-  const [view, setView] = useState<CalendarToolbarView>('month');
+  const [view, setView] = useState<CalendarToolbarView>(fixture.data.view as CalendarToolbarView);
   const [i, setI] = useState(1);
   return (
     <div style={{ width: '100%' }}>
@@ -21,8 +28,8 @@ function Demo() {
         previousDisabled={i === 0}
         nextDisabled={i === MONTHS.length - 1}
         actions={
-          <Button variant="primary" size="sm">
-            New event
+          <Button variant={action.variant} size={action.size}>
+            {action.label}
           </Button>
         }
       />

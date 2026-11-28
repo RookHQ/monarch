@@ -2,18 +2,10 @@ import { useState } from 'react';
 import { Badge } from '@rookcom/monarch-react';
 import { DecisionCard, type DecisionOption } from '@rookcom/monarch-react/collaboration';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './decision-card.fixture.json';
 
-const RENEWAL: DecisionOption[] = [
-  { value: 'keep', label: 'Keep', tone: 'success' },
-  { value: 'review', label: 'Review', tone: 'warning' },
-  {
-    value: 'lapse',
-    label: 'Let lapse',
-    tone: 'danger',
-    note: 'Reminders stop and one final notice is sent before it expires.',
-    reasonRequired: true,
-  },
-];
+const RENEWAL = fixture.data.options as DecisionOption[];
 
 const APPROVAL: DecisionOption[] = [
   { value: 'approve', label: 'Approve', description: 'Goes ahead now', tone: 'success' },
@@ -27,29 +19,33 @@ const APPROVAL: DecisionOption[] = [
   },
 ];
 
-const NOW = new Date(2026, 4, 10, 12);
+// The fixture holds the moments as UTC instants; the card shows them in the viewer's zone, so they are read as local times.
+const local = (iso: string) => new Date(iso.replace('Z', ''));
+
+const NOW = local(fixture.data.now);
 
 const wait = () => new Promise((resolve) => setTimeout(resolve, 700));
 
 function RenewalDemo() {
   const [saved, setSaved] = useState<{ value: string | null; reason: string | null; at: Date }>({
-    value: 'review',
-    reason: 'Check with the team first',
-    at: new Date(2026, 4, 8, 9),
+    value: fixture.data.value,
+    reason: fixture.data.reason,
+    at: local(fixture.data.decidedAt),
   });
   return (
     <div style={{ width: '100%', maxWidth: '32rem' }}>
       <DecisionCard
-        title="Renewal decision"
+        title={fixture.data.title}
         options={RENEWAL}
         value={saved.value}
         reason={saved.reason}
         decidedAt={saved.at}
-        decidedBy="Alex Morgan"
+        decidedBy={fixture.data.decidedBy}
         now={NOW}
         context={
           <p style={{ margin: 0 }}>
-            Usage: <Badge tone="info">Active</Badge> Serves a website and email.
+            {fixture.data.context.label} <Badge tone="info">{fixture.data.context.badge}</Badge>{' '}
+            {fixture.data.context.text}
           </p>
         }
         onDecide={async ({ value, reason }) => {

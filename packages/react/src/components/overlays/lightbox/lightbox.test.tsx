@@ -106,7 +106,7 @@ describe('Lightbox', () => {
     const user = userEvent.setup();
     const dialog = await screen.findByRole('dialog');
     const zoomIn = screen.getByRole('button', { name: 'Zoom in' });
-    const reset = screen.getByRole('button', { name: 'Reset zoom' });
+    const reset = screen.getByRole('button', { name: /^Reset zoom, \d+%$/ });
     expect(reset).toHaveTextContent('100%');
     expect(screen.getByRole('button', { name: 'Zoom out' })).toHaveAttribute(
       'aria-disabled',
@@ -130,7 +130,7 @@ describe('Lightbox', () => {
     await user.click(zoomIn);
     expect(reset).toHaveTextContent('150%');
     await user.click(screen.getByRole('button', { name: 'Next' }));
-    expect(screen.getByRole('button', { name: 'Reset zoom' })).toHaveTextContent('100%');
+    expect(screen.getByRole('button', { name: /^Reset zoom, \d+%$/ })).toHaveTextContent('100%');
   });
 
   it('does not load unsafe addresses and translates its labels', async () => {

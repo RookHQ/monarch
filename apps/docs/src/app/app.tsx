@@ -18,8 +18,10 @@ import { GalleryPage, MarketingExample, preloadRoute, resolveRoute } from './rou
 function TestRoute({ path }: { path: string }) {
   const { prefs } = useAppearance();
   if (path === '/__gallery') return <GalleryPage />;
-  if (path.startsWith('/__gallery/'))
-    return <GalleryPage only={path.slice('/__gallery/'.length)} />;
+  if (path.startsWith('/__gallery/')) {
+    const [id = '', mode] = path.slice('/__gallery/'.length).split('/');
+    return <GalleryPage only={id} live={mode === 'live'} />;
+  }
   const name =
     products.find((p) => p.id === prefs.product)?.name.replace(/^Rook /, '') ?? 'Product';
   return <MarketingExample productName={name} />;

@@ -1,6 +1,8 @@
-import { IconButton, Tooltip } from '@rookcom/monarch-react';
+import { IconButton, Tooltip, TooltipProvider } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
-import { PlusIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './tooltip.fixture.json';
+import { LinkIcon } from '../../../internal/docs-demo.js';
 
 export default {
   id: 'tooltip',
@@ -80,10 +82,13 @@ export default {
       items: [
         {
           title: 'On an icon button',
+          stage: { side: 'top', align: 'center' },
           render: () => (
-            <Tooltip content="Copy link">
-              <IconButton label="Copy link" icon={<PlusIcon />} />
-            </Tooltip>
+            <TooltipProvider>
+              <Tooltip content={fixture.data.tooltip} defaultOpen>
+                <IconButton label={fixture.data.label} icon={<LinkIcon />} />
+              </Tooltip>
+            </TooltipProvider>
           ),
         },
       ],
@@ -101,7 +106,7 @@ export default {
       ],
     },
     dependencies: {
-      packages: ['@radix-ui/react-tooltip'],
+      packages: ['@radix-ui/react-tooltip', 'react'],
       components: [],
     },
     testing: {

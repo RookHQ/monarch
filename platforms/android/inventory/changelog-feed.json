@@ -1,0 +1,114 @@
+{
+  "id": "changelog-feed",
+  "name": null,
+  "title": "ChangelogFeed",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyColumn of Column items with MonarchText, MonarchBadge, MonarchProse and MonarchLink",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Release notes as a What's new screen: a LazyColumn of entries, newest first, each with its date and version, a heading, tag badges, the notes as MonarchProse and an optional Read more link.",
+  "whenToUse": "For a What's new screen or sheet in the app, from release notes the app fetches or ships.",
+  "whenNotToUse": "For a one-off announcement, use a banner or a dialog. For an activity history of a record, use MonarchActivityTimeline.",
+  "api": [
+    "LazyColumn { items(entries, key = { it.id }) { entry -> Column { MonarchText(text = \"$date · $version\", style = MonarchTextStyle.Caption); MonarchText(text = entry.title, style = MonarchTextStyle.Heading); FlowRow { entry.tags.forEach { MonarchBadge(text = it, tone = …) } }; MonarchProse { paragraph(entry.body) }; entry.href?.let { MonarchLink(text = \"Read more\", onClick = { uriHandler.openUri(it) }, variant = MonarchLinkVariant.Standalone, external = true) } } } }"
+  ],
+  "options": [
+    {
+      "name": "entries",
+      "type": "app data",
+      "default": "required",
+      "description": "Release notes, newest first: id (the LazyColumn key), date, version, title, tags, body and an optional link."
+    },
+    {
+      "name": "date",
+      "type": "Long",
+      "default": "required",
+      "description": "The release day in epoch milliseconds, written with java.text.DateFormat in UTC (DateFormat.getDateInstance(DateFormat.LONG, locale) with timeZone = UTC), so a date-only release shows the same day everywhere."
+    },
+    {
+      "name": "MonarchBadge.tone",
+      "type": "MonarchTone",
+      "default": "MonarchTone.Neutral",
+      "description": "Neutral for most tags; a status tone only when the tag means that status."
+    },
+    {
+      "name": "MonarchProse",
+      "type": "MonarchProseScope.() -> Unit",
+      "default": "required",
+      "description": "The notes as paragraphs and list items; MonarchAiMarkdown when the notes arrive as Markdown."
+    },
+    {
+      "name": "MonarchLink",
+      "type": "MonarchLink(variant = Standalone, external = true)",
+      "default": "null",
+      "description": "Read more, opening the full note through LocalUriHandler; only for a safe http or https link."
+    }
+  ],
+  "states": [
+    {
+      "name": "entries",
+      "description": "One entry per release, newest first."
+    },
+    {
+      "name": "empty",
+      "description": "A line of muted text, such as \"No updates yet.\", in place of the list."
+    }
+  ],
+  "appearance": "Muted caption text for the date and version, the heading style for titles, badges in their tones, prose in default text and the link color for Read more, in light, dark and both high-contrast themes.",
+  "platformNotes": "The web ChangelogFeed is a public changelog page with a timeline marker, permalinks and an RSS link in the header. In an app it is a What's new screen: a LazyColumn of entries with no timeline line, no permalinks and no RSS link, as the plan says; Read more opens the full note in the browser. Dates are epoch milliseconds formatted in UTC, matching the web's default time zone. The heading and description above the list are the screen's top app bar. iOS shares the recipe approach.",
+  "accessibility": [
+    "Each entry title is a heading (MonarchTextStyle.Heading), so TalkBack users can jump between releases.",
+    "Tags are words on badges, not colors.",
+    "Read more is a MonarchLink with a 48dp touch target and is read with \"opens in the browser\".",
+    "The list scrolls with the system scroll and keeps its position by entry id."
+  ],
+  "edgeCases": [
+    "Long notes wrap; keep each entry's body short and link to the full note.",
+    "Use the entry id as the key so the list keeps its position when entries are added at the top."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Changelog with RSS",
+      "fixture": "changelog-feed",
+      "webExample": "Changelog with RSS",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchText(text = {{title}}, style = MonarchTextStyle.Title, heading = true)\n    Row(verticalAlignment = Alignment.CenterVertically) {\n        MonarchText(text = {{description}}, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted, modifier = Modifier.weight(1f))\n        MonarchIcon(SampleIcons.Rss, contentDescription = null, size = MonarchIconSize.Sm)\n        MonarchLink(text = \"RSS feed\", onClick = {}, variant = MonarchLinkVariant.Standalone)\n    }\n    LazyColumn(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space6)) {\n        items(releases, key = { it.id }) { release ->\n            Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n              Box(\n                  modifier = Modifier\n                      .padding(top = MonarchTheme.spacing.space1)\n                      .size(MonarchTheme.spacing.space3)\n                      .border(2.dp, MonarchTheme.colors.accentStrong, CircleShape),\n              )\n              Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2), verticalAlignment = Alignment.CenterVertically) {\n                    MonarchText(\n                        text = dates.format(Date(release.date)),\n                        style = MonarchTextStyle.Caption,\n                        color = MonarchTheme.colors.textMuted,\n                    )\n                    release.version?.let { MonarchText(text = it, style = MonarchTextStyle.Code) }\n                }\n                MonarchText(text = release.title, style = MonarchTextStyle.Heading)\n                FlowRow(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n                    release.tags.forEach { MonarchBadge(text = it.label, tone = it.tone) }\n                }\n                release.body?.let { body ->\n                    MonarchProse(style = MonarchProseStyle(limitLineLength = false)) { paragraph(body) }\n                }\n                release.href?.let { href ->\n                    MonarchLink(\n                        text = \"Read more\",\n                        onClick = { uriHandler.openUri(href) },\n                        variant = MonarchLinkVariant.Standalone,\n                        external = true,\n                    )\n                }\n              }\n            }\n        }\n    }\n}",
+      "setupTemplate": "val locale = Locale.forLanguageTag({{locale}})\nval uriHandler = LocalUriHandler.current\nval dates = remember(locale) {\n    DateFormat.getDateInstance(DateFormat.LONG, locale).apply { timeZone = TimeZone.getTimeZone(\"UTC\") }\n}\nclass ReleaseTag(val label: String, val tone: MonarchTone = MonarchTone.Neutral)\nclass Release(\n    val id: String,\n    val date: Long,\n    val version: String?,\n    val title: String,\n    val tags: List<ReleaseTag>,\n    val body: String?,\n    val href: String?,\n)\nval releases = listOf(\n    Release(\n        id = {{entries.0.id}},\n        date = {{entries.0.date|millis}},\n        version = {{entries.0.version}},\n        title = {{entries.0.title}},\n        tags = listOf(ReleaseTag({{entries.0.tags.0.label}}, {{entries.0.tags.0.tone|tone}}), ReleaseTag({{entries.0.tags.1.label}})),\n        body = {{entries.0.body}},\n        href = {{entries.0.href}},\n    ),\n    Release(\n        id = {{entries.1.id}},\n        date = {{entries.1.date|millis}},\n        version = null,\n        title = {{entries.1.title}},\n        tags = listOf(ReleaseTag({{entries.1.tags.0.label}})),\n        body = {{entries.1.body}},\n        href = null,\n    ),\n    Release(\n        id = {{entries.2.id}},\n        date = {{entries.2.date|millis}},\n        version = null,\n        title = {{entries.2.title}},\n        tags = listOf(ReleaseTag({{entries.2.tags.0.label}})),\n        body = null,\n        href = null,\n    ),\n)",
+      "imports": [
+        "java.text.DateFormat",
+        "java.util.Date",
+        "java.util.TimeZone",
+        "androidx.compose.ui.platform.LocalUriHandler",
+        "androidx.compose.foundation.layout.FlowRow",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.items",
+        "java.util.Locale",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.unit.dp",
+        "com.rookhq.monarch.foundation.icon.MonarchIconSize"
+      ],
+      "setup": "val locale = Locale.forLanguageTag(\"en-GB\")\nval uriHandler = LocalUriHandler.current\nval dates = remember(locale) {\n    DateFormat.getDateInstance(DateFormat.LONG, locale).apply { timeZone = TimeZone.getTimeZone(\"UTC\") }\n}\nclass ReleaseTag(val label: String, val tone: MonarchTone = MonarchTone.Neutral)\nclass Release(\n    val id: String,\n    val date: Long,\n    val version: String?,\n    val title: String,\n    val tags: List<ReleaseTag>,\n    val body: String?,\n    val href: String?,\n)\nval releases = listOf(\n    Release(\n        id = \"sample-export\",\n        date = 1_780_272_000_000L,\n        version = \"2.4.0\",\n        title = \"Reports can be exported\",\n        tags = listOf(ReleaseTag(\"New\", MonarchTone.Accent), ReleaseTag(\"Reports\")),\n        body = \"Every report now has an Export button. Files keep the filters you applied.\",\n        href = \"#sample-export\",\n    ),\n    Release(\n        id = \"sample-search\",\n        date = 1_779_235_200_000L,\n        version = null,\n        title = \"Search remembers your last query\",\n        tags = listOf(ReleaseTag(\"Improved\")),\n        body = \"Opening search again shows the last query and its results.\",\n        href = null,\n    ),\n    Release(\n        id = \"sample-fix\",\n        date = 1_778_544_000_000L,\n        version = null,\n        title = \"Fixed a sorting issue in tables\",\n        tags = listOf(ReleaseTag(\"Fix\")),\n        body = null,\n        href = null,\n    ),\n)",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchText(text = \"Changelog\", style = MonarchTextStyle.Title, heading = true)\n    Row(verticalAlignment = Alignment.CenterVertically) {\n        MonarchText(text = \"Sample entries showing the layout.\", style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted, modifier = Modifier.weight(1f))\n        MonarchIcon(SampleIcons.Rss, contentDescription = null, size = MonarchIconSize.Sm)\n        MonarchLink(text = \"RSS feed\", onClick = {}, variant = MonarchLinkVariant.Standalone)\n    }\n    LazyColumn(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space6)) {\n        items(releases, key = { it.id }) { release ->\n            Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n              Box(\n                  modifier = Modifier\n                      .padding(top = MonarchTheme.spacing.space1)\n                      .size(MonarchTheme.spacing.space3)\n                      .border(2.dp, MonarchTheme.colors.accentStrong, CircleShape),\n              )\n              Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2), verticalAlignment = Alignment.CenterVertically) {\n                    MonarchText(\n                        text = dates.format(Date(release.date)),\n                        style = MonarchTextStyle.Caption,\n                        color = MonarchTheme.colors.textMuted,\n                    )\n                    release.version?.let { MonarchText(text = it, style = MonarchTextStyle.Code) }\n                }\n                MonarchText(text = release.title, style = MonarchTextStyle.Heading)\n                FlowRow(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1)) {\n                    release.tags.forEach { MonarchBadge(text = it.label, tone = it.tone) }\n                }\n                release.body?.let { body ->\n                    MonarchProse(style = MonarchProseStyle(limitLineLength = false)) { paragraph(body) }\n                }\n                release.href?.let { href ->\n                    MonarchLink(\n                        text = \"Read more\",\n                        onClick = { uriHandler.openUri(href) },\n                        variant = MonarchLinkVariant.Standalone,\n                        external = true,\n                    )\n                }\n              }\n            }\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "ChangelogFeed",
+  "dependsOn": [
+    "badge",
+    "prose",
+    "link"
+  ]
+}

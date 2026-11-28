@@ -1,0 +1,71 @@
+{
+  "id": "incoming-call",
+  "name": null,
+  "title": "IncomingCall",
+  "family": "collaboration",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "CallKit: CXProvider.reportNewIncomingCall(with:update:completion:)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "An incoming call is reported to CallKit, and the system draws the ringing screen, on the lock screen too. Monarch ships no ringing banner.",
+  "whenToUse": "Whenever the app receives a call. A VoIP push must be reported to CallKit in the PushKit callback, or the system ends the app.",
+  "whenNotToUse": "Do not draw a custom ringing screen. For a message that is not a call, use a notification.",
+  "api": [
+    "CXProvider(configuration: CXProviderConfiguration())",
+    "func reportNewIncomingCall(with UUID: UUID, update: CXCallUpdate, completion: @escaping ((any Error)?) -> Void)",
+    "protocol CXProviderDelegate  // perform CXAnswerCallAction, CXEndCallAction"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "ringing",
+      "description": "The system screen or banner with the caller name from CXCallUpdate, and Accept and Decline."
+    },
+    {
+      "name": "answered",
+      "description": "The provider delegate receives CXAnswerCallAction; the app connects the call and shows its call screen."
+    },
+    {
+      "name": "declined or missed",
+      "description": "The delegate receives CXEndCallAction, or the app reports the end with reportCall(with:endedAt:reason:)."
+    }
+  ],
+  "appearance": "System appearance in every theme. Monarch has no part in it; the app can set the icon and ringtone in CXProviderConfiguration.",
+  "platformNotes": "The web IncomingCall is a banner with Decline and Answer that the product places and rings itself. Android uses a full-screen notification with CallStyle. On iOS a custom banner cannot ring on the lock screen and a VoIP push must be reported to CallKit, so the system screen is the only answer. \"Answer with audio only\" for a video call has no counterpart on the system screen; set hasVideo on the CXCallUpdate.",
+  "accessibility": [
+    "System behaviour: the ringing screen is accessible, announces the caller and works with hearing devices and CarPlay."
+  ],
+  "edgeCases": [
+    "CXProvider is not available on macOS; guard the code with #if os(iOS).",
+    "Keep one CXProvider for the lifetime of the app and set its delegate; without a delegate an answered call connects nothing.",
+    "CallKit is not available in every region; check before using it.",
+    "The example and the catalogue page were compiled but the ringing screen was not run."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Audio call",
+      "fixture": "incoming-call",
+      "webExample": "Audio call",
+      "template": "MonarchCard(elevation: .md) {\n    HStack(spacing: theme.spacing.space3) {\n        MonarchAvatar(image: nil, name: {{caller}}, isDecorative: true)\n        VStack(alignment: .leading, spacing: 2) {\n            Text({{caller}})\n                .monarchTextStyle(.bodyStrong)\n                .foregroundStyle(theme.colors.textDefault)\n            Label({{status}}, systemImage: \"phone\")\n                .monarchTextStyle(.caption)\n                .foregroundStyle(theme.colors.textMuted)\n            Text({{detail}})\n                .monarchTextStyle(.caption)\n                .foregroundStyle(theme.colors.textMuted)\n        }\n        Spacer(minLength: 0)\n        // The app answers and ends the call through its CXProvider delegate, after CallKit reports it.\n        Button {\n        } label: {\n            // The web draws a phone with a slash (phone-off) for Decline.\n            ZStack {\n                Image(systemName: \"phone.fill\")\n                Capsule().frame(width: 24, height: 2).rotationEffect(.degrees(-45))\n            }\n                .foregroundStyle(theme.colors.dangerOnSolid)\n                .frame(width: 44, height: 44)\n                .background(Circle().fill(theme.colors.dangerSolid))\n        }\n        .accessibilityLabel(\"Decline\")\n        Button {\n        } label: {\n            Image(systemName: \"phone.fill\")\n                .foregroundStyle(theme.colors.successOnSolid)\n                .frame(width: 44, height: 44)\n                .background(Circle().fill(theme.colors.successSolid))\n        }\n        .accessibilityLabel(\"Answer\")\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme",
+      "setup": "@Environment(\\.monarchTheme) private var theme",
+      "code": "MonarchCard(elevation: .md) {\n    HStack(spacing: theme.spacing.space3) {\n        MonarchAvatar(image: nil, name: \"Robin Park\", isDecorative: true)\n        VStack(alignment: .leading, spacing: 2) {\n            Text(\"Robin Park\")\n                .monarchTextStyle(.bodyStrong)\n                .foregroundStyle(theme.colors.textDefault)\n            Label(\"Incoming call\", systemImage: \"phone\")\n                .monarchTextStyle(.caption)\n                .foregroundStyle(theme.colors.textMuted)\n            Text(\"Design team\")\n                .monarchTextStyle(.caption)\n                .foregroundStyle(theme.colors.textMuted)\n        }\n        Spacer(minLength: 0)\n        // The app answers and ends the call through its CXProvider delegate, after CallKit reports it.\n        Button {\n        } label: {\n            // The web draws a phone with a slash (phone-off) for Decline.\n            ZStack {\n                Image(systemName: \"phone.fill\")\n                Capsule().frame(width: 24, height: 2).rotationEffect(.degrees(-45))\n            }\n                .foregroundStyle(theme.colors.dangerOnSolid)\n                .frame(width: 44, height: 44)\n                .background(Circle().fill(theme.colors.dangerSolid))\n        }\n        .accessibilityLabel(\"Decline\")\n        Button {\n        } label: {\n            Image(systemName: \"phone.fill\")\n                .foregroundStyle(theme.colors.successOnSolid)\n                .frame(width: 44, height: 44)\n                .background(Circle().fill(theme.colors.successSolid))\n        }\n        .accessibilityLabel(\"Answer\")\n    }\n}"
+    }
+  ],
+  "webEquivalent": "IncomingCall",
+  "dependsOn": [],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The system call screen belongs to CallKit, which shows the caller name and the answer and decline controls; the card is the in-app banner a product draws while the app is open, with the same avatar, caller, status, detail and round buttons as the web.",
+      "convention": "CallKit owns the incoming-call screen"
+    }
+  ]
+}

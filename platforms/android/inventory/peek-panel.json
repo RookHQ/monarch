@@ -1,0 +1,99 @@
+{
+  "id": "peek-panel",
+  "name": null,
+  "title": "PeekPanel",
+  "family": "overlays",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "androidx.compose.material3.adaptive.navigation.NavigableSupportingPaneScaffold with rememberSupportingPaneScaffoldNavigator and androidx.compose.material3.adaptive.layout.AnimatedPane; MonarchBottomSheet on a phone",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A side panel that previews a record next to its list is the supporting pane of SupportingPaneScaffold: beside the main pane at expanded width, in place of it on a phone. MonarchBottomSheet is the alternative on a phone when the list should stay visible. Monarch ships nothing.",
+  "whenToUse": "To preview a row's details without leaving the list: an invoice next to the invoice list, a contact next to the search results.",
+  "whenNotToUse": "For a full record use a screen of its own (or ListDetailPaneScaffold). For a short task use a sheet (see sheet). For a menu of actions use MonarchMenu.",
+  "api": [
+    "@Composable fun <T> NavigableSupportingPaneScaffold(navigator: ThreePaneScaffoldNavigator<T>, mainPane: @Composable ThreePaneScaffoldPaneScope.() -> Unit, supportingPane: @Composable ThreePaneScaffoldPaneScope.() -> Unit, modifier: Modifier = Modifier, extraPane: (@Composable ThreePaneScaffoldPaneScope.() -> Unit)? = null, …)",
+    "@Composable fun rememberSupportingPaneScaffoldNavigator(scaffoldDirective: PaneScaffoldDirective = calculatePaneScaffoldDirective(currentWindowAdaptiveInfo()), …): ThreePaneScaffoldNavigator<Any>",
+    "suspend fun ThreePaneScaffoldNavigator<T>.navigateTo(pane: ThreePaneScaffoldRole, contentKey: T? = null)",
+    "@Composable fun ThreePaneScaffoldPaneScope.AnimatedPane(modifier: Modifier = Modifier, …, content: @Composable AnimatedPaneScope.() -> Unit)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "expanded width",
+      "description": "The supporting pane sits beside the main pane; the list stays usable."
+    },
+    {
+      "name": "compact width",
+      "description": "The supporting pane replaces the main pane; back returns to the list (NavigableSupportingPaneScaffold handles it)."
+    },
+    {
+      "name": "closed",
+      "description": "navigateBack() hides the supporting pane."
+    },
+    {
+      "name": "sheet on a phone",
+      "description": "A MonarchBottomSheet with the same content covers part of the list instead."
+    }
+  ],
+  "appearance": "The scaffold draws no colors of its own: the panes show what their content draws, so give the supporting pane a Surface in the raised background role. The sheet alternative uses the raised background role with the overlay scrim role.",
+  "platformNotes": "The web PeekPanel draws its own header (title, position, previous, next, open full record, close), sizes and keyboard shortcuts, and is inline or overlay by width. On Android the placement is the adaptive scaffold's: beside the main pane when the window is wide enough, in its place otherwise; the header is ordinary content (MonarchText, MonarchButton for previous, next and close); its J and K shortcuts are onPreviewKeyEvent handlers in the app. The catalogue app does not depend on the adaptive libraries, so its page shows the phone form, a MonarchBottomSheet; the scaffold example is compiled and composed in the unit tests. iOS uses the inspector.",
+  "accessibility": [
+    "System behavior: at compact width the supporting pane is the screen, and the system back gesture returns to the main pane.",
+    "Start the panel with a heading (the record's name) so TalkBack users know where they are.",
+    "Give the panel a visible Close button; at expanded width there is no back gesture to close it.",
+    "Buttons in the panel keep their 48dp targets."
+  ],
+  "edgeCases": [
+    "The panes' widths come from the scaffold directive; at medium width only one pane is shown.",
+    "Keep the selected row highlighted in the main pane so the panel's subject is clear at expanded width."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Preview orders from a list",
+      "fixture": "peek-panel",
+      "webExample": "Preview orders from a list",
+      "template": "orders.forEachIndexed { index, order ->\n    MonarchButton(\n        text = order.first,\n        onClick = { selected = index },\n        variant = if (index == selected) MonarchButtonVariant.Secondary else MonarchButtonVariant.Ghost,\n    )\n}\nselected?.let { index ->\n    val order = orders[index]\n    // The peek stays beside the list, as on the web: previous and next, the position, the full record and close.\n    Column(\n        modifier = Modifier\n            .fillMaxWidth()\n            .border(MonarchTheme.spacing.px, MonarchTheme.colors.borderSubtle, MonarchTheme.shapes.lg)\n            .clip(MonarchTheme.shapes.lg),\n    ) {\n        Row(\n            modifier = Modifier.padding(horizontal = MonarchTheme.spacing.space2),\n            verticalAlignment = Alignment.CenterVertically,\n            horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n        ) {\n            MonarchIconButton(label = \"Previous\", onClick = { selected = index - 1 }, enabled = index > 0, size = MonarchButtonSize.Sm) {\n                MonarchIcon(SampleIcons.ChevronUp, contentDescription = null, size = MonarchIconSize.Sm)\n            }\n            MonarchIconButton(label = \"Next\", onClick = { selected = index + 1 }, enabled = index < orders.size - 1, size = MonarchButtonSize.Sm) {\n                MonarchIcon(SampleIcons.ChevronDown, contentDescription = null, size = MonarchIconSize.Sm)\n            }\n            MonarchText(\n                text = \"${index + 1} of ${orders.size}\",\n                modifier = Modifier.weight(1f),\n                style = MonarchTextStyle.Caption,\n                color = MonarchTheme.colors.textMuted,\n            )\n            MonarchLink(text = \"Open full record\", onClick = { selected = null }, variant = MonarchLinkVariant.Standalone)\n            MonarchIconButton(label = \"Close\", onClick = { selected = null }, size = MonarchButtonSize.Sm) {\n                MonarchIcon(SampleIcons.Close, contentDescription = null, size = MonarchIconSize.Sm)\n            }\n        }\n        MonarchDivider(variant = MonarchDividerVariant.Subtle)\n        Column(\n            modifier = Modifier.padding(MonarchTheme.spacing.space4),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n        ) {\n            MonarchText(text = order.first, style = MonarchTextStyle.BodyStrong, heading = true)\n            MonarchText(text = order.second, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n            Spacer(Modifier.height(MonarchTheme.spacing.space3))\n            MonarchText(text = \"Total \" + order.third)\n        }\n        MonarchDivider(variant = MonarchDividerVariant.Subtle)\n        Row(\n            modifier = Modifier\n                .fillMaxWidth()\n                .background(MonarchTheme.colors.bgSubtle)\n                .padding(MonarchTheme.spacing.space3),\n            horizontalArrangement = Arrangement.End,\n        ) {\n            MonarchButton(\n                text = {{footer}},\n                onClick = { selected = null },\n                variant = MonarchButtonVariant.Primary,\n                size = MonarchButtonSize.Sm,\n            )\n        }\n    }\n}\n",
+      "setupTemplate": "var selected by remember { mutableStateOf<Int?>({{selected}}) }\nval orders = listOf(\n    Triple({{orders.0.id}}, {{orders.0.status}}, {{orders.0.total}}),\n    Triple({{orders.1.id}}, {{orders.1.status}}, {{orders.1.total}}),\n    Triple({{orders.2.id}}, {{orders.2.status}}, {{orders.2.total}}),\n)",
+      "setup": "var selected by remember { mutableStateOf<Int?>(1) }\nval orders = listOf(\n    Triple(\"Order 1001\", \"Paid\", \"€120.00\"),\n    Triple(\"Order 1002\", \"Awaiting payment\", \"€48.50\"),\n    Triple(\"Order 1003\", \"Refunded\", \"€15.00\"),\n)",
+      "code": "orders.forEachIndexed { index, order ->\n    MonarchButton(\n        text = order.first,\n        onClick = { selected = index },\n        variant = if (index == selected) MonarchButtonVariant.Secondary else MonarchButtonVariant.Ghost,\n    )\n}\nselected?.let { index ->\n    val order = orders[index]\n    // The peek stays beside the list, as on the web: previous and next, the position, the full record and close.\n    Column(\n        modifier = Modifier\n            .fillMaxWidth()\n            .border(MonarchTheme.spacing.px, MonarchTheme.colors.borderSubtle, MonarchTheme.shapes.lg)\n            .clip(MonarchTheme.shapes.lg),\n    ) {\n        Row(\n            modifier = Modifier.padding(horizontal = MonarchTheme.spacing.space2),\n            verticalAlignment = Alignment.CenterVertically,\n            horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n        ) {\n            MonarchIconButton(label = \"Previous\", onClick = { selected = index - 1 }, enabled = index > 0, size = MonarchButtonSize.Sm) {\n                MonarchIcon(SampleIcons.ChevronUp, contentDescription = null, size = MonarchIconSize.Sm)\n            }\n            MonarchIconButton(label = \"Next\", onClick = { selected = index + 1 }, enabled = index < orders.size - 1, size = MonarchButtonSize.Sm) {\n                MonarchIcon(SampleIcons.ChevronDown, contentDescription = null, size = MonarchIconSize.Sm)\n            }\n            MonarchText(\n                text = \"${index + 1} of ${orders.size}\",\n                modifier = Modifier.weight(1f),\n                style = MonarchTextStyle.Caption,\n                color = MonarchTheme.colors.textMuted,\n            )\n            MonarchLink(text = \"Open full record\", onClick = { selected = null }, variant = MonarchLinkVariant.Standalone)\n            MonarchIconButton(label = \"Close\", onClick = { selected = null }, size = MonarchButtonSize.Sm) {\n                MonarchIcon(SampleIcons.Close, contentDescription = null, size = MonarchIconSize.Sm)\n            }\n        }\n        MonarchDivider(variant = MonarchDividerVariant.Subtle)\n        Column(\n            modifier = Modifier.padding(MonarchTheme.spacing.space4),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space1),\n        ) {\n            MonarchText(text = order.first, style = MonarchTextStyle.BodyStrong, heading = true)\n            MonarchText(text = order.second, style = MonarchTextStyle.Caption, color = MonarchTheme.colors.textMuted)\n            Spacer(Modifier.height(MonarchTheme.spacing.space3))\n            MonarchText(text = \"Total \" + order.third)\n        }\n        MonarchDivider(variant = MonarchDividerVariant.Subtle)\n        Row(\n            modifier = Modifier\n                .fillMaxWidth()\n                .background(MonarchTheme.colors.bgSubtle)\n                .padding(MonarchTheme.spacing.space3),\n            horizontalArrangement = Arrangement.End,\n        ) {\n            MonarchButton(\n                text = \"Send receipt\",\n                onClick = { selected = null },\n                variant = MonarchButtonVariant.Primary,\n                size = MonarchButtonSize.Sm,\n            )\n        }\n    }\n}\n",
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.ui.draw.clip",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ]
+    },
+    {
+      "title": "A preview pane next to a list",
+      "setup": "@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nval navigator = rememberSupportingPaneScaffoldNavigator()\nval scope = rememberCoroutineScope()",
+      "imports": [
+        "androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi",
+        "androidx.compose.material3.adaptive.layout.AnimatedPane",
+        "androidx.compose.material3.adaptive.layout.SupportingPaneScaffoldRole",
+        "androidx.compose.material3.adaptive.navigation.NavigableSupportingPaneScaffold",
+        "androidx.compose.material3.adaptive.navigation.rememberSupportingPaneScaffoldNavigator",
+        "kotlinx.coroutines.launch"
+      ],
+      "code": "@OptIn(ExperimentalMaterial3AdaptiveApi::class)\nNavigableSupportingPaneScaffold(\n    navigator = navigator,\n    mainPane = {\n        AnimatedPane {\n            Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                MonarchText(text = \"Invoices\", style = MonarchTextStyle.Heading)\n                MonarchButton(\n                    text = \"Preview INV-1042\",\n                    onClick = { scope.launch { navigator.navigateTo(SupportingPaneScaffoldRole.Supporting) } },\n                )\n            }\n        }\n    },\n    supportingPane = {\n        AnimatedPane {\n            Surface(color = MonarchTheme.colors.bgRaised) {\n                Column(\n                    modifier = Modifier.padding(MonarchTheme.spacing.space4),\n                    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n                ) {\n                    MonarchText(text = \"INV-1042\", style = MonarchTextStyle.Heading)\n                    MonarchText(text = \"Due in 5 days\")\n                    MonarchButton(text = \"Close\", onClick = { scope.launch { navigator.navigateBack() } })\n                }\n            }\n        }\n    },\n)"
+    }
+  ],
+  "webEquivalent": "PeekPanel",
+  "dependsOn": [
+    "sheet",
+    "button"
+  ],
+  "icons": {
+    "previous": "ChevronDownGlyph",
+    "next": "ChevronDownGlyph",
+    "close": "CloseGlyph"
+  }
+}

@@ -1,13 +1,10 @@
 import { useState } from 'react';
 import { AiPermissionScope, type AiPermissionScopeItem } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-permission-scope.fixture.json';
 
-const SCOPES: AiPermissionScopeItem[] = [
-  { app: 'Calendar', resources: 'Your events only', access: 'read' },
-  { app: 'Documents', resources: 'Shared projects', access: 'write' },
-  { app: 'Contacts', access: 'read' },
-  { app: 'Billing', access: 'none' },
-];
+const SCOPES = fixture.data.scopes as AiPermissionScopeItem[];
 
 function EditableDemo() {
   const [scopes, setScopes] = useState(SCOPES);

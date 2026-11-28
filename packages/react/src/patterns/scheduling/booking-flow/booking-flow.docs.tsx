@@ -7,10 +7,23 @@ import {
   type SlotPickerSlot,
 } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './booking-flow.fixture.json';
 
+const [intro, consult] = fixture.data.services as [
+  { name: string; minutes: number },
+  { name: string; minutes: number },
+];
 const SERVICES = [
-  { id: 'intro', name: 'Introductory call', minutes: 20 },
-  { id: 'consult', name: 'Consultation', minutes: 45 },
+  { id: 'intro', name: intro.name, minutes: intro.minutes },
+  { id: 'consult', name: consult.name, minutes: consult.minutes },
+];
+
+const [serviceStep, timeStep, detailsStep, reviewStep] = fixture.data.steps as [
+  { id: string; label: string; title: string },
+  { id: string; label: string },
+  { id: string; label: string },
+  { id: string; label: string },
 ];
 
 function slotsFor(day: string): SlotPickerSlot[] {
@@ -46,16 +59,16 @@ function Demo({ layout }: { layout: 'steps' | 'list' }) {
   const chosen = SERVICES.find((s) => s.id === service);
   const steps: BookingFlowStep[] = [
     {
-      id: 'service',
-      label: 'Service',
-      title: 'Choose a service',
+      id: serviceStep.id,
+      label: serviceStep.label,
+      title: serviceStep.title,
       content: <ServiceOptions value={service} onPick={setService} />,
       summary: chosen?.name,
       hideContinue: true,
     },
     {
-      id: 'time',
-      label: 'Date and time',
+      id: timeStep.id,
+      label: timeStep.label,
       title: 'Choose a date and time',
       description: chosen ? `${chosen.name} · ${chosen.minutes} min` : undefined,
       slotPicker: {
@@ -77,8 +90,8 @@ function Demo({ layout }: { layout: 'steps' | 'list' }) {
       complete: slot !== null,
     },
     {
-      id: 'details',
-      label: 'Your details',
+      id: detailsStep.id,
+      label: detailsStep.label,
       content: (
         <Field required>
           <FieldLabel>Name</FieldLabel>
@@ -89,8 +102,8 @@ function Demo({ layout }: { layout: 'steps' | 'list' }) {
       complete: name.trim() !== '',
     },
     {
-      id: 'review',
-      label: 'Review',
+      id: reviewStep.id,
+      label: reviewStep.label,
       title: 'Review your booking',
       content: <p style={{ margin: 0 }}>Check the summary, then confirm.</p>,
     },

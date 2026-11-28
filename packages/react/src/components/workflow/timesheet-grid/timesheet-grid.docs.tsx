@@ -8,43 +8,59 @@ import {
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { TrashIcon } from '../../../internal/docs-demo.js';
 
-const WEEK: TimesheetDay[] = [
-  { date: '2026-01-12', expectedMinutes: 480 },
-  { date: '2026-01-13', expectedMinutes: 480, today: true },
-  { date: '2026-01-14', expectedMinutes: 480 },
-  { date: '2026-01-15', expectedMinutes: 480, locked: 'Leave' },
-  { date: '2026-01-16', expectedMinutes: 480 },
-  { date: '2026-01-17', nonWorking: true },
-  { date: '2026-01-18', nonWorking: true },
-];
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './timesheet-grid.fixture.json';
 
-const START: TimesheetRow[] = [
-  {
-    id: 'web',
-    label: 'Website refresh',
-    description: 'Design · Billable',
-    cells: { '2026-01-12': 240, '2026-01-13': 180 },
-  },
-  {
-    id: 'app',
-    label: 'Mobile app',
-    description: 'Development · Billable',
-    cells: { '2026-01-12': 180, '2026-01-14': 300 },
-  },
-  {
-    id: 'internal',
-    label: 'Internal',
-    description: 'Meetings · Non-billable',
-    cells: { '2026-01-13': 60 },
-  },
-  {
-    id: 'timer',
-    label: 'Timer and imported entries',
-    description: 'Edit these in the day view',
-    readOnly: true,
-    cells: { '2026-01-14': 75 },
-  },
-];
+interface FixtureDay {
+  date: string;
+  expectedMinutes?: number;
+  today?: boolean;
+  locked?: string;
+  nonWorking?: boolean;
+}
+interface FixtureRow {
+  id: string;
+  label: string;
+  description: string;
+  readOnly?: boolean;
+  cells: { date: string; minutes: number }[];
+}
+interface FixtureSummary {
+  id: string;
+  label: string;
+  cells: { date: string; text: string }[];
+  total: string;
+}
+const data = fixture.data as unknown as {
+  days: FixtureDay[];
+  rows: FixtureRow[];
+  rowAction: string;
+  summary: FixtureSummary;
+};
+const day = (iso: string) => iso.slice(0, 10);
+
+const WEEK: TimesheetDay[] = data.days.map((d) => ({
+  date: day(d.date),
+  ...(d.expectedMinutes !== undefined && { expectedMinutes: d.expectedMinutes }),
+  ...(d.today !== undefined && { today: d.today }),
+  ...(d.locked !== undefined && { locked: d.locked }),
+  ...(d.nonWorking !== undefined && { nonWorking: d.nonWorking }),
+}));
+
+const START: TimesheetRow[] = data.rows.map((r) => ({
+  id: r.id,
+  label: r.label,
+  description: r.description,
+  ...(r.readOnly !== undefined && { readOnly: r.readOnly }),
+  cells: Object.fromEntries(r.cells.map((c) => [day(c.date), c.minutes])),
+}));
+
+const SUMMARY = {
+  id: data.summary.id,
+  label: data.summary.label,
+  cells: Object.fromEntries(data.summary.cells.map((c) => [day(c.date), c.text])),
+  total: data.summary.total,
+};
 
 function EditableDemo() {
   const [rows, setRows] = useState(START);
@@ -63,21 +79,14 @@ function EditableDemo() {
           <IconButton
             size="xs"
             icon={<TrashIcon />}
-            label={`Clear ${String(row.label)}`}
+            label={`${data.rowAction} ${String(row.label)}`}
             onClick={() =>
               setRows((all) => all.map((r) => (r.id === row.id ? { ...r, cells: {} } : r)))
             }
           />
         )
       }
-      summaryRows={[
-        {
-          id: 'attendance',
-          label: 'Attendance',
-          cells: { '2026-01-12': '7h 55m', '2026-01-13': '4h 10m', '2026-01-14': '6h 30m' },
-          total: '18h 35m',
-        },
-      ]}
+      summaryRows={[SUMMARY]}
     />
   );
 }

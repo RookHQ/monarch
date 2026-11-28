@@ -1,35 +1,15 @@
+import { Link } from '@rookcom/monarch-react';
 import { PreviewRows, type PreviewRow } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './preview-rows.fixture.json';
 
-const COLUMNS = [
-  { id: 'name', label: 'Name' },
-  { id: 'email', label: 'Email' },
-  { id: 'country', label: 'Country' },
-];
+const COLUMNS = fixture.data.columns;
 
-const ROWS: PreviewRow[] = [
-  { row: 1, values: { name: 'Ana Ruiz', email: 'ana@example.com', country: 'Spain' } },
-  {
-    row: 2,
-    values: { name: '', email: 'not-an-email', country: 'France' },
-    errors: [
-      { field: 'Email', message: 'Not an email address' },
-      { field: 'Name', message: 'Required' },
-    ],
-  },
-  {
-    row: 3,
-    values: { name: 'Sam Lee', email: 'sam@example.com', country: 'Atlantis' },
-    warnings: [{ field: 'Country', message: 'Not recognised; left empty' }],
-  },
-  {
-    row: 4,
-    values: { name: 'Kim Park', email: 'kim@example.com', country: 'Korea' },
-    status: 'duplicate',
-    note: <a href="#record-9">Matches an existing record</a>,
-  },
-  { row: 5, values: { name: 'Lee Chen', email: 'lee@example.com', country: 'Canada' } },
-];
+const ROWS = (fixture.data.rows as unknown as (PreviewRow & { note?: string })[]).map((row) => ({
+  ...row,
+  ...(row.note !== undefined && { note: <Link href="#record-9">{row.note}</Link> }),
+})) as PreviewRow[];
 
 export default {
   id: 'preview-rows',
@@ -155,7 +135,7 @@ export default {
           title: 'Preview with problems',
           stack: true,
           render: () => (
-            <PreviewRows caption="Preview of contacts.csv" rows={ROWS} columns={COLUMNS} />
+            <PreviewRows caption={fixture.data.caption} rows={ROWS} columns={COLUMNS} />
           ),
         },
         {

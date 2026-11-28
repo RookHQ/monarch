@@ -1,0 +1,101 @@
+{
+  "id": "rule-builder",
+  "name": null,
+  "title": "RuleBuilder",
+  "family": "workflow",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "NavigationStack with ScrollView and toolbar(.cancellationAction, .confirmationAction), MonarchTextField for the name, MonarchSectionCard per part, Toggle with .toggleStyle(.monarchCheckbox) for triggers, MonarchConditionEditor, MonarchActionEditor, standard Toggle for the options, MonarchInlineNotice and MonarchBanner for problems, and AccessibilityNotification.Announcement when saving is blocked",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a full-screen “when, if, then” rule form with a name, triggers, conditions with all or any, ordered actions, on and stop-processing options, problems listed on save and a Save action.",
+  "whenToUse": "Automation, routing, notification and form-logic rules that an app's users write themselves: “when a ticket is created, if the priority is high, set the team to Support”.",
+  "whenNotToUse": "For conditions alone (filters, eligibility) use MonarchConditionEditor; for a nested filter use MonarchQueryBuilder; for a list of steps without conditions use MonarchActionEditor.",
+  "api": [
+    "MonarchTextField.init(_ label: String, text: Binding<String>, prompt: String? = nil, helper: String? = nil, error: String? = nil, isSecure: Bool = false)",
+    "MonarchSectionCard.init(_ title: String, description: String? = nil, …, @ViewBuilder content: () -> Content)",
+    "MonarchConditionEditor.init(conditions: Binding<[MonarchCondition]>, fields: [MonarchConditionField], match: Binding<MonarchConditionMatch>? = nil, maxConditions: Int = 20, showsErrors: Bool = false, …)",
+    "MonarchCondition.problem(fields: [MonarchConditionField]) -> MonarchConditionProblem?",
+    "MonarchActionEditor.init(actions: Binding<[MonarchRuleAction]>, types: [MonarchActionType], isOrdered: Bool = true, maxActions: Int = 20, showsErrors: Bool = false, …)",
+    "static func MonarchActionEditor.problems(of actions: [MonarchRuleAction], types: [MonarchActionType]) -> [String: [MonarchActionProblem]]",
+    "MonarchBanner.init(_ title: String? = nil, message: String, tone: MonarchTone = .info, …)",
+    "ToolbarItem(placement: .confirmationAction) { Button(\"Save rule\") { … } }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "editing",
+      "description": "Name, When (trigger checkboxes), If (condition editor with all or any), Then (ordered action editor) and Options (Rule is on, Stop processing) as section cards on a scrolling screen, with Cancel and Save rule in the navigation bar."
+    },
+    {
+      "name": "no triggers",
+      "description": "For rules that are not run by events (form logic), leave out the When card and its problem."
+    },
+    {
+      "name": "blocked",
+      "description": "Save with problems sets showsErrors: the name field, the When and Then cards and each incomplete condition and action show what is missing, a danger banner lists every problem, and the list is announced."
+    },
+    {
+      "name": "saving",
+      "description": "While the app saves, replace Save rule with a ProgressView in the toolbar and disable the form; on failure show the error in a danger MonarchBanner."
+    },
+    {
+      "name": "saved",
+      "description": "The app stores the rule and dismisses the screen."
+    }
+  ],
+  "appearance": "The navigation bar and toolbar are the system's; each part is a MonarchSectionCard on the card surface with its title and help text in the muted colour; problems use the danger tone with its icon. Light, dark and both high-contrast themes follow from the components' colour roles.",
+  "platformNotes": "The web RuleBuilder is one form component with props for triggers, fields, action types, messages and an async onSubmit. On iOS it is a recipe of Monarch components on a full screen pushed or presented in a sheet, because a rule is a create-or-edit task with Save and Cancel in the navigation bar, and the app owns the rule's model and storage. Like the web, the problem summary takes focus when saving is blocked: the banner is one element with accessibilityFocused, set in the update after it appears. The web single-trigger mode is a Picker with .pickerStyle(.menu) in place of the checkboxes. There is no Android entry yet.",
+  "accessibility": [
+    "Cancel and Save rule are the navigation bar's cancellation and confirmation actions, with 44-point targets.",
+    "Each section card's title is a heading, so the VoiceOver rotor moves between When, If, Then and Options.",
+    "Trigger checkboxes are toggles read with their label and checked state.",
+    "The condition and action editors keep their own accessibility: named rows, announced removals and reorder actions without dragging.",
+    "When saving is blocked VoiceOver moves to the problem summary, which reads all problems as one message, and each is also text next to its part, not only colour."
+  ],
+  "edgeCases": [
+    "Compute the problems from the same state that is saved, so the banner and the per-part errors agree.",
+    "Keep showsErrors false until the first save, so a new rule does not open full of errors.",
+    "Ignore a second Save while the first is still saving.",
+    "A long rule scrolls; the Save action stays in the navigation bar."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Scheduled rule with an extra option",
+      "fixture": "rule-builder",
+      "webExample": "Scheduled rule with an extra option",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    MonarchTextField(\"Name\", text: $name, isRequired: true)\n    MonarchTextField(\"Description (optional)\", text: $description)\n    VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n        Text(\"When\").monarchTextStyle(.label)\n        Text(\"The rule is checked whenever any of these happen.\")\n            .monarchTextStyle(.caption)\n            .foregroundStyle(theme.colors.textMuted)\n        ForEach(events, id: \\.id) { event in\n            Toggle(isOn: trigger(event.id)) {\n                VStack(alignment: .leading) {\n                    Text(event.label)\n                    if let description = event.description {\n                        Text(description).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                    }\n                }\n            }\n            .toggleStyle(.monarchCheckbox)\n        }\n    }\n    MonarchSectionCard(\"If\", description: \"Leave empty to apply every time the rule is checked.\") {\n        MonarchConditionEditor(\n            conditions: $conditions, fields: fields, match: $match, showsErrors: showsErrors,\n            labels: MonarchConditionEditorLabels(condition: { _ in \"\" })\n        )\n    }\n    MonarchSectionCard(\"Then\", description: \"Actions run in this order.\") {\n        MonarchActionEditor(actions: $actions, types: types, showsErrors: showsErrors)\n    }\n    VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n        Text(\"Options\").monarchTextStyle(.label)\n        Toggle(isOn: $isOn) {\n            VStack(alignment: .leading) {\n                Text(\"Rule is on\")\n                Text(\"Rules that are off are kept but never run.\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n            }\n        }\n        .toggleStyle(.monarchCheckbox)\n        Toggle(isOn: $stopsProcessing) {\n            VStack(alignment: .leading) {\n                Text(\"Stop processing\")\n                Text(\"When this rule matches, later rules are skipped for the same event.\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n            }\n        }\n        .toggleStyle(.monarchCheckbox)\n    }\n    MonarchTextField({{extra.label}}, text: $priority)\n    HStack(spacing: MonarchTokens.Space.space3) {\n        Spacer()\n        MonarchButton(\"Cancel\", variant: .secondary) { showsErrors = false }\n        MonarchButton(\"Save rule\", variant: .primary) { showsErrors = true }\n    }\n}\n.padding()\n.padding(.top, MonarchTokens.Space.space6)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var name = {{name}}\n@State private var description = \"\"\n@State private var triggers: Set<String> = [{{checkedTrigger}}]\n@State private var match = MonarchConditionMatch.all\n@State private var conditions: [MonarchCondition] = [\n    MonarchCondition(id: \"c1\", field: {{condition.field}}, operator: .greaterThan, value: .number({{condition.value|double}})),\n]\n@State private var actions: [MonarchRuleAction] = [\n    MonarchRuleAction(id: \"a1\", type: {{action.type}}, parameters: [{{action.param.key}}: .option({{action.value}})]),\n]\n@State private var isOn = true\n@State private var stopsProcessing = false\n@State private var priority = {{extra.value}}\n@State private var showsErrors = false\n\nprivate let events: [(id: String, label: String, description: String?)] = [\n    ({{triggers.0.value}}, {{triggers.0.label}}, nil),\n    ({{triggers.1.value}}, {{triggers.1.label}}, nil),\n    ({{triggers.2.value}}, {{triggers.2.label}}, nil),\n    ({{triggers.3.value}}, {{triggers.3.label}}, {{triggers.3.description}}),\n]\nprivate let fields = [\n    MonarchConditionField(id: {{fields.0.value}}, label: {{fields.0.label}}, kind: .select([\n        MonarchComboboxOption(id: {{fields.0.options.0.value}}, label: {{fields.0.options.0.label}}),\n        MonarchComboboxOption(id: {{fields.0.options.1.value}}, label: {{fields.0.options.1.label}}),\n        MonarchComboboxOption(id: {{fields.0.options.2.value}}, label: {{fields.0.options.2.label}}),\n    ])),\n    MonarchConditionField(id: {{fields.1.value}}, label: {{fields.1.label}}, kind: .text),\n    MonarchConditionField(id: {{fields.2.value}}, label: {{fields.2.label}}, kind: .number, prompt: {{fields.2.placeholder}}),\n    MonarchConditionField(id: {{fields.3.value}}, label: {{fields.3.label}}, kind: .text),\n]\nprivate let types = [\n    MonarchActionType(id: {{actionTypes.0.value}}, label: {{actionTypes.0.label}}, parameters: [\n        MonarchActionParameter(key: {{action.param.key}}, label: {{action.param.label}}, kind: .select([\n            MonarchComboboxOption(id: {{action.options.0.value}}, label: {{action.options.0.label}}),\n            MonarchComboboxOption(id: {{action.options.1.value}}, label: {{action.options.1.label}}),\n        ]), isRequired: true),\n    ]),\n    MonarchActionType(id: {{actionTypes.1.value}}, label: {{actionTypes.1.label}}, parameters: [\n        MonarchActionParameter(key: \"tags\", label: \"Tags\", kind: .tags(suggestions: []), isRequired: true),\n    ]),\n    MonarchActionType(id: {{actionTypes.2.value}}, label: {{actionTypes.2.label}}, parameters: [\n        MonarchActionParameter(key: \"message\", label: \"Message\", kind: .multilineText, isRequired: true),\n    ]),\n]\n\nprivate func trigger(_ id: String) -> Binding<Bool> {\n    Binding(\n        get: { triggers.contains(id) },\n        set: { isOn in if isOn { triggers.insert(id) } else { triggers.remove(id) } }\n    )\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var name = \"Raise priority of old requests\"\n@State private var description = \"\"\n@State private var triggers: Set<String> = [\"hourly\"]\n@State private var match = MonarchConditionMatch.all\n@State private var conditions: [MonarchCondition] = [\n    MonarchCondition(id: \"c1\", field: \"hoursOpen\", operator: .greaterThan, value: .number(24.0)),\n]\n@State private var actions: [MonarchRuleAction] = [\n    MonarchRuleAction(id: \"a1\", type: \"set_priority\", parameters: [\"priority\": .option(\"high\")]),\n]\n@State private var isOn = true\n@State private var stopsProcessing = false\n@State private var priority = \"10\"\n@State private var showsErrors = false\n\nprivate let events: [(id: String, label: String, description: String?)] = [\n    (\"created\", \"Request created\", nil),\n    (\"updated\", \"Request updated\", nil),\n    (\"replied\", \"Requester replied\", nil),\n    (\"hourly\", \"Every hour\", \"Checks open requests on a schedule.\"),\n]\nprivate let fields = [\n    MonarchConditionField(id: \"priority\", label: \"Priority\", kind: .select([\n        MonarchComboboxOption(id: \"low\", label: \"Low\"),\n        MonarchComboboxOption(id: \"normal\", label: \"Normal\"),\n        MonarchComboboxOption(id: \"high\", label: \"High\"),\n    ])),\n    MonarchConditionField(id: \"subject\", label: \"Subject\", kind: .text),\n    MonarchConditionField(id: \"hoursOpen\", label: \"Hours since created\", kind: .number, prompt: \"Hours\"),\n    MonarchConditionField(id: \"tags\", label: \"Tags\", kind: .text),\n]\nprivate let types = [\n    MonarchActionType(id: \"set_priority\", label: \"Set priority\", parameters: [\n        MonarchActionParameter(key: \"priority\", label: \"Priority\", kind: .select([\n            MonarchComboboxOption(id: \"normal\", label: \"Normal\"),\n            MonarchComboboxOption(id: \"high\", label: \"High\"),\n        ]), isRequired: true),\n    ]),\n    MonarchActionType(id: \"add_tags\", label: \"Add tags\", parameters: [\n        MonarchActionParameter(key: \"tags\", label: \"Tags\", kind: .tags(suggestions: []), isRequired: true),\n    ]),\n    MonarchActionType(id: \"notify\", label: \"Notify the team\", parameters: [\n        MonarchActionParameter(key: \"message\", label: \"Message\", kind: .multilineText, isRequired: true),\n    ]),\n]\n\nprivate func trigger(_ id: String) -> Binding<Bool> {\n    Binding(\n        get: { triggers.contains(id) },\n        set: { isOn in if isOn { triggers.insert(id) } else { triggers.remove(id) } }\n    )\n}",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    MonarchTextField(\"Name\", text: $name, isRequired: true)\n    MonarchTextField(\"Description (optional)\", text: $description)\n    VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n        Text(\"When\").monarchTextStyle(.label)\n        Text(\"The rule is checked whenever any of these happen.\")\n            .monarchTextStyle(.caption)\n            .foregroundStyle(theme.colors.textMuted)\n        ForEach(events, id: \\.id) { event in\n            Toggle(isOn: trigger(event.id)) {\n                VStack(alignment: .leading) {\n                    Text(event.label)\n                    if let description = event.description {\n                        Text(description).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                    }\n                }\n            }\n            .toggleStyle(.monarchCheckbox)\n        }\n    }\n    MonarchSectionCard(\"If\", description: \"Leave empty to apply every time the rule is checked.\") {\n        MonarchConditionEditor(\n            conditions: $conditions, fields: fields, match: $match, showsErrors: showsErrors,\n            labels: MonarchConditionEditorLabels(condition: { _ in \"\" })\n        )\n    }\n    MonarchSectionCard(\"Then\", description: \"Actions run in this order.\") {\n        MonarchActionEditor(actions: $actions, types: types, showsErrors: showsErrors)\n    }\n    VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n        Text(\"Options\").monarchTextStyle(.label)\n        Toggle(isOn: $isOn) {\n            VStack(alignment: .leading) {\n                Text(\"Rule is on\")\n                Text(\"Rules that are off are kept but never run.\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n            }\n        }\n        .toggleStyle(.monarchCheckbox)\n        Toggle(isOn: $stopsProcessing) {\n            VStack(alignment: .leading) {\n                Text(\"Stop processing\")\n                Text(\"When this rule matches, later rules are skipped for the same event.\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n            }\n        }\n        .toggleStyle(.monarchCheckbox)\n    }\n    MonarchTextField(\"Priority (higher runs first)\", text: $priority)\n    HStack(spacing: MonarchTokens.Space.space3) {\n        Spacer()\n        MonarchButton(\"Cancel\", variant: .secondary) { showsErrors = false }\n        MonarchButton(\"Save rule\", variant: .primary) { showsErrors = true }\n    }\n}\n.padding()\n.padding(.top, MonarchTokens.Space.space6)"
+    }
+  ],
+  "webEquivalent": "RuleBuilder",
+  "dependsOn": [
+    "condition-editor",
+    "action-editor",
+    "text-field",
+    "checkbox",
+    "switch",
+    "section-card",
+    "alert",
+    "inline-notice",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "condition.operator"
+      ],
+      "reason": "Naming only: the web operator gt is the native case greaterThan; the condition shown is the same.",
+      "convention": "naming: same condition"
+    }
+  ]
+}

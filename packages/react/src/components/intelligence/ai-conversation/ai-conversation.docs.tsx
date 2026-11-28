@@ -3,10 +3,13 @@ import { Button, Input } from '@rookcom/monarch-react';
 import {
   messageText,
   mockTransport,
+  type AiMessage,
   textDeltas,
   useAiConversation,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-conversation.fixture.json';
 
 const transport = mockTransport({
   delayMs: 40,
@@ -19,8 +22,17 @@ const transport = mockTransport({
   ],
 });
 
+/** One finished turn, as a product would restore it from its own storage. */
+const HISTORY: AiMessage[] = fixture.data.messages.map((m) => ({
+  id: m.id,
+  role: m.role as AiMessage['role'],
+  ...('agent' in m && { agent: { name: m.agent } }),
+  parts: [{ type: 'text', text: m.text, state: 'done' }],
+  createdAt: m.createdAt,
+}));
+
 function MinimalChat() {
-  const chat = useAiConversation({ transport });
+  const chat = useAiConversation({ transport, initialMessages: HISTORY });
   const [draft, setDraft] = useState('');
   return (
     <div style={{ display: 'grid', gap: 'var(--mn-space-3)', width: '100%' }}>
@@ -46,7 +58,7 @@ function MinimalChat() {
           aria-label="Message"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Ask something"
+          placeholder={fixture.data.placeholder}
         />
         {chat.busy ? (
           <Button onClick={chat.stop}>Stop</Button>

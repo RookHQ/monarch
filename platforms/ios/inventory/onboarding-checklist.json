@@ -1,0 +1,151 @@
+{
+  "id": "onboarding-checklist",
+  "name": "MonarchOnboardingChecklist",
+  "title": "OnboardingChecklist",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchCard containing a DisclosureGroup (.disclosureGroupStyle(MonarchDisclosureGroupStyle)) whose label is a ProgressView (.monarchLinear)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A first-run checklist: steps with a done state and an optional call to action, a progress summary, and collapse and dismiss controls.",
+  "whenToUse": "To guide people through setting up a product with a short list of steps (three to seven) that the app can mark done from its own data.",
+  "whenNotToUse": "For a linear form split into pages use MonarchStepper. For a to-do list people tick themselves use Toggle with .monarchCheckbox.",
+  "api": [
+    "init(_ title: String, steps: [MonarchOnboardingStep], description: String? = nil, completeMessage: String? = nil, isCollapsible: Bool = true, isExpanded: Binding<Bool>? = nil, labels: MonarchOnboardingChecklistLabels = MonarchOnboardingChecklistLabels(), onDismiss: (@MainActor () -> Void)? = nil, @ViewBuilder action: @escaping (MonarchOnboardingStep) -> Action)",
+    "init(_ title: String, steps: [MonarchOnboardingStep], description: String? = nil, completeMessage: String? = nil, isCollapsible: Bool = true, isExpanded: Binding<Bool>? = nil, labels: MonarchOnboardingChecklistLabels = MonarchOnboardingChecklistLabels(), onDismiss: (@MainActor () -> Void)? = nil) where Action == EmptyView",
+    "struct MonarchOnboardingStep: Identifiable, Sendable, Hashable { init(id: String, title: String, description: String? = nil, isDone: Bool = false) }",
+    "struct MonarchOnboardingChecklistLabels { init(progress: (@Sendable (Int, Int) -> String)? = nil, progressLabel: String? = nil, dismiss: String? = nil, done: String? = nil, notDone: String? = nil, current: String? = nil, complete: String? = nil, expanded: String? = nil, collapsed: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The heading, such as \"Get started\". Read as a header."
+    },
+    {
+      "name": "steps",
+      "type": "[MonarchOnboardingStep]",
+      "default": "required",
+      "description": "The steps in order: id, title, optional description and isDone. The app decides when each is done."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "Text under the heading."
+    },
+    {
+      "name": "completeMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces \"All done. You are set up.\", shown when every step is done."
+    },
+    {
+      "name": "isCollapsible",
+      "type": "Bool",
+      "default": "true",
+      "description": "Makes the progress row a disclosure that shows and hides the steps."
+    },
+    {
+      "name": "isExpanded",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Whether the steps are shown. Without it the component keeps the state itself, starting expanded. Bind it to keep the state across launches."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchOnboardingChecklistLabels",
+      "default": "MonarchOnboardingChecklistLabels()",
+      "description": "Replacements for the built-in strings: progress, progressLabel, dismiss, done, notDone, current, complete, expanded and collapsed."
+    },
+    {
+      "name": "onDismiss",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows a dismiss button that runs this. The app hides the checklist and remembers it."
+    },
+    {
+      "name": "action",
+      "type": "@ViewBuilder (MonarchOnboardingStep) -> Action",
+      "default": "none (initialiser without it)",
+      "description": "The call to action of a step, such as a small MonarchButtonStyle button. Shown only while the step is not done."
+    }
+  ],
+  "states": [
+    {
+      "name": "in progress",
+      "description": "The bar and \"n of m done\" show progress; the first open step has a subtle fill and an accent ring with its number."
+    },
+    {
+      "name": "step done",
+      "description": "The marker is a filled success circle with a check; the title is muted; the description and action are hidden."
+    },
+    {
+      "name": "complete",
+      "description": "Every step is done: a success message with a check appears above the steps."
+    },
+    {
+      "name": "collapsed",
+      "description": "Only the heading and the progress row are shown; the chevron turns."
+    },
+    {
+      "name": "empty",
+      "description": "With no steps the progress reads \"0 of 0 done\" and the checklist is not complete."
+    }
+  ],
+  "appearance": "A MonarchCard (surface fill, subtle border, small shadow). The progress uses MonarchProgressViewStyle (accent fill on a muted track). Open steps have a number in a strong-border ring, the current step an accent-strong ring on the subtle fill, done steps a success-solid circle with a check in the on-solid colour. The complete message uses the success subtle fill and success strong text. All are theme roles, so light, dark and both high-contrast themes follow the theme.",
+  "platformNotes": "The web turns the progress bar to the success tone when complete; MonarchProgressViewStyle has no tone, so the bar stays accent and the success message shows completion. The web sets a heading level; iOS marks the title as a header without a level. The web places the action beside the step on wide screens; iOS places it under the step text. Collapse uses isExpanded, the SwiftUI convention, where the web uses collapsed. Android has the same parameters.",
+  "accessibility": [
+    "The title is a header.",
+    "With collapsing, the progress row is the disclosure button, read as \"Setup progress, n of m done\" with the value \"Expanded\" or \"Collapsed\"; hidden steps are removed from VoiceOver.",
+    "Without collapsing, the progress row is one element named \"Setup progress\" with \"n of m done\" as its value.",
+    "Each step is one element read as its title, with the value \"Done\" or \"Not done\" (\"Not done, Current step\" for the first open step) and its description as the hint; the step number and marker are not read.",
+    "Each step's action is a separate element after the step.",
+    "Done is shown by a check in the marker and by the spoken value, not by colour alone.",
+    "The dismiss button is named \"Dismiss checklist\" and, like the disclosure row, has a 44-point touch target.",
+    "Markers and text scale with Dynamic Type; the expand animation is removed with Reduce Motion."
+  ],
+  "edgeCases": [
+    "The checklist does not hide itself on dismiss; the app removes it.",
+    "Step ids must be unique; they identify the rows.",
+    "An empty step list is never complete.",
+    "Long titles and descriptions wrap; the marker stays at the top of the step."
+  ],
+  "tests": [
+    "MonarchOnboardingChecklistTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Get started",
+      "fixture": "onboarding-checklist",
+      "webExample": "Get started",
+      "template": "MonarchOnboardingChecklist(\n    {{title}},\n    steps: steps,\n    description: {{description}},\n    onDismiss: {},\n    action: { step in\n        if step.id == {{steps.1.id}} {\n            Button({{steps.1.action.label}}) {}\n                .buttonStyle(.monarch({{steps.1.action.variant|case}}, size: .sm))\n        } else if step.id == {{steps.2.id}} {\n            Button({{steps.2.action.label}}) {}\n                .buttonStyle(.monarch({{steps.2.action.variant|case}}, size: .sm))\n        } else if step.id == {{steps.3.id}} {\n            Button({{steps.3.action.label}}) {}\n                .buttonStyle(.monarch({{steps.3.action.variant|case}}, size: .sm))\n        }\n    }\n)",
+      "setupTemplate": "@State private var steps = [\n    MonarchOnboardingStep(id: {{steps.0.id}}, title: {{steps.0.title}}, isDone: {{steps.0.done}}),\n    MonarchOnboardingStep(id: {{steps.1.id}}, title: {{steps.1.title}}, description: {{steps.1.description}}),\n    MonarchOnboardingStep(id: {{steps.2.id}}, title: {{steps.2.title}}, description: {{steps.2.description}}),\n    MonarchOnboardingStep(id: {{steps.3.id}}, title: {{steps.3.title}}),\n]",
+      "setup": "@State private var steps = [\n    MonarchOnboardingStep(id: \"profile\", title: \"Complete your profile\", isDone: true),\n    MonarchOnboardingStep(id: \"invite\", title: \"Invite your team\", description: \"Work is easier to share with the people you work with.\"),\n    MonarchOnboardingStep(id: \"project\", title: \"Create your first project\", description: \"Start from a template or a blank project.\"),\n    MonarchOnboardingStep(id: \"notifications\", title: \"Choose your notifications\"),\n]",
+      "code": "MonarchOnboardingChecklist(\n    \"Get started\",\n    steps: steps,\n    description: \"A few steps to set up your workspace.\",\n    onDismiss: {},\n    action: { step in\n        if step.id == \"invite\" {\n            Button(\"Invite people\") {}\n                .buttonStyle(.monarch(.secondary, size: .sm))\n        } else if step.id == \"project\" {\n            Button(\"New project\") {}\n                .buttonStyle(.monarch(.secondary, size: .sm))\n        } else if step.id == \"notifications\" {\n            Button(\"Open settings\") {}\n                .buttonStyle(.monarch(.ghost, size: .sm))\n        }\n    }\n)"
+    },
+    {
+      "title": "Expanded state kept by the screen",
+      "setup": "@State private var isExpanded = false",
+      "code": "MonarchOnboardingChecklist(\n    \"Get started\",\n    steps: [\n        MonarchOnboardingStep(id: \"a\", title: \"Verify your email\", isDone: true),\n        MonarchOnboardingStep(id: \"b\", title: \"Add a payment method\"),\n    ],\n    isExpanded: $isExpanded\n)"
+    }
+  ],
+  "webEquivalent": "OnboardingChecklist",
+  "dependsOn": [
+    "card",
+    "progress-bar",
+    "collapsible",
+    "button"
+  ],
+  "icons": {
+    "collapse": "ChevronDownGlyph",
+    "dismiss": "CloseGlyph",
+    "step.done": "CheckGlyph"
+  }
+}

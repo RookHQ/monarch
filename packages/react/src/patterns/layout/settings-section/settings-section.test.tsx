@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { createRef, useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -212,5 +214,14 @@ describe('Settings', () => {
     );
     expect(saving).toContain('You have unsaved changes.');
     expect(saving).toContain('mn-settings-action-row');
+  });
+
+  it('keeps a row a left-aligned grid even though it is also a Field', () => {
+    // .mn-field (a flex column) loaded after this sheet won, and the row's
+    // align-items: center then centred the label and control in the card.
+    const css = readFileSync(join(dirname(__filename), 'settings-section.css'), 'utf8');
+    expect(css).toMatch(/\.mn-settings-row\.mn-settings-row \{\s*display: grid/);
+    expect(css).toMatch(/\.mn-settings-section__card \{[^}]*container-type: inline-size/);
+    expect(css).not.toContain('@media (min-width: 768px)');
   });
 });

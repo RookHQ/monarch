@@ -2,6 +2,8 @@ import { Badge } from '@rookcom/monarch-react';
 import { HighlightText, SearchResultItem, queryTerms } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { CalendarIcon, InboxIcon, UsersIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './search-result-item.fixture.json';
 
 export default {
   id: 'search-result-item',
@@ -115,13 +117,13 @@ export default {
           stack: true,
           render: () => (
             <SearchResultItem
-              title="Travel policy"
+              title={fixture.data.title}
               href="#travel-policy"
-              path={['Handbook', 'Policies']}
-              snippet="Book travel at least two weeks ahead and add the trip to the shared calendar."
-              terms={queryTerms('travel calendar')}
+              path={fixture.data.path}
+              snippet={fixture.data.snippet}
+              terms={queryTerms(fixture.data.query)}
               icon={<InboxIcon />}
-              meta={<Badge>Document</Badge>}
+              meta={<Badge>{fixture.data.badge}</Badge>}
             />
           ),
         },

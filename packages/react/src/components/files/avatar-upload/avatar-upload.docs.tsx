@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { AvatarUpload } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './avatar-upload.fixture.json';
 
 /** Keeps the cropped picture in a blob: URL, as an app would until the upload finishes. */
 function ProfilePhoto({ shape }: { shape?: 'circle' | 'square' }) {
@@ -13,10 +15,10 @@ function ProfilePhoto({ shape }: { shape?: 'circle' | 'square' }) {
   );
   return (
     <AvatarUpload
-      name={shape === 'square' ? 'Northwind Studio' : 'Alex Morgan'}
+      name={shape === 'square' ? 'Northwind Studio' : fixture.data.name}
       shape={shape}
       src={src}
-      maxSize={5 * 1024 * 1024}
+      maxSize={fixture.data.maxSize}
       onChange={(blob) => setSrc(URL.createObjectURL(blob))}
       onRemove={() => setSrc(null)}
     />

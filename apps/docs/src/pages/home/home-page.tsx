@@ -16,6 +16,7 @@ import { REPO_URL } from '../../layout/top-bar.js';
 import { pageById } from '../../lib/docs.js';
 // Only the showcased pages' details, so the home page does not load every summary.
 import { details as showcaseDetails } from 'virtual:monarch-docs-details?pages=button,segmented-control,tabs,status-badge,progress-bar,avatar';
+import nativeFacts from 'virtual:monarch-native-facts';
 import { facts, INSTALL_COMMAND } from '../../lib/facts.js';
 import { DEFAULT_PRODUCT } from '../../lib/appearance.js';
 import '../../styles/home.css';
@@ -294,6 +295,44 @@ function Components() {
   );
 }
 
+/** A platform's version and release state, from its changelog and manifest (plugins/native.ts). */
+const nativeState = (p: { version: string | null; unreleased: boolean }) =>
+  `${p.version ? `Version ${p.version}` : 'In development'}${p.unreleased ? ', unreleased' : ''}.`;
+
+/** The three implementations of Monarch, each linking to its own documentation. */
+function Platforms() {
+  return (
+    <MarketingSection spacing="md" aria-labelledby="home-platforms">
+      <MarketingSectionHeader
+        titleId="home-platforms"
+        eyebrow="Platforms"
+        title="One design language, three implementations"
+        description="Monarch shares its tokens, roles and component vocabulary across the web, Android and iOS, and renders through each platform's own controls."
+      />
+      <FeatureGrid
+        columns={3}
+        items={[
+          {
+            title: 'Web',
+            description: `React components and CSS tokens. @rookcom/monarch-react ${facts.reactVersion}, on npm.`,
+            href: href('/getting-started'),
+          },
+          {
+            title: 'Android',
+            description: `Kotlin and Jetpack Compose on Material 3. ${nativeState(nativeFacts.android)}`,
+            href: href('/android'),
+          },
+          {
+            title: 'iOS',
+            description: `Swift and SwiftUI. ${nativeState(nativeFacts.ios)}`,
+            href: href('/ios'),
+          },
+        ]}
+      />
+    </MarketingSection>
+  );
+}
+
 function Theming() {
   const { prefs, update } = useAppearance();
   return (
@@ -364,7 +403,7 @@ function OpenSource() {
             Made by <a {...MAKER_LINK}>Rook</a>. Open to everyone.
           </span>
         }
-        description="Monarch is free under the Apache License 2.0, for a weekend project or a company-wide platform. Read the code, open an issue, or help shape what comes next."
+        description="Monarch is open source under the Apache License 2.0, for a weekend project or a company-wide platform. Read the code, open an issue, or help shape what comes next."
         actions={
           <>
             <Button asChild variant="primary" leadingIcon={<RepoIcon />}>
@@ -391,6 +430,7 @@ export function HomePage() {
       <ShowcaseSection />
       <Foundations />
       <Components />
+      <Platforms />
       <Theming />
       <OpenSource />
     </div>

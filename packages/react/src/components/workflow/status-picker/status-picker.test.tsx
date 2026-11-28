@@ -16,6 +16,14 @@ const STATUSES: StatusOption[] = [
 ];
 
 describe('StatusPicker', () => {
+  it('opens from the controlled open prop and reports changes', async () => {
+    const onOpenChange = vi.fn();
+    render(<StatusPicker statuses={STATUSES} value="doing" open onOpenChange={onOpenChange} />);
+    expect(await screen.findByRole('menuitemradio', { name: /In progress/ })).toBeTruthy();
+    await userEvent.keyboard('{Escape}');
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
   it('StatusGlyph forwards its ref', () => {
     const ref = createRef<SVGSVGElement>();
     render(<StatusGlyph ref={ref} category="started" />);

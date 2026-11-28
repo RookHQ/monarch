@@ -3,51 +3,76 @@ import { Badge, Button } from '@rookcom/monarch-react';
 import { SearchResults, type SearchResultGroup } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { CalendarIcon, InboxIcon, UsersIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './search-results.fixture.json';
+
+interface FixtureItem {
+  id: string;
+  title: string;
+  path?: string[];
+  snippet?: string;
+  meta?: string;
+}
+const [documents, events, people] = fixture.data.groups as unknown as readonly [
+  { id: string; label: string; total: number; items: readonly [FixtureItem, FixtureItem] },
+  { id: string; label: string; items: readonly [FixtureItem] },
+  { id: string; label: string; items: readonly [FixtureItem] },
+];
+const [policy, checklist] = documents.items;
+const [planning] = events.items;
+const [alex] = people.items;
 
 const GROUPS: SearchResultGroup[] = [
   {
-    id: 'documents',
-    label: 'Documents',
+    id: documents.id,
+    label: documents.label,
     icon: <InboxIcon />,
-    total: 8,
+    total: documents.total,
     onShowMore: () => {},
     items: [
       {
-        id: 'doc-1',
-        title: 'Travel policy',
+        id: policy.id,
+        title: policy.title,
         href: '#travel-policy',
-        path: ['Handbook', 'Policies'],
-        snippet: 'Book travel at least two weeks ahead and share the plan with your team.',
-        meta: <Badge>Policy</Badge>,
+        ...(policy.path && { path: policy.path }),
+        ...(policy.snippet && { snippet: policy.snippet }),
+        meta: <Badge>{policy.meta}</Badge>,
       },
       {
-        id: 'doc-2',
-        title: 'Team travel checklist',
+        id: checklist.id,
+        title: checklist.title,
         href: '#travel-checklist',
-        path: ['Operations'],
-        snippet: 'Passports, insurance and a contact sheet for every trip.',
+        ...(checklist.path && { path: checklist.path }),
+        ...(checklist.snippet && { snippet: checklist.snippet }),
       },
     ],
   },
   {
-    id: 'events',
-    label: 'Events',
+    id: events.id,
+    label: events.label,
     icon: <CalendarIcon />,
     items: [
       {
-        id: 'event-1',
-        title: 'Travel planning review',
+        id: planning.id,
+        title: planning.title,
         href: '#planning-review',
-        path: ['Calendar'],
-        meta: 'Thursday',
+        ...(planning.path && { path: planning.path }),
+        ...(planning.meta && { meta: planning.meta }),
       },
     ],
   },
   {
-    id: 'people',
-    label: 'People',
+    id: people.id,
+    label: people.label,
     icon: <UsersIcon />,
-    items: [{ id: 'person-1', title: 'Alex Kim', href: '#alex', snippet: 'Travel coordinator' }],
+    items: [
+      {
+        id: alex.id,
+        title: alex.title,
+        href: '#alex',
+        ...(alex.snippet && { snippet: alex.snippet }),
+      },
+    ],
   },
 ];
 
@@ -206,7 +231,7 @@ export default {
         {
           title: 'Grouped results',
           stack: true,
-          render: () => <SearchResults groups={GROUPS} query="travel" />,
+          render: () => <SearchResults groups={GROUPS} query={fixture.data.query} />,
         },
         {
           title: 'Flat list with backend highlights',

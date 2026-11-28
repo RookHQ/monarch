@@ -1,0 +1,155 @@
+{
+  "id": "usage-meter",
+  "name": "MonarchUsageMeter",
+  "title": "UsageMeter",
+  "family": "billing",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "ProgressView with a ProgressViewStyle per item",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Usage against limits: for each metered item, what was used, the limit and a meter that turns to the warning colour near the limit and the danger colour over it, with the level written as text.",
+  "whenToUse": "On a billing or plan screen, to show requests, storage, seats or minutes used in a period.",
+  "whenNotToUse": "For the progress of a task, use ProgressView with the Monarch linear style. For one reading against a scale, use MonarchGauge.",
+  "api": [
+    "MonarchUsageMeter.init(_ title: String? = nil, items: [MonarchUsageMeterItem], period: String? = nil, resetsAt: Date? = nil, warningAt: Double = 0.8, isLoading: Bool = false, error: String? = nil, isRetrying: Bool = false, labels: MonarchUsageMeterLabels = MonarchUsageMeterLabels(), onRetry: (@MainActor () -> Void)? = nil)",
+    "MonarchUsageMeterItem.init(_ label: String, id: String? = nil, used: Double, limit: Double? = nil, unit: String? = nil, description: String? = nil)",
+    "MonarchUsageMeterLabels.init(amount: (@Sendable (_ used: String, _ limit: String) -> String)? = nil, percent: (@Sendable (_ percent: String) -> String)? = nil, nearLimit: String? = nil, overLimit: String? = nil, resets: (@Sendable (_ date: String) -> String)? = nil, announcement: (@Sendable (_ label: String, _ level: String) -> String)? = nil, loading: String? = nil, retry: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "The heading, already localised."
+    },
+    {
+      "name": "items",
+      "type": "[MonarchUsageMeterItem]",
+      "default": "required",
+      "description": "The metered items, in display order. An item without a limit shows the count alone."
+    },
+    {
+      "name": "period",
+      "type": "String?",
+      "default": "nil",
+      "description": "The period measured, such as \"This month\"."
+    },
+    {
+      "name": "resetsAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the quota resets. Written in the locale and time zone of the environment."
+    },
+    {
+      "name": "warningAt",
+      "type": "Double",
+      "default": "0.8",
+      "description": "The fraction of the limit at which an item is near the limit."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows redacted placeholder rows, as many as items or three, instead of the items. VoiceOver reads \"Loading usage\"."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "An error message, shown instead of the items."
+    },
+    {
+      "name": "isRetrying",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether a retry is running. The retry button waits and reads Retrying."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchUsageMeterLabels",
+      "default": "MonarchUsageMeterLabels()",
+      "description": "Replaces any of the built-in strings."
+    },
+    {
+      "name": "onRetry",
+      "type": "(() -> Void)?",
+      "default": "nil",
+      "description": "Adds a \"Try again\" button under the error."
+    }
+  ],
+  "states": [
+    {
+      "name": "normal",
+      "description": "The meter is filled in the accent colour and the line under it reads \"42% used\"."
+    },
+    {
+      "name": "near the limit",
+      "description": "At or above warningAt: the warning colour, a warning icon and \"Near the limit · 84% used\"."
+    },
+    {
+      "name": "over the limit",
+      "description": "Above the limit: a full meter in the danger colour, a danger icon and \"Over the limit · 130% used\"."
+    },
+    {
+      "name": "unlimited",
+      "description": "No limit, or a limit of zero or less: the count and the unit, with no meter."
+    },
+    {
+      "name": "loading",
+      "description": "Redacted placeholder rows replace the items and are read as one Loading usage element."
+    },
+    {
+      "name": "error",
+      "description": "MonarchInlineErrorRetry replaces the items when onRetry is given, a plain error notice when not."
+    }
+  ],
+  "appearance": "A muted track with a fill in the accent, warning or danger solid colour. The status line uses the matching strong colour and an icon; labels and descriptions are muted text, in every theme.",
+  "platformNotes": "The web component lays items out in a grid or a list; on a phone they are a single column, so there is no layout option. Like the web, loading draws skeleton rows and the error uses MonarchInlineErrorRetry. The web has header actions, a heading level, compact notation and a per-item formatter; these are not offered: numbers use the locale of the environment with at most one fraction digit. The eight built-in strings are replaced through MonarchUsageMeterLabels rather than one parameter each. Android uses the same names.",
+  "accessibility": [
+    "The title has the header trait.",
+    "Each item is one element: its label is the item's label and its value is the figures, the level and the percentage, for example \"42 of 50 GB, Near the limit, 84% used\".",
+    "Near and over the limit are written as text and have an icon, so they do not depend on the colour of the meter.",
+    "When the level of an item changes while the view is on screen, VoiceOver announces every item that is near or over its limit.",
+    "The placeholder rows are read as one Loading usage element.",
+    "The retry button is the one of MonarchInlineErrorRetry, with a 44-point touch target.",
+    "All text scales with Dynamic Type and wraps."
+  ],
+  "edgeCases": [
+    "Used above the limit draws a full meter; the percentage shows the real share, such as 130%.",
+    "Exactly at the limit is near the limit, not over it.",
+    "A limit of zero, a negative limit or a limit that is not a number is treated as no limit.",
+    "The error takes precedence over loading.",
+    "The announcement is posted when levels change, not when the view first appears.",
+    "The unit is written after the figures with a space, in every locale."
+  ],
+  "tests": [
+    "MonarchUsageMeterTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Quotas and counts",
+      "fixture": "usage-meter",
+      "webExample": "Quotas and counts",
+      "template": "MonarchUsageMeter(\n    {{title}},\n    items: [\n        MonarchUsageMeterItem({{items.0.label}}, id: {{items.0.id}}, used: {{items.0.used}}, limit: {{items.0.limit}}),\n        MonarchUsageMeterItem({{items.1.label}}, id: {{items.1.id}}, used: {{items.1.used}}, limit: {{items.1.limit}}),\n        MonarchUsageMeterItem({{items.2.label}}, id: {{items.2.id}}, used: {{items.2.used}}, limit: {{items.2.limit}}, unit: {{items.2.unit}}),\n        MonarchUsageMeterItem({{items.3.label}}, id: {{items.3.id}}, used: {{items.3.used}}, description: {{items.3.description}}),\n    ],\n    period: {{period}},\n    resetsAt: {{resetsAt|date}}\n)\n.environment(\\.locale, Locale(identifier: {{locale}}))\n.environment(\\.timeZone, TimeZone(identifier: {{timeZone}}) ?? .gmt)",
+      "code": "MonarchUsageMeter(\n    \"Usage\",\n    items: [\n        MonarchUsageMeterItem(\"Requests\", id: \"req\", used: 4200, limit: 10_000),\n        MonarchUsageMeterItem(\"Messages\", id: \"msg\", used: 8500, limit: 10_000),\n        MonarchUsageMeterItem(\"Storage\", id: \"gb\", used: 12, limit: 10, unit: \"GB\"),\n        MonarchUsageMeterItem(\"Conversations\", id: \"conv\", used: 31, description: \"Conversations started\"),\n    ],\n    period: \"This month\",\n    resetsAt: Date(timeIntervalSince1970: 1_796_083_200)\n)\n.environment(\\.locale, Locale(identifier: \"en-GB\"))\n.environment(\\.timeZone, TimeZone(identifier: \"UTC\") ?? .gmt)"
+    },
+    {
+      "title": "An error with a retry button",
+      "code": "MonarchUsageMeter(\"Usage\", items: [], error: \"Usage could not be loaded.\") {\n    reload()\n}",
+      "setup": "private func reload() {}"
+    }
+  ],
+  "webEquivalent": "UsageMeter",
+  "dependsOn": [
+    "progress-bar"
+  ],
+  "icons": {
+    "level.warning": "WarningGlyph",
+    "level.over": "ErrorGlyph"
+  }
+}

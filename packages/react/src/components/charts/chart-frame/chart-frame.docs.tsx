@@ -2,36 +2,29 @@ import { useState } from 'react';
 import { TabsFilter } from '@rookcom/monarch-react';
 import { ChartFrame, Sparkline, type ChartTableData } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './chart-frame.fixture.json';
 
-const WEEK = [
-  { day: 'Mon', requests: 48 },
-  { day: 'Tue', requests: 61 },
-  { day: 'Wed', requests: 55 },
-  { day: 'Thu', requests: 72 },
-  { day: 'Fri', requests: 66 },
-];
+const WEEK = fixture.data.week;
 
 const TABLE: ChartTableData = {
   columns: [
-    { key: 'day', label: 'Day' },
-    { key: 'requests', label: 'Requests' },
+    { key: 'day', label: fixture.data.dayTitle },
+    { key: 'requests', label: fixture.data.legend.label },
   ],
   rows: WEEK.map((d) => ({ day: d.day, requests: d.requests })),
 };
 
-const RANGES = [
-  { value: '7d', label: '7 days' },
-  { value: '30d', label: '30 days' },
-];
+const RANGES = fixture.data.ranges;
 
 function FrameDemo() {
-  const [range, setRange] = useState('7d');
+  const [range, setRange] = useState(fixture.data.range);
   return (
     <ChartFrame
-      title="Requests"
-      description="New requests per day"
+      title={fixture.data.title}
+      description={fixture.data.description}
       headingLevel={3}
-      height={96}
+      height={fixture.data.height}
       actions={
         <TabsFilter
           aria-label="Range"
@@ -41,15 +34,15 @@ function FrameDemo() {
           onValueChange={setRange}
         />
       }
-      legend={[{ key: 'requests', label: 'Requests', color: 1 }]}
+      legend={[{ key: fixture.data.legend.key, label: fixture.data.legend.label, color: 1 }]}
       table={TABLE}
-      footer="Counts update every hour."
+      footer={fixture.data.footer}
     >
       <Sparkline
         values={WEEK.map((d) => d.requests)}
         variant="area"
         color={1}
-        height={96}
+        height={fixture.data.height}
         responsive
       />
     </ChartFrame>

@@ -1,10 +1,19 @@
 import { useState } from 'react';
 import { EditableCell, type EditableCellValue } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './editable-cell.fixture.json';
 
-function TextCell() {
-  const [value, setValue] = useState<EditableCellValue>('Quarterly review');
-  return <EditableCell label="Title" value={value} onCommit={setValue} />;
+function TextCell({ editing = false }: { editing?: boolean }) {
+  const [value, setValue] = useState<EditableCellValue>(fixture.data.value);
+  return (
+    <EditableCell
+      label={fixture.data.label}
+      value={value}
+      onCommit={setValue}
+      defaultEditing={editing}
+    />
+  );
 }
 
 function NumberCell() {
@@ -178,6 +187,7 @@ export default {
     },
     examples: {
       items: [
+        { title: 'Editing a text cell', stage: true, render: () => <TextCell editing /> },
         { title: 'Text', render: () => <TextCell /> },
         { title: 'Number with bounds', render: () => <NumberCell /> },
         { title: 'Select', render: () => <SelectCell /> },

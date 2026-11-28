@@ -1,0 +1,156 @@
+{
+  "id": "toast",
+  "name": "MonarchToast",
+  "title": "Toast",
+  "family": "feedback",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "overlay(alignment:), Observation (@Observable), AccessibilityNotification.Announcement",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Transient notifications: a MonarchToastCenter that holds them, a host modifier that draws them over the content at one edge, and the MonarchToast value.",
+  "whenToUse": "To confirm something that just happened without interrupting, optionally with one action such as Undo.",
+  "whenNotToUse": "For a message that must be read or answered, use the system alert modifier. For a status that should stay beside its content, use MonarchBanner. Do not put the only way to recover from an error in a toast, because it closes by itself.",
+  "api": [
+    "struct MonarchToast { init(_ title: String, message: String? = nil, tone: MonarchTone = .neutral, actionTitle: String? = nil, duration: TimeInterval? = nil, action: (@MainActor () -> Void)? = nil, onDismiss: (@MainActor () -> Void)? = nil) }",
+    "final class MonarchToastCenter { init(limit: Int = 3, durationScale: Double = 1) }",
+    "var toasts: [MonarchToast] { get }",
+    "let limit: Int",
+    "var durationScale: Double",
+    "func show(_ toast: MonarchToast) -> UUID",
+    "func show(_ title: String, message: String? = nil, tone: MonarchTone = .neutral, actionTitle: String? = nil, duration: TimeInterval? = nil, action: (@MainActor () -> Void)? = nil, onDismiss: (@MainActor () -> Void)? = nil) -> UUID",
+    "func dismiss(_ id: UUID)",
+    "func dismissAll()",
+    "func monarchToastHost(_ center: MonarchToastCenter, position: MonarchToastPosition = .bottom, dismissLabel: String? = nil) -> some View",
+    "enum MonarchToastPosition { case bottom, top }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "A short headline."
+    },
+    {
+      "name": "message",
+      "type": "String?",
+      "default": "nil",
+      "description": "One line of detail."
+    },
+    {
+      "name": "tone",
+      "type": "MonarchTone",
+      "default": ".neutral",
+      "description": "Selects the icon and its colour."
+    },
+    {
+      "name": "actionTitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "Title of the action button. No button without it and action."
+    },
+    {
+      "name": "duration",
+      "type": "TimeInterval?",
+      "default": "nil",
+      "description": "Seconds before the toast closes itself. nil is 5, or 10 for the danger tone and for a toast with an action. .infinity keeps it until dismissed."
+    },
+    {
+      "name": "action",
+      "type": "(() -> Void)?",
+      "default": "nil",
+      "description": "Runs when the action button is activated; the toast then closes."
+    },
+    {
+      "name": "onDismiss",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Runs once when the toast closes for any reason (time, dismiss, swipe, a newer toast, the app). After the action button it runs after action."
+    },
+    {
+      "name": "limit",
+      "type": "Int",
+      "default": "3",
+      "description": "On the center: how many toasts are shown at once. Older ones close first."
+    },
+    {
+      "name": "durationScale",
+      "type": "Double",
+      "default": "1",
+      "description": "On the center: multiplies every duration. .infinity turns closing by time off."
+    },
+    {
+      "name": "position",
+      "type": "MonarchToastPosition",
+      "default": ".bottom",
+      "description": "On the host: the edge where toasts appear."
+    },
+    {
+      "name": "dismissLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "On the host: replaces the built-in \"Dismiss\" spoken name of the close button."
+    }
+  ],
+  "states": [
+    {
+      "name": "shown",
+      "description": "Slides in from its edge and fades in; appears at once when Reduce Motion is on."
+    },
+    {
+      "name": "closed",
+      "description": "By its timer, the dismiss button, the action, a drag towards its edge, dismiss(_:), dismissAll(), or when newer toasts exceed the limit."
+    }
+  ],
+  "appearance": "A raised surface with 12-point corners, the default border and the large elevation shadow. The icon is in the strong colour of the tone, the title in the default text colour and the message in the muted text colour. Toasts are at most 640 points wide and stack with the newest nearest the content.",
+  "platformNotes": "iOS has no toast, so this is built. The host is a SwiftUI overlay inside the safe area of the view it is applied to. It does not sit above sheets and full-screen covers, which the plan asked for: that needs a separate UIWindow, which was not built because it could not be tested without a device. Until then, apply the host to the content of a sheet, with a center of its own. Being inside the safe area, the bottom position moves above the keyboard. Toasts are shown through a MonarchToastCenter from the environment, where the web has a global toast() function and a provider. Timers do not pause while a toast is touched or while VoiceOver focus is on it; set durationScale, or an infinite duration, where that matters. The web's hotkey, offsets and three positions become top and bottom. There is no altText for the action. Android themes the Material 3 SnackbarHost. Several closures are optional (action, onDismiss). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is action.",
+  "accessibility": [
+    "Showing a toast posts an announcement with the tone name, the title and the message. The danger tone is announced with high priority, the others with the default priority.",
+    "The icon, title and message are one element, read as the tone name, the title, then the message, so the tone does not depend on colour.",
+    "The action and the dismiss button are separate buttons with touch targets of at least 44 points; the drag gesture is never the only way to close a toast.",
+    "The slide and fade are not animated when Reduce Motion is on.",
+    "The action moves under the text when both do not fit on one line.",
+    "A toast closes by time even while VoiceOver is reading it; durationScale lengthens or turns off the timers."
+  ],
+  "edgeCases": [
+    "actionTitle without action, or action without actionTitle, shows no button, and the toast uses the short duration.",
+    "A negative duration closes the toast at once.",
+    "Changing durationScale affects toasts shown afterwards.",
+    "Without the host modifier above it, reading the center from the environment is a runtime error, as for any @Observable environment object.",
+    "A toast behind a sheet is not visible."
+  ],
+  "tests": [
+    "MonarchToastTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Success with undo",
+      "fixture": "toast",
+      "webExample": "Success with undo",
+      "template": "VStack {\n    MonarchButton({{trigger}}) { archive() }\n}\n.frame(maxWidth: .infinity, minHeight: 240)\n.monarchToastHost(toasts)\n.onAppear { archive() }",
+      "setupTemplate": "@State private var toasts = MonarchToastCenter()\n@State private var undone = 0\n\nprivate func archive() {\n    toasts.show({{toast.title}}, message: {{toast.description}}, tone: {{toast.tone|tone}}, actionTitle: {{toast.action}}) {\n        undone += 1\n    }\n}",
+      "setup": "@State private var toasts = MonarchToastCenter()\n@State private var undone = 0\n\nprivate func archive() {\n    toasts.show(\"Ticket archived\", message: \"You can undo this.\", tone: .success, actionTitle: \"Undo\") {\n        undone += 1\n    }\n}",
+      "code": "VStack {\n    MonarchButton(\"Archive ticket\") { archive() }\n}\n.frame(maxWidth: .infinity, minHeight: 240)\n.monarchToastHost(toasts)\n.onAppear { archive() }"
+    },
+    {
+      "title": "An error that stays until dismissed, at the top",
+      "code": "Text(\"Content\")\n    .frame(maxWidth: .infinity, minHeight: 240)\n    .monarchToastHost(toasts, position: .top)\n    .onAppear {\n        toasts.show(\"Could not sync\", message: \"Check your connection.\", tone: .danger, duration: .infinity)\n    }",
+      "setup": "@State private var toasts = MonarchToastCenter()"
+    },
+    {
+      "title": "Undo that commits on close",
+      "code": "Button(\"Archive\") {\n    var undone = false\n    toasts.show(\n        \"Ticket archived\",\n        actionTitle: \"Undo\",\n        action: { undone = true },\n        onDismiss: { if !undone { commitArchive() } }\n    )\n}",
+      "setup": "@State private var toasts = MonarchToastCenter()\nfunc commitArchive() {}"
+    }
+  ],
+  "webEquivalent": "Toast",
+  "dependsOn": [
+    "button",
+    "icon",
+    "text"
+  ]
+}

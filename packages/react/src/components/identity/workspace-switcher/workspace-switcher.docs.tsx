@@ -1,23 +1,24 @@
 import { useState } from 'react';
 import { WorkspaceSwitcher } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './workspace-switcher.fixture.json';
 
-const workspaces = [
-  { id: 'w1', name: 'Acme', handle: 'acme' },
-  { id: 'w2', name: 'Northfield Traders', handle: 'northwind' },
-  { id: 'w3', name: 'Globex', handle: 'globex', keywords: 'globex corporation' },
-];
+const workspaces = fixture.data.workspaces;
 
 function Basic() {
-  const [workspace, setWorkspace] = useState('w1');
+  const [workspace, setWorkspace] = useState(fixture.data.value);
+  const [open, setOpen] = useState(true);
   return (
     <div style={{ width: '15rem' }}>
       <WorkspaceSwitcher
+        open={open}
+        onOpenChange={setOpen}
         workspaces={workspaces}
         value={workspace}
         onValueChange={setWorkspace}
         onCreate={() => {}}
-        manageHref="https://id.example.com/workspaces"
+        manageHref={fixture.data.manageHref}
       />
     </div>
   );
@@ -134,6 +135,7 @@ export default {
       items: [
         {
           title: 'Switch, create and manage',
+          stage: true,
           render: () => <Basic />,
         },
         {

@@ -1,28 +1,38 @@
+import { useState } from 'react';
 import { Button, DangerZone, DangerZoneItem } from '@rookcom/monarch-react';
 import { DeleteWorkspaceFlow } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './delete-workspace-flow.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
 function FromDangerZone() {
+  const [open, setOpen] = useState(true);
   return (
-    <DangerZone description="These actions affect everyone in the workspace.">
-      <DangerZoneItem
-        title="Delete this workspace"
-        description="Removes the workspace, its apps and its records for every member."
-        action={
-          <DeleteWorkspaceFlow
-            trigger={<Button variant="danger">Delete workspace</Button>}
-            workspaceName="north-studio"
-            impact={{ apps: 4, members: 12, records: 18340, subscriptions: 1, domains: 2 }}
-            onExport={() => wait(800)}
-            onTransferInstead={() => {}}
-            stepUp={{ methods: ['password', 'totp'], onVerify: () => wait(600) }}
-            onDelete={() => wait(1200)}
-          />
-        }
+    <>
+      <DangerZone description={fixture.data.dangerZone.description}>
+        <DangerZoneItem
+          title={fixture.data.dangerZone.title}
+          description={fixture.data.dangerZone.itemDescription}
+          action={
+            <Button variant="danger" onClick={() => setOpen(true)}>
+              {fixture.data.dangerZone.action}
+            </Button>
+          }
+        />
+      </DangerZone>
+      <DeleteWorkspaceFlow
+        open={open}
+        onOpenChange={setOpen}
+        workspaceName={fixture.data.flow.workspaceName}
+        impact={fixture.data.impact}
+        onExport={() => wait(800)}
+        onTransferInstead={() => {}}
+        stepUp={{ methods: ['password', 'totp'], onVerify: () => wait(600) }}
+        onDelete={() => wait(1200)}
       />
-    </DangerZone>
+    </>
   );
 }
 
@@ -206,6 +216,7 @@ export default {
       items: [
         {
           title: 'From a danger zone, with export, transfer and step-up',
+          stage: { align: 'center' },
           render: () => <FromDangerZone />,
         },
         { title: 'Scheduled deletion after 30 days', render: () => <Scheduled /> },

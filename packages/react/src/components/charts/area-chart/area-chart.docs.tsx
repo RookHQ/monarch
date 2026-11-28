@@ -1,21 +1,17 @@
-import { AreaChart } from '@rookcom/monarch-react/charts';
+import { AreaChart, type AreaChartProps } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './area-chart.fixture.json';
 
-const DAYS = Array.from({ length: 14 }, (_, i) => new Date(Date.UTC(2026, 2, 1 + i, 12)));
-const WEB = [420, 460, 445, 480, 610, 640, 600, 520, 560, 610, 600, 640, 690, 670];
-const IOS = [210, 230, 220, 240, 300, 320, 310, 260, 280, 300, 310, 330, 350, 340];
-const ANDROID = [150, 160, 170, 160, 210, 220, 230, 190, 200, 220, 230, 240, 250, 260];
+const DAYS = fixture.data.days.map((day) => new Date(day));
+const [WEB, IOS, ANDROID] = fixture.data.series.map((series) => series.values);
 const TRAFFIC = DAYS.map((date, i) => ({
   date,
-  web: WEB[i] ?? 0,
-  ios: IOS[i] ?? 0,
-  android: ANDROID[i] ?? 0,
+  web: WEB?.[i] ?? 0,
+  ios: IOS?.[i] ?? 0,
+  android: ANDROID?.[i] ?? 0,
 }));
-const PLATFORMS = [
-  { key: 'web', label: 'Web' },
-  { key: 'ios', label: 'iOS' },
-  { key: 'android', label: 'Android' },
-];
+const PLATFORMS = fixture.data.series.map(({ key, label }) => ({ key, label }));
 const USERS = DAYS.map((date, i) => ({
   date,
   total: 1000 + i * 85,
@@ -166,15 +162,15 @@ export default {
           stack: true,
           render: () => (
             <AreaChart
-              title="Sessions by platform"
-              description="Last 14 days"
+              title={fixture.data.title}
+              description={fixture.data.description}
               data={TRAFFIC}
               xKey="date"
-              xLabel="Day"
+              xLabel={fixture.data.xLabel}
               series={PLATFORMS}
-              stacking="stacked"
-              curve="monotone"
-              locale="en-US"
+              stacking={fixture.data.stacking as AreaChartProps['stacking']}
+              curve={fixture.data.curve as AreaChartProps['curve']}
+              locale={fixture.data.locale}
               xFormat={UTC_DAY}
             />
           ),

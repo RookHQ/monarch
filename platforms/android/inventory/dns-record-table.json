@@ -1,0 +1,159 @@
+{
+  "id": "dns-record-table",
+  "name": "MonarchDnsRecordTable",
+  "title": "DnsRecordTable",
+  "family": "technical",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column, Row, FlowRow and BoxWithConstraints (cards, or a table at 640dp and wider); MonarchCopyButton, MonarchStatusBadge and MonarchText",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The DNS records a user must add at their DNS provider to connect a custom domain or verify a sender: type, name and value with copy buttons, what each record is for, and whether public DNS already shows it.",
+  "whenToUse": "On a custom domain or sender verification screen, to list the records the user has to create and show which ones public DNS already returns.",
+  "whenNotToUse": "For progress through DNS, certificate and live, use MonarchDomainProgress next to it; for one value to copy, use MonarchCopyField; for general tabular data, a data table.",
+  "api": [
+    "@Composable fun MonarchDnsRecordTable(records: List<MonarchDnsRecord>, modifier: Modifier = Modifier, zone: String? = null, layout: MonarchDnsRecordTableLayout = MonarchDnsRecordTableLayout.Automatic, copyIcon: (@Composable () -> Unit)? = null, onCopy: ((String) -> Unit)? = null, labels: MonarchDnsRecordTableLabels = MonarchDnsRecordTableLabels())",
+    "class MonarchDnsRecord(type: String, name: String, value: String, purpose: MonarchDnsRecordPurpose? = null, ttl: String? = null, priority: Int? = null, found: Boolean? = null, id: String = \"$type:$name:$value\")",
+    "sealed interface MonarchDnsRecordPurpose { data object Routing; data object Verification; data object Certificate; data class Custom(heading: String) }",
+    "enum class MonarchDnsRecordTableLayout { Automatic, Cards, Table }",
+    "class MonarchDnsRecordTableLabels(type: String? = null, name: String? = null, value: String? = null, ttl: String? = null, priority: String? = null, status: String? = null, found: String? = null, waiting: String? = null, purpose: ((purpose: MonarchDnsRecordPurpose?) -> String)? = null, copyName: ((record: MonarchDnsRecord, shownName: String) -> String)? = null, copyValue: ((record: MonarchDnsRecord, shownName: String) -> String)? = null, fullName: ((name: String) -> String)? = null, label: ((zone: String?) -> String)? = null, summary: ((found: Int, checked: Int) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "records",
+      "type": "List<MonarchDnsRecord>",
+      "default": "required",
+      "description": "The records, in the order the user should create them. Each has a type, a full name, a value, and optionally a purpose, TTL, priority and found state (found true is Found, false is Waiting, null when not checked)."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the records."
+    },
+    {
+      "name": "zone",
+      "type": "String?",
+      "default": "null",
+      "description": "The DNS zone the user manages, such as example.com. Names inside it are shown relative to it (book, @ for the apex), with \"Full name: …\" under the card."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchDnsRecordTableLayout",
+      "default": "MonarchDnsRecordTableLayout.Automatic",
+      "description": "Cards: one card per record. Table: one row per record under column headings. Automatic: a table when the width is at least 640dp and the font scale at most 1.3, cards otherwise."
+    },
+    {
+      "name": "copyIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "A copy icon. Given, each copy button is an icon button; otherwise a small ghost text button \"Copy\"."
+    },
+    {
+      "name": "onCopy",
+      "type": "((String) -> Unit)?",
+      "default": "null",
+      "description": "Called with the copied text after a name or a value is copied."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchDnsRecordTableLabels",
+      "default": "MonarchDnsRecordTableLabels()",
+      "description": "Replacements for every built-in string: the column and term headings, Found and Waiting, the purpose headings, the spoken names of names and values, the full name line, the group name and the found announcement."
+    }
+  ],
+  "states": [
+    {
+      "name": "not checked",
+      "description": "A record with found null has no status badge; the table has no Status column when no record was checked."
+    },
+    {
+      "name": "waiting",
+      "description": "found false shows a neutral \"Waiting\" status badge."
+    },
+    {
+      "name": "found",
+      "description": "found true shows a success \"Found\" status badge. When the number of found records changes, \"1 of 2 records found.\" is announced."
+    },
+    {
+      "name": "cards",
+      "description": "Each record is a card with its purpose as a heading, the status, the type with the priority and TTL when given, the name and value with copy buttons, and the full name when the name is shown relative to the zone."
+    },
+    {
+      "name": "table",
+      "description": "A heading row (Type, Name, Value, and Priority, TTL and Status only when a record uses them) and one row per record, with single-line names and values shortened in the middle."
+    },
+    {
+      "name": "empty",
+      "description": "No records draws nothing but the named group."
+    }
+  ],
+  "appearance": "Cards and the table are on the surface color with a default border and 12dp corners. Card headings are strong body text in the default text color, terms and table headings muted caption text, types, names and values code text in the default color. Found is a success status badge, Waiting a neutral one. Every color is a theme role, so light, dark and both high-contrast themes are covered.",
+  "platformNotes": "The web table scrolls sideways when narrow; on Android, as on iOS, the automatic layout switches to cards when the window is narrower than 640dp or the font scale is above 1.3, and the table's names and values are single lines shortened in the middle. The copy buttons are MonarchCopyButton rather than MonarchCopyField: a copy field shows its label as a floating label, while here the visible term is short (Name, Value) and the spoken name is long (\"name of the CNAME record\"). Monarch bundles no icons, so copyIcon is optional and the buttons are text buttons without it. The web's headingLevel has no Android equivalent: card headings are headings. TTL is a string the app formats. The web's DnsProviderGuide is not part of this component. iOS uses the same names, except found (iOS isFound), copyIcon (Android only) and MonarchDnsRecordPurpose.Custom (iOS custom(String)). The plan's dependency description-list is not used: its copy affordance has no spoken name per record.",
+  "accessibility": [
+    "The records are one group named \"DNS records for <zone>\", or \"DNS records\" without a zone.",
+    "Each card heading is a heading.",
+    "A name is read as \"name of the CNAME record, book\" and a value as \"value of the CNAME record book, domains.example.net\"; the visible terms Name and Value are not read again.",
+    "Each copy button is its own element named \"Copy name of the CNAME record\" with a touch target of at least 48dp, and says \"Copied to clipboard\" after a copy.",
+    "The type, priority and TTL are read with their term, such as \"Type, CNAME\".",
+    "The found state is a word in a status badge, not only a color.",
+    "When the number of found records changes, the summary \"1 of 2 records found.\" is announced through a polite live region that is always present.",
+    "In the table, the column headings are headings.",
+    "Card text wraps at font scale 2.0, and the automatic layout uses cards above font scale 1.3."
+  ],
+  "edgeCases": [
+    "A name outside the zone, or any name without a zone, is shown in full with no full name line.",
+    "The zone and names are compared ignoring case and a trailing dot.",
+    "Long values (DKIM keys) wrap in full in the cards and are shortened in the middle in the table; the copied value is always complete.",
+    "Copying a name copies it as shown (relative to the zone), which is what most providers expect.",
+    "Priority and TTL appear in a card only when the record has them, and as columns only when a record has them.",
+    "The found announcement fires on a change only, not when the records first appear.",
+    "A record without a purpose uses the verification heading, as on iOS."
+  ],
+  "tests": [
+    "MonarchDnsRecordTableTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Cards with found state",
+      "fixture": "dns-record-table",
+      "webExample": "Cards with found state",
+      "template": "MonarchDnsRecordTable(\n    records = listOf(\n        MonarchDnsRecord(\n            type = {{records.0.type}},\n            name = {{records.0.name}},\n            value = {{records.0.value}},\n            purpose = MonarchDnsRecordPurpose.{{records.0.purpose|pascal}},\n            found = {{records.0.ok}},\n        ),\n        MonarchDnsRecord(\n            type = {{records.1.type}},\n            name = {{records.1.name}},\n            value = {{records.1.value}},\n            purpose = MonarchDnsRecordPurpose.{{records.1.purpose|pascal}},\n            found = {{records.1.ok}},\n        ),\n    ),\n    zone = {{zone}},\n)",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "code": "MonarchDnsRecordTable(\n    records = listOf(\n        MonarchDnsRecord(\n            type = \"CNAME\",\n            name = \"book.example.com\",\n            value = \"domains.example.net\",\n            purpose = MonarchDnsRecordPurpose.Routing,\n            found = false,\n        ),\n        MonarchDnsRecord(\n            type = \"TXT\",\n            name = \"_verify.book.example.com\",\n            value = \"site-verification=4f1a9c2e\",\n            purpose = MonarchDnsRecordPurpose.Verification,\n            found = true,\n        ),\n    ),\n    zone = \"example.com\",\n)"
+    },
+    {
+      "title": "Mail records as a table, with a copy icon",
+      "code": "MonarchDnsRecordTable(\n    records = listOf(\n        MonarchDnsRecord(type = \"MX\", name = \"example.com\", value = \"mx1.example.net\", priority = 10),\n        MonarchDnsRecord(type = \"MX\", name = \"example.com\", value = \"mx2.example.net\", priority = 20),\n    ),\n    zone = \"example.com\",\n    layout = MonarchDnsRecordTableLayout.Table,\n    copyIcon = { MonarchIcon(imageVector = SampleIcons.Copy, contentDescription = null) },\n)",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ]
+    }
+  ],
+  "webEquivalent": "DnsRecordTable",
+  "dependsOn": [
+    "copy-button",
+    "status-badge",
+    "description-list"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-text",
+      "platform": "android",
+      "reason": "Each record card writes the Name and Value captions above its values (shown on screen); they are hidden from TalkBack because each copy field carries its own spoken name (\"name of the CNAME record, book\"). \"1 of 2 records found.\" is a polite live-region announcement made when the count changes, not visible text.",
+      "convention": "a card labels its values and speaks one name per control (Material accessibility)",
+      "paths": [
+        "Name",
+        "Value",
+        "1 of 2 records found."
+      ]
+    }
+  ]
+}

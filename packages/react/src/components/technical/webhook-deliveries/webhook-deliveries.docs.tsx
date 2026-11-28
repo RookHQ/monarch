@@ -1,49 +1,39 @@
 import { Button } from '@rookcom/monarch-react';
 import { WebhookDeliveries, type WebhookDelivery } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './webhook-deliveries.fixture.json';
 
-const minutesAgo = (m: number) => new Date(Date.now() - m * 60_000);
+const data = fixture.data as unknown as {
+  eventTypes: string[];
+  deliveries: {
+    id: string;
+    status: WebhookDelivery['status'];
+    eventType: string;
+    eventId: string;
+    responseCode?: number;
+    durationMs?: number;
+    error?: string;
+    attempts: number;
+    ageSeconds: number;
+    nextAttemptSeconds?: number;
+  }[];
+};
 
-const sample: WebhookDelivery[] = [
-  {
-    id: 'd1',
-    status: 'succeeded',
-    eventType: 'order.created',
-    eventId: 'evt_3c91a0',
-    responseCode: 200,
-    durationMs: 142,
-    attempts: 1,
-    at: minutesAgo(2),
-  },
-  {
-    id: 'd2',
-    status: 'retrying',
-    eventType: 'order.updated',
-    eventId: 'evt_3c8f12',
-    responseCode: 503,
-    error: 'The endpoint answered 503',
-    attempts: 2,
-    at: minutesAgo(9),
-    nextAttemptAt: new Date(Date.now() + 5 * 60_000),
-  },
-  {
-    id: 'd3',
-    status: 'failed',
-    eventType: 'invoice.paid',
-    eventId: 'evt_3c7b55',
-    error: 'No response within 10 seconds',
-    attempts: 6,
-    at: minutesAgo(65),
-  },
-  {
-    id: 'd4',
-    status: 'pending',
-    eventType: 'order.created',
-    eventId: 'evt_3c9d77',
-    attempts: 0,
-    at: minutesAgo(0.5),
-  },
-];
+const sample: WebhookDelivery[] = data.deliveries.map((d) => ({
+  id: d.id,
+  status: d.status,
+  eventType: d.eventType,
+  eventId: d.eventId,
+  ...(d.responseCode !== undefined && { responseCode: d.responseCode }),
+  ...(d.durationMs !== undefined && { durationMs: d.durationMs }),
+  ...(d.error !== undefined && { error: d.error }),
+  attempts: d.attempts,
+  at: new Date(Date.now() - d.ageSeconds * 1000),
+  ...(d.nextAttemptSeconds !== undefined && {
+    nextAttemptAt: new Date(Date.now() + d.nextAttemptSeconds * 1000),
+  }),
+}));
 
 const wait = () => new Promise((resolve) => setTimeout(resolve, 800));
 
@@ -183,7 +173,7 @@ export default {
           render: () => (
             <WebhookDeliveries
               deliveries={sample}
-              eventTypes={['order.created', 'order.updated', 'invoice.paid']}
+              eventTypes={data.eventTypes}
               onRedeliver={wait}
             />
           ),

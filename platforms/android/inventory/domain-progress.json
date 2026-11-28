@@ -1,0 +1,159 @@
+{
+  "id": "domain-progress",
+  "name": "MonarchDomainProgress",
+  "title": "DomainProgress",
+  "family": "technical",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column and Row drawn as a vertical stepper; androidx.compose.material3.CircularProgressIndicator for the step in progress; MonarchInlineNotice for problems; android.text.format.DateUtils.getRelativeTimeSpanString for the last check",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Stage-by-stage progress for connecting a custom domain (DNS record found, HTTPS certificate issued, live), with the problems the product found, what public DNS shows right now and that checking continues on its own.",
+  "whenToUse": "On a custom domain screen after the user added DNS records, to show where the connection stands and what to fix, while the app polls the product.",
+  "whenNotToUse": "For the records themselves, use MonarchDnsRecordTable; for a general multi-step flow the user moves through, use MonarchStepper.",
+  "api": [
+    "@Composable fun MonarchDomainProgress(host: String, stage: MonarchDomainStage, modifier: Modifier = Modifier, problems: List<MonarchDomainProblem> = emptyList(), dnsFound: MonarchDomainDnsSnapshot? = null, checkedAt: Long? = null, now: Long? = null, rechecking: Boolean = true, notify: MonarchDomainNotify? = null, labels: MonarchDomainProgressLabels = MonarchDomainProgressLabels())",
+    "object MonarchDomainProgressDefaults { fun recheckIntervalMillis(stage: MonarchDomainStage?, suggestedMillis: Long? = null, stopped: Boolean = false): Long? }",
+    "enum class MonarchDomainStage { Dns, Ownership, Certificate, Page, Live }",
+    "enum class MonarchDomainStep { Dns, Certificate, Live }",
+    "enum class MonarchDomainStepState { Done, Current, Todo, Error }",
+    "class MonarchDomainProblem(message: String, code: String? = null, severity: MonarchDomainProblemSeverity = MonarchDomainProblemSeverity.Blocking, step: MonarchDomainStep? = null)",
+    "enum class MonarchDomainProblemSeverity { Blocking, Info }",
+    "class MonarchDomainDnsSnapshot(cnames: List<String> = emptyList(), a: List<String> = emptyList(), aaaa: List<String> = emptyList())",
+    "enum class MonarchDomainNotify { Email, InApp }",
+    "class MonarchDomainProgressLabels(title: ((step: MonarchDomainStep, state: MonarchDomainStepState, stage: MonarchDomainStage) -> String)? = null, detail: ((step: MonarchDomainStep, state: MonarchDomainStepState, host: String) -> String)? = null, state: ((state: MonarchDomainStepState) -> String)? = null, listLabel: ((host: String) -> String)? = null, announcement: ((position: Int, count: Int, title: String, state: String) -> String)? = null, dnsSeen: ((host: String, seen: String) -> String)? = null, noRecord: String? = null, rechecking: ((notify: MonarchDomainNotify?) -> String)? = null, checked: ((time: String) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "host",
+      "type": "String",
+      "default": "required",
+      "description": "The custom host name, such as book.example.com. Used in the live step text, the DNS line and the group name."
+    },
+    {
+      "name": "stage",
+      "type": "MonarchDomainStage",
+      "default": "required",
+      "description": "Dns or Ownership: the DNS step is in progress. Certificate: DNS done, certificate in progress. Page: certificate done, the site load check in progress. Live: every step done."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the progress."
+    },
+    {
+      "name": "problems",
+      "type": "List<MonarchDomainProblem>",
+      "default": "emptyList()",
+      "description": "What the last check found. A blocking problem marks its step (the current one by default) as needing attention and is shown as a warning notice; when there is none, the first informational problem is shown as a neutral notice."
+    },
+    {
+      "name": "dnsFound",
+      "type": "MonarchDomainDnsSnapshot?",
+      "default": "null",
+      "description": "What public DNS shows for the host right now, shown as \"Public DNS for <host> shows CNAME → …\" or \"no record yet\". null hides the line."
+    },
+    {
+      "name": "checkedAt",
+      "type": "Long?",
+      "default": "null",
+      "description": "When the product last checked, as epoch milliseconds (UTC). Shown as \"Checked 2 minutes ago.\""
+    },
+    {
+      "name": "now",
+      "type": "Long?",
+      "default": "null",
+      "description": "The reference time for checkedAt, as epoch milliseconds. null is the current time, refreshed every minute; pass a fixed time in tests and screenshots."
+    },
+    {
+      "name": "rechecking",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the product keeps checking on its own; adds \"We keep checking automatically…\"."
+    },
+    {
+      "name": "notify",
+      "type": "MonarchDomainNotify?",
+      "default": "null",
+      "description": "How the product tells the user it went live: Email or InApp changes the end of the rechecking sentence."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchDomainProgressLabels",
+      "default": "MonarchDomainProgressLabels()",
+      "description": "Replacements for every built-in string: step titles and details, spoken states, the group name, the announcement, the DNS line, the rechecking sentence and the last check line."
+    }
+  ],
+  "states": [
+    {
+      "name": "done",
+      "description": "The step marker is the success fill with a check mark, and the line after it is the success color."
+    },
+    {
+      "name": "current",
+      "description": "The step marker is the accent fill with a spinner; when animations are off the spinner is a still dot."
+    },
+    {
+      "name": "todo",
+      "description": "The step marker is an empty surface circle with the default border, and the title is muted."
+    },
+    {
+      "name": "error",
+      "description": "A blocking problem: the step marker is the warning fill with an exclamation mark, and the problem is shown as a warning notice."
+    },
+    {
+      "name": "live",
+      "description": "Every step is done and the DNS, rechecking and last check lines are hidden."
+    }
+  ],
+  "appearance": "Markers are 24dp circles (larger at large font scales) with a 2dp border: success, accent or warning solid fills with their on-solid glyph color, or the surface color with the default border. The line between markers is 2dp, the success color after a finished step and the default border otherwise. Titles are strong body text, muted before the step starts; details and status lines are muted caption text. Every color is a theme role, so light, dark and both high-contrast themes are covered.",
+  "platformNotes": "Built as its own vertical stepper rather than on MonarchStepper, as on iOS, because MonarchStepper always draws a current step (it cannot show every step done once live) and has no in-progress spinner; the plan's dependency on stepper is therefore not used. The spinner is the Material 3 CircularProgressIndicator. Monarch bundles no icons, so the check and exclamation marks are drawn as the web's SVG strokes, as MonarchStepper does. The web's rich-content messages (dnsSeen, checked) take and return strings, and the host is not set in code font inside the sentence. The web's polling helper domainPollMs is MonarchDomainProgressDefaults.recheckIntervalMillis, returning milliseconds (iOS returns a Duration from a static function on the view). Times are epoch milliseconds. iOS uses the same names, except rechecking (iOS isRechecking), stopped (iOS isStopped) and the PascalCase enum constants.",
+  "accessibility": [
+    "The steps are one group named \"Progress for <host>\".",
+    "Each step is one element: its title as the name and \"<state>, <detail>\" as the state description, such as \"in progress, Being issued now, usually 1 to 5 minutes.\"",
+    "The state is a spoken word and a glyph in the marker, not only a color; markers are hidden from TalkBack.",
+    "When the active step or its state changes, \"Step 2 of 3: HTTPS certificate, in progress.\" is announced through a polite live region that is always present; nothing is announced when the view first appears.",
+    "Problems are MonarchInlineNotice, which speaks the tone name with the message.",
+    "When animations are off, the in-progress marker is a still dot.",
+    "Text wraps and the marker grows with the font scale."
+  ],
+  "edgeCases": [
+    "A blocking problem on a step that is already done does not change it.",
+    "A blocking problem without a step marks the current step; with several problems all blocking ones are shown and informational ones are hidden.",
+    "Long host names wrap in the step details and the DNS line.",
+    "The view never checks DNS itself; the app polls and passes the new stage.",
+    "The relative time uses DateUtils, in the device locale."
+  ],
+  "tests": [
+    "MonarchDomainProgressTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Issuing the certificate",
+      "fixture": "domain-progress",
+      "webExample": "Issuing the certificate",
+      "template": "MonarchDomainProgress(\n    host = {{host}},\n    stage = MonarchDomainStage.{{stage|pascal}},\n    dnsFound = MonarchDomainDnsSnapshot(cnames = listOf({{dnsFound.cnames.0}})),\n    checkedAt = {{checkedAt|millis}},\n    now = {{now|millis}},\n    notify = MonarchDomainNotify.{{notify|pascal}},\n)",
+      "code": "MonarchDomainProgress(\n    host = \"book.example.com\",\n    stage = MonarchDomainStage.Certificate,\n    dnsFound = MonarchDomainDnsSnapshot(cnames = listOf(\"domains.example.net\")),\n    checkedAt = 1_768_046_280_000L,\n    now = 1_768_046_400_000L,\n    notify = MonarchDomainNotify.Email,\n)"
+    },
+    {
+      "title": "A record that points somewhere else",
+      "code": "MonarchDomainProgress(\n    host = \"book.example.com\",\n    stage = MonarchDomainStage.Dns,\n    problems = listOf(MonarchDomainProblem(\"Your domain points somewhere else. Remove the A record for book.\")),\n    dnsFound = MonarchDomainDnsSnapshot(a = listOf(\"203.0.113.10\")),\n)"
+    },
+    {
+      "title": "Polling the product",
+      "setup": "var stage by remember { mutableStateOf(MonarchDomainStage.Dns) }",
+      "code": "MonarchDomainProgress(host = \"book.example.com\", stage = stage)\nLaunchedEffect(stage) {\n    val wait = MonarchDomainProgressDefaults.recheckIntervalMillis(stage) ?: return@LaunchedEffect\n    kotlinx.coroutines.delay(wait)\n    // Ask the product for the new stage here.\n}"
+    }
+  ],
+  "webEquivalent": "DomainProgress",
+  "dependsOn": [
+    "stepper",
+    "status-badge"
+  ]
+}

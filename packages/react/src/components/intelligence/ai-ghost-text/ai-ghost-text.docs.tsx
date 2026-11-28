@@ -1,7 +1,15 @@
 import { useRef, useState } from 'react';
 import { Button, Textarea } from '@rookcom/monarch-react';
-import { AiGhostText, AiInlineDiff, useAiRewrite } from '@rookcom/monarch-react/ai';
+import {
+  AiGhostText,
+  AiInlineDiff,
+  useAiCompletion,
+  useAiRewrite,
+  type UseAiCompletionResult,
+} from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-ghost-text.fixture.json';
 
 /** A stand-in for a model: continues a few known openings after a short wait. */
 const CONTINUATIONS: [RegExp, string][] = [
@@ -21,13 +29,45 @@ function demoComplete(text: string, cursor: number, signal: AbortSignal): Promis
   });
 }
 
+/**
+ * The page opens on a suggestion that is already showing, as after a pause in
+ * typing “Thanks”. The first edit, Tab, Escape or blur hands over to the live
+ * completion.
+ */
 function ReplyDemo() {
+  const live = useAiCompletion({ complete: demoComplete });
+  const [seeded, setSeeded] = useState(true);
+  const settle = () => setSeeded(false);
+  const completion: UseAiCompletionResult = seeded
+    ? {
+        ...live,
+        status: 'ready',
+        suggestion: fixture.data.suggestion,
+        text: fixture.data.text,
+        cursor: fixture.data.text.length,
+        dismiss: settle,
+        update: (text, cursor) => {
+          settle();
+          live.update(text, cursor);
+        },
+        accept: () => {
+          settle();
+          const text = fixture.data.text + fixture.data.suggestion;
+          return { inserted: fixture.data.suggestion, text, cursor: text.length };
+        },
+        acceptWord: () => {
+          settle();
+          return { inserted: ' for', text: 'Thanks for', cursor: 10 };
+        },
+      }
+    : live;
   return (
-    <AiGhostText complete={demoComplete}>
+    <AiGhostText completion={completion}>
       <Textarea
-        aria-label="Reply"
+        aria-label={fixture.data.label}
         rows={4}
-        placeholder="Type “Thanks” or “Let me know” and pause"
+        defaultValue={fixture.data.text}
+        placeholder={fixture.data.placeholder}
       />
     </AiGhostText>
   );

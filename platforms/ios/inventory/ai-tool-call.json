@@ -1,0 +1,164 @@
+{
+  "id": "ai-tool-call",
+  "name": "MonarchAiToolCall",
+  "title": "AiToolCall",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "DisclosureGroup(isExpanded:content:label:) with .disclosureGroupStyle(.monarch), MonarchStatusBadge for the state and MonarchAiCodeBlock for the input and output",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "One tool call of an assistant turn as a card that opens: what was done in plain words, the state as an icon and a word, how long it took and, on demand, the exact input and output.",
+  "whenToUse": "For each tool-call part of an assistant message, when people should see what the assistant did; and in audit or debugging views where the raw arguments and results must be inspectable.",
+  "whenNotToUse": "Not while the call waits for a decision: show an approval (MonarchAiPermissionScope or the app's approval card) instead. Not to show the result as a thing, such as a created record, which is MonarchAiToolResultCard.",
+  "api": [
+    "init(_ part: MonarchAiToolCallPart, summary: String? = nil, systemImage: String? = nil, toolLabels: [String: String] = [:], isExpanded: Binding<Bool>? = nil, announcesChanges: Bool = true, maxValueLength: Int = 4000, labels: MonarchAiToolCallLabels = MonarchAiToolCallLabels(), describeTool: (@MainActor (MonarchAiToolCallPart) -> String?)? = nil)",
+    "MonarchAiToolCallLabels.init(state:formatDuration:input:output:error:tool:empty:stateChanged:showMore:truncated:)"
+  ],
+  "options": [
+    {
+      "name": "part",
+      "type": "MonarchAiToolCallPart",
+      "default": "required",
+      "description": "The call from the conversation model: name, input, state, output, error, start and end times, streamed input text."
+    },
+    {
+      "name": "summary",
+      "type": "String?",
+      "default": "nil",
+      "description": "The one-line summary in words. Wins over describeTool."
+    },
+    {
+      "name": "systemImage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the wrench symbol before the title. Decorative."
+    },
+    {
+      "name": "toolLabels",
+      "type": "[String: String]",
+      "default": "[:]",
+      "description": "Display names by tool name. Unlisted tools get a humanized name."
+    },
+    {
+      "name": "isExpanded",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Whether the details are open. Kept inside, closed at first, when nil."
+    },
+    {
+      "name": "announcesChanges",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether a change of state is announced. Turn it off when the thread already announces it."
+    },
+    {
+      "name": "maxValueLength",
+      "type": "Int",
+      "default": "4000",
+      "description": "The longest input or output shown before Show all, in characters. 0 shows everything."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiToolCallLabels",
+      "default": "MonarchAiToolCallLabels()",
+      "description": "Replacements for the state names, the duration format, the headings, the empty and truncation notes, the announcement and Show all."
+    },
+    {
+      "name": "describeTool",
+      "type": "(@MainActor (MonarchAiToolCallPart) -> String?)?",
+      "default": "nil",
+      "description": "Builds the summary from the call. Return nil to fall back to the tool's label."
+    }
+  ],
+  "states": [
+    {
+      "name": "pending approval",
+      "description": "Warning tone, a triangle and \"Waiting for approval\"."
+    },
+    {
+      "name": "awaiting result",
+      "description": "Neutral tone, a clock and \"Waiting for result\"."
+    },
+    {
+      "name": "running",
+      "description": "Info tone, circling arrows and \"Running\". No duration until it ends."
+    },
+    {
+      "name": "succeeded",
+      "description": "Success tone, a check mark, \"Done\" and the duration."
+    },
+    {
+      "name": "failed",
+      "description": "Danger tone, an octagon, \"Failed\", and the error under the card without opening it."
+    },
+    {
+      "name": "denied",
+      "description": "Neutral tone, a crossed circle and \"Denied\"."
+    },
+    {
+      "name": "cancelled",
+      "description": "Neutral tone, a minus and \"Cancelled\"."
+    },
+    {
+      "name": "expanded",
+      "description": "The tool's name, the input and the output in code blocks, or \"No details yet.\"."
+    },
+    {
+      "name": "truncated",
+      "description": "A value longer than maxValueLength is cut at a line end with \"Showing 4,000 of 52,113 characters\" and a Show all button."
+    }
+  ],
+  "appearance": "A card on the subtle background with the subtle border; the tool icon uses the AI tool role, the state is a small status badge in its tone, the duration and notes are muted text and the error is the strong danger role. Every colour is a theme role, so it follows light, dark and both high-contrast themes.",
+  "platformNotes": "The web uses <details>/<summary>; iOS uses the standard DisclosureGroup in the Monarch style, so the header is a button with an expanded or collapsed value. The running state shows a symbol instead of the web's spinner. Values are MonarchAiJSON, pretty-printed with sorted keys; the web keeps the key order of the object. The web renders input and output only while open; SwiftUI also builds the content only when the group is open. The summary is a String, not arbitrary content.",
+  "accessibility": [
+    "The summary row is one button read as the title, the state and the duration, with the value Expanded or Collapsed.",
+    "State icons are decorative; the state is always a word as well as a tone.",
+    "A change of state after the card appears is announced as \"<tool>: <state>\"; the first state is not announced, and announcesChanges turns announcements off.",
+    "The error line is read as \"Error: message\".",
+    "The input and output blocks are named Input and Output through MonarchAiCodeBlock, with a Copy button.",
+    "The header and Show all are at least 44 points high."
+  ],
+  "edgeCases": [
+    "A call without input and output shows \"No details yet.\" when open.",
+    "While arguments stream, inputText stands in for an empty input.",
+    "A string that holds JSON is re-indented; text that only starts with a brace is shown as it is.",
+    "Times that cannot be read, or an end before the start, show no duration.",
+    "A long title wraps; the state badge and duration move under it."
+  ],
+  "tests": [
+    "MonarchAiToolCallTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Humanized summary with details",
+      "fixture": "ai-tool-call",
+      "webExample": "Humanized summary with details",
+      "template": "MonarchAiToolCall(\n    MonarchAiToolCallPart(\n        id: {{id}},\n        name: {{name}},\n        input: .string(#\"{\"query\": \"{{input.query|raw}}\", \"limit\": {{input.limit}}}\"#),\n        state: {{state|case}},\n        output: .string(#\"{\"results\": [{\"title\": \"{{output.results.0.title|raw}}\", \"id\": \"{{output.results.0.id|raw}}\"}], \"total\": {{output.total}}}\"#),\n        startedAt: {{startedAt}},\n        endedAt: {{endedAt}}\n    ),\n    summary: {{summary}},\n    isExpanded: $open\n)",
+      "setupTemplate": "@State private var open = true",
+      "setup": "@State private var open = true",
+      "code": "MonarchAiToolCall(\n    MonarchAiToolCallPart(\n        id: \"call-1\",\n        name: \"search_documents\",\n        input: .string(#\"{\"query\": \"Q3 plan\", \"limit\": 5}\"#),\n        state: .succeeded,\n        output: .string(#\"{\"results\": [{\"title\": \"Q3 planning notes\", \"id\": \"doc-18\"}], \"total\": 1}\"#),\n        startedAt: \"2026-03-02T10:00:00.000Z\",\n        endedAt: \"2026-03-02T10:00:01.400Z\"\n    ),\n    summary: \"Searched documents for “Q3 plan”\",\n    isExpanded: $open\n)"
+    },
+    {
+      "title": "A failed call, open",
+      "setup": "@State private var isExpanded = true",
+      "code": "MonarchAiToolCall(\n    MonarchAiToolCallPart(id: \"call-2\", name: \"send_email\", input: [\"to\": \"ada@example.com\"], state: .failed, error: \"The mail server refused the message.\"),\n    toolLabels: [\"send_email\": \"Send an email\"],\n    isExpanded: $isExpanded\n)"
+    }
+  ],
+  "webEquivalent": "AiToolCall",
+  "dependsOn": [
+    "collapsible",
+    "status-badge",
+    "ai-code-block"
+  ],
+  "icons": {
+    "toggle": "ChevronRightGlyph",
+    "tool": "WrenchGlyph",
+    "state.succeeded": "CheckGlyph",
+    "copy": "CopyGlyph"
+  }
+}

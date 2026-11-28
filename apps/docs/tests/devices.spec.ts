@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import {
+  componentPageHydrated,
   componentRoutes,
   mountPreviews,
   pageUrl,
@@ -69,6 +70,10 @@ const ALLOWED: Record<string, { match: RegExp; devices?: Device[]; why: string }
     {
       match: /^small target: a in \.mn-app-shell__main/,
       why: 'Example page content inside the shell.',
+    },
+    {
+      match: /^small target: a\.mn-link /,
+      why: 'Example page content inside the shell: the links of the sample inbox list.',
     },
   ],
 };
@@ -204,6 +209,8 @@ async function open(page: Page, route: string): Promise<() => string[]> {
   await waitForFonts(page);
   // Five shapes of 500+ pages run in parallel: give a page as long to appear as the axe test does.
   await expect(page.locator('h1').first()).toBeAttached({ timeout: 15_000 });
+  // The platform tabs replace their prerendered copy once the page has hydrated: measure after.
+  await componentPageHydrated(page);
   await mountPreviews(page);
   // Components that measure themselves (a ResizeObserver choosing a compact layout) re-render
   // after mounting: wait until the examples keep the same size for several frames in a row.

@@ -1,0 +1,147 @@
+{
+  "id": "ai-source-list",
+  "name": "MonarchAiSourceList",
+  "title": "AiSourceList",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of clickable source rows with MonarchFavicon, and a MonarchButton toggle; androidx.compose.ui.platform.LocalUriHandler opens links",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The block of sources under an AI answer: each with its favicon, [n] number, title, host, product, kind and snippet, grouped into Used and Considered, and collapsed to the first few.",
+  "whenToUse": "Under an assistant reply that cites sources, so people can see and open what the answer is based on, in the same numbering as the citation markers in the text.",
+  "whenNotToUse": "For one citation inside the text use MonarchAiCitation. For a preview of one source with the quoted passage use MonarchAiSourcePreview. For a list of links that are not AI sources use MonarchLinkCard or a plain list.",
+  "api": [
+    "@Composable fun MonarchAiSourceList(items: List<MonarchAiSourceListItem>, modifier: Modifier = Modifier, collapseAfter: Int? = 3, initiallyExpanded: Boolean = false, numbered: Boolean = true, favicon: (@Composable (MonarchAiSourcePart) -> Painter?)? = null, labels: MonarchAiSourceListLabels = MonarchAiSourceListLabels(), onOpen: ((MonarchAiSourceListItem) -> Unit)? = null)",
+    "data class MonarchAiSourceListItem(source: MonarchAiSourcePart, used: Boolean = true, snippet: String? = null) { val id: String; companion object { fun sources(message: MonarchAiConversationMessage): List<MonarchAiSourceListItem> } }",
+    "class MonarchAiSourceListLabels(heading: String? = null, used: ((count: Int) -> String)? = null, considered: ((count: Int) -> String)? = null, showAll: ((count: Int) -> String)? = null, showFewer: String? = null, source: ((number: Int, title: String) -> String)? = null, openSource: String? = null, kind: ((kind: MonarchAiSourceKind) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "List<MonarchAiSourceListItem>",
+      "default": "required",
+      "description": "The sources in citation order; the first is [1]. Each wraps the conversation model's MonarchAiSourcePart with used and a snippet."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the list."
+    },
+    {
+      "name": "collapseAfter",
+      "type": "Int?",
+      "default": "3",
+      "description": "How many sources show while collapsed. null never collapses."
+    },
+    {
+      "name": "initiallyExpanded",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Whether a collapsible list starts expanded."
+    },
+    {
+      "name": "numbered",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the [n] number that matches each source's citation marker."
+    },
+    {
+      "name": "favicon",
+      "type": "(@Composable (MonarchAiSourcePart) -> Painter?)?",
+      "default": "null",
+      "description": "The favicon the app loaded for a source; null shows MonarchFavicon's letter tile. Monarch loads no images."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiSourceListLabels",
+      "default": "MonarchAiSourceListLabels()",
+      "description": "Replacements for the heading, group headings, toggle titles, spoken source name, tap action name and kind names."
+    },
+    {
+      "name": "onOpen",
+      "type": "((MonarchAiSourceListItem) -> Unit)?",
+      "default": "null",
+      "description": "Makes each source a button that calls this, for example to show MonarchAiSourcePreview. Without it, safe addresses open through LocalUriHandler."
+    }
+  ],
+  "states": [
+    {
+      "name": "ungrouped",
+      "description": "All sources are used: one list under the heading."
+    },
+    {
+      "name": "grouped",
+      "description": "Some sources were considered but not used: Used (n) and Considered (n) groups, used first."
+    },
+    {
+      "name": "collapsed",
+      "description": "More sources than collapseAfter: the first few of used then considered show, with Show all n sources."
+    },
+    {
+      "name": "expanded",
+      "description": "Every source shows, with Show fewer."
+    },
+    {
+      "name": "actionable",
+      "description": "With onOpen each row is a button; otherwise a row with a safe address opens it and its title uses the link color."
+    },
+    {
+      "name": "plain",
+      "description": "A source without onOpen and without a safe address is text in the default color."
+    }
+  ],
+  "appearance": "The heading and group headings are muted text; titles use the link color when the row opens and default text otherwise; the [n] number, the meta line and the two-line snippet are muted. The favicon is MonarchFavicon at its small size, with its letter tile when there is no painter. A pressed row shows the Material ripple.",
+  "platformNotes": "As on iOS, the whole row is the touch target, a button with onOpen or a link opened through LocalUriHandler otherwise (the web opens a new tab from the title). The web's messages object is one labels value with lambdas for the counted strings. Sources come from the conversation model; MonarchAiSourceListItem adds the web's used and snippet fields, and sources(message) gives a message's sources in first-appearance order. iOS uses isUsed, isNumbered and isInitiallyExpanded; Android drops the is prefix, as Material 3 does. The favicon field of a source is an address; Monarch loads no images, so the app passes painters through favicon, and a source without one shows a letter tile instead of the web's kind glyph. The parity map names collapsible, but only the sources after the first few are hidden, so the toggle is a ghost MonarchButton under the list rather than a MonarchCollapsible header. iOS's opensSource hint is the tap action name openSource here, because TalkBack reads it as \"double tap to open the source\".",
+  "accessibility": [
+    "The list heading and the Used and Considered headings are headings.",
+    "Each source is one element read as \"Source 1: title\", then host, product and kind, then the snippet; with numbered false the number is left out.",
+    "A row that opens is a button at least 48dp high whose tap action is read as \"open the source\".",
+    "The favicon is decorative and hidden.",
+    "The toggle is a separate button whose text says Show all 5 sources or Show fewer."
+  ],
+  "edgeCases": [
+    "Unsafe addresses such as javascript: are never opened; the row becomes plain text unless onOpen is given.",
+    "The group headings count every source, also the ones hidden while collapsed; a group with no source shown while collapsed has no heading.",
+    "collapseAfter 0 hides every source until the list is expanded.",
+    "Long titles and meta lines wrap; snippets stop at two lines with an ellipsis.",
+    "An empty list shows only the heading; leave the list out when a reply has no sources."
+  ],
+  "tests": [
+    "MonarchAiSourceListTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Used and considered, opening a preview",
+      "fixture": "ai-source-list",
+      "webExample": "Used and considered, opening a preview",
+      "template": "MonarchAiSourceList(\n    items = listOf(\n        MonarchAiSourceListItem(MonarchAiSourcePart(id = {{sources.0.id}}, title = {{sources.0.title}}, url = {{sources.0.url}}, kind = MonarchAiSourceKind.{{sources.0.kind|pascal}}, product = {{sources.0.product}}), snippet = {{sources.0.snippet}}),\n        MonarchAiSourceListItem(MonarchAiSourcePart(id = {{sources.1.id}}, title = {{sources.1.title}}, url = {{sources.1.url}}, kind = MonarchAiSourceKind.{{sources.1.kind|pascal}}), snippet = {{sources.1.snippet}}),\n        MonarchAiSourceListItem(MonarchAiSourcePart(id = {{sources.2.id}}, title = {{sources.2.title}}, kind = MonarchAiSourceKind.{{sources.2.kind|pascal}}, product = {{sources.2.product}}), used = {{sources.2.used}}),\n        MonarchAiSourceListItem(MonarchAiSourcePart(id = {{sources.3.id}}, title = {{sources.3.title}}, kind = MonarchAiSourceKind.{{sources.3.kind|pascal}}), used = {{sources.3.used}}, snippet = {{sources.3.snippet}}),\n    ),\n    onOpen = {},\n)",
+      "imports": [
+        "com.rookhq.monarch.components.intelligence.aiconversation.MonarchAiSourcePart",
+        "com.rookhq.monarch.components.intelligence.aiconversation.MonarchAiSourceKind"
+      ],
+      "code": "MonarchAiSourceList(\n    items = listOf(\n        MonarchAiSourceListItem(MonarchAiSourcePart(id = \"s1\", title = \"Team handbook\", url = \"https://example.com/handbook\", kind = MonarchAiSourceKind.Doc, product = \"Docs\"), snippet = \"Requests are answered within two working days.\"),\n        MonarchAiSourceListItem(MonarchAiSourcePart(id = \"s2\", title = \"Support policy\", url = \"https://example.com/support-policy\", kind = MonarchAiSourceKind.Web), snippet = \"Urgent issues go to the on-call queue.\"),\n        MonarchAiSourceListItem(MonarchAiSourcePart(id = \"s3\", title = \"Ticket 1042\", kind = MonarchAiSourceKind.Record, product = \"Helpdesk\"), used = false),\n        MonarchAiSourceListItem(MonarchAiSourcePart(id = \"s4\", title = \"Onboarding checklist.pdf\", kind = MonarchAiSourceKind.File), used = false, snippet = \"A list of first-week tasks.\"),\n    ),\n    onOpen = {},\n)"
+    },
+    {
+      "title": "Sources read from a message, as links",
+      "code": "val message = MonarchAiConversationMessage(\n    id = \"a1\",\n    role = MonarchAiRole.Assistant,\n    parts = listOf(\n        MonarchAiTextPart(\"Revenue grew 12%.\"),\n        MonarchAiSourcePart(\"s1\", \"Q3 revenue report\", \"https://example.com/q3\", MonarchAiSourceKind.Doc),\n    ),\n    createdAt = \"2025-03-10T12:00:00.000Z\",\n)\nMonarchAiSourceList(items = MonarchAiSourceListItem.sources(message), collapseAfter = null)"
+    }
+  ],
+  "webEquivalent": "AiSourceList",
+  "dependsOn": [
+    "favicon",
+    "link",
+    "collapsible",
+    "button",
+    "ai-conversation"
+  ],
+  "icons": {
+    "toggle": "ChevronDownGlyph"
+  }
+}

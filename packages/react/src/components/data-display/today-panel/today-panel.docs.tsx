@@ -3,42 +3,54 @@ import { Badge } from '@rookcom/monarch-react';
 import { TodayPanel, type TodayTask } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
-const today = '2026-11-07';
-const events = [
-  {
-    id: 'e1',
-    title: 'Weekly review',
-    start: '2026-11-07T09:30:00Z',
-    end: '2026-11-07T10:00:00Z',
-    detail: 'Room 2',
-  },
-  {
-    id: 'e2',
-    title: 'Interview: product designer',
-    start: '2026-11-07T13:00:00Z',
-    end: '2026-11-07T14:00:00Z',
-  },
-];
-const initialTasks: TodayTask[] = [
-  { id: 't1', title: 'Send the quarterly proposal', detail: 'Northwind account', href: '#t1' },
-  { id: 't2', title: 'Approve 3 time-off requests', overdue: true, due: '2 days late' },
-  {
-    id: 't3',
-    title: 'Review the release notes',
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './today-panel.fixture.json';
+
+const data = fixture.data as unknown as {
+  today: string;
+  locale: string;
+  timeZone: string;
+  events: { id: string; title: string; start: string; end: string; detail?: string }[];
+  tasks: {
+    id: string;
+    title: string;
+    detail?: string;
+    due?: string;
+    overdue?: boolean;
+    badge?: { text: string; tone: 'info' };
+  }[];
+};
+const today = data.today.slice(0, 10);
+const events = data.events.map((e) => ({
+  id: e.id,
+  title: e.title,
+  start: e.start,
+  end: e.end,
+  ...(e.detail !== undefined && { detail: e.detail }),
+}));
+const initialTasks: TodayTask[] = data.tasks.map((t) => ({
+  id: t.id,
+  title: t.title,
+  ...(t.id === 't1' && { href: '#t1' }),
+  ...(t.overdue !== undefined && { overdue: t.overdue }),
+  ...(t.detail !== undefined && { detail: t.detail }),
+  ...(t.due !== undefined && { due: t.due }),
+  ...(t.badge !== undefined && {
     meta: (
-      <Badge tone="info" size="sm">
-        High
+      <Badge tone={t.badge.tone} size="sm">
+        {t.badge.text}
       </Badge>
     ),
-  },
-];
+  }),
+}));
 
 function ToggleDemo() {
   const [tasks, setTasks] = useState(initialTasks);
   return (
     <TodayPanel
       today={today}
-      timeZone="UTC"
+      locale={data.locale}
+      timeZone={data.timeZone}
       events={events}
       tasks={tasks}
       onTaskToggle={(id, done) =>

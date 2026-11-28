@@ -1,0 +1,83 @@
+{
+  "id": "drop-zone",
+  "name": null,
+  "title": "DropZone",
+  "family": "files",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": ".dropDestination(for:action:isTargeted:) on the region, with a Transferable that has a FileRepresentation; .fileImporter (through MonarchFileUpload) as the path that always works",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "SwiftUI's drop destination on an existing region, such as a file list or a conversation, so files can be dropped where they belong, with the same checks as MonarchFileUpload and its picker button as the path that works everywhere. Monarch ships no type.",
+  "whenToUse": "On iPad and Mac, when a file list, a folder or a conversation should also accept files dragged from another app. Always keep a visible button that opens the system picker.",
+  "whenNotToUse": "For a form field that takes files, use MonarchFileUpload, which already accepts drops on its own area. On iPhone, where drag and drop between apps is limited, the picker button alone is the expected path.",
+  "api": [
+    "func dropDestination<T: Transferable>(for payloadType: T.Type = T.self, action: @escaping ([T], CGPoint) -> Bool, isTargeted: @escaping (Bool) -> Void = { _ in }) -> some View",
+    "static func MonarchFileUpload.validate(_ files: [MonarchFileUploadFile], allowedContentTypes: [UTType] = [.item], maxSize: Int64? = nil, maxFiles: Int? = nil, currentCount: Int = 0, labels: MonarchFileUploadLabels = MonarchFileUploadLabels(), locale: Locale = .autoupdatingCurrent, validate: (@Sendable (MonarchFileUploadFile) -> String?)? = nil) -> (accepted: [MonarchFileUploadFile], rejected: [MonarchFileUploadRejection])"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "idle",
+      "description": "The region looks as it always does; the MonarchFileUpload button above it is the visible way in."
+    },
+    {
+      "name": "targeted",
+      "description": "isTargeted reports true while files are held over the region: draw the container shape in the accent subtle fill with the accent border."
+    },
+    {
+      "name": "refused",
+      "description": "MonarchFileUpload.validate returns the refused files with a message each; show them in a danger MonarchInlineNotice and announce the count."
+    },
+    {
+      "name": "full or disabled",
+      "description": "Return false from the action without taking the files, and disable the picker button with disabled(_:)."
+    }
+  ],
+  "appearance": "The region keeps its own look. While files are held over it, it gets the accent subtle fill and the accent border on the container shape; refusals use the danger notice. The roles follow light, dark and high-contrast themes.",
+  "platformNotes": "The web DropZone is a component that listens to the region or the whole window, shows an overlay while files are dragged, and refuses a wrong type before the drop. On iOS the system drop destination does this: the region is the view the modifier is on, and a whole-screen zone is the modifier on the screen's root view. The dragged type is known only after the drop, so refusals come then, through MonarchFileUpload.validate with the same messages as MonarchFileUpload. Dropped files arrive as a temporary copy through a FileRepresentation and are deleted by the system after the import, so the Transferable copies them first. Dragging files between apps is an iPad and Mac interaction; the picker is the main path on iPhone. Android uses Modifier.dragAndDropTarget with the same rules.",
+  "accessibility": [
+    "Dragging is an extra: the MonarchFileUpload picker button is a standard button with a 44-point target, and is how VoiceOver, Switch Control and keyboard users add files.",
+    "The targeted state is a fill and a border, and the button keeps its text, so nothing relies on colour alone.",
+    "After a drop, post an announcement with the number of files added and refused, because focus does not move."
+  ],
+  "edgeCases": [
+    "Two drop destinations nested in each other: the innermost takes the drop. Do not put a drop destination around a MonarchFileUpload, which has its own.",
+    "A drop of several files where some are refused: add the accepted ones and list the refused ones; do not refuse the whole drop.",
+    "Delete the temporary copies after uploading them."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "A file list that accepts drops",
+      "fixture": "drop-zone",
+      "webExample": "A file list that accepts drops",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    MonarchFileUpload(\n        allowedContentTypes: [.image, .pdf],\n        maxSize: {{maxSize}},\n        hint: {{hint}},\n        variant: .compact,\n        labels: MonarchFileUploadLabels(browse: {{browse}})\n    ) { accepted, _ in\n        items += accepted.map { MonarchFileListItem(id: $0.url.absoluteString, name: $0.name, size: $0.size) }\n    }\n    if !refused.isEmpty {\n        MonarchInlineNotice(refused.map(\\.message).joined(separator: \"\\n\"), tone: .danger)\n    }\n    MonarchFileList(items, label: {{listLabel}})\n        .padding(theme.spacing.space2)\n        .background(\n            RoundedRectangle(cornerRadius: theme.radius.md)\n                .fill(isTargeted ? theme.colors.accentSubtle : Color.clear)\n        )\n        .dropDestination(\n            for: DroppedFile.self,\n            action: { dropped, _ in\n                let result = MonarchFileUpload.validate(\n                    dropped.map { MonarchFileUploadFile(url: $0.url) },\n                    allowedContentTypes: [.image, .pdf],\n                    maxSize: {{maxSize}},\n                    currentCount: items.count\n                )\n                items += result.accepted.map { MonarchFileListItem(id: $0.url.absoluteString, name: $0.name, size: $0.size) }\n                refused = result.rejected\n                return !result.accepted.isEmpty\n            },\n            isTargeted: { isTargeted = $0 }\n        )\n}",
+      "setupTemplate": "/// A dropped file, copied before the system removes its temporary file.\nstruct DroppedFile: Transferable {\n    let url: URL\n\n    static var transferRepresentation: some TransferRepresentation {\n        FileRepresentation(importedContentType: .item) { received in\n            let copy = FileManager.default.temporaryDirectory.appendingPathComponent(received.file.lastPathComponent)\n            try? FileManager.default.removeItem(at: copy)\n            try FileManager.default.copyItem(at: received.file, to: copy)\n            return DroppedFile(url: copy)\n        }\n    }\n}\n\n@Environment(\\.monarchTheme) private var theme\n@State private var items = [\n    MonarchFileListItem(id: {{files.0.id}}, name: {{files.0.name}}, size: {{files.0.size}}),\n]\n@State private var refused: [MonarchFileUploadRejection] = []\n@State private var isTargeted = false",
+      "imports": [
+        "UniformTypeIdentifiers"
+      ],
+      "setup": "/// A dropped file, copied before the system removes its temporary file.\nstruct DroppedFile: Transferable {\n    let url: URL\n\n    static var transferRepresentation: some TransferRepresentation {\n        FileRepresentation(importedContentType: .item) { received in\n            let copy = FileManager.default.temporaryDirectory.appendingPathComponent(received.file.lastPathComponent)\n            try? FileManager.default.removeItem(at: copy)\n            try FileManager.default.copyItem(at: received.file, to: copy)\n            return DroppedFile(url: copy)\n        }\n    }\n}\n\n@Environment(\\.monarchTheme) private var theme\n@State private var items = [\n    MonarchFileListItem(id: \"seed-1\", name: \"team-charter.pdf\", size: 420_000),\n]\n@State private var refused: [MonarchFileUploadRejection] = []\n@State private var isTargeted = false",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    MonarchFileUpload(\n        allowedContentTypes: [.image, .pdf],\n        maxSize: 10_485_760,\n        hint: \"Images or PDF, up to 10 MB. Or drop files on the list.\",\n        variant: .compact,\n        labels: MonarchFileUploadLabels(browse: \"Upload files\")\n    ) { accepted, _ in\n        items += accepted.map { MonarchFileListItem(id: $0.url.absoluteString, name: $0.name, size: $0.size) }\n    }\n    if !refused.isEmpty {\n        MonarchInlineNotice(refused.map(\\.message).joined(separator: \"\\n\"), tone: .danger)\n    }\n    MonarchFileList(items, label: \"Shared files\")\n        .padding(theme.spacing.space2)\n        .background(\n            RoundedRectangle(cornerRadius: theme.radius.md)\n                .fill(isTargeted ? theme.colors.accentSubtle : Color.clear)\n        )\n        .dropDestination(\n            for: DroppedFile.self,\n            action: { dropped, _ in\n                let result = MonarchFileUpload.validate(\n                    dropped.map { MonarchFileUploadFile(url: $0.url) },\n                    allowedContentTypes: [.image, .pdf],\n                    maxSize: 10_485_760,\n                    currentCount: items.count\n                )\n                items += result.accepted.map { MonarchFileListItem(id: $0.url.absoluteString, name: $0.name, size: $0.size) }\n                refused = result.rejected\n                return !result.accepted.isEmpty\n            },\n            isTargeted: { isTargeted = $0 }\n        )\n}"
+    }
+  ],
+  "webEquivalent": "DropZone",
+  "dependsOn": [
+    "file-upload"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "accept"
+      ],
+      "reason": "allowedContentTypes takes UTType values (.image, .pdf), not the MIME patterns of the web accept attribute.",
+      "convention": "Apple UniformTypeIdentifiers: file pickers and drop destinations filter by UTType."
+    }
+  ]
+}

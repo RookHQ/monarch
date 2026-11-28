@@ -18,6 +18,8 @@ import {
   type DataTableSort,
 } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './data-table.fixture.json';
 
 interface Invoice {
   id: string;
@@ -28,77 +30,31 @@ interface Invoice {
   owner: string;
 }
 
-const INVOICES: Invoice[] = [
-  {
-    id: 'INV-1042',
-    customer: 'Northfield Traders',
-    status: 'Paid',
-    amount: 1240,
-    issued: '2026-09-02',
-    owner: 'Ana',
-  },
-  {
-    id: 'INV-1043',
-    customer: 'Cobalt Ltd',
-    status: 'Due',
-    amount: 860,
-    issued: '2026-09-11',
-    owner: 'Ben',
-  },
-  {
-    id: 'INV-1044',
-    customer: 'Fernway Inc',
-    status: 'Overdue',
-    amount: 4300,
-    issued: '2026-08-21',
-    owner: 'Chen',
-  },
-  {
-    id: 'INV-1045',
-    customer: 'Tidewater Toys',
-    status: 'Due',
-    amount: 395,
-    issued: '2026-09-18',
-    owner: 'Ana',
-  },
-  {
-    id: 'INV-1046',
-    customer: 'Westbridge Imports',
-    status: 'Paid',
-    amount: 2150,
-    issued: '2026-09-20',
-    owner: 'Dev',
-  },
-  {
-    id: 'INV-1047',
-    customer: 'Lumen',
-    status: 'Due',
-    amount: 1720,
-    issued: '2026-09-24',
-    owner: 'Ben',
-  },
-];
+const INVOICES = fixture.data.invoices as Invoice[];
 
 const TONE = { Paid: 'success', Due: 'neutral', Overdue: 'danger' } as const;
 
-const COLUMNS: DataTableColumn<Invoice>[] = [
-  { id: 'customer', header: 'Customer', sortable: true },
-  {
-    id: 'status',
-    header: 'Status',
+// What the columns do on the web only; the headers are the fixture's.
+const COLUMN_BEHAVIOUR: Record<string, Partial<DataTableColumn<Invoice>>> = {
+  customer: { sortable: true },
+  status: {
     sortable: true,
     cell: (r) => <Badge tone={TONE[r.status]}>{r.status}</Badge>,
   },
-  { id: 'issued', header: 'Issued', sortable: true, hideBelow: 520 },
-  { id: 'owner', header: 'Owner', sortable: true, defaultHidden: false },
-  {
-    id: 'amount',
-    header: 'Amount',
+  issued: { sortable: true, hideBelow: 520 },
+  owner: { sortable: true, defaultHidden: false },
+  amount: {
     numeric: true,
     sortable: true,
     cell: (r) => `$${r.amount.toLocaleString('en-US')}`,
   },
-];
+};
+
+const COLUMNS = fixture.data.columns.map((c) => ({
+  id: c.id,
+  header: c.header,
+  ...COLUMN_BEHAVIOUR[c.id],
+})) as DataTableColumn<Invoice>[];
 
 const shared = {
   rows: INVOICES,
@@ -107,15 +63,20 @@ const shared = {
 };
 
 function SortAndSelect() {
-  const [selected, setSelected] = useState<string[]>(['INV-1044']);
+  const [selected, setSelected] = useState<string[]>(fixture.data.selected);
   const [opened, setOpened] = useState<string>();
   return (
     <div style={{ display: 'grid', gap: 8, width: '100%' }}>
       <DataTable
         {...shared}
         columns={COLUMNS}
-        caption="Invoices"
-        defaultSort={[{ id: 'issued', direction: 'descending' }]}
+        caption={fixture.data.caption}
+        defaultSort={[
+          {
+            id: fixture.data.defaultSort.id,
+            direction: fixture.data.defaultSort.direction as DataTableSort['direction'],
+          },
+        ]}
         multiSort
         selectable
         selectedRowIds={selected}
@@ -123,8 +84,17 @@ function SortAndSelect() {
         stickyFirstColumn
         onRowOpen={(r) => setOpened(r.id)}
         rowActions={(r) => [
-          { id: 'send', label: 'Send reminder', onSelect: () => setOpened(`reminder ${r.id}`) },
-          { id: 'void', label: 'Void invoice', tone: 'danger', onSelect: () => {} },
+          {
+            id: 'send',
+            label: fixture.data.rowActions[0] ?? '',
+            onSelect: () => setOpened(`reminder ${r.id}`),
+          },
+          {
+            id: 'void',
+            label: fixture.data.rowActions[1] ?? '',
+            tone: 'danger',
+            onSelect: () => {},
+          },
         ]}
       />
       <p style={{ margin: 0, fontSize: 13 }}>

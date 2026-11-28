@@ -1,0 +1,88 @@
+{
+  "id": "consent-manager",
+  "name": null,
+  "title": "ConsentManager",
+  "family": "identity",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "AppTrackingTransparency: ATTrackingManager.requestTrackingAuthorization() and ATTrackingManager.trackingAuthorizationStatus",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "On iOS, consent to track across other companies' apps and websites is Apple's App Tracking Transparency prompt, and the app keeps its own in-app consent state; Monarch ships no consent manager. The in-app choices are shown with MonarchConsentPreferences.",
+  "whenToUse": "Call requestTrackingAuthorization() before any SDK reads the advertising identifier or links the person's data with other companies' data, at a moment the person understands why, and read trackingAuthorizationStatus before starting such an SDK. Use MonarchConsentPreferences for analytics and preferences that stay inside the app.",
+  "whenNotToUse": "Do not build a custom pre-prompt that imitates the system alert, and do not ask again after the person answered: the system shows the prompt once. Do not use ATT for in-app analytics that are not tracking in Apple's sense; that is the app's own consent with MonarchConsentPreferences.",
+  "api": [
+    "class func requestTrackingAuthorization() async -> ATTrackingManager.AuthorizationStatus",
+    "class var trackingAuthorizationStatus: ATTrackingManager.AuthorizationStatus { get }",
+    "enum ATTrackingManager.AuthorizationStatus { case notDetermined, restricted, denied, authorized }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "not determined",
+      "description": "The person has not been asked; requesting shows the system alert with the app's NSUserTrackingUsageDescription text."
+    },
+    {
+      "name": "authorized",
+      "description": "Tracking across apps is allowed; the advertising identifier is available."
+    },
+    {
+      "name": "denied",
+      "description": "The person said no, or turned tracking off in Settings; the identifier is zeros and the prompt does not show again."
+    },
+    {
+      "name": "restricted",
+      "description": "Tracking is not allowed on this device, for example by a profile; the prompt does not show."
+    }
+  ],
+  "appearance": "The prompt is a system alert in every theme. The app's explanation before it and its in-app choices use Monarch components.",
+  "platformNotes": "The web's ConsentManager is a provider that decides the regime (opt-in, opt-out or notice) from the visitor's jurisdiction, honours Global Privacy Control, records each decision and feeds the cookie banner, preferences dialog and ConsentGate. On iOS, tracking across apps is governed by App Tracking Transparency in every country, so the system prompt replaces the regime logic for that purpose, and an app may not track without it. Consent for in-app analytics and preferences is app state: store it where the app keeps settings, show and change it with MonarchConsentPreferences, list decisions with MonarchConsentHistory, and gate SDKs in the app's own code. The request needs the NSUserTrackingUsageDescription key in Info.plist and an active app; call it after launch, not during it. Android has no equivalent system prompt; its plan composes the consent preferences.",
+  "accessibility": [
+    "System behaviour: the tracking alert is read by VoiceOver with the app's usage description and its two buttons.",
+    "Monarch components around it keep their own behaviour: MonarchButton reports its title and state, MonarchConsentPreferences its switches."
+  ],
+  "edgeCases": [
+    "trackingAuthorizationStatus can change while the app runs, when the person changes Settings; read it again when the app becomes active.",
+    "On a device where tracking is restricted, the request returns at once without a prompt.",
+    "The request requires the NSUserTrackingUsageDescription key in Info.plist; the catalogue page checks for the key before asking."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Opt-in",
+      "fixture": "consent-manager",
+      "webExample": "Opt-in",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    VStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n        LabeledContent({{regime.term}}, value: {{regime.value}})\n        LabeledContent({{status.term}}, value: {{status.value}})\n        LabeledContent({{categories.0.label}}) { MonarchBadge({{categories.0.badge}}, tone: {{categories.0.tone|tone}}) }\n        LabeledContent({{categories.1.label}}) { MonarchBadge({{categories.1.badge}}, tone: {{categories.1.tone|tone}}) }\n        LabeledContent({{categories.2.label}}) { MonarchBadge({{categories.2.badge}}, tone: {{categories.2.tone|tone}}) }\n        LabeledContent({{categories.3.label}}) { MonarchBadge({{categories.3.badge}}, tone: {{categories.3.tone|tone}}) }\n    }\n    .labeledContentStyle(.monarch(.inline))\n    HStack(spacing: MonarchTokens.Space.space2) {\n        MonarchButton({{actions.rejectAll}}, variant: .secondary, size: .sm) {}\n        MonarchButton({{actions.acceptAll}}, variant: .secondary, size: .sm) {}\n        MonarchButton({{actions.withdraw}}, variant: .ghost, size: .sm) {}\n    }\n    Text({{fallback}})\n        .monarchTextStyle(.body)\n        .foregroundStyle(theme.colors.textMuted)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme",
+      "setup": "@Environment(\\.monarchTheme) private var theme",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    VStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n        LabeledContent(\"Regime\", value: \"opt-in\")\n        LabeledContent(\"Status\", value: \"pending\")\n        LabeledContent(\"Strictly necessary\") { MonarchBadge(\"Allowed\", tone: .success) }\n        LabeledContent(\"Preferences\") { MonarchBadge(\"Not allowed\", tone: .neutral) }\n        LabeledContent(\"Analytics\") { MonarchBadge(\"Not allowed\", tone: .neutral) }\n        LabeledContent(\"Marketing\") { MonarchBadge(\"Not allowed\", tone: .neutral) }\n    }\n    .labeledContentStyle(.monarch(.inline))\n    HStack(spacing: MonarchTokens.Space.space2) {\n        MonarchButton(\"Reject all\", variant: .secondary, size: .sm) {}\n        MonarchButton(\"Accept all\", variant: .secondary, size: .sm) {}\n        MonarchButton(\"Withdraw\", variant: .ghost, size: .sm) {}\n    }\n    Text(\"The analytics script is not loaded.\")\n        .monarchTextStyle(.body)\n        .foregroundStyle(theme.colors.textMuted)\n}"
+    },
+    {
+      "title": "In-app choices beside the system status",
+      "imports": [
+        "AppTrackingTransparency"
+      ],
+      "setup": "@State private var showsChoices = false\n@State private var choices: [String: Bool] = [:]\nprivate let categories = [\n    MonarchConsentPreferencesCategory(id: \"necessary\", label: \"Strictly necessary\", description: \"Sign-in and security.\", isRequired: true),\n    MonarchConsentPreferencesCategory(id: \"analytics\", label: \"Analytics\", description: \"How the app is used, inside this app only.\"),\n]",
+      "code": "VStack(alignment: .leading) {\n    MonarchButton(\"Privacy choices\") { showsChoices = true }\n    if ATTrackingManager.trackingAuthorizationStatus != .authorized {\n        Text(\"Cross-app tracking is off; in-app choices still apply.\")\n            .monarchTextStyle(.caption)\n    }\n}\n.sheet(isPresented: $showsChoices) {\n    ScrollView {\n        MonarchConsentPreferences(categories: categories, choices: choices) { _, newChoices in\n            choices = newChoices\n            showsChoices = false\n        }\n        .padding()\n    }\n}"
+    }
+  ],
+  "webEquivalent": "ConsentManager",
+  "dependsOn": [
+    "consent-preferences"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "decisions"
+      ],
+      "reason": "Decision: web-only. iOS asks for tracking permission through the system App Tracking Transparency prompt and has no in-app consent store.",
+      "convention": "HIG: App Tracking Transparency"
+    }
+  ]
+}

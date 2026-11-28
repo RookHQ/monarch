@@ -1,8 +1,12 @@
 import { useState } from 'react';
-import { ApiKeyRow, KeyCreatedDialog } from '@rookcom/monarch-react/patterns';
+import { ApiKeyRow, KeyCreatedDialog, type ApiKeyStatus } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './api-key-row.fixture.json';
 
-const NOW = '2026-06-10T12:00:00Z';
+const NOW = fixture.data.now;
+type FixtureKey = (typeof fixture.data.keys)[number];
+const [REPORTING, IMPORT] = fixture.data.keys as [FixtureKey, FixtureKey];
 const wait = () => new Promise((resolve) => setTimeout(resolve, 600));
 
 function KeyList() {
@@ -13,13 +17,13 @@ function KeyList() {
       <ul style={{ margin: 0, padding: 0 }}>
         <ApiKeyRow
           as="li"
-          name="Reporting job"
-          prefix="sk_live_4f2a"
-          createdAt="2026-05-02T09:00:00Z"
-          lastUsedAt="2026-06-10T10:30:00Z"
-          scopes={['items:read', 'reports:read']}
+          name={REPORTING.name}
+          prefix={REPORTING.prefix}
+          createdAt={REPORTING.createdAt}
+          lastUsedAt={REPORTING.lastUsedAt}
+          scopes={REPORTING.scopes}
           now={NOW}
-          status={revoked.includes('a') ? 'revoked' : 'active'}
+          status={revoked.includes('a') ? 'revoked' : (REPORTING.status as ApiKeyStatus)}
           onRotate={async () => {
             await wait();
             setRotated(true);
@@ -31,15 +35,15 @@ function KeyList() {
         />
         <ApiKeyRow
           as="li"
-          name="Import script"
-          prefix="sk_test_91bd"
-          createdAt="2026-06-01T09:00:00Z"
+          name={IMPORT.name}
+          prefix={IMPORT.prefix}
+          createdAt={IMPORT.createdAt}
           lastUsedAt={null}
-          expiresAt="2026-06-14T09:00:00Z"
-          status={revoked.includes('b') ? 'revoked' : 'expiring'}
-          scopes={['items:read', 'items:write', 'users:read', 'users:write', 'webhooks:write']}
+          expiresAt={IMPORT.expiresAt}
+          status={revoked.includes('b') ? 'revoked' : (IMPORT.status as ApiKeyStatus)}
+          scopes={IMPORT.scopes}
           now={NOW}
-          revokeConfirmPhrase="Import script"
+          revokeConfirmPhrase={IMPORT.revokeConfirmPhrase}
           onRevoke={async () => {
             await wait();
             setRevoked((r) => [...r, 'b']);

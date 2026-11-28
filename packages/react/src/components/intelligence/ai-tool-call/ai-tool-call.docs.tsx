@@ -5,21 +5,23 @@ import {
   type AiToolCallPart,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-tool-call.fixture.json';
 
 const STARTED: AiToolCallPart = {
   type: 'tool-call',
-  id: 'call-1',
-  name: 'search_documents',
-  input: { query: 'Q3 plan', limit: 5 },
+  id: fixture.data.id,
+  name: fixture.data.name,
+  input: fixture.data.input,
   state: 'running',
-  startedAt: '2026-03-02T10:00:00.000Z',
+  startedAt: fixture.data.startedAt,
 };
 
 const SEARCH: AiToolCallPart = {
   ...STARTED,
-  state: 'succeeded',
-  output: { results: [{ title: 'Q3 planning notes', id: 'doc-18' }], total: 1 },
-  endedAt: '2026-03-02T10:00:01.400Z',
+  state: fixture.data.state as AiToolCallPart['state'],
+  output: fixture.data.output,
+  endedAt: fixture.data.endedAt,
 };
 
 const STATES: AiToolCallPart[] = [

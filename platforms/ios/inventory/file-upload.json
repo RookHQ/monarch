@@ -1,0 +1,196 @@
+{
+  "id": "file-upload",
+  "name": "MonarchFileUpload",
+  "title": "FileUpload",
+  "family": "files",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": ".fileImporter(isPresented:allowedContentTypes:allowsMultipleSelection:onCompletion:), PhotosPicker(selection:maxSelectionCount:matching:) and .dropDestination(for:action:isTargeted:) with a Transferable FileRepresentation",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "An area for adding files through the system document picker, the system photo picker and drag and drop, with checks of type, size and count that explain every refusal.",
+  "whenToUse": "Wherever people attach files that the app then uploads: attachments on a form, documents for a record, an avatar.",
+  "whenNotToUse": "Not for showing upload progress (use MonarchUploadQueue), not for files already attached (use MonarchFileList or MonarchAttachmentChip), and not when the app only needs a photo with no checks (use PhotosPicker directly).",
+  "api": [
+    "init(allowedContentTypes: [UTType] = [.item], maxSize: Int64? = nil, maxFiles: Int? = nil, currentCount: Int = 0, hint: String? = nil, systemImage: String? = nil, variant: MonarchFileUploadVariant = .zone, allowsMultipleSelection: Bool? = nil, allowsPhotos: Bool = false, showsErrors: Bool = true, isInvalid: Bool = false, labels: MonarchFileUploadLabels = MonarchFileUploadLabels(), validate: (@Sendable (MonarchFileUploadFile) -> String?)? = nil, onFiles: @escaping @MainActor ([MonarchFileUploadFile], [MonarchFileUploadRejection]) -> Void)",
+    "nonisolated static func validate(_ files: [MonarchFileUploadFile], allowedContentTypes: [UTType] = [.item], maxSize: Int64? = nil, maxFiles: Int? = nil, currentCount: Int = 0, labels: MonarchFileUploadLabels = MonarchFileUploadLabels(), locale: Locale = .autoupdatingCurrent, validate: (@Sendable (MonarchFileUploadFile) -> String?)? = nil) -> (accepted: [MonarchFileUploadFile], rejected: [MonarchFileUploadRejection])",
+    "struct MonarchFileUploadFile: Hashable, Sendable { let url: URL; let name: String; let size: Int64?; let contentType: UTType?; init(url: URL, name: String, size: Int64? = nil, contentType: UTType? = nil); init(url: URL) }",
+    "struct MonarchFileUploadRejection: Hashable, Sendable { let file: MonarchFileUploadFile; let reason: MonarchFileUploadRejectionReason; let message: String }",
+    "enum MonarchFileUploadRejectionReason { case invalidType, tooLarge, tooMany, custom }",
+    "enum MonarchFileUploadVariant { case zone, compact }",
+    "struct MonarchFileUploadLabels { init(title: String? = nil, browse: String? = nil, photos: String? = nil, dropHere: String? = nil, invalidType: (@Sendable (String) -> String)? = nil, tooLarge: (@Sendable (String, String) -> String)? = nil, tooMany: (@Sendable (String, Int) -> String)? = nil, limits: (@Sendable (String?, Int?) -> String)? = nil, limitReached: (@Sendable (Int) -> String)? = nil, added: (@Sendable (Int) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "allowedContentTypes",
+      "type": "[UTType]",
+      "default": "[.item]",
+      "description": "The accepted types, matched by conformance (.image accepts PNG and HEIC). The document picker shows only these."
+    },
+    {
+      "name": "maxSize",
+      "type": "Int64?",
+      "default": "nil",
+      "description": "The largest size of one file, in bytes."
+    },
+    {
+      "name": "maxFiles",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The most files in total, counting currentCount. Extra files are refused in order, keeping the first valid ones."
+    },
+    {
+      "name": "currentCount",
+      "type": "Int",
+      "default": "0",
+      "description": "Files already attached. When it reaches maxFiles the buttons are disabled and the hint says the limit is reached."
+    },
+    {
+      "name": "hint",
+      "type": "String?",
+      "default": "nil",
+      "description": "Text under the title. By default it is made from the limits, such as \"Up to 10 MB each · 5 files max\"."
+    },
+    {
+      "name": "systemImage",
+      "type": "String?",
+      "default": "nil",
+      "description": "A decorative SF Symbol at the start. Default square.and.arrow.up."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchFileUploadVariant",
+      "default": ".zone",
+      "description": "zone: a dashed bordered area with the parts stacked and centred. compact: one row; stacked at the accessibility text sizes."
+    },
+    {
+      "name": "allowsMultipleSelection",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Whether several files can be chosen at once. By default yes, unless maxFiles is 1."
+    },
+    {
+      "name": "allowsPhotos",
+      "type": "Bool",
+      "default": "false",
+      "description": "Adds \"Choose photos\", which opens PhotosPicker for the images and videos the allowed types accept."
+    },
+    {
+      "name": "showsErrors",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the refusals in a danger MonarchInlineNotice under the area. Turn off to show them yourself."
+    },
+    {
+      "name": "isInvalid",
+      "type": "Bool",
+      "default": "false",
+      "description": "Draws the danger border, for example when a required file is missing."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchFileUploadLabels",
+      "default": "MonarchFileUploadLabels()",
+      "description": "Replacements for every built-in text and message."
+    },
+    {
+      "name": "validate",
+      "type": "(@Sendable (MonarchFileUploadFile) -> String?)?",
+      "default": "nil",
+      "description": "An extra check after type and size. Return a message to refuse the file."
+    },
+    {
+      "name": "onFiles",
+      "type": "@MainActor ([MonarchFileUploadFile], [MonarchFileUploadRejection]) -> Void",
+      "default": "required",
+      "description": "Receives the accepted and refused files of every pick or drop. The app uploads the accepted files."
+    }
+  ],
+  "states": [
+    {
+      "name": "rest",
+      "description": "Surface fill with the input border; the zone's border is dashed."
+    },
+    {
+      "name": "drag over",
+      "description": "While files are dragged over it (iPad, Mac): the accent subtle fill and accent border, and the title says \"Drop to upload\"."
+    },
+    {
+      "name": "refused files",
+      "description": "The danger border and a danger notice listing each refusal; announced."
+    },
+    {
+      "name": "limit reached",
+      "description": "currentCount reached maxFiles: the disabled roles, disabled buttons and \"Limit reached: 5 files attached.\""
+    },
+    {
+      "name": "loading photos",
+      "description": "The photo button shows a progress indicator while the chosen photos are copied."
+    },
+    {
+      "name": "invalid",
+      "description": "isInvalid: the danger border."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true): the disabled roles, and picking and dropping do nothing."
+    }
+  ],
+  "appearance": "A container-radius area on the surface fill with an input-coloured border (dashed for the zone), a muted icon, the title in the label style and the hint in the muted caption style; buttons are MonarchButtonStyle secondary small. Drag over uses the accent subtle and accent border roles, errors the danger roles. Every colour is a theme role, so dark and high-contrast themes follow.",
+  "platformNotes": "The web input's accept string becomes UTType values, matched by conformance. The browse button opens the system document picker (.fileImporter); its URLs are security-scoped, so the app calls startAccessingSecurityScopedResource() before reading. Photos and dropped files are copied to the temporary directory, because the system removes its copy when the import ends; the app deletes them after uploading. Dropping is available where the system supports drag and drop (iPad, Mac); on iPhone the buttons are the way in. The web's paste option and capture attribute have no direct equivalent: use MonarchFileUpload.validate for files the app gets from the pasteboard or the camera. The web greys out a drag of the wrong type before the drop; on iOS the type is known only after the drop, so the refusal comes then.",
+  "accessibility": [
+    "\"Browse files\" and \"Choose photos\" are standard buttons with 44-point touch targets; they are the way in for VoiceOver and Switch Control.",
+    "The title and the hint are read as one element; the icon is decorative.",
+    "After a pick or drop, the number of files added and every refusal are announced.",
+    "Refusals are shown with a danger icon and text, not colour alone."
+  ],
+  "edgeCases": [
+    "A file of unknown type is accepted only when any data is allowed; its type falls back to its extension first.",
+    "A file of unknown size passes the size check.",
+    "With single selection, extra dropped files are refused as \"up to 1 file\".",
+    "The refusals shown are those of the latest pick; a new pick replaces them.",
+    "A photo that cannot be loaded is skipped."
+  ],
+  "tests": [
+    "MonarchFileUploadTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "With an upload queue",
+      "fixture": "file-upload",
+      "webExample": "With an upload queue",
+      "template": "MonarchFileUpload(\n    allowedContentTypes: [.image, .pdf],\n    maxSize: {{maxSize}},\n    maxFiles: {{maxFiles}},\n    currentCount: attached.count,\n    hint: {{hint}},\n    labels: MonarchFileUploadLabels(title: {{title}}, browse: {{browse}})\n) { accepted, _ in\n    attached.append(contentsOf: accepted)\n}",
+      "setupTemplate": "@State private var attached: [MonarchFileUploadFile] = []",
+      "setup": "@State private var attached: [MonarchFileUploadFile] = []",
+      "code": "MonarchFileUpload(\n    allowedContentTypes: [.image, .pdf],\n    maxSize: 10_485_760,\n    maxFiles: 5,\n    currentCount: attached.count,\n    hint: \"Images or PDF, up to 10 MB each, 5 files max\",\n    labels: MonarchFileUploadLabels(title: \"Drag and drop files here\", browse: \"Browse files\")\n) { accepted, _ in\n    attached.append(contentsOf: accepted)\n}"
+    },
+    {
+      "title": "A compact row with an extra check",
+      "imports": [
+        "UniformTypeIdentifiers"
+      ],
+      "code": "MonarchFileUpload(\n    allowedContentTypes: [UTType.commaSeparatedText],\n    variant: .compact,\n    validate: { file in file.name.hasPrefix(\"~\") ? \"\\(file.name) is a temporary file.\" : nil },\n    onFiles: { _, _ in }\n)"
+    }
+  ],
+  "webEquivalent": "FileUpload",
+  "dependsOn": [
+    "button",
+    "upload-queue",
+    "inline-notice"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "accept"
+      ],
+      "reason": "iOS names the accepted types as UTType values (.image, .pdf), not MIME patterns; the types are the same as the web's image/* and application/pdf.",
+      "convention": "Apple UniformTypeIdentifiers: file pickers filter by UTType."
+    }
+  ]
+}

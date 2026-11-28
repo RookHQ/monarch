@@ -1,8 +1,17 @@
-import { PageHeader } from '@rookcom/monarch-react';
+import { Link, PageHeader } from '@rookcom/monarch-react';
 import { AppShell, IdentityBar } from '@rookcom/monarch-react/shell';
 import { RookRail } from '@rookcom/monarch-react/rook';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './app-shell.fixture.json';
 import { AppMark, CalendarIcon, HomeIcon, InboxIcon } from '../../../internal/docs-demo.js';
+
+const CONVERSATIONS = fixture.data.conversations;
+const [home, inbox, calendar] = fixture.data.nav as unknown as readonly [
+  { key: string; label: string },
+  { key: string; label: string; badge: number },
+  { key: string; label: string },
+];
 
 function Demo() {
   return (
@@ -27,28 +36,42 @@ function Demo() {
             style={{ height: '100%' }}
             persist={false}
             messages={{ nav: 'Main (app shell example)' }}
-            brand={{ label: 'Acme Desk home', href: '#home', icon: <AppMark /> }}
-            currentPath="/inbox"
+            brand={{ label: `${fixture.data.product} home`, href: '#home', icon: <AppMark /> }}
+            currentPath={`/${fixture.data.current}`}
             sections={[
               {
                 key: 'main',
                 items: [
-                  { key: 'home', label: 'Home', icon: <HomeIcon />, href: '/home' },
-                  { key: 'inbox', label: 'Inbox', icon: <InboxIcon />, href: '/inbox', badge: 12 },
-                  { key: 'calendar', label: 'Calendar', icon: <CalendarIcon />, href: '/calendar' },
+                  { key: home.key, label: home.label, icon: <HomeIcon />, href: `/${home.key}` },
+                  {
+                    key: inbox.key,
+                    label: inbox.label,
+                    icon: <InboxIcon />,
+                    href: `/${inbox.key}`,
+                    badge: inbox.badge,
+                  },
+                  {
+                    key: calendar.key,
+                    label: calendar.label,
+                    icon: <CalendarIcon />,
+                    href: `/${calendar.key}`,
+                  },
                 ],
               },
             ]}
-            account={{ name: 'Ada Lovelace', onSignOut: () => {} }}
+            account={{ name: fixture.data.account.name, onSignOut: () => {} }}
           />
         }
-        header={<IdentityBar product={{ name: 'Acme Desk' }} />}
+        header={<IdentityBar product={{ name: fixture.data.product }} />}
       >
         <div style={{ padding: 'var(--mn-space-6)' }}>
-          <PageHeader title="Inbox" description="12 open conversations" />
-          {Array.from({ length: 12 }, (_, i) => (
-            <p key={i}>
-              <a href={`#conversation-${i + 1}`}>Conversation {i + 1}</a>
+          <PageHeader
+            title={fixture.data.header.title}
+            description={fixture.data.header.description}
+          />
+          {CONVERSATIONS.map((subject, i) => (
+            <p key={subject}>
+              <Link href={`#conversation-${i + 1}`}>{subject}</Link>
             </p>
           ))}
         </div>

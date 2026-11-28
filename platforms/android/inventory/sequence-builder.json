@@ -1,0 +1,102 @@
+{
+  "id": "sequence-builder",
+  "name": null,
+  "title": "SequenceBuilder",
+  "family": "workflow",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchReorderableList (androidx.compose.foundation.lazy.LazyColumn) of MonarchCard rows, each opening an MonarchBottomSheet with MonarchDurationInput, MonarchSelect, MonarchTextField and a preview",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a multi-step message sequence as reorderable step rows, each edited in a sheet with its wait, channel, subject, message with variables, and a preview with sample data.",
+  "whenToUse": "For outreach, onboarding or follow-up sequences: wait, send, wait, send, across channels, with personalised variables.",
+  "whenNotToUse": "For a single message, use a form with MonarchTextField. For rules that react to events, use MonarchConditionEditor and MonarchActionEditor.",
+  "api": [
+    "MonarchReorderableList(items = steps, key = { it.id }, itemLabel = { … }, onReorder = { from, to -> … }, moveButtons = true) { step, state -> MonarchCard(onClick = { editing = step.id }) { … } }",
+    "MonarchBottomSheet(onDismissRequest = { editing = null }) { … }",
+    "MonarchDurationInput(minutes = step.waitMinutes, onMinutesChange = { … }, label = \"Wait before sending\", largestUnit = MonarchDurationInputUnit.Days)",
+    "MonarchTextField(value = step.body, onValueChange = { … }, label = \"Message\", singleLine = false)"
+  ],
+  "options": [
+    {
+      "name": "steps",
+      "type": "List of the app's step type",
+      "default": "required",
+      "description": "Each step's id, channel, wait in minutes after the previous step, subject and message, in the app's state."
+    },
+    {
+      "name": "channels",
+      "type": "List<MonarchSelectOption<String>>",
+      "default": "emptyList()",
+      "description": "The channels a step can use, in a MonarchSelect; the subject shows for channels that have one, such as email."
+    },
+    {
+      "name": "sample",
+      "type": "Map<String, String>",
+      "default": "emptyMap()",
+      "description": "Sample values of the {{variables}}, used by the preview."
+    }
+  ],
+  "states": [
+    {
+      "name": "list",
+      "description": "One card per step with its number, channel, when it is sent and the start of its subject or message; drag handles and move buttons reorder."
+    },
+    {
+      "name": "editing",
+      "description": "A bottom sheet with the wait, the channel, the subject, the message with its variables hint, the preview and Done."
+    },
+    {
+      "name": "empty",
+      "description": "Only Add step; the app may add a MonarchEmptyState."
+    }
+  ],
+  "appearance": "Steps are MonarchCards in a reorderable list with drag handles; the sheet uses the Material 3 sheet surface with Monarch fields. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web's SequenceBuilder is one component with every step's fields open in a long list, inline variable buttons and a details preview. On Android it is a recipe in the list-and-detail pattern: steps are reorderable rows (drag or move buttons, from MonarchReorderableList) and each step is edited in a bottom sheet, because a stack of open editors does not fit a phone. Variables are typed in the message with a hint instead of insert buttons; the preview replaces {{token}} with sample values. Validation (subject, message, length, unknown variables) is the app's, shown as each field's errorText. MonarchReorderableList is lazy, so give it a bounded height or make it the screen's scrolling list. iOS has the same plan: a recipe.",
+  "accessibility": [
+    "MonarchReorderableList gives each row a drag handle with TalkBack actions and announces moves; with moveButtons each row also has Move up and Move down.",
+    "Each step card is one button that opens its sheet; the sheet's fields have visible labels.",
+    "The preview is plain text, read after its heading."
+  ],
+  "edgeCases": [
+    "The first step's wait is from the start of the sequence.",
+    "Unknown {{variables}} stay as written in the preview, so they are easy to spot.",
+    "Keep step ids stable so a reorder keeps each step's state."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Two-step outreach",
+      "fixture": "sequence-builder",
+      "webExample": "Two-step outreach",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    steps.forEachIndexed { index, step ->\n        val channel = channelOf(step.channel)\n        val update = { changed: Step -> steps = steps.map { if (it.id == changed.id) changed else it } }\n        MonarchCard {\n            Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n                Row(verticalAlignment = Alignment.CenterVertically) {\n                    Column(modifier = Modifier.weight(1f)) {\n                        MonarchText(\n                            text = \"Step ${index + 1}, ${channel.label}\",\n                            style = MonarchTextStyle.Subheading,\n                            modifier = Modifier.semantics { heading() },\n                        )\n                        MonarchText(text = whenSent(step.waitMinutes), style = MonarchTextStyle.Caption)\n                    }\n                    MonarchIconButton(label = \"Remove step ${index + 1}\", onClick = { steps = steps.filterNot { it.id == step.id } }) {\n                        MonarchIcon(SampleIcons.Close, contentDescription = null)\n                    }\n                    MonarchIconButton(\n                        label = \"Move step ${index + 1} up\",\n                        onClick = { steps = steps.toMutableList().also { java.util.Collections.swap(it, index, index - 1) } },\n                        enabled = index > 0,\n                    ) { MonarchIcon(SampleIcons.ChevronUp, contentDescription = null) }\n                    MonarchIconButton(\n                        label = \"Move step ${index + 1} down\",\n                        onClick = { steps = steps.toMutableList().also { java.util.Collections.swap(it, index, index + 1) } },\n                        enabled = index < steps.size - 1,\n                    ) { MonarchIcon(SampleIcons.ChevronDown, contentDescription = null) }\n                }\n                MonarchDurationInput(\n                    minutes = step.waitMinutes,\n                    onMinutesChange = { update(Step(step.id, step.channel, it, step.subject, step.body)) },\n                    label = \"Wait before sending\",\n                    helperText = \"For example 2d, 4h or 30m.\",\n                    largestUnit = MonarchDurationInputUnit.Days,\n                )\n                if (channel.hasSubject) {\n                    MonarchTextField(\n                        value = step.subject,\n                        onValueChange = { update(Step(step.id, step.channel, step.waitMinutes, it, step.body)) },\n                        label = \"Subject\",\n                        required = true,\n                    )\n                }\n                MonarchTextField(\n                    value = step.body,\n                    onValueChange = { update(Step(step.id, step.channel, step.waitMinutes, step.subject, it)) },\n                    label = \"Message\",\n                    required = true,\n                    singleLine = false,\n                    minLines = 3,\n                )\n                channel.maxLength?.let {\n                    MonarchText(text = \"${step.body.length} / $it\", style = MonarchTextStyle.Caption)\n                }\n                MonarchText(text = \"Insert a variable\", style = MonarchTextStyle.Caption)\n                FlowRow(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                    variables.forEach { variable ->\n                        MonarchButton(\n                            text = variable.label,\n                            onClick = { update(Step(step.id, step.channel, step.waitMinutes, step.subject, step.body + \"{{\" + variable.token + \"}}\")) },\n                            variant = MonarchButtonVariant.Secondary,\n                            size = MonarchButtonSize.Sm,\n                        )\n                    }\n                }\n                MonarchCollapsible(\n                    expanded = step.id in previews,\n                    onExpandedChange = { open -> previews = if (open) previews + step.id else previews - step.id },\n                    label = \"Preview with sample data\",\n                ) {\n                    if (channel.hasSubject) {\n                        MonarchText(text = render(step.subject), style = MonarchTextStyle.BodyStrong)\n                    }\n                    MonarchText(text = render(step.body))\n                }\n            }\n        }\n    }\n    FlowRow(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n        channels.forEach { option ->\n            MonarchButton(\n                text = \"Add ${option.label} step\",\n                leadingIcon = { MonarchIcon(SampleIcons.Plus, null) },\n                onClick = { steps = steps + Step((steps.size + 1).toString(), option.key, 1_440, \"\", \"\") },\n                variant = MonarchButtonVariant.Secondary,\n                size = MonarchButtonSize.Sm,\n            )\n        }\n    }\n}",
+      "setupTemplate": "class Step(val id: String, val channel: String, val waitMinutes: Int?, val subject: String, val body: String)\nclass Channel(val key: String, val label: String, val hasSubject: Boolean, val maxLength: Int?)\nclass Variable(val token: String, val label: String, val sample: String)\nval channels = listOf(\n    Channel({{channels.0.value}}, {{channels.0.label}}, hasSubject = {{channels.0.hasSubject}}, maxLength = null),\n    Channel({{channels.1.value}}, {{channels.1.label}}, hasSubject = false, maxLength = {{channels.1.maxLength}}),\n)\nval variables = listOf(\n    Variable({{variables.0.token}}, {{variables.0.label}}, {{variables.0.sample}}),\n    Variable({{variables.1.token}}, {{variables.1.label}}, {{variables.1.sample}}),\n    Variable({{variables.2.token}}, {{variables.2.label}}, {{variables.2.sample}}),\n)\nfun channelOf(key: String) = channels.firstOrNull { it.key == key } ?: channels.first()\nfun render(text: String) = variables.fold(text) { acc, v -> acc.replace(\"{{\" + v.token + \"}}\", v.sample) }\nfun whenSent(minutes: Int?): String = when {\n    (minutes ?: 0) == 0 -> \"Sent straight away\"\n    minutes!! % 1_440 == 0 -> \"Sent ${minutes / 1_440}d after the previous step\"\n    minutes % 60 == 0 -> \"Sent ${minutes / 60}h after the previous step\"\n    else -> \"Sent ${minutes}m after the previous step\"\n}\nvar steps by remember {\n    mutableStateOf(\n        listOf(\n            Step(\"1\", {{steps.0.channel}}, {{steps.0.delayMinutes}}, {{steps.0.subject}}, {{steps.0.body}}),\n            Step(\"2\", {{steps.1.channel}}, {{steps.1.delayMinutes}}, \"\", {{steps.1.body}}),\n        ),\n    )\n}\nvar previews by remember { mutableStateOf(emptySet<String>()) }",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.foundation.layout.FlowRow",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.ui.semantics.heading",
+        "androidx.compose.ui.semantics.semantics",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.foundation.layout.Column"
+      ],
+      "setup": "class Step(val id: String, val channel: String, val waitMinutes: Int?, val subject: String, val body: String)\nclass Channel(val key: String, val label: String, val hasSubject: Boolean, val maxLength: Int?)\nclass Variable(val token: String, val label: String, val sample: String)\nval channels = listOf(\n    Channel(\"email\", \"Email\", hasSubject = true, maxLength = null),\n    Channel(\"chat\", \"Chat message\", hasSubject = false, maxLength = 1000),\n)\nval variables = listOf(\n    Variable(\"firstName\", \"First name\", \"Sam\"),\n    Variable(\"product.name\", \"Product name\", \"Atlas\"),\n    Variable(\"product.url\", \"Product link\", \"https://example.com\"),\n)\nfun channelOf(key: String) = channels.firstOrNull { it.key == key } ?: channels.first()\nfun render(text: String) = variables.fold(text) { acc, v -> acc.replace(\"{{\" + v.token + \"}}\", v.sample) }\nfun whenSent(minutes: Int?): String = when {\n    (minutes ?: 0) == 0 -> \"Sent straight away\"\n    minutes!! % 1_440 == 0 -> \"Sent ${minutes / 1_440}d after the previous step\"\n    minutes % 60 == 0 -> \"Sent ${minutes / 60}h after the previous step\"\n    else -> \"Sent ${minutes}m after the previous step\"\n}\nvar steps by remember {\n    mutableStateOf(\n        listOf(\n            Step(\"1\", \"email\", 0, \"A quick intro to {{product.name}}\", \"Hi {{firstName}},\\n\\nHere is {{product.name}}: {{product.url}}.\\n\\nWorth a short look?\"),\n            Step(\"2\", \"chat\", 2880, \"\", \"Hi {{firstName}}, a gentle nudge about {{product.name}}.\"),\n        ),\n    )\n}\nvar previews by remember { mutableStateOf(emptySet<String>()) }",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    steps.forEachIndexed { index, step ->\n        val channel = channelOf(step.channel)\n        val update = { changed: Step -> steps = steps.map { if (it.id == changed.id) changed else it } }\n        MonarchCard {\n            Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n                Row(verticalAlignment = Alignment.CenterVertically) {\n                    Column(modifier = Modifier.weight(1f)) {\n                        MonarchText(\n                            text = \"Step ${index + 1}, ${channel.label}\",\n                            style = MonarchTextStyle.Subheading,\n                            modifier = Modifier.semantics { heading() },\n                        )\n                        MonarchText(text = whenSent(step.waitMinutes), style = MonarchTextStyle.Caption)\n                    }\n                    MonarchIconButton(label = \"Remove step ${index + 1}\", onClick = { steps = steps.filterNot { it.id == step.id } }) {\n                        MonarchIcon(SampleIcons.Close, contentDescription = null)\n                    }\n                    MonarchIconButton(\n                        label = \"Move step ${index + 1} up\",\n                        onClick = { steps = steps.toMutableList().also { java.util.Collections.swap(it, index, index - 1) } },\n                        enabled = index > 0,\n                    ) { MonarchIcon(SampleIcons.ChevronUp, contentDescription = null) }\n                    MonarchIconButton(\n                        label = \"Move step ${index + 1} down\",\n                        onClick = { steps = steps.toMutableList().also { java.util.Collections.swap(it, index, index + 1) } },\n                        enabled = index < steps.size - 1,\n                    ) { MonarchIcon(SampleIcons.ChevronDown, contentDescription = null) }\n                }\n                MonarchDurationInput(\n                    minutes = step.waitMinutes,\n                    onMinutesChange = { update(Step(step.id, step.channel, it, step.subject, step.body)) },\n                    label = \"Wait before sending\",\n                    helperText = \"For example 2d, 4h or 30m.\",\n                    largestUnit = MonarchDurationInputUnit.Days,\n                )\n                if (channel.hasSubject) {\n                    MonarchTextField(\n                        value = step.subject,\n                        onValueChange = { update(Step(step.id, step.channel, step.waitMinutes, it, step.body)) },\n                        label = \"Subject\",\n                        required = true,\n                    )\n                }\n                MonarchTextField(\n                    value = step.body,\n                    onValueChange = { update(Step(step.id, step.channel, step.waitMinutes, step.subject, it)) },\n                    label = \"Message\",\n                    required = true,\n                    singleLine = false,\n                    minLines = 3,\n                )\n                channel.maxLength?.let {\n                    MonarchText(text = \"${step.body.length} / $it\", style = MonarchTextStyle.Caption)\n                }\n                MonarchText(text = \"Insert a variable\", style = MonarchTextStyle.Caption)\n                FlowRow(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n                    variables.forEach { variable ->\n                        MonarchButton(\n                            text = variable.label,\n                            onClick = { update(Step(step.id, step.channel, step.waitMinutes, step.subject, step.body + \"{{\" + variable.token + \"}}\")) },\n                            variant = MonarchButtonVariant.Secondary,\n                            size = MonarchButtonSize.Sm,\n                        )\n                    }\n                }\n                MonarchCollapsible(\n                    expanded = step.id in previews,\n                    onExpandedChange = { open -> previews = if (open) previews + step.id else previews - step.id },\n                    label = \"Preview with sample data\",\n                ) {\n                    if (channel.hasSubject) {\n                        MonarchText(text = render(step.subject), style = MonarchTextStyle.BodyStrong)\n                    }\n                    MonarchText(text = render(step.body))\n                }\n            }\n        }\n    }\n    FlowRow(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n        channels.forEach { option ->\n            MonarchButton(\n                text = \"Add ${option.label} step\",\n                leadingIcon = { MonarchIcon(SampleIcons.Plus, null) },\n                onClick = { steps = steps + Step((steps.size + 1).toString(), option.key, 1_440, \"\", \"\") },\n                variant = MonarchButtonVariant.Secondary,\n                size = MonarchButtonSize.Sm,\n            )\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "SequenceBuilder",
+  "dependsOn": [
+    "reorderable-list",
+    "duration-input",
+    "select",
+    "text-field",
+    "card"
+  ]
+}

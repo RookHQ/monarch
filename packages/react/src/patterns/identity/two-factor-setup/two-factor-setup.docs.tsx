@@ -1,6 +1,8 @@
 import { Button } from '@rookcom/monarch-react';
 import { TwoFactorSetup } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './two-factor-setup.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
@@ -43,14 +45,15 @@ function DemoQr() {
 function Setup() {
   return (
     <TwoFactorSetup
-      trigger={<Button variant="primary">Turn on two-step verification</Button>}
-      secret="JBSWY3DPEHPK3PXPJBSWY3DP"
+      trigger={<Button variant="primary">{fixture.data.trigger}</Button>}
+      defaultOpen
+      secret={fixture.data.secret}
       qrCode={<DemoQr />}
-      accountName="sam@example.com"
+      accountName={fixture.data.accountName}
       onVerify={async (code) => {
         await wait(700);
         if (code === '000000') throw new Error('That code didn’t work. Try the newest code.');
-        return ['k7f2-9qd4', 'm3x8-2hp6', 'r5c1-8vt3', 'w9n4-6bz2', 'a2j7-4ls9', 'e6y3-1gu5'];
+        return fixture.data.recoveryCodes;
       }}
     />
   );
@@ -176,7 +179,13 @@ export default {
       ],
     },
     examples: {
-      items: [{ title: 'Full setup (enter 000000 to see a wrong code)', render: () => <Setup /> }],
+      items: [
+        {
+          title: 'Full setup (enter 000000 to see a wrong code)',
+          stage: { align: 'center' },
+          render: () => <Setup />,
+        },
+      ],
     },
     doDont: {
       do: [

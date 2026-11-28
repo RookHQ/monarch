@@ -1,0 +1,157 @@
+{
+  "id": "ai-agent-run-timeline",
+  "name": "MonarchAiAgentRunTimeline",
+  "title": "AiAgentRunTimeline",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of clickable event rows with bars drawn on androidx.compose.foundation.Canvas, androidx.compose.material3.SingleChoiceSegmentedButtonRow for the view, and a table in Modifier.horizontalScroll; MonarchBadge, MonarchTabularNumber and MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The trace of one agent run: every model call, tool call and hand-off as a bar on a shared time axis, totals for time, tokens and cost, and details that open per event, with a table view of the same data.",
+  "whenToUse": "In a developer or operator view of an agent: to see where a run spent its time, tokens and money, and to jump from an event to the conversation part it produced.",
+  "whenNotToUse": "For the steps an assistant shows the person while it works, use MonarchAiChainOfSteps. For usage over a period, use MonarchAiUsageMeter or a chart.",
+  "api": [
+    "@Composable public fun MonarchAiAgentRunTimeline(events: List<MonarchAiRunEvent>, modifier: Modifier = Modifier, currency: String = \"USD\", now: Long? = null, mode: MonarchAiAgentRunTimelineMode? = null, onModeChange: ((MonarchAiAgentRunTimelineMode) -> Unit)? = null, initialMode: MonarchAiAgentRunTimelineMode = MonarchAiAgentRunTimelineMode.Timeline, onOpenPart: ((MonarchAiRunEvent) -> Unit)? = null, labels: MonarchAiAgentRunTimelineLabels = MonarchAiAgentRunTimelineLabels())",
+    "public data class MonarchAiRunEvent(id: String, kind: MonarchAiRunEventKind, name: String, startedAt: Long, endedAt: Long? = null, inputTokens: Long? = null, outputTokens: Long? = null, costMicros: Long? = null, detail: String? = null, partId: String? = null, messageId: String? = null)",
+    "public enum class MonarchAiRunEventKind { Model, Tool, Handoff, Error }",
+    "public enum class MonarchAiAgentRunTimelineMode { Timeline, Table }",
+    "public class MonarchAiAgentRunTimelineLabels(label: String? = null, modeLabel: String? = null, mode: ((MonarchAiAgentRunTimelineMode) -> String)? = null, kind: ((MonarchAiRunEventKind) -> String)? = null, events: String? = null, totalDuration: String? = null, inputTokens: String? = null, outputTokens: String? = null, cost: String? = null, start: String? = null, duration: String? = null, eventColumn: String? = null, kindColumn: String? = null, running: String? = null, empty: String? = null, notAvailable: String? = null, openPart: String? = null, formatDuration: ((Long) -> String)? = null, formatOffset: ((Long) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "events",
+      "type": "List<MonarchAiRunEvent>",
+      "default": "required",
+      "description": "The run's events in any order: kind, name, start and end in epoch milliseconds (end null while running), tokens, cost in micros, a detail text, and the conversation part or message it belongs to."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the trace."
+    },
+    {
+      "name": "currency",
+      "type": "String",
+      "default": "\"USD\"",
+      "description": "The ISO 4217 currency of costMicros. An unknown code is written after the number."
+    },
+    {
+      "name": "now",
+      "type": "Long?",
+      "default": "null",
+      "description": "The end of events that are still running, in epoch milliseconds. Without it they end at the latest known time, so the trace never reads the clock."
+    },
+    {
+      "name": "mode",
+      "type": "MonarchAiAgentRunTimelineMode?",
+      "default": "null",
+      "description": "The view, timeline or table. Without it the component keeps the state."
+    },
+    {
+      "name": "onModeChange",
+      "type": "((MonarchAiAgentRunTimelineMode) -> Unit)?",
+      "default": "null",
+      "description": "Called when the person switches the view; set mode in it when the app holds the state."
+    },
+    {
+      "name": "initialMode",
+      "type": "MonarchAiAgentRunTimelineMode",
+      "default": "MonarchAiAgentRunTimelineMode.Timeline",
+      "description": "The first view when the component keeps the state."
+    },
+    {
+      "name": "onOpenPart",
+      "type": "((MonarchAiRunEvent) -> Unit)?",
+      "default": "null",
+      "description": "Adds \"Show in conversation\" to an open event that has a partId or a messageId."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiAgentRunTimelineLabels",
+      "default": "MonarchAiAgentRunTimelineLabels()",
+      "description": "Replacements for every built-in string, and the duration and offset formats."
+    }
+  ],
+  "states": [
+    {
+      "name": "timeline",
+      "description": "A time axis (start, middle, end), then one row per event with its kind badge, name, duration and bar."
+    },
+    {
+      "name": "open event",
+      "description": "Start offset, duration, the known tokens and cost, the detail in the code style, and Show in conversation."
+    },
+    {
+      "name": "running",
+      "description": "\"Running\" instead of a duration, and a bar that fades into the AI thinking color."
+    },
+    {
+      "name": "error",
+      "description": "The kind badge in the danger tone and a danger bar."
+    },
+    {
+      "name": "table",
+      "description": "Event, kind, start, duration, input and output tokens and, when any event has one, cost; unknown values show \"–\". Scrolls sideways."
+    },
+    {
+      "name": "empty",
+      "description": "\"No events yet\" under the totals."
+    }
+  ],
+  "appearance": "Bars use the AI solid color for model calls, the AI tool color for tools, info solid for hand-offs and danger solid for errors, on a muted track. Totals are strong body text in tabular figures with muted captions. All colors are theme roles, so dark and both high-contrast themes follow.",
+  "platformNotes": "Same parameters as iOS, with Android types: times are epoch milliseconds, counts and costs are Long, and the view is a nullable mode with onModeChange instead of a Binding. Bars are drawn on a Canvas inside each event's row, so the bar, the header and the details form one row for touch and TalkBack. The web draws a moving shimmer on running bars; Android draws a still gradient, so there is nothing to stop when animations are removed. The web's detail is any React node; on Android it is text. The axis shows three ticks instead of five, for phone widths. Costs below one unit keep up to four decimals, so a model call of a fraction of a cent does not read as zero.",
+  "accessibility": [
+    "The trace is a traversal group named \"Agent run\"; the visible heading has the heading role.",
+    "Each total is one element, such as \"Total time, 4.2 s\".",
+    "Each event is one button read as its kind, name and duration, such as \"Tool, search_invoices, 1.6 s\", with an Expanded or Collapsed state and expand and collapse actions; a running event says \"Running\".",
+    "Bars and the axis are hidden, so nothing depends on their color or length.",
+    "Each fact of an open event is its own text; Show in conversation is a button with a 48dp touch target.",
+    "In the table each row is one element with every known value; unknown values are left out of what is read.",
+    "The view switch is a Material 3 segmented button row named \"View\"."
+  ],
+  "edgeCases": [
+    "Events are sorted by start; equal starts keep their order.",
+    "An event that ends before it starts is drawn with no length.",
+    "An instant event keeps a 2dp bar.",
+    "Long names wrap in the timeline and widen the table, which scrolls."
+  ],
+  "tests": [
+    "MonarchAiAgentRunTimelineTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "A finished run",
+      "fixture": "ai-agent-run-timeline",
+      "webExample": "A finished run",
+      "template": "CompositionLocalProvider(LocalConfiguration provides locale) {\n    MonarchAiAgentRunTimeline(\n        events = listOf(\n        MonarchAiRunEvent(\n            id = {{events.0.id}},\n            kind = MonarchAiRunEventKind.{{events.0.kind|pascal}},\n            name = {{events.0.name}},\n            startedAt = {{events.0.startedAt|millis}},\n            endedAt = {{events.0.endedAt|millis}},\n            inputTokens = {{events.0.inputTokens}},\n            outputTokens = {{events.0.outputTokens}},\n            costMicros = {{events.0.costMicros}},\n        ),\n        MonarchAiRunEvent(\n            id = {{events.1.id}},\n            kind = MonarchAiRunEventKind.{{events.1.kind|pascal}},\n            name = {{events.1.name}},\n            startedAt = {{events.1.startedAt|millis}},\n            endedAt = {{events.1.endedAt|millis}},\n            detail = {{events.1.detail}},\n        ),\n        MonarchAiRunEvent(\n            id = {{events.2.id}},\n            kind = MonarchAiRunEventKind.{{events.2.kind|pascal}},\n            name = {{events.2.name}},\n            startedAt = {{events.2.startedAt|millis}},\n            endedAt = {{events.2.endedAt|millis}},\n        ),\n        MonarchAiRunEvent(\n            id = {{events.3.id}},\n            kind = MonarchAiRunEventKind.{{events.3.kind|pascal}},\n            name = {{events.3.name}},\n            startedAt = {{events.3.startedAt|millis}},\n            endedAt = {{events.3.endedAt|millis}},\n            inputTokens = {{events.3.inputTokens}},\n            outputTokens = {{events.3.outputTokens}},\n            costMicros = {{events.3.costMicros}},\n        ),\n        ),\n        currency = {{currency}},\n        labels = MonarchAiAgentRunTimelineLabels(label = {{title}}),\n    )\n}",
+      "setupTemplate": "val configuration = LocalConfiguration.current\nval locale = remember(configuration) {\n    Configuration(configuration).apply { setLocale(Locale.forLanguageTag({{locale}})) }\n}",
+      "imports": [
+        "android.content.res.Configuration",
+        "androidx.compose.ui.platform.LocalConfiguration",
+        "java.util.Locale"
+      ],
+      "setup": "val configuration = LocalConfiguration.current\nval locale = remember(configuration) {\n    Configuration(configuration).apply { setLocale(Locale.forLanguageTag(\"en-GB\")) }\n}",
+      "code": "CompositionLocalProvider(LocalConfiguration provides locale) {\n    MonarchAiAgentRunTimeline(\n        events = listOf(\n        MonarchAiRunEvent(\n            id = \"1\",\n            kind = MonarchAiRunEventKind.Model,\n            name = \"Plan the answer\",\n            startedAt = 1_767_268_800_000L,\n            endedAt = 1_767_268_801_400L,\n            inputTokens = 1850,\n            outputTokens = 240,\n            costMicros = 3100,\n        ),\n        MonarchAiRunEvent(\n            id = \"2\",\n            kind = MonarchAiRunEventKind.Tool,\n            name = \"search_records\",\n            startedAt = 1_767_268_801_400L,\n            endedAt = 1_767_268_802_600L,\n            detail = \"query: \\\"renewals this quarter\\\" · 14 results\",\n        ),\n        MonarchAiRunEvent(\n            id = \"3\",\n            kind = MonarchAiRunEventKind.Handoff,\n            name = \"To the analysis agent\",\n            startedAt = 1_767_268_802_600L,\n            endedAt = 1_767_268_802_700L,\n        ),\n        MonarchAiRunEvent(\n            id = \"4\",\n            kind = MonarchAiRunEventKind.Model,\n            name = \"Write the summary\",\n            startedAt = 1_767_268_802_700L,\n            endedAt = 1_767_268_806_100L,\n            inputTokens = 4200,\n            outputTokens = 910,\n            costMicros = 9800,\n        ),\n        ),\n        currency = \"EUR\",\n        labels = MonarchAiAgentRunTimelineLabels(label = \"Agent run\"),\n    )\n}"
+    },
+    {
+      "title": "The table, with the view held by the app",
+      "setup": "var mode by rememberSaveable { mutableStateOf(MonarchAiAgentRunTimelineMode.Table) }\nval t0 = 1_700_000_000_000L",
+      "code": "MonarchAiAgentRunTimeline(\n    events = listOf(MonarchAiRunEvent(\"1\", MonarchAiRunEventKind.Tool, \"lookup_customer\", t0, t0 + 420)),\n    mode = mode,\n    onModeChange = { mode = it },\n)"
+    }
+  ],
+  "webEquivalent": "AiAgentRunTimeline",
+  "dependsOn": [
+    "ai-chain-of-steps",
+    "tabular-number"
+  ],
+  "icons": {
+    "row.expand": "ChevronRightGlyph"
+  }
+}

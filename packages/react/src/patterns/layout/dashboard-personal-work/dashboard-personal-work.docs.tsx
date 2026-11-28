@@ -1,51 +1,39 @@
 import { useState } from 'react';
-import { Button } from '@rookcom/monarch-react';
+import { Badge, Button, DescriptionItem, DescriptionList, Progress } from '@rookcom/monarch-react';
 import { DashboardPersonalWork, PeriodSelector } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+import { DemoRows } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './dashboard-personal-work.fixture.json';
 
-const NOW = '2026-06-15T10:00:00Z';
-const sampleKpis = [
-  { id: 'k1', label: 'Sample figure A', value: 12 },
-  { id: 'k2', label: 'Sample figure B', value: 4 },
-  { id: 'k3', label: 'Sample figure C', value: 27 },
-];
-const sampleInsights = [
-  {
-    id: 'i1',
-    severity: 'info' as const,
-    origin: 'rule' as const,
-    title: 'Sample insight',
-    why: 'Insights explain why they are shown.',
-  },
-];
-const sampleEvents = [
-  {
-    id: 'e1',
-    actor: { name: 'Person A' },
-    verb: 'updated',
-    object: 'Item 12',
-    time: '2026-06-15T09:40:00Z',
-  },
-  {
-    id: 'e2',
-    actor: { name: 'Person B' },
-    verb: 'created',
-    object: 'Item 13',
-    time: '2026-06-15T08:05:00Z',
-  },
-];
-const sampleTasks = [
-  { id: 't1', title: 'Review item 12' },
-  { id: 't2', title: 'Reply to a request', overdue: true },
-];
+// Priya’s own work on Monday 15 June 2026.
+const NOW = fixture.data.activity.now;
+const sampleKpis = fixture.data.kpis;
+const sampleInsights = fixture.data.insights.map((insight) => ({
+  ...insight,
+  severity: insight.severity as 'info',
+  origin: insight.origin as 'rule',
+}));
+const sampleEvents = fixture.data.activity.events.map((event) => ({
+  id: event.id,
+  actor: { name: event.actor },
+  verb: event.verb,
+  object: event.object,
+  time: event.time,
+}));
+const sampleTasks = fixture.data.today.tasks.map((task) => ({
+  ...task,
+  ...(fixture.data.today.overdue.includes(task.id) && { overdue: true }),
+  ...(fixture.data.today.done.includes(task.id) && { done: true }),
+}));
 
 function ArrangeDemo() {
   const [editing, setEditing] = useState(false);
   const [layout, setLayout] = useState<string[] | undefined>(undefined);
   return (
     <DashboardPersonalWork
-      title="Home"
-      description="Sample workspace"
+      title={fixture.data.title}
+      description={fixture.data.description}
       period={<PeriodSelector defaultValue={{ preset: '7d' }} today="2026-06-15" size="sm" />}
       kpis={sampleKpis}
       insights={sampleInsights}
@@ -56,18 +44,47 @@ function ArrangeDemo() {
           onClick={() => setEditing((v) => !v)}
           aria-pressed={editing}
         >
-          {editing ? 'Done' : 'Arrange'}
+          {editing ? 'Done' : fixture.data.arrange}
         </Button>
       }
       editing={editing}
       layout={layout}
       onLayoutChange={(next: string[]) => setLayout(next)}
-      today={{ today: '2026-06-15', tasks: sampleTasks }}
-      assigned={<p style={{ margin: 0 }}>Your open items by status</p>}
-      dueSoon={<p style={{ margin: 0 }}>Items due this week</p>}
-      progress={<p style={{ margin: 0 }}>Goals you track</p>}
-      announcements={<p style={{ margin: 0 }}>Latest notices</p>}
-      team={<p style={{ margin: 0 }}>Requests waiting for your approval</p>}
+      today={{
+        today: '2026-06-15',
+        tasks: sampleTasks,
+        locale: fixture.data.locale,
+        timeZone: fixture.data.timeZone,
+      }}
+      assigned={
+        <DemoRows
+          rows={fixture.data.assigned.rows.map((row) => ({
+            label: row.label,
+            value: <Badge tone={row.tone as 'info'}>{row.value}</Badge>,
+          }))}
+        />
+      }
+      dueSoon={<DemoRows rows={fixture.data.dueSoon.rows} />}
+      progress={
+        <div style={{ display: 'grid', gap: 'var(--mn-space-4)' }}>
+          {fixture.data.progress.goals.map((goal) => (
+            <div key={goal.label} style={{ display: 'grid', gap: 'var(--mn-space-1-5)' }}>
+              <DemoRows rows={[{ label: goal.label, value: `${goal.value}%` }]} />
+              <Progress label={goal.label} value={goal.value} />
+            </div>
+          ))}
+        </div>
+      }
+      announcements={
+        <DescriptionList columns={1}>
+          {fixture.data.announcements.items.map((item) => (
+            <DescriptionItem key={item.term} term={item.term}>
+              {item.body}
+            </DescriptionItem>
+          ))}
+        </DescriptionList>
+      }
+      team={<DemoRows rows={fixture.data.team.rows} />}
       activity={sampleEvents}
       activityProps={{ now: NOW }}
     />
@@ -97,7 +114,7 @@ export default {
         'Composition, not configuration: every section is a slot or kit component (KPIRow, InsightStrip, Widget, Leaderboard, ActivityWidget, TodayPanel), so apps keep their data fetching.',
         'Every section is optional and fails on its own: a widget’s loading, empty and error states never block the page.',
         'People can rearrange sections (DashboardGrid arrange mode); the template never stores the layout itself.',
-        'Sample figures in docs are placeholders; the template never invents or computes metrics.',
+        'The figures in these examples are demo data; the template never invents or computes metrics.',
       ],
     },
     apiReference: {
@@ -206,7 +223,7 @@ export default {
     examples: {
       items: [
         {
-          title: 'All sections with sample data, arrangeable',
+          title: 'One person’s work, arrangeable',
           stack: true,
           render: () => <ArrangeDemo />,
         },

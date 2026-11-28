@@ -1,5 +1,7 @@
 import { AnnouncementBar } from '@rookcom/monarch-react/marketing';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './announcement-bar.fixture.json';
 
 export default {
   id: 'announcement-bar',
@@ -113,8 +115,8 @@ export default {
         {
           title: 'Release announcement',
           render: () => (
-            <AnnouncementBar action={{ label: 'Read the release notes', href: '#changelog' }}>
-              Version 2 is available.
+            <AnnouncementBar action={{ label: fixture.data.action.label, href: '#changelog' }}>
+              {fixture.data.message}
             </AnnouncementBar>
           ),
         },

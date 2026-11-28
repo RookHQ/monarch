@@ -1,0 +1,119 @@
+{
+  "id": "presence-avatars",
+  "name": "MonarchPresenceAvatars",
+  "title": "PresenceAvatars",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchAvatarGroup (an overlapping HStack) of MonarchAvatar with presence; Button with sheet(isPresented:) and presentationDetents holding a List of everyone",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Who is here now: an overlapping stack of avatars with presence dots and a \"+N\" tile, opening a sheet that lists everyone with their presence and activity.",
+  "whenToUse": "In the header of a shared document, board or call, to show who else is here now and what they are doing.",
+  "whenNotToUse": "Not for a static list of assignees or members; use MonarchAvatarGroup. Not for one person's presence; use MonarchAvatar with a status.",
+  "api": [
+    "init(_ people: [MonarchPresencePerson], maxVisible: Int = 4, size: MonarchAvatarSize = .sm, labels: MonarchPresenceAvatarsLabels = MonarchPresenceAvatarsLabels(), onPersonTap: (@MainActor (MonarchPresencePerson) -> Void)? = nil)",
+    "MonarchPresencePerson.init(id: String, name: String, avatarURL: URL? = nil, seed: String? = nil, status: MonarchPresenceStatus = .online, customStatus: String? = nil, activity: String? = nil)",
+    "MonarchPresenceAvatarsLabels.init(label: (@Sendable (Int) -> String)? = nil, showAll: String? = nil, list: String? = nil, done: String? = nil, status: (@Sendable (String, String?) -> String)? = nil, detail: (@Sendable (String, String?) -> String)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "people",
+      "type": "[MonarchPresencePerson]",
+      "default": "required",
+      "description": "Who is here, the most relevant first."
+    },
+    {
+      "name": "maxVisible",
+      "type": "Int",
+      "default": "4",
+      "description": "Show at most this many avatars, then a \"+N\" tile. With one person more than this, all are shown instead of \"+1\"."
+    },
+    {
+      "name": "size",
+      "type": "MonarchAvatarSize",
+      "default": ".sm",
+      "description": "The size of the avatars in the stack; the presence dot follows it."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchPresenceAvatarsLabels",
+      "default": "MonarchPresenceAvatarsLabels()",
+      "description": "Replacements for the stack's name and hint, the list's title and Done button, and the spoken status and second line of a person."
+    },
+    {
+      "name": "onPersonTap",
+      "type": "(@MainActor (MonarchPresencePerson) -> Void)?",
+      "default": "nil",
+      "description": "Makes the stack open the list even without hidden people, and each person in the list a button; the sheet closes before it runs."
+    }
+  ],
+  "states": [
+    {
+      "name": "all shown",
+      "description": "Every avatar is visible and the stack is not a button; each avatar is read on its own."
+    },
+    {
+      "name": "overflow",
+      "description": "A \"+N\" tile ends the stack and the whole stack is a button that opens the list."
+    },
+    {
+      "name": "tappable",
+      "description": "With onPersonTap the stack opens the list and every row in it is a button."
+    },
+    {
+      "name": "list open",
+      "description": "A sheet at medium height, resizable to large, lists everyone with avatar, presence dot, name, presence and activity, with a Done button."
+    },
+    {
+      "name": "empty",
+      "description": "Nothing is drawn."
+    }
+  ],
+  "appearance": "Avatars with a ring in the surface colour and presence dots in their presence colours; the \"+N\" tile in the muted background with muted text. In the list, names in the default text colour and the second line in the muted text colour, in every theme.",
+  "platformNotes": "The web opens a popover from the \"+N\" button and makes each avatar a button. On iOS overlapping 24-point avatars cannot each be a 44-point touch target, so the whole stack is one button that opens a sheet, and people are tapped in that list. On iPad and Mac the sheet appears as a form sheet. Voice Control accepts the initials shown on an avatar through accessibilityInputLabels, where the web adds them to the button's name.",
+  "accessibility": [
+    "The stack is named \"5 people here\".",
+    "A stack that opens the list is one button whose value names each visible person with their presence and activity, then \"2 more\", with the hint \"Shows everyone here\".",
+    "A stack that does not open the list is a container whose avatars are images named \"Ana Silva, Online, Editing\".",
+    "Presence is always spoken, with the custom status, so it never depends on the dot colour.",
+    "Each row in the list is one element with the same text, at least 44 points high, and a button when onPersonTap is given.",
+    "Voice Control accepts a person's name or the initials shown on their avatar.",
+    "Avatars, dots and text scale with Dynamic Type."
+  ],
+  "edgeCases": [
+    "An empty list of people draws nothing.",
+    "With one person more than maxVisible, every avatar is shown instead of a \"+1\" tile.",
+    "An activity that is empty or white space is left out.",
+    "Long names and activities wrap in the list."
+  ],
+  "tests": [
+    "MonarchPresenceAvatarsTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "In a document header",
+      "fixture": "presence-avatars",
+      "webExample": "In a document header",
+      "template": "MonarchPresenceAvatars(people)",
+      "setupTemplate": "private let people = [\n    MonarchPresencePerson(id: {{people.0.id}}, name: {{people.0.name}}, activity: {{people.0.activity}}),\n    MonarchPresencePerson(id: {{people.1.id}}, name: {{people.1.name}}, activity: {{people.1.activity}}),\n    MonarchPresencePerson(id: {{people.2.id}}, name: {{people.2.name}}, status: Self.status({{people.2.status}})),\n    MonarchPresencePerson(id: {{people.3.id}}, name: {{people.3.name}}, status: Self.status({{people.3.status}}), customStatus: {{people.3.customStatus.emoji}} + \" \" + {{people.3.customStatus.text}}),\n    MonarchPresencePerson(id: {{people.4.id}}, name: {{people.4.name}}, status: Self.status({{people.4.status}})),\n    MonarchPresencePerson(id: {{people.5.id}}, name: {{people.5.name}}),\n    MonarchPresencePerson(id: {{people.6.id}}, name: {{people.6.name}}, status: Self.status({{people.6.status}})),\n]\n\nprivate static func status(_ web: String) -> MonarchPresenceStatus {\n    switch web {\n    case \"away\": .away\n    case \"busy\": .busy\n    case \"dnd\": .doNotDisturb\n    case \"offline\": .offline\n    default: .online\n    }\n}",
+      "setup": "private let people = [\n    MonarchPresencePerson(id: \"u1\", name: \"Priya Raman\", activity: \"Editing\"),\n    MonarchPresencePerson(id: \"u2\", name: \"Tom Becker\", activity: \"Viewing\"),\n    MonarchPresencePerson(id: \"u3\", name: \"Lee Park\", status: Self.status(\"away\")),\n    MonarchPresencePerson(id: \"u4\", name: \"Ana Silva\", status: Self.status(\"busy\"), customStatus: \"📅\" + \" \" + \"In a meeting\"),\n    MonarchPresencePerson(id: \"u5\", name: \"Ben Okafor\", status: Self.status(\"dnd\")),\n    MonarchPresencePerson(id: \"u6\", name: \"Sam Ito\"),\n    MonarchPresencePerson(id: \"u7\", name: \"Mia Novak\", status: Self.status(\"offline\")),\n]\n\nprivate static func status(_ web: String) -> MonarchPresenceStatus {\n    switch web {\n    case \"away\": .away\n    case \"busy\": .busy\n    case \"dnd\": .doNotDisturb\n    case \"offline\": .offline\n    default: .online\n    }\n}",
+      "code": "MonarchPresenceAvatars(people)"
+    },
+    {
+      "title": "Jump to a person",
+      "setup": "@State private var focused: String?\nprivate let people = [\n    MonarchPresencePerson(id: \"1\", name: \"Ana Silva\", activity: \"Editing\"),\n    MonarchPresencePerson(id: \"2\", name: \"Ben Okafor\", status: .away),\n]",
+      "code": "MonarchPresenceAvatars(people, size: .md) { person in\n    focused = person.id\n}"
+    }
+  ],
+  "webEquivalent": "PresenceAvatars",
+  "dependsOn": [
+    "avatar",
+    "presence-dot",
+    "sheet"
+  ]
+}

@@ -1,26 +1,12 @@
 import { DnsProviderGuide, DnsRecordTable, type DnsRecord } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './dns-record-table.fixture.json';
 
 const wide = { width: '100%', maxWidth: '44rem' } as const;
 
-const routing: DnsRecord = {
-  type: 'CNAME',
-  name: 'book.example.com',
-  value: 'domains.example.net',
-  purpose: 'routing',
-  ok: false,
-};
-
-const records: DnsRecord[] = [
-  routing,
-  {
-    type: 'TXT',
-    name: '_verify.book.example.com',
-    value: 'site-verification=4f1a9c2e',
-    purpose: 'verification',
-    ok: true,
-  },
-];
+const records = fixture.data.records as DnsRecord[];
+const routing = records[0] as DnsRecord;
 
 export default {
   id: 'dns-record-table',
@@ -144,7 +130,7 @@ export default {
           stack: true,
           render: () => (
             <div style={wide}>
-              <DnsRecordTable records={records} zone="example.com" />
+              <DnsRecordTable records={records} zone={fixture.data.zone} />
             </div>
           ),
         },

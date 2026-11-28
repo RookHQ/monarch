@@ -1,5 +1,6 @@
 import { useState, type KeyboardEvent } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { OverlayStage } from '../../../internal/overlay-stage.js';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToString } from 'react-dom/server';
@@ -300,5 +301,31 @@ describe('mention helpers', () => {
       { type: 'text', text: '!' },
     ]);
     expect(parseMentionTokens('plain')).toEqual([{ type: 'text', text: 'plain' }]);
+  });
+
+  it('renders in place inside an overlay stage, without moving focus or scrolling', () => {
+    const scroll = vi.fn();
+    const original = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = scroll;
+    render(
+      <OverlayStage>
+        <MentionPicker
+          id="staged"
+          open
+          anchor={{ top: 0, left: 0, height: 0 }}
+          items={[{ id: 'u_ben', label: 'Ben Okafor', description: 'Engineering' }]}
+          status="ready"
+          activeId="u_ben"
+          onSelect={() => {}}
+          onActiveChange={() => {}}
+        />
+      </OverlayStage>,
+    );
+    const stage = document.querySelector('[data-mn-overlay-stage]');
+    const list = screen.getByRole('listbox');
+    expect(stage?.contains(list)).toBe(true);
+    expect(list.closest('.mn-mention-picker')?.hasAttribute('data-staged')).toBe(true);
+    expect(scroll).not.toHaveBeenCalled();
+    Element.prototype.scrollIntoView = original;
   });
 });

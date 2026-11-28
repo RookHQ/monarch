@@ -1,0 +1,125 @@
+{
+  "id": "save-status-indicator",
+  "name": "MonarchSaveStatusIndicator",
+  "title": "SaveStatusIndicator",
+  "family": "feedback",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Label with a ProgressView or SF Symbol icon, in TimelineView(.everyMinute), and MonarchButton for retry",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A small inline status for saving: \"Unsaved changes\", \"Saving…\", \"Saved · 2 minutes ago\" or \"Couldn't save\" with a retry button.",
+  "whenToUse": "In an editor's toolbar or next to a form's buttons, wherever edits are saved in the background.",
+  "whenNotToUse": "For the freshness of data the app fetched, use MonarchFreshnessIndicator. For a one-off confirmation after a button press, use a toast.",
+  "api": [
+    "init(_ status: MonarchSaveStatus, savedAt: Date? = nil, errorMessage: String? = nil, announcesSaving: Bool = false, labels: MonarchSaveStatusIndicatorLabels = MonarchSaveStatusIndicatorLabels(), onRetry: (@MainActor () -> Void)? = nil)",
+    "enum MonarchSaveStatus { case idle, unsaved, saving, saved, error }",
+    "struct MonarchSaveStatusIndicatorLabels { var unsaved, saving, saved, error, retry: String? }"
+  ],
+  "options": [
+    {
+      "name": "status",
+      "type": "MonarchSaveStatus",
+      "default": "required",
+      "description": "idle (nothing drawn), unsaved, saving, saved or error."
+    },
+    {
+      "name": "savedAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the last save finished; shown as relative time after \"Saved\"."
+    },
+    {
+      "name": "errorMessage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces \"Couldn't save\" with the reason."
+    },
+    {
+      "name": "announcesSaving",
+      "type": "Bool",
+      "default": "false",
+      "description": "Also announces \"Saving…\". Off by default so autosaves stay quiet."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSaveStatusIndicatorLabels",
+      "default": "MonarchSaveStatusIndicatorLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds a retry button to the error status."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "Nothing is drawn."
+    },
+    {
+      "name": "unsaved",
+      "description": "A small dot in the warning colour and \"Unsaved changes\"."
+    },
+    {
+      "name": "saving",
+      "description": "A small system spinner and \"Saving…\"."
+    },
+    {
+      "name": "saved",
+      "description": "A check mark in the success colour, \"Saved\" and the relative time."
+    },
+    {
+      "name": "error",
+      "description": "A warning triangle and the text in the danger colour, with a retry button when onRetry is given."
+    }
+  ],
+  "appearance": "Caption text in the muted text colour. Icons take the strong colour of their meaning: warning for unsaved, success for saved, danger for error, where the text is also in the danger colour.",
+  "platformNotes": "The web announces through a polite live region; iOS posts an announcement, which VoiceOver may speak over other speech. Android shares the name and the statuses.",
+  "accessibility": [
+    "The icon and words are a standard Label, read with the time as one element; the icon is decorative and the words carry the meaning.",
+    "When the status turns saved or error, the outcome is announced; saving is announced only with announcesSaving.",
+    "The retry button is a separate standard button with a 44-point touch target.",
+    "Text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "The relative time is redrawn every minute.",
+    "The same outcome twice in a row (saved, then saved again) is not announced again, because the status did not change; set the status to saving in between.",
+    "An empty errorMessage falls back to \"Couldn't save\"."
+  ],
+  "tests": [
+    "MonarchSaveStatusIndicatorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "States",
+      "fixture": "save-status-indicator",
+      "webExample": "States",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    MonarchSaveStatusIndicator(.{{states.0|raw}}, labels: labels)\n    MonarchSaveStatusIndicator(.{{states.1|raw}}, labels: labels)\n    MonarchSaveStatusIndicator(.{{states.2|raw}}, savedAt: .now.addingTimeInterval(-{{savedAgoSeconds}}), labels: labels)\n    MonarchSaveStatusIndicator(.{{states.3|raw}}, labels: labels, onRetry: {})\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\nprivate let labels = MonarchSaveStatusIndicatorLabels(error: {{errorLabel}})",
+      "setup": "@Environment(\\.monarchTheme) private var theme\nprivate let labels = MonarchSaveStatusIndicatorLabels(error: \"Couldn't save\")",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    MonarchSaveStatusIndicator(.unsaved, labels: labels)\n    MonarchSaveStatusIndicator(.saving, labels: labels)\n    MonarchSaveStatusIndicator(.saved, savedAt: .now.addingTimeInterval(-120), labels: labels)\n    MonarchSaveStatusIndicator(.error, labels: labels, onRetry: {})\n}"
+    },
+    {
+      "title": "A failed save with retry",
+      "setup": "@State private var status = MonarchSaveStatus.error",
+      "code": "MonarchSaveStatusIndicator(status, errorMessage: \"You are offline\") {\n    status = .saving\n}"
+    }
+  ],
+  "webEquivalent": "SaveStatusIndicator",
+  "dependsOn": [
+    "relative-time",
+    "button"
+  ],
+  "icons": {
+    "status.unsaved": "DotGlyph",
+    "status.saved": "CheckGlyph",
+    "status.error": "WarningGlyph"
+  }
+}

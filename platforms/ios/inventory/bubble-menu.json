@@ -1,0 +1,86 @@
+{
+  "id": "bubble-menu",
+  "name": null,
+  "title": "BubbleMenu",
+  "family": "files",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "The system edit menu that TextEditor and TextField show over a selection (with Format on TextEditor(text: Binding<AttributedString>, selection:) from iOS 26); selection actions go in ToolbarItemGroup(placement: .keyboard), or into the menu itself with UITextViewDelegate.textView(_:editMenuForTextIn:suggestedActions:) in UIKit; the open menu in the example is MonarchEditorToolbar(groups: MonarchEditorTool.inlineGroups) over the text with MonarchElevation",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The menu over selected text is the system edit menu; Monarch ships no floating toolbar of its own.",
+  "whenToUse": "Whenever people select text in an editor: the system menu already offers Cut, Copy, Paste, Look Up, Translate and Share, and Format for rich text. Put actions about the selection (Comment, Ask about this) in a keyboard toolbar that is enabled while the selection is not empty.",
+  "whenNotToUse": "Do not draw a second floating toolbar over a selection; it would cover or fight the system menu. For a full set of formatting controls, use MonarchEditorToolbar or MonarchRichTextEditor.",
+  "api": [
+    "TextEditor(text: Binding<String>)",
+    "TextEditor(text: Binding<AttributedString>, selection: Binding<AttributedTextSelection>) // iOS 26",
+    "ToolbarItemGroup(placement: .keyboard) { … }",
+    "UITextViewDelegate.textView(_:editMenuForTextIn:suggestedActions:) -> UIMenu? // UIKit"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "no selection",
+      "description": "No menu; a selection action in the keyboard toolbar is disabled."
+    },
+    {
+      "name": "text selected",
+      "description": "The system shows its edit menu next to the selection; the keyboard toolbar action becomes enabled."
+    },
+    {
+      "name": "rich text selected",
+      "description": "On iOS 26, a rich TextEditor adds the system Format items to the menu."
+    },
+    {
+      "name": "read-only",
+      "description": "Text with .textSelection(.enabled) offers Copy and Share only."
+    }
+  ],
+  "appearance": "System appearance in every theme, including dark and the high-contrast settings. Only the keyboard toolbar button takes Monarch's ghost button style and theme colours.",
+  "platformNotes": "The web BubbleMenu floats a Tiptap toolbar over the selection and takes focus with Alt+F10. iOS already shows its own edit menu at the selection, positioned and announced by the system, so Monarch adds nothing there. SwiftUI has no API to add items to that menu; a UIKit text view adds them in textView(_:editMenuForTextIn:suggestedActions:) (iOS 16 and later). The web placement and offset options have no counterpart. Android's plan is the same: its platform text selection menu, with no Monarch type.",
+  "accessibility": [
+    "System behaviour: VoiceOver reads the edit menu's items and the rotor's Edit actions reach the same commands.",
+    "The keyboard toolbar action is a standard button with a text label, disabled while nothing is selected."
+  ],
+  "edgeCases": [
+    "Plain TextField and TextEditor have no selection binding before iOS 18; selection actions need iOS 18 (TextSelection) or iOS 26 (AttributedTextSelection) in SwiftUI.",
+    "The keyboard toolbar only shows while the keyboard does; with a hardware keyboard, offer the same action elsewhere, such as a toolbar button."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Inline formatting",
+      "fixture": "bubble-menu",
+      "webExample": "Inline formatting",
+      "template": "// The menu open above the text, as the web shows it while words are selected. An app shows it when its own\n// selection is not empty, and runs the tool on the selected range.\nZStack(alignment: .topLeading) {\n    TextEditor(text: $text)\n        .monarchTextStyle(.body)\n        .accessibilityLabel({{label}})\n        .scrollContentBackground(.hidden)\n        .padding(.top, theme.spacing.space8)\n        .padding(.horizontal, theme.spacing.space2)\n        .frame(minHeight: 200)\n        .overlay(RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous).stroke(theme.colors.borderSubtle))\n        .padding(.top, theme.spacing.space6)\n    MonarchEditorToolbar(groups: MonarchEditorTool.inlineGroups) { _ in }\n        .padding(.horizontal, theme.spacing.space2)\n        .monarchElevation(.md, fill: \\.bgRaised, in: RoundedRectangle(cornerRadius: theme.radius.md, style: .continuous))\n        .padding(.leading, theme.spacing.space3)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var text = {{text}}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var text = \"Select any words in this paragraph to see the menu. It floats above the selection, flips below near the top of the window, and never takes focus until you ask for it with Alt+F10.\"",
+      "code": "// The menu open above the text, as the web shows it while words are selected. An app shows it when its own\n// selection is not empty, and runs the tool on the selected range.\nZStack(alignment: .topLeading) {\n    TextEditor(text: $text)\n        .monarchTextStyle(.body)\n        .accessibilityLabel(\"Sample text\")\n        .scrollContentBackground(.hidden)\n        .padding(.top, theme.spacing.space8)\n        .padding(.horizontal, theme.spacing.space2)\n        .frame(minHeight: 200)\n        .overlay(RoundedRectangle(cornerRadius: theme.radius.lg, style: .continuous).stroke(theme.colors.borderSubtle))\n        .padding(.top, theme.spacing.space6)\n    MonarchEditorToolbar(groups: MonarchEditorTool.inlineGroups) { _ in }\n        .padding(.horizontal, theme.spacing.space2)\n        .monarchElevation(.md, fill: \\.bgRaised, in: RoundedRectangle(cornerRadius: theme.radius.md, style: .continuous))\n        .padding(.leading, theme.spacing.space3)\n}"
+    },
+    {
+      "title": "A Comment action for the selection above the keyboard",
+      "setup": "@available(iOS 26.0, macOS 26.0, *)\nstruct SelectionActions: View {\n    @State private var text = AttributedString(\"Select any words in this paragraph.\")\n    @State private var selection = AttributedTextSelection()\n    @State private var quoted = \"\"\n\n    private var selectedText: String {\n        guard case .ranges(let ranges) = selection.indices(in: text) else { return \"\" }\n        return String(text[ranges].characters)\n    }\n\n    var body: some View {\n        TextEditor(text: $text, selection: $selection)\n            .monarchTextStyle(.body)\n            .toolbar {\n                ToolbarItemGroup(placement: .keyboard) {\n                    Button(\"Comment\", systemImage: \"text.bubble\") { quoted = selectedText }\n                        .buttonStyle(.monarch(.ghost, size: .sm))\n                        .disabled(selectedText.isEmpty)\n                }\n            }\n    }\n}",
+      "code": "if #available(iOS 26.0, macOS 26.0, *) {\n    SelectionActions()\n}"
+    }
+  ],
+  "webEquivalent": "BubbleMenu",
+  "dependsOn": [
+    "rich-text-editor",
+    "editor-toolbar"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "selection"
+      ],
+      "reason": "Platform limit, system control used: TextEditor(text:) cannot start with a range of the text selected (the web example opens with \"any words\" selected); the selection binding needs AttributedTextSelection, iOS 26 only. The open menu is drawn by the Monarch inline toolbar above the text, so the example shows the same open state.",
+      "convention": "HIG: system edit menu and TextEditor selection"
+    }
+  ]
+}

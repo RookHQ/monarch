@@ -7,12 +7,15 @@ import {
   type PasswordRule,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './password-strength-meter.fixture.json';
 
 function SignUpDemo() {
-  const [password, setPassword] = useState('');
+  // Opens part-way through typing: three rules met, the symbol still missing.
+  const [password, setPassword] = useState(fixture.data.password);
   return (
     <Field style={{ width: '100%', maxWidth: 320 }}>
-      <FieldLabel>Choose a password</FieldLabel>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
       <PasswordInput
         purpose="new"
         value={password}

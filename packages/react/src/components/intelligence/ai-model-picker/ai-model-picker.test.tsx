@@ -88,8 +88,9 @@ describe('AiModelPicker', () => {
     expect(within(list).getByRole('group', { name: 'Provider A' })).toBeInTheDocument();
     expect(within(list).getByRole('group', { name: 'Provider B' })).toBeInTheDocument();
     const deep = screen.getByRole('option', { name: /Deep/ });
-    expect(deep).toHaveAccessibleDescription(
-      'Best for long documents Vision Tools Reasoning 200K context · Slower · Cost: high',
+    // Named from its content: everything the option shows, then what only speech needs.
+    expect(deep).toHaveAccessibleName(
+      'Deep Best for long documents Vision Tools Reasoning 200K context · Slower · Cost: high',
     );
     expect(screen.getByRole('option', { name: /Swift/ })).toHaveAttribute('aria-selected', 'true');
     expect(list).toHaveAttribute(
@@ -100,8 +101,8 @@ describe('AiModelPicker', () => {
       'aria-disabled',
       'true',
     );
-    expect(screen.getByRole('option', { name: 'Configured Your key' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'Own key model Key needed' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /^Configured Your key\b/ })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /^Own key model Key needed\b/ })).toBeInTheDocument();
     await expectNoA11yViolations();
   });
 
@@ -143,7 +144,7 @@ describe('AiModelPicker', () => {
     await user.click(screen.getByRole('button', { name: /Model/ }));
     const own = screen.getByRole('option', { name: /Own key model/ });
     expect(own).not.toHaveAttribute('aria-disabled');
-    expect(own).toHaveAccessibleDescription(/Select to add an API key\./);
+    expect(own).toHaveAccessibleName(/Select to add an API key\.$/);
     await user.click(own);
     expect(onConfigureKey).toHaveBeenCalledWith(models[2]);
     expect(onChange).not.toHaveBeenCalled();

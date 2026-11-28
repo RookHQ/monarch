@@ -1,0 +1,160 @@
+{
+  "id": "lightbox",
+  "name": "MonarchLightbox",
+  "title": "Lightbox",
+  "family": "overlays",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.ui.window.Dialog (full screen), androidx.compose.foundation.pager.HorizontalPager, androidx.compose.foundation.gestures.transformable and detectTapGestures",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A full-screen viewer for images and videos: swipe or step between items, pinch, double-tap or use buttons to zoom, with a caption and a position count.",
+  "whenToUse": "To look at one or more pictures or videos at full size from a thumbnail, with a caption that belongs to the design: attachments in a conversation, a gallery on a record.",
+  "whenNotToUse": "Not for documents, PDFs or files of unknown type: hand them to the system with an Intent.ACTION_VIEW, or use file-preview. Not for a single decorative image.",
+  "api": [
+    "@Composable fun MonarchLightbox(items: List<MonarchLightboxItem>, selectedIndex: Int, onSelectedIndexChange: (Int) -> Unit, onDismissRequest: () -> Unit, modifier: Modifier = Modifier, looping: Boolean = false, maximumZoom: Float = 4f, onShare: ((index: Int) -> Unit)? = null, labels: MonarchLightboxLabels = MonarchLightboxLabels())",
+    "class MonarchLightboxItem(image: Painter?, alt: String, caption: String? = null, video: (@Composable () -> Unit)? = null)",
+    "class MonarchLightboxLabels(title: String? = null, previous: String? = null, next: String? = null, zoomIn: String? = null, zoomOut: String? = null, resetZoom: String? = null, close: String? = null, share: String? = null, position: ((number: Int, count: Int) -> String)? = null, unavailable: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "List<MonarchLightboxItem>",
+      "default": "required",
+      "description": "The images and videos, in order. Each has an image Painter (or null), alt text, an optional caption and optionally the app's video player."
+    },
+    {
+      "name": "selectedIndex",
+      "type": "Int",
+      "default": "required",
+      "description": "The item on screen, from 0. An index outside the items shows the nearest item; it is not reported back until the person moves."
+    },
+    {
+      "name": "onSelectedIndexChange",
+      "type": "(Int) -> Unit",
+      "default": "required",
+      "description": "Called with the new index after a swipe, Previous, Next or an arrow key."
+    },
+    {
+      "name": "onDismissRequest",
+      "type": "() -> Unit",
+      "default": "required",
+      "description": "Called by Close, the back gesture and Escape. Stop showing the viewer in it."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the viewer's surface."
+    },
+    {
+      "name": "looping",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Whether Next on the last item goes to the first, and Previous on the first to the last. Swiping does not wrap."
+    },
+    {
+      "name": "maximumZoom",
+      "type": "Float",
+      "default": "4f",
+      "description": "The largest zoom factor of an image. Values below 1 count as 1, which turns zoom off and hides the zoom buttons."
+    },
+    {
+      "name": "onShare",
+      "type": "((index: Int) -> Unit)?",
+      "default": "null",
+      "description": "When set, a Share button calls it with the index of the item on screen; the app starts its share sheet."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchLightboxLabels",
+      "default": "MonarchLightboxLabels()",
+      "description": "Replacements for the built-in strings: the viewer's name, the button names, the position text and the unavailable text."
+    }
+  ],
+  "states": [
+    {
+      "name": "fitted",
+      "description": "The image fits the stage. A sideways swipe moves to the next or previous item. Zoom out and the level button are disabled."
+    },
+    {
+      "name": "zoomed",
+      "description": "The image is larger than the stage and a drag pans it, without leaving its edges. The level shows as a percentage on the reset button. Zoom in is disabled at the largest zoom."
+    },
+    {
+      "name": "first or last item",
+      "description": "Without looping, Previous or Next is disabled."
+    },
+    {
+      "name": "single item",
+      "description": "No position count and no Previous and Next."
+    },
+    {
+      "name": "unavailable",
+      "description": "An item without a picture or video, and an empty list, show \"This file can’t be shown.\" in place of the media. Zoom is hidden."
+    },
+    {
+      "name": "video",
+      "description": "The app's player, named by the alt text. Zoom is hidden."
+    }
+  ],
+  "appearance": "The viewer fills the screen with the canvas background role and the default text role. Toolbar buttons are ghost MonarchButtons, Previous and Next secondary ones, with their disabled roles; the unavailable text uses the muted text role. The same roles are used in light, dark and both high-contrast themes.",
+  "platformNotes": "The web Lightbox is a dialog over a translucent scrim with arrow buttons beside the image; here it is a full-screen Dialog on the opaque canvas, and swiping is the main gesture, with Previous and Next under the media for TalkBack, Switch Access and keyboard users. Pinch and double tap are added to the web's zoom buttons. Monarch bundles no icons, so the tools are text: a minus sign, the level, a plus sign, Share and Close, each with a spoken name. Monarch loads nothing: an image is a Painter the app has loaded (the web takes a URL and checks its scheme), and a video is the app's own player in the item's video slot, because Media3 is not a Monarch dependency; the web's caption tracks belong to that player. The web's Download link becomes onShare, which the app answers with its share sheet. The web's trigger is not needed: any button sets the state that shows the viewer. iOS uses the same names, with selection and onClose where Android uses selectedIndex with onSelectedIndexChange and onDismissRequest, as Compose does.",
+  "accessibility": [
+    "The viewer is a pane named \"Media viewer\", shown in its own dialog window, so TalkBack stays inside it; back, Escape and Close call onDismissRequest.",
+    "An image is one element with its alt text as the name, the image role and the zoom level as its state; its custom actions Zoom in and Zoom out step the zoom.",
+    "The position text is a polite live region read as \"2 of 5: Team photo\", so moving to another item is announced.",
+    "Zoom in, zoom out, reset zoom, share, close, previous and next are buttons with spoken names and 48dp touch targets; unavailable steps and zoom limits are disabled, not hidden.",
+    "A video's alt text names the area that holds the app's player.",
+    "Zoom changes from buttons, keys and double tap animate unless animations are removed. The toolbar wraps at large font sizes and a long caption scrolls in its box.",
+    "With a keyboard, the left and right arrows step (mirrored right to left), +, - and 0 zoom and Escape closes, once focus is in the viewer. The key mapping is unit-tested; delivery of key events to the dialog window was not exercised end to end."
+  ],
+  "edgeCases": [
+    "Zoom belongs to one item: moving to another item returns to fitted.",
+    "While zoomed, a sideways drag pans the image and does not change the item; zoom out first, or use the buttons.",
+    "An empty alt is allowed by the type but leaves the image without a spoken name; always give one.",
+    "A caption taller than 96dp scrolls inside its box.",
+    "Looping from the last item to the first jumps without the paging animation.",
+    "Pinch and pan were exercised only through the zoom arithmetic in unit tests; real multi-touch was not run on a device.",
+    "Pinch zooms around the center of the image, not around the fingers."
+  ],
+  "tests": [
+    "MonarchLightboxTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Gallery of three images",
+      "fixture": "lightbox",
+      "webExample": "Gallery of three images",
+      "template": "Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    photos.indices.forEach { i ->\n        MonarchButton(\n            text = \"$buttonLabel ${i + 1}\",\n            onClick = {\n                index = i\n                viewing = true\n            },\n        )\n    }\n}\nif (viewing) {\n    MonarchLightbox(\n        items = photos,\n        selectedIndex = index,\n        onSelectedIndexChange = { index = it },\n        onDismissRequest = { viewing = false },\n    )\n}",
+      "setupTemplate": "var viewing by remember { mutableStateOf(true) }\nvar index by remember { mutableIntStateOf(0) }\nval buttonLabel = {{buttonLabel}}\nval photos = listOf(\n    MonarchLightboxItem(image = sampleFlatPainter(), alt = {{photos.0.alt}}, caption = {{photos.0.caption}}),\n    MonarchLightboxItem(image = sampleFlatPainter(), alt = {{photos.1.alt}}, caption = {{photos.1.caption}}),\n    MonarchLightboxItem(image = sampleFlatPainter(), alt = {{photos.2.alt}}),\n)",
+      "imports": [
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Row",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.testing.sampleFlatPainter"
+      ],
+      "setup": "var viewing by remember { mutableStateOf(true) }\nvar index by remember { mutableIntStateOf(0) }\nval buttonLabel = \"View image\"\nval photos = listOf(\n    MonarchLightboxItem(image = sampleFlatPainter(), alt = \"Planning board with three columns of notes\", caption = \"Sprint planning board\"),\n    MonarchLightboxItem(image = sampleFlatPainter(), alt = \"Pencil sketch of a settings screen\", caption = \"Settings sketch\"),\n    MonarchLightboxItem(image = sampleFlatPainter(), alt = \"Plain sample image in a warm grey\"),\n)",
+      "code": "Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    photos.indices.forEach { i ->\n        MonarchButton(\n            text = \"$buttonLabel ${i + 1}\",\n            onClick = {\n                index = i\n                viewing = true\n            },\n        )\n    }\n}\nif (viewing) {\n    MonarchLightbox(\n        items = photos,\n        selectedIndex = index,\n        onSelectedIndexChange = { index = it },\n        onDismissRequest = { viewing = false },\n    )\n}"
+    },
+    {
+      "title": "Looping, sharing and a video item",
+      "setup": "var index by remember { mutableIntStateOf(0) }\nval context = LocalContext.current",
+      "imports": [
+        "android.content.Intent",
+        "androidx.compose.ui.platform.LocalContext",
+        "com.rookhq.monarch.testing.samplePainter"
+      ],
+      "code": "MonarchLightbox(\n    items = listOf(\n        MonarchLightboxItem(image = samplePainter(), alt = \"Team photo\", caption = \"Lisbon\"),\n        // The app's own player, for example a Media3 PlayerSurface with its controls.\n        MonarchLightboxItem(image = null, alt = \"Product demo\", video = { MonarchText(text = \"Video player\") }),\n    ),\n    selectedIndex = index,\n    onSelectedIndexChange = { index = it },\n    onDismissRequest = {},\n    looping = true,\n    onShare = {\n        val send = Intent(Intent.ACTION_SEND).setType(\"text/plain\").putExtra(Intent.EXTRA_TEXT, \"https://example.com/photos/$it\")\n        context.startActivity(Intent.createChooser(send, null))\n    },\n)"
+    }
+  ],
+  "webEquivalent": "Lightbox",
+  "dependsOn": [
+    "button"
+  ]
+}

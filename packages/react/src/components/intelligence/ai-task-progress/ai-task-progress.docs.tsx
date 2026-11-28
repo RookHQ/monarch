@@ -2,15 +2,12 @@ import { useEffect, useState } from 'react';
 import { Button } from '@rookcom/monarch-react';
 import { AiTaskProgress, type AiStep, type AiTaskStatus } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-task-progress.fixture.json';
 
-const NOW = Date.UTC(2026, 0, 1, 12, 0, 0);
+const NOW = Date.parse(fixture.data.now);
 
-const LABELS = [
-  'Collect the documents',
-  'Summarise each document',
-  'Write the overview',
-  'Check the figures',
-];
+const LABELS = fixture.data.steps.map((step) => step.label);
 
 function stepsAt(progress: number, failAt?: number): AiStep[] {
   return LABELS.map((label, i) => ({
@@ -184,12 +181,12 @@ export default {
           stack: true,
           render: () => (
             <AiTaskProgress
-              title="Summarising 12 documents"
-              steps={stepsAt(1)}
-              startedAt={NOW - 3 * 60_000}
+              title={fixture.data.title}
+              steps={fixture.data.steps as AiStep[]}
+              startedAt={Date.parse(fixture.data.startedAt)}
               now={NOW}
-              etaMs={5 * 60_000}
-              status="running"
+              etaMs={fixture.data.etaMs}
+              status={fixture.data.status as AiTaskStatus}
               onCancel={() => {}}
               onNotifyChange={() => {}}
             />

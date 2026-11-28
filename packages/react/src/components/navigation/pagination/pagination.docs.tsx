@@ -1,21 +1,23 @@
 import { useState } from 'react';
 import { Pagination } from '@rookcom/monarch-react';
 import { incomplete, type ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './pagination.fixture.json';
 
 function PaginationDemo({ compact = false }: { compact?: boolean }) {
-  const [page, setPage] = useState(5);
+  const [page, setPage] = useState(fixture.data.page);
   return compact ? (
     <Pagination
       variant="compact"
-      label="Compact pagination"
+      label={fixture.data.compact.label}
       page={page}
-      pageCount={8}
-      pageSize={20}
-      totalItems={143}
+      pageCount={fixture.data.compact.pageCount}
+      pageSize={fixture.data.compact.pageSize}
+      totalItems={fixture.data.compact.totalItems}
       onPageChange={setPage}
     />
   ) : (
-    <Pagination page={page} pageCount={20} onPageChange={setPage} />
+    <Pagination page={page} pageCount={fixture.data.full.pageCount} onPageChange={setPage} />
   );
 }
 

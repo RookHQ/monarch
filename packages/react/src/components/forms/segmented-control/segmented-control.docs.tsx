@@ -2,19 +2,24 @@ import { useState } from 'react';
 import { SegmentedControl, ToggleGroup } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { BoardIcon, GridIcon, ListIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './segmented-control.fixture.json';
+
+type View = 'list' | 'board' | 'grid';
+const viewIcons = [<ListIcon />, <BoardIcon />, <GridIcon />];
 
 function ViewSwitch() {
-  const [view, setView] = useState<'list' | 'board' | 'grid'>('list');
+  const [view, setView] = useState<View>(fixture.data.selected as View);
   return (
     <SegmentedControl
-      aria-label="View"
+      aria-label={fixture.data.label}
       value={view}
       onValueChange={setView}
-      options={[
-        { value: 'list', label: 'List', icon: <ListIcon /> },
-        { value: 'board', label: 'Board', icon: <BoardIcon /> },
-        { value: 'grid', label: 'Grid', icon: <GridIcon /> },
-      ]}
+      options={fixture.data.options.map((o, i) => ({
+        value: o.value as View,
+        label: o.label,
+        icon: viewIcons[i],
+      }))}
     />
   );
 }
@@ -190,7 +195,7 @@ export default {
                 defaultValue="monthly"
                 options={[
                   { value: 'monthly', label: 'Monthly' },
-                  { value: 'yearly', label: 'Yearly', suffix: '2 months free' },
+                  { value: 'yearly', label: 'Yearly', suffix: 'Save 2 months' },
                 ]}
               />
               <SegmentedControl

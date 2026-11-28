@@ -101,7 +101,7 @@ export default {
                   <Button variant="secondary">See how it works</Button>
                 </>
               }
-              note="Free for teams of up to 10."
+              note="Set up in under five minutes."
             />
           ),
         },

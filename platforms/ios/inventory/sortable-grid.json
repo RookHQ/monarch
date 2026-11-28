@@ -1,0 +1,120 @@
+{
+  "id": "sortable-grid",
+  "name": "MonarchSortableGrid",
+  "title": "SortableGrid",
+  "family": "interaction",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "LazyVGrid with draggable(_:) and dropDestination(for:action:isTargeted:) on each tile, MonarchDragHandle with accessibility actions, AccessibilityNotification.Announcement",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Tiles that people reorder in two dimensions by dragging, or one place or one row at a time with accessibility actions, with each move announced.",
+  "whenToUse": "For a dashboard of widgets, a photo or card board, or any grid whose order the person arranges.",
+  "whenNotToUse": "For a single column of rows, use a List with onMove(perform:) (see reorderable-list). For moving items between groups, use a Kanban board.",
+  "api": [
+    "init(_ items: Binding<[Item]>, itemLabel: KeyPath<Item, String>, columns: Int? = nil, minimumItemWidth: CGFloat? = nil, isItemDisabled: ((Item) -> Bool)? = nil, labels: MonarchSortableGridLabels = MonarchSortableGridLabels(), onReorder: (@MainActor (_ from: Int, _ to: Int) -> Void)? = nil, @ViewBuilder content: @escaping (Item, MonarchSortableGridItemState) -> Content)",
+    "struct MonarchSortableGridItemState { let index: Int; let isDropTarget: Bool; let isDisabled: Bool }",
+    "struct MonarchSortableGridLabels { var handle: (@Sendable (String) -> String)?; var moved, dropped: (@Sendable (String, Int, Int) -> String)?; var actions: [MonarchDragHandleDirection: String] }"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "Binding<[Item]>",
+      "default": "required",
+      "description": "The items in order. Item is Identifiable. The grid writes the new order after each move."
+    },
+    {
+      "name": "itemLabel",
+      "type": "KeyPath<Item, String>",
+      "default": "required",
+      "description": "The plain-text name of an item, used in the handle's name and the announcements."
+    },
+    {
+      "name": "columns",
+      "type": "Int?",
+      "default": "nil",
+      "description": "A fixed number of columns. Without it, as many columns of minimumItemWidth as fit."
+    },
+    {
+      "name": "minimumItemWidth",
+      "type": "CGFloat?",
+      "default": "nil (160 points)",
+      "description": "The smallest tile width for adaptive columns, scaled with Dynamic Type."
+    },
+    {
+      "name": "isItemDisabled",
+      "type": "((Item) -> Bool)?",
+      "default": "nil",
+      "description": "Items that cannot be moved. Other items can still move past them."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSortableGridLabels",
+      "default": "MonarchSortableGridLabels()",
+      "description": "Replacements for the handle name, the two announcements and the move action names."
+    },
+    {
+      "name": "onReorder",
+      "type": "(@MainActor (Int, Int) -> Void)?",
+      "default": "nil",
+      "description": "Called after each finished move with the old and the new index, after items is updated."
+    },
+    {
+      "name": "content",
+      "type": "@ViewBuilder (Item, MonarchSortableGridItemState) -> Content",
+      "default": "required",
+      "description": "Draws a tile. The state gives the index, whether a drag is over it and whether it is disabled."
+    }
+  ],
+  "states": [
+    {
+      "name": "drop target",
+      "description": "While a dragged tile is over a tile, that tile has an accent outline and its state has isDropTarget."
+    },
+    {
+      "name": "disabled item",
+      "description": "Not draggable; its handle is drawn in the disabled colour and has no actions."
+    },
+    {
+      "name": "disabled grid",
+      "description": "With .disabled(true) no tile can be dragged or moved."
+    }
+  ],
+  "appearance": "The grid draws only the handle in each tile's top trailing corner (muted grip, disabled colour when locked) and a strong-accent outline around the tile a drag is over. The tiles are the app's own views.",
+  "platformNotes": "The web grid follows the pointer and slides the other tiles out of the way while dragging; on iOS the system drag shows a lifted preview and the order changes on drop. The web picks up a tile with Space and moves it with the arrow keys; on iOS each handle offers named actions (Move up, Move down, Move backward, Move forward) to VoiceOver, Switch Control and Full Keyboard Access. The web's uncontrolled defaultItems is not offered: the order is always a binding. The default minimum tile width is 160 points instead of the web's 12rem, so a phone shows two columns.",
+  "accessibility": [
+    "Each tile has a drag handle named Reorder and the item's name, with move actions for each direction that the column count allows (up and down only in one column).",
+    "After a move with an action the new position is announced: \"Design review moved to position 3 of 8.\"; after a drop: \"Design review dropped at position 3 of 8.\"",
+    "Backward and forward follow reading order, so they are mirrored in right-to-left layouts with the grid.",
+    "The drop target is shown by an outline, not by colour alone.",
+    "The handle keeps a 44 by 44 point touch target; adaptive columns become fewer and wider at larger text sizes."
+  ],
+  "edgeCases": [
+    "Drops of text from another grid or another app are ignored: the payload carries the grid's own id.",
+    "An action that would move a tile past the first or last place, or above the first row, does nothing.",
+    "An empty items array draws nothing.",
+    "Tiles in the same row take the height the grid gives them; give tiles a minimum height when they should line up."
+  ],
+  "tests": [
+    "MonarchSortableGridTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Drag or keyboard in two dimensions",
+      "fixture": "sortable-grid",
+      "webExample": "Drag or keyboard in two dimensions",
+      "template": "MonarchSortableGrid($shortcuts, itemLabel: \\.name, minimumItemWidth: {{minItemWidth}} * 16) { shortcut, _ in\n    VStack(alignment: .leading, spacing: 2) {\n        Text(shortcut.name).monarchTextStyle(.bodyStrong)\n        Text(shortcut.detail).monarchTextStyle(.caption)\n    }\n    .frame(maxWidth: .infinity, alignment: .leading)\n    .padding(.vertical, theme.spacing.space3)\n    .padding(.leading, 40)\n    .padding(.trailing, theme.spacing.space3)\n    .background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous))\n    .overlay(\n        RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous)\n            .strokeBorder(theme.colors.borderSubtle)\n    )\n}\n.monarchSortableGridHandle(.leading)\n.accessibilityLabel({{label}})",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\nstruct Shortcut: Identifiable {\n    let id: String\n    let name: String\n    let detail: String\n}\n\n@State private var shortcuts = [\n    Shortcut(id: {{shortcuts.0.id}}, name: {{shortcuts.0.name}}, detail: {{shortcuts.0.detail}}),\n    Shortcut(id: {{shortcuts.1.id}}, name: {{shortcuts.1.name}}, detail: {{shortcuts.1.detail}}),\n    Shortcut(id: {{shortcuts.2.id}}, name: {{shortcuts.2.name}}, detail: {{shortcuts.2.detail}}),\n    Shortcut(id: {{shortcuts.3.id}}, name: {{shortcuts.3.name}}, detail: {{shortcuts.3.detail}}),\n    Shortcut(id: {{shortcuts.4.id}}, name: {{shortcuts.4.name}}, detail: {{shortcuts.4.detail}}),\n    Shortcut(id: {{shortcuts.5.id}}, name: {{shortcuts.5.name}}, detail: {{shortcuts.5.detail}}),\n]",
+      "setup": "@Environment(\\.monarchTheme) private var theme\nstruct Shortcut: Identifiable {\n    let id: String\n    let name: String\n    let detail: String\n}\n\n@State private var shortcuts = [\n    Shortcut(id: \"inbox\", name: \"Inbox\", detail: \"12 unread\"),\n    Shortcut(id: \"calendar\", name: \"Calendar\", detail: \"3 events today\"),\n    Shortcut(id: \"reports\", name: \"Reports\", detail: \"Updated hourly\"),\n    Shortcut(id: \"files\", name: \"Files\", detail: \"48 items\"),\n    Shortcut(id: \"people\", name: \"People\", detail: \"9 teams\"),\n    Shortcut(id: \"settings\", name: \"Settings\", detail: \"Workspace\"),\n]",
+      "code": "MonarchSortableGrid($shortcuts, itemLabel: \\.name, minimumItemWidth: 10 * 16) { shortcut, _ in\n    VStack(alignment: .leading, spacing: 2) {\n        Text(shortcut.name).monarchTextStyle(.bodyStrong)\n        Text(shortcut.detail).monarchTextStyle(.caption)\n    }\n    .frame(maxWidth: .infinity, alignment: .leading)\n    .padding(.vertical, theme.spacing.space3)\n    .padding(.leading, 40)\n    .padding(.trailing, theme.spacing.space3)\n    .background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous))\n    .overlay(\n        RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous)\n            .strokeBorder(theme.colors.borderSubtle)\n    )\n}\n.monarchSortableGridHandle(.leading)\n.accessibilityLabel(\"Shortcuts\")"
+    }
+  ],
+  "webEquivalent": "SortableGrid",
+  "dependsOn": [
+    "drag-handle"
+  ]
+}

@@ -1,0 +1,109 @@
+{
+  "id": "create-workspace-dialog",
+  "name": null,
+  "title": "CreateWorkspaceDialog",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet with dismissible = false while it creates, a scrolling androidx.compose.foundation.layout.Column with a heading Row and a Cancel MonarchButton, around the workspace onboarding form (MonarchTextField, MonarchUsernameAvailabilityInput, MonarchRadioCardGroup, MonarchButton)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a sheet titled \"Create new workspace\" around the workspace onboarding form, which cannot be dismissed while the workspace is being created and closes when it is created.",
+  "whenToUse": "To create another workspace from inside the app, for example from the workspace switcher or an empty state.",
+  "whenNotToUse": "For the very first workspace in the first-run flow, show the workspace onboarding form as a full screen instead. For renaming or editing a workspace, use a settings screen.",
+  "api": [
+    "ModalBottomSheet(onDismissRequest = { if (!creating) open = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { !creating }), sheetGesturesEnabled = !creating) { … }",
+    "MonarchText(text = \"Create new workspace\", style = MonarchTextStyle.Heading, heading = true)",
+    "MonarchButton(text = \"Cancel\", onClick = …, variant = MonarchButtonVariant.Ghost, enabled = !creating)",
+    "The workspace onboarding form: MonarchTextField, MonarchUsernameAvailabilityInput, MonarchRadioCardGroup and a primary MonarchButton with loading = creating"
+  ],
+  "options": [
+    {
+      "name": "open",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Whether the sheet is shown; the app sets it from its New workspace button and clears it when the workspace is created."
+    },
+    {
+      "name": "creating",
+      "type": "Boolean",
+      "default": "false",
+      "description": "True while the product creates the workspace: the submit button shows progress, Cancel is disabled and the sheet cannot be swiped or dismissed."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "Only the button that opens the sheet."
+    },
+    {
+      "name": "open",
+      "description": "The sheet with the heading and Cancel in the first row, then the name, username and type fields and the submit button."
+    },
+    {
+      "name": "invalid",
+      "description": "Each field shows its own error after a submit, as in the workspace onboarding form."
+    },
+    {
+      "name": "creating",
+      "description": "The submit button shows its progress indicator; Cancel is disabled and swiping, tapping outside and Back do not close the sheet."
+    },
+    {
+      "name": "created",
+      "description": "The app sets open to false and the sheet closes."
+    }
+  ],
+  "appearance": "The Material 3 sheet in the theme's raised surface with its drag handle; the heading in the heading style, Cancel as a ghost button, and the fields and primary button with their Monarch look.",
+  "platformNotes": "The web ships CreateWorkspaceDialog as one component around WorkspaceOnboardingForm with onSubmit, checkUsername, rules, closeOnSuccess and messages props. On Android it is a recipe, as on iOS: a modal bottom sheet is the phone's surface for a short task, Cancel sits in the sheet's first row because Compose sheets have no navigation bar, and dismissible = false replaces the web's \"cannot be dismissed while pending\". The rules and the lookup stay in the app.",
+  "accessibility": [
+    "The heading has the heading role, so TalkBack can jump to it.",
+    "Cancel is a button with a 48dp touch target and is disabled while creating.",
+    "Each field keeps its own label and error, and the username status is announced by MonarchUsernameAvailabilityInput.",
+    "The submit button reads \"Loading\" while creating.",
+    "The sheet's content scrolls, so every field is reachable at font scale 2.0."
+  ],
+  "edgeCases": [
+    "While creating, onDismissRequest ignores Back and taps outside, and confirmValueChange refuses to hide the sheet.",
+    "If creation fails, set creating to false and show the error in the sheet, for example with MonarchInlineNotice above the button."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "From a workspace switcher",
+      "fixture": "create-workspace-dialog",
+      "webExample": "From a workspace switcher",
+      "template": "MonarchButton(text = {{trigger}}, onClick = { open = true }, variant = MonarchButtonVariant.Primary)\nif (open) {\n    // While the workspace is created, a swipe, back or a tap outside does not close the sheet.\n    MonarchBottomSheet(onDismissRequest = { open = false }, dismissible = !creating) {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            Row(verticalAlignment = Alignment.CenterVertically) {\n                MonarchText(\n                    text = {{title}},\n                    modifier = Modifier.weight(1f),\n                    style = MonarchTextStyle.Heading,\n                    heading = true,\n                )\n                MonarchButton(\n                    text = {{cancel}},\n                    onClick = { open = false },\n                    variant = MonarchButtonVariant.Ghost,\n                    enabled = !creating,\n                )\n            }\n            MonarchTextField(value = name, onValueChange = { name = it }, label = {{name.label}}, placeholder = {{name.value}}, errorText = nameError, required = true)\n            MonarchUsernameAvailabilityInput(\n                value = username,\n                label = {{username.label}},\n                onValueChange = { username = it },\n                validate = { handle ->\n                    // Call the product's availability lookup here.\n                    if (handle.lowercase() == {{username.taken}}) {\n                        MonarchUsernameAvailabilityResult(valid = false, message = {{username.takenMessage}})\n                    } else {\n                        MonarchUsernameAvailabilityResult(valid = true)\n                    }\n                },\n                placeholder = {{username.prompt}},\n                helperText = {{username.helper}},\n                prefix = {{username.prefix}},\n                required = true,\n                onStatusChange = { status, _ -> usernameStatus = status },\n            )\n            MonarchRadioCardGroup(\n                options = listOf(\n                    MonarchRadioCardOption({{type.options.0.id}}, title = {{type.options.0.title}}, description = {{type.options.0.description}}, icon = { MonarchIcon(SampleIcons.Person, contentDescription = null) }),\n                    MonarchRadioCardOption({{type.options.1.id}}, title = {{type.options.1.title}}, description = {{type.options.1.description}}, icon = { MonarchIcon(SampleIcons.Building, contentDescription = null) }),\n                ),\n                selected = type,\n                onSelect = { type = it },\n                label = {{type.label}},\n                columns = 2,\n                layout = MonarchRadioCardLayout.Tile,\n            )\n            MonarchButton(\n                text = {{submit}},\n                onClick = {\n                    submitted = true\n                    val valid = name.trim().length in 4..25 && type != null\n                    if (valid && usernameStatus == MonarchUsernameAvailabilityStatus.Valid) {\n                        creating = true\n                        scope.launch {\n                            // Create the workspace on the server here.\n                            creating = false\n                            open = false\n                        }\n                    }\n                },\n                modifier = Modifier.fillMaxWidth(),\n                variant = MonarchButtonVariant.Primary,\n                loading = creating,\n            )\n        }\n    }\n}",
+      "setupTemplate": "var open by rememberSaveable { mutableStateOf(true) }\nvar name by rememberSaveable { mutableStateOf({{name.value}}) }\nvar username by rememberSaveable { mutableStateOf(\"\") }\nvar type by rememberSaveable { mutableStateOf<String?>({{type.value}}) }\nvar usernameStatus by remember { mutableStateOf(MonarchUsernameAvailabilityStatus.Idle) }\nvar submitted by rememberSaveable { mutableStateOf(false) }\nvar creating by remember { mutableStateOf(false) }\nval scope = rememberCoroutineScope()\nval nameError = if (submitted && name.trim().length !in 4..25) \"Use 4 to 25 characters\" else null",
+      "imports": [
+        "kotlinx.coroutines.launch",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "var open by rememberSaveable { mutableStateOf(true) }\nvar name by rememberSaveable { mutableStateOf(\"Acme Inc.\") }\nvar username by rememberSaveable { mutableStateOf(\"\") }\nvar type by rememberSaveable { mutableStateOf<String?>(\"business\") }\nvar usernameStatus by remember { mutableStateOf(MonarchUsernameAvailabilityStatus.Idle) }\nvar submitted by rememberSaveable { mutableStateOf(false) }\nvar creating by remember { mutableStateOf(false) }\nval scope = rememberCoroutineScope()\nval nameError = if (submitted && name.trim().length !in 4..25) \"Use 4 to 25 characters\" else null",
+      "code": "MonarchButton(text = \"Create workspace\", onClick = { open = true }, variant = MonarchButtonVariant.Primary)\nif (open) {\n    // While the workspace is created, a swipe, back or a tap outside does not close the sheet.\n    MonarchBottomSheet(onDismissRequest = { open = false }, dismissible = !creating) {\n        Column(\n            modifier = Modifier.verticalScroll(rememberScrollState()),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n        ) {\n            Row(verticalAlignment = Alignment.CenterVertically) {\n                MonarchText(\n                    text = \"Create new workspace\",\n                    modifier = Modifier.weight(1f),\n                    style = MonarchTextStyle.Heading,\n                    heading = true,\n                )\n                MonarchButton(\n                    text = \"Cancel\",\n                    onClick = { open = false },\n                    variant = MonarchButtonVariant.Ghost,\n                    enabled = !creating,\n                )\n            }\n            MonarchTextField(value = name, onValueChange = { name = it }, label = \"Workspace name\", placeholder = \"Acme Inc.\", errorText = nameError, required = true)\n            MonarchUsernameAvailabilityInput(\n                value = username,\n                label = \"Workspace username\",\n                onValueChange = { username = it },\n                validate = { handle ->\n                    // Call the product's availability lookup here.\n                    if (handle.lowercase() == \"acmeinc\") {\n                        MonarchUsernameAvailabilityResult(valid = false, message = \"That username is taken\")\n                    } else {\n                        MonarchUsernameAvailabilityResult(valid = true)\n                    }\n                },\n                placeholder = \"acme\",\n                helperText = \"Letters and numbers only, 5 to 30 characters.\",\n                prefix = \"@\",\n                required = true,\n                onStatusChange = { status, _ -> usernameStatus = status },\n            )\n            MonarchRadioCardGroup(\n                options = listOf(\n                    MonarchRadioCardOption(\"creator\", title = \"Creator\", description = \"For individual creators and personal projects\", icon = { MonarchIcon(SampleIcons.Person, contentDescription = null) }),\n                    MonarchRadioCardOption(\"business\", title = \"Business\", description = \"For teams and companies\", icon = { MonarchIcon(SampleIcons.Building, contentDescription = null) }),\n                ),\n                selected = type,\n                onSelect = { type = it },\n                label = \"Type\",\n                columns = 2,\n                layout = MonarchRadioCardLayout.Tile,\n            )\n            MonarchButton(\n                text = \"Create workspace\",\n                onClick = {\n                    submitted = true\n                    val valid = name.trim().length in 4..25 && type != null\n                    if (valid && usernameStatus == MonarchUsernameAvailabilityStatus.Valid) {\n                        creating = true\n                        scope.launch {\n                            // Create the workspace on the server here.\n                            creating = false\n                            open = false\n                        }\n                    }\n                },\n                modifier = Modifier.fillMaxWidth(),\n                variant = MonarchButtonVariant.Primary,\n                loading = creating,\n            )\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "CreateWorkspaceDialog",
+  "dependsOn": [
+    "sheet",
+    "workspace-onboarding-form"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "scenario",
+      "platform": "android",
+      "reason": "The web shows the form in a centred dialog with a close button and a Cancel and Create workspace pair at the bottom. Android shows it in a modal bottom sheet, with Cancel in the first row and one full-width Create workspace button at the bottom, because a sheet is the phone's surface for a short task and has no navigation bar. The title, the two fields with their asterisks, the Type cards and the copy are the web's.",
+      "convention": "Material 3 modal bottom sheet for a short task"
+    },
+    {
+      "rule": "layout",
+      "platform": "android",
+      "reason": "The web puts the helper line (Letters and numbers only, 5 to 30 characters.) between the label and the username field. The Android field shows its helper text under the field, where the status message also appears, so the text is the same and its place is the field's own.",
+      "convention": "Material 3 text field: supporting text under the field"
+    }
+  ]
+}

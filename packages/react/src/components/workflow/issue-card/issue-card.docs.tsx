@@ -1,22 +1,20 @@
 import { useState } from 'react';
 import { IssueCard, type PriorityLevel, type StatusOption } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './issue-card.fixture.json';
 
-const STATUSES: StatusOption[] = [
-  { id: 'backlog', name: 'Backlog', category: 'backlog' },
-  { id: 'todo', name: 'Todo', category: 'unstarted' },
-  { id: 'doing', name: 'In progress', category: 'started' },
-  { id: 'done', name: 'Done', category: 'completed' },
-];
+const labels = fixture.data.labels as [string, string];
+const STATUSES = fixture.data.statuses as StatusOption[];
 
 function EditableCard() {
-  const [status, setStatus] = useState('doing');
-  const [priority, setPriority] = useState<PriorityLevel>('high');
+  const [status, setStatus] = useState<string>(fixture.data.status);
+  const [priority, setPriority] = useState(fixture.data.priority as PriorityLevel);
   return (
     <div style={{ width: '100%', maxWidth: 300 }}>
       <IssueCard
-        issueKey="WEB-218"
-        title="Add keyboard shortcuts to the board view"
+        issueKey={fixture.data.key}
+        title={fixture.data.title}
         href="#"
         status={STATUSES.find((s) => s.id === status)}
         statuses={STATUSES}
@@ -24,12 +22,12 @@ function EditableCard() {
         priority={priority}
         onPriorityChange={setPriority}
         labels={[
-          { id: 'a11y', name: 'Accessibility' },
-          { id: 'board', name: 'Board' },
+          { id: 'a11y', name: labels[0] },
+          { id: 'board', name: labels[1] },
         ]}
-        dueDate="2026-12-04"
-        today="2026-11-07"
-        assignee={{ name: 'Robin Diaz' }}
+        dueDate={fixture.data.dueDate}
+        today={fixture.data.today}
+        assignee={{ name: fixture.data.assignee }}
       />
     </div>
   );

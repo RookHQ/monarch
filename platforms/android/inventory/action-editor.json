@@ -1,0 +1,191 @@
+{
+  "id": "action-editor",
+  "name": "MonarchActionEditor",
+  "title": "ActionEditor",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of outlined action cards; MonarchSelect (androidx.compose.material3.ExposedDropdownMenuBox) for the type and single options, MonarchTextField (androidx.compose.material3.OutlinedTextField) for text, messages and numbers, MonarchMultiSelect (androidx.compose.material3.ModalBottomSheet) for several options and tags, MonarchCheckboxRow (androidx.compose.material3.Checkbox) for yes or no, MonarchInlineNotice for warnings, MonarchButton for move, remove and add",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Edits the ordered actions of a rule: each action has a type and the parameters that type defines, with validation and reordering.",
+  "whenToUse": "For the \"then do this\" part of routing rules, automations and macros, where the kinds of action and their parameters are data the app defines.",
+  "whenNotToUse": "For the \"when\" part of a rule use MonarchConditionEditor. For a fixed form with known fields, compose MonarchTextField and MonarchSelect directly.",
+  "api": [
+    "@Composable fun MonarchActionEditor(value: List<MonarchRuleAction>, onValueChange: (List<MonarchRuleAction>) -> Unit, actionTypes: List<MonarchActionType>, modifier: Modifier = Modifier, ordered: Boolean = true, maxActions: Int = 20, showErrors: Boolean = false, defaultType: String? = null, enabled: Boolean = true, createId: (() -> String)? = null, removeIcon: (@Composable () -> Unit)? = null, addIcon: (@Composable () -> Unit)? = null, emptyContent: (@Composable () -> Unit)? = null, labels: MonarchActionEditorLabels = MonarchActionEditorLabels())",
+    "data class MonarchRuleAction(id: String, type: String, parameters: Map<String, MonarchActionValue> = emptyMap()) { fun problems(actionTypes: List<MonarchActionType>): List<MonarchActionProblem>; companion object { fun create(id: String, type: MonarchActionType?): MonarchRuleAction; fun problems(actions: List<MonarchRuleAction>, actionTypes: List<MonarchActionType>): Map<String, List<MonarchActionProblem>> } }",
+    "class MonarchActionType(key: String, label: String, description: String? = null, group: String? = null, parameters: List<MonarchActionParameter> = emptyList(), defaults: Map<String, MonarchActionValue> = emptyMap(), enabled: Boolean = true, disabledReason: String? = null, validate: ((parameters: Map<String, MonarchActionValue>) -> String?)? = null, editor: (@Composable (parameters: Map<String, MonarchActionValue>, onParamsChange: (Map<String, MonarchActionValue>) -> Unit) -> Unit)? = null)",
+    "class MonarchActionParameter(key: String, label: String, kind: MonarchActionParameterKind, options: List<MonarchSelectOption<String>> = emptyList(), required: Boolean = false, description: String? = null, placeholder: String? = null, emptyLabel: String? = null, min: Double? = null, max: Double? = null, visibleWhen: ((parameters: Map<String, MonarchActionValue>) -> Boolean)? = null) { fun isVisible(parameters: Map<String, MonarchActionValue>): Boolean }",
+    "enum class MonarchActionParameterKind { Text, TextArea, Number, Select, MultiSelect, Tags, Boolean }",
+    "sealed interface MonarchActionValue { val isEmpty: Boolean; data class Text(text: String); data class Number(text: String) { constructor(number: Double); val parsed: Double? }; data class Flag(checked: Boolean); data class Values(values: List<String>) }",
+    "sealed interface MonarchActionProblem { data class Missing(param: String); data class OutOfRange(param: String); data class Invalid(message: String) }",
+    "class MonarchActionEditorLabels(label: String? = null, action: ((position: Int) -> String)? = null, type: String? = null, remove: String? = null, removeItem: ((position: Int) -> String)? = null, moveUp: String? = null, moveDown: String? = null, moveUpItem: ((position: Int) -> String)? = null, moveDownItem: ((position: Int) -> String)? = null, moved: ((type: String, position: Int, count: Int) -> String)? = null, add: String? = null, empty: String? = null, choose: String? = null, required: ((label: String) -> String)? = null, outOfRange: ((label: String) -> String)? = null, unknownType: ((key: String) -> String)? = null, unavailable: String? = null, maxReached: ((max: Int) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "value",
+      "type": "List<MonarchRuleAction>",
+      "default": "required",
+      "description": "The actions, in the order they run. Ids must be unique."
+    },
+    {
+      "name": "onValueChange",
+      "type": "(List<MonarchRuleAction>) -> Unit",
+      "default": "required",
+      "description": "Called with the whole new list after every change: add, remove, move, type or parameter."
+    },
+    {
+      "name": "actionTypes",
+      "type": "List<MonarchActionType>",
+      "default": "required",
+      "description": "The kinds of action: label, description, group, parameters, defaults, availability, an extra validate and an optional custom editor."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the editor."
+    },
+    {
+      "name": "ordered",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Actions run in order: each card gets Move up and Move down buttons, and each move is announced."
+    },
+    {
+      "name": "maxActions",
+      "type": "Int",
+      "default": "20",
+      "description": "The most actions. At this count the add button is replaced by a note."
+    },
+    {
+      "name": "showErrors",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows empty required parameters and numbers out of range as the input's error, the type's own check under the inputs, and the danger border on the card."
+    },
+    {
+      "name": "defaultType",
+      "type": "String?",
+      "default": "null",
+      "description": "The key of the type new actions start as. The first enabled type when null or unknown."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "When false every control is disabled; a type's custom editor is still shown but its changes are dropped."
+    },
+    {
+      "name": "createId",
+      "type": "(() -> String)?",
+      "default": "null",
+      "description": "Makes the id of a new action. By default the first free action-<n>."
+    },
+    {
+      "name": "removeIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The icon of each remove button. Monarch bundles no icons; without it the button reads \"Remove\"."
+    },
+    {
+      "name": "addIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "An icon before the text of the add button."
+    },
+    {
+      "name": "emptyContent",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "Replaces \"No actions yet.\""
+    },
+    {
+      "name": "labels",
+      "type": "MonarchActionEditorLabels",
+      "default": "MonarchActionEditorLabels()",
+      "description": "Replacements for the built-in strings."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "\"No actions yet.\" above the add button."
+    },
+    {
+      "name": "actions",
+      "description": "One outlined card per action: the heading \"Action 1\", a row of Move up, Move down and Remove, the type menu with the type's description, then one labelled input per visible parameter."
+    },
+    {
+      "name": "conditional parameter",
+      "description": "A parameter with visibleWhen appears and disappears as other parameters change, and is validated only while shown."
+    },
+    {
+      "name": "custom editor",
+      "description": "A type's editor replaces its parameter inputs."
+    },
+    {
+      "name": "unavailable type",
+      "description": "A disabled type stays selected on existing actions, with a warning notice and its reason; it cannot be picked for others."
+    },
+    {
+      "name": "errors",
+      "description": "With showErrors: \"Fill in “Team”.\" or \"Enter an allowed number for “Hours”.\" on the input, the type's message in a danger notice, and the danger border."
+    },
+    {
+      "name": "limit reached",
+      "description": "The add button is replaced by a muted note."
+    },
+    {
+      "name": "disabled",
+      "description": "Every control takes its disabled colors and does nothing."
+    }
+  ],
+  "appearance": "Each action is a card on the surface fill with the subtle border (the danger border while it has problems) and a subheading title. Inputs, menus, sheets and checkboxes take their Monarch colors; warnings use the warning inline notice and the type's own problem the danger inline notice. Light, dark and both high-contrast themes follow from those roles.",
+  "platformNotes": "The web reorders with ReorderableList (drag and keyboard); on Android the cards sit in a plain Column with Move up and Move down buttons, because a rule editor lives inside a scrolling form and MonarchReorderableList is a lazy list that cannot go inside one; buttons also work the same with TalkBack and Switch Access, and each move is announced in a polite live region. The web's NativeSelect, Combobox and TagInput are MonarchSelect and MonarchMultiSelect (free tags are created from the search text); the web's Textarea is a multi-line MonarchTextField. Parameter values are typed (MonarchActionValue) instead of JavaScript values; numbers keep the typed text. Problems are typed (MonarchActionProblem) and turned into text with labels, instead of the web's message strings. The web's render becomes editor, a composable slot. The web type's value is key here. The web moves focus after add and remove; Compose leaves focus to the system. Same name as iOS's plan; iOS has not built it yet.",
+  "accessibility": [
+    "Each action title (\"Action 1\") is a heading.",
+    "Move and remove buttons are named with the position (\"Move down: action 1\", \"Remove action 1\") and have 48dp touch targets; Move up on the first and Move down on the last are disabled.",
+    "Each move is announced through a polite live region on an always-present node: \"Close ticket moved to position 2 of 2.\"",
+    "Inputs keep their Material 3 roles and visible labels; a problem is set as the input's error text, not only as the border color.",
+    "A yes or no parameter is one checkbox row, read with its label and state."
+  ],
+  "edgeCases": [
+    "Picking another type starts the action again with that type's defaults; parameters of the old type are dropped.",
+    "A stored type the list no longer has shows as \"key (not available)\" and is not validated.",
+    "A hidden parameter keeps its value in parameters; it is only skipped by validation.",
+    "Clearing an optional menu or a number removes the key from parameters."
+  ],
+  "tests": [
+    "MonarchActionEditorTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Routing actions with errors shown",
+      "fixture": "action-editor",
+      "webExample": "Routing actions with errors shown",
+      "template": "MonarchActionEditor(\n    value = actions,\n    onValueChange = { actions = it },\n    actionTypes = types,\n    showErrors = true,\n    removeIcon = { MonarchIcon(SampleIcons.Close, contentDescription = null) },\n    moveUpIcon = { MonarchIcon(SampleIcons.ChevronUp, contentDescription = null) },\n    moveDownIcon = { MonarchIcon(SampleIcons.ChevronDown, contentDescription = null) },\n    addIcon = { MonarchIcon(SampleIcons.Plus, contentDescription = null) },\n)",
+      "setupTemplate": "val types = listOf(\n    MonarchActionType(\n        key = {{types.0.value}},\n        label = {{types.0.label}},\n        group = {{types.0.group}},\n        parameters = listOf(\n            MonarchActionParameter(\n                key = \"teamId\",\n                label = {{labels.team}},\n                kind = MonarchActionParameterKind.Select,\n                options = listOf(MonarchSelectOption({{teams.0.value}}, {{teams.0.label}}), MonarchSelectOption({{teams.1.value}}, {{teams.1.label}})),\n                required = true,\n            ),\n        ),\n    ),\n    MonarchActionType(\n        key = {{types.1.value}},\n        label = {{types.1.label}},\n        description = {{labels.roundRobinDescription}},\n        group = {{types.1.group}},\n        parameters = listOf(\n            MonarchActionParameter(\n                key = \"teamId\",\n                label = {{labels.team}},\n                kind = MonarchActionParameterKind.Select,\n                options = listOf(MonarchSelectOption({{teams.0.value}}, {{teams.0.label}}), MonarchSelectOption({{teams.1.value}}, {{teams.1.label}})),\n                emptyLabel = {{labels.currentTeam}},\n            ),\n        ),\n    ),\n    MonarchActionType(\n        key = {{types.2.value}},\n        label = {{types.2.label}},\n        group = {{types.2.group}},\n        parameters = listOf(\n            MonarchActionParameter(\n                key = \"priority\",\n                label = {{labels.priority}},\n                kind = MonarchActionParameterKind.Select,\n                options = listOf(MonarchSelectOption({{priorities.0.value}}, {{priorities.0.label}}), MonarchSelectOption({{priorities.1.value}}, {{priorities.1.label}})),\n                required = true,\n            ),\n        ),\n    ),\n    MonarchActionType(\n        key = {{types.3.value}},\n        label = {{types.3.label}},\n        group = {{types.3.group}},\n        parameters = listOf(\n            MonarchActionParameter(\n                key = \"tags\",\n                label = {{labels.tags}},\n                kind = MonarchActionParameterKind.Tags,\n                required = true,\n                placeholder = {{labels.tagsPrompt}},\n            ),\n        ),\n        defaults = mapOf(\"tags\" to MonarchActionValue.Values(emptyList())),\n    ),\n    MonarchActionType(\n        key = {{types.4.value}},\n        label = {{types.4.label}},\n        group = {{types.4.group}},\n        parameters = listOf(\n            MonarchActionParameter(\n                key = \"to\",\n                label = {{labels.notify}},\n                kind = MonarchActionParameterKind.Select,\n                options = listOf(\n                    MonarchSelectOption({{recipients.0.value}}, {{recipients.0.label}}),\n                    MonarchSelectOption({{recipients.1.value}}, {{recipients.1.label}}),\n                    MonarchSelectOption({{recipients.2.value}}, {{recipients.2.label}}),\n                ),\n                required = true,\n            ),\n            MonarchActionParameter(\n                key = \"personId\",\n                label = {{labels.person}},\n                kind = MonarchActionParameterKind.Select,\n                options = listOf(MonarchSelectOption({{people.0.value}}, {{people.0.label}}), MonarchSelectOption({{people.1.value}}, {{people.1.label}})),\n                required = true,\n                visibleWhen = { it[\"to\"] == MonarchActionValue.Text({{recipients.2.value}}) },\n            ),\n            MonarchActionParameter(\n                key = \"message\",\n                label = {{labels.message}},\n                kind = MonarchActionParameterKind.TextArea,\n                required = true,\n            ),\n        ),\n        defaults = mapOf(\"to\" to MonarchActionValue.Text({{recipients.0.value}}), \"message\" to MonarchActionValue.Text(\"\")),\n    ),\n    MonarchActionType(\n        key = {{types.5.value}},\n        label = {{types.5.label}},\n        group = {{types.5.group}},\n        enabled = false,\n        disabledReason = {{labels.disabledReason}},\n    ),\n)\nvar actions by remember {\n    mutableStateOf(\n        listOf(\n            MonarchRuleAction({{actions.0.id}}, {{actions.0.type}}, mapOf(\"teamId\" to MonarchActionValue.Text({{actions.0.teamId}}))),\n            MonarchRuleAction({{actions.1.id}}, {{actions.1.type}}, mapOf(\"to\" to MonarchActionValue.Text({{actions.1.to}}), \"message\" to MonarchActionValue.Text({{actions.1.message}}))),\n        ),\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "val types = listOf(\n    MonarchActionType(\n        key = \"set_team\",\n        label = \"Set team\",\n        group = \"Routing\",\n        parameters = listOf(\n            MonarchActionParameter(\n                key = \"teamId\",\n                label = \"Team\",\n                kind = MonarchActionParameterKind.Select,\n                options = listOf(MonarchSelectOption(\"support\", \"Support\"), MonarchSelectOption(\"billing\", \"Billing\")),\n                required = true,\n            ),\n        ),\n    ),\n    MonarchActionType(\n        key = \"assign_round_robin\",\n        label = \"Assign in turn\",\n        description = \"The next available person in the team, in turn.\",\n        group = \"Routing\",\n        parameters = listOf(\n            MonarchActionParameter(\n                key = \"teamId\",\n                label = \"Team\",\n                kind = MonarchActionParameterKind.Select,\n                options = listOf(MonarchSelectOption(\"support\", \"Support\"), MonarchSelectOption(\"billing\", \"Billing\")),\n                emptyLabel = \"The current team\",\n            ),\n        ),\n    ),\n    MonarchActionType(\n        key = \"set_priority\",\n        label = \"Set priority\",\n        group = \"Fields\",\n        parameters = listOf(\n            MonarchActionParameter(\n                key = \"priority\",\n                label = \"Priority\",\n                kind = MonarchActionParameterKind.Select,\n                options = listOf(MonarchSelectOption(\"low\", \"Low\"), MonarchSelectOption(\"high\", \"High\")),\n                required = true,\n            ),\n        ),\n    ),\n    MonarchActionType(\n        key = \"add_tags\",\n        label = \"Add tags\",\n        group = \"Fields\",\n        parameters = listOf(\n            MonarchActionParameter(\n                key = \"tags\",\n                label = \"Tags\",\n                kind = MonarchActionParameterKind.Tags,\n                required = true,\n                placeholder = \"Type a tag and press Enter\",\n            ),\n        ),\n        defaults = mapOf(\"tags\" to MonarchActionValue.Values(emptyList())),\n    ),\n    MonarchActionType(\n        key = \"notify\",\n        label = \"Notify people\",\n        group = \"Messages\",\n        parameters = listOf(\n            MonarchActionParameter(\n                key = \"to\",\n                label = \"Notify\",\n                kind = MonarchActionParameterKind.Select,\n                options = listOf(\n                    MonarchSelectOption(\"assignee\", \"Assignee\"),\n                    MonarchSelectOption(\"team\", \"Everyone in the team\"),\n                    MonarchSelectOption(\"person\", \"A specific person\"),\n                ),\n                required = true,\n            ),\n            MonarchActionParameter(\n                key = \"personId\",\n                label = \"Person\",\n                kind = MonarchActionParameterKind.Select,\n                options = listOf(MonarchSelectOption(\"p1\", \"Jo Park\"), MonarchSelectOption(\"p2\", \"Ana Ruiz\")),\n                required = true,\n                visibleWhen = { it[\"to\"] == MonarchActionValue.Text(\"person\") },\n            ),\n            MonarchActionParameter(\n                key = \"message\",\n                label = \"Message\",\n                kind = MonarchActionParameterKind.TextArea,\n                required = true,\n            ),\n        ),\n        defaults = mapOf(\"to\" to MonarchActionValue.Text(\"assignee\"), \"message\" to MonarchActionValue.Text(\"\")),\n    ),\n    MonarchActionType(\n        key = \"external_issue\",\n        label = \"Create an issue in another app\",\n        group = \"Messages\",\n        enabled = false,\n        disabledReason = \"The connection is not set up.\",\n    ),\n)\nvar actions by remember {\n    mutableStateOf(\n        listOf(\n            MonarchRuleAction(\"1\", \"set_team\", mapOf(\"teamId\" to MonarchActionValue.Text(\"billing\"))),\n            MonarchRuleAction(\"2\", \"notify\", mapOf(\"to\" to MonarchActionValue.Text(\"person\"), \"message\" to MonarchActionValue.Text(\"\"))),\n        ),\n    )\n}",
+      "code": "MonarchActionEditor(\n    value = actions,\n    onValueChange = { actions = it },\n    actionTypes = types,\n    showErrors = true,\n    removeIcon = { MonarchIcon(SampleIcons.Close, contentDescription = null) },\n    moveUpIcon = { MonarchIcon(SampleIcons.ChevronUp, contentDescription = null) },\n    moveDownIcon = { MonarchIcon(SampleIcons.ChevronDown, contentDescription = null) },\n    addIcon = { MonarchIcon(SampleIcons.Plus, contentDescription = null) },\n)"
+    }
+  ],
+  "webEquivalent": "ActionEditor",
+  "dependsOn": [
+    "select",
+    "text-field",
+    "button"
+  ],
+  "icons": {
+    "remove": "CloseGlyph",
+    "add": "PlusGlyph"
+  }
+}

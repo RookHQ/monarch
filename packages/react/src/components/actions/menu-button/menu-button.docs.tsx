@@ -6,7 +6,15 @@ import {
   MenuButton,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './menu-button.fixture.json';
 import { MoreIcon, PencilIcon, TrashIcon } from '../../../internal/docs-demo.js';
+
+const items = fixture.data.items as unknown as readonly [
+  { label: string },
+  { label: string; shortcut: string },
+  { label: string; tone: 'danger' },
+];
 
 export default {
   id: 'menu-button',
@@ -128,14 +136,16 @@ export default {
       items: [
         {
           title: 'Items as data',
+          stage: true,
           render: () => (
             <MenuButton
-              label="Actions"
+              defaultOpen
+              label={fixture.data.label}
               items={[
-                { label: 'Rename', icon: <PencilIcon /> },
-                { label: 'Duplicate', shortcut: '⌘D' },
+                { label: items[0].label, icon: <PencilIcon /> },
+                { label: items[1].label, shortcut: items[1].shortcut },
                 'separator',
-                { label: 'Delete', icon: <TrashIcon />, tone: 'danger' },
+                { label: items[2].label, icon: <TrashIcon />, tone: items[2].tone },
               ]}
             />
           ),

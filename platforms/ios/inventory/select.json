@@ -1,0 +1,136 @@
+{
+  "id": "select",
+  "name": "MonarchSelectField",
+  "title": "Select",
+  "family": "forms",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchSelectField (a custom Menu with an inline Picker inside the Monarch field box) for forms; the primary example draws the field and a popover listbox of Buttons with a check on the chosen row",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A select with the Monarch anatomy: the label above, a 1 point field box with the chosen value and a chevron, and the help or error line below. The options open in the system menu.",
+  "whenToUse": "To choose one value from a list of up to a few dozen options in a form or a row of settings.",
+  "whenNotToUse": "For two to four plain-text choices that should all stay visible, use MonarchSegmentedControl or Picker with pickerStyle(.segmented). For a long list that needs search, use MonarchCombobox.",
+  "api": [
+    "MonarchSelectField.init(_ label: String, selection: Binding<Value>, options: [MonarchSelectOption<Value>], prompt: String? = nil, helper: String? = nil, error: String? = nil, isRequired: Bool = false, labelVisibility: Visibility = .visible, labels: MonarchFormFieldLabels = MonarchFormFieldLabels())",
+    "MonarchSelectField.init(_ label: String, selection: Binding<Value>, valueText: String?, prompt: String? = nil, helper: String? = nil, error: String? = nil, isRequired: Bool = false, labelVisibility: Visibility = .visible, labels: MonarchFormFieldLabels = MonarchFormFieldLabels(), content: () -> Content)",
+    "MonarchSelectOption.init(_ title: String, value: Value, systemImage: String? = nil, isDisabled: Bool = false)"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The visible label and the spoken name."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<Value>",
+      "default": "required",
+      "description": "The chosen value. Use an optional Value for a select that can have no choice."
+    },
+    {
+      "name": "options",
+      "type": "[MonarchSelectOption<Value>]",
+      "default": "required",
+      "description": "The choices. The field shows the title of the chosen one."
+    },
+    {
+      "name": "prompt",
+      "type": "String?",
+      "default": "nil",
+      "description": "Text shown while no option matches the selection."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Supporting text under the field."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "An error message with an icon. Replaces the helper text and is announced."
+    },
+    {
+      "name": "isRequired",
+      "type": "Bool",
+      "default": "false",
+      "description": "A required mark after the label and \"Required\" in the hint."
+    },
+    {
+      "name": "labelVisibility",
+      "type": "Visibility",
+      "default": ".visible",
+      "description": ".hidden draws no label, for a row. The label is still spoken."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "The prompt in the subtle text colour."
+    },
+    {
+      "name": "chosen",
+      "description": "The title of the chosen option in the default text colour."
+    },
+    {
+      "name": "open",
+      "description": "The system menu with a check mark beside the chosen option."
+    },
+    {
+      "name": "error",
+      "description": "A danger border and an error line with an icon."
+    },
+    {
+      "name": "disabled",
+      "description": "The subtle background and the disabled text colour."
+    }
+  ],
+  "appearance": "The Monarch field box: 1 point input border, 8 point radius, surface fill, 44 point minimum height (40 and 52 with monarchFieldSize), 14 point value text, a muted chevron. The menu is the system menu.",
+  "platformNotes": "The Picker with the menu style draws bare text with no box and cannot be restyled, so the field is a Menu whose label is the Monarch box and whose content is an inline Picker. Options, the check mark, scrolling, dismissal and keyboard navigation are the system menu. Android ships MonarchSelect with the same anatomy over an exposed dropdown.",
+  "accessibility": [
+    "The field is one button named by the label, with the chosen text as its value and the help, error and \"Required\" as its hint.",
+    "The visible label and the chevron are hidden from VoiceOver.",
+    "The open menu is the system menu: options are read with a selected state on the chosen one.",
+    "The box is at least 44 points high and scales with Dynamic Type.",
+    "The error has an icon as well as the danger colour, and a new error is announced."
+  ],
+  "edgeCases": [
+    "A selection with no matching option shows the prompt.",
+    "Options with the same value cannot be told apart; use the model id as the value.",
+    "A long title truncates to one line in the field."
+  ],
+  "tests": [
+    "MonarchSelectFieldTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Status picker",
+      "fixture": "select",
+      "webExample": "Status picker",
+      "template": "Button {\n    isOpen = true\n} label: {\n    HStack {\n        Text(options.first { $0.value == status }?.label ?? {{label}})\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textDefault)\n        Spacer(minLength: 0)\n        Image(systemName: \"chevron.down\")\n            .imageScale(.small)\n            .foregroundStyle(theme.colors.textMuted)\n    }\n    .padding(.horizontal, theme.spacing.space3)\n    .frame(minHeight: 44)\n    .background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: MonarchTokens.Radius.md, style: .continuous))\n    .overlay(RoundedRectangle(cornerRadius: MonarchTokens.Radius.md, style: .continuous).strokeBorder(theme.colors.borderDefault, lineWidth: MonarchTokens.Space.px))\n    .contentShape(Rectangle())\n}\n.buttonStyle(.plain)\n.accessibilityLabel({{label}})\n.accessibilityValue(options.first { $0.value == status }?.label ?? \"\")\n.frame(width: 224)\n.onAppear { if startsPresented { isOpen = true } }\n.popover(isPresented: $isOpen, arrowEdge: .top) {\n    VStack(alignment: .leading, spacing: 0) {\n        ForEach(options, id: \\.value) { option in\n            Button {\n                status = option.value\n                isOpen = false\n            } label: {\n                HStack {\n                    Text(option.label).monarchTextStyle(.body)\n                    Spacer(minLength: theme.spacing.space4)\n                    if status == option.value {\n                        Image(systemName: \"checkmark\").foregroundStyle(theme.colors.accentSolid)\n                    }\n                }\n                .foregroundStyle(theme.colors.textDefault)\n                .padding(.horizontal, theme.spacing.space3)\n                .frame(minHeight: 44)\n                .background(status == option.value ? theme.colors.bgMuted : Color.clear, in: RoundedRectangle(cornerRadius: MonarchTokens.Radius.md, style: .continuous))\n                .contentShape(Rectangle())\n            }\n            .buttonStyle(.plain)\n            .accessibilityAddTraits(status == option.value ? .isSelected : [])\n        }\n    }\n    .padding(theme.spacing.space1)\n    .frame(minWidth: 224)\n    .presentationCompactAdaptation(.popover)\n    .presentationBackground(theme.colors.bgSurface)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@Environment(\\.monarchStartsPresented) private var startsPresented\n@State private var isOpen = false\n@State private var status = {{selected}}\nprivate let options = [\n    (value: {{options.0.value}}, label: {{options.0.label}}),\n    (value: {{options.1.value}}, label: {{options.1.label}}),\n    (value: {{options.2.value}}, label: {{options.2.label}}),\n]",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@Environment(\\.monarchStartsPresented) private var startsPresented\n@State private var isOpen = false\n@State private var status = \"open\"\nprivate let options = [\n    (value: \"open\", label: \"Open\"),\n    (value: \"pending\", label: \"Pending\"),\n    (value: \"resolved\", label: \"Resolved\"),\n]",
+      "code": "Button {\n    isOpen = true\n} label: {\n    HStack {\n        Text(options.first { $0.value == status }?.label ?? \"Status\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textDefault)\n        Spacer(minLength: 0)\n        Image(systemName: \"chevron.down\")\n            .imageScale(.small)\n            .foregroundStyle(theme.colors.textMuted)\n    }\n    .padding(.horizontal, theme.spacing.space3)\n    .frame(minHeight: 44)\n    .background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: MonarchTokens.Radius.md, style: .continuous))\n    .overlay(RoundedRectangle(cornerRadius: MonarchTokens.Radius.md, style: .continuous).strokeBorder(theme.colors.borderDefault, lineWidth: MonarchTokens.Space.px))\n    .contentShape(Rectangle())\n}\n.buttonStyle(.plain)\n.accessibilityLabel(\"Status\")\n.accessibilityValue(options.first { $0.value == status }?.label ?? \"\")\n.frame(width: 224)\n.onAppear { if startsPresented { isOpen = true } }\n.popover(isPresented: $isOpen, arrowEdge: .top) {\n    VStack(alignment: .leading, spacing: 0) {\n        ForEach(options, id: \\.value) { option in\n            Button {\n                status = option.value\n                isOpen = false\n            } label: {\n                HStack {\n                    Text(option.label).monarchTextStyle(.body)\n                    Spacer(minLength: theme.spacing.space4)\n                    if status == option.value {\n                        Image(systemName: \"checkmark\").foregroundStyle(theme.colors.accentSolid)\n                    }\n                }\n                .foregroundStyle(theme.colors.textDefault)\n                .padding(.horizontal, theme.spacing.space3)\n                .frame(minHeight: 44)\n                .background(status == option.value ? theme.colors.bgMuted : Color.clear, in: RoundedRectangle(cornerRadius: MonarchTokens.Radius.md, style: .continuous))\n                .contentShape(Rectangle())\n            }\n            .buttonStyle(.plain)\n            .accessibilityAddTraits(status == option.value ? .isSelected : [])\n        }\n    }\n    .padding(theme.spacing.space1)\n    .frame(minWidth: 224)\n    .presentationCompactAdaptation(.popover)\n    .presentationBackground(theme.colors.bgSurface)\n}",
+      "previewTap": true
+    },
+    {
+      "title": "No choice yet, with an error",
+      "setup": "@State private var priority: String?",
+      "code": "MonarchSelectField(\n    \"Priority\",\n    selection: $priority,\n    options: [\n        MonarchSelectOption(\"Low\", value: String?.some(\"low\")),\n        MonarchSelectOption(\"High\", value: String?.some(\"high\")),\n    ],\n    prompt: \"Choose a priority\",\n    error: priority == nil ? \"Choose a priority.\" : nil,\n    isRequired: true\n)"
+    }
+  ],
+  "webEquivalent": "Select",
+  "dependsOn": [
+    "form-field"
+  ],
+  "icons": {
+    "trigger.chevron": "ChevronDownGlyph"
+  }
+}

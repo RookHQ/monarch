@@ -1,0 +1,173 @@
+{
+  "id": "session-list",
+  "name": "MonarchSessionList",
+  "title": "SessionList",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchSectionCard with a VStack of rows (MonarchIcon, Text, MonarchBadge, RelativeDateTimeFormatter in a TimelineView(.everyMinute)), MonarchButton, alert(_:isPresented:presenting:actions:message:) with Button(role: .destructive) and Button(role: .cancel)",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The places an account is signed in: one row per browser or app with its device, location and times, a This device badge, Sign out on each row and Sign out other devices in the header, each behind a confirmation.",
+  "whenToUse": "On an account security screen where people review the browsers and apps signed in to their account and sign out one they do not recognise, or every other one at once.",
+  "whenNotToUse": "For the physical devices that have accessed an account, with blocking, use MonarchDeviceList. For a single new-sign-in alert use MonarchSecurityAlertCard.",
+  "api": [
+    "init(_ sessions: [MonarchSession], title: String? = nil, description: String? = nil, state: MonarchSessionListState = .ready, isRetrying: Bool = false, confirmsSignOut: Bool = true, now: Date? = nil, footnote: String? = nil, labels: MonarchSessionListLabels = MonarchSessionListLabels(), onRetry: (@MainActor () -> Void)? = nil, onSignOut: (@MainActor (String) async throws -> Void)? = nil, onSignOutOthers: (@MainActor ([String]) async throws -> Void)? = nil)",
+    "struct MonarchSession { init(id: String, label: String, kind: MonarchDeviceKind = .desktop, detail: String? = nil, signedIn: Date? = nil, lastActive: Date? = nil, isCurrent: Bool = false) }",
+    "enum MonarchSessionListState { case ready, loading, failed }",
+    "struct MonarchSessionListLabels { init(title:, description:, listLabel:, current:, signedIn:, lastActive:, signOut:, signOutLabel:, signOutOthers:, confirmTitle:, confirmMessage:, othersTitle:, othersMessage:, cancel:, signedOut:, signedOutOthers:, signOutFailed:, signOutOthersFailed:, loading:, emptyTitle:, errorTitle:) }"
+  ],
+  "options": [
+    {
+      "name": "sessions",
+      "type": "[MonarchSession]",
+      "default": "required",
+      "description": "The person's sessions, the current one included, shown in the order given."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in title \"Where you’re signed in\"."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the line under the title."
+    },
+    {
+      "name": "state",
+      "type": "MonarchSessionListState",
+      "default": ".ready",
+      "description": "Loaded, loading or failed. A loaded empty list shows the empty state."
+    },
+    {
+      "name": "isRetrying",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the retry button busy in the failed state."
+    },
+    {
+      "name": "confirmsSignOut",
+      "type": "Bool",
+      "default": "true",
+      "description": "Asks with a system alert before signing out. Set false when the handlers open the app's own confirmation."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for relative times. Without it they follow the clock, updated every minute."
+    },
+    {
+      "name": "footnote",
+      "type": "String?",
+      "default": "nil",
+      "description": "A note in the card's footer bar, such as how long open apps stay signed in."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSessionListLabels",
+      "default": "MonarchSessionListLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Retries loading. Shows Try again in the failed state."
+    },
+    {
+      "name": "onSignOut",
+      "type": "(@MainActor (String) async throws -> Void)?",
+      "default": "nil",
+      "description": "Signs one session out, given its id. Shows Sign out on every row, the current one included; throwing shows the failure."
+    },
+    {
+      "name": "onSignOutOthers",
+      "type": "(@MainActor ([String]) async throws -> Void)?",
+      "default": "nil",
+      "description": "Signs out every session except the current one, given their ids. Shows Sign out other devices in the header when another session exists; throwing shows the failure."
+    }
+  ],
+  "states": [
+    {
+      "name": "list",
+      "description": "One row per session, separated by dividers."
+    },
+    {
+      "name": "current",
+      "description": "A success This device badge and no last-active time."
+    },
+    {
+      "name": "signing out",
+      "description": "The button that started it shows its spinner; the other sign-out buttons are disabled."
+    },
+    {
+      "name": "sign-out failed",
+      "description": "A danger inline notice at the top of the card, such as \"Couldn’t sign out Chrome on Windows. Try again.\", announced."
+    },
+    {
+      "name": "loading",
+      "description": "The section card's skeleton rows, read as \"Loading sessions\"."
+    },
+    {
+      "name": "empty",
+      "description": "A small MonarchEmptyState, \"No active sessions\"."
+    },
+    {
+      "name": "failed",
+      "description": "A small MonarchErrorState with Try again when onRetry is given."
+    }
+  ],
+  "appearance": "A MonarchSectionCard: the title and description in the section header styles, rows with the device icon in the muted text colour, the label in the strong body style, a subtle success badge, caption lines in the muted text colour and ghost Sign out buttons. The footnote sits in the card's subtle footer bar. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The parity map names List rows; the rows are a VStack inside a MonarchSectionCard, like the web's SectionCard and MonarchDeviceList, because the list sits inside the app's own scrolling settings screen where a nested List would not size itself. The web's confirmation is a ConfirmDialog that stays open while the request runs; on iOS it is the system alert, which closes when a button is tapped, so the pending state moves to the button and a failure appears as a notice in the card. The web's per-row hint (a hover title with the full user agent) has no touch equivalent and is left out, as is its describeUserAgent helper: an iOS app gets the session label from its server. The web's headingLevel has no iOS equivalent (the title is a header) and its locale prop is the SwiftUI locale environment. Android builds the same component, also experimental. Several closures are optional (onRetry, onSignOut, onSignOutOthers). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onRetry.",
+  "accessibility": [
+    "The title has the header trait (from MonarchSectionCard).",
+    "Each session is one element whose label is the session's label and whose value is This device, the detail and the times, built by a tested pure function; the current session is a word, not only a colour.",
+    "The device icon is decorative and hidden.",
+    "Sign out is a separate MonarchButton with a 44-point touch target, named \"Sign out <label>\".",
+    "The confirmations are system alerts with a destructive button and a cancel button.",
+    "Each result and each failure is posted as an announcement.",
+    "Rows stack the button under the text when they do not fit, so nothing is cut off at the largest text sizes."
+  ],
+  "edgeCases": [
+    "The current session can be signed out too; its confirmation says the person will need to sign in again on this device.",
+    "Sign out other devices is hidden when the current session is the only one.",
+    "The app removes signed-out sessions from sessions after the handler returns; the list does not remove them itself.",
+    "Only one sign-out runs at a time."
+  ],
+  "tests": [
+    "MonarchSessionListTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Sign out one or every other session",
+      "fixture": "session-list",
+      "webExample": "Sign out one or every other session",
+      "template": "MonarchSessionList(\n    sessions,\n    footnote: {{footnote}},\n    onSignOut: { id in\n        // The app ends the session on the server.\n        try await Task.sleep(for: .milliseconds(300))\n        sessions.removeAll { $0.id == id }\n    },\n    onSignOutOthers: { ids in\n        try await Task.sleep(for: .milliseconds(300))\n        sessions.removeAll { ids.contains($0.id) }\n    }\n)",
+      "setupTemplate": "@State private var sessions = [\n    MonarchSession(\n        id: {{sessions.0.id}},\n        label: {{sessions.0.label}},\n        signedIn: Date(timeIntervalSinceNow: -{{sessions.0.signedInHoursAgo}} * 3600),\n        lastActive: Date(timeIntervalSinceNow: -{{sessions.0.lastActiveHoursAgo}} * 3600),\n        isCurrent: {{sessions.0.current}}\n    ),\n    MonarchSession(\n        id: {{sessions.1.id}},\n        label: {{sessions.1.label}},\n        kind: {{sessions.1.kind|case}},\n        detail: {{sessions.1.detail}},\n        signedIn: Date(timeIntervalSinceNow: -{{sessions.1.signedInHoursAgo}} * 3600),\n        lastActive: Date(timeIntervalSinceNow: -{{sessions.1.lastActiveHoursAgo}} * 3600)\n    ),\n    MonarchSession(\n        id: {{sessions.2.id}},\n        label: {{sessions.2.label}},\n        kind: {{sessions.2.kind|case}},\n        signedIn: Date(timeIntervalSinceNow: -{{sessions.2.signedInHoursAgo}} * 3600),\n        lastActive: Date(timeIntervalSinceNow: -{{sessions.2.lastActiveHoursAgo}} * 3600)\n    ),\n]",
+      "setup": "@State private var sessions = [\n    MonarchSession(\n        id: \"s-1\",\n        label: \"Chrome on macOS\",\n        signedIn: Date(timeIntervalSinceNow: -30 * 3600),\n        lastActive: Date(timeIntervalSinceNow: -0 * 3600),\n        isCurrent: true\n    ),\n    MonarchSession(\n        id: \"s-2\",\n        label: \"Safari on iPhone\",\n        kind: .mobile,\n        detail: \"Lisbon, Portugal\",\n        signedIn: Date(timeIntervalSinceNow: -200 * 3600),\n        lastActive: Date(timeIntervalSinceNow: -3 * 3600)\n    ),\n    MonarchSession(\n        id: \"s-3\",\n        label: \"Firefox on Linux\",\n        kind: .desktop,\n        signedIn: Date(timeIntervalSinceNow: -500 * 3600),\n        lastActive: Date(timeIntervalSinceNow: -72 * 3600)\n    ),\n]",
+      "code": "MonarchSessionList(\n    sessions,\n    footnote: \"Apps already open on a device you sign out can stay signed in for a few minutes.\",\n    onSignOut: { id in\n        // The app ends the session on the server.\n        try await Task.sleep(for: .milliseconds(300))\n        sessions.removeAll { $0.id == id }\n    },\n    onSignOutOthers: { ids in\n        try await Task.sleep(for: .milliseconds(300))\n        sessions.removeAll { ids.contains($0.id) }\n    }\n)"
+    },
+    {
+      "title": "Loading and failed",
+      "code": "VStack {\n    MonarchSessionList([], state: .loading)\n    MonarchSessionList([], state: .failed, onRetry: {})\n}"
+    }
+  ],
+  "webEquivalent": "SessionList",
+  "dependsOn": [
+    "device-list",
+    "section-card",
+    "confirm-dialog",
+    "button",
+    "badge",
+    "relative-time",
+    "inline-notice"
+  ]
+}

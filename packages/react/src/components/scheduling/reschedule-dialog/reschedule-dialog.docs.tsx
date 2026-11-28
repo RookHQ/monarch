@@ -6,19 +6,36 @@ import {
   type SlotPickerSlot,
 } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './reschedule-dialog.fixture.json';
 
 function slotsFor(day: string): SlotPickerSlot[] {
   if (day.endsWith('-07') || day.endsWith('-08')) return [];
   return ['09:00', '09:30', '11:00', '14:00', '15:30'].map((t) => ({ start: `${day}T${t}:00Z` }));
 }
 
-function Demo({ outside = false }: { outside?: boolean }) {
+function Demo({
+  outside = false,
+  defaultOpen = false,
+}: {
+  outside?: boolean;
+  defaultOpen?: boolean;
+}) {
   const [day, setDay] = useState<string>('2026-11-05');
   const [last, setLast] = useState<RescheduleDetails | null>(null);
   return (
-    <div style={{ display: 'grid', gap: 8 }}>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1fr)',
+        justifyItems: 'start',
+        gap: 8,
+        width: '100%',
+      }}
+    >
       <RescheduleDialog
-        trigger={<Button>Reschedule</Button>}
+        trigger={<Button>{fixture.data.trigger}</Button>}
+        defaultOpen={defaultOpen}
         subject="Consultation with Sam Lee"
         currentStart="2026-11-04T09:30:00Z"
         timeZone="Europe/London"
@@ -44,7 +61,7 @@ function Demo({ outside = false }: { outside?: boolean }) {
       <p style={{ margin: 0, fontSize: 13 }}>
         {last
           ? `Moved to ${last.start}${last.outsideHours ? ' (outside hours)' : ''}`
-          : 'Not moved yet'}
+          : fixture.data.status}
       </p>
     </div>
   );
@@ -163,7 +180,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Reschedule to an open slot', render: () => <Demo /> },
+        {
+          title: 'Reschedule to an open slot',
+          stage: true,
+          render: () => <Demo defaultOpen />,
+        },
         { title: 'Staff: allow a time outside working hours', render: () => <Demo outside /> },
       ],
     },

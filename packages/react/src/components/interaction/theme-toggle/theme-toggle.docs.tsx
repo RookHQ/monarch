@@ -5,6 +5,8 @@ import {
   type ThemePreference,
 } from '@rookcom/monarch-react/shell';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './theme-toggle.fixture.json';
 
 /** Docs examples keep their choice in memory, so they never change this site's own theme. */
 function useDemoCookies(initial?: ThemePreference): ShellCookieStore {
@@ -16,7 +18,7 @@ function useDemoCookies(initial?: ThemePreference): ShellCookieStore {
 }
 
 function SettingsDemo() {
-  const cookies = useDemoCookies('system');
+  const cookies = useDemoCookies(fixture.data.preference as ThemePreference);
   return <ThemeToggle cookies={cookies} applyToDocument={false} />;
 }
 

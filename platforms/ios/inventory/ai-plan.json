@@ -1,0 +1,141 @@
+{
+  "id": "ai-plan",
+  "name": "MonarchAiPlan",
+  "title": "AiPlan",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchCard with a VStack of rows (MonarchDragHandle with draggable(_:) and dropDestination(for:action:isTargeted:), MonarchInlineEditText, an icon Button) and MonarchButton for Add, Reject and Approve; MonarchAiChainOfSteps once decided",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The plan an agent proposes before it acts, which a person edits, reorders, approves or rejects, and which then shows the steps as the agent works through them.",
+  "whenToUse": "When an agent should not act until a person agrees: show the plan part (MonarchAiPlanPart) from the message model and run the approved steps.",
+  "whenNotToUse": "Not to show steps the agent is already running with no approval (use MonarchAiChainOfSteps) and not for a single risky tool call (use MonarchAiToolResultCard or a confirmation dialog).",
+  "api": [
+    "init(_ part: MonarchAiPlanPart, decision: MonarchAiPlanDecision? = nil, isEditable: Bool = true, labels: MonarchAiPlanLabels = MonarchAiPlanLabels(), onChange: (@MainActor ([MonarchAiPlanStep]) -> Void)? = nil, onReject: (@MainActor () -> Void)? = nil, onApprove: (@MainActor ([MonarchAiPlanStep]) -> Void)? = nil)",
+    "enum MonarchAiPlanDecision { case pending, approved, rejected }",
+    "struct MonarchAiPlanLabels { init(title: String? = nil, description: String? = nil, editHint: String? = nil, approvedNotice: String? = nil, rejectedNotice: String? = nil, stepLabel: ((Int) -> String)? = nil, stepPlaceholder: String? = nil, untitledStep: ((Int) -> String)? = nil, reorder: ((String) -> String)? = nil, moved: ((String, Int, Int) -> String)? = nil, remove: ((String) -> String)? = nil, removed: ((String) -> String)? = nil, addStep: String? = nil, approve: String? = nil, reject: String? = nil, emptyPlan: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "part",
+      "type": "MonarchAiPlanPart",
+      "default": "required",
+      "description": "The plan part the agent proposed. Its steps seed the draft; a new part from the model (not an echo of the draft) replaces it."
+    },
+    {
+      "name": "decision",
+      "type": "MonarchAiPlanDecision?",
+      "default": "nil",
+      "description": "The decision, when the app owns it. When nil the view keeps its own after Approve or Reject."
+    },
+    {
+      "name": "isEditable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the person can change the steps before deciding. Once decided the plan is always read-only."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiPlanLabels",
+      "default": "MonarchAiPlanLabels()",
+      "description": "Replacements for the built-in strings, including the title."
+    },
+    {
+      "name": "onChange",
+      "type": "(@MainActor ([MonarchAiPlanStep]) -> Void)?",
+      "default": "nil",
+      "description": "Called with the draft after every edit, move, addition and removal."
+    },
+    {
+      "name": "onReject",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Called when the person rejects the plan."
+    },
+    {
+      "name": "onApprove",
+      "type": "(@MainActor ([MonarchAiPlanStep]) -> Void)?",
+      "default": "nil",
+      "description": "Called with the approved steps, labels trimmed and empty steps left out."
+    }
+  ],
+  "states": [
+    {
+      "name": "pending, editable",
+      "description": "Each step is a numbered row with a drag handle, the step text as an inline editor and a remove button; Add step, Reject and Approve plan follow."
+    },
+    {
+      "name": "pending, read-only",
+      "description": "isEditable false: the steps as a MonarchAiChainOfSteps with Reject and Approve plan."
+    },
+    {
+      "name": "empty",
+      "description": "Every step empty: Approve plan is disabled and a note says to add a step."
+    },
+    {
+      "name": "approved",
+      "description": "The description reads the approved notice; the cleaned steps show as a MonarchAiChainOfSteps whose states follow the part and are announced."
+    },
+    {
+      "name": "rejected",
+      "description": "The description reads the rejected notice; the steps show read-only with no buttons."
+    },
+    {
+      "name": "drop target",
+      "description": "While a dragged step is over a row, the row takes the AI subtle background."
+    }
+  ],
+  "appearance": "A Monarch card: the title in the subheading style and default text role, the description and step numbers in the muted text role, a drop target in the AI subtle role. Buttons are Monarch ghost, secondary and primary buttons. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "Planned as a List with onMove; built as a VStack instead, because the plan sits inside a scrolling conversation where a List cannot size itself, and onMove only works inside a List. Steps move by dragging the handle onto another step, or with the handle's Move up and Move down actions; the web also shows visible move buttons and keyboard reordering. The web's text inputs are always open with Enter adding a step and Backspace removing an empty one; iOS uses MonarchInlineEditText, which opens on tap and saves on Return or when focus leaves. The web's title prop is labels.title. The web announces through a live region; iOS posts accessibility announcements.",
+  "accessibility": [
+    "The plan is a container named by its title; the title has the header trait.",
+    "Each step's text is a button named \"Step 2\" whose value is the step text, with the Edit hint of MonarchInlineEditText.",
+    "Each drag handle is named \"Reorder <step>\" and offers Move up and Move down actions; a move is announced as \"<step>, position 2 of 3\".",
+    "Each remove button is named \"Remove <step>\"; a removal is announced as \"Removed <step>\".",
+    "An empty step is named \"step 2\" in these names.",
+    "Approving or rejecting announces the approved or rejected notice; once approved the chain of steps announces starts and failures.",
+    "The step number is hidden from VoiceOver because the step label carries it.",
+    "Every control has a 44-point touch target; the footer buttons stack when they do not fit."
+  ],
+  "edgeCases": [
+    "A step whose text is only spaces counts as empty and is left out of the approved steps.",
+    "A new step opens its editor at once.",
+    "When the app passes a decision and neither onApprove nor onReject, no buttons are shown.",
+    "Long steps wrap at every text size."
+  ],
+  "tests": [
+    "MonarchAiPlanTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Editable proposal",
+      "fixture": "ai-plan",
+      "webExample": "Editable proposal",
+      "template": "MonarchAiPlan(\n    MonarchAiPlanPart(steps: [\n        MonarchAiPlanStep(id: {{steps.0.id}}, label: {{steps.0.label}}),\n        MonarchAiPlanStep(id: {{steps.1.id}}, label: {{steps.1.label}}),\n        MonarchAiPlanStep(id: {{steps.2.id}}, label: {{steps.2.label}}),\n    ]),\n    onReject: {},\n    onApprove: { _ in }\n)",
+      "code": "MonarchAiPlan(\n    MonarchAiPlanPart(steps: [\n        MonarchAiPlanStep(id: \"s1\", label: \"Collect last quarter’s figures\"),\n        MonarchAiPlanStep(id: \"s2\", label: \"Compare them with the forecast\"),\n        MonarchAiPlanStep(id: \"s3\", label: \"Draft a one-page summary\"),\n    ]),\n    onReject: {},\n    onApprove: { _ in }\n)"
+    },
+    {
+      "title": "An approved plan, running",
+      "code": "MonarchAiPlan(\n    MonarchAiPlanPart(steps: [\n        MonarchAiPlanStep(id: \"find\", label: \"Find the three open invoices\", state: .done),\n        MonarchAiPlanStep(id: \"send\", label: \"Send the reminders\", state: .active),\n    ]),\n    decision: .approved\n)"
+    }
+  ],
+  "webEquivalent": "AiPlan",
+  "dependsOn": [
+    "reorderable-list",
+    "inline-edit-text",
+    "button",
+    "drag-handle",
+    "card",
+    "ai-chain-of-steps",
+    "ai-conversation"
+  ],
+  "icons": {
+    "remove": "CloseGlyph",
+    "addStep": "PlusGlyph"
+  }
+}

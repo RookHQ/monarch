@@ -8,6 +8,8 @@ import {
   useChoice,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './choice-dialog.fixture.json';
 import { MoreIcon } from '../../../internal/docs-demo.js';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
@@ -15,19 +17,13 @@ const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(re
 function ViewVisibility() {
   return (
     <ChoiceDialog
-      trigger={<Button>Save view</Button>}
-      title="Who can see this view?"
-      description="You can change this later from the view’s settings."
-      choices={[
-        { value: 'private', label: 'Only me', description: 'The view is listed only for you.' },
-        {
-          value: 'shared',
-          label: 'Everyone in the workspace',
-          description: 'Members see it in their sidebar and can open it.',
-        },
-      ]}
-      defaultValue="private"
-      confirmLabel="Save view"
+      trigger={<Button>{fixture.data.trigger}</Button>}
+      defaultOpen
+      title={fixture.data.title}
+      description={fixture.data.description}
+      choices={fixture.data.choices}
+      defaultValue={fixture.data.defaultValue}
+      confirmLabel={fixture.data.confirmLabel}
       onChoose={() => wait(800)}
     />
   );
@@ -276,7 +272,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Visibility of a saved view', render: () => <ViewVisibility /> },
+        {
+          title: 'Visibility of a saved view',
+          stage: { align: 'center' },
+          render: () => <ViewVisibility />,
+        },
         {
           title: 'No default, a danger option and a label that follows the choice',
           render: () => <ImportConflicts />,

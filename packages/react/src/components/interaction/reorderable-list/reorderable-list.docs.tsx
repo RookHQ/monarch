@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Badge } from '@rookcom/monarch-react';
 import { ReorderableList } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './reorderable-list.fixture.json';
 
 interface Stage {
   id: string;
@@ -10,12 +12,7 @@ interface Stage {
   locked?: boolean;
 }
 
-const STAGES: Stage[] = [
-  { id: 'new', name: 'New', count: 12 },
-  { id: 'contacted', name: 'Contacted', count: 8 },
-  { id: 'proposal', name: 'Proposal sent', count: 5 },
-  { id: 'negotiation', name: 'Negotiation', count: 3 },
-];
+const STAGES: Stage[] = fixture.data.items;
 
 function StagesDemo() {
   const [stages, setStages] = useState(STAGES);

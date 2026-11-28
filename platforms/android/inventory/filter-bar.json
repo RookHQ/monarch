@@ -1,0 +1,122 @@
+{
+  "id": "filter-bar",
+  "name": null,
+  "title": "FilterBar",
+  "family": "search",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchSearchBar over an androidx.compose.foundation.horizontalScroll Row of MonarchButton (Filters), MonarchTag filter and removable chips (MonarchChip and MonarchButton) and MonarchButton, with MonarchFacetedFilterPanel in a MonarchBottomSheet",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: search, a sideways-scrolling row of filter chips (Filters, quick toggles, applied filters you can remove, Clear all) and the result count above a list; the full filter set opens in a sheet.",
+  "whenToUse": "Above a list or table with filters applied, so people can see, change and remove them, and for one-tap quick filters such as Assigned to me.",
+  "whenNotToUse": "For switching between exclusive views use tabs or a segmented button; for tags on a record use MonarchBadge or MonarchTag; for a few sort options use a MonarchMenu.",
+  "api": [
+    "MonarchSearchBar(query = query, onQueryChange = { query = it }, onSearch = {}, placeholder = \"Search tickets\")",
+    "Row(Modifier.horizontalScroll(rememberScrollState())) { AssistChip(onClick = { sheet = true }, label = { Text(\"Filters (2)\") }); MonarchTag(text = …, selected = …, onSelectedChange = …); MonarchTag(text = \"Status: Open\", onRemove = …, removeIcon = …); TextButton(onClick = clearAll) { Text(\"Clear all\") } }",
+    "MonarchText(text = \"12 results\", modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })",
+    "ModalBottomSheet(onDismissRequest = …) { MonarchFacetedFilterPanel(facets = …, value = filters, onValueChange = { filters = it }) { MonarchButton(text = \"Show results\", …) } }"
+  ],
+  "options": [
+    {
+      "name": "query",
+      "type": "String",
+      "default": "\"\"",
+      "description": "The search text, in MonarchSearchBar above the chips."
+    },
+    {
+      "name": "filters",
+      "type": "Map<String, MonarchFacetSelection>",
+      "default": "emptyMap()",
+      "description": "The applied filters by facet id; the sheet edits them and each chosen option is a removable chip."
+    },
+    {
+      "name": "quick filters",
+      "type": "MonarchTag(selected, onSelectedChange)",
+      "default": "none",
+      "description": "One-tap toggles such as Assigned to me or Unread, as filter chips."
+    },
+    {
+      "name": "Filters chip",
+      "type": "MonarchButton",
+      "default": "required",
+      "description": "Opens the sheet; its label carries the number of active filters, \"Filters (2)\"."
+    },
+    {
+      "name": "Clear all",
+      "type": "ghost MonarchButton",
+      "default": "shown when filters are active",
+      "description": "Removes every applied filter."
+    },
+    {
+      "name": "result count",
+      "type": "MonarchText in a polite live region",
+      "default": "optional",
+      "description": "\"12 results\", announced when it changes."
+    }
+  ],
+  "states": [
+    {
+      "name": "no filters",
+      "description": "Only Filters and the quick toggles; no Clear all."
+    },
+    {
+      "name": "filters applied",
+      "description": "A removable chip per applied value, Filters (n) and Clear all."
+    },
+    {
+      "name": "sheet open",
+      "description": "MonarchFacetedFilterPanel in a bottom sheet with Show results."
+    },
+    {
+      "name": "many chips",
+      "description": "The row scrolls sideways; it never wraps into several rows on a phone."
+    }
+  ],
+  "appearance": "Material 3 chips in Monarch colors: outlined when off, filled when a quick filter is on; removable chips with the app's close glyph; the result count as body text. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web FilterBar is a wrapping toolbar with MonarchChip (removable, editable in a popover, or a toggle with a count), a FilterMenu (Add filter), Clear all, a result count, trailing controls, URL helpers and an optional collapse into a sheet below a width. On a phone the native pattern is a single sideways-scrolling chip row under the search field, with the full filter set in a bottom sheet, so this recipe uses Material 3 chips and MonarchFacetedFilterPanel in a MonarchBottomSheet instead of popovers per chip; Add filter becomes the Filters chip. Search parameters in the URL have no counterpart: keep the filters in the screen's state or ViewModel. iOS has no entry yet; its plan is also a recipe.",
+  "accessibility": [
+    "The Filters chip is a button whose name carries the count, \"Filters (2)\".",
+    "Quick filters are filter chips that report selected.",
+    "Each removable chip's remove target is named, \"Remove Status: Open\", and has a 48dp target from MonarchTag.",
+    "The result count is a polite live region, so a change is announced.",
+    "The sheet is a modal pane; back and the scrim close it."
+  ],
+  "edgeCases": [
+    "Keep the chip row on one line with horizontalScroll; at font scale 2.0 people scroll it.",
+    "Clear the applied chips when Clear all is pressed, and close the sheet with Show results.",
+    "MonarchFacetedFilterPanel is not lazy: in the sheet put it in a verticalScroll Column."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Removable filters",
+      "fixture": "filter-bar",
+      "webExample": "Removable filters",
+      "template": "FlowRow(\n    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n    itemVerticalAlignment = Alignment.CenterVertically,\n) {\n    filters.forEach { (name, value) ->\n        MonarchTag(\n            text = \"$name: $value\",\n            onRemove = { filters = filters.filterNot { it.first == name } },\n            removeIcon = { MonarchIcon(SampleIcons.Close, null) },\n            removeLabel = \"Remove $name filter\",\n        )\n    }\n    if (filters.isNotEmpty()) {\n        MonarchButton(\n            text = \"Clear all\",\n            onClick = { filters = emptyList() },\n            variant = MonarchButtonVariant.Link,\n            size = MonarchButtonSize.Sm,\n        )\n    }\n}",
+      "setupTemplate": "var filters by remember {\n    mutableStateOf(\n        listOf(\n            {{filters.0.name}} to {{filters.0.value}},\n            {{filters.1.name}} to {{filters.1.value}},\n            {{filters.2.name}} to {{filters.2.value}},\n        ),\n    )\n}",
+      "imports": [
+        "com.rookhq.monarch.foundation.icon.MonarchIcon",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "androidx.compose.foundation.horizontalScroll",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.ui.Alignment"
+      ],
+      "setup": "var filters by remember {\n    mutableStateOf(\n        listOf(\n            \"Status\" to \"Open\",\n            \"Assignee\" to \"Me\",\n            \"Priority\" to \"High\",\n        ),\n    )\n}",
+      "code": "FlowRow(\n    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n    itemVerticalAlignment = Alignment.CenterVertically,\n) {\n    filters.forEach { (name, value) ->\n        MonarchTag(\n            text = \"$name: $value\",\n            onRemove = { filters = filters.filterNot { it.first == name } },\n            removeIcon = { MonarchIcon(SampleIcons.Close, null) },\n            removeLabel = \"Remove $name filter\",\n        )\n    }\n    if (filters.isNotEmpty()) {\n        MonarchButton(\n            text = \"Clear all\",\n            onClick = { filters = emptyList() },\n            variant = MonarchButtonVariant.Link,\n            size = MonarchButtonSize.Sm,\n        )\n    }\n}"
+    }
+  ],
+  "webEquivalent": "FilterBar",
+  "dependsOn": [
+    "tag",
+    "search-input",
+    "faceted-filter-panel",
+    "sheet"
+  ]
+}

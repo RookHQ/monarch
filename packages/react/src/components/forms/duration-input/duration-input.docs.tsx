@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { Field, FieldDescription, FieldLabel } from '@rookcom/monarch-react';
 import { DurationInput } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './duration-input.fixture.json';
 
 function EstimateDemo() {
-  const [minutes, setMinutes] = useState<number | null>(90);
+  const [minutes, setMinutes] = useState<number | null>(fixture.data.minutes);
   return (
     <Field style={{ width: '100%', maxWidth: 240 }}>
-      <FieldLabel>Estimate</FieldLabel>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
       <DurationInput value={minutes} onValueChange={setMinutes} />
-      <FieldDescription>Type 1h 30m, 90m or 1.5h. Arrow keys step by 15 minutes.</FieldDescription>
+      <FieldDescription>{fixture.data.helper}</FieldDescription>
     </Field>
   );
 }

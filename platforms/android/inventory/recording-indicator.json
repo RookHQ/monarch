@@ -1,0 +1,139 @@
+{
+  "id": "recording-indicator",
+  "name": "MonarchRecordingIndicator",
+  "title": "RecordingIndicator",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Row, androidx.compose.material3.Text, androidx.compose.material3.OutlinedIconButton, android.text.format.DateUtils.formatElapsedTime, android.icu.text.MeasureFormat",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A \"REC\" badge with a pulsing dot and the recorded time, shown while a call or a session is recorded, with an optional stop button.",
+  "whenToUse": "While a call, a meeting or a screen session is being recorded, so everyone can see it and the person recording can stop it.",
+  "whenNotToUse": "For a live state that is not recording use MonarchStatusDot with pulsing. For a general status label use MonarchBadge.",
+  "api": [
+    "@Composable fun MonarchRecordingIndicator(recording: Boolean, modifier: Modifier = Modifier, variant: MonarchRecordingIndicatorVariant = MonarchRecordingIndicatorVariant.Subtle, paused: Boolean = false, since: Long? = null, elapsedMillis: Long? = null, showElapsed: Boolean? = null, onStop: (() -> Unit)? = null, labels: MonarchRecordingIndicatorLabels = MonarchRecordingIndicatorLabels())",
+    "enum class MonarchRecordingIndicatorVariant { Subtle, Solid }",
+    "class MonarchRecordingIndicatorLabels(rec: String? = null, recording: String? = null, paused: String? = null, started: String? = null, stopped: String? = null, pausedAnnouncement: String? = null, resumed: String? = null, stop: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "recording",
+      "type": "Boolean",
+      "default": "required",
+      "description": "Whether recording is on. While false nothing is drawn."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the component."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchRecordingIndicatorVariant",
+      "default": "MonarchRecordingIndicatorVariant.Subtle",
+      "description": "Subtle on the app's surfaces, Solid over video."
+    },
+    {
+      "name": "paused",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The badge says Paused, shows a square and the time stops."
+    },
+    {
+      "name": "since",
+      "type": "Long?",
+      "default": "null",
+      "description": "When recording started, in epoch milliseconds (UTC). The time advances from it every second."
+    },
+    {
+      "name": "elapsedMillis",
+      "type": "Long?",
+      "default": "null",
+      "description": "The recorded time counted by the app. Takes precedence over since and does not advance by itself."
+    },
+    {
+      "name": "showElapsed",
+      "type": "Boolean?",
+      "default": "null",
+      "description": "Shows the time; null shows it whenever since or elapsedMillis is given."
+    },
+    {
+      "name": "onStop",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Stops recording. Adds the stop button."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchRecordingIndicatorLabels",
+      "default": "MonarchRecordingIndicatorLabels()",
+      "description": "Replacements for the eight built-in strings."
+    }
+  ],
+  "states": [
+    {
+      "name": "not recording",
+      "description": "Nothing is drawn; the live region stays, so the stop is announced."
+    },
+    {
+      "name": "recording",
+      "description": "A pulsing dot, \"REC\" and the time."
+    },
+    {
+      "name": "paused",
+      "description": "A square, \"Paused\" and a time that does not advance."
+    },
+    {
+      "name": "animations off",
+      "description": "The dot does not pulse."
+    }
+  ],
+  "appearance": "Subtle is the danger subtle fill with the danger border and strong danger text, with a solid danger dot. Solid is the inverse surface with inverse text and the inverse danger dot. The stop button is a surface with the default border and a strong danger square. The same roles are used in every theme.",
+  "platformNotes": "The web variants are named badge and overlay; Android uses the shared words Subtle and Solid, as iOS does. The web overlay is translucent; Solid is opaque, because Monarch does not dim colors with alpha. Strings are replaced through one labels value, as on iOS. The time is formatted by DateUtils.formatElapsedTime and spoken in words by ICU MeasureFormat in the user's locale. The pulse of the dot fades with the alpha of the drawing, as the web animates opacity. Announcements use a polite live region that is always present, because Compose has no direct announcement call and View.announceForAccessibility is deprecated.",
+  "accessibility": [
+    "The badge is one TalkBack element read as \"Recording\" or \"Recording, Paused\", with the time in words as its state.",
+    "Starting, stopping, pausing and resuming are each announced once through a polite live region; the first state and the advancing time are not announced.",
+    "The state is text and a dot or a square as well as color.",
+    "The dot does not pulse when the user has turned animations off.",
+    "The stop button is named \"Stop recording\" and has a 48dp touch target reserved in the layout.",
+    "The badge grows with the font size setting."
+  ],
+  "edgeCases": [
+    "A since in the future shows 0 seconds.",
+    "Over an hour the time has hours, \"1:02:03\".",
+    "With elapsedMillis the app must update the value for the time to move.",
+    "The live region that carries the announcements has no size; whether TalkBack speaks it on every device was not checked on a device."
+  ],
+  "tests": [
+    "MonarchRecordingIndicatorTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Start and stop",
+      "fixture": "recording-indicator",
+      "webExample": "Start and stop",
+      "template": "Row(\n    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n    verticalAlignment = Alignment.CenterVertically,\n) {\n    MonarchButton(\n        text = if (recording) {{stop}} else {{start}},\n        onClick = { recording = !recording },\n        size = MonarchButtonSize.Sm,\n    )\n    MonarchRecordingIndicator(recording = recording, elapsedMillis = {{elapsedMillis}})\n}",
+      "setupTemplate": "var recording by remember { mutableStateOf(true) }",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "var recording by remember { mutableStateOf(true) }",
+      "code": "Row(\n    horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n    verticalAlignment = Alignment.CenterVertically,\n) {\n    MonarchButton(\n        text = if (recording) \"Stop recording\" else \"Start recording\",\n        onClick = { recording = !recording },\n        size = MonarchButtonSize.Sm,\n    )\n    MonarchRecordingIndicator(recording = recording, elapsedMillis = 83_000)\n}"
+    },
+    {
+      "title": "Over video, paused",
+      "code": "MonarchRecordingIndicator(\n    recording = true,\n    variant = MonarchRecordingIndicatorVariant.Solid,\n    paused = true,\n    elapsedMillis = 83_000L,\n)"
+    }
+  ],
+  "webEquivalent": "RecordingIndicator",
+  "dependsOn": [
+    "badge"
+  ]
+}

@@ -1,0 +1,145 @@
+{
+  "id": "approval-chain-editor",
+  "name": "MonarchApprovalChainEditor",
+  "title": "ApprovalChainEditor",
+  "family": "workflow",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "VStack of MonarchCard steps, each with Picker(.menu) in MonarchFormField for the approver and target, MonarchTextField for the label, a Menu with Move up and Move down, and accessibilityActions(_:) for the same moves",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Edits the ordered steps of an approval chain: who approves each step (a kind of approver, plus a role or person where needed), an optional label, and the order.",
+  "whenToUse": "In settings where an admin sets up who approves requests, expenses or documents, step by step.",
+  "whenNotToUse": "To show the progress of one request through its chain use MonarchApprovalTimeline. For an escalation ladder with delays use MonarchEscalationPolicyEditor. For a plain reorderable list use List with onMove.",
+  "api": [
+    "init(steps: Binding<[MonarchApprovalChainStep]>, approverTypes: [MonarchApprovalApproverType], description: String? = nil, minSteps: Int = 1, maxSteps: Int = 10, showsLabels: Bool = true, showsErrors: Bool = false, labels: MonarchApprovalChainEditorLabels = MonarchApprovalChainEditorLabels(), makeID: @escaping @MainActor () -> String = { UUID().uuidString })",
+    "nonisolated static func validate(_ steps: [MonarchApprovalChainStep], approverTypes: [MonarchApprovalApproverType]) -> Set<String>",
+    "nonisolated static func summarize(_ steps: [MonarchApprovalChainStep], approverTypes: [MonarchApprovalApproverType], separator: String = \" → \") -> String",
+    "MonarchApprovalChainStep.init(id: String, approver: String, target: String? = nil, label: String? = nil)",
+    "MonarchApprovalApproverType.init(id: String, label: String, targets: [MonarchComboboxOption]? = nil, targetLabel: String? = nil)",
+    "MonarchApprovalChainEditorLabels.init(legend:step:approver:target:targetPlaceholder:label:labelPlaceholder:addStep:removeStep:targetRequired:maxReached:reorder:moveUp:moveDown:moved:), every parameter optional"
+  ],
+  "options": [
+    {
+      "name": "steps",
+      "type": "Binding<[MonarchApprovalChainStep]>",
+      "default": "required",
+      "description": "The steps in order: id, approver type id, target and label."
+    },
+    {
+      "name": "approverTypes",
+      "type": "[MonarchApprovalApproverType]",
+      "default": "required",
+      "description": "The kinds of approver; a type with targets needs one chosen. New steps use the first."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "Help under the heading."
+    },
+    {
+      "name": "minSteps",
+      "type": "Int",
+      "default": "1",
+      "description": "The fewest steps; remove is disabled at this count."
+    },
+    {
+      "name": "maxSteps",
+      "type": "Int",
+      "default": "10",
+      "description": "The most steps; the add button becomes \"A chain can have up to 10 steps.\"."
+    },
+    {
+      "name": "showsLabels",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the optional label field (up to 60 characters) on each step."
+    },
+    {
+      "name": "showsErrors",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows \"Choose who decides this step.\" under missing targets, for example after a save attempt."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchApprovalChainEditorLabels",
+      "default": "MonarchApprovalChainEditorLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "makeID",
+      "type": "@MainActor () -> String",
+      "default": "{ UUID().uuidString }",
+      "description": "Makes the id of a new step."
+    }
+  ],
+  "states": [
+    {
+      "name": "steps",
+      "description": "One card per step: \"Step 1\", Reorder, Remove, Approver, the target when the type has targets, and Label."
+    },
+    {
+      "name": "missing target",
+      "description": "With showsErrors, the target menu shows the error with an icon."
+    },
+    {
+      "name": "at the minimum",
+      "description": "Remove is disabled."
+    },
+    {
+      "name": "full",
+      "description": "The add button is replaced by a muted note."
+    },
+    {
+      "name": "unknown approver",
+      "description": "A stored approver id that is no longer offered stays selected by its id until changed."
+    },
+    {
+      "name": "disabled",
+      "description": "Every control is disabled and the moves are not offered to VoiceOver."
+    }
+  ],
+  "appearance": "Monarch cards on the surface colour, a subheading for the list, menu pickers and text fields in the Monarch field style, ghost icon buttons for reorder and remove and a secondary Add step button. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web uses ReorderableList with drag handles and move buttons; iOS follows MonarchActionEditor: a Reorder menu with Move up and Move down on each card and the same moves as VoiceOver actions, because cards with several fields cannot be List rows with onMove without nesting a List in a scrolling form. There is no drag gesture, so nothing depends on dragging. The web's targets are NativeSelect options; iOS reuses MonarchComboboxOption in a menu Picker. The web's createStep is makeID here. The web moves focus after a removal; iOS leaves focus to VoiceOver. Android uses the same name and options.",
+  "accessibility": [
+    "The list is a container named \"Steps, in order\" with a heading.",
+    "Each step is a container read as \"Step 1, Finance check (Role: Finance team)\" with Move up and Move down accessibility actions; each move is announced (\"Moved to position 2.\").",
+    "The remove button is named \"Remove step 1\" and the reorder menu \"Reorder step 1\".",
+    "The approver and target menus are labelled through MonarchFormField; the target is marked Required and its error is text with an icon.",
+    "Touch targets are at least 44 points."
+  ],
+  "edgeCases": [
+    "Changing the approver drops a target the new type does not offer, as the web does.",
+    "Labels longer than 60 characters are cut; an emptied label becomes nil.",
+    "With no approver types the add button is disabled.",
+    "validate returns ids, so the app can scroll to the first incomplete step."
+  ],
+  "tests": [
+    "MonarchApprovalChainEditorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Edit a chain",
+      "fixture": "approval-chain-editor",
+      "webExample": "Edit a chain",
+      "template": "VStack(alignment: .leading, spacing: 12) {\n    MonarchApprovalChainEditor(\n        steps: $steps,\n        approverTypes: [\n            MonarchApprovalApproverType(id: {{approverTypes.0.value}}, label: {{approverTypes.0.label}}),\n            MonarchApprovalApproverType(id: {{approverTypes.1.value}}, label: {{approverTypes.1.label}}),\n            MonarchApprovalApproverType(id: {{approverTypes.2.value}}, label: {{approverTypes.2.label}}),\n            MonarchApprovalApproverType(\n                id: {{approverTypes.3.value}},\n                label: {{approverTypes.3.label}},\n                targets: [\n                    MonarchComboboxOption(id: {{approverTypes.3.targets.0.value}}, label: {{approverTypes.3.targets.0.label}}),\n                    MonarchComboboxOption(id: {{approverTypes.3.targets.1.value}}, label: {{approverTypes.3.targets.1.label}}),\n                ],\n                targetLabel: {{approverTypes.3.targetLabel}}\n            ),\n            MonarchApprovalApproverType(\n                id: {{approverTypes.4.value}},\n                label: {{approverTypes.4.label}},\n                targets: [\n                    MonarchComboboxOption(id: {{approverTypes.4.targets.0.value}}, label: {{approverTypes.4.targets.0.label}}),\n                    MonarchComboboxOption(id: {{approverTypes.4.targets.1.value}}, label: {{approverTypes.4.targets.1.label}}),\n                ],\n                targetLabel: {{approverTypes.4.targetLabel}}\n            ),\n        ],\n        description: {{description}},\n        showsErrors: tried\n    )\n    MonarchButton({{saveLabel}}, variant: .primary) {\n        tried = true\n    }\n}",
+      "setupTemplate": "@State private var steps = [\n    MonarchApprovalChainStep(id: {{steps.0.id}}, approver: {{steps.0.approver}}),\n    MonarchApprovalChainStep(id: {{steps.1.id}}, approver: {{steps.1.approver}}, label: {{steps.1.label}}),\n]\n@State private var tried = false",
+      "setup": "@State private var steps = [\n    MonarchApprovalChainStep(id: \"1\", approver: \"manager\"),\n    MonarchApprovalChainStep(id: \"2\", approver: \"role\", label: \"Finance check\"),\n]\n@State private var tried = false",
+      "code": "VStack(alignment: .leading, spacing: 12) {\n    MonarchApprovalChainEditor(\n        steps: $steps,\n        approverTypes: [\n            MonarchApprovalApproverType(id: \"manager\", label: \"Reporting manager\"),\n            MonarchApprovalApproverType(id: \"manager-2\", label: \"Manager’s manager\"),\n            MonarchApprovalApproverType(id: \"head\", label: \"Department head\"),\n            MonarchApprovalApproverType(\n                id: \"role\",\n                label: \"Anyone with a role\",\n                targets: [\n                    MonarchComboboxOption(id: \"finance\", label: \"Finance team\"),\n                    MonarchComboboxOption(id: \"people\", label: \"People team\"),\n                ],\n                targetLabel: \"Role\"\n            ),\n            MonarchApprovalApproverType(\n                id: \"person\",\n                label: \"A named person\",\n                targets: [\n                    MonarchComboboxOption(id: \"p1\", label: \"Jo Park\"),\n                    MonarchComboboxOption(id: \"p2\", label: \"Ana Ruiz\"),\n                ],\n                targetLabel: \"Person\"\n            ),\n        ],\n        description: \"Each step is decided by one of the people it names. A step whose approver is the requester is skipped.\",\n        showsErrors: tried\n    )\n    MonarchButton(\"Save chain\", variant: .primary) {\n        tried = true\n    }\n}"
+    }
+  ],
+  "webEquivalent": "ApprovalChainEditor",
+  "dependsOn": [
+    "text-field",
+    "form-field",
+    "card",
+    "button",
+    "dropdown-menu"
+  ]
+}

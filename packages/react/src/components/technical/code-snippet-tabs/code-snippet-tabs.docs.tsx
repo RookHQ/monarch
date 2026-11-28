@@ -1,23 +1,9 @@
 import { CodeSnippetTabs, type CodeSnippet } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './code-snippet-tabs.fixture.json';
 
-const LIST_ITEMS: CodeSnippet[] = [
-  {
-    label: 'cURL',
-    language: 'bash',
-    code: 'curl https://api.example.com/v1/items \\\n  -H "Authorization: Bearer $API_KEY"',
-  },
-  {
-    label: 'JavaScript',
-    language: 'js',
-    code: "const res = await fetch('https://api.example.com/v1/items', {\n  headers: { Authorization: `Bearer ${process.env.API_KEY}` },\n});",
-  },
-  {
-    label: 'Python',
-    language: 'python',
-    code: "import os, requests\n\nrequests.get(\n    'https://api.example.com/v1/items',\n    headers={'Authorization': f\"Bearer {os.environ['API_KEY']}\"},\n)",
-  },
-];
+const LIST_ITEMS: CodeSnippet[] = fixture.data.snippets;
 
 const CREATE_ITEM: CodeSnippet[] = [
   {
@@ -146,7 +132,7 @@ export default {
         {
           title: 'Request in three languages',
           stack: true,
-          render: () => <CodeSnippetTabs snippets={LIST_ITEMS} label="Request examples" />,
+          render: () => <CodeSnippetTabs snippets={LIST_ITEMS} label={fixture.data.label} />,
         },
         {
           title: 'Two sets kept on one language',

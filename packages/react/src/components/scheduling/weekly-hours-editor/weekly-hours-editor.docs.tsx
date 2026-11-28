@@ -5,11 +5,18 @@ import {
   type WeeklyHoursInterval,
 } from '@rookcom/monarch-react/scheduling';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './weekly-hours-editor.fixture.json';
 
-const WEEKDAYS: WeeklyHoursInterval[] = [1, 2, 3, 4, 5].flatMap((day) => [
-  { day, start: 540, end: 750 },
-  { day, start: 810, end: 1050 },
-]);
+const data = fixture.data as unknown as {
+  timeZoneLabel: string;
+  days: number[];
+  intervals: { start: number; end: number }[];
+};
+
+const WEEKDAYS: WeeklyHoursInterval[] = data.days.flatMap((day) =>
+  data.intervals.map(({ start, end }) => ({ day, start, end })),
+);
 
 function ControlledDemo() {
   const [value, setValue] = useState<WeeklyHoursInterval[]>(WEEKDAYS);
@@ -21,7 +28,7 @@ function ControlledDemo() {
         locale="en-GB"
         value={value}
         onValueChange={setValue}
-        timeZoneLabel="Times in Europe/London"
+        timeZoneLabel={data.timeZoneLabel}
       />
       <p style={{ margin: 0, fontSize: 13 }} aria-live="polite">
         {invalid ? 'Fix the highlighted days to save.' : `${hours} hours a week`}

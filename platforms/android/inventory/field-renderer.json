@@ -1,0 +1,174 @@
+{
+  "id": "field-renderer",
+  "name": "MonarchFieldRenderer",
+  "title": "FieldRenderer",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "A when over MonarchFormFieldType to MonarchFormField with MonarchTextField, MonarchNumberInput, MonarchSelect, MonarchRadioRow, MonarchRatingPicker and MonarchFileUpload; MonarchMultiSelect, MonarchCheckboxGroup and MonarchCheckboxRow; androidx.compose.material3.DatePickerDialog and androidx.compose.material3.TimePickerDialog for dates and times",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Renders one form question from data: the right Monarch input for its type, with the label, help, required mark, error and an optional “filled in automatically” note.",
+  "whenToUse": "Questions are authored by admins and stored as data, or a form shows answers that were filled in automatically and people must check them.",
+  "whenNotToUse": "When the form is fixed in code, compose MonarchFormField, MonarchTextField and the other inputs directly.",
+  "api": [
+    "@Composable public fun MonarchFieldRenderer(field: MonarchFormFieldDefinition, value: MonarchFormFieldValue?, onValueChange: (MonarchFormFieldValue?) -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, problem: MonarchFormFieldProblem? = null, errorText: String? = null, confidence: Float? = null, confidenceThreshold: Float = 0.6f, labels: MonarchFieldRendererLabels = MonarchFieldRendererLabels())",
+    "public class MonarchFormFieldDefinition(id: String, type: MonarchFormFieldType, label: String, description: String? = null, placeholder: String? = null, required: Boolean = false, options: List<MonarchFormFieldOption> = emptyList(), minLength: Int? = null, maxLength: Int? = null, min: Double? = null, max: Double? = null, minDate: Long? = null, maxDate: Long? = null, minSelections: Int? = null, maxSelections: Int? = null, accept: List<String> = emptyList(), maxFileSize: Long? = null, maxFiles: Int = 1, consentText: String? = null, conditions: List<MonarchCondition> = emptyList(), conditionMatch: MonarchConditionMatch = MonarchConditionMatch.All, readOnly: Boolean = false) { fun problem(value: MonarchFormFieldValue?): MonarchFormFieldProblem?; fun isVisible(values: Map<String, MonarchFormFieldValue?>): Boolean }",
+    "public enum class MonarchFormFieldType { ShortText, LongText, Email, Phone, Url, Number, Date, Time, Select, MultiSelect, Radio, Checkboxes, YesNo, Consent, Rating, File, Section }",
+    "public sealed interface MonarchFormFieldValue { val isEmpty: Boolean; val raw: Any; data class Text(text: String); data class Number(number: Double); data class Date(millis: Long); data class Flag(checked: Boolean); data class Values(values: List<String>); data class Files(files: List<MonarchFormFieldFile>) }",
+    "public sealed interface MonarchFormFieldProblem { data object Required; data object MustAgree; data object Email; data object Url; data object NotANumber; data class Min(min: Double); data class Max(max: Double); data class MinLength(min: Int); data class MaxLength(max: Int); data class MinSelections(min: Int); data class MaxSelections(max: Int) }",
+    "public data class MonarchFormFieldOption(value: String, label: String)",
+    "public data class MonarchFormFieldFile(name: String, size: Long? = null, file: MonarchPickedFile? = null)",
+    "public class MonarchFieldRendererLabels(required: String? = null, mustAgree: String? = null, email: String? = null, url: String? = null, number: String? = null, min: ((min: String) -> String)? = null, max: ((max: String) -> String)? = null, minLength: ((min: Int) -> String)? = null, maxLength: ((max: Int) -> String)? = null, minSelections: ((min: Int) -> String)? = null, maxSelections: ((max: Int) -> String)? = null, yes: String? = null, no: String? = null, choose: String? = null, chooseDate: String? = null, chooseTime: String? = null, confirm: String? = null, cancel: String? = null, aiFilled: String? = null, aiCheck: String? = null, remove: String? = null, removeFile: ((name: String) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "field",
+      "type": "MonarchFormFieldDefinition",
+      "default": "required",
+      "description": "The question: its type, label, help, required flag, options, limits, conditions and read-only flag."
+    },
+    {
+      "name": "value",
+      "type": "MonarchFormFieldValue?",
+      "default": "required",
+      "description": "The current answer, or null for none."
+    },
+    {
+      "name": "onValueChange",
+      "type": "(MonarchFormFieldValue?) -> Unit",
+      "default": "required",
+      "description": "Called with the new answer; null when it is cleared."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the question."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the answer can be changed."
+    },
+    {
+      "name": "problem",
+      "type": "MonarchFormFieldProblem?",
+      "default": "null",
+      "description": "A problem from MonarchFormFieldDefinition.problem, shown as the error with its built-in message."
+    },
+    {
+      "name": "errorText",
+      "type": "String?",
+      "default": "null",
+      "description": "An error message, such as a server error; replaces the message of problem."
+    },
+    {
+      "name": "confidence",
+      "type": "Float?",
+      "default": "null",
+      "description": "The confidence, from 0 to 1, of an answer filled in automatically; shows a note under the question."
+    },
+    {
+      "name": "confidenceThreshold",
+      "type": "Float",
+      "default": "0.6f",
+      "description": "The confidence under which the note asks people to check the answer."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchFieldRendererLabels",
+      "default": "MonarchFieldRendererLabels()",
+      "description": "Replacements for the built-in strings and messages."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "The input shows its placeholder, Choose…, Choose a date or Choose a time."
+    },
+    {
+      "name": "answered",
+      "description": "The input shows the answer: text, the chosen option, a date such as Nov 14, 2026, a time, a rating or the chosen files."
+    },
+    {
+      "name": "error",
+      "description": "The message shows under the question in the danger color and is the error of the input for TalkBack."
+    },
+    {
+      "name": "filled in automatically",
+      "description": "With confidence, a note says the answer was filled in; below the threshold it asks for a check in the warning color."
+    },
+    {
+      "name": "read-only",
+      "description": "Text questions keep a readable, read-only input; other questions are disabled."
+    },
+    {
+      "name": "disabled",
+      "description": "Every input is disabled."
+    },
+    {
+      "name": "section",
+      "description": "A heading with an optional description and no input."
+    }
+  ],
+  "appearance": "Every question uses the look of the Monarch input it renders: outlined fields with the input border, radio and checkbox rows, buttons for date and time. Errors use the danger text color, the automatic-fill note the AI text color or, when unsure, the warning text color; section descriptions use the muted text color. Light, dark and both high-contrast themes follow from the color roles.",
+  "platformNotes": "Same question types, checks, order of checks and default messages as the web (validateFormField is MonarchFormFieldDefinition.problem, which returns a typed problem; the renderer turns it into the message, and errorText replaces it). Differences: a date answer is UTC epoch milliseconds, as the Material 3 DatePickerState gives it, where the web stores YYYY-MM-DD; a time stays HH:MM. Dates and times are buttons that open the Material 3 DatePickerDialog and TimePickerDialog instead of typed inputs. File limits are MIME types and bytes (accept, maxFileSize) as in MonarchFileUpload, where the web takes an accept string and megabytes. A rating uses the numbered scale of MonarchRatingPicker because Monarch bundles no star glyph. The rows of a long-text question are not applied: MonarchTextField grows with its text. A consent shows no visible required mark; its error explains it. headingLevel and locale are not parameters: TalkBack has no heading levels, and the locale comes from the configuration. The AI note is text without the web's assistant glyph. There is no iOS entry yet.",
+  "accessibility": [
+    "Inputs without a label of their own sit in a MonarchFormField, so TalkBack reads the label, Required and the error on the input, and a new error is announced through a polite live region.",
+    "Multi-select and checkboxes questions use the labels, required marks and errors of MonarchMultiSelect and MonarchCheckboxGroup.",
+    "Radio and yes-or-no options are selectable 48dp rows in a selectable group; a consent is one checkbox row with its statement as the name.",
+    "A consent error is text under the row, announced through a polite live region, and is set as the error of the row.",
+    "A section is a heading.",
+    "Each chosen file has a 48dp remove button named Remove followed by the file name.",
+    "The automatic-fill note is text, not only color."
+  ],
+  "edgeCases": [
+    "Text is cut at maxLength while typing; problem also reports a stored answer that is too long.",
+    "Spaces alone are no answer, and length checks ignore spaces at either end, as on the web.",
+    "A yes-or-no question with an answer that is not a Flag counts as unanswered.",
+    "Use isVisible to leave out questions whose conditions do not hold; the renderer does not hide itself.",
+    "A time answer that is not HH:MM shows Choose a time."
+  ],
+  "tests": [
+    "MonarchFieldRendererTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "A short public form",
+      "fixture": "field-renderer",
+      "webExample": "A short public form",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    MonarchFieldRenderer(\n        field = form[0],\n        value = answers[form[0].id],\n        onValueChange = { answers[form[0].id] = it },\n        confidence = {{prefilled.confidence|double}}f,\n    )\n    MonarchFieldRenderer(\n        field = form[1],\n        value = answers[form[1].id],\n        onValueChange = { answers[form[1].id] = it },\n    )\n    MonarchFieldRenderer(\n        field = form[2],\n        value = answers[form[2].id],\n        onValueChange = { answers[form[2].id] = it },\n    )\n    MonarchFieldRenderer(\n        field = form[3],\n        value = answers[form[3].id],\n        onValueChange = { answers[form[3].id] = it },\n    )\n    MonarchFieldRenderer(\n        field = form[4],\n        value = answers[form[4].id],\n        onValueChange = { answers[form[4].id] = it },\n    )\n    MonarchFieldRenderer(\n        field = form[5],\n        value = answers[form[5].id],\n        onValueChange = { answers[form[5].id] = it },\n    )\n}",
+      "setupTemplate": "val form = listOf(\n    MonarchFormFieldDefinition({{fields.0.id}}, MonarchFormFieldType.{{fields.0.type|pascal}}, {{fields.0.label}}, required = {{fields.0.required}}),\n    MonarchFormFieldDefinition({{fields.1.id}}, MonarchFormFieldType.{{fields.1.type|pascal}}, {{fields.1.label}}, description = {{fields.1.description}}, required = {{fields.1.required}}),\n    MonarchFormFieldDefinition({{fields.2.id}}, MonarchFormFieldType.{{fields.2.type|pascal}}, {{fields.2.label}}, options = listOf(MonarchFormFieldOption({{fields.2.options.0.value}}, {{fields.2.options.0.label}}), MonarchFormFieldOption({{fields.2.options.1.value}}, {{fields.2.options.1.label}}))),\n    MonarchFormFieldDefinition({{fields.3.id}}, MonarchFormFieldType.{{fields.3.type|pascal}}, {{fields.3.label}}),\n    MonarchFormFieldDefinition({{fields.4.id}}, MonarchFormFieldType.{{fields.4.type|pascal}}, {{fields.4.label}}),\n    MonarchFormFieldDefinition({{fields.5.id}}, MonarchFormFieldType.{{fields.5.type|pascal}}, {{fields.5.label}}, required = {{fields.5.required}}, consentText = {{fields.5.consentText}} + \"*\"),\n)\nval answers = remember {\n    mutableStateMapOf<String, MonarchFormFieldValue?>({{prefilled.field}} to MonarchFormFieldValue.Text({{prefilled.value}}))\n}",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme"
+      ],
+      "setup": "val form = listOf(\n    MonarchFormFieldDefinition(\"name\", MonarchFormFieldType.ShortText, \"Full name\", required = true),\n    MonarchFormFieldDefinition(\"email\", MonarchFormFieldType.Email, \"Email\", description = \"We only use it to reply.\", required = true),\n    MonarchFormFieldDefinition(\"where\", MonarchFormFieldType.Radio, \"Where will you join from?\", options = listOf(MonarchFormFieldOption(\"remote\", \"Remote\"), MonarchFormFieldOption(\"office\", \"Office\"))),\n    MonarchFormFieldDefinition(\"relocate\", MonarchFormFieldType.YesNo, \"Can you relocate?\"),\n    MonarchFormFieldDefinition(\"rating\", MonarchFormFieldType.Rating, \"How was the process?\"),\n    MonarchFormFieldDefinition(\"consent\", MonarchFormFieldType.Consent, \"Consent\", required = true, consentText = \"I agree to be contacted about this request.\" + \"*\"),\n)\nval answers = remember {\n    mutableStateMapOf<String, MonarchFormFieldValue?>(\"name\" to MonarchFormFieldValue.Text(\"Alex Morgan\"))\n}",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4)) {\n    MonarchFieldRenderer(\n        field = form[0],\n        value = answers[form[0].id],\n        onValueChange = { answers[form[0].id] = it },\n        confidence = 0.92f,\n    )\n    MonarchFieldRenderer(\n        field = form[1],\n        value = answers[form[1].id],\n        onValueChange = { answers[form[1].id] = it },\n    )\n    MonarchFieldRenderer(\n        field = form[2],\n        value = answers[form[2].id],\n        onValueChange = { answers[form[2].id] = it },\n    )\n    MonarchFieldRenderer(\n        field = form[3],\n        value = answers[form[3].id],\n        onValueChange = { answers[form[3].id] = it },\n    )\n    MonarchFieldRenderer(\n        field = form[4],\n        value = answers[form[4].id],\n        onValueChange = { answers[form[4].id] = it },\n    )\n    MonarchFieldRenderer(\n        field = form[5],\n        value = answers[form[5].id],\n        onValueChange = { answers[form[5].id] = it },\n    )\n}"
+    },
+    {
+      "title": "An answer filled in automatically",
+      "code": "MonarchFieldRenderer(\n    field = MonarchFormFieldDefinition(\"company\", MonarchFormFieldType.ShortText, \"Company\"),\n    value = MonarchFormFieldValue.Text(\"Rook\"),\n    onValueChange = {},\n    confidence = 0.4f,\n)"
+    }
+  ],
+  "webEquivalent": "FieldRenderer",
+  "dependsOn": [
+    "form-field",
+    "text-field",
+    "number-input",
+    "select",
+    "multi-select",
+    "checkbox-group",
+    "radio-group",
+    "switch",
+    "date-picker",
+    "file-upload",
+    "rating-picker"
+  ]
+}

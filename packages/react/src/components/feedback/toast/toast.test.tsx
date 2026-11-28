@@ -13,6 +13,7 @@ import {
   type ToastOptions,
   type ToastProviderProps,
 } from './index.js';
+import { OverlayStage } from '../../../internal/overlay-stage.js';
 
 function Demo({ options }: { options: ToastOptions[] }) {
   const { toast } = useToast();
@@ -56,6 +57,22 @@ const announcer = () =>
   );
 
 describe('Toast', () => {
+  it('keeps toasts in an overlay stage until they are closed', async () => {
+    render(
+      <OverlayStage>
+        <ToastProvider>
+          <Demo options={[{ title: 'Ticket archived', duration: 50 }]} />
+        </ToastProvider>
+      </OverlayStage>,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Notify' }));
+    expect(await screen.findByText('Ticket archived')).toBeTruthy();
+    await new Promise((r) => setTimeout(r, 300));
+    expect(screen.getByText('Ticket archived')).toBeTruthy();
+    const stage = document.querySelector('[data-mn-overlay-stage]');
+    expect(stage?.querySelector('.mn-toast-viewport')).not.toBeNull();
+  });
+
   it('shows the toast, dismisses with the close button and runs the action', async () => {
     const onUndo = vi.fn();
     renderToast([

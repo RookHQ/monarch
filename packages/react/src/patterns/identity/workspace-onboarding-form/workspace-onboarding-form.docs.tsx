@@ -1,5 +1,7 @@
 import { WorkspaceOnboardingForm } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './workspace-onboarding-form.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 const TAKEN = new Set(['acme', 'design', 'studio']);
@@ -16,6 +18,7 @@ function Onboarding() {
     <div style={{ maxWidth: 420 }}>
       <WorkspaceOnboardingForm
         checkUsername={checkUsername}
+        defaultValues={fixture.data}
         onSubmit={async () => {
           await wait(800);
           return { id: 'w-1' };

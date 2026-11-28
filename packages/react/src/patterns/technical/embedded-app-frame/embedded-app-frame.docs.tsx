@@ -5,10 +5,29 @@ import type { ComponentDocs } from '../../../internal/component-docs.js';
 /**
  * Docs only: a same-origin stand-in for an embedded app page, served from a
  * blob: URL. It copies this page's styles and theme so it looks like a Rook
- * page, then speaks the embed contract (ready + resize) to its parent.
+ * page (and is rebuilt when the theme changes), then speaks the embed contract
+ * (ready + resize) to its parent.
  */
+function readRootAttributes(): string {
+  if (typeof document === 'undefined') return '';
+  return Array.from(document.documentElement.attributes)
+    .map((a) => `${a.name}="${a.value.replace(/"/g, '&quot;')}"`)
+    .join(' ');
+}
+
+function useRootAttributes(): string {
+  const [attrs, setAttrs] = useState(readRootAttributes);
+  useEffect(() => {
+    const observer = new MutationObserver(() => setAttrs(readRootAttributes()));
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+  return attrs;
+}
+
 function useDemoPage(body: string, speak: boolean): string | null {
   const [url, setUrl] = useState<string | null>(null);
+  const attrs = useRootAttributes();
   useEffect(() => {
     const head = Array.from(document.head.querySelectorAll('style, link[rel="stylesheet"]'))
       // Absolute hrefs: a blob: document cannot resolve this page's relative URLs.
@@ -16,9 +35,6 @@ function useDemoPage(body: string, speak: boolean): string | null {
         n instanceof HTMLLinkElement ? `<link rel="stylesheet" href="${n.href}">` : n.outerHTML,
       )
       .join('');
-    const attrs = Array.from(document.documentElement.attributes)
-      .map((a) => `${a.name}="${a.value.replace(/"/g, '&quot;')}"`)
-      .join(' ');
     const script = speak
       ? `<script>
 const o = location.origin, p = 'rook-app-settings';
@@ -29,11 +45,11 @@ new ResizeObserver(size).observe(document.body); size();
 addEventListener('message', (e) => { if (e.origin === o && e.data && e.data.type === 'ping') send({ type: 'ready' }); });
 </script>`
       : '';
-    const html = `<!doctype html><html ${attrs}><head><meta charset="utf-8">${head}<style>body{margin:0;padding:var(--mn-space-5);background:var(--mn-color-bg-surface);color:var(--mn-color-text-default);font-family:var(--mn-font-sans);font-size:var(--mn-text-sm)}h2{margin:0 0 var(--mn-space-2);font-size:var(--mn-text-base)}p{margin:0 0 var(--mn-space-3);color:var(--mn-color-text-muted)}label{display:flex;gap:var(--mn-space-2);align-items:center;margin-top:var(--mn-space-2)}</style></head><body>${body}${script}</body></html>`;
+    const html = `<!doctype html><html ${attrs}><head><meta charset="utf-8">${head}<style>body{margin:0;padding:var(--mn-space-5);background:var(--mn-color-bg-surface);color:var(--mn-color-text-default);font-family:var(--mn-font-sans);font-size:var(--mn-text-sm)}h2{margin:0 0 var(--mn-space-2);font-size:var(--mn-text-base)}p{margin:0 0 var(--mn-space-3);color:var(--mn-color-text-muted)}label{display:flex;gap:var(--mn-space-2);align-items:center;margin-top:var(--mn-space-2)}input[type=checkbox]{width:1rem;height:1rem;margin:0;accent-color:var(--mn-color-accent-solid)}</style></head><body>${body}${script}</body></html>`;
     const next = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
     setUrl(next);
     return () => URL.revokeObjectURL(next);
-  }, [body, speak]);
+  }, [body, speak, attrs]);
   return url;
 }
 

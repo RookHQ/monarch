@@ -1,43 +1,55 @@
-import { useState } from 'react';
-import { Button } from '@rookcom/monarch-react';
+import { useState, type ComponentProps } from 'react';
+import { Badge, Button, StatusBadge } from '@rookcom/monarch-react';
+import { BarChart } from '@rookcom/monarch-react/charts';
 import { DashboardOperational, PeriodSelector } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+import { DemoRows } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './dashboard-operational.fixture.json';
 
-const NOW = '2026-06-15T10:00:00Z';
-const sampleKpis = [
-  { id: 'k1', label: 'Sample figure A', value: 12 },
-  { id: 'k2', label: 'Sample figure B', value: 4 },
-  { id: 'k3', label: 'Sample figure C', value: 27 },
-];
+interface StatusRow {
+  label: string;
+  state: string;
+}
+interface BadgeRow {
+  label: string;
+  badge: string;
+  tone: 'danger' | 'warning' | 'info' | 'neutral';
+}
+
+// One support desk, Monday 15 June 2026, 11:00 in London.
+const NOW = fixture.data.now;
+type Props = ComponentProps<typeof DashboardOperational>;
+const sampleKpis = fixture.data.kpis.map((kpi) => {
+  const { text, value, ...rest } = kpi as typeof kpi & { text?: string; value?: number };
+  return { ...rest, id: kpi.label, value: text ?? value };
+}) as NonNullable<Props['kpis']>;
+const slaInsight = fixture.data.insight;
 const sampleInsights = [
   {
-    id: 'i1',
-    severity: 'info' as const,
-    origin: 'rule' as const,
-    title: 'Sample insight',
-    why: 'Insights explain why they are shown.',
+    id: slaInsight.id,
+    severity: slaInsight.severity as 'warning',
+    origin: slaInsight.origin as 'rule',
+    title: slaInsight.title,
+    why: slaInsight.why,
+    action: { label: slaInsight.action, onClick: () => {} },
   },
 ];
-const sampleRanking = [
-  { id: 'r1', name: 'Person A', value: 9 },
-  { id: 'r2', name: 'Person B', value: 6 },
-  { id: 'r3', name: 'Person C', value: 3 },
-];
-const sampleEvents = [
-  {
-    id: 'e1',
-    actor: { name: 'Person A' },
-    verb: 'updated',
-    object: 'Item 12',
-    time: '2026-06-15T09:40:00Z',
-  },
-  {
-    id: 'e2',
-    actor: { name: 'Person B' },
-    verb: 'created',
-    object: 'Item 13',
-    time: '2026-06-15T08:05:00Z',
-  },
+const sampleRanking = fixture.data.workload.entries;
+const sampleEvents = fixture.data.activity.map((e) => ({
+  id: e.id,
+  actor: { name: e.actor },
+  verb: e.verb,
+  object: e.object,
+  time: e.time,
+}));
+const TREND = fixture.data.trend.data;
+const [API, EMAIL, CHAT] = fixture.data.status as unknown as [StatusRow, StatusRow, StatusRow];
+const [ATTENTION_1, ATTENTION_2] = fixture.data.attention as [BadgeRow, BadgeRow];
+const [QUEUE_1, QUEUE_2, QUEUE_3] = fixture.data.queue as [BadgeRow, BadgeRow, BadgeRow];
+const [MAINTENANCE, ROTA] = fixture.data.upcoming as [
+  { label: string; value: string },
+  { label: string; value: string },
 ];
 
 function ArrangeDemo() {
@@ -45,10 +57,11 @@ function ArrangeDemo() {
   const [layout, setLayout] = useState<string[] | undefined>(undefined);
   return (
     <DashboardOperational
-      title="Home"
-      description="Sample workspace"
+      title={fixture.data.title}
+      description={fixture.data.description}
       period={<PeriodSelector defaultValue={{ preset: '7d' }} today="2026-06-15" size="sm" />}
       kpis={sampleKpis}
+      kpiProps={{ minItemWidth: '9rem' }}
       insights={sampleInsights}
       actions={
         <Button
@@ -57,19 +70,66 @@ function ArrangeDemo() {
           onClick={() => setEditing((v) => !v)}
           aria-pressed={editing}
         >
-          {editing ? 'Done' : 'Arrange'}
+          {editing ? 'Done' : fixture.data.arrange}
         </Button>
       }
       editing={editing}
       layout={layout}
       onLayoutChange={(next: string[]) => setLayout(next)}
-      status={<p style={{ margin: 0 }}>Status summary</p>}
-      attention={<p style={{ margin: 0 }}>Items close to their deadline</p>}
-      queue={<p style={{ margin: 0 }}>Your open items</p>}
-      trend={<p style={{ margin: 0 }}>Chart for the selected period</p>}
+      status={
+        <DemoRows
+          rows={[
+            { label: API.label, value: <StatusBadge status={API.state.toLowerCase()} /> },
+            { label: EMAIL.label, value: <StatusBadge status={EMAIL.state.toLowerCase()} /> },
+            { label: CHAT.label, value: <StatusBadge status={CHAT.state.toLowerCase()} /> },
+          ]}
+        />
+      }
+      attention={
+        <DemoRows
+          rows={[
+            {
+              label: ATTENTION_1.label,
+              value: <Badge tone={ATTENTION_1.tone as 'danger'}>{ATTENTION_1.badge}</Badge>,
+            },
+            {
+              label: ATTENTION_2.label,
+              value: <Badge tone={ATTENTION_2.tone as 'warning'}>{ATTENTION_2.badge}</Badge>,
+            },
+          ]}
+        />
+      }
+      queue={
+        <DemoRows
+          rows={[
+            { label: QUEUE_1.label, value: <Badge tone="info">{QUEUE_1.badge}</Badge> },
+            { label: QUEUE_2.label, value: <Badge>{QUEUE_2.badge}</Badge> },
+            { label: QUEUE_3.label, value: <Badge tone="info">{QUEUE_3.badge}</Badge> },
+          ]}
+        />
+      }
+      trend={
+        <BarChart
+          title={fixture.data.trend.title}
+          description={fixture.data.trend.description}
+          data={TREND}
+          categoryKey="day"
+          categoryLabel={fixture.data.trend.categoryLabel}
+          series={fixture.data.trend.series}
+          height={180}
+          locale="en-GB"
+        />
+      }
       workload={sampleRanking}
-      workloadProps={{ valueLabel: 'Items' }}
-      upcoming={<p style={{ margin: 0 }}>Scheduled windows</p>}
+      workloadProps={{ valueLabel: fixture.data.workload.valueLabel }}
+      upcoming={
+        <DemoRows
+          rows={[
+            { label: MAINTENANCE.label, value: MAINTENANCE.value },
+            { label: ROTA.label, value: ROTA.value },
+          ]}
+        />
+      }
       activity={sampleEvents}
       activityProps={{ now: NOW }}
     />
@@ -101,7 +161,7 @@ export default {
         'Composition, not configuration: every section is a slot or kit component (KPIRow, InsightStrip, Widget, Leaderboard, ActivityWidget, TodayPanel), so apps keep their data fetching.',
         'Every section is optional and fails on its own: a widget’s loading, empty and error states never block the page.',
         'People can rearrange sections (DashboardGrid arrange mode); the template never stores the layout itself.',
-        'Sample figures in docs are placeholders; the template never invents or computes metrics.',
+        'The figures in these examples are demo data; the template never invents or computes metrics.',
       ],
     },
     apiReference: {
@@ -210,7 +270,7 @@ export default {
     examples: {
       items: [
         {
-          title: 'All sections with sample data, arrangeable',
+          title: 'A support desk, arrangeable',
           stack: true,
           render: () => <ArrangeDemo />,
         },

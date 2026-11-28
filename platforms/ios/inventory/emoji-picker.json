@@ -1,0 +1,136 @@
+{
+  "id": "emoji-picker",
+  "name": "MonarchEmojiPicker",
+  "title": "EmojiPicker",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "ScrollViewReader with a horizontal ScrollView of category Buttons and a ScrollView of LazyVGrid (adaptive GridItem) sections of Buttons; a TextField search row; Menu with an inline Picker for the skin tone",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "An emoji picker with search, categories, recently used emoji and skin tones, built on a compact bundled index of 517 common emoji with English names and keywords.",
+  "whenToUse": "For reactions on messages and comments, and for inserting an emoji where the system keyboard is not open, inline, in a popover or in a sheet with medium detents.",
+  "whenNotToUse": "In a text field, the system keyboard's emoji key already offers every emoji; do not add a picker beside it. For a fixed set of reactions, use a Menu of Buttons (see MonarchCallControls).",
+  "api": [
+    "init(categories: [MonarchEmojiPickerCategory] = MonarchEmojiPickerCategory.defaults, recents: [String] = [], maxRecents: Int = 24, skinTone: Binding<MonarchEmojiSkinTone>? = nil, showsSkinTones: Bool = true, labels: MonarchEmojiPickerLabels = MonarchEmojiPickerLabels(), onSelect: @escaping @MainActor (String, MonarchEmojiPickerItem) -> Void)",
+    "static func search(_ query: String, in categories: [MonarchEmojiPickerCategory] = MonarchEmojiPickerCategory.defaults, limit: Int = .max) -> [MonarchEmojiPickerItem]",
+    "static func applying(_ tone: MonarchEmojiSkinTone, to emoji: String) -> String",
+    "static func pushingRecent(_ emoji: String, to recents: [String], max: Int = 24) -> [String]",
+    "struct MonarchEmojiPickerItem { init(_ emoji: String, name: String, keywords: [String] = [], acceptsSkinTone: Bool = false) }",
+    "struct MonarchEmojiPickerCategory { init(id: String, label: String? = nil, symbol: String? = nil, emojis: [MonarchEmojiPickerItem]); static let defaults: [MonarchEmojiPickerCategory] }",
+    "enum MonarchEmojiSkinTone { case none, light, mediumLight, medium, mediumDark, dark; var modifier: Unicode.Scalar? }",
+    "struct MonarchEmojiPickerLabels { init(label:search:clearSearch:categoryBar:categoryName:searchResults:noResults:resultsCount:skinTone:skinToneName:) }  // every parameter optional"
+  ],
+  "options": [
+    {
+      "name": "categories",
+      "type": "[MonarchEmojiPickerCategory]",
+      "default": "MonarchEmojiPickerCategory.defaults",
+      "description": "The emoji offered, by category. Pass a full dataset, names in another language or a category of the app's own."
+    },
+    {
+      "name": "recents",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Recently used emoji, newest first, shown as the first category. The app stores them; MonarchEmojiPicker.pushingRecent builds the new list."
+    },
+    {
+      "name": "maxRecents",
+      "type": "Int",
+      "default": "24",
+      "description": "The most recents shown."
+    },
+    {
+      "name": "skinTone",
+      "type": "Binding<MonarchEmojiSkinTone>?",
+      "default": "nil",
+      "description": "The skin tone for emoji that take one. Without a binding the picker keeps the choice for as long as it is shown."
+    },
+    {
+      "name": "showsSkinTones",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the skin tone menu is shown."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchEmojiPickerLabels",
+      "default": "MonarchEmojiPickerLabels()",
+      "description": "Replacements for every built-in string, including category and skin tone names."
+    },
+    {
+      "name": "onSelect",
+      "type": "@MainActor (String, MonarchEmojiPickerItem) -> Void",
+      "default": "required",
+      "description": "Called with the chosen emoji, skin tone applied, and its item."
+    }
+  ],
+  "states": [
+    {
+      "name": "browsing",
+      "description": "The search row, the category bar and the grid of sections with headings; the current category button has the emphasis fill."
+    },
+    {
+      "name": "searching",
+      "description": "The category bar is hidden and one section, Search results, lists the matches; the count is announced."
+    },
+    {
+      "name": "no results",
+      "description": "\"No emoji found\" in the muted text colour."
+    },
+    {
+      "name": "skin tone",
+      "description": "Emoji that take a skin tone are shown and returned with it; the menu shows a hand in the chosen tone."
+    },
+    {
+      "name": "disabled",
+      "description": "disabled(true) disables search, categories, the menu and the cells."
+    }
+  ],
+  "appearance": "The search row uses the text field's fill and input border; headings use the caption role in the muted text colour; the selected category has the emphasis background; emoji are drawn by the system in the title type role, in light, dark and both high-contrast themes.",
+  "platformNotes": "iOS has no emoji picker outside the keyboard, so Monarch draws one and ships the same 517-emoji index as the web. The planned .searchable is not used: it needs a navigation bar, which a picker in a popover or inline does not have, so the picker draws its own search row from the text field tokens. The web keyboard navigation (arrow keys, Home, End, Page Up and Down) and the hover preview are not offered; VoiceOver and Full Keyboard Access move between the buttons. The current category follows taps on the category bar, not scrolling. EmojiPickerPopover maps to presenting the picker with popover(isPresented:) or sheet(isPresented:). Android's plan covers it with the platform's emoji picker instead.",
+  "accessibility": [
+    "The picker is a container named \"Emoji picker\".",
+    "Each emoji is a button named by its name (\"thumbs up\"), not read as the character.",
+    "Category buttons are named by category; the current one has the selected trait and a fill, so it is not shown by colour alone.",
+    "Section headings have the header trait.",
+    "The skin tone menu is named \"Skin tone\" with the tone's name as its value, and offers a standard inline picker.",
+    "The number of results is announced after each change to the search.",
+    "Cells, category buttons and the clear button are at least 44 points and grow with Dynamic Type."
+  ],
+  "edgeCases": [
+    "A recent emoji missing from the categories is shown and read as itself.",
+    "Duplicate emoji across categories appear once in search results.",
+    "The grid is about 288 points high, scaled with Dynamic Type; it scrolls.",
+    "Names and keywords of the built-in index are English data, not built-in strings; pass categories for another language.",
+    "Flags and some newer emoji depend on the system's emoji font.",
+    "The announcement after each keystroke and the scroll to a category were compiled and unit-tested as logic but not checked with VoiceOver on a device."
+  ],
+  "tests": [
+    "MonarchEmojiPickerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Inline with recents and skin tones",
+      "fixture": "emoji-picker",
+      "webExample": "Inline with recents and skin tones",
+      "template": "MonarchEmojiPicker(recents: recents, skinTone: $skinTone) { emoji, _ in\n    recents = MonarchEmojiPicker.pushingRecent(emoji, to: recents)\n}\n.frame(height: 376)",
+      "setupTemplate": "@State private var recents = [{{recents.0}}, {{recents.1}}, {{recents.2}}]\n@State private var skinTone = MonarchEmojiSkinTone{{skinTone|case}}",
+      "setup": "@State private var recents = [\"👍\", \"🎉\", \"✅\"]\n@State private var skinTone = MonarchEmojiSkinTone.none",
+      "code": "MonarchEmojiPicker(recents: recents, skinTone: $skinTone) { emoji, _ in\n    recents = MonarchEmojiPicker.pushingRecent(emoji, to: recents)\n}\n.frame(height: 376)"
+    },
+    {
+      "title": "Categories of the app's own",
+      "setup": "@State private var status = \"\"",
+      "code": "MonarchEmojiPicker(\n    categories: [\n        MonarchEmojiPickerCategory(\n            id: \"status\",\n            label: \"Status\",\n            emojis: [\n                MonarchEmojiPickerItem(\"✅\", name: \"done\", keywords: [\"complete\"]),\n                MonarchEmojiPickerItem(\"🚧\", name: \"in progress\"),\n                MonarchEmojiPickerItem(\"⛔\", name: \"blocked\"),\n            ]\n        )\n    ],\n    showsSkinTones: false\n) { _, item in\n    status = item.name\n}"
+    }
+  ],
+  "webEquivalent": "EmojiPicker",
+  "dependsOn": [
+    "text-field"
+  ]
+}

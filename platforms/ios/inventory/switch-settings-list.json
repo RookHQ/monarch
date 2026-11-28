@@ -1,0 +1,156 @@
+{
+  "id": "switch-settings-list",
+  "name": "MonarchSwitchSettingsList",
+  "title": "SwitchSettingsList",
+  "family": "forms",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Toggle with a private switch ToggleStyle (a narrow track and round thumb, as the web draws it) and accessibilityRepresentation in each MonarchSwitchSettingsRow, ProgressView while saving, MonarchButton to retry",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A group of on/off settings that each save on their own, with saving, saved and failed states and retry on the row.",
+  "whenToUse": "For preferences where every switch is saved at once with its own request, such as notification or privacy settings, and a failed save must show on the setting that did not stick.",
+  "whenNotToUse": "For switches submitted together with other fields and a Save button, use a Form with plain Toggles, or MonarchFormField with the row layout. For one setting with no group, use a Toggle.",
+  "api": [
+    "MonarchSwitchSettingsList.init(_ title: String? = nil, description: String? = nil, labels: MonarchSwitchSettingsListLabels = MonarchSwitchSettingsListLabels(), savedDuration: Duration = .seconds(2), @ViewBuilder content: () -> Content)",
+    "MonarchSwitchSettingsRow.init(_ label: String, isOn: Binding<Bool>, description: String? = nil, labels: MonarchSwitchSettingsListLabels? = nil, onStatusChange: (@MainActor (MonarchSwitchSettingsStatus) -> Void)? = nil, save: @escaping @MainActor (Bool) async throws -> Void)",
+    "enum MonarchSwitchSettingsStatus { case idle, saving, saved, error }",
+    "struct MonarchSwitchSettingsListLabels { init(saving: String? = nil, saved: String? = nil, error: String? = nil, retry: String? = nil, retryLabel: (@Sendable (String) -> String)? = nil, errorMessage: (@Sendable (any Error) -> String?)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "List: the heading of the group, a header for VoiceOver."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "List: a sentence under the heading."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSwitchSettingsListLabels",
+      "default": "MonarchSwitchSettingsListLabels()",
+      "description": "List: replacements for \"Saving\", \"Saved\", \"Couldn't save.\", \"Retry\", the spoken retry name and the error message, for every row."
+    },
+    {
+      "name": "savedDuration",
+      "type": "Duration",
+      "default": ".seconds(2)",
+      "description": "List: how long \"Saved\" stays after a save."
+    },
+    {
+      "name": "content",
+      "type": "() -> Content",
+      "default": "required",
+      "description": "List: the rows."
+    },
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "Row: the name of the setting; labels the switch."
+    },
+    {
+      "name": "isOn",
+      "type": "Binding<Bool>",
+      "default": "required",
+      "description": "Row: the saved value. The row writes the new value when save returns."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "nil",
+      "description": "Row: what the setting does, under the label and part of the switch's label."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSwitchSettingsListLabels?",
+      "default": "nil",
+      "description": "Row: replacements for this row; nil properties keep the list's."
+    },
+    {
+      "name": "onStatusChange",
+      "type": "(@MainActor (MonarchSwitchSettingsStatus) -> Void)?",
+      "default": "nil",
+      "description": "Row: runs when the save status changes."
+    },
+    {
+      "name": "save",
+      "type": "@MainActor (Bool) async throws -> Void",
+      "default": "required",
+      "description": "Row: saves the new value. Throwing rolls the switch back and shows the error with Retry."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "The switch shows the saved value; no status line."
+    },
+    {
+      "name": "saving",
+      "description": "The switch already shows the new value; a small spinner and \"Saving\" in the muted colour. Further toggles are ignored."
+    },
+    {
+      "name": "saved",
+      "description": "A check mark and \"Saved\" in the strong success colour for savedDuration, announced."
+    },
+    {
+      "name": "error",
+      "description": "The switch returns to the saved value; an icon and \"Couldn't save.\" with the error's message in the strong danger colour, and a Retry button that saves the failed value again. Announced. Toggling the switch again also retries."
+    },
+    {
+      "name": "disabled",
+      "description": "Set with disabled(_:) on a row or the list. The switch cannot be toggled; label and description take the disabled text colour."
+    }
+  ],
+  "appearance": "The list is a bordered group on the surface colour with the default border, 12-point corners and a subtle line between rows. Labels use the body style in the default text colour, descriptions the caption style in the muted colour. The switch is drawn from the theme: a narrow track in the accent when on and the strong neutral when off, with a round thumb; VoiceOver is given a standard Toggle. Status colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web has SwitchSettingsList and SwitchSettingsItem; on iOS the row is MonarchSwitchSettingsRow so it can also be placed in a system Form section without the list's frame. On the web, a handler that does not return a promise skips \"Saved\"; on iOS save is always async, so every successful save shows \"Saved\". The web's headingLevel has no iOS equivalent (the title is a header) and uncontrolled defaultChecked is replaced by the binding. The status line sits under the label rather than beside the switch, so it can wrap at large text sizes. Android builds the same component. The parity map lists inline-error-retry as a dependency; it is not used, because its retry button cannot be given a per-row spoken name, so the row draws the same icon-and-text message with a MonarchButton.",
+  "accessibility": [
+    "Each switch is the standard Toggle, labelled by the row's label and description, so VoiceOver reads its name, its on or off value and its switch role.",
+    "While a save has failed, the error text is the hint of the switch.",
+    "\"Saved\" and the error are posted as announcements when the status changes; \"Saving\" is not announced, and the spinner is one element labelled \"Saving\".",
+    "The retry button is named \"Retry\" and the row label (\"Retry Weekly summary\") and is a MonarchButton with a 44-point touch target.",
+    "The status line has an icon and text, so saved and failed do not depend on colour.",
+    "The list title has the header trait."
+  ],
+  "edgeCases": [
+    "A save that throws an error without a LocalizedError description shows only \"Couldn't save.\"; pass labels.errorMessage to turn other errors into text.",
+    "Leaving the screen while a save runs does not cancel it; the binding is still written when it returns.",
+    "A late \"Saved\" timer never clears the status of a newer save.",
+    "Long labels and descriptions wrap; the error and Retry stack when they do not fit on one line."
+  ],
+  "tests": [
+    "MonarchSwitchSettingsListTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Notification preferences",
+      "fixture": "switch-settings-list",
+      "webExample": "Notification preferences",
+      "template": "MonarchSwitchSettingsList({{title}}, description: {{description}}) {\n    MonarchSwitchSettingsRow({{items.0.label}}, isOn: $alerts, description: {{items.0.description}}) { _ in\n        try await Task.sleep(for: .milliseconds({{saveMillis}}))\n    }\n    MonarchSwitchSettingsRow({{items.1.label}}, isOn: $devices, description: {{items.1.description}}) { _ in\n        try await Task.sleep(for: .milliseconds({{saveMillis}}))\n    }\n    MonarchSwitchSettingsRow({{items.2.label}}, isOn: $digest) { _ in\n        try await Task.sleep(for: .milliseconds({{saveMillis}}))\n    }\n}",
+      "setupTemplate": "@State private var alerts = {{items.0.checked}}\n@State private var devices = {{items.1.checked}}\n@State private var digest = {{items.2.checked}}",
+      "setup": "@State private var alerts = true\n@State private var devices = true\n@State private var digest = false",
+      "code": "MonarchSwitchSettingsList(\"Security notifications\", description: \"Emails about activity on your account.\") {\n    MonarchSwitchSettingsRow(\"Security alerts\", isOn: $alerts, description: \"Password changes and new recovery methods.\") { _ in\n        try await Task.sleep(for: .milliseconds(700))\n    }\n    MonarchSwitchSettingsRow(\"New device sign-in\", isOn: $devices, description: \"When your account is used on a device for the first time.\") { _ in\n        try await Task.sleep(for: .milliseconds(700))\n    }\n    MonarchSwitchSettingsRow(\"Weekly summary\", isOn: $digest) { _ in\n        try await Task.sleep(for: .milliseconds(700))\n    }\n}"
+    },
+    {
+      "title": "Reporting the status",
+      "setup": "@State private var shareData = false\n@State private var status = MonarchSwitchSettingsStatus.idle",
+      "code": "MonarchSwitchSettingsList(\"Privacy\") {\n    MonarchSwitchSettingsRow(\n        \"Share usage data\",\n        isOn: $shareData,\n        onStatusChange: { status = $0 },\n        save: { _ in try await Task.sleep(for: .milliseconds(300)) }\n    )\n}\nMonarchButton(\"Done\", variant: .primary) {}\n    .disabled(status == .saving)"
+    }
+  ],
+  "webEquivalent": "SwitchSettingsList",
+  "dependsOn": [
+    "switch",
+    "spinner",
+    "button",
+    "icon"
+  ]
+}

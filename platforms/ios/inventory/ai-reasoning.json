@@ -1,0 +1,121 @@
+{
+  "id": "ai-reasoning",
+  "name": "MonarchAiReasoning",
+  "title": "AiReasoning",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "DisclosureGroup with .disclosureGroupStyle(.monarch); MonarchAiThinkingIndicator (TimelineView) as the live timer in the header",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The model's reasoning for one answer, as a disclosure that reads \"Thinking…\" with a live timer while it streams and \"Thought for 12s\" once it finishes.",
+  "whenToUse": "Inside an assistant reply, to show a reasoning part (MonarchAiReasoningPart) from the message model without letting it crowd the answer.",
+  "whenNotToUse": "Not for the wait before the first token when there is no reasoning to show (use MonarchAiThinkingIndicator) and not for the steps of an agent (use MonarchAiChainOfSteps).",
+  "api": [
+    "init(_ part: MonarchAiReasoningPart, startedAt: Date? = nil, startsExpanded: Bool = false, labels: MonarchAiReasoningLabels = MonarchAiReasoningLabels(), onExpandedChange: (@MainActor (Bool) -> Void)? = nil)",
+    "struct MonarchAiReasoningLabels { init(prefix: String? = nil, thinking: String? = nil, thoughtFor: ((String) -> String)? = nil, thought: String? = nil, reasoningHidden: String? = nil, duration: ((Int) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "part",
+      "type": "MonarchAiReasoningPart",
+      "default": "required",
+      "description": "The reasoning part from the message model: its text, whether it streams, its durationMs and whether it is redacted."
+    },
+    {
+      "name": "startedAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the reasoning started. Pass it when the view can be rebuilt while the part streams, so the timer does not restart. The moment the view appears when nil."
+    },
+    {
+      "name": "startsExpanded",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether finished reasoning starts open. Streaming reasoning always starts open."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiReasoningLabels",
+      "default": "MonarchAiReasoningLabels()",
+      "description": "Replacements for the built-in strings, including the duration format."
+    },
+    {
+      "name": "onExpandedChange",
+      "type": "(@MainActor (Bool) -> Void)?",
+      "default": "nil",
+      "description": "Called when the disclosure opens or closes, by the person or automatically when the reasoning finishes or starts again."
+    }
+  ],
+  "states": [
+    {
+      "name": "streaming",
+      "description": "Open; the header is a MonarchAiThinkingIndicator with the pulsing assistant mark, \"Thinking…\" and the elapsed time after 3 seconds; the text grows live. With no text yet it is a still row with the same header."
+    },
+    {
+      "name": "finished",
+      "description": "Closed; the header reads \"Thought for\" the part's durationMs, or the time this view measured, or \"Thought\" when neither is known."
+    },
+    {
+      "name": "touched",
+      "description": "If the person opens or closes it while it streams, it stays as they left it when the reasoning finishes."
+    },
+    {
+      "name": "restarted",
+      "description": "When a finished part streams again (a regeneration), it opens and measures again."
+    },
+    {
+      "name": "redacted",
+      "description": "A still row with the assistant mark and \"Reasoning hidden\"; no disclosure and no text."
+    }
+  ],
+  "appearance": "The header uses the Monarch disclosure group style; the thinking mark and the still-row glyph take the AI strong role; the reasoning text takes the muted text role beside a thin rule in the AI border role. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web wraps a details element and renders the text with AiStreamingText; iOS uses the standard DisclosureGroup and plain selectable Text, because iOS has no streaming text component yet. The web chevron leads; the Monarch disclosure style puts it at the trailing edge. The web's onOpenChange is onExpandedChange; its locale prop is the SwiftUI locale environment. The web prefixes the summary with hidden text; iOS puts the prefix in the header's accessibility label.",
+  "accessibility": [
+    "The header is the disclosure button of MonarchDisclosureGroupStyle, labelled \"Assistant reasoning: Thought for 12s\" (or \"Thinking…\") with an Expanded or Collapsed value.",
+    "Redacted or empty reasoning is one element with the same label and no button.",
+    "The live timer is not read on every tick and the reasoning is not announced; VoiceOver reads the current header when it reaches it.",
+    "With Reduce Motion the thinking mark stops pulsing (the timer still ticks once a second) and the content opens without animation.",
+    "The header and the still row are at least 44 points high; text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "A part that streams with no text yet shows the live header without a disclosure, then becomes a disclosure when text arrives.",
+    "A durationMs on the part wins over the time this view measured.",
+    "Durations round to whole seconds and are at least 1 second.",
+    "Long reasoning wraps; the disclosure has no height limit."
+  ],
+  "tests": [
+    "MonarchAiReasoningTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Finished, collapsed",
+      "fixture": "ai-reasoning",
+      "webExample": "Finished, collapsed",
+      "template": "MonarchAiReasoning(\n    MonarchAiReasoningPart(text: {{text}}, durationMs: {{durationMs}})\n)",
+      "code": "MonarchAiReasoning(\n    MonarchAiReasoningPart(text: \"Compare both drafts, then list what changed in the budget section.\", durationMs: 12_000)\n)"
+    },
+    {
+      "title": "Streaming reasoning",
+      "setup": "private let start = Date(timeIntervalSinceReferenceDate: 800_000_000)",
+      "code": "MonarchAiReasoning(\n    MonarchAiReasoningPart(text: \"The person asks for the cheapest flight.\", state: .streaming),\n    startedAt: start\n)"
+    },
+    {
+      "title": "Redacted reasoning",
+      "code": "MonarchAiReasoning(MonarchAiReasoningPart(text: \"\", isRedacted: true))"
+    }
+  ],
+  "webEquivalent": "AiReasoning",
+  "dependsOn": [
+    "collapsible",
+    "ai-thinking-indicator",
+    "ai-conversation"
+  ],
+  "icons": {
+    "expand": "ChevronRightGlyph"
+  }
+}

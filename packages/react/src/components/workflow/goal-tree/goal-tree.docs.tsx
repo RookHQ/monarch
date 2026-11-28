@@ -2,49 +2,10 @@ import { Button } from '@rookcom/monarch-react';
 import { GoalTree, type GoalTreeItem } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
-const GOALS: GoalTreeItem[] = [
-  {
-    id: 'o1',
-    title: 'Grow repeat customers',
-    progress: 62,
-    status: 'on-track',
-    owner: { name: 'Sam Lee' },
-    meta: 'weight 40% · due 31 Mar',
-    alignedTo: 'Customers come back (Company)',
-  },
-  {
-    id: 'k1',
-    parentId: 'o1',
-    title: 'Launch loyalty emails',
-    progress: 100,
-    status: 'done',
-    meta: '30%',
-  },
-  {
-    id: 'k2',
-    parentId: 'o1',
-    title: 'Cut monthly churn to 3%',
-    progress: 30,
-    status: 'at-risk',
-    meta: '40%',
-  },
-  {
-    id: 'k3',
-    parentId: 'o1',
-    title: 'Interview 20 customers',
-    progress: 55,
-    status: 'on-track',
-    meta: '30%',
-  },
-  {
-    id: 'o2',
-    title: 'Ship the mobile app',
-    progress: 10,
-    status: 'off-track',
-    owner: { name: 'Alex Kim' },
-  },
-  { id: 'k4', parentId: 'o2', title: 'Beta with 50 testers', progress: 0, status: 'not-started' },
-];
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './goal-tree.fixture.json';
+
+const GOALS = fixture.data.goals as GoalTreeItem[];
 
 export default {
   id: 'goal-tree',
@@ -173,7 +134,7 @@ export default {
               onAddChild={() => {}}
               renderActions={(goal) => (
                 <Button size="xs" variant="ghost">
-                  {goal.parentId ? 'Check in' : 'History'}
+                  {goal.parentId ? fixture.data.actions.keyResult : fixture.data.actions.objective}
                 </Button>
               )}
             />

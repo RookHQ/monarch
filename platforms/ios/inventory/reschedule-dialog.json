@@ -1,0 +1,118 @@
+{
+  "id": "reschedule-dialog",
+  "name": null,
+  "title": "RescheduleDialog",
+  "family": "scheduling",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:) with a NavigationStack, cancellationAction and confirmationAction ToolbarItems, interactiveDismissDisabled while saving, MonarchSlotPicker, a system Toggle (the switch entry) that swaps the slots for a DatePicker, MonarchTextField for the reason and LabeledContent with .labeledContentStyle(.monarch) for the current time",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: moving an existing booking to a new open time in a sheet, with the current time, an optional switch to type a time outside opening hours, an optional reason, and Save that waits for the app.",
+  "whenToUse": "When an appointment, meeting or interview that was booked from availability moves to another time, or staff propose another time for a request.",
+  "whenNotToUse": "For a first booking use the booking-flow recipe or MonarchSlotPicker on its screen. For editing every field of an event use a form in a sheet.",
+  "api": [
+    "MonarchButton(\"Reschedule\") { isPresented = true }.sheet(isPresented: $isPresented) { NavigationStack { ScrollView { LabeledContent(subject) { Text(currentStart) }; Toggle(\"Choose a time outside opening hours\", isOn: $isOutsideHours); if isOutsideHours { DatePicker(\"New time\", selection: $typedTime) } else { MonarchSlotPicker(selection:day:slots:timeZone:) }; MonarchTextField(\"Reason (optional)\", text: $reason) }.navigationTitle(\"Reschedule\").toolbar { ToolbarItem(placement: .cancellationAction) { … } ToolbarItem(placement: .confirmationAction) { … } } }.interactiveDismissDisabled(isSaving) }"
+  ],
+  "options": [
+    {
+      "name": "subject and current time",
+      "type": "LabeledContent",
+      "default": "required",
+      "description": "What is being moved and when it is now."
+    },
+    {
+      "name": "slots",
+      "type": "MonarchSlotPicker",
+      "default": "required",
+      "description": "The open times for the same service; the app loads them for the chosen day. The chosen time clears when the day changes."
+    },
+    {
+      "name": "outside hours",
+      "type": "Toggle and DatePicker",
+      "default": "none",
+      "description": "For staff: replaces the slots with a typed date and time in the business's zone."
+    },
+    {
+      "name": "reason",
+      "type": "MonarchTextField",
+      "default": "none",
+      "description": "An optional reason kept in the booking's history."
+    },
+    {
+      "name": "extra fields",
+      "type": "View",
+      "default": "none",
+      "description": "Fields such as a host Picker go above the slots."
+    },
+    {
+      "name": "save",
+      "type": "confirmationAction",
+      "default": "required",
+      "description": "Save is disabled until a time is chosen; while the app saves it becomes a progress indicator and the sheet cannot be dismissed."
+    }
+  ],
+  "states": [
+    {
+      "name": "no time chosen",
+      "description": "Save is disabled."
+    },
+    {
+      "name": "saving",
+      "description": "Save becomes a progress indicator named \"Saving\", Cancel is disabled and the sheet cannot be swiped away (interactiveDismissDisabled)."
+    },
+    {
+      "name": "error",
+      "description": "MonarchInlineErrorRetry with the reason above the fields; every choice is kept."
+    },
+    {
+      "name": "outside hours",
+      "description": "The slots are replaced by a DatePicker."
+    },
+    {
+      "name": "saved",
+      "description": "The sheet closes; the app shows a toast if it wants to confirm."
+    }
+  ],
+  "appearance": "A system sheet with a navigation bar, Cancel and Save in the standard places, the Monarch labeled content style for the current time, the system switch, the Monarch slot picker and field. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web ships RescheduleDialog as a modal dialog component with subject, currentStart, slotPicker, allowOutsideHours, showReason, notice and an onConfirm promise. On iOS a sheet with a navigation bar is the system surface for a short task: Cancel and Save sit in the cancellation and confirmation slots, and interactiveDismissDisabled replaces the web's blocking of Escape and outside clicks while saving. The web's size option has no meaning on a phone. The typed outside-hours time is a system DatePicker; convert it from the business's zone before saving, as the web does. Android has the same recipe coverage and status (available).",
+  "accessibility": [
+    "The sheet is modal; VoiceOver reads the navigation title \"Reschedule\" first.",
+    "Cancel and Save are in the standard toolbar places; while saving Save is a progress indicator named \"Saving\".",
+    "The current time is one element read as the subject and the time.",
+    "The outside-hours switch is a standard toggle with its on or off value; the date picker is the system control.",
+    "The error is text with a Try again button, not only a colour."
+  ],
+  "edgeCases": [
+    "When the chosen day has no open times, MonarchSlotPicker shows its empty state; offer the outside-hours switch to staff.",
+    "A failed save keeps the time and reason the person chose.",
+    "At the largest text sizes the content scrolls inside the sheet."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Reschedule to an open slot",
+      "fixture": "reschedule-dialog",
+      "webExample": "Reschedule to an open slot",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    MonarchButton({{trigger}}) { isPresented = true }\n    Text({{status}})\n        .monarchTextStyle(.caption)\n        .foregroundStyle(theme.colors.textMuted)\n}\n.monarchDialog(\n    isPresented: $isPresented,\n    title: \"Reschedule\",\n    message: \"Consultation with Sam Lee \\u{00B7} Currently Wed, 4 Nov 2026, 09:30 GMT\",\n    showsCloseButton: true\n) {\n    VStack(alignment: .leading, spacing: theme.spacing.space4) {\n        MonarchSlotPicker(selection: $slot, day: $selectedDay, slots: slots, timeZone: \"Europe/London\", today: Date(timeIntervalSince1970: 1_793_577_600))\n        MonarchTextField(\"Reason (optional)\", text: $reason, prompt: \"\", helper: \"Kept in the history.\", axis: .vertical, lineLimit: 3...6)\n        .monarchHelperAbove()\n        if let error {\n            MonarchInlineErrorRetry(error) { save() }\n        }\n    }\n} footer: {\n    HStack(spacing: theme.spacing.space2) {\n        MonarchButton(\"Cancel\") { isPresented = false }\n            .disabled(isSaving)\n        MonarchButton(\"Reschedule\", variant: .primary, isLoading: isSaving) { save() }\n            .disabled(newTime == nil)\n    }\n}",
+      "setupTemplate": "private static let day = Date(timeIntervalSince1970: 1_793_836_800)\n\n@Environment(\\.monarchTheme) private var theme\n@State private var isPresented = false\n@State private var slot: Date?\n@State private var selectedDay: Date? = day\n@State private var reason = \"\"\n@State private var isSaving = false\n@State private var error: String?\n\nprivate var slots: [MonarchSlotPickerSlot] {\n    [9, 9.5, 11, 14, 15.5].map { MonarchSlotPickerSlot(start: Self.day.addingTimeInterval($0 * 3_600)) }\n}\n\nprivate var newTime: Date? { slot ?? selectedDay }\n\nprivate func save() {\n    guard newTime != nil else { return }\n    isSaving = true\n    error = nil\n    Task {\n        // Save the new time; on failure set error and keep every choice.\n        isSaving = false\n        isPresented = false\n    }\n}",
+      "setup": "private static let day = Date(timeIntervalSince1970: 1_793_836_800)\n\n@Environment(\\.monarchTheme) private var theme\n@State private var isPresented = false\n@State private var slot: Date?\n@State private var selectedDay: Date? = day\n@State private var reason = \"\"\n@State private var isSaving = false\n@State private var error: String?\n\nprivate var slots: [MonarchSlotPickerSlot] {\n    [9, 9.5, 11, 14, 15.5].map { MonarchSlotPickerSlot(start: Self.day.addingTimeInterval($0 * 3_600)) }\n}\n\nprivate var newTime: Date? { slot ?? selectedDay }\n\nprivate func save() {\n    guard newTime != nil else { return }\n    isSaving = true\n    error = nil\n    Task {\n        // Save the new time; on failure set error and keep every choice.\n        isSaving = false\n        isPresented = false\n    }\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    MonarchButton(\"Reschedule\") { isPresented = true }\n    Text(\"Not moved yet\")\n        .monarchTextStyle(.caption)\n        .foregroundStyle(theme.colors.textMuted)\n}\n.monarchDialog(\n    isPresented: $isPresented,\n    title: \"Reschedule\",\n    message: \"Consultation with Sam Lee \\u{00B7} Currently Wed, 4 Nov 2026, 09:30 GMT\",\n    showsCloseButton: true\n) {\n    VStack(alignment: .leading, spacing: theme.spacing.space4) {\n        MonarchSlotPicker(selection: $slot, day: $selectedDay, slots: slots, timeZone: \"Europe/London\", today: Date(timeIntervalSince1970: 1_793_577_600))\n        MonarchTextField(\"Reason (optional)\", text: $reason, prompt: \"\", helper: \"Kept in the history.\", axis: .vertical, lineLimit: 3...6)\n        .monarchHelperAbove()\n        if let error {\n            MonarchInlineErrorRetry(error) { save() }\n        }\n    }\n} footer: {\n    HStack(spacing: theme.spacing.space2) {\n        MonarchButton(\"Cancel\") { isPresented = false }\n            .disabled(isSaving)\n        MonarchButton(\"Reschedule\", variant: .primary, isLoading: isSaving) { save() }\n            .disabled(newTime == nil)\n    }\n}",
+      "previewPresented": [
+        "isPresented"
+      ]
+    }
+  ],
+  "webEquivalent": "RescheduleDialog",
+  "dependsOn": [
+    "sheet",
+    "slot-picker",
+    "text-field",
+    "button"
+  ],
+  "parityExceptions": []
+}

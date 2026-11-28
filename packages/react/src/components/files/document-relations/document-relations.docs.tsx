@@ -5,6 +5,8 @@ import {
   type DocumentRelationTarget,
 } from '@rookcom/monarch-react/editor';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './document-relations.fixture.json';
 
 const HIRING: DocumentRelationTarget = { id: 'd1', title: 'Hiring plan', description: 'People' };
 const HANDBOOK: DocumentRelationTarget = {
@@ -28,17 +30,19 @@ const DOCS: DocumentRelationTarget[] = [
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
+const HREFS: Record<string, string> = {
+  d1: '#hiring-plan',
+  d2: '#handbook',
+  d3: '#travel-policy',
+};
+
 function Editable() {
-  const [relations, setRelations] = useState<DocumentRelation[]>([
-    { id: 'r1', type: 'parent-of', target: { ...HIRING, href: '#hiring-plan' } },
-    {
-      id: 'r2',
-      type: 'parent-of',
-      direction: 'incoming',
-      target: { ...HANDBOOK, href: '#handbook' },
-    },
-    { id: 'r3', type: 'supersedes', target: { ...TRAVEL, href: '#travel-policy' } },
-  ]);
+  const [relations, setRelations] = useState<DocumentRelation[]>(
+    (fixture.data.relations as DocumentRelation[]).map((relation) => ({
+      ...relation,
+      target: { ...relation.target, href: HREFS[relation.target.id] ?? '#' },
+    })),
+  );
   return (
     <DocumentRelations
       relations={relations}

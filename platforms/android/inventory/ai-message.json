@@ -1,0 +1,343 @@
+{
+  "id": "ai-message",
+  "name": "MonarchAiMessage",
+  "title": "AiMessageView",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column and FlowRow composing MonarchAiStreamingText, MonarchAiReasoning, MonarchAiToolCall, MonarchAiToolApproval, MonarchAiSourceList, MonarchAiCitation, MonarchAttachmentChip, MonarchAiErrorMessage, MonarchAiMemoryChip, MonarchAiChainOfSteps, MonarchAiArtifactCard, MonarchAiGenerativeUi, MonarchAiEditProposal, MonarchAiMessageBranch, MonarchAiMessageActions, MonarchAiUserMessageEdit and MonarchAvatar",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "One chat message: its text, reasoning, tool calls, sources, citations, files, memories, plans, artifacts, generated UI, edit proposals and errors in the order the model produced them, with the layout of its role, the time, the version switcher and the action row.",
+  "whenToUse": "For each message of a conversation driven by MonarchAiConversation, in the app's LazyColumn of messages, so every part type gets the matching Monarch component.",
+  "whenNotToUse": "For a single answer outside a conversation use MonarchAiStreamingText or MonarchAiStructuredAnswer; for a whole thread with its input use the conversation components around a LazyColumn of these messages.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchAiMessage(message: MonarchAiConversationMessage, modifier: Modifier = Modifier, agent: MonarchAiAgentRef? = null, agentImage: Painter? = null, announces: Boolean = true, showTimestamp: Boolean = true, timeZone: String? = null, is24Hour: Boolean? = null, showActions: Boolean = true, copyable: Boolean = true, editing: Boolean = false, speaking: Boolean = false, onCopy: ((String) -> Unit)? = null, onRegenerate: (() -> Unit)? = null, onEdit: (() -> Unit)? = null, onFeedback: ((MonarchAiMessageFeedback?) -> Unit)? = null, onShare: (() -> Unit)? = null, onReadAloud: ((speaking: Boolean) -> Unit)? = null, onBranch: ((index: Int) -> Unit)? = null, onRetry: (() -> Unit)? = null, onResume: (() -> Unit)? = null, onCancelQueued: (() -> Unit)? = null, onForgetMemory: ((id: String) -> Unit)? = null, onEditMemory: ((id: String, text: String) -> Unit)? = null, onApproveTool: ((toolCallId: String, input: MonarchAiJSON?) -> Unit)? = null, onDenyTool: ((toolCallId: String, reason: String?) -> Unit)? = null, onAlwaysAllowTool: ((toolName: String) -> Unit)? = null, onEditSubmit: ((String) -> Unit)? = null, onEditCancel: (() -> Unit)? = null, onOpenArtifact: ((MonarchAiArtifactPart) -> Unit)? = null, onOpenFile: ((MonarchAiFilePart) -> Unit)? = null, onOpenSource: ((MonarchAiSourcePart) -> Unit)? = null, onOpenLink: ((url: String) -> Unit)? = null, uiRegistry: MonarchAiUiRegistry? = null, onUiAction: ((MonarchAiUiAction) -> Unit)? = null, editHunks: ((MonarchAiEditProposalPart) -> List<MonarchAiEditHunk>?)? = null, renderPart: ((part: MonarchAiPart, index: Int) -> (@Composable () -> Unit)?)? = null, agentIcon: (@Composable () -> Unit)? = null, actionIcon: (@Composable (action: MonarchAiMessageAction, active: Boolean) -> Unit)? = null, moreIcon: (@Composable () -> Unit)? = null, previousVersionIcon: (@Composable () -> Unit)? = null, nextVersionIcon: (@Composable () -> Unit)? = null, labels: MonarchAiMessageLabels = MonarchAiMessageLabels(), moreActions: (@Composable ColumnScope.(close: () -> Unit) -> Unit)? = null)",
+    "class MonarchAiMessageLabels(assistantSaid: String? = null, youSaid: String? = null, systemSaid: String? = null, assistant: String? = null, finishNotice: ((MonarchAiFinishReason) -> String?)? = null, queued: String? = null, cancelQueued: String? = null, resume: String? = null, editLabel: String? = null, editSave: String? = null, editCancel: String? = null, versions: String? = null, previousVersion: String? = null, nextVersion: String? = null, text: MonarchAiStreamingTextLabels = MonarchAiStreamingTextLabels(), reasoning: MonarchAiReasoningLabels = MonarchAiReasoningLabels(), toolCall: MonarchAiToolCallLabels = MonarchAiToolCallLabels(), toolApproval: MonarchAiToolApprovalLabels = MonarchAiToolApprovalLabels(), sources: MonarchAiSourceListLabels = MonarchAiSourceListLabels(), citation: MonarchAiCitationLabels = MonarchAiCitationLabels(), error: MonarchAiErrorMessageLabels = MonarchAiErrorMessageLabels(), memory: MonarchAiMemoryChipLabels = MonarchAiMemoryChipLabels(), file: MonarchAttachmentChipLabels = MonarchAttachmentChipLabels(), plan: MonarchAiChainOfStepsLabels = MonarchAiChainOfStepsLabels(), actions: MonarchAiMessageActionsLabels = MonarchAiMessageActionsLabels())"
+  ],
+  "options": [
+    {
+      "name": "message",
+      "type": "MonarchAiConversationMessage",
+      "default": "required",
+      "description": "The message: role, ordered parts, creation time, agent, feedback, branch, finish reason and queued flag."
+    },
+    {
+      "name": "agent",
+      "type": "MonarchAiAgentRef?",
+      "default": "null",
+      "description": "The agent shown when the message has none of its own."
+    },
+    {
+      "name": "agentImage",
+      "type": "Painter?",
+      "default": "null",
+      "description": "The agent's picture, loaded by the app; the avatar shows agentIcon or initials meanwhile."
+    },
+    {
+      "name": "announces",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether streamed text and errors announce themselves; pass false when the thread has one announcer."
+    },
+    {
+      "name": "showTimestamp",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the time the message was created: in the header of an assistant message, in the footer otherwise."
+    },
+    {
+      "name": "timeZone",
+      "type": "String?",
+      "default": "null",
+      "description": "IANA zone of the time; null is the device's zone."
+    },
+    {
+      "name": "is24Hour",
+      "type": "Boolean?",
+      "default": "null",
+      "description": "24-hour clock; null follows the device setting."
+    },
+    {
+      "name": "showActions",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows the action row; it is hidden while the message streams, is edited or is queued."
+    },
+    {
+      "name": "copyable",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Shows Copy (the web's onCopy={false} hides it)."
+    },
+    {
+      "name": "editing",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows MonarchAiUserMessageEdit in place of the person's bubble."
+    },
+    {
+      "name": "speaking",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Whether the app is reading the message aloud; Read aloud then reads Stop reading."
+    },
+    {
+      "name": "onCopy",
+      "type": "((String) -> Unit)?",
+      "default": "null",
+      "description": "Called with the text after Copy has put it on the clipboard."
+    },
+    {
+      "name": "onRegenerate / onFeedback / onReadAloud",
+      "type": "callbacks",
+      "default": "null",
+      "description": "Show Regenerate, the thumbs and Read aloud on an assistant message."
+    },
+    {
+      "name": "onEdit",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Shows Edit on the person's message."
+    },
+    {
+      "name": "onShare",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Shows Share."
+    },
+    {
+      "name": "onBranch",
+      "type": "((index: Int) -> Unit)?",
+      "default": "null",
+      "description": "Switches versions; the switcher shows when the message has more than one version and both version icons are given."
+    },
+    {
+      "name": "onRetry / onResume",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Try again on a retryable error part, Resume on a resumable one."
+    },
+    {
+      "name": "onCancelQueued",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Shows Cancel on a queued message of the person."
+    },
+    {
+      "name": "onForgetMemory / onEditMemory",
+      "type": "callbacks",
+      "default": "null",
+      "description": "Forget and Edit on a memory the reply saved."
+    },
+    {
+      "name": "onApproveTool / onDenyTool",
+      "type": "callbacks",
+      "default": "null",
+      "description": "With either, a tool call waiting for approval shows as MonarchAiToolApproval."
+    },
+    {
+      "name": "onAlwaysAllowTool",
+      "type": "((toolName: String) -> Unit)?",
+      "default": "null",
+      "description": "Offers Always allow on the approval card."
+    },
+    {
+      "name": "onEditSubmit / onEditCancel",
+      "type": "callbacks",
+      "default": "null",
+      "description": "Save or cancel the edit of the person's message."
+    },
+    {
+      "name": "onOpenArtifact",
+      "type": "((MonarchAiArtifactPart) -> Unit)?",
+      "default": "null",
+      "description": "Shows artifact parts as MonarchAiArtifactCard; without it they show nothing."
+    },
+    {
+      "name": "onOpenFile",
+      "type": "((MonarchAiFilePart) -> Unit)?",
+      "default": "null",
+      "description": "Makes file chips open the file."
+    },
+    {
+      "name": "onOpenSource",
+      "type": "((MonarchAiSourcePart) -> Unit)?",
+      "default": "null",
+      "description": "Opens a source from the list or a citation."
+    },
+    {
+      "name": "onOpenLink",
+      "type": "((url: String) -> Unit)?",
+      "default": "null",
+      "description": "Opens a link in the text; null opens it with the system."
+    },
+    {
+      "name": "uiRegistry / onUiAction",
+      "type": "MonarchAiUiRegistry? / callback",
+      "default": "null",
+      "description": "Shows ui parts with MonarchAiGenerativeUi from this allow-list; without it ui parts show nothing."
+    },
+    {
+      "name": "editHunks",
+      "type": "((MonarchAiEditProposalPart) -> List<MonarchAiEditHunk>?)?",
+      "default": "null",
+      "description": "Turns an edit proposal into hunks for a read-only MonarchAiEditProposal; null shows nothing."
+    },
+    {
+      "name": "renderPart",
+      "type": "((MonarchAiPart, Int) -> (@Composable () -> Unit)?)?",
+      "default": "null",
+      "description": "Returns content for a part, {} for nothing, or null to keep the default component."
+    },
+    {
+      "name": "agentIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The avatar's icon while there is no picture."
+    },
+    {
+      "name": "actionIcon / moreIcon",
+      "type": "slots",
+      "default": "null",
+      "description": "Glyphs of the action row; without them the actions show as text."
+    },
+    {
+      "name": "previousVersionIcon / nextVersionIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "Icons of the version switcher, required for it to show."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiMessageLabels",
+      "default": "MonarchAiMessageLabels()",
+      "description": "Replacements for the built-in strings and the labels of each part component."
+    },
+    {
+      "name": "moreActions",
+      "type": "(@Composable ColumnScope.(close: () -> Unit) -> Unit)?",
+      "default": "null",
+      "description": "Items of the menu of further actions."
+    }
+  ],
+  "states": [
+    {
+      "name": "assistant",
+      "description": "A header with the avatar, the agent's name, role and time, then the parts at full width and the action row."
+    },
+    {
+      "name": "person",
+      "description": "The parts in an end-aligned bubble on the muted background, at most 85% of the width; time and actions under it."
+    },
+    {
+      "name": "system or tool",
+      "description": "The parts at full width without a header."
+    },
+    {
+      "name": "streaming",
+      "description": "Text shows a caret and announces new sentences; the action row is hidden and the version switcher disabled."
+    },
+    {
+      "name": "finished short",
+      "description": "A Length, ContentFilter or Refusal finish reason adds a warning-coloured notice under a finished reply."
+    },
+    {
+      "name": "queued",
+      "description": "The note Queued. It will send when you are back online. with Cancel; no action row."
+    },
+    {
+      "name": "editing",
+      "description": "MonarchAiUserMessageEdit replaces the bubble."
+    },
+    {
+      "name": "tool approval",
+      "description": "A tool call waiting for approval shows Approve and Deny when the app handles them."
+    },
+    {
+      "name": "error",
+      "description": "An error part shows MonarchAiErrorMessage with Try again and Resume when allowed."
+    }
+  ],
+  "appearance": "The person's bubble uses the muted background with the default text color and the extra-large radius; the agent's role, the time and the queued note use the muted text color; the finish notice uses the warning strong color. Each part takes the colors of its own component, so light, dark and both high-contrast themes follow the theme roles.",
+  "platformNotes": "The web's AiMessageView is memoised and hides the action row until hover; on Android the row is always visible under a finished message and Compose skips unchanged messages when the app keys its LazyColumn items by message id. Callbacks do not receive the message, because the caller has it in scope. The web's onCopy={false} is copyable = false; Monarch copies with MonarchCopyButton. The avatar picture is a Painter the app loads (no URL loading). The version switcher needs app-supplied icons because Monarch bundles none. The web announces an error part only the first time it mounts; here announces controls it, so a thread that re-shows old messages should pass false. The web renders a tool call as a compact row; Android uses MonarchAiToolCall, which can expand to show input and output. iOS has no MonarchAiMessage view yet; the name follows the iOS model note that reserves it for the message view.",
+  "accessibility": [
+    "TalkBack reads You said:, Assistant said: or System message: on the message before its parts.",
+    "The avatar is decorative; the agent's name is text in the header.",
+    "Copy, Edit, the version buttons and Resume have 48dp touch targets.",
+    "Citations are named Source n: title.",
+    "The finish notice and the queued note are text, not only color.",
+    "Streamed text announces new sentences politely and the last text part announces Response complete once the reply, including its tool calls, is done; announces = false turns this off."
+  ],
+  "edgeCases": [
+    "Artifact, ui and edit-proposal parts show nothing until the app gives onOpenArtifact, uiRegistry or editHunks.",
+    "Several source parts show one source list, at the first source.",
+    "A citation whose source is not in the message shows nothing.",
+    "Without both version icons and onBranch the switcher is left out.",
+    "Long text wraps inside the bubble; the bubble never grows beyond 85% of the width.",
+    "The message does not scroll; put it in the app's LazyColumn."
+  ],
+  "tests": [
+    "MonarchAiMessageTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Assistant answer with reasoning, tool, sources and file",
+      "fixture": "ai-message",
+      "webExample": "Assistant answer with reasoning, tool, sources and file",
+      "template": "CompositionLocalProvider(LocalConfiguration provides locale) {\n    @OptIn(ExperimentalMonarchApi::class)\n    MonarchAiMessage(\n        message = MonarchAiConversationMessage(\n            id = \"a1\",\n            role = MonarchAiRole.Assistant,\n            parts = listOf(\n                MonarchAiReasoningPart({{reasoning.text}}, durationMs = {{reasoning.durationMs}}),\n                MonarchAiToolCallPart(\n                    id = {{tool.id}},\n                    name = {{tool.name}},\n                    input = MonarchAiJSON.Object(mapOf(\"query\" to MonarchAiJSON.Text({{tool.query}}))),\n                    state = MonarchAiToolCallState.Succeeded,\n                    startedAt = {{tool.startedAt}},\n                    endedAt = {{tool.endedAt}},\n                ),\n                MonarchAiTextPart({{answer}}),\n                MonarchAiSourcePart({{source.id}}, {{source.title}}, url = {{source.url}}, kind = MonarchAiSourceKind.{{source.kind|pascal}}),\n                MonarchAiCitationPart({{citation.id}}, {{citation.sourceId}}),\n                MonarchAiFilePart({{file.name}}, {{file.mediaType}}, size = {{file.size}}),\n            ),\n            createdAt = {{createdAt}},\n            agent = MonarchAiAgentRef({{agent.name}}, role = {{agent.role}}),\n            branch = MonarchAiBranchPosition(index = {{branch.index}}, count = {{branch.count}}),\n            feedback = feedback,\n        ),\n        onRegenerate = {},\n        onFeedback = { feedback = it },\n        onBranch = {},\n    )\n}",
+      "setupTemplate": "var feedback by rememberSaveable { mutableStateOf<MonarchAiMessageFeedback?>(null) }\nval configuration = LocalConfiguration.current\nval locale = remember(configuration) {\n    Configuration(configuration).apply { setLocale(Locale.forLanguageTag({{locale}})) }\n}",
+      "imports": [
+        "android.content.res.Configuration",
+        "androidx.compose.ui.platform.LocalConfiguration",
+        "java.util.Locale",
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.components.intelligence.aiconversation.*",
+        "com.rookhq.monarch.foundation.icon.MonarchIcon",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "var feedback by rememberSaveable { mutableStateOf<MonarchAiMessageFeedback?>(null) }\nval configuration = LocalConfiguration.current\nval locale = remember(configuration) {\n    Configuration(configuration).apply { setLocale(Locale.forLanguageTag(\"en-GB\")) }\n}",
+      "code": "CompositionLocalProvider(LocalConfiguration provides locale) {\n    @OptIn(ExperimentalMonarchApi::class)\n    MonarchAiMessage(\n        message = MonarchAiConversationMessage(\n            id = \"a1\",\n            role = MonarchAiRole.Assistant,\n            parts = listOf(\n                MonarchAiReasoningPart(\"Find the decisions first, then the owners.\", durationMs = 3000),\n                MonarchAiToolCallPart(\n                    id = \"t1\",\n                    name = \"search_documents\",\n                    input = MonarchAiJSON.Object(mapOf(\"query\" to MonarchAiJSON.Text(\"meeting notes\"))),\n                    state = MonarchAiToolCallState.Succeeded,\n                    startedAt = \"2026-03-02T10:15:00.000Z\",\n                    endedAt = \"2026-03-02T10:15:01.600Z\",\n                ),\n                MonarchAiTextPart(\"The team agreed on the launch date.\\n\\n- Confirm the venue\\n- Share the agenda\\n- Book a review\"),\n                MonarchAiSourcePart(\"s1\", \"Weekly meeting notes\", url = \"https://example.com/notes\", kind = MonarchAiSourceKind.Doc),\n                MonarchAiCitationPart(\"c1\", \"s1\"),\n                MonarchAiFilePart(\"agenda.pdf\", \"application/pdf\", size = 48_000),\n            ),\n            createdAt = \"2026-03-02T10:15:00.000Z\",\n            agent = MonarchAiAgentRef(\"Assistant\", role = \"Writing assistant\"),\n            branch = MonarchAiBranchPosition(index = 1, count = 2),\n            feedback = feedback,\n        ),\n        onRegenerate = {},\n        onFeedback = { feedback = it },\n        onBranch = {},\n    )\n}"
+    },
+    {
+      "title": "A tool call waiting for approval",
+      "setup": "val reply = MonarchAiConversationMessage(\n    id = \"a2\",\n    role = MonarchAiRole.Assistant,\n    parts = listOf(MonarchAiToolCallPart(\"t1\", \"send_reminder\", state = MonarchAiToolCallState.PendingApproval)),\n    createdAt = \"2026-11-05T09:06:00.000Z\",\n)",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiMessage(\n    message = reply,\n    onApproveTool = { _, _ -> /* conversation.approveTool(id, input) */ },\n    onDenyTool = { _, _ -> /* conversation.denyTool(id, reason) */ },\n    showActions = false,\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.components.intelligence.aiconversation.*"
+      ]
+    }
+  ],
+  "webEquivalent": "AiMessageView",
+  "dependsOn": [
+    "ai-streaming-text",
+    "ai-reasoning",
+    "ai-tool-call",
+    "ai-source-list",
+    "ai-error-message",
+    "ai-message-actions",
+    "attachment-chip"
+  ],
+  "icons": {
+    "agent": "BotGlyph",
+    "reasoning.chevron": "ChevronRightGlyph",
+    "tool.succeeded": "CheckGlyph",
+    "branch": "ChevronRightGlyph",
+    "copy": "CopyGlyph",
+    "regenerate": "RetryGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "layout",
+      "platform": "android",
+      "reason": "The web example is a 614px page with 24px targets: the number of the source, the citation chip, the file chip and the icon buttons sit close under each other. Android asks every control for a 48dp touch target, so the numbered source link, the citation chip and the action buttons keep a 48dp box and the rhythm between them is looser than on the web. The order, the data, the copy and the icons are the web's.",
+      "convention": "Material touch target of 48dp for every control"
+    }
+  ]
+}

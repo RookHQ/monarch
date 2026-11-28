@@ -1,0 +1,99 @@
+{
+  "id": "delete-workspace-flow",
+  "name": null,
+  "title": "DeleteWorkspaceFlow",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:content:) with interactiveDismissDisabled, holding a NavigationStack with navigationDestination(for:) for the steps; MonarchConsequenceList, MonarchButton, MonarchTypeToConfirmInput, MonarchInlineNotice, a nested sheet with MonarchStepUpAuthDialog, and MonarchEmptyState for the done screen",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: an owner deletes a workspace in a sheet that shows what will be deleted, offers an export and a transfer instead, asks for the workspace name, confirms it is them with MonarchStepUpAuthDialog, and ends on a done screen.",
+  "whenToUse": "In workspace settings, behind a danger Delete workspace button that only owners see.",
+  "whenNotToUse": "To leave a workspace use the leave workspace recipe. To remove a member use the revoke access recipe. To erase one person's data use the GDPR erase recipe.",
+  "api": [
+    "MonarchButton(\"Delete workspace\", systemImage: \"trash\", variant: .danger) { isOpen = true }",
+    ".sheet(isPresented: $isOpen) { NavigationStack { impact } .interactiveDismissDisabled(isDeleting) }",
+    "impact: MonarchConsequenceList([MonarchConsequence(.removed, \"apps\", count: 4), …], heading: \"What will be deleted\"); MonarchButton(\"Export data\"); MonarchButton(\"Transfer ownership instead\", variant: .ghost); NavigationLink(\"Continue\", value: …)",
+    "confirm: MonarchTypeToConfirmInput(phrase: workspaceName, text: $typed, onMatchChange: { isMatched = $0 }); MonarchButton(\"Delete workspace\", variant: .danger, isLoading: isDeleting).disabled(!isMatched)",
+    ".sheet(isPresented: $isVerifying) { MonarchStepUpAuthDialog(description:, onVerified: { delete() }, onVerify: { credential in … }) }",
+    "done: MonarchEmptyState(\"Workspace deleted\", message:, kind: .success, actionTitle: \"Close\", action:)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "impact",
+      "description": "The first screen: a sentence, MonarchConsequenceList with the counts (apps, members, records, subscriptions, domains), an optional Keep a copy section with Export data, an optional Transfer it instead section, and Continue."
+    },
+    {
+      "name": "impact loading",
+      "description": "Pass isLoading to MonarchConsequenceList and disable Continue with a caption saying to wait for the summary."
+    },
+    {
+      "name": "confirm",
+      "description": "The pushed screen: \"This cannot be undone.\" (or the scheduled date with a grace period), the type-to-confirm field, and a danger Delete workspace button disabled until the name matches."
+    },
+    {
+      "name": "verifying",
+      "description": "MonarchStepUpAuthDialog in a nested sheet; the delete runs only after it succeeds."
+    },
+    {
+      "name": "deleting",
+      "description": "The danger button shows its spinner and the sheet cannot be swiped away."
+    },
+    {
+      "name": "failed",
+      "description": "A danger MonarchInlineNotice on the confirm screen, announced; the person can try again."
+    },
+    {
+      "name": "done",
+      "description": "A success MonarchEmptyState, \"Workspace deleted\" or \"Deletion scheduled\", with Close; the app then navigates away."
+    }
+  ],
+  "appearance": "Every part is an existing Monarch component or a system sheet and navigation bar in the theme: MonarchConsequenceList with its kind icons, MonarchSectionHeader for the optional sections, primary, secondary, ghost and danger MonarchButtons.",
+  "platformNotes": "The web's DeleteWorkspaceFlow is one component built on a WizardDialog with numbered steps. On iOS it is a recipe: a sheet with a NavigationStack, so each step is a pushed screen with the system back button, which is how multi-step tasks work on a phone, and the step-up check is MonarchStepUpAuthDialog in a nested sheet. The web's impact counts become MonarchConsequence items with counts; its messages are written in the app. The web's gracePeriodDays changes only the copy (\"Schedule deletion\", the date) and is the app's choice here. Android composes the same recipe.",
+  "accessibility": [
+    "The navigation title of each step is read when the step appears; the system back button returns to the previous step.",
+    "MonarchConsequenceList reads each line with its kind and count, so removed and changed do not depend on the icons.",
+    "MonarchTypeToConfirmInput announces when the typed name matches.",
+    "The disabled Delete workspace button has a caption that says why.",
+    "Failures are shown in words in a notice and announced; the sheet cannot be dismissed while deleting.",
+    "MonarchStepUpAuthDialog shows errors in words and supports the password, a code and the device owner check."
+  ],
+  "edgeCases": [
+    "Check on the server that the person is an owner and re-authenticated; the recipe only gathers the confirmation.",
+    "Offer Transfer ownership instead only when there is another member who could own the workspace.",
+    "After the done screen closes, navigate away from the deleted workspace.",
+    "With a grace period, say when the deletion happens and how to cancel it."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "From a danger zone, with export, transfer and step-up",
+      "fixture": "delete-workspace-flow",
+      "webExample": "From a danger zone, with export, transfer and step-up",
+      "template": "MonarchSectionCard({{dangerZone.heading}}, description: {{dangerZone.description}}, tone: .danger) {\n    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n        Text({{dangerZone.title}}).monarchTextStyle(.bodyStrong)\n        Text({{dangerZone.itemDescription}})\n            .monarchTextStyle(.caption)\n            .foregroundStyle(theme.colors.textMuted)\n        MonarchButton({{dangerZone.action}}, variant: .danger) { isOpen = true }\n    }\n}\n.sheet(isPresented: $isOpen) {\n    NavigationStack {\n        if isDone {\n            MonarchEmptyState(\n                \"Workspace deleted\",\n                message: \"{{flow.workspaceName|raw}} and everything in it has been deleted.\",\n                systemImage: \"checkmark.circle\",\n                kind: .success,\n                actionTitle: \"Close\",\n                action: { isOpen = false }\n            )\n        } else {\n            impact\n        }\n    }\n    .interactiveDismissDisabled(isDeleting)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = false\n@State private var typed = \"\"\n@State private var isMatched = false\n@State private var isVerifying = false\n@State private var isDeleting = false\n@State private var isDone = false\n@State private var failure: String?\n\nprivate var impact: some View {\n    ScrollView {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                Text(\"Step 1 of 4\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                ProgressView(value: 0.25).progressViewStyle(.monarchLinear)\n            }\n            Text({{flow.intro}}).monarchTextStyle(.body)\n            MonarchConsequenceList(\n                [\n                    MonarchConsequence(.removed, {{impactLabels.apps}}, count: {{impact.apps}}),\n                    MonarchConsequence(.removed, {{impactLabels.records}}, count: {{impact.records}}),\n                    MonarchConsequence(.changed, {{impactLabels.members}}, count: {{impact.members}}),\n                    MonarchConsequence(.changed, {{impactLabels.subscriptions}}, count: {{impact.subscriptions}}),\n                    MonarchConsequence(.changed, {{impactLabels.domains}}, count: {{impact.domains}}),\n                ],\n                heading: {{flow.heading}},\n                isGrouped: true\n            )\n            HStack {\n                MonarchButton({{flow.cancel}}) { isOpen = false }\n                NavigationLink({{flow.continue}}, value: \"confirm\")\n                    .buttonStyle(.monarch(.primary, fullWidth: true))\n            }\n        }\n        .padding(theme.spacing.space6)\n    }\n    .navigationTitle({{flow.title}})\n    .navigationDestination(for: String.self) { _ in confirm }\n}\n\nprivate var confirm: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space4) {\n        Text(\"This cannot be undone.\").monarchTextStyle(.body)\n        MonarchTypeToConfirmInput(phrase: {{flow.workspaceName}}, text: $typed, onMatchChange: { isMatched = $0 })\n        if let failure {\n            MonarchInlineNotice(failure, tone: .danger)\n        }\n        MonarchButton({{dangerZone.action}}, variant: .danger, isLoading: isDeleting, fullWidth: true) {\n            isVerifying = true\n        }\n        .disabled(!isMatched)\n    }\n    .padding(theme.spacing.space6)\n    .navigationTitle(\"Confirm deletion\")\n    .sheet(isPresented: $isVerifying) {\n        MonarchStepUpAuthDialog(\n            description: \"Deleting a workspace needs you to confirm your identity.\",\n            onVerified: { delete() },\n            onVerify: { _ in\n                // The app re-authenticates the person here.\n            }\n        )\n    }\n}\n\nprivate func delete() {\n    isDeleting = true\n    failure = nil\n    Task {\n        do {\n            // The app deletes the workspace here.\n            try await Task.sleep(for: .milliseconds(300))\n            isDone = true\n        } catch {\n            failure = \"The workspace couldn’t be deleted. Try again.\"\n        }\n        isDeleting = false\n    }\n}",
+      "previewPresented": [
+        "isOpen"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isOpen = false\n@State private var typed = \"\"\n@State private var isMatched = false\n@State private var isVerifying = false\n@State private var isDeleting = false\n@State private var isDone = false\n@State private var failure: String?\n\nprivate var impact: some View {\n    ScrollView {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                Text(\"Step 1 of 4\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n                ProgressView(value: 0.25).progressViewStyle(.monarchLinear)\n            }\n            Text(\"Deleting north-studio removes it and everything in it for every member. This cannot be undone.\").monarchTextStyle(.body)\n            MonarchConsequenceList(\n                [\n                    MonarchConsequence(.removed, \"apps\", count: 4),\n                    MonarchConsequence(.removed, \"records\", count: 18_340),\n                    MonarchConsequence(.changed, \"members lose access\", count: 12),\n                    MonarchConsequence(.changed, \"active subscription is cancelled\", count: 1),\n                    MonarchConsequence(.changed, \"custom domains are disconnected\", count: 2),\n                ],\n                heading: \"What will be deleted\",\n                isGrouped: true\n            )\n            HStack {\n                MonarchButton(\"Cancel\") { isOpen = false }\n                NavigationLink(\"Continue\", value: \"confirm\")\n                    .buttonStyle(.monarch(.primary, fullWidth: true))\n            }\n        }\n        .padding(theme.spacing.space6)\n    }\n    .navigationTitle(\"Delete workspace\")\n    .navigationDestination(for: String.self) { _ in confirm }\n}\n\nprivate var confirm: some View {\n    VStack(alignment: .leading, spacing: theme.spacing.space4) {\n        Text(\"This cannot be undone.\").monarchTextStyle(.body)\n        MonarchTypeToConfirmInput(phrase: \"north-studio\", text: $typed, onMatchChange: { isMatched = $0 })\n        if let failure {\n            MonarchInlineNotice(failure, tone: .danger)\n        }\n        MonarchButton(\"Delete workspace\", variant: .danger, isLoading: isDeleting, fullWidth: true) {\n            isVerifying = true\n        }\n        .disabled(!isMatched)\n    }\n    .padding(theme.spacing.space6)\n    .navigationTitle(\"Confirm deletion\")\n    .sheet(isPresented: $isVerifying) {\n        MonarchStepUpAuthDialog(\n            description: \"Deleting a workspace needs you to confirm your identity.\",\n            onVerified: { delete() },\n            onVerify: { _ in\n                // The app re-authenticates the person here.\n            }\n        )\n    }\n}\n\nprivate func delete() {\n    isDeleting = true\n    failure = nil\n    Task {\n        do {\n            // The app deletes the workspace here.\n            try await Task.sleep(for: .milliseconds(300))\n            isDone = true\n        } catch {\n            failure = \"The workspace couldn’t be deleted. Try again.\"\n        }\n        isDeleting = false\n    }\n}",
+      "code": "MonarchSectionCard(\"Danger zone\", description: \"These actions affect everyone in the workspace.\", tone: .danger) {\n    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n        Text(\"Delete this workspace\").monarchTextStyle(.bodyStrong)\n        Text(\"Removes the workspace, its apps and its records for every member.\")\n            .monarchTextStyle(.caption)\n            .foregroundStyle(theme.colors.textMuted)\n        MonarchButton(\"Delete workspace\", variant: .danger) { isOpen = true }\n    }\n}\n.sheet(isPresented: $isOpen) {\n    NavigationStack {\n        if isDone {\n            MonarchEmptyState(\n                \"Workspace deleted\",\n                message: \"north-studio and everything in it has been deleted.\",\n                systemImage: \"checkmark.circle\",\n                kind: .success,\n                actionTitle: \"Close\",\n                action: { isOpen = false }\n            )\n        } else {\n            impact\n        }\n    }\n    .interactiveDismissDisabled(isDeleting)\n}"
+    }
+  ],
+  "webEquivalent": "DeleteWorkspaceFlow",
+  "dependsOn": [
+    "sheet",
+    "consequence-list",
+    "type-to-confirm-input",
+    "step-up-auth-dialog",
+    "button",
+    "inline-notice",
+    "empty-state",
+    "section-header"
+  ]
+}

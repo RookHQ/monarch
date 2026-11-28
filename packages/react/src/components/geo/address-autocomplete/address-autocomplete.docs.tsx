@@ -6,30 +6,40 @@ import {
   type AddressValue,
 } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './address-autocomplete.fixture.json';
 
 // A pretend provider with a few neutral addresses. Monarch ships no vendor
 // SDK: a product implements `search` (and `resolve`) against its own endpoint.
-const PLACES: AddressSuggestion[] = [
-  {
-    id: 'p1',
-    label: '10 Market Street',
-    description: 'Springfield, OR 97477, United States',
-    address: {
-      line1: '10 Market Street',
-      city: 'Springfield',
-      regionName: 'Oregon',
-      postalCode: '97477',
-      country: 'US',
-    },
-  },
-  {
-    id: 'p2',
-    label: '24 Harbour Road',
-    description: 'Bristol BS1 5TY, United Kingdom',
-    address: { line1: '24 Harbour Road', city: 'Bristol', postalCode: 'BS1 5TY', country: 'GB' },
-  },
-  { id: 'p3', label: '8 Lindenweg', description: '10115 Berlin, Germany' },
-];
+interface FixturePlace {
+  id: string;
+  label: string;
+  description: string;
+  address?: {
+    line1: string;
+    city: string;
+    region?: string;
+    postalCode: string;
+    countryCode: string;
+  };
+}
+
+const PLACES: AddressSuggestion[] = (fixture.data.places as FixturePlace[]).map(
+  ({ id, label, description, address }) => ({
+    id,
+    label,
+    description,
+    ...(address !== undefined && {
+      address: {
+        line1: address.line1,
+        city: address.city,
+        ...(address.region !== undefined && { regionName: address.region }),
+        postalCode: address.postalCode,
+        country: address.countryCode,
+      },
+    }),
+  }),
+);
 
 function wait<T>(ms: number, value: T, signal: AbortSignal) {
   return new Promise<T>((resolve, reject) => {
@@ -44,7 +54,7 @@ function wait<T>(ms: number, value: T, signal: AbortSignal) {
 function searchPlaces(query: string, { signal }: { signal: AbortSignal }) {
   const q = query.toLowerCase();
   return wait(
-    400,
+    200,
     PLACES.filter((p) => `${p.label} ${p.description}`.toLowerCase().includes(q)),
     signal,
   );
@@ -63,16 +73,15 @@ function CheckoutDemo() {
   return (
     <div style={{ display: 'grid', gap: 12, width: '100%', maxWidth: 560 }}>
       <AddressAutocomplete
+        defaultQuery={fixture.data.query}
         search={searchPlaces}
         resolve={resolvePlace}
         value={value}
         onValueChange={setValue}
-        description="Try “Market”, “Harbour” or “Linden”."
-        required
+        description={fixture.data.helper}
+        required={fixture.data.required}
+        messages={{ label: fixture.data.label, enterManually: fixture.data.enterManually }}
       />
-      <pre style={{ margin: 0, fontSize: 12, whiteSpace: 'pre-wrap' }}>
-        {JSON.stringify(value, null, 2)}
-      </pre>
     </div>
   );
 }

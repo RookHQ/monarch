@@ -1,13 +1,13 @@
 import { SignUpForm } from '@rookcom/monarch-react/patterns';
 import { SignInWithRookButton } from '@rookcom/monarch-react/rook';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './sign-up-form.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 
-const TERMS = [
-  { label: 'Terms of Service', href: '#terms', version: '2026-01' },
-  { label: 'Privacy Policy', href: '#privacy', version: '2026-01' },
-];
+const TERM_HREFS = ['#terms', '#privacy'];
+const TERMS = fixture.data.terms.map((term, i) => ({ ...term, href: TERM_HREFS[i] ?? '#terms' }));
 
 async function demoSignUp({ email }: { email: string }) {
   await wait(800);
@@ -135,6 +135,7 @@ export default {
             <SignUpForm
               aria-label="Create account"
               terms={TERMS}
+              defaultEmail={fixture.data.email}
               signInHref="#sign-in"
               onSubmit={demoSignUp}
             />

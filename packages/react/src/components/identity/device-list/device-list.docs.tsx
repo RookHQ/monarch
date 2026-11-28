@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { DeviceList, type DeviceListItem } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './device-list.fixture.json';
 
 const wait = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms));
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000);
@@ -36,10 +38,15 @@ const SAMPLE: DeviceListItem[] = [
   },
 ];
 
+const FIXTURE_DEVICES = fixture.data.devices as DeviceListItem[];
+
 function Removable() {
-  const [devices, setDevices] = useState(SAMPLE);
+  const [devices, setDevices] = useState(FIXTURE_DEVICES);
   return (
     <DeviceList
+      title={fixture.data.title}
+      description={fixture.data.description}
+      now={fixture.data.now}
       devices={devices}
       onRemove={async (id) => {
         await wait(600);

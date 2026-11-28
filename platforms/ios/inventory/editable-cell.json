@@ -1,0 +1,218 @@
+{
+  "id": "editable-cell",
+  "name": "MonarchEditableCell",
+  "title": "EditableCell",
+  "family": "data-grid",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Button that swaps to TextField with @FocusState for text and number cells; Picker with .pickerStyle(.menu) for select cells; DatePicker(displayedComponents: .date) in the compact style for date cells",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A table or list cell that edits one value in place, text, number, select or date, with validation, an asynchronous save and an error that keeps the draft.",
+  "whenToUse": "For one value in a row that people often correct without opening a form: a title, a quantity, a status, a due date. Use it in MonarchDataTable cells and in list rows.",
+  "whenNotToUse": "For several related fields that change together, push a Form or open a sheet. For a free-text heading on a detail screen, use MonarchInlineEditText.",
+  "api": [
+    "init(_ label: String, value: Binding<MonarchEditableCellValue>, kind: MonarchEditableCellKind = .text, options: [MonarchEditableCellOption] = [], placeholder: String? = nil, minimum: Double? = nil, maximum: Double? = nil, minimumDate: Date? = nil, maximumDate: Date? = nil, isRequired: Bool = false, isNumeric: Bool? = nil, startsEditing: Bool = false, savesOnFocusLoss: Bool = true, labels: MonarchEditableCellLabels = MonarchEditableCellLabels(), format: (@MainActor (MonarchEditableCellValue) -> String)? = nil, validate: (@MainActor (MonarchEditableCellValue) -> String?)? = nil, onCancel: (@MainActor () -> Void)? = nil, onCommit: @escaping @MainActor (MonarchEditableCellValue) async throws -> Void)",
+    "enum MonarchEditableCellKind: String { case text, number, select, date }",
+    "enum MonarchEditableCellValue: Hashable { case empty, text(String), number(Double), date(Date); var isEmpty: Bool }",
+    "struct MonarchEditableCellOption: Identifiable, Hashable { init(_ label: String, value: String, isDisabled: Bool = false) }",
+    "struct MonarchEditableCellLabels { init(edit: String? = nil, saving: String? = nil, cancel: String? = nil, save: String? = nil, invalidNumber: String? = nil, required: String? = nil, belowMinimum: (@Sendable (String) -> String)? = nil, aboveMaximum: (@Sendable (String) -> String)? = nil, noValue: String? = nil, saveFailed: String? = nil, error: (@Sendable (String) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "What the cell holds, for example \"Status for Acme\". Read by VoiceOver; not drawn."
+    },
+    {
+      "name": "value",
+      "type": "Binding<MonarchEditableCellValue>",
+      "default": "required",
+      "description": "The saved value. Written after a successful save."
+    },
+    {
+      "name": "kind",
+      "type": "MonarchEditableCellKind",
+      "default": ".text",
+      "description": "The editor: text field, number field, menu of choices or compact date picker."
+    },
+    {
+      "name": "options",
+      "type": "[MonarchEditableCellOption]",
+      "default": "[]",
+      "description": "The choices of a select cell; a disabled choice is shown but cannot be chosen."
+    },
+    {
+      "name": "placeholder",
+      "type": "String?",
+      "default": "nil",
+      "description": "The text of an empty cell and the prompt of text and number fields."
+    },
+    {
+      "name": "minimum",
+      "type": "Double?",
+      "default": "nil",
+      "description": "The lowest value of a number cell."
+    },
+    {
+      "name": "maximum",
+      "type": "Double?",
+      "default": "nil",
+      "description": "The highest value of a number cell."
+    },
+    {
+      "name": "minimumDate",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The earliest day of a date cell; also the picker's range."
+    },
+    {
+      "name": "maximumDate",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The latest day of a date cell; also the picker's range."
+    },
+    {
+      "name": "isRequired",
+      "type": "Bool",
+      "default": "false",
+      "description": "Refuses an empty value. A required select cell offers no None choice."
+    },
+    {
+      "name": "isNumeric",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Trailing alignment with tabular figures. nil means number cells only."
+    },
+    {
+      "name": "startsEditing",
+      "type": "Bool",
+      "default": "false",
+      "description": "Opens the text or number field when the cell first appears."
+    },
+    {
+      "name": "savesOnFocusLoss",
+      "type": "Bool",
+      "default": "true",
+      "description": "Leaving a text or number field saves the draft."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchEditableCellLabels",
+      "default": "MonarchEditableCellLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "format",
+      "type": "(@MainActor (MonarchEditableCellValue) -> String)?",
+      "default": "nil",
+      "description": "The text of a value in view mode. The default is the option label, the number or day in the locale, or the text."
+    },
+    {
+      "name": "validate",
+      "type": "(@MainActor (MonarchEditableCellValue) -> String?)?",
+      "default": "nil",
+      "description": "Returns a message to refuse a value before saving."
+    },
+    {
+      "name": "onCancel",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Runs when the person leaves a field without saving."
+    },
+    {
+      "name": "onCommit",
+      "type": "@MainActor (MonarchEditableCellValue) async throws -> Void",
+      "default": "required",
+      "description": "Persists a new value. Not called for an unchanged value. Throw to refuse it with the error's description."
+    }
+  ],
+  "states": [
+    {
+      "name": "viewing",
+      "description": "The value as body text, trailing-aligned with tabular figures for numbers; an empty cell shows the placeholder in the subtle colour."
+    },
+    {
+      "name": "editing",
+      "description": "Text and number cells: a bordered field with the focus ring and save and cancel icon buttons at its trailing end."
+    },
+    {
+      "name": "choosing",
+      "description": "Select cells are always a system menu button showing the current choice; date cells are the compact date picker. Choosing saves at once."
+    },
+    {
+      "name": "empty date",
+      "description": "An empty date cell shows the placeholder (or None); touching it shows a picker on today, moved into the range, with save and cancel."
+    },
+    {
+      "name": "saving",
+      "description": "A small progress indicator replaces the buttons and the control is disabled; VoiceOver reads Saving."
+    },
+    {
+      "name": "invalid",
+      "description": "The field border turns to the danger colour and the message is shown under it with an icon; the draft is kept."
+    },
+    {
+      "name": "failed",
+      "description": "The error's description (or Couldn’t save. Try again.) is shown; a typed draft is kept, a chosen value goes back to the saved one."
+    },
+    {
+      "name": "disabled",
+      "description": "Plain text in the disabled colour for every kind; no control."
+    }
+  ],
+  "appearance": "The value is body text in the default text colour, or the subtle colour when empty and the disabled colour when disabled. The field is a surface-coloured box with the input border, the control radius and the focus ring; errors use the danger strong role. The save glyph uses the accent strong role and the cancel glyph the muted text role. Menus and date pickers are the system controls tinted by the theme. The same roles apply in light, dark and both high-contrast themes.",
+  "platformNotes": "The web cell is a button that opens a text input, a native select or a date input; Enter or F2 opens, Enter saves and Escape cancels. On iOS a touch keyboard has no Escape or F2, so text and number fields carry save and cancel icon buttons (Return saves; a hardware Escape still cancels). Select and date cells use the system menu and compact date picker, which already open on touch, so choosing saves at once; a failed save puts the saved value back instead of keeping an open editor. The web's ISO date strings are Dates at the start of the day in the environment's calendar, and numbers are parsed in the person's locale instead of JavaScript Number(). A non-required date cell is cleared from its context menu. The web's trigger=\"none\" mode for a grid that owns focus is not offered: SwiftUI lists have no cell focus model; use startsEditing for a row that was just added. Android has no editable cell yet. Several closures are optional (format, validate, onCancel). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is format.",
+  "accessibility": [
+    "In view mode a text, number or empty date cell is one button: the label, then the shown value (or the placeholder) as the value, then \"Edit\" as the hint.",
+    "The field, the menu and the date picker carry the label; the menu and the picker keep their system roles and values.",
+    "An error is announced when it appears, spoken as the editor's hint (\"Error: …\") and shown with an icon and text, not colour alone.",
+    "While a save runs the field's spoken value is \"Saving\" and the progress indicator is named \"Saving\".",
+    "The save and cancel icon buttons are named \"Save\" and \"Cancel\" and have 44-point touch targets; every cell is at least 44 points high.",
+    "Text scales with Dynamic Type and wraps; numbers keep tabular figures."
+  ],
+  "edgeCases": [
+    "A value equal to the saved one closes the editor without calling onCommit; empty text and .empty count as equal, and dates are compared by day.",
+    "A draft that has just been refused or failed is not saved again when focus leaves the field.",
+    "A second save and Cancel are ignored while a save runs.",
+    "Number drafts accept the locale's grouping and decimal separators and ignore spaces; anything else is refused with Enter a number.",
+    "A select value that matches no option is shown as its raw text.",
+    "startsEditing formats a number draft in the current locale, because the environment is not available before the view appears."
+  ],
+  "tests": [
+    "MonarchEditableCellTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Editing a text cell",
+      "fixture": "editable-cell",
+      "webExample": "Editing a text cell",
+      "template": "MonarchEditableCell({{label}}, value: $title, startsEditing: true) { _ in\n    try await Task.sleep(for: .milliseconds(300))\n}",
+      "setupTemplate": "@State private var title: MonarchEditableCellValue = .text({{value}})",
+      "setup": "@State private var title: MonarchEditableCellValue = .text(\"Quarterly review\")",
+      "code": "MonarchEditableCell(\"Title\", value: $title, startsEditing: true) { _ in\n    try await Task.sleep(for: .milliseconds(300))\n}"
+    },
+    {
+      "title": "A status menu and a due date",
+      "setup": "@State private var status: MonarchEditableCellValue = .text(\"open\")\n@State private var due: MonarchEditableCellValue = .date(Date(timeIntervalSince1970: 1_794_614_400))",
+      "code": "VStack(alignment: .leading) {\n    MonarchEditableCell(\n        \"Status\",\n        value: $status,\n        kind: .select,\n        options: [\n            MonarchEditableCellOption(\"Open\", value: \"open\"),\n            MonarchEditableCellOption(\"In review\", value: \"review\"),\n            MonarchEditableCellOption(\"Done\", value: \"done\"),\n        ]\n    ) { _ in }\n    MonarchEditableCell(\"Due\", value: $due, kind: .date) { _ in }\n}"
+    },
+    {
+      "title": "Text with a rule of the app",
+      "setup": "@State private var owner: MonarchEditableCellValue = .text(\"Sam Lee\")",
+      "code": "MonarchEditableCell(\n    \"Owner\",\n    value: $owner,\n    validate: { value in\n        if case .text(let text) = value, text.count < 2 { return \"Use at least 2 characters.\" }\n        return nil\n    },\n    onCommit: { _ in }\n)"
+    }
+  ],
+  "webEquivalent": "EditableCell",
+  "dependsOn": [
+    "text-field",
+    "select",
+    "date-picker",
+    "icon"
+  ]
+}

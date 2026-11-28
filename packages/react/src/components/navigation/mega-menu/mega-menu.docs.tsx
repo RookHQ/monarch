@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { MegaMenu, type MegaMenuItem } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { CalendarIcon, GearIcon, GridIcon, UsersIcon } from '../../../internal/docs-demo.js';
@@ -71,6 +72,13 @@ const items: MegaMenuItem[] = [
   },
   { id: 'support', label: 'Support', href: '#support' },
 ];
+
+function SiteHeader() {
+  const [openItem, setOpenItem] = useState<string | null>('product');
+  return (
+    <MegaMenu items={items} openItem={openItem} onOpenItemChange={setOpenItem} aria-label="Site" />
+  );
+}
 
 export default {
   id: 'mega-menu',
@@ -213,7 +221,7 @@ export default {
         {
           title: 'Product site header',
           stack: true,
-          render: () => <MegaMenu items={items} aria-label="Site" />,
+          render: () => <SiteHeader />,
         },
         {
           title: 'Click only',

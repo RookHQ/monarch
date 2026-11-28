@@ -1,5 +1,13 @@
-import { CopyField, Field, FieldDescription, FieldLabel } from '@rookcom/monarch-react';
+import {
+  CopyField,
+  Field,
+  FieldDescription,
+  FieldLabel,
+  type CopyFieldProps,
+} from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './copy-field.fixture.json';
 
 const embed = `<script src="https://example.com/widget.js"
   data-workspace="ws_01HZX4" async></script>`;
@@ -131,8 +139,16 @@ export default {
           stack: true,
           render: () => (
             <>
-              <CopyField label="Webhook URL" value="https://example.com/hooks/inbound/7f3a2c" />
-              <CopyField label="TXT record" value="verify=c41e9b20d7" size="sm" iconOnly />
+              <CopyField
+                label={fixture.data.fields[0]?.label ?? ''}
+                value={fixture.data.fields[0]?.value ?? ''}
+              />
+              <CopyField
+                label={fixture.data.fields[1]?.label ?? ''}
+                value={fixture.data.fields[1]?.value ?? ''}
+                size={fixture.data.fields[1]?.size as NonNullable<CopyFieldProps['size']>}
+                iconOnly={fixture.data.fields[1]?.iconOnly as boolean}
+              />
             </>
           ),
         },

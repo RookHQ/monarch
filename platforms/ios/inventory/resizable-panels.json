@@ -1,0 +1,149 @@
+{
+  "id": "resizable-panels",
+  "name": "MonarchResizablePanels",
+  "title": "ResizablePanels",
+  "family": "layout",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "GeometryReader, HStackLayout and VStackLayout, DragGesture, focusable with onKeyPress, accessibilityAdjustableAction",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Two panels, side by side or stacked, with a separator the person drags, or moves from a keyboard or with VoiceOver, to resize them.",
+  "whenToUse": "On an iPad or another regular-width screen, when two panes stay on screen together and people choose how much space each gets: a list beside a preview, an editor above its output.",
+  "whenNotToUse": "For a list and a detail that become one pane with a back button on a phone, use NavigationSplitView (see split-layout). On a phone in portrait there is rarely room for two panes; the default stacks them.",
+  "api": [
+    "MonarchResizablePanels.init(fraction: Binding<Double>, axis: MonarchResizablePanelsAxis = .horizontal, range: ClosedRange<Double> = 0.1...0.9, step: Double = 0.05, showsGrip: Bool = false, handleLabel: String? = nil, stacksWhenCompact: Bool = true, collapsesFirst: Bool = false, onResizeEnded: (@MainActor (Double) -> Void)? = nil, @ViewBuilder first: () -> First, @ViewBuilder second: () -> Second)",
+    "enum MonarchResizablePanelsAxis { case horizontal, vertical }"
+  ],
+  "options": [
+    {
+      "name": "fraction",
+      "type": "Binding<Double>",
+      "default": "required",
+      "description": "The share of the first panel, from 0 to 1. The app owns it; keep it in @SceneStorage or @AppStorage to restore the layout."
+    },
+    {
+      "name": "axis",
+      "type": "MonarchResizablePanelsAxis",
+      "default": ".horizontal",
+      "description": "horizontal: side by side, the first panel at the leading edge. vertical: stacked, the first panel on top."
+    },
+    {
+      "name": "range",
+      "type": "ClosedRange<Double>",
+      "default": "0.1...0.9",
+      "description": "The smallest and largest share of the first panel. Limited to 0...1."
+    },
+    {
+      "name": "step",
+      "type": "Double",
+      "default": "0.05",
+      "description": "The share one arrow key press or one VoiceOver swipe moves the separator."
+    },
+    {
+      "name": "showsGrip",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether a grip is drawn in the middle of the separator."
+    },
+    {
+      "name": "handleLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in spoken name \"Resize panels\"."
+    },
+    {
+      "name": "stacksWhenCompact",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether side-by-side panels are stacked at their natural height, with a plain divider and no resizing, when the horizontal size class is compact."
+    },
+    {
+      "name": "onResizeEnded",
+      "type": "((Double) -> Void)?",
+      "default": "nil",
+      "description": "Called with the share when a drag ends and after each keyboard or VoiceOver step. Save the layout here."
+    },
+    {
+      "name": "first",
+      "type": "() -> First",
+      "default": "required",
+      "description": "The leading or top panel."
+    },
+    {
+      "name": "second",
+      "type": "() -> Second",
+      "default": "required",
+      "description": "The trailing or bottom panel."
+    }
+  ],
+  "states": [
+    {
+      "name": "resting",
+      "description": "A hairline separator in the strong border colour between the panels."
+    },
+    {
+      "name": "dragging",
+      "description": "The separator and the grip take the accent colour and the line is 2 points thick. The panels resize as the finger moves."
+    },
+    {
+      "name": "focused",
+      "description": "With a hardware keyboard the separator takes focus and looks as it does while dragged."
+    },
+    {
+      "name": "disabled",
+      "description": "The separator uses the subtle border colour and does not respond to a drag, the keyboard or VoiceOver. Set with disabled(_:)."
+    },
+    {
+      "name": "stacked",
+      "description": "At a compact width with stacksWhenCompact, the panels are one above the other at their natural height with a MonarchDivider between them."
+    }
+  ],
+  "appearance": "A 1-point line in the strong border role; the accent role and 2 points while dragged or focused; the subtle border role when disabled. The optional grip is a capsule in the same colour. The panels draw their own backgrounds.",
+  "platformNotes": "The parity map named NavigationSplitView column widths for this entry. On iOS navigationSplitViewColumnWidth only proposes a width and the person cannot drag the column edge, so the separator is custom in every case. The web takes any number of panels with alternating handles and sizes in percent; iOS takes two panels and one share from 0 to 1, and a third pane is a MonarchResizablePanels nested in a panel. The web keeps the sizes itself (defaultSizes, onLayout); here the app owns the binding and onResizeEnded is the moment to save. Not offered: collapsible panels (collapsedSize, Enter to collapse) and a per-handle disabled flag (disable the whole view). The web stacks below 768 pixels only when stackOnNarrow is set; here stacking at a compact width is the default, because two resizable columns do not fit a phone in portrait. Android ships the same two-panel API.",
+  "accessibility": [
+    "The separator is one element named \"Resize panels\" or by handleLabel.",
+    "Its value is the share of the first panel as a whole percentage, for example \"40%\".",
+    "It has the adjustable action: swiping up or down with VoiceOver moves it by step.",
+    "With a hardware keyboard the separator is focusable. The arrow keys along the axis move it by step in the direction they point, so left and right swap in a right-to-left layout. Home and End move it to the ends of range.",
+    "The touch target is 44 points across, centred on the line, and overlaps the edges of both panels.",
+    "Dragging follows the layout direction: in a right-to-left layout the first panel is on the right.",
+    "The active state is a thicker line as well as the accent colour.",
+    "The panels are not animated while they resize, so there is nothing for Reduce Motion to turn off; the colour change of the line is not animated when Reduce Motion is on."
+  ],
+  "edgeCases": [
+    "The view fills the space it is offered. Inside a ScrollView give it a height.",
+    "A fraction outside range is shown at the nearest end of the range; the binding is not rewritten until the person moves the separator.",
+    "The content of a panel is clipped to the panel.",
+    "Controls within 22 points of the separator share their touch area with it; the separator wins.",
+    "When stacked, fraction, range and step have no effect and no separator is offered.",
+    "The vertical axis never stacks."
+  ],
+  "tests": [
+    "MonarchResizablePanelsTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Saved, collapsible layout",
+      "fixture": "resizable-panels",
+      "webExample": "Saved, collapsible layout",
+      "template": "VStack(alignment: .leading, spacing: 8) {\nMonarchResizablePanels(\n    fraction: $fraction,\n    range: ({{panels.0.minSize|double}} / 100)...(min({{panels.0.maxSize|double}}, 100 - {{panels.1.minSize|double}}) / 100),\n    showsGrip: true,\n    stacksWhenCompact: false,\n    collapsesFirst: true,\n    first: {\n        Text({{panels.0.label}})\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textDefault)\n            .padding(theme.spacing.space3)\n            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)\n    },\n    second: {\n        Text({{panels.1.label}})\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textDefault)\n            .padding(theme.spacing.space3)\n            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)\n    }\n)\n.frame(height: {{height}})\n.clipShape(RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous))\n.overlay(RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous).strokeBorder(theme.colors.borderSubtle, lineWidth: MonarchTokens.Space.px))\nText(\"Saved layout: \" + String(Int((fraction * 100).rounded())) + \" / \" + String(100 - Int((fraction * 100).rounded())))\n    .monarchTextStyle(.caption)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var fraction = {{firstSize|double}} / 100",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var fraction = 30.0 / 100",
+      "code": "VStack(alignment: .leading, spacing: 8) {\nMonarchResizablePanels(\n    fraction: $fraction,\n    range: (20.0 / 100)...(min(50.0, 100 - 30.0) / 100),\n    showsGrip: true,\n    stacksWhenCompact: false,\n    collapsesFirst: true,\n    first: {\n        Text(\"Folders\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textDefault)\n            .padding(theme.spacing.space3)\n            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)\n    },\n    second: {\n        Text(\"Messages\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textDefault)\n            .padding(theme.spacing.space3)\n            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)\n    }\n)\n.frame(height: 240)\n.clipShape(RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous))\n.overlay(RoundedRectangle(cornerRadius: MonarchTokens.Radius.lg, style: .continuous).strokeBorder(theme.colors.borderSubtle, lineWidth: MonarchTokens.Space.px))\nText(\"Saved layout: \" + String(Int((fraction * 100).rounded())) + \" / \" + String(100 - Int((fraction * 100).rounded())))\n    .monarchTextStyle(.caption)\n}"
+    },
+    {
+      "title": "An editor above its preview",
+      "code": "MonarchResizablePanels(\n    fraction: $editorShare,\n    axis: .vertical,\n    handleLabel: \"Resize the editor and the preview\",\n    first: { Text(\"Editor\").frame(maxWidth: .infinity, maxHeight: .infinity) },\n    second: { Text(\"Preview\").frame(maxWidth: .infinity, maxHeight: .infinity) }\n)\n.frame(height: theme.spacing.space24 * 3)",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var editorShare = 0.6"
+    }
+  ],
+  "webEquivalent": "ResizablePanels",
+  "dependsOn": [
+    "separator"
+  ]
+}

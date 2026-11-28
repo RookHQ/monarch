@@ -1,0 +1,67 @@
+{
+  "id": "reorderable-list",
+  "name": null,
+  "title": "ReorderableList",
+  "family": "interaction",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "List with ForEach.onMove(perform:) and EditMode (.environment(\\.editMode, …) or EditButton), plus accessibilityActions(_:) and AccessibilityNotification.Announcement for each step",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A vertical list that people reorder by the row's reorder control. iOS provides it: a List whose ForEach has onMove(perform:), shown in edit mode. Monarch ships nothing.",
+  "whenToUse": "For a single column of rows whose order the person sets: pipeline stages, form fields, playlist items.",
+  "whenNotToUse": "For tiles in two dimensions, use MonarchSortableGrid. For moving items between columns, use a Kanban board.",
+  "api": [
+    "ForEach(_ data: Data, id: KeyPath<Data.Element, ID>, content: (Data.Element) -> Content).onMove(perform: (IndexSet, Int) -> Void)",
+    "View.environment(\\.editMode, Binding<EditMode>)",
+    "EditButton()",
+    "View.accessibilityActions(_ content: () -> some View)",
+    "AccessibilityNotification.Announcement(_ string: String).post()"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "editing",
+      "description": "In edit mode each row shows the system reorder control at its trailing edge, which is the handle."
+    },
+    {
+      "name": "not editing",
+      "description": "Rows show no reorder control."
+    },
+    {
+      "name": "locked row",
+      "description": "Use moveDisabled(true) on a row that cannot move."
+    }
+  ],
+  "appearance": "System list appearance in every theme; rows inside a Monarch theme use the Monarch text styles and tint that the app applies.",
+  "platformNotes": "The web ReorderableList draws its own handles, offers optional move buttons and announces every step in a live region. On iOS the system list already has a reorder control in edit mode, so Monarch ships no type; the recipe adds Move up and Move down accessibility actions that announce the new position. Android builds MonarchReorderableList because Compose has no built-in list reordering.",
+  "accessibility": [
+    "The reorder control is the system's, with its own VoiceOver support in edit mode.",
+    "The recipe adds Move up and Move down accessibility actions to each row, so VoiceOver and Switch Control can move a row one place without a drag.",
+    "After each action the recipe posts an announcement with the new position: \"Contacted moved to position 1 of 4\".",
+    "Each row is one element with accessibilityElement(children: .combine)."
+  ],
+  "edgeCases": [
+    "EditButton and \\.editMode exist only on iOS; the example guards them with #if os(iOS) so it also builds on the macOS host.",
+    "onMove gives a destination offset in the list before removal, which Array.move(fromOffsets:toOffset:) expects.",
+    "The Move up action on the first row and Move down on the last row do nothing."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Drag or keyboard",
+      "fixture": "reorderable-list",
+      "webExample": "Drag or keyboard",
+      "template": "VStack(spacing: theme.spacing.space1) {\n    ForEach(stages, id: \\.id) { stage in\n        row(stage)\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var stages: [(id: String, name: String, count: Int)] = [\n    (id: {{items.0.id}}, name: {{items.0.name}}, count: {{items.0.count}}),\n    (id: {{items.1.id}}, name: {{items.1.name}}, count: {{items.1.count}}),\n    (id: {{items.2.id}}, name: {{items.2.name}}, count: {{items.2.count}}),\n    (id: {{items.3.id}}, name: {{items.3.name}}, count: {{items.3.count}}),\n]\n\nprivate func row(_ stage: (id: String, name: String, count: Int)) -> some View {\n    HStack(spacing: theme.spacing.space3) {\n        MonarchDragHandle(\"Reorder \" + stage.name, onMove: { move(stage.id, $0) })\n            .draggable(stage.id)\n        Text(stage.name).monarchTextStyle(.body)\n        Spacer()\n        MonarchBadge(\"\\(stage.count)\")\n    }\n    .padding(theme.spacing.space3)\n    .background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: theme.radius.md, style: .continuous))\n    .overlay(RoundedRectangle(cornerRadius: theme.radius.md, style: .continuous).strokeBorder(theme.colors.borderSubtle, lineWidth: 1))\n    .dropDestination(for: String.self) { ids, _ in\n        guard let id = ids.first, let from = stages.firstIndex(where: { $0.id == id }),\n            let to = stages.firstIndex(where: { $0.id == stage.id })\n        else { return false }\n        stages.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)\n        return true\n    }\n}\n\nprivate func move(_ id: String, _ direction: MonarchDragHandleDirection) {\n    guard let from = stages.firstIndex(where: { $0.id == id }) else { return }\n    let to = direction == .up ? from - 1 : from + 2\n    guard (0...stages.count).contains(to), direction == .up ? from > 0 : from < stages.count - 1 else { return }\n    stages.move(fromOffsets: IndexSet(integer: from), toOffset: to)\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var stages: [(id: String, name: String, count: Int)] = [\n    (id: \"new\", name: \"New\", count: 12),\n    (id: \"contacted\", name: \"Contacted\", count: 8),\n    (id: \"proposal\", name: \"Proposal sent\", count: 5),\n    (id: \"negotiation\", name: \"Negotiation\", count: 3),\n]\n\nprivate func row(_ stage: (id: String, name: String, count: Int)) -> some View {\n    HStack(spacing: theme.spacing.space3) {\n        MonarchDragHandle(\"Reorder \" + stage.name, onMove: { move(stage.id, $0) })\n            .draggable(stage.id)\n        Text(stage.name).monarchTextStyle(.body)\n        Spacer()\n        MonarchBadge(\"\\(stage.count)\")\n    }\n    .padding(theme.spacing.space3)\n    .background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: theme.radius.md, style: .continuous))\n    .overlay(RoundedRectangle(cornerRadius: theme.radius.md, style: .continuous).strokeBorder(theme.colors.borderSubtle, lineWidth: 1))\n    .dropDestination(for: String.self) { ids, _ in\n        guard let id = ids.first, let from = stages.firstIndex(where: { $0.id == id }),\n            let to = stages.firstIndex(where: { $0.id == stage.id })\n        else { return false }\n        stages.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)\n        return true\n    }\n}\n\nprivate func move(_ id: String, _ direction: MonarchDragHandleDirection) {\n    guard let from = stages.firstIndex(where: { $0.id == id }) else { return }\n    let to = direction == .up ? from - 1 : from + 2\n    guard (0...stages.count).contains(to), direction == .up ? from > 0 : from < stages.count - 1 else { return }\n    stages.move(fromOffsets: IndexSet(integer: from), toOffset: to)\n}",
+      "code": "VStack(spacing: theme.spacing.space1) {\n    ForEach(stages, id: \\.id) { stage in\n        row(stage)\n    }\n}"
+    }
+  ],
+  "webEquivalent": "ReorderableList",
+  "dependsOn": []
+}

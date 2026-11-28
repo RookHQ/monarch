@@ -1,0 +1,107 @@
+{
+  "id": "ai-attachment-tray",
+  "name": "MonarchAiAttachmentTray",
+  "title": "AiAttachmentTray",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "ScrollView(.horizontal) of MonarchAttachmentChip (MonarchFileTypeIcon, ProgressView with .progressViewStyle(.monarchLinear), retry and remove Buttons)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The files attached to a message for an assistant, in a row that wraps onto new rows, each with its type, name and size, upload progress, failure and retry, and a remove button.",
+  "whenToUse": "Above the prompt field of an assistant's composer, for the files the person attached before sending.",
+  "whenNotToUse": "For files already sent in a message, show MonarchAttachmentChip or a file card in the message. For a long upload list, use MonarchUploadQueue.",
+  "api": [
+    "init(_ files: [MonarchAiAttachmentTrayFile], labels: MonarchAiAttachmentTrayLabels = MonarchAiAttachmentTrayLabels(), onRetry: (@MainActor (String) -> Void)? = nil, onRemove: @escaping @MainActor (String) -> Void)",
+    "struct MonarchAiAttachmentTrayFile { init(id: String, name: String, size: Int64? = nil, contentType: String? = nil, progress: Double? = nil, isFailed: Bool = false, errorMessage: String? = nil); init(_ part: MonarchAiFilePart, id: String? = nil, progress: Double? = nil) }",
+    "struct MonarchAiAttachmentTrayLabels { init(label: String? = nil, ready: (@Sendable (String) -> String)? = nil, removed: (@Sendable (String) -> String)? = nil, chip: MonarchAttachmentChipLabels = MonarchAttachmentChipLabels()) }"
+  ],
+  "options": [
+    {
+      "name": "files",
+      "type": "[MonarchAiAttachmentTrayFile]",
+      "default": "required",
+      "description": "The attached files in the order they were added: name, size, MIME type, progress, and failure (isFailed or an errorMessage). A conversation's MonarchAiFilePart converts with init(_:id:progress:)."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiAttachmentTrayLabels",
+      "default": "MonarchAiAttachmentTrayLabels()",
+      "description": "Replacements for the tray's name, the uploaded and removed announcements, and each chip's strings."
+    },
+    {
+      "name": "onRetry",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Retries a failed upload by file id. Without it failed files have no retry button."
+    },
+    {
+      "name": "onRemove",
+      "type": "@MainActor (String) -> Void",
+      "default": "required",
+      "description": "Removes a file by id; take it out of files."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "Type icon, name and size."
+    },
+    {
+      "name": "uploading",
+      "description": "The percentage under the name and a linear progress bar."
+    },
+    {
+      "name": "failed",
+      "description": "The error message (or \"Upload failed\") in the danger colour, with a retry button when onRetry is set."
+    },
+    {
+      "name": "empty",
+      "description": "Nothing is drawn."
+    }
+  ],
+  "appearance": "A row of MonarchAttachmentChip tiles on the muted control fill with a default border, each at most about 240 points wide before Dynamic Type, wrapping onto new rows. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web shows an image thumbnail for picture files; MonarchAttachmentChip has no thumbnail slot yet, so iOS shows the file type icon for every file. The web moves keyboard focus to the next remove button after a removal; on iOS the removal is announced and VoiceOver focus is left to the system. The web's progress and error fields are a number and a string or true; on iOS they are progress, isFailed and errorMessage. Android has the same parameters.",
+  "accessibility": [
+    "The tray is a container named \"Attachments\".",
+    "Each file's name is one element whose value is its size, percentage or failure; the type icon is decorative.",
+    "The progress bar is a standard ProgressView named \"Uploading\" and the file name.",
+    "Retry and remove are buttons named with the file name, with 44-point touch targets.",
+    "A finished upload (\"photo.png uploaded\") and a file removed with its button (\"photo.png removed\") are announced; a failure is announced by the chip."
+  ],
+  "edgeCases": [
+    "Long names are shortened in the middle, so the extension stays visible.",
+    "A progress outside 0 through 1 is clamped; a progress of 1 counts as ready.",
+    "Several changes in one update are announced together."
+  ],
+  "tests": [
+    "MonarchAiAttachmentTrayTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Progress, error and retry",
+      "fixture": "ai-attachment-tray",
+      "webExample": "Progress, error and retry",
+      "template": "VStack(spacing: MonarchTokens.Space.space2) {\n    MonarchAiAttachmentTray(\n        files,\n        onRetry: { _ in },\n        onRemove: { id in files.removeAll { $0.id == id } }\n    )\n    MonarchButton({{reset}}, variant: .ghost, size: .sm) { files = initial }\n}\n.onAppear { files = initial }",
+      "setupTemplate": "private let initial = [\n    MonarchAiAttachmentTrayFile(id: {{files.0.id}}, name: {{files.0.name}}, size: {{files.0.size}}, contentType: {{files.0.type}}),\n    MonarchAiAttachmentTrayFile(id: {{files.1.id}}, name: {{files.1.name}}, size: {{files.1.size}}, contentType: {{files.1.type}}, progress: {{files.1.progress}}),\n    MonarchAiAttachmentTrayFile(id: {{files.2.id}}, name: {{files.2.name}}, size: {{files.2.size}}, contentType: {{files.2.type}}, errorMessage: {{files.2.error}}),\n]\n@State private var files: [MonarchAiAttachmentTrayFile] = []",
+      "setup": "private let initial = [\n    MonarchAiAttachmentTrayFile(id: \"brief\", name: \"Project brief.pdf\", size: 2_450_000, contentType: \"application/pdf\"),\n    MonarchAiAttachmentTrayFile(id: \"data\", name: \"Survey results.csv\", size: 384_000, contentType: \"text/csv\", progress: 0.1),\n    MonarchAiAttachmentTrayFile(id: \"deck\", name: \"Kickoff slides.pptx\", size: 48_000_000, contentType: \"application/vnd.openxmlformats-officedocument.presentationml.presentation\", errorMessage: \"Larger than the 25 MB limit\"),\n]\n@State private var files: [MonarchAiAttachmentTrayFile] = []",
+      "code": "VStack(spacing: MonarchTokens.Space.space2) {\n    MonarchAiAttachmentTray(\n        files,\n        onRetry: { _ in },\n        onRemove: { id in files.removeAll { $0.id == id } }\n    )\n    MonarchButton(\"Reset\", variant: .ghost, size: .sm) { files = initial }\n}\n.onAppear { files = initial }"
+    }
+  ],
+  "webEquivalent": "AiAttachmentTray",
+  "dependsOn": [
+    "attachment-chip",
+    "progress-bar",
+    "button",
+    "ai-conversation"
+  ],
+  "icons": {
+    "remove": "CloseGlyph",
+    "error": "ErrorGlyph",
+    "retry": "RetryGlyph"
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "id": "save-status-indicator",
+  "name": "MonarchSaveStatusIndicator",
+  "title": "SaveStatusIndicator",
+  "family": "feedback",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Row, androidx.compose.material3.Text, androidx.compose.material3.CircularProgressIndicator, MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A small inline status for saving: \"Saving…\", \"Saved · 2 minutes ago\" or \"Couldn't save\" with a Retry button.",
+  "whenToUse": "In an editor's top bar, next to a form's actions or under a field that saves on its own, so people know whether their edits are safe.",
+  "whenNotToUse": "For a save the user started with a button and then leaves the screen, confirm with a snackbar. For the age of synced data, use MonarchFreshnessIndicator.",
+  "api": [
+    "@Composable fun MonarchSaveStatusIndicator(status: MonarchSaveStatus, modifier: Modifier = Modifier, announceSaving: Boolean = false, savedAt: Long? = null, errorMessage: String? = null, icon: (@Composable (MonarchSaveStatus) -> Unit)? = null, onRetry: (() -> Unit)? = null, labels: MonarchSaveStatusIndicatorLabels = MonarchSaveStatusIndicatorLabels())",
+    "enum class MonarchSaveStatus { Idle, Unsaved, Saving, Saved, Error }",
+    "class MonarchSaveStatusIndicatorLabels(unsaved: String? = null, saving: String? = null, saved: String? = null, error: String? = null, retry: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "status",
+      "type": "MonarchSaveStatus",
+      "default": "required",
+      "description": "Idle (nothing drawn), Unsaved, Saving, Saved or Error."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the indicator."
+    },
+    {
+      "name": "announceSaving",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Also announces \"Saving…\". Off by default so autosaves stay quiet."
+    },
+    {
+      "name": "savedAt",
+      "type": "Long?",
+      "default": "null",
+      "description": "When the last save finished, in epoch milliseconds (UTC); shown as relative time after \"Saved\" and redrawn every minute."
+    },
+    {
+      "name": "errorMessage",
+      "type": "String?",
+      "default": "null",
+      "description": "Replaces \"Couldn't save\" with the reason."
+    },
+    {
+      "name": "icon",
+      "type": "(@Composable (MonarchSaveStatus) -> Unit)?",
+      "default": "null",
+      "description": "Replaces the dot for Unsaved, Saved and Error, for example a check mark. Tinted with the status color."
+    },
+    {
+      "name": "onRetry",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Adds a Retry button to the error status."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchSaveStatusIndicatorLabels",
+      "default": "MonarchSaveStatusIndicatorLabels()",
+      "description": "Replacements for monarch_savestatusindicator_unsaved, _saving, _saved, _error and _retry."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "Nothing is drawn; the live region stays."
+    },
+    {
+      "name": "unsaved",
+      "description": "A warning dot and \"Unsaved changes\"."
+    },
+    {
+      "name": "saving",
+      "description": "A small progress ring and \"Saving…\"; a still dot when animations are off."
+    },
+    {
+      "name": "saved",
+      "description": "A success dot (or the icon), \"Saved\" and the relative time. Announced."
+    },
+    {
+      "name": "error",
+      "description": "A danger dot, the error in danger text and the Retry button. Announced."
+    }
+  ],
+  "appearance": "Caption text in the muted text color; the error text in the strong danger color. The mark takes subtle text while saving and the strong success, warning or danger color for saved, unsaved and error. Retry is a small ghost MonarchButton. The same roles in every theme, including both high-contrast themes.",
+  "platformNotes": "The web uses check, warning and dot glyphs; Monarch for Android bundles no icons, so the mark is a dot unless the app passes icon, and the words always carry the status. The web announces through a polite live region, as here; iOS posts an announcement. Times are epoch milliseconds, formatted with DateUtils. iOS shares the name and the statuses.",
+  "accessibility": [
+    "The mark, the status and the time are one TalkBack element read as \"Saved, 2 minutes ago\"; the mark and the middle dot are hidden.",
+    "A change to Saved or Error is announced through a polite live region on a node that is always present; Saving only with announceSaving. The first status is not announced.",
+    "The live region is emptied for a frame before each announcement, so a second \"Saved\" is announced again.",
+    "Retry is a separate button with a 48dp touch target.",
+    "The progress ring is replaced by a still dot when animations are off.",
+    "Long error messages wrap at the largest font size."
+  ],
+  "edgeCases": [
+    "savedAt is shown only with Saved.",
+    "onRetry without the Error status shows no button.",
+    "A save that fails with the same message twice is announced twice."
+  ],
+  "tests": [
+    "MonarchSaveStatusIndicatorTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "States",
+      "fixture": "save-status-indicator",
+      "webExample": "States",
+      "template": "val icon: @Composable (MonarchSaveStatus) -> Unit = { status ->\n    MonarchIcon(\n        when (status) {\n            MonarchSaveStatus.Saved -> SampleIcons.Check\n            MonarchSaveStatus.Unsaved -> SampleIcons.Dot\n            else -> SampleIcons.Warning\n        },\n        contentDescription = null,\n        size = MonarchIconSize.Sm,\n    )\n}\nColumn(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchSaveStatusIndicator(status = MonarchSaveStatus.{{states.0|pascal}}, labels = labels, icon = icon)\n    MonarchSaveStatusIndicator(status = MonarchSaveStatus.{{states.1|pascal}}, labels = labels, icon = icon)\n    MonarchSaveStatusIndicator(\n        status = MonarchSaveStatus.{{states.2|pascal}},\n        savedAt = System.currentTimeMillis() - {{savedAgoSeconds}} * 1000L,\n        labels = labels,\n        icon = icon,\n    )\n    MonarchSaveStatusIndicator(status = MonarchSaveStatus.{{states.3|pascal}}, labels = labels, icon = icon, onRetry = {})\n}",
+      "setupTemplate": "val labels = MonarchSaveStatusIndicatorLabels(error = {{errorLabel}})",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.foundation.icon.MonarchIcon",
+        "com.rookhq.monarch.foundation.icon.MonarchIconSize"
+      ],
+      "setup": "val labels = MonarchSaveStatusIndicatorLabels(error = \"Couldn't save\")",
+      "code": "val icon: @Composable (MonarchSaveStatus) -> Unit = { status ->\n    MonarchIcon(\n        when (status) {\n            MonarchSaveStatus.Saved -> SampleIcons.Check\n            MonarchSaveStatus.Unsaved -> SampleIcons.Dot\n            else -> SampleIcons.Warning\n        },\n        contentDescription = null,\n        size = MonarchIconSize.Sm,\n    )\n}\nColumn(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchSaveStatusIndicator(status = MonarchSaveStatus.Unsaved, labels = labels, icon = icon)\n    MonarchSaveStatusIndicator(status = MonarchSaveStatus.Saving, labels = labels, icon = icon)\n    MonarchSaveStatusIndicator(\n        status = MonarchSaveStatus.Saved,\n        savedAt = System.currentTimeMillis() - 120 * 1000L,\n        labels = labels,\n        icon = icon,\n    )\n    MonarchSaveStatusIndicator(status = MonarchSaveStatus.Error, labels = labels, icon = icon, onRetry = {})\n}"
+    },
+    {
+      "title": "Offline",
+      "code": "MonarchSaveStatusIndicator(status = MonarchSaveStatus.Error, errorMessage = \"You are offline\", onRetry = {})"
+    }
+  ],
+  "webEquivalent": "SaveStatusIndicator",
+  "dependsOn": [
+    "relative-time",
+    "button"
+  ],
+  "icons": {
+    "status.unsaved": "DotGlyph",
+    "status.saved": "CheckGlyph",
+    "status.error": "WarningGlyph"
+  }
+}

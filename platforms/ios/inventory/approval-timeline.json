@@ -1,0 +1,123 @@
+{
+  "id": "approval-timeline",
+  "name": "MonarchApprovalTimeline",
+  "title": "ApprovalTimeline",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of step rows with a drawn marker (Circle, SF Symbol) and a Capsule rail; MonarchFlowLayout, MonarchAvatar; TimelineView(.everyMinute) and RelativeDateTimeFormatter for relative times",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The history and outlook of one approval: who submitted it, each step with its decision, who is deciding now and what comes next.",
+  "whenToUse": "On the detail screen of a request (expense, leave, purchase, access) to show where it is in its approval chain and who decided what.",
+  "whenNotToUse": "For the list of requests waiting on the viewer, use MonarchApprovalQueue. For a general feed of events on a record, use MonarchActivityTimeline. For the steps of a form, use MonarchStepper.",
+  "api": [
+    "MonarchApprovalTimeline.init(_ steps: [MonarchApprovalTimelineStep], now: Date? = nil, absoluteAfter: TimeInterval = 7 * 86_400, showsAvatars: Bool = true, labels: MonarchApprovalTimelineLabels = MonarchApprovalTimelineLabels())",
+    "MonarchApprovalTimelineStep.init(id: String, label: String, status: MonarchApprovalStepStatus, actor: MonarchApprovalPerson? = nil, approvers: [MonarchApprovalPerson] = [], delegatedFrom: MonarchApprovalPerson? = nil, date: Date? = nil, comment: String? = nil, note: String? = nil)",
+    "MonarchApprovalPerson.init(_ name: String, avatarURL: URL? = nil, seed: String? = nil)",
+    "enum MonarchApprovalStepStatus { case submitted, approved, rejected, pending, waiting, skipped, cancelled }",
+    "MonarchApprovalTimelineLabels.init(label: String? = nil, status: (@Sendable (MonarchApprovalStepStatus) -> String)? = nil, approvers: (@Sendable (String) -> String)? = nil, delegatedFrom: (@Sendable (String) -> String)? = nil, current: String? = nil, empty: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "steps",
+      "type": "[MonarchApprovalTimelineStep]",
+      "default": "required",
+      "description": "The steps in order, from submission to the outcome."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for relative times. The current time, refreshed every minute, when nil."
+    },
+    {
+      "name": "absoluteAfter",
+      "type": "TimeInterval",
+      "default": "7 * 86_400",
+      "description": "How far from now, in seconds, a time is shown as a date and time instead of \"2 hours ago\"."
+    },
+    {
+      "name": "showsAvatars",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows a small avatar before the name of whoever decided or submitted."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchApprovalTimelineLabels",
+      "default": "MonarchApprovalTimelineLabels()",
+      "description": "Replacements for the status names, the approvers and delegation phrases, the spoken names and the empty text."
+    }
+  ],
+  "states": [
+    {
+      "name": "submitted / approved",
+      "description": "A filled success marker with a check; the rail below it is the success border."
+    },
+    {
+      "name": "rejected",
+      "description": "A filled danger marker with a cross; the status text is bold in the strong danger colour."
+    },
+    {
+      "name": "pending",
+      "description": "A warning-outlined marker with a dot; the status is bold in the strong warning colour, the approvers are listed and VoiceOver adds \"Current step\"."
+    },
+    {
+      "name": "waiting",
+      "description": "An empty outlined marker and a muted label; the approvers are listed."
+    },
+    {
+      "name": "skipped / cancelled",
+      "description": "A dashed outlined marker with a dash or a cross, and the note."
+    },
+    {
+      "name": "empty",
+      "description": "No steps: the text \"Not submitted yet\"."
+    }
+  ],
+  "appearance": "Markers use the solid success and danger roles with their on-solid glyph colour, the subtle warning fill with the solid warning border, or the surface fill with the strong border. Labels use the default text, meta lines the muted text in the caption role, and comments sit in a rounded box on the muted background. The same roles adapt to dark and high-contrast themes.",
+  "platformNotes": "Matches the web ApprovalTimeline. Labels, comments and notes are plain strings rather than rich content, and the time zone and locale come from the environment rather than parameters. Android uses the same name and API shape.",
+  "accessibility": [
+    "The timeline is a container named \"Approval timeline\".",
+    "Each step is one element read as its label, status, actor, absolute date and time, approvers, delegation, comment and note.",
+    "The step waiting for a decision adds \"Current step\".",
+    "Markers differ by shape (check, cross, dot, dash, empty, dashed border) and the status is written, so nothing relies on colour.",
+    "Markers, rails and avatars are hidden from VoiceOver; markers and text scale with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Long labels and comments wrap; the rail stretches with the step.",
+    "A decided step without an actor or a date has no meta line.",
+    "Approvers are only shown on pending and waiting steps; a delegation on a decided step gets its own line.",
+    "Times in the future are relative too (\"in 2 hours\")."
+  ],
+  "tests": [
+    "MonarchApprovalTimelineTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Waiting on a step",
+      "fixture": "approval-timeline",
+      "webExample": "Waiting on a step",
+      "template": "MonarchApprovalTimeline(\n    [\n        MonarchApprovalTimelineStep(\n            id: {{steps.0.id}},\n            label: {{steps.0.label}},\n            status: {{steps.0.status|case}},\n            actor: MonarchApprovalPerson({{steps.0.actor.name}}),\n            date: {{steps.0.at|date}}\n        ),\n        MonarchApprovalTimelineStep(\n            id: {{steps.1.id}},\n            label: {{steps.1.label}},\n            status: {{steps.1.status|case}},\n            actor: MonarchApprovalPerson({{steps.1.actor.name}}),\n            date: {{steps.1.at|date}},\n            comment: {{steps.1.comment}}\n        ),\n        MonarchApprovalTimelineStep(\n            id: {{steps.2.id}},\n            label: {{steps.2.label}},\n            status: {{steps.2.status|case}},\n            note: {{steps.2.note}}\n        ),\n        MonarchApprovalTimelineStep(\n            id: {{steps.3.id}},\n            label: {{steps.3.label}},\n            status: {{steps.3.status|case}},\n            approvers: [MonarchApprovalPerson({{steps.3.approvers.0.name}}), MonarchApprovalPerson({{steps.3.approvers.1.name}})]\n        ),\n        MonarchApprovalTimelineStep(id: {{steps.4.id}}, label: {{steps.4.label}}, status: {{steps.4.status|case}}),\n    ],\n    now: {{now|date}}\n)",
+      "code": "MonarchApprovalTimeline(\n    [\n        MonarchApprovalTimelineStep(\n            id: \"s\",\n            label: \"Request\",\n            status: .submitted,\n            actor: MonarchApprovalPerson(\"Alex Morgan\"),\n            date: Date(timeIntervalSince1970: 1_773_046_800)\n        ),\n        MonarchApprovalTimelineStep(\n            id: \"1\",\n            label: \"Reporting manager\",\n            status: .approved,\n            actor: MonarchApprovalPerson(\"Sam Lee\"),\n            date: Date(timeIntervalSince1970: 1_773_131_400),\n            comment: \"Matches the receipts.\"\n        ),\n        MonarchApprovalTimelineStep(\n            id: \"2\",\n            label: \"Department head\",\n            status: .skipped,\n            note: \"Same person as the requester.\"\n        ),\n        MonarchApprovalTimelineStep(\n            id: \"3\",\n            label: \"Finance check\",\n            status: .pending,\n            approvers: [MonarchApprovalPerson(\"Jo Park\"), MonarchApprovalPerson(\"Ana Ruiz\")]\n        ),\n        MonarchApprovalTimelineStep(id: \"4\", label: \"Final sign-off\", status: .waiting),\n    ],\n    now: Date(timeIntervalSince1970: 1_773_144_000)\n)"
+    }
+  ],
+  "webEquivalent": "ApprovalTimeline",
+  "dependsOn": [
+    "avatar",
+    "relative-time"
+  ],
+  "icons": {
+    "status.approved": "CheckGlyph",
+    "status.submitted": "CheckGlyph",
+    "status.rejected": "CloseGlyph",
+    "status.cancelled": "CloseGlyph",
+    "status.skipped": "DashGlyph",
+    "status.pending": "DotGlyph"
+  }
+}

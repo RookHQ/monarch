@@ -9,56 +9,51 @@ import {
   type RuleTrigger,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './rule-builder.fixture.json';
 
-const TRIGGERS: RuleTrigger[] = [
-  { value: 'created', label: 'Request created' },
-  { value: 'updated', label: 'Request updated' },
-  { value: 'replied', label: 'Requester replied' },
-  { value: 'hourly', label: 'Every hour', description: 'Checks open requests on a schedule.' },
+const scenario = fixture.data;
+
+const TRIGGERS: RuleTrigger[] = scenario.triggers;
+
+const [priorityField, subjectField, hoursField, tagsField] = scenario.fields as [
+  { value: string; label: string; options: { value: string; label: string }[] },
+  { value: string; label: string },
+  { value: string; label: string; placeholder: string },
+  { value: string; label: string },
 ];
-
 const FIELDS: ConditionField[] = [
-  {
-    value: 'priority',
-    label: 'Priority',
-    type: 'select',
-    options: [
-      { value: 'low', label: 'Low' },
-      { value: 'normal', label: 'Normal' },
-      { value: 'high', label: 'High' },
-    ],
-  },
-  { value: 'subject', label: 'Subject', type: 'text' },
-  { value: 'hoursOpen', label: 'Hours since created', type: 'number', placeholder: 'Hours' },
-  { value: 'tags', label: 'Tags', type: 'tags' },
+  { ...priorityField, type: 'select' },
+  { ...subjectField, type: 'text' },
+  { ...hoursField, type: 'number' },
+  { ...tagsField, type: 'tags' },
 ];
 
+const [setPriorityType, addTagsType, notifyType] = scenario.actionTypes as [
+  { value: string; label: string },
+  { value: string; label: string },
+  { value: string; label: string },
+];
 const ACTIONS: ActionTypeDefinition[] = [
   {
-    value: 'set_priority',
-    label: 'Set priority',
+    ...setPriorityType,
     params: [
       {
-        key: 'priority',
-        label: 'Priority',
+        key: scenario.action.param.key,
+        label: scenario.action.param.label,
         type: 'select',
         required: true,
-        options: [
-          { value: 'normal', label: 'Normal' },
-          { value: 'high', label: 'High' },
-        ],
+        options: scenario.action.options,
       },
     ],
   },
   {
-    value: 'add_tags',
-    label: 'Add tags',
+    ...addTagsType,
     defaults: { tags: [] },
     params: [{ key: 'tags', label: 'Tags', type: 'tags', required: true }],
   },
   {
-    value: 'notify',
-    label: 'Notify the team',
+    ...notifyType,
     defaults: { message: '' },
     params: [{ key: 'message', label: 'Message', type: 'textarea', required: true }],
   },
@@ -67,13 +62,19 @@ const ACTIONS: ActionTypeDefinition[] = [
 function RuleDemo() {
   const [rule, setRule] = useState<RuleDraft>(
     createRuleDraft({
-      name: 'Raise priority of old requests',
-      triggers: ['hourly'],
-      conditions: [{ id: 'c1', field: 'hoursOpen', operator: 'gt', value: 24 }],
-      actions: [{ id: 'a1', type: 'set_priority', params: { priority: 'high' } }],
+      name: scenario.name,
+      triggers: [scenario.checkedTrigger],
+      conditions: [{ id: 'c1', ...scenario.condition } as RuleDraft['conditions'][number]],
+      actions: [
+        {
+          id: 'a1',
+          type: scenario.action.type,
+          params: { [scenario.action.param.key]: scenario.action.value },
+        },
+      ],
     }),
   );
-  const [priority, setPriority] = useState('10');
+  const [priority, setPriority] = useState(scenario.extra.value);
   const [saved, setSaved] = useState('');
   return (
     <div style={{ display: 'grid', gap: 12, width: '100%', maxWidth: 760 }}>
@@ -91,7 +92,7 @@ function RuleDemo() {
         onCancel={() => setSaved('')}
       >
         <Field>
-          <FieldLabel>Priority (higher runs first)</FieldLabel>
+          <FieldLabel>{scenario.extra.label}</FieldLabel>
           <Input type="number" value={priority} onChange={(e) => setPriority(e.target.value)} />
         </Field>
       </RuleBuilder>

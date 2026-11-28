@@ -1,0 +1,99 @@
+{
+  "id": "danger-zone",
+  "name": null,
+  "title": "DangerZone",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "Form Section(content:header:footer:) with Button(_:role: .destructive) rows, each confirmed with confirmationDialog(_:isPresented:titleVisibility:actions:message:); MonarchSectionCard(tone: .danger) with danger MonarchButtons and alert(_:isPresented:actions:message:) on a scrolling page",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the last settings section, holding irreversible actions (delete a workspace, transfer ownership, leave), with one row per action, its consequence, and a confirmation before each.",
+  "whenToUse": "At the end of a settings screen, for actions that cannot be undone or that hand the workspace or account to someone else.",
+  "whenNotToUse": "For a single destructive action next to the thing it affects, use a danger MonarchButton with a confirmation (confirm-dialog). For ordinary settings, use the settings-section recipe.",
+  "api": [
+    "Section { Button(\"Delete workspace\", role: .destructive) { isConfirming = true } } header: { Text(\"Danger zone\") } footer: { Text(consequence) }",
+    ".confirmationDialog(\"Delete this workspace?\", isPresented: $isConfirming, titleVisibility: .visible) { Button(\"Delete workspace\", role: .destructive) { … } } message: { Text(…) }",
+    "MonarchSectionCard(\"Danger zone\", description: …, tone: .danger) { VStack { Text(title).monarchTextStyle(.bodyStrong); Text(consequence).monarchTextStyle(.caption); MonarchButton(…, variant: .danger, size: .sm) { … } } }",
+    ".alert(title, isPresented: …, actions: { Button(…, role: .destructive) { … }; Button(\"Cancel\", role: .cancel) {} }, message: { Text(…) })"
+  ],
+  "options": [
+    {
+      "name": "heading",
+      "type": "String",
+      "default": "\"Danger zone\"",
+      "description": "The section header, or the MonarchSectionCard title, whose danger tone is spoken with it."
+    },
+    {
+      "name": "consequence",
+      "type": "String",
+      "default": "required",
+      "description": "One or two sentences saying what the action does and that it cannot be undone: the section footer, or a caption in the card."
+    },
+    {
+      "name": "disabled reason",
+      "type": "String?",
+      "default": "nil",
+      "description": "Why an action is unavailable: the footer says so and the button is disabled."
+    }
+  ],
+  "states": [
+    {
+      "name": "ready",
+      "description": "Each action is a destructive button row with its consequence under it."
+    },
+    {
+      "name": "unavailable",
+      "description": "The button is disabled and the footer or caption says why."
+    },
+    {
+      "name": "confirming",
+      "description": "The button opens a confirmation dialog (an action sheet on iPhone) or an alert, whose destructive button repeats the action."
+    },
+    {
+      "name": "done",
+      "description": "The app reflects the result, usually by leaving the screen."
+    }
+  ],
+  "appearance": "In a Form, the system's destructive button text colour on the grouped row background, and the system footer style. In the card form, MonarchSectionCard with the danger tone's border and icon, strong body titles, muted captions and small danger buttons. Both follow light, dark and both high-contrast themes.",
+  "platformNotes": "The web ships DangerZone and DangerZoneItem with heading levels and a layout that places the action beside the text. On iOS, as in the Settings app, each destructive action is its own Form section with a destructive button and the consequence in the footer, so the recipe needs no Monarch type; Android also keeps it a recipe. Confirmation is the system confirmationDialog, which iOS shows as an action sheet, or an alert for a single question, as in the confirm-dialog entry. On a scrolling page the web's card is MonarchSectionCard with the danger tone, and the action sits under the text so long titles and large text never squeeze it. VoiceOver has no heading levels to set beyond the header trait.",
+  "accessibility": [
+    "Form section headers are read as headings, and each footer is read after its button, so the consequence follows the action.",
+    "Destructive buttons have the destructive role, and VoiceOver focuses the confirmation when it opens.",
+    "In the card form the danger tone is spoken with the title by MonarchSectionCard, and item titles have the header trait.",
+    "The reason an action is unavailable is visible text, not only a dimmed button."
+  ],
+  "edgeCases": [
+    "Put the danger zone last on the settings screen.",
+    "Keep each consequence to one or two sentences; longer text wraps.",
+    "For the most destructive actions, ask for a typed phrase in the alert (see confirm-dialog)."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Workspace danger zone",
+      "fixture": "danger-zone",
+      "webExample": "Workspace danger zone",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    // The heading sits outside the card, as on the web; the card has a red edge and a button at the right of each action.\n    Text({{heading}}).monarchTextStyle(.bodyStrong).foregroundStyle(theme.colors.dangerStrong)\n    Text({{description}}).monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n    VStack(spacing: 0) {\n        HStack(alignment: .center, spacing: theme.spacing.space3) {\n            VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                Text({{items.0.title}}).monarchTextStyle(.label).fontWeight(.medium)\n                Text({{items.0.description}})\n                    .monarchTextStyle(.caption)\n                    .foregroundStyle(theme.colors.textMuted)\n            }\n            .frame(maxWidth: .infinity, alignment: .leading)\n            MonarchButton({{items.0.action.label}}, variant: {{items.0.action.variant|case}}, size: .sm) {}\n                .fixedSize()\n        }\n        .padding(theme.spacing.space3)\n        Divider()\n        HStack(alignment: .center, spacing: theme.spacing.space3) {\n            VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                Text({{items.1.title}}).monarchTextStyle(.label).fontWeight(.medium)\n                Text({{items.1.description}})\n                    .monarchTextStyle(.caption)\n                    .foregroundStyle(theme.colors.textMuted)\n            }\n            .frame(maxWidth: .infinity, alignment: .leading)\n            MonarchButton({{items.1.action.label}}, variant: {{items.1.action.variant|case}}, size: .sm) {\n                isConfirming = true\n            }\n            .fixedSize()\n            .disabled(isDeleted)\n        }\n        .padding(theme.spacing.space3)\n    }\n    .background(theme.colors.bgSurface)\n    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))\n    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(theme.colors.borderSubtle))\n    .overlay(alignment: .leading) { Rectangle().fill(theme.colors.dangerSolid).frame(width: 3) }\n    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))\n}\n.confirmationDialog(\"Delete this workspace?\", isPresented: $isConfirming, titleVisibility: .visible) {\n    Button(\"Delete workspace\", role: .destructive) { isDeleted = true }\n    Button(\"Cancel\", role: .cancel) {}\n} message: {\n    Text(\"Every project, file and member is deleted. This can't be undone.\")\n}\n.padding(theme.spacing.space4)\n.monarchCanvas()\n.frame(minHeight: theme.spacing.space24 * 4)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isConfirming = false\n@State private var isDeleted = false",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isConfirming = false\n@State private var isDeleted = false",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    // The heading sits outside the card, as on the web; the card has a red edge and a button at the right of each action.\n    Text(\"Danger zone\").monarchTextStyle(.bodyStrong).foregroundStyle(theme.colors.dangerStrong)\n    Text(\"These actions affect everyone in the workspace and cannot be undone.\").monarchTextStyle(.caption).foregroundStyle(theme.colors.textMuted)\n    VStack(spacing: 0) {\n        HStack(alignment: .center, spacing: theme.spacing.space3) {\n            VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                Text(\"Transfer ownership\").monarchTextStyle(.label).fontWeight(.medium)\n                Text(\"Another member becomes the owner. You stay on as an admin.\")\n                    .monarchTextStyle(.caption)\n                    .foregroundStyle(theme.colors.textMuted)\n            }\n            .frame(maxWidth: .infinity, alignment: .leading)\n            MonarchButton(\"Transfer ownership\", variant: .secondary, size: .sm) {}\n                .fixedSize()\n        }\n        .padding(theme.spacing.space3)\n        Divider()\n        HStack(alignment: .center, spacing: theme.spacing.space3) {\n            VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                Text(\"Delete this workspace\").monarchTextStyle(.label).fontWeight(.medium)\n                Text(\"Projects, tasks and files are deleted for everyone.\")\n                    .monarchTextStyle(.caption)\n                    .foregroundStyle(theme.colors.textMuted)\n            }\n            .frame(maxWidth: .infinity, alignment: .leading)\n            MonarchButton(\"Delete workspace\", variant: .danger, size: .sm) {\n                isConfirming = true\n            }\n            .fixedSize()\n            .disabled(isDeleted)\n        }\n        .padding(theme.spacing.space3)\n    }\n    .background(theme.colors.bgSurface)\n    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))\n    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(theme.colors.borderSubtle))\n    .overlay(alignment: .leading) { Rectangle().fill(theme.colors.dangerSolid).frame(width: 3) }\n    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))\n}\n.confirmationDialog(\"Delete this workspace?\", isPresented: $isConfirming, titleVisibility: .visible) {\n    Button(\"Delete workspace\", role: .destructive) { isDeleted = true }\n    Button(\"Cancel\", role: .cancel) {}\n} message: {\n    Text(\"Every project, file and member is deleted. This can't be undone.\")\n}\n.padding(theme.spacing.space4)\n.monarchCanvas()\n.frame(minHeight: theme.spacing.space24 * 4)"
+    },
+    {
+      "title": "A danger zone card on a scrolling page",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isConfirming = false",
+      "code": "MonarchSectionCard(\"Danger zone\", description: \"Only workspace owners can use these actions.\", tone: .danger) {\n    VStack(alignment: .leading, spacing: theme.spacing.space1) {\n        Text(\"Leave workspace\")\n            .monarchTextStyle(.bodyStrong)\n            .accessibilityAddTraits(.isHeader)\n        Text(\"You lose access to its projects until someone invites you again.\")\n            .monarchTextStyle(.caption)\n            .foregroundStyle(theme.colors.textMuted)\n        MonarchButton(\"Leave workspace\", variant: .danger, size: .sm) { isConfirming = true }\n    }\n}\n.alert(\n    \"Leave this workspace?\",\n    isPresented: $isConfirming,\n    actions: {\n        Button(\"Leave\", role: .destructive) {}\n        Button(\"Cancel\", role: .cancel) {}\n    },\n    message: {\n        Text(\"You lose access to its projects.\")\n    }\n)"
+    }
+  ],
+  "webEquivalent": "DangerZone",
+  "dependsOn": [
+    "settings-section",
+    "button",
+    "confirm-dialog",
+    "section-card"
+  ]
+}

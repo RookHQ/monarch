@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { AiContextWindowMeter } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-context-window-meter.fixture.json';
 
 function SummarizeDemo() {
   const [used, setUsed] = useState(110000);
@@ -145,13 +147,9 @@ export default {
           render: () => (
             <div style={{ maxWidth: '24rem' }}>
               <AiContextWindowMeter
-                used={46000}
-                limit={128000}
-                breakdown={[
-                  { label: 'Instructions', tokens: 3000 },
-                  { label: 'Attachments', tokens: 18000 },
-                  { label: 'Messages', tokens: 22000 },
-                ]}
+                used={fixture.data.used}
+                limit={fixture.data.limit}
+                breakdown={fixture.data.breakdown}
               />
             </div>
           ),

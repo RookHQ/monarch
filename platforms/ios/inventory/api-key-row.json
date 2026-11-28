@@ -1,0 +1,181 @@
+{
+  "id": "api-key-row",
+  "name": "MonarchApiKeyRow",
+  "title": "ApiKeyRow",
+  "family": "technical",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack row for a List; Menu with .menuStyle(.button) and MonarchButtonStyle (ghost) for the actions; confirmationDialog for Rotate; alert with an optional TextField for Revoke; MonarchStatusBadge, MonarchBadge (outline) in MonarchFlowLayout, MonarchInlineErrorRetry; RelativeDateTimeFormatter in TimelineView(.everyMinute)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "One API key in a list: name and status, the visible prefix with the rest masked, created, last used and expiry times, scopes, and Rotate and Revoke actions that ask for confirmation before calling the app.",
+  "whenToUse": "On a developer settings screen that lists API keys, personal access tokens or webhook secrets.",
+  "whenNotToUse": "To show a new secret once after creating or rotating a key, use a sheet with MonarchCopyField. To enter a secret, use MonarchSecretField.",
+  "api": [
+    "init(_ name: String, prefix: String, createdAt: Date, lastUsedAt: Date? = nil, expiresAt: Date? = nil, scopes: [String] = [], maxScopes: Int = 3, status: MonarchApiKeyStatus = .active, now: Date? = nil, revokeConfirmPhrase: String? = nil, labels: MonarchApiKeyRowLabels = MonarchApiKeyRowLabels(), onRotate: (@MainActor () async throws -> Void)? = nil, onRevoke: (@MainActor () async throws -> Void)? = nil, @ViewBuilder actions: () -> Actions)",
+    "init(… same parameters without actions)  // Actions == EmptyView",
+    "enum MonarchApiKeyStatus: String { case active, expiring, expired, revoked }",
+    "struct MonarchApiKeyRowLabels { var prefix, created, lastUsed, neverUsed, expires, scopes, noScopes, status, rotate, revoke, actions, rotateTitle, rotateMessage, rotateConfirm, revokeTitle, revokeMessage, revokeConfirm, revokePhrasePrompt, cancel, rotating, revoking, rotateFailed, revokeFailed: String? }"
+  ],
+  "options": [
+    {
+      "name": "name",
+      "type": "String",
+      "default": "required",
+      "description": "The key's name, also used in the confirmations and the menu's spoken name."
+    },
+    {
+      "name": "prefix",
+      "type": "String",
+      "default": "required",
+      "description": "The visible, non-secret start of the key; the rest is shown as a mask."
+    },
+    {
+      "name": "createdAt",
+      "type": "Date",
+      "default": "required",
+      "description": "When the key was created, shown as a relative time."
+    },
+    {
+      "name": "lastUsedAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the key was last used; without it the row says Never used."
+    },
+    {
+      "name": "expiresAt",
+      "type": "Date?",
+      "default": "nil",
+      "description": "When the key expires, if it does."
+    },
+    {
+      "name": "scopes",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Scope names, shown as outline badges; without any the row says No scopes."
+    },
+    {
+      "name": "maxScopes",
+      "type": "Int",
+      "default": "3",
+      "description": "Scopes shown before a +N badge."
+    },
+    {
+      "name": "status",
+      "type": "MonarchApiKeyStatus",
+      "default": ".active",
+      "description": "Active, expiring, expired or revoked; expired and revoked keys have no actions."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for relative times; without it they follow the clock, updated every minute."
+    },
+    {
+      "name": "revokeConfirmPhrase",
+      "type": "String?",
+      "default": "nil",
+      "description": "A phrase, usually the name, that must be typed in the revoke alert before Revoke key works."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchApiKeyRowLabels",
+      "default": "MonarchApiKeyRowLabels()",
+      "description": "Replacements for every built-in string; strings that name something take %@."
+    },
+    {
+      "name": "onRotate",
+      "type": "(@MainActor () async throws -> Void)?",
+      "default": "nil",
+      "description": "Rotates the key after confirmation. A thrown error is shown in the row with a retry."
+    },
+    {
+      "name": "onRevoke",
+      "type": "(@MainActor () async throws -> Void)?",
+      "default": "nil",
+      "description": "Revokes the key after confirmation, like onRotate."
+    },
+    {
+      "name": "actions",
+      "type": "@ViewBuilder () -> Actions",
+      "default": "none",
+      "description": "More menu items after Rotate and Revoke, such as Edit."
+    }
+  ],
+  "states": [
+    {
+      "name": "active, expiring",
+      "description": "A success or warning status badge and the actions menu."
+    },
+    {
+      "name": "expired, revoked",
+      "description": "A neutral or danger status badge and no actions."
+    },
+    {
+      "name": "confirming",
+      "description": "Rotate shows a confirmation dialog; Revoke shows an alert, with a field when a phrase is required."
+    },
+    {
+      "name": "running",
+      "description": "A small spinner with Rotating… or Revoking…; the menu is disabled."
+    },
+    {
+      "name": "failed",
+      "description": "MonarchInlineErrorRetry with the error's description or the built-in sentence; Retry runs the action again."
+    }
+  ],
+  "appearance": "The name in the default text role, the prefix in the code style and muted role, the times in the muted caption, outline scope badges, and status badges in their tone's subtle colours, in light, dark and both high-contrast themes.",
+  "platformNotes": "The web row shows Rotate and Revoke as buttons and keeps its ConfirmDialog open while the promise runs, showing a rejection inside it. On iOS the actions sit in a trailing menu, as in list rows; the system confirmation dialog and alert close when a button is tapped, so progress and failures are shown in the row instead. The web's rotateConfirmOptions and revokeConfirmOptions are replaced by labels. The web's `as` and link-name options have no meaning on iOS. Android has the same parameters. Several closures are optional (onRotate, onRevoke). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onRotate.",
+  "accessibility": [
+    "The name and the status badge are combined into one element; the status is a word, not only a colour.",
+    "The prefix is read as \"Key starting with sk_live_4f2a\"; the mask is not read.",
+    "Scopes are one element read as \"Scopes\" and every scope, including those behind +N.",
+    "The menu is a button named \"Actions for Reporting job\" with a 44-point touch target; Revoke has the destructive role.",
+    "Rotating… or Revoking… is announced when an action starts, and the failure message when it fails.",
+    "Text wraps and scales with Dynamic Type; the name and status stack when they do not fit on one line."
+  ],
+  "edgeCases": [
+    "A long prefix is truncated in the middle, so the start and the mask stay visible.",
+    "Only one action runs at a time; the menu is disabled while it runs.",
+    "The Revoke button in the alert is disabled until the phrase matches (case-sensitive, ignoring surrounding spaces), and the action checks the phrase again.",
+    "A negative maxScopes shows only the +N badge."
+  ],
+  "tests": [
+    "MonarchApiKeyRowTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Key list with rotate and revoke",
+      "fixture": "api-key-row",
+      "webExample": "Key list with rotate and revoke",
+      "template": "VStack(spacing: 0) {\n    MonarchApiKeyRow(\n        {{keys.0.name}},\n        prefix: {{keys.0.prefix}},\n        createdAt: {{keys.0.createdAt|date}},\n        lastUsedAt: {{keys.0.lastUsedAt|date}},\n        scopes: [{{keys.0.scopes.0}}, {{keys.0.scopes.1}}],\n        status: {{keys.0.status|case}},\n        now: {{now|date}},\n        onRotate: { try await Task.sleep(for: .milliseconds(200)) },\n        onRevoke: { try await Task.sleep(for: .milliseconds(200)) }\n    )\n    MonarchApiKeyRow(\n        {{keys.1.name}},\n        prefix: {{keys.1.prefix}},\n        createdAt: {{keys.1.createdAt|date}},\n        expiresAt: {{keys.1.expiresAt|date}},\n        scopes: [{{keys.1.scopes.0}}, {{keys.1.scopes.1}}, {{keys.1.scopes.2}}, {{keys.1.scopes.3}}, {{keys.1.scopes.4}}],\n        status: {{keys.1.status|case}},\n        now: {{now|date}},\n        revokeConfirmPhrase: {{keys.1.revokeConfirmPhrase}},\n        onRevoke: { try await Task.sleep(for: .milliseconds(200)) }\n    )\n}",
+      "code": "VStack(spacing: 0) {\n    MonarchApiKeyRow(\n        \"Reporting job\",\n        prefix: \"sk_live_4f2a\",\n        createdAt: Date(timeIntervalSince1970: 1_777_712_400),\n        lastUsedAt: Date(timeIntervalSince1970: 1_781_087_400),\n        scopes: [\"items:read\", \"reports:read\"],\n        status: .active,\n        now: Date(timeIntervalSince1970: 1_781_092_800),\n        onRotate: { try await Task.sleep(for: .milliseconds(200)) },\n        onRevoke: { try await Task.sleep(for: .milliseconds(200)) }\n    )\n    MonarchApiKeyRow(\n        \"Import script\",\n        prefix: \"sk_test_91bd\",\n        createdAt: Date(timeIntervalSince1970: 1_780_304_400),\n        expiresAt: Date(timeIntervalSince1970: 1_781_427_600),\n        scopes: [\"items:read\", \"items:write\", \"users:read\", \"users:write\", \"webhooks:write\"],\n        status: .expiring,\n        now: Date(timeIntervalSince1970: 1_781_092_800),\n        revokeConfirmPhrase: \"Import script\",\n        onRevoke: { try await Task.sleep(for: .milliseconds(200)) }\n    )\n}"
+    },
+    {
+      "title": "A revoked key",
+      "setup": "private let now = Date(timeIntervalSince1970: 1_794_666_600)",
+      "code": "MonarchApiKeyRow(\"Old CI key\", prefix: \"sk_test_91bc\", createdAt: now, status: .revoked, now: now)"
+    }
+  ],
+  "webEquivalent": "ApiKeyRow",
+  "dependsOn": [
+    "status-badge",
+    "confirm-dialog",
+    "dropdown-menu",
+    "badge",
+    "inline-error-retry"
+  ],
+  "toneMap": {
+    "STATUS_TONE": {
+      "active": "success",
+      "expiring": "warning",
+      "expired": "neutral",
+      "revoked": "danger"
+    }
+  }
+}

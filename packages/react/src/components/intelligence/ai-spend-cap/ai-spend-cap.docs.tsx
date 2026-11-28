@@ -1,30 +1,32 @@
 import { useState } from 'react';
-import { AiSpendCap, type AiSpendCapSettings } from '@rookcom/monarch-react/ai';
+import {
+  AiSpendCap,
+  type AiSpendCapPeriod,
+  type AiSpendCapSettings,
+} from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-spend-cap.fixture.json';
 
-const RESETS_AT = '2026-12-01T00:00:00Z';
+const RESETS_AT = fixture.data.resetsAt;
 
-const BREAKDOWN = [
-  { id: 'research', label: 'Research agent', spent: 2310 },
-  { id: 'summaries', label: 'Meeting summaries', spent: 1245 },
-  { id: 'drafting', label: 'Email drafting', spent: 645 },
-];
+const BREAKDOWN = fixture.data.breakdown;
 
 function EditableDemo() {
   const [settings, setSettings] = useState<AiSpendCapSettings>({
-    limit: 5000,
-    warnAt: 0.8,
-    behaviour: 'pause',
+    limit: fixture.data.settings.limit,
+    warnAt: fixture.data.settings.warnAt,
+    behaviour: fixture.data.settings.behaviour as AiSpendCapSettings['behaviour'],
   });
   return (
     <AiSpendCap
-      spent={4200}
-      currency="GBP"
-      locale="en-GB"
-      period="month"
+      spent={fixture.data.spent}
+      currency={fixture.data.currency}
+      locale={fixture.data.locale}
+      period={fixture.data.period as AiSpendCapPeriod}
       resetsAt={RESETS_AT}
-      timeZone="UTC"
-      maxLimit={50000}
+      timeZone={fixture.data.timeZone}
+      maxLimit={fixture.data.maxLimit}
       breakdown={BREAKDOWN}
       {...settings}
       onSave={setSettings}

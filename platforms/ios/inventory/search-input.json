@@ -1,0 +1,80 @@
+{
+  "id": "search-input",
+  "name": null,
+  "title": "SearchInput",
+  "family": "search",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "searchable(text:placement:prompt:) in a NavigationStack, with onSubmit(of: .search), searchSuggestions and searchScopes",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A search box for filtering a list or querying a server is the system search field, added to the navigation bar with searchable. Monarch ships nothing.",
+  "whenToUse": "To search or filter the content of a screen that has a navigation bar. The system supplies the magnifier, the clear button, the Cancel button, the keyboard's Search key and the hide-on-scroll behaviour.",
+  "whenNotToUse": "Not for a search box in the middle of a screen, inside a form or a sheet without a navigation bar: use MonarchTextField there. Not for choosing one value from a list (use a Picker).",
+  "api": [
+    "func searchable(text: Binding<String>, placement: SearchFieldPlacement = .automatic, prompt: String) -> some View",
+    "func onSubmit(of triggers: SubmitTriggers, _ action: @escaping () -> Void) -> some View",
+    "func searchSuggestions<S: View>(_ suggestions: () -> S) -> some View",
+    "func searchScopes<V: Hashable, S: View>(_ scope: Binding<V>, scopes: () -> S) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "empty",
+      "description": "The magnifier and the prompt."
+    },
+    {
+      "name": "active",
+      "description": "The field has focus, the keyboard is open and the system shows a Cancel button. isSearching in the environment is true."
+    },
+    {
+      "name": "with text",
+      "description": "The system shows a clear button at the trailing edge."
+    },
+    {
+      "name": "loading",
+      "description": "The field has no pending state. Show a ProgressView in the results while a server query runs."
+    }
+  ],
+  "appearance": "The system draws the field in every theme. The theme's tint colours the cursor and the Cancel button; Monarch colours and type are not applied to the field.",
+  "platformNotes": "The web SearchInput draws an icon, a clear button, a pending spinner and a shortcut hint, and debounces onSearch. On iOS the icon, clear button and Cancel are the system's. The web's debounce is task(id: query) with a short sleep, as in the second example; pending is a ProgressView in the results; the shortcut hint is not shown. The web's sizes do not apply. MonarchTextField has no leading icon or clear button yet, so an inline search box outside a navigation bar is a plain labelled field. Android styles the Material 3 SearchBar as MonarchSearchBar; iOS adopts the system field.",
+  "accessibility": [
+    "System behaviour: the field has the search field trait, the prompt as its placeholder and a labelled clear button.",
+    "System behaviour: the keyboard's return key is Search, and onSubmit(of: .search) runs on it.",
+    "Announce the number of results after a query with AccessibilityNotification.Announcement, since the list changes without focus moving.",
+    "The field follows Dynamic Type."
+  ],
+  "edgeCases": [
+    "searchable has no effect without a NavigationStack or NavigationSplitView around the view.",
+    "placement .navigationBarDrawer(displayMode: .always) keeps the field visible; the default hides it until the list is pulled down.",
+    "Filtering on every keystroke is fine for local data; debounce a server query.",
+    "An empty result needs its own message: ContentUnavailableView.search."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Debounced, pending",
+      "fixture": "search-input",
+      "webExample": "Debounced, pending",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    MonarchTextField(\"Search\", text: $query, prompt: {{placeholder}}, labelVisibility: .hidden) {\n        MonarchIcon(systemName: \"magnifyingglass\", size: .sm).accessibilityHidden(true)\n    } trailing: {\n        EmptyView()\n    }\n    .autocorrectionDisabled()\n    Text(\"\\(matches.count) \\(matches.count == 1 ? \"result\" : \"results\")\\(query.isEmpty ? \"\" : \" for \\u{201C}\\(query)\\u{201D}\")\")\n        .monarchTextStyle(.caption)\n}\n.frame(maxWidth: {{maxWidth}}, alignment: .topLeading)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var query = \"\"\n\nprivate let fruit = [{{fruit.0}}, {{fruit.1}}, {{fruit.2}}, {{fruit.3}}, {{fruit.4}}, {{fruit.5}}, {{fruit.6}}, {{fruit.7}}]\n\nprivate var matches: [String] {\n    query.isEmpty ? fruit : fruit.filter { $0.localizedCaseInsensitiveContains(query) }\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var query = \"\"\n\nprivate let fruit = [\"Apple\", \"Apricot\", \"Banana\", \"Blueberry\", \"Cherry\", \"Grape\", \"Mango\", \"Peach\"]\n\nprivate var matches: [String] {\n    query.isEmpty ? fruit : fruit.filter { $0.localizedCaseInsensitiveContains(query) }\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    MonarchTextField(\"Search\", text: $query, prompt: \"Search fruit\", labelVisibility: .hidden) {\n        MonarchIcon(systemName: \"magnifyingglass\", size: .sm).accessibilityHidden(true)\n    } trailing: {\n        EmptyView()\n    }\n    .autocorrectionDisabled()\n    Text(\"\\(matches.count) \\(matches.count == 1 ? \"result\" : \"results\")\\(query.isEmpty ? \"\" : \" for \\u{201C}\\(query)\\u{201D}\")\")\n        .monarchTextStyle(.caption)\n}\n.frame(maxWidth: 300, alignment: .topLeading)"
+    },
+    {
+      "title": "A debounced server query",
+      "setup": "@State private var query = \"\"\n@State private var submitted = \"\"",
+      "code": "NavigationStack {\n    Text(submitted.isEmpty ? \"Type to search\" : \"Results for \\(submitted)\")\n        .monarchTextStyle(.body)\n        .searchable(text: $query, prompt: \"Search invoices\")\n        .onSubmit(of: .search) { submitted = query }\n        .task(id: query) {\n            try? await Task.sleep(for: .milliseconds(300))\n            if !Task.isCancelled { submitted = query }\n        }\n}"
+    }
+  ],
+  "webEquivalent": "SearchInput",
+  "dependsOn": [],
+  "icons": {
+    "search": "SearchGlyph"
+  },
+  "parityExceptions": []
+}

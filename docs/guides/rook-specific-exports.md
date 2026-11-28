@@ -8,7 +8,8 @@ use instead.
 
 From `@rookcom/monarch-react` 0.14.5 every one of them is exported from one
 entry, `@rookcom/monarch-react/rook`. Nothing is renamed, and the old import
-paths (`/shell`, `/patterns`, `/ai`) keep working until 0.15.0; see
+paths (`/shell`, `/patterns`, `/ai`) keep working until they are
+removed no earlier than 2027-02-11 (90-day window); see
 [Moving to `/rook`](#moving-to-rook) below. The
 [versioning policy](../governance/versioning.md) applies to these exports as
 to any other.
@@ -27,13 +28,13 @@ to any other.
 
 ## `@rookcom/monarch-react`
 
-| Export                                                                                                                                     | Import from | Old path, until 0.15.0 | Rook contract                                                                                 | Outside Rook, use                                                                                                       |
-| ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | ---------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `RookRail`, `rookRailScript`, `ROOK_RAIL_COOKIE`, `ROOK_RAIL_EVENT`                                                                        | `/rook`     | `/shell`               | The `rook_rail` cookie and `<html data-rook-rail="expanded">`, shared by every Rook app       | `SidebarNav` (root entry) in `AppShell`'s `rail` slot                                                                   |
-| `RookBar`, `RookBarPanelProvider`, `useRookBarPanel`, `RookBarAppCatalog`, `RookBarLinkList`, `RookBarFeaturePanel`, `RookBarStoriesPanel` | `/rook`     | `/shell`               | The Rook company bar on public pages: wordmark, app catalogue, stories, Rook account controls | `SiteHeader` (`/marketing`) or `TopNav` (root entry), with `AccountMenu` (`/patterns`)                                  |
-| `ROOK_THEME_COOKIE`, `ROOK_THEME_EVENT`                                                                                                    | `/rook`     | `/shell`               | The `rook_theme` cookie and the `rook-theme` event, shared by every Rook app                  | `ThemeToggle` with your own `cookieName` (and `cookieDomain`), and the same name in `appearanceScript({ themeCookie })` |
-| `SignInWithRookButton`                                                                                                                     | `/rook`     | `/patterns`            | Sign-in with Rook ID, with the Rook mark                                                      | `SignInForm` (`/patterns`) with your own providers in its `providers` slot, or a `Button`                               |
-| `rookIntelligenceTransport`, `mapRookIntelligenceEvent`                                                                                    | `/rook`     | `/ai`                  | The Rook Intelligence API (`POST /v1/agents/{id}/chat`, server-sent events)                   | `createSseTransport` with your own endpoint and event mapper, or your own `AiTransport`                                 |
+| Export                                                                                                                                     | Import from | Old path (deprecated) | Rook contract                                                                                 | Outside Rook, use                                                                                                       |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | --------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `RookRail`, `rookRailScript`, `ROOK_RAIL_COOKIE`, `ROOK_RAIL_EVENT`                                                                        | `/rook`     | `/shell`              | The `rook_rail` cookie and `<html data-rook-rail="expanded">`, shared by every Rook app       | `SidebarNav` (root entry) in `AppShell`'s `rail` slot                                                                   |
+| `RookBar`, `RookBarPanelProvider`, `useRookBarPanel`, `RookBarAppCatalog`, `RookBarLinkList`, `RookBarFeaturePanel`, `RookBarStoriesPanel` | `/rook`     | `/shell`              | The Rook company bar on public pages: wordmark, app catalogue, stories, Rook account controls | `SiteHeader` (`/marketing`) or `TopNav` (root entry), with `AccountMenu` (`/patterns`)                                  |
+| `ROOK_THEME_COOKIE`, `ROOK_THEME_EVENT`                                                                                                    | `/rook`     | `/shell`              | The `rook_theme` cookie and the `rook-theme` event, shared by every Rook app                  | `ThemeToggle` with your own `cookieName` (and `cookieDomain`), and the same name in `appearanceScript({ themeCookie })` |
+| `SignInWithRookButton`                                                                                                                     | `/rook`     | `/patterns`           | Sign-in with Rook ID, with the Rook mark                                                      | `SignInForm` (`/patterns`) with your own providers in its `providers` slot, or a `Button`                               |
+| `rookIntelligenceTransport`, `mapRookIntelligenceEvent`                                                                                    | `/rook`     | `/ai`                 | The Rook Intelligence API (`POST /v1/agents/{id}/chat`, server-sent events)                   | `createSseTransport` with your own endpoint and event mapper, or your own `AiTransport`                                 |
 
 Each export above comes with its types (`RookRailProps`, `RookBarProps`,
 `SignInWithRookButtonProps`, `RookIntelligenceTransportOptions` and so on).
@@ -60,8 +61,9 @@ Both tools do it for you:
   lines is reported without a fix; split it by hand.
 - ESLint: `monarch/no-deprecated-api` with `eslint --fix`.
 
-The old paths are deprecated from 0.14.5 and stop exporting these names in
-0.15.0 ([deprecation policy](../governance/DEPRECATION-POLICY.md),
+The old paths are deprecated from 0.14.5 (2026-11-13) and stop exporting
+these names in a later 0.14.x patch, no earlier than 2027-02-11 (90-day
+window) and not before 0.14.7 ([deprecation policy](../governance/DEPRECATION-POLICY.md),
 [migration](migration.md#rook-specific-exports-move-to-rook)). The
 manifest lists each export with `entry: "./rook"` and the old entry in
 `alsoEntries`.

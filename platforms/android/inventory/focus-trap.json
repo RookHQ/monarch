@@ -1,0 +1,68 @@
+{
+  "id": "focus-trap",
+  "name": null,
+  "title": "FocusTrap",
+  "family": "interaction",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "androidx.compose.ui.window.Dialog, MonarchDialog, MonarchBottomSheet, androidx.compose.ui.window.Popup with PopupProperties(focusable = true)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Keeping focus inside a modal surface is done by the platform's modal windows: Dialog, MonarchDialog, MonarchBottomSheet and a focusable Popup each open a window that holds TalkBack and keyboard focus. Monarch ships nothing.",
+  "whenToUse": "For any surface that must be finished or dismissed before the rest of the screen can be used: a confirmation, a form in a dialog, a sheet of options.",
+  "whenNotToUse": "For content that may be used alongside the screen, such as a side panel or a non-modal tooltip, use a non-modal container and let focus move freely.",
+  "api": [
+    "@Composable fun Dialog(onDismissRequest: () -> Unit, properties: DialogProperties = DialogProperties(), content: @Composable () -> Unit)",
+    "@Composable fun MonarchDialog(onDismissRequest: () -> Unit, title: String?, modifier: Modifier = Modifier, description: String? = null, dismissible: Boolean = true, dismissOnClickOutside: Boolean = dismissible, paneTitle: String? = null, actions: (@Composable RowScope.() -> Unit)? = null, content: (@Composable ColumnScope.() -> Unit)? = null)",
+    "@Composable fun MonarchBottomSheet(onDismissRequest: () -> Unit, modifier: Modifier = Modifier, title: String? = null, description: String? = null, dismissible: Boolean = true, showHandle: Boolean = true, fullyExpanded: Boolean = true, fullWidthContent: Boolean = false, content: @Composable MonarchBottomSheetScope.() -> Unit)",
+    "@Composable fun Popup(alignment: Alignment = Alignment.TopStart, offset: IntOffset = IntOffset(0, 0), onDismissRequest: (() -> Unit)? = null, properties: PopupProperties = PopupProperties(), content: @Composable () -> Unit)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "shown",
+      "description": "The modal window holds focus. TalkBack and the keyboard cannot reach the screen behind it."
+    },
+    {
+      "name": "dismissed",
+      "description": "Back, a tap on the scrim or a button calls onDismissRequest; the app removes the window and focus returns to the screen."
+    }
+  ],
+  "appearance": "No appearance of its own: dialogs and sheets take the Monarch colors through MonarchTheme's Material 3 mapping, in light, dark and high contrast.",
+  "platformNotes": "The web needs a FocusTrap component and hook because a browser lets Tab leave a dialog. On Android a Dialog, MonarchBottomSheet or focusable Popup is a separate window, so TalkBack and the keyboard stay inside it. The web's initialFocus is a FocusRequester with requestFocus() in a LaunchedEffect inside the window; returnFocus is the system's; onEscape is onDismissRequest, which Back and Escape trigger. iOS uses sheet and fullScreenCover in the same way.",
+  "accessibility": [
+    "System behavior: a dialog or modal sheet is a separate window; TalkBack and keyboard focus stay inside it until it is dismissed.",
+    "System behavior: Back, and Escape on a hardware keyboard, call onDismissRequest unless the properties turn that off.",
+    "A Popup only takes focus with PopupProperties(focusable = true); a non-focusable popup does not confine focus.",
+    "Give a dialog a title so TalkBack announces it when it opens."
+  ],
+  "edgeCases": [
+    "MonarchDialog(dismissible = false), or DialogProperties(dismissOnBackPress = false) on a Dialog, keeps a dialog with unsaved changes open; keep a visible button that dismisses it.",
+    "A custom overlay drawn inside the screen (a Box over the content) does not confine focus; use Dialog or Popup instead.",
+    "The catalogue page opens the dialog and the sheet only on a tap; the compiled example shows the dialog closed until a button is pressed."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "An inline panel that holds focus until applied or cancelled",
+      "fixture": "focus-trap",
+      "webExample": "An inline panel that holds focus until applied or cancelled",
+      "template": "MonarchButton(text = {{trigger}}, onClick = { open = true })\nif (open) {\n    MonarchDialog(\n        onDismissRequest = { open = false },\n        title = {{label}},\n        actions = {\n            MonarchButton(text = {{cancel}}, onClick = { open = false })\n            MonarchButton(text = {{apply}}, onClick = { open = false }, variant = MonarchButtonVariant.Primary)\n        },\n    ) {\n        MonarchTextField(value = owner, onValueChange = { owner = it }, label = {{fields.0.label}}, placeholder = {{fields.0.placeholder}})\n        MonarchTextField(value = tag, onValueChange = { tag = it }, label = {{fields.1.label}}, placeholder = {{fields.1.placeholder}})\n    }\n}",
+      "setupTemplate": "var open by remember { mutableStateOf(true) }\nvar owner by remember { mutableStateOf(\"\") }\nvar tag by remember { mutableStateOf(\"\") }",
+      "setup": "var open by remember { mutableStateOf(true) }\nvar owner by remember { mutableStateOf(\"\") }\nvar tag by remember { mutableStateOf(\"\") }",
+      "code": "MonarchButton(text = \"Edit filters\", onClick = { open = true })\nif (open) {\n    MonarchDialog(\n        onDismissRequest = { open = false },\n        title = \"Filters\",\n        actions = {\n            MonarchButton(text = \"Cancel\", onClick = { open = false })\n            MonarchButton(text = \"Apply\", onClick = { open = false }, variant = MonarchButtonVariant.Primary)\n        },\n    ) {\n        MonarchTextField(value = owner, onValueChange = { owner = it }, label = \"Owner\", placeholder = \"Owner\")\n        MonarchTextField(value = tag, onValueChange = { tag = it }, label = \"Label\", placeholder = \"Label\")\n    }\n}"
+    },
+    {
+      "title": "A modal bottom sheet",
+      "setup": "var open by remember { mutableStateOf(false) }",
+      "code": "MonarchButton(text = \"Share options\", onClick = { open = true })\nif (open) {\n    MonarchBottomSheet(onDismissRequest = { open = false }) {\n        MonarchButton(text = \"Close\", onClick = { open = false })\n    }\n}"
+    }
+  ],
+  "webEquivalent": "FocusTrap",
+  "dependsOn": []
+}

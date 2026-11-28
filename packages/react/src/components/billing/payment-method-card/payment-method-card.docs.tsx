@@ -1,7 +1,20 @@
 import { PaymentMethodCard } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './payment-method-card.fixture.json';
 
-const today = new Date(2026, 5, 15);
+const today = new Date(fixture.data.now);
+type Card = {
+  brand: string;
+  last4: string;
+  expiryMonth: number;
+  expiryYear: number;
+};
+const [visa, mastercard, rupay] = fixture.data.cards as unknown as readonly [
+  Card & { holderName: string; isDefault: boolean; removeDisabled: boolean },
+  Card,
+  Card,
+];
 const noop = () => {};
 
 export default {
@@ -129,30 +142,30 @@ export default {
           render: () => (
             <div style={{ display: 'grid', gap: 12, maxWidth: 560 }}>
               <PaymentMethodCard
-                brand="visa"
-                last4="4242"
-                expiryMonth={8}
-                expiryYear={2028}
-                holderName="Account holder"
-                isDefault
+                brand={visa.brand}
+                last4={visa.last4}
+                expiryMonth={visa.expiryMonth}
+                expiryYear={visa.expiryYear}
+                holderName={visa.holderName}
+                isDefault={visa.isDefault}
                 now={today}
                 onRemove={noop}
-                removeDisabled
+                removeDisabled={visa.removeDisabled}
               />
               <PaymentMethodCard
-                brand="mastercard"
-                last4="4444"
-                expiryMonth={7}
-                expiryYear={2026}
+                brand={mastercard.brand}
+                last4={mastercard.last4}
+                expiryMonth={mastercard.expiryMonth}
+                expiryYear={mastercard.expiryYear}
                 now={today}
                 onMakeDefault={noop}
                 onRemove={noop}
               />
               <PaymentMethodCard
-                brand="rupay"
-                last4="0005"
-                expiryMonth={1}
-                expiryYear={2026}
+                brand={rupay.brand}
+                last4={rupay.last4}
+                expiryMonth={rupay.expiryMonth}
+                expiryYear={rupay.expiryYear}
                 now={today}
                 onMakeDefault={noop}
                 onRemove={noop}

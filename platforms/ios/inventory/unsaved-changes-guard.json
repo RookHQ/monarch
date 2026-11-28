@@ -1,0 +1,134 @@
+{
+  "id": "unsaved-changes-guard",
+  "name": "MonarchUnsavedChangesGuard",
+  "title": "UnsavedChangesGuard",
+  "family": "overlays",
+  "category": "B",
+  "coverage": "build",
+  "kind": "modifier",
+  "wrapsNative": "ViewModifier using interactiveDismissDisabled, navigationBarBackButtonHidden with a toolbar back button (iOS), confirmationDialog(_:isPresented:titleVisibility:actions:message:) and alert for a failed save",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A modifier that warns before leaving a screen or a sheet throws away unsaved changes, with Keep editing, Discard changes and an optional Save and leave.",
+  "whenToUse": "On an editor or a form in a sheet or a pushed screen, while it has changes that are not saved and leaving would lose them.",
+  "whenNotToUse": "When changes are saved as they are made (show MonarchSaveStatusIndicator instead), or when the draft is kept and restored later. For confirming a deletion use confirm-dialog.",
+  "api": [
+    "func monarchUnsavedChangesGuard(isPresented: Binding<Bool>, hasChanges: Bool, labels: MonarchUnsavedChangesGuardLabels = MonarchUnsavedChangesGuardLabels(), guardsBackButton: Bool = true, onSave: (@MainActor () async throws -> Void)? = nil, onLeave: @escaping @MainActor (MonarchUnsavedChangesGuardLeaveReason) -> Void) -> some View",
+    "MonarchUnsavedChangesGuard.init(isPresented: Binding<Bool>, hasChanges: Bool, labels: MonarchUnsavedChangesGuardLabels = MonarchUnsavedChangesGuardLabels(), guardsBackButton: Bool = true, onSave: (@MainActor () async throws -> Void)? = nil, onLeave: @escaping @MainActor (MonarchUnsavedChangesGuardLeaveReason) -> Void)",
+    "enum MonarchUnsavedChangesGuardLeaveReason { case discard, save }",
+    "MonarchUnsavedChangesGuardLabels.init(title: String? = nil, message: String? = nil, keepEditing: String? = nil, discard: String? = nil, save: String? = nil, saveFailed: String? = nil, back: String? = nil, saving: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "isPresented",
+      "type": "Binding<Bool>",
+      "default": "required",
+      "description": "Whether the question is shown. Set it to true from the app's own Cancel or Close button when there are changes; the guarding back button sets it too."
+    },
+    {
+      "name": "hasChanges",
+      "type": "Bool",
+      "default": "required",
+      "description": "Whether there are unsaved changes. While false nothing is blocked and the system back button is kept."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchUnsavedChangesGuardLabels",
+      "default": "MonarchUnsavedChangesGuardLabels()",
+      "description": "Replacements for the question, the message, the three choices, the save failure, the back button and \"Saving\"."
+    },
+    {
+      "name": "guardsBackButton",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the navigation bar's back button is replaced, while there are changes, by one that asks first. iOS only."
+    },
+    {
+      "name": "onSave",
+      "type": "(@MainActor () async throws -> Void)?",
+      "default": "nil",
+      "description": "Saves the changes. When given, Save and leave is offered. While it runs the screen cannot be left; a thrown error is shown in an alert and the person stays."
+    },
+    {
+      "name": "onLeave",
+      "type": "@MainActor (MonarchUnsavedChangesGuardLeaveReason) -> Void",
+      "default": "required",
+      "description": "Leaves the screen (dismiss or pop), called with .discard straight away or with .save after onSave succeeded."
+    }
+  ],
+  "states": [
+    {
+      "name": "no changes",
+      "description": "Nothing changes: the sheet can be swiped away and the system back button works."
+    },
+    {
+      "name": "changes",
+      "description": "The sheet cannot be swiped away, and on iOS the back button reads \"Back\" with a chevron and asks first; the back swipe is off."
+    },
+    {
+      "name": "asking",
+      "description": "A confirmation dialog titled \"Discard unsaved changes?\" with Save and leave, Discard changes (destructive) and Keep editing (cancel)."
+    },
+    {
+      "name": "saving",
+      "description": "A \"Saving\" progress indicator on a raised surface over the content; leaving stays blocked."
+    },
+    {
+      "name": "save failed",
+      "description": "An alert with the error's description, or \"Your changes could not be saved. Try again.\", and a Keep editing button."
+    }
+  ],
+  "appearance": "The question and the failure are the system confirmation dialog and alert, drawn by the system in every theme; the destructive choice is the system's red. The saving indicator uses the raised background, the default text colour and a medium shadow from the theme.",
+  "platformNotes": "The web UnsavedChangesGuard is a dialog plus a hook that blocks router navigation, intercepts same-origin links and asks the browser to warn before the tab closes. iOS has no links or tabs to close, so the guard blocks the two ways out a person can take without the app's code, the sheet swipe and the back button, and the app's own Cancel button sets isPresented. SwiftUI cannot tell when a blocked swipe was attempted, so a swipe does nothing instead of asking. The web keeps the dialog open with a pending state while saving; the system dialog closes when a button is tapped, so the guard shows a progress indicator over the screen and reports a failure in an alert. The web's children (extra content in the dialog) cannot go in a confirmation dialog. Android builds the same component with the same name.",
+  "accessibility": [
+    "System behaviour: VoiceOver reads the dialog's title and message; the escape gesture chooses Keep editing, the cancel role.",
+    "The destructive choice is named \"Discard changes\", so it does not depend on its red colour.",
+    "The replacement back button is a labelled button with a backward chevron that follows the reading direction.",
+    "\"Saving\" is announced when the save starts and shown with a labelled progress indicator; a failure is shown in an alert, which VoiceOver reads.",
+    "While leaving is blocked, the back swipe and the sheet swipe are off, so a gesture cannot lose the changes."
+  ],
+  "edgeCases": [
+    "Without onSave only Discard changes and Keep editing are offered.",
+    "Apply the modifier inside the sheet's content (for example on the root of its NavigationStack), so interactiveDismissDisabled reaches the sheet.",
+    "Errors are shown with their LocalizedError description when they have one; other errors show the built-in failure text.",
+    "The guard does not stop the app from dismissing in code; route every Cancel and Close through isPresented."
+  ],
+  "tests": [
+    "MonarchUnsavedChangesGuardTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Leaving with unsaved changes",
+      "fixture": "unsaved-changes-guard",
+      "webExample": "Leaving with unsaved changes",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    MonarchTextField({{fieldLabel}}, text: $name)\n    HStack(spacing: theme.spacing.space2) {\n        MonarchButton({{save}}, variant: .primary) {}\n        MonarchButton({{leave}}) { isAsking = true }\n    }\n    Text(\"Current page: \" + page)\n}\n.padding()\n.monarchUnsavedChangesGuard(\n    isPresented: $isAsking,\n    hasChanges: true,\n    labels: MonarchUnsavedChangesGuardLabels(\n        title: {{dialog.title}},\n        message: {{dialog.message}},\n        keepEditing: {{dialog.keepEditing}},\n        discard: {{dialog.discard}},\n        save: {{dialog.save}}\n    ),\n    onSave: { try await Task.sleep(for: .milliseconds(600)) },\n    onLeave: { _ in page = {{leftPage}} }\n)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var name = {{name}}\n@State private var page = {{page}}\n@State private var isAsking = false",
+      "previewPresented": [
+        "isAsking"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var name = \"Weekly planning v2\"\n@State private var page = \"Editor\"\n@State private var isAsking = false",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space3) {\n    MonarchTextField(\"Board name\", text: $name)\n    HStack(spacing: theme.spacing.space2) {\n        MonarchButton(\"Save\", variant: .primary) {}\n        MonarchButton(\"Go to overview\") { isAsking = true }\n    }\n    Text(\"Current page: \" + page)\n}\n.padding()\n.monarchUnsavedChangesGuard(\n    isPresented: $isAsking,\n    hasChanges: true,\n    labels: MonarchUnsavedChangesGuardLabels(\n        title: \"Discard unsaved changes?\",\n        message: \"Your changes have not been saved. If you leave now, they will be lost.\",\n        keepEditing: \"Keep editing\",\n        discard: \"Discard changes\",\n        save: \"Save and leave\"\n    ),\n    onSave: { try await Task.sleep(for: .milliseconds(600)) },\n    onLeave: { _ in page = \"Overview\" }\n)"
+    },
+    {
+      "title": "A pushed screen whose back button asks first",
+      "setup": "@State private var notes = \"\"\n@State private var isAsking = false\n@Environment(\\.dismiss) private var dismiss",
+      "code": "TextField(\"Notes\", text: $notes, axis: .vertical)\n    .monarchTextStyle(.body)\n    .navigationTitle(\"Notes\")\n    .monarchUnsavedChangesGuard(\n        isPresented: $isAsking,\n        hasChanges: !notes.isEmpty,\n        onLeave: { _ in dismiss() }\n    )"
+    }
+  ],
+  "webEquivalent": "UnsavedChangesGuard",
+  "dependsOn": [
+    "confirm-dialog",
+    "sheet"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The question is the system confirmation dialog. Anchored to its button it is a bubble with the two actions; Keep editing is its cancel role, which the system does not draw as a button there (tapping outside or the escape gesture keeps editing). The destructive role takes the system red.",
+      "convention": "HIG: confirmation dialog; the cancel role is the dismissal"
+    }
+  ]
+}

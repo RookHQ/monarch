@@ -1,36 +1,54 @@
+import { Link } from '@rookcom/monarch-react';
 import { ActivityWidget } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 
-const now = '2026-11-07T12:00:00Z';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './activity-widget.fixture.json';
+
+const now = fixture.data.now;
+const [e1, e2, e3, e4] = fixture.data.events as unknown as [
+  { id: string; actor: string; verb: string; object: string; time: string },
+  {
+    id: string;
+    actor: string;
+    kind: 'automation';
+    verb: string;
+    object: string;
+    time: string;
+    tone: 'warning';
+  },
+  { id: string; actor: string; verb: string; object: string; time: string },
+  { id: string; actor: string; verb: string; object: string; time: string },
+];
 const events = [
   {
-    id: '1',
-    actor: { name: 'Ada Moss' },
-    verb: 'closed',
-    object: <a href="#r1">Request 1042</a>,
-    time: '2026-11-07T11:40:00Z',
+    id: e1.id,
+    actor: { name: e1.actor },
+    verb: e1.verb,
+    object: <Link href="#r1">{e1.object}</Link>,
+    time: e1.time,
   },
   {
-    id: '2',
-    actor: { name: 'Renewal rule', kind: 'automation' as const },
-    verb: 'flagged',
-    object: 'Contract 88',
-    time: '2026-11-07T10:05:00Z',
-    tone: 'warning' as const,
+    id: e2.id,
+    actor: { name: e2.actor, kind: e2.kind },
+    verb: e2.verb,
+    object: e2.object,
+    time: e2.time,
+    tone: e2.tone,
   },
   {
-    id: '3',
-    actor: { name: 'Bea Lund' },
-    verb: 'commented on',
-    object: <a href="#r2">Request 1039</a>,
-    time: '2026-11-07T08:15:00Z',
+    id: e3.id,
+    actor: { name: e3.actor },
+    verb: e3.verb,
+    object: <Link href="#r2">{e3.object}</Link>,
+    time: e3.time,
   },
   {
-    id: '4',
-    actor: { name: 'Cal Ortiz' },
-    verb: 'created',
-    object: 'Project Atlas',
-    time: '2026-11-06T16:00:00Z',
+    id: e4.id,
+    actor: { name: e4.actor },
+    verb: e4.verb,
+    object: e4.object,
+    time: e4.time,
   },
 ];
 
@@ -139,7 +157,7 @@ export default {
               style={{ maxWidth: '30rem' }}
               events={events}
               now={now}
-              timeZone="UTC"
+              timeZone={fixture.data.timeZone}
               viewAllHref="#activity"
             />
           ),

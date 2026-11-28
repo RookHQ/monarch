@@ -7,47 +7,14 @@ import {
   type ConditionMatch,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './condition-editor.fixture.json';
 
-const FIELDS: ConditionField[] = [
-  {
-    value: 'priority',
-    label: 'Priority',
-    type: 'select',
-    options: [
-      { value: 'low', label: 'Low' },
-      { value: 'normal', label: 'Normal' },
-      { value: 'high', label: 'High' },
-      { value: 'urgent', label: 'Urgent' },
-    ],
-  },
-  { value: 'subject', label: 'Subject', type: 'text' },
-  {
-    value: 'requester.domain',
-    label: 'Requester email domain',
-    type: 'text',
-    placeholder: 'example.com',
-  },
-  { value: 'hoursOpen', label: 'Hours since created', type: 'number', placeholder: 'Hours' },
-  { value: 'businessHours', label: 'Within business hours', type: 'boolean' },
-  { value: 'tags', label: 'Tags', type: 'tags', options: [{ value: 'billing', label: 'billing' }] },
-  {
-    value: 'custom.plan',
-    label: 'Plan',
-    type: 'select',
-    group: 'Custom fields',
-    options: [
-      { value: 'starter', label: 'Starter' },
-      { value: 'team', label: 'Team' },
-    ],
-  },
-];
+const FIELDS = fixture.data.fields as ConditionField[];
 
 function EditorDemo() {
-  const [conditions, setConditions] = useState<Condition[]>([
-    { id: '1', field: 'priority', operator: 'in', value: ['high', 'urgent'] },
-    { id: '2', field: 'subject', operator: 'contains', value: 'refund' },
-  ]);
-  const [match, setMatch] = useState<ConditionMatch>('all');
+  const [conditions, setConditions] = useState<Condition[]>(fixture.data.conditions as Condition[]);
+  const [match, setMatch] = useState<ConditionMatch>(fixture.data.match as ConditionMatch);
   const sample = { priority: 'high', subject: 'Refund for order 1042', hoursOpen: 3 };
   return (
     <div style={{ display: 'grid', gap: 12, width: '100%', maxWidth: 720 }}>

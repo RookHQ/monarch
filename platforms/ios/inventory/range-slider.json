@@ -1,0 +1,153 @@
+{
+  "id": "range-slider",
+  "name": "MonarchRangeSlider",
+  "title": "RangeSlider",
+  "family": "forms",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "GeometryReader with Capsule and Circle shapes, DragGesture, and accessibilityAdjustableAction on each thumb",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A track with two thumbs that chooses a lower and an upper value; the thumbs never cross.",
+  "whenToUse": "For a filter or setting with a lower and an upper bound on one scale: a price, a salary or an age band, working hours.",
+  "whenNotToUse": "For one value, use the system Slider. For exact amounts people type, use two MonarchNumberInput fields. For dates, use a date range picker.",
+  "api": [
+    "init(_ label: String, value: Binding<ClosedRange<Double>>, in bounds: ClosedRange<Double> = 0...100, step: Double = 1, minimumStepsBetween: Int = 0, size: MonarchRangeSliderSize = .md, isInvalid: Bool = false, labels: MonarchRangeSliderLabels = MonarchRangeSliderLabels(), valueText: ((Double) -> String)? = nil, showsValue: Bool = false, onEditingChanged: @escaping (Bool) -> Void = { _ in })",
+    "enum MonarchRangeSliderSize { case sm, md }",
+    "struct MonarchRangeSliderLabels { init(minimum: String? = nil, maximum: String? = nil, range: (@Sendable (String, String) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "What the range is. Spoken with each thumb (\"Price, Minimum\"); not drawn. Give the visible label with MonarchFormField."
+    },
+    {
+      "name": "value",
+      "type": "Binding<ClosedRange<Double>>",
+      "default": "required",
+      "description": "The lower and upper values."
+    },
+    {
+      "name": "bounds",
+      "type": "ClosedRange<Double>",
+      "default": "0...100",
+      "description": "The lowest and highest values."
+    },
+    {
+      "name": "step",
+      "type": "Double",
+      "default": "1",
+      "description": "The distance between allowed values. 0 allows any value."
+    },
+    {
+      "name": "minimumStepsBetween",
+      "type": "Int",
+      "default": "0",
+      "description": "The smallest gap between the thumbs, in steps. With 0 the thumbs may meet."
+    },
+    {
+      "name": "size",
+      "type": "MonarchRangeSliderSize",
+      "default": ".md",
+      "description": "The thickness of the track and the size of the thumbs. The touch area is 44 points high at both sizes."
+    },
+    {
+      "name": "isInvalid",
+      "type": "Bool",
+      "default": "false",
+      "description": "Draws the range and the thumb borders in the danger colour."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchRangeSliderLabels",
+      "default": "MonarchRangeSliderLabels()",
+      "description": "Replacements for \"Minimum\", \"Maximum\" and the \"20 – 80\" range text."
+    },
+    {
+      "name": "valueText",
+      "type": "((Double) -> String)?",
+      "default": "nil",
+      "description": "Formats a value for VoiceOver and the shown range. The number in the current locale by default."
+    },
+    {
+      "name": "showsValue",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the formatted range above the track."
+    },
+    {
+      "name": "onEditingChanged",
+      "type": "(Bool) -> Void",
+      "default": "{ _ in }",
+      "description": "Runs with true when a drag starts and false when it ends, like Slider. Save the value on false."
+    }
+  ],
+  "states": [
+    {
+      "name": "default",
+      "description": "The track in the emphasis background, the range between the thumbs in the accent colour, thumbs on the surface colour with an accent border."
+    },
+    {
+      "name": "thumbs together",
+      "description": "Both thumbs at one value; dragging or adjusting can only move them apart."
+    },
+    {
+      "name": "dragging",
+      "description": "The thumb picked when the touch started follows the finger and stops at the other thumb; onEditingChanged(true) at the start and onEditingChanged(false) at the end."
+    },
+    {
+      "name": "invalid",
+      "description": "The range and the thumb borders take the solid danger colour."
+    },
+    {
+      "name": "disabled",
+      "description": "Set with disabled(_:). Muted track, range and thumbs in the disabled colours; touches and VoiceOver adjustments do nothing."
+    }
+  ],
+  "appearance": "The track uses the emphasis background, the range the solid accent colour of the theme (solid danger when invalid), the thumbs the surface colour with a two-point border in the range colour. The shown range uses the caption style in the muted text colour with tabular digits. All are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "SwiftUI has no two-thumb slider, so this is drawn: the plan's build coverage is right. Android styles a RangeSlider in its theme instead. The web's marks (labelled ticks under the track), largeStep (Page Up and Page Down), name (hidden form inputs) and the separate onValueChange and onValueCommit callbacks are not offered: the binding changes on every move, and onEditingChanged marks the end of a drag as on Slider. The web's accent tone is used directly through the accent colour roles, because MonarchTone has no accent case. The value is a ClosedRange<Double> rather than a generic BinaryFloatingPoint value. The thumbs are not focusable with a hardware keyboard; VoiceOver and Switch Control use the adjustable action.",
+  "accessibility": [
+    "Each thumb is its own adjustable element, labelled with the label and \"Minimum\" or \"Maximum\" (\"Price, Minimum\"); the name is built by a tested pure function and can be replaced with labels.",
+    "The value of each thumb is the formatted number from valueText.",
+    "Swiping up or down on a thumb moves it by one step (a hundredth of the bounds when step is 0) and stops at the other thumb plus the gap.",
+    "The lower thumb is read before the upper thumb in both layout directions (accessibilitySortPriority).",
+    "The shown range and the track are hidden from VoiceOver, because the thumbs carry the same values.",
+    "Each thumb and the track have a touch area 44 points high."
+  ],
+  "edgeCases": [
+    "A value outside the bounds or off the step grid is drawn snapped; the binding is only written when a thumb moves.",
+    "When both thumbs sit at the maximum, a touch there picks the lower thumb so it can be pulled back.",
+    "In right-to-left layouts the lower value is on the right. Positions are computed in reading order by a tested function and the drawing is kept left to right so it is not mirrored twice.",
+    "A gap wider than the bounds is reduced to the width of the bounds."
+  ],
+  "tests": [
+    "MonarchRangeSliderTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Price filter",
+      "fixture": "range-slider",
+      "webExample": "Price filter",
+      "template": "MonarchFormField({{label}}, helper: {{description}}) {\n    MonarchRangeSlider(\n        {{label}},\n        value: $price,\n        in: {{min|double}}...{{max|double}},\n        step: {{step|double}},\n        valueText: { {{valuePrefix}} + String(Int($0)) },\n        showsValue: true\n    )\n}",
+      "setupTemplate": "@State private var price: ClosedRange<Double> = {{value.0|double}}...{{value.1|double}}",
+      "setup": "@State private var price: ClosedRange<Double> = 200.0...800.0",
+      "code": "MonarchFormField(\"Price\", helper: \"Results update when you let go.\") {\n    MonarchRangeSlider(\n        \"Price\",\n        value: $price,\n        in: 0.0...1000.0,\n        step: 50.0,\n        valueText: { \"$\" + String(Int($0)) },\n        showsValue: true\n    )\n}"
+    },
+    {
+      "title": "Working hours with a minimum gap, saved when the drag ends",
+      "setup": "@State private var hours: ClosedRange<Double> = 9...17\n@State private var saved: ClosedRange<Double> = 9...17",
+      "code": "MonarchRangeSlider(\n    \"Working hours\",\n    value: $hours,\n    in: 0...24,\n    minimumStepsBetween: 2,\n    size: .sm,\n    showsValue: true,\n    onEditingChanged: { isEditing in\n        if !isEditing { saved = hours }\n    }\n)"
+    }
+  ],
+  "webEquivalent": "RangeSlider",
+  "dependsOn": [
+    "slider",
+    "form-field"
+  ]
+}

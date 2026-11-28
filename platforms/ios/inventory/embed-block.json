@@ -1,0 +1,133 @@
+{
+  "id": "embed-block",
+  "name": "MonarchEmbedBlock",
+  "title": "EmbedBlock",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "WKWebView in a UIViewRepresentable (NSViewRepresentable on the macOS host) with a non-persistent WKWebsiteDataStore and a WKNavigationDelegate allow-list; MonarchLinkCard for other links and MonarchInlineNotice for unusable ones",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Shows a video, design or demo from an allow-listed site in a web view, and any other web link as a link card; only a provider's own embed address is ever loaded.",
+  "whenToUse": "In a document or a post where someone pastes a link to a video (YouTube, Vimeo, Loom), a design (Figma) or a code demo (CodePen) that should play or be explored in place.",
+  "whenNotToUse": "Not for arbitrary web pages (use MonarchLinkCard or open the link in SFSafariViewController), not for the app's own video (use AVKit's VideoPlayer) and not for a link preview with an image (use MonarchLinkCard).",
+  "api": [
+    "init(url: String, caption: String? = nil, title: String? = nil, providers: [MonarchEmbedProvider] = MonarchEmbedProvider.defaults, requiresTapToLoad: Bool = false, labels: MonarchEmbedBlockLabels = MonarchEmbedBlockLabels())",
+    "static func resolve(_ url: String, providers: [MonarchEmbedProvider] = MonarchEmbedProvider.defaults) -> MonarchEmbedResolution",
+    "MonarchEmbedProvider.init(id: String, name: String, hosts: [String], aspectRatio: CGFloat = MonarchEmbedProvider.videoAspectRatio, embedURL: @escaping @Sendable (URL) -> URL?)",
+    "static let MonarchEmbedProvider.defaults: [MonarchEmbedProvider]",
+    "static let MonarchEmbedProvider.videoAspectRatio: CGFloat",
+    "static let MonarchEmbedProvider.documentAspectRatio: CGFloat",
+    "enum MonarchEmbedResolution { case frame(url: URL, embedURL: URL, provider: MonarchEmbedProvider); case link(url: URL, host: String); case invalid(String); var kind: MonarchEmbedResolutionKind }",
+    "enum MonarchEmbedResolutionKind { case frame, link, invalid }",
+    "struct MonarchEmbedBlockLabels { init(frameTitle: (@Sendable (String) -> String)? = nil, load: (@Sendable (String) -> String)? = nil, invalid: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "url",
+      "type": "String",
+      "default": "required",
+      "description": "The URL someone pasted: a share link, not an embed code. Spaces around it are ignored."
+    },
+    {
+      "name": "caption",
+      "type": "String?",
+      "default": "nil",
+      "description": "Shown under the content in the muted text colour, and the spoken name of the web view when there is no title. For a link card it is also the card's title."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "The spoken name of the web view when it differs from the caption."
+    },
+    {
+      "name": "providers",
+      "type": "[MonarchEmbedProvider]",
+      "default": "MonarchEmbedProvider.defaults",
+      "description": "The sites that may be shown in a web view: YouTube (as youtube-nocookie.com), Vimeo, Loom, Figma and CodePen by default. Each has exact hosts, an aspect ratio and a function that gives its https embed address."
+    },
+    {
+      "name": "requiresTapToLoad",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether nothing is loaded from the site until the person taps \"Load YouTube content\"."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchEmbedBlockLabels",
+      "default": "MonarchEmbedBlockLabels()",
+      "description": "Replacements for the spoken name of the web view, the load button and the message for an unusable link."
+    }
+  ],
+  "states": [
+    {
+      "name": "frame",
+      "description": "An https link with no port on an allow-listed host with an embeddable form: a web view at the provider's aspect ratio (16:9 for video, 4:3 for Figma and CodePen) on the subtle fill, with a subtle border."
+    },
+    {
+      "name": "waiting for a tap",
+      "description": "With requiresTapToLoad, a placeholder with a play symbol and a load button in place of the web view."
+    },
+    {
+      "name": "link",
+      "description": "Any other http or https link: MonarchLinkCard with the host (without www.) and the full URL."
+    },
+    {
+      "name": "invalid",
+      "description": "Another scheme, a relative or malformed URL, or a URL with a user name or password: MonarchInlineNotice \"This link can't be shown.\" in the warning tone."
+    }
+  ],
+  "appearance": "The web view sits on the subtle background fill inside a container shape with a subtle border; the caption uses the muted text colour. The site's own page decides the colours inside the web view and does not follow the Monarch theme or high contrast.",
+  "platformNotes": "The web uses a sandboxed iframe with the provider's allow attributes. On iOS the plan named WKWebView, or SwiftUI's WebView on iOS 26; the package targets iOS 17, so it is a WKWebView in a representable. The sandbox is replaced by: a non-persistent website data store, no windows opened by script, media that waits for a tap and plays inline, a navigation policy that keeps the main frame on the embed's host and opens tapped links elsewhere in the browser, and https only for frames inside the embed. The request carries the app's bundle id as an https Referer, which video sites ask of apps. requiresTapToLoad has no web equivalent; the web lazy-loads the frame. The web's Tiptap editor extension (URL field and caption field) is not part of the iOS component: an app's editor composes MonarchTextField with this view. Android uses the same name and options.",
+  "accessibility": [
+    "The web view is a container named by title, then caption, then \"YouTube content\"; the site's page supplies the elements inside it.",
+    "The load button reads \"Load YouTube content\" and has a 44-point touch target.",
+    "A link card is read as MonarchLinkCard: one link with the title, site and URL.",
+    "An unusable link is a notice with a warning icon and text, not colour alone.",
+    "The caption scales with Dynamic Type; the web view keeps its aspect ratio at every text size."
+  ],
+  "edgeCases": [
+    "An allow-listed host over http, with a port, or with a path that has no embed form (for example youtube.com/feed) becomes a link card, never a web view.",
+    "A provider whose embed address is not https is ignored for that URL.",
+    "A YouTube id must be 11 letters, digits, - or _; a Loom id 16 to 64 hexadecimal digits.",
+    "The web view does not scroll on its own; its content is sized by the aspect ratio.",
+    "Matrix fixtures and examples use requiresTapToLoad, so tests never reach the network; the loaded web view is checked by its configuration and navigation policy."
+  ],
+  "tests": [
+    "MonarchEmbedBlockTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "A video that loads after a tap",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    MonarchEmbedBlock(\n        url: \"https://www.youtube.com/watch?v=aqz-KE-bpKQ\",\n        caption: \"Walkthrough\",\n        requiresTapToLoad: true\n    )\n    MonarchLinkCard(\n        \"example.com\",\n        url: URL(string: \"https://example.com/handbook/onboarding\")!,\n        siteName: \"https://example.com/handbook/onboarding\",\n        image: nil\n    )\n}"
+    },
+    {
+      "title": "Any other link is a link card",
+      "code": "MonarchEmbedBlock(url: \"https://www.example.com/notes\", caption: \"Meeting notes\")"
+    },
+    {
+      "title": "Checking a pasted link before inserting it",
+      "setup": "@State private var link = \"https://vimeo.com/76979871\"",
+      "code": "VStack(alignment: .leading) {\n    MonarchTextField(\n        \"Link to embed\",\n        text: $link,\n        error: MonarchEmbedBlock.resolve(link).kind == .invalid ? \"Enter a web address that starts with https://.\" : nil\n    )\n    MonarchEmbedBlock(url: link, requiresTapToLoad: true)\n}"
+    }
+  ],
+  "webEquivalent": "EmbedBlock",
+  "dependsOn": [
+    "link-card",
+    "inline-notice",
+    "button"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "no-fixture",
+      "platform": "ios",
+      "reason": "The web embed block is an editor block that loads a third-party frame by URL; the web example shows the frame chrome only, and the native EmbedBlock cannot show the same web content.",
+      "convention": "Native shows a link card or a system web view, per HIG and Material 3."
+    }
+  ]
+}

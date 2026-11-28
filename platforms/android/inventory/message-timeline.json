@@ -1,0 +1,84 @@
+{
+  "id": "message-timeline",
+  "name": null,
+  "title": "MessageTimeline",
+  "family": "collaboration",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "androidx.compose.foundation.lazy.LazyColumn (reverse layout) inside MonarchVirtualMessageList, with MonarchMessageRow rows, MonarchTypingIndicator in its status slot and MonarchReadReceipt in its footer",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a conversation's messages grouped by day, with a New messages divider, older history loaded at the top, who is typing under the list and who has seen the last message.",
+  "whenToUse": "For the message area of a chat, a channel or a support conversation: MonarchVirtualMessageList draws the day separators, the unread divider, grouping and the jump to latest; the rows are MonarchMessageRows.",
+  "whenNotToUse": "For the replies to one message, use MonarchThreadPanel. For comments anchored to a document, use MonarchCommentThread. For a feed of events rather than messages, use MonarchActivityTimeline.",
+  "api": [
+    "@Composable fun <T> MonarchVirtualMessageList(items: List<T>, key: (item: T) -> Any, time: (item: T) -> Long, modifier: Modifier = Modifier, state: LazyListState = rememberLazyListState(), authorId: (item: T) -> String? = { null }, firstUnreadKey: Any? = null, hasOlder: Boolean = false, loadingOlder: Boolean = false, …, onLoadOlder: (() -> Unit)? = null, …, footer: (@Composable () -> Unit)? = null, status: (@Composable () -> Unit)? = null, …, row: @Composable LazyItemScope.(item: T, context: MonarchVirtualMessageListContext<T>) -> Unit)",
+    "@ExperimentalMonarchApi @Composable fun MonarchMessageRow(author: MonarchMessageRowAuthor, time: Long, modifier: Modifier = Modifier, …, grouped: Boolean = false, …, content: @Composable () -> Unit)",
+    "@Composable fun MonarchTypingIndicator(names: List<String>, modifier: Modifier = Modifier, text: String? = null, reserveSpace: Boolean = true, announceChanges: Boolean = true)",
+    "@Composable fun MonarchReadReceipt(readers: List<MonarchReadReceiptReader>, modifier: Modifier = Modifier, display: MonarchReadReceiptDisplay = MonarchReadReceiptDisplay.Text, …)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "grouped by day",
+      "description": "A Today, Yesterday or date separator before the first message of each day, in the given locale and time zone."
+    },
+    {
+      "name": "unread",
+      "description": "With firstUnreadKey, a New messages divider above the first unread message."
+    },
+    {
+      "name": "grouped",
+      "description": "Consecutive messages by one author within five minutes are drawn with grouped = true, without a repeated name and avatar."
+    },
+    {
+      "name": "older history",
+      "description": "With hasOlder, older messages load when the reader nears the top; loadingOlder and olderFailed show progress or a retry."
+    },
+    {
+      "name": "typing and seen",
+      "description": "MonarchTypingIndicator in the status slot under the list; MonarchReadReceipt in the footer after the last message."
+    }
+  ],
+  "appearance": "The separators and divider use MonarchVirtualMessageList's roles: muted text with subtle borders, and the accent role for New messages. The rows, typing indicator and read receipt keep their own roles. The same roles adapt to dark and both high-contrast themes.",
+  "platformNotes": "The web's MessageTimeline is one component with exported helpers (shouldGroupMessages, formatMessageDay, the separators) for products that virtualise rows themselves. On Android, MonarchVirtualMessageList already virtualises with a lazy list and draws the day separators, the unread divider, grouping and the jump button, so the timeline is the recipe below and there is no separate type; iOS uses the same recipe. The web's imperative handle (scrollToBottom, scrollToItem) is the LazyListState passed as state and scrollToKey. Dates are epoch milliseconds in UTC, grouped in the given time zone.",
+  "accessibility": [
+    "MonarchVirtualMessageList announces messages that arrive in a polite live region; the rows themselves are not live, so scrolling stays quiet.",
+    "Day separators and the New messages divider are read as headings.",
+    "Each MonarchMessageRow reads its author, full date and body as one element.",
+    "MonarchTypingIndicator announces who starts typing; MonarchReadReceipt reads who has seen the message."
+  ],
+  "edgeCases": [
+    "Keep firstUnreadKey fixed while the conversation is open, so the divider does not move as the reader catches up.",
+    "Pass now, locale and timeZone for output that does not depend on the device, for example in screenshots.",
+    "The list scrolls itself: give it a bounded height and do not put it in a vertically scrolling parent."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Conversation with older history",
+      "fixture": "message-timeline",
+      "webExample": "Conversation with older history",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchVirtualMessageList(\n        items = messages,\n        key = { it.id },\n        time = { it.time },\n        modifier = Modifier.height(860.dp),\n        authorId = { it.authorId },\n        firstUnreadKey = {{firstUnreadId}},\n        hasOlder = {{hasOlder}},\n        now = now,\n        timeZone = {{timeZone}},\n        status = { MonarchTypingIndicator(names = listOf({{typing}})) },\n    ) { message, context ->\n        MonarchMessageRow(\n            author = MonarchMessageRowAuthor(message.author, seed = message.authorId),\n            time = message.time,\n            now = now,\n            timeStyle = MonarchMessageRowTimeStyle.Clock,\n            locale = Locale.UK,\n            timeZone = {{timeZone}},\n            grouped = context.grouped,\n        ) { MonarchText(message.text) }\n    }\n    MonarchButton(\n        text = {{addLabel}},\n        onClick = {},\n        variant = MonarchButtonVariant.Secondary,\n        size = MonarchButtonSize.Sm,\n    )\n}",
+      "setupTemplate": "class Message(val id: String, val authorId: String, val author: String, val text: String, val time: Long)\nval now = {{now|millis}}\nval messages = remember {\n    listOf(\n        Message(id = {{messages.0.id}}, authorId = {{messages.0.authorId}}, author = {{messages.0.author}}, text = {{messages.0.text}}, time = {{messages.0.time|millis}}),\n        Message(id = {{messages.1.id}}, authorId = {{messages.1.authorId}}, author = {{messages.1.author}}, text = {{messages.1.text}}, time = {{messages.1.time|millis}}),\n        Message(id = {{messages.2.id}}, authorId = {{messages.2.authorId}}, author = {{messages.2.author}}, text = {{messages.2.text}}, time = {{messages.2.time|millis}}),\n        Message(id = {{messages.3.id}}, authorId = {{messages.3.authorId}}, author = {{messages.3.author}}, text = {{messages.3.text}}, time = {{messages.3.time|millis}}),\n        Message(id = {{messages.4.id}}, authorId = {{messages.4.authorId}}, author = {{messages.4.author}}, text = {{messages.4.text}}, time = {{messages.4.time|millis}}),\n        Message(id = {{messages.5.id}}, authorId = {{messages.5.authorId}}, author = {{messages.5.author}}, text = {{messages.5.text}}, time = {{messages.5.time|millis}}),\n        Message(id = {{messages.6.id}}, authorId = {{messages.6.authorId}}, author = {{messages.6.author}}, text = {{messages.6.text}}, time = {{messages.6.time|millis}}),\n        Message(id = {{messages.7.id}}, authorId = {{messages.7.authorId}}, author = {{messages.7.author}}, text = {{messages.7.text}}, time = {{messages.7.time|millis}}),\n    )\n}",
+      "imports": [
+        "androidx.compose.ui.unit.dp",
+        "java.util.Locale"
+      ],
+      "setup": "class Message(val id: String, val authorId: String, val author: String, val text: String, val time: Long)\nval now = 1_772_452_800_000L\nval messages = remember {\n    listOf(\n        Message(id = \"m1\", authorId = \"ana\", author = \"Ana Lopez\", text = \"Morning! Is the launch checklist up to date?\", time = 1_772_393_400_000L),\n        Message(id = \"m2\", authorId = \"ana\", author = \"Ana Lopez\", text = \"Mostly. Legal sign-off is still open.\", time = 1_772_393_580_000L),\n        Message(id = \"m3\", authorId = \"ben\", author = \"Ben Okafor\", text = \"I’ll chase it after standup.\", time = 1_772_433_000_000L),\n        Message(id = \"m4\", authorId = \"chloe\", author = \"Chloé Martin\", text = \"Thanks. The press kit is in the shared folder.\", time = 1_772_436_600_000L),\n        Message(id = \"m5\", authorId = \"chloe\", author = \"Chloé Martin\", text = \"Looks good. One typo on page two.\", time = 1_772_436_720_000L),\n        Message(id = \"m6\", authorId = \"ana\", author = \"Ana Lopez\", text = \"Fixed, and the screenshots are refreshed.\", time = 1_772_443_800_000L),\n        Message(id = \"m7\", authorId = \"ben\", author = \"Ben Okafor\", text = \"Great. Shall we freeze copy at 15:00?\", time = 1_772_449_200_000L),\n        Message(id = \"m8\", authorId = \"ben\", author = \"Ben Okafor\", text = \"Works for me.\", time = 1_772_449_320_000L),\n    )\n}",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchVirtualMessageList(\n        items = messages,\n        key = { it.id },\n        time = { it.time },\n        modifier = Modifier.height(860.dp),\n        authorId = { it.authorId },\n        firstUnreadKey = \"m7\",\n        hasOlder = true,\n        now = now,\n        timeZone = \"UTC\",\n        status = { MonarchTypingIndicator(names = listOf(\"Ben Okafor\")) },\n    ) { message, context ->\n        MonarchMessageRow(\n            author = MonarchMessageRowAuthor(message.author, seed = message.authorId),\n            time = message.time,\n            now = now,\n            timeStyle = MonarchMessageRowTimeStyle.Clock,\n            locale = Locale.UK,\n            timeZone = \"UTC\",\n            grouped = context.grouped,\n        ) { MonarchText(message.text) }\n    }\n    MonarchButton(\n        text = \"Add a message\",\n        onClick = {},\n        variant = MonarchButtonVariant.Secondary,\n        size = MonarchButtonSize.Sm,\n    )\n}"
+    }
+  ],
+  "webEquivalent": "MessageTimeline",
+  "dependsOn": [
+    "message-row",
+    "virtual-message-list",
+    "typing-indicator",
+    "read-receipt"
+  ]
+}

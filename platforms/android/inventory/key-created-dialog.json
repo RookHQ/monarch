@@ -1,0 +1,179 @@
+{
+  "id": "key-created-dialog",
+  "name": "MonarchKeyCreatedDialog",
+  "title": "KeyCreatedDialog",
+  "family": "technical",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "androidx.compose.material3.AlertDialog with androidx.compose.ui.window.DialogProperties, MonarchCopyField or MonarchSecretField, MonarchBanner and MonarchCheckboxRow",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A dialog that shows a newly created secret exactly once: the value with a copy button, a \"store it now\" warning, and an acknowledgement the person must tick before the dialog can close.",
+  "whenToUse": "Right after the server creates an API key, token, signing secret or client secret that it will not show again, or after a rotation.",
+  "whenNotToUse": "For a secret that can be viewed again in settings use MonarchSecretField. For a confirmation before creating or revoking a key use the Material 3 AlertDialog (ConfirmDialog).",
+  "api": [
+    "@Composable public fun MonarchKeyCreatedDialog(secret: String, onDone: () -> Unit, modifier: Modifier = Modifier, kind: MonarchKeyCreatedDialogKind = MonarchKeyCreatedDialogKind.Secret, label: String? = null, name: String? = null, title: String? = null, description: String? = null, requiresAcknowledgement: Boolean? = null, masked: Boolean = false, multiline: Boolean = false, note: String? = null, onCopy: ((String) -> Unit)? = null, labels: MonarchKeyCreatedDialogLabels = MonarchKeyCreatedDialogLabels())",
+    "public enum class MonarchKeyCreatedDialogKind { Secret, Public }",
+    "public class MonarchKeyCreatedDialogLabels(title: String? = null, label: String? = null, secretNoticeTitle: String? = null, secretNotice: String? = null, publicNoticeTitle: String? = null, publicNotice: String? = null, acknowledge: ((label: String) -> String)? = null, acknowledgeRequired: String? = null, done: String? = null, copy: String? = null, copied: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "secret",
+      "type": "String",
+      "default": "required",
+      "description": "The value to show once."
+    },
+    {
+      "name": "onDone",
+      "type": "() -> Unit",
+      "default": "required",
+      "description": "Called when Done or Back closes the dialog after the value was acknowledged, or at once for a public value. Stop showing the dialog here."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the dialog."
+    },
+    {
+      "name": "kind",
+      "type": "MonarchKeyCreatedDialogKind",
+      "default": "MonarchKeyCreatedDialogKind.Secret",
+      "description": "Secret: a warning notice and an acknowledgement before closing. Public: an information notice and nothing to confirm."
+    },
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "null",
+      "description": "What the value is, such as \"Signing secret\". The field's label (unless name is given), part of the copy button's name and of the acknowledgement. \"API key\" when null."
+    },
+    {
+      "name": "name",
+      "type": "String?",
+      "default": "null",
+      "description": "The name the person gave it, shown as the field's label; the label then shows under the value."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "null",
+      "description": "Replaces the title \"Copy your new key\"."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "null",
+      "description": "Text under the title."
+    },
+    {
+      "name": "requiresAcknowledgement",
+      "type": "Boolean?",
+      "default": "null",
+      "description": "Overrides whether the checkbox must be ticked before closing (by default only for a secret)."
+    },
+    {
+      "name": "masked",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Shows the value in a read-only MonarchSecretField with a reveal toggle; copy works without revealing."
+    },
+    {
+      "name": "multiline",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Wraps the whole value over several lines, for certificates and private keys. Ignored when masked."
+    },
+    {
+      "name": "note",
+      "type": "String?",
+      "default": "null",
+      "description": "Extra text under the value, such as when an old key stops working."
+    },
+    {
+      "name": "onCopy",
+      "type": "((String) -> Unit)?",
+      "default": "null",
+      "description": "Called with the copied text after each copy."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchKeyCreatedDialogLabels",
+      "default": "MonarchKeyCreatedDialogLabels()",
+      "description": "Replacements for every built-in string: title, default label, both notices, the acknowledgement, the \"confirm first\" message, Done, Copy and Copied."
+    }
+  ],
+  "states": [
+    {
+      "name": "unacknowledged",
+      "description": "For a secret: Back and taps outside do nothing; Done stays enabled."
+    },
+    {
+      "name": "nudged",
+      "description": "Done tapped before ticking: \"Confirm that you have saved it before you close this dialog.\" appears under the checkbox in the strong danger color, is announced through an assertive live region, and is set as the checkbox's error."
+    },
+    {
+      "name": "acknowledged",
+      "description": "The checkbox is ticked: Done and Back call onDone."
+    },
+    {
+      "name": "public",
+      "description": "An information notice and no checkbox; Done, Back and taps outside are not blocked (taps outside never close it)."
+    },
+    {
+      "name": "masked",
+      "description": "The value is dots until revealed with the Show toggle."
+    },
+    {
+      "name": "new secret",
+      "description": "When the secret changes, the acknowledgement and the message reset."
+    }
+  ],
+  "appearance": "The Material 3 alert dialog surface and shape from the theme, a heading title, a warning (secret) or information (public) MonarchBanner, the read-only outlined field in the code type with a copy button, and a checkbox row. The early-Done message is in the strong danger color. Light, dark and both high-contrast themes follow the theme roles.",
+  "platformNotes": "The web dialog blocks Escape, outside clicks and its close button until acknowledged; on Android Back is blocked through DialogProperties.dismissOnBackPress until then, and taps outside never close it, so the secret cannot be lost by accident. iOS presents the content in a sheet with swipe to dismiss disabled; Android uses the Material 3 AlertDialog, which the app shows by composing it, as with AlertDialog. The web passes any content as children under the value; here it is the note string. Copy failures cannot happen with the Android clipboard, so there is no onCopyError. TalkBack focus is not moved to the checkbox when Done is tapped early (Compose 1.12 has no API to move accessibility focus); the message is announced and set as the checkbox's error instead. The copied clip of a secret is marked sensitive, so Android 13 and later hide it in the clipboard preview. Monarch does not set FLAG_SECURE: set it on the window of a screen that shows secrets.",
+  "accessibility": [
+    "The title has heading semantics.",
+    "The notice is MonarchBanner, which reads its tone with the title and message.",
+    "The value is a read-only field named by its label; its copy button is named \"Copy API key\" (the label) and announces the copy.",
+    "The acknowledgement is a MonarchCheckboxRow: one checkbox element with the visible label as its name.",
+    "Tapping Done too early announces why through an assertive live region and sets it as the checkbox's error.",
+    "Done, the copy button, the reveal toggle and the checkbox have 48dp touch targets; the content scrolls inside the dialog at font scale 2.0 and the title wraps whole."
+  ],
+  "edgeCases": [
+    "Back and outside taps are blocked while unacknowledged, but the app can still stop composing the dialog itself; onDone is not called then.",
+    "Long and multi-line values wrap in full with multiline; otherwise the field scrolls sideways and copies the whole value.",
+    "At the largest text sizes the content scrolls inside the dialog while Done stays visible.",
+    "With name given, the label is shown under the field so the person still sees what kind of value it is."
+  ],
+  "tests": [
+    "MonarchKeyCreatedDialogTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "New API key",
+      "fixture": "key-created-dialog",
+      "webExample": "New API key",
+      "template": "MonarchButton(text = {{trigger}}, onClick = { newKey = {{secret}} }, variant = MonarchButtonVariant.Primary)\nnewKey?.let { key ->\n    MonarchKeyCreatedDialog(\n        secret = key,\n        onDone = { newKey = null },\n        name = {{name}},\n    )\n}",
+      "setupTemplate": "var newKey by rememberSaveable { mutableStateOf<String?>({{secret}}) }",
+      "setup": "var newKey by rememberSaveable { mutableStateOf<String?>(\"sk_live_4f9a1c7e2b8d6035\") }",
+      "code": "MonarchButton(text = \"Create key\", onClick = { newKey = \"sk_live_4f9a1c7e2b8d6035\" }, variant = MonarchButtonVariant.Primary)\nnewKey?.let { key ->\n    MonarchKeyCreatedDialog(\n        secret = key,\n        onDone = { newKey = null },\n        name = \"Reporting job\",\n    )\n}"
+    },
+    {
+      "title": "A publishable key that can be viewed again",
+      "setup": "var shown by rememberSaveable { mutableStateOf(true) }",
+      "code": "if (shown) {\n    MonarchKeyCreatedDialog(\n        secret = \"pk_live_8Kd02\",\n        onDone = { shown = false },\n        kind = MonarchKeyCreatedDialogKind.Public,\n        label = \"Publishable key\",\n    )\n}"
+    }
+  ],
+  "webEquivalent": "KeyCreatedDialog",
+  "dependsOn": [
+    "dialog",
+    "secret-field",
+    "copy-button",
+    "checkbox",
+    "alert"
+  ]
+}

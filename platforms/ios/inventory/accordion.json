@@ -1,0 +1,91 @@
+{
+  "id": "accordion",
+  "name": "MonarchDisclosureGroupStyle",
+  "title": "Accordion",
+  "family": "data-display",
+  "category": "B",
+  "coverage": "style",
+  "kind": "style",
+  "wrapsNative": "DisclosureGroup with .disclosureGroupStyle(.monarch) and isExpanded: bindings, separated by MonarchDivider",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Stacked sections whose content opens under each header: standard DisclosureGroups with the Monarch style, one shared binding for one-at-a-time or a Set for any number.",
+  "whenToUse": "For reference content where people look for one item: FAQs, policy sections, help topics, optional detail under a summary.",
+  "whenNotToUse": "For switching between views of one object, use Picker with .pickerStyle(.segmented) or a TabView. Do not hide content everyone must read, and do not use it for form steps. Inside a List, the system disclosure style fits better.",
+  "api": [
+    "DisclosureGroup(_ titleKey: StringProtocol, isExpanded: Binding<Bool>, content: () -> Content).disclosureGroupStyle(.monarch)",
+    "init(expandedLabel: String? = nil, collapsedLabel: String? = nil)  // MonarchDisclosureGroupStyle"
+  ],
+  "options": [
+    {
+      "name": "expandedLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Expanded\" spoken value of every header."
+    },
+    {
+      "name": "collapsedLabel",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in \"Collapsed\" spoken value of every header."
+    }
+  ],
+  "states": [
+    {
+      "name": "collapsed",
+      "description": "Only the headers are shown; chevrons point down."
+    },
+    {
+      "name": "expanded",
+      "description": "A section's content is shown under its header and its chevron points up. With one String? binding, opening a section closes the open one; with a Set<String> binding any number stay open."
+    },
+    {
+      "name": "disabled",
+      "description": "A section with disabled(_:) uses the disabled text colour and does not open."
+    }
+  ],
+  "appearance": "Headers use the label type role in the default text colour with a muted chevron; MonarchDivider draws a hairline in the subtle border colour between sections. No boxes or fills, in every theme.",
+  "platformNotes": "The web Accordion is Radix Accordion with type single or multiple, collapsible and headingAs. On iOS each section is a standard DisclosureGroup with the Monarch style; single or multiple is decided by the binding the app passes (an optional id or a Set of ids), so no accordion type is shipped. Arrow-key movement between headers is not offered; VoiceOver moves between them as separate elements. Android ships a MonarchAccordion type.",
+  "accessibility": [
+    "Each header is a button labelled with the section title, with the value \"Expanded\" or \"Collapsed\".",
+    "The recipe adds the header trait to each section, so VoiceOver's headings rotor reaches them.",
+    "Collapsed content is removed, so VoiceOver does not reach it.",
+    "Every header is at least 44 points high; content appears without animation when Reduce Motion is on."
+  ],
+  "edgeCases": [
+    "Long titles wrap before the chevron.",
+    "With a single optional binding, opening a section closes the open one in the same change.",
+    "State held inside a section's content is lost when it collapses.",
+    "Whether the header trait added to a DisclosureGroup is read together with the button by VoiceOver was not checked on a device."
+  ],
+  "tests": [
+    "AccordionTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Single, collapsible",
+      "fixture": "accordion",
+      "webExample": "Single, collapsible",
+      "template": "VStack(alignment: .leading, spacing: 0) {\n    MonarchDivider()\n    DisclosureGroup({{items.0.title}}, isExpanded: Binding(get: { open == {{items.0.id}} }, set: { open = $0 ? {{items.0.id}} : nil })) {\n        Text({{items.0.body}}).monarchTextStyle(.body)\n    }\n    .accessibilityAddTraits(.isHeader)\n    MonarchDivider()\n    DisclosureGroup({{items.1.title}}, isExpanded: Binding(get: { open == {{items.1.id}} }, set: { open = $0 ? {{items.1.id}} : nil })) {\n        Text({{items.1.body}}).monarchTextStyle(.body)\n    }\n    .accessibilityAddTraits(.isHeader)\n    MonarchDivider()\n}\n.disclosureGroupStyle(.monarch)",
+      "setupTemplate": "@State private var open: String? = {{open}}",
+      "setup": "@State private var open: String? = \"billing\"",
+      "code": "VStack(alignment: .leading, spacing: 0) {\n    MonarchDivider()\n    DisclosureGroup(\"When am I billed?\", isExpanded: Binding(get: { open == \"billing\" }, set: { open = $0 ? \"billing\" : nil })) {\n        Text(\"On the first of each month, for the seats in use.\").monarchTextStyle(.body)\n    }\n    .accessibilityAddTraits(.isHeader)\n    MonarchDivider()\n    DisclosureGroup(\"Can I cancel at any time?\", isExpanded: Binding(get: { open == \"cancel\" }, set: { open = $0 ? \"cancel\" : nil })) {\n        Text(\"Yes. Access continues to the end of the paid period.\").monarchTextStyle(.body)\n    }\n    .accessibilityAddTraits(.isHeader)\n    MonarchDivider()\n}\n.disclosureGroupStyle(.monarch)"
+    },
+    {
+      "title": "Any number open",
+      "setup": "@State private var openSections: Set<String> = [\"Shipping\"]",
+      "code": "VStack(alignment: .leading, spacing: 0) {\n    ForEach([\"Shipping\", \"Returns\", \"Warranty\"], id: \\.self) { title in\n        DisclosureGroup(title, isExpanded: Binding(\n            get: { openSections.contains(title) },\n            set: { isOpen in\n                if isOpen { openSections.insert(title) } else { openSections.remove(title) }\n            }\n        )) {\n            Text(\"Details about \\(title.lowercased()).\").monarchTextStyle(.body)\n        }\n        MonarchDivider()\n    }\n}\n.disclosureGroupStyle(.monarch)"
+    }
+  ],
+  "webEquivalent": "Accordion",
+  "dependsOn": [
+    "collapsible",
+    "separator"
+  ],
+  "icons": {
+    "chevron": "ChevronDownGlyph"
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "id": "ai-citation",
+  "name": "MonarchAiCitation",
+  "title": "AiCitation",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Button with a plain style that opens popover(isPresented:attachmentAnchor:arrowEdge:content:) with presentationCompactAdaptation(.popover); Link with the Monarch link style or MonarchButton in the card",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A [1] marker after a sentence of an AI answer that opens a popover card with the cited source's title, where it lives, the quoted passage and a way to open it.",
+  "whenToUse": "In an assistant message, after each sentence or paragraph that relies on a source part of the message.",
+  "whenNotToUse": "For the list of all sources at the end of an answer, list the source parts with links. For where a value in the product came from, use MonarchProvenance.",
+  "api": [
+    "init(_ index: Int, source: MonarchAiSourcePart, quote: String? = nil, isPresented: Binding<Bool>? = nil, labels: MonarchAiCitationLabels = MonarchAiCitationLabels(), onOpen: (@MainActor (MonarchAiSourcePart) -> Void)? = nil)",
+    "static func sourceNumbers(in parts: [MonarchAiPart]) -> [String: Int]",
+    "struct MonarchAiCitationLabels { init(marker:, card:, open:, visit:, kind:) }"
+  ],
+  "options": [
+    {
+      "name": "index",
+      "type": "Int",
+      "default": "required",
+      "description": "The number shown in the marker; 1 shows [1]. Number a message's sources with sourceNumbers(in:)."
+    },
+    {
+      "name": "source",
+      "type": "MonarchAiSourcePart",
+      "default": "required",
+      "description": "The cited source part of the message."
+    },
+    {
+      "name": "quote",
+      "type": "String?",
+      "default": "nil",
+      "description": "The passage the answer relies on, from the citation part. Shown in the card."
+    },
+    {
+      "name": "isPresented",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Controls the card from outside. Without it the marker keeps its own state."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiCitationLabels",
+      "default": "MonarchAiCitationLabels()",
+      "description": "Replacements for the marker's spoken name, the card heading, Open source, Visit page and the kind names."
+    },
+    {
+      "name": "onOpen",
+      "type": "(@MainActor (MonarchAiSourcePart) -> Void)?",
+      "default": "nil",
+      "description": "Opens the source inside the app, for example a preview sheet. Shows Open source in the card, which closes the card first. Without it the card links to the source's http, https or mailto address."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "The marker in the link colour in the caption style."
+    },
+    {
+      "name": "open",
+      "description": "A popover card on the raised background with the heading, the source with its favicon or kind symbol, the meta line, the quote on the subtle background with a strong leading bar, and the action."
+    },
+    {
+      "name": "no action",
+      "description": "A source without a handler and without a safe address has no button or link in the card."
+    }
+  ],
+  "appearance": "The marker uses the link text colour. The card uses the raised background, muted caption text for the heading and meta line, the strong body style for the title and the subtle background with a strong border colour bar for the quote. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web opens the card on hover and focus after a delay and pins it on click; iOS has no hover on a phone, so a tap opens and closes it, and openDelay and closeDelay are not offered. The card stays a popover on iPhone (presentationCompactAdaptation(.popover)) rather than becoming a sheet. SwiftUI Text cannot contain a button, so the marker sits after the sentence in an HStack or MonarchFlowLayout instead of inside the text run. Relative addresses, which the web resolves against the page, are not opened. The web's shared AiSourceGlyph and aiSourceMeta helpers are internal here. Android builds the same component.",
+  "accessibility": [
+    "The marker is a button named \"Source <n>: <title>\" by a tested pure function; the brackets are not read.",
+    "The marker has a 44-point touch target although it draws as small text.",
+    "The card's heading has the header trait; the favicon or kind symbol is decorative.",
+    "The card's Visit page is a standard Link marked as external; Open source is a MonarchButton.",
+    "The popover is the system's, so VoiceOver moves into it and the escape gesture closes it."
+  ],
+  "edgeCases": [
+    "A source repeated in a message keeps its first number.",
+    "A javascript:, file: or relative address is neither opened nor shown as the host.",
+    "A favicon address that is not http or https is ignored and the kind symbol is shown.",
+    "Long titles and quotes wrap; the card is at most 320 points wide, scaled with Dynamic Type."
+  ],
+  "tests": [
+    "MonarchAiCitationTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Inline citations with a preview",
+      "fixture": "ai-citation",
+      "webExample": "Inline citations with a preview",
+      "template": "MonarchFlowLayout(spacing: 0, rowSpacing: 4, alignment: .firstTextBaseline) {\n    ForEach(Array(Self.words({{before}}).dropLast().enumerated()), id: \\.offset) { _, word in\n        Text(\"\\(word) \").monarchTextStyle(.body)\n    }\n    HStack(alignment: .firstTextBaseline, spacing: 0) {\n        Text(Self.words({{before}}).last ?? \"\").monarchTextStyle(.body)\n        MonarchAiCitation(1, source: handbook, quote: {{quote}}, onOpen: { previewed = $0 })\n        Text(Self.words({{between}}).first.map { $0 + \" \" } ?? \"\").monarchTextStyle(.body)\n    }\n    ForEach(Array(Self.words({{between}}).dropFirst().dropLast().enumerated()), id: \\.offset) { _, word in\n        Text(\"\\(word) \").monarchTextStyle(.body)\n    }\n    HStack(alignment: .firstTextBaseline, spacing: 0) {\n        Text(Self.words({{between}}).last ?? \"\").monarchTextStyle(.body)\n        MonarchAiCitation(2, source: policy)\n        Text({{after}}).monarchTextStyle(.body)\n    }\n}\n.sheet(item: $previewed) { source in\n    MonarchAiSourcePreview(source, quote: {{quote}}, content: {{preview}})\n}",
+      "setupTemplate": "@State private var previewed: MonarchAiSourcePart?\nprivate static func words(_ text: String) -> [String] { text.split(separator: \" \").map(String.init) }\nprivate let handbook = MonarchAiSourcePart(id: {{sources.0.id}}, title: {{sources.0.title}}, url: {{sources.0.url}}, kind: .{{sources.0.kind|raw}}, product: {{sources.0.product}})\nprivate let policy = MonarchAiSourcePart(id: {{sources.1.id}}, title: {{sources.1.title}}, url: {{sources.1.url}}, kind: .{{sources.1.kind|raw}})",
+      "setup": "@State private var previewed: MonarchAiSourcePart?\nprivate static func words(_ text: String) -> [String] { text.split(separator: \" \").map(String.init) }\nprivate let handbook = MonarchAiSourcePart(id: \"s1\", title: \"Team handbook\", url: \"https://example.com/handbook\", kind: .doc, product: \"Docs\")\nprivate let policy = MonarchAiSourcePart(id: \"s2\", title: \"Support policy\", url: \"https://example.com/support-policy\", kind: .web)",
+      "code": "MonarchFlowLayout(spacing: 0, rowSpacing: 4, alignment: .firstTextBaseline) {\n    ForEach(Array(Self.words(\"Requests are answered within two working days\").dropLast().enumerated()), id: \\.offset) { _, word in\n        Text(\"\\(word) \").monarchTextStyle(.body)\n    }\n    HStack(alignment: .firstTextBaseline, spacing: 0) {\n        Text(Self.words(\"Requests are answered within two working days\").last ?? \"\").monarchTextStyle(.body)\n        MonarchAiCitation(1, source: handbook, quote: \"Requests are answered within two working days.\", onOpen: { previewed = $0 })\n        Text(Self.words(\", and urgent issues have a separate queue\").first.map { $0 + \" \" } ?? \"\").monarchTextStyle(.body)\n    }\n    ForEach(Array(Self.words(\", and urgent issues have a separate queue\").dropFirst().dropLast().enumerated()), id: \\.offset) { _, word in\n        Text(\"\\(word) \").monarchTextStyle(.body)\n    }\n    HStack(alignment: .firstTextBaseline, spacing: 0) {\n        Text(Self.words(\", and urgent issues have a separate queue\").last ?? \"\").monarchTextStyle(.body)\n        MonarchAiCitation(2, source: policy)\n        Text(\".\").monarchTextStyle(.body)\n    }\n}\n.sheet(item: $previewed) { source in\n    MonarchAiSourcePreview(source, quote: \"Requests are answered within two working days.\", content: \"Welcome to the team.\\n\\nRequests are answered within two working days. Urgent issues go to the on-call queue.\\n\\nSee the support policy for details.\")\n}"
+    },
+    {
+      "title": "Open the source inside the app",
+      "code": "MonarchAiCitation(\n    2,\n    source: MonarchAiSourcePart(id: \"deal\", title: \"Acme renewal\", kind: .record, product: \"CRM\")\n) { source in\n    // Show a preview of the record.\n}"
+    }
+  ],
+  "webEquivalent": "AiCitation",
+  "dependsOn": [
+    "popover",
+    "link",
+    "ai-conversation",
+    "favicon",
+    "button"
+  ]
+}

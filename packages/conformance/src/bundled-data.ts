@@ -57,7 +57,7 @@ export const BUNDLED_IMPORT_PATH_DEPRECATIONS: readonly ImportPathDeprecation[] 
     from: '@rookcom/monarch-react/shell',
     to: '@rookcom/monarch-react/rook',
     since: '0.14.5',
-    removeIn: '0.15.0',
+    removeNoEarlierThan: '2027-02-11',
     message:
       'Rook-specific exports live in @rookcom/monarch-react/rook. See docs/guides/rook-specific-exports.md.',
   },
@@ -67,7 +67,7 @@ export const BUNDLED_IMPORT_PATH_DEPRECATIONS: readonly ImportPathDeprecation[] 
     from: '@rookcom/monarch-react/patterns',
     to: '@rookcom/monarch-react/rook',
     since: '0.14.5',
-    removeIn: '0.15.0',
+    removeNoEarlierThan: '2027-02-11',
     message:
       'Rook-specific exports live in @rookcom/monarch-react/rook. See docs/guides/rook-specific-exports.md.',
   },
@@ -77,7 +77,7 @@ export const BUNDLED_IMPORT_PATH_DEPRECATIONS: readonly ImportPathDeprecation[] 
     from: '@rookcom/monarch-react/ai',
     to: '@rookcom/monarch-react/rook',
     since: '0.14.5',
-    removeIn: '0.15.0',
+    removeNoEarlierThan: '2027-02-11',
     message:
       'Rook-specific exports live in @rookcom/monarch-react/rook. See docs/guides/rook-specific-exports.md.',
   },
@@ -804,7 +804,7 @@ export const COLOUR_TOKENS: Readonly<Record<string, ColourToken>> = {
   '#006b97': { variable: '--mn-color-info-solid-hover', invariant: false },
   '#0074a4': { variable: '--mn-color-info-strong', invariant: false },
   '#007db0': { variable: '--mn-color-info-solid', invariant: false },
-  '#009ede': { variable: '--mn-color-info-strong-inverse', invariant: false },
+  '#009cdc': { variable: '--mn-color-info-strong-inverse', invariant: false },
   '#0c6eed': { variable: '--mn-color-data-1', invariant: false },
   '#0d0f14': { variable: '--mn-color-warning-on-solid', invariant: false },
   '#15181e': { variable: '--mn-color-bg-inverse', invariant: false },

@@ -3,6 +3,7 @@ import { examplesOf, useDocs, type DocsPageMeta } from '../../lib/docs.js';
 import { href } from '../../lib/router.js';
 import { PreviewBoundary } from './preview-boundary.js';
 import { useNearViewport } from './use-near-viewport.js';
+import { renderExample } from './render-example.js';
 
 /** The first example of a docs file, as a non-interactive thumbnail. */
 function Thumbnail({ id }: { id: string }) {
@@ -11,7 +12,7 @@ function Thumbnail({ id }: { id: string }) {
   if (!example) return null;
   return (
     <div className="docs-card__stage" data-stack={example.stack || undefined}>
-      <PreviewBoundary name={docs.title}>{example.render()}</PreviewBoundary>
+      <PreviewBoundary name={docs.title}>{renderExample(example)}</PreviewBoundary>
     </div>
   );
 }

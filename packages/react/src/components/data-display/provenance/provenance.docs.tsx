@@ -1,7 +1,20 @@
+import { Fragment } from 'react';
 import { Provenance } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './provenance.fixture.json';
 
 const NOW = '2026-03-10T12:00:00Z';
+
+const items = fixture.data.items as readonly {
+  label: string;
+  value: string;
+  source: string;
+  checkedHoursAgo?: number;
+}[];
+
+/** The time a value was checked: some hours before the example's fixed clock. */
+const hoursBefore = (hours: number) => new Date(Date.parse(NOW) - hours * 3_600_000).toISOString();
 
 function SourceIcon() {
   return (
@@ -120,37 +133,32 @@ export default {
                 margin: 0,
               }}
             >
-              <dt>Expires</dt>
-              <dd
-                style={{
-                  margin: 0,
-                  display: 'flex',
-                  gap: 8,
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                }}
-              >
-                12 Aug 2027
-                <Provenance
-                  source="Registry"
-                  icon={<SourceIcon />}
-                  checkedAt="2026-03-10T10:00:00Z"
-                  now={NOW}
-                />
-              </dd>
-              <dt>Owner</dt>
-              <dd
-                style={{
-                  margin: 0,
-                  display: 'flex',
-                  gap: 8,
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                }}
-              >
-                Example team
-                <Provenance source="Entered by hand" />
-              </dd>
+              {items.map((item) => (
+                <Fragment key={item.label}>
+                  <dt>{item.label}</dt>
+                  <dd
+                    style={{
+                      margin: 0,
+                      display: 'flex',
+                      gap: 8,
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {item.value}
+                    {item.checkedHoursAgo !== undefined ? (
+                      <Provenance
+                        source={item.source}
+                        icon={<SourceIcon />}
+                        checkedAt={hoursBefore(item.checkedHoursAgo)}
+                        now={NOW}
+                      />
+                    ) : (
+                      <Provenance source={item.source} />
+                    )}
+                  </dd>
+                </Fragment>
+              ))}
             </dl>
           ),
         },

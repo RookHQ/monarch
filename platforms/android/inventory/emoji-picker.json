@@ -1,0 +1,110 @@
+{
+  "id": "emoji-picker",
+  "name": "MonarchEmojiPicker",
+  "title": "EmojiPicker",
+  "family": "collaboration",
+  "category": "A",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "androidx.emoji2.emojipicker.EmojiPickerView (androidx.emoji2:emoji2-emojipicker) inside androidx.compose.ui.viewinterop.AndroidView",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "An emoji picker with category tabs, recently used emoji first and skin-tone variants: the AndroidX system EmojiPickerView, hosted in Compose.",
+  "whenToUse": "To let people choose any emoji for a reaction or a message, usually in a MonarchBottomSheet opened from a reaction or emoji button, or as the picker of MonarchReactionBar.",
+  "whenNotToUse": "For a few fixed reactions use a row of buttons or MonarchReactionBar quickReactions. For typing emoji in text, the keyboard already has a picker with search.",
+  "api": [
+    "@Composable public fun MonarchEmojiPicker(onEmojiPicked: (String) -> Unit, modifier: Modifier = Modifier, columns: Int? = null, rows: Float? = null, label: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "onEmojiPicked",
+      "type": "(String) -> Unit",
+      "default": "required",
+      "description": "Called with the emoji the person picks, including the skin-tone variant chosen with a long press."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the picker. It fills the width and is 320dp high unless the modifier sets a size first."
+    },
+    {
+      "name": "columns",
+      "type": "Int?",
+      "default": "null",
+      "description": "Emoji per row. null keeps the view's 9."
+    },
+    {
+      "name": "rows",
+      "type": "Float?",
+      "default": "null",
+      "description": "Rows visible at once; a fraction shows that the grid scrolls. null keeps the view's 7.5."
+    },
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "null",
+      "description": "The pane name TalkBack reads; the built-in \"Emoji\" (monarch_emojipicker_label) without it."
+    }
+  ],
+  "states": [
+    {
+      "name": "default",
+      "description": "Category tabs over a scrolling grid; the first tab holds the recently used emoji once the person has picked one."
+    },
+    {
+      "name": "variant menu",
+      "description": "A long press on an emoji with skin-tone or gender variants opens the view's own popup of variants."
+    }
+  ],
+  "appearance": "EmojiPickerView draws its own tabs and grid and takes its colors from the Activity's View theme, not from MonarchTheme; place it on a raised surface such as a MonarchBottomSheet. Light, dark and high-contrast themes are not checked on a device yet.",
+  "platformNotes": "The web EmojiPicker and the iOS MonarchEmojiPicker are custom pickers with a bundled index of 517 emoji, search, categories, recents and skin tones, because neither platform has a picker outside the keyboard. Android has one in AndroidX, so Monarch hosts EmojiPickerView instead of drawing one: it covers recents, skin-tone and gender variants and the emoji font of the device. It has no search field and no categories or recents parameters; the keyboard's emoji search covers search. Recently used emoji are kept by the view in the app's shared preferences.",
+  "accessibility": [
+    "The picker is a pane named \"Emoji\" (or label) and a traversal group, so TalkBack announces it when it appears in a sheet.",
+    "Each emoji in the grid and each category tab is read by the AndroidX view itself; this is not covered by Robolectric tests and is listed for a device check."
+  ],
+  "edgeCases": [
+    "EmojiPickerView is created once in AndroidView's factory and keeps its own state across recompositions; columns and rows are applied on update.",
+    "The latest onEmojiPicked is called, also after the lambda changes between recompositions.",
+    "Give the picker a bounded height when it sits in a scrolling column; the default 320dp does this."
+  ],
+  "tests": [
+    "MonarchEmojiPickerTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Inline with recents and skin tones",
+      "fixture": "emoji-picker",
+      "webExample": "Inline with recents and skin tones",
+      "setupTemplate": "var picked by remember { mutableStateOf<String?>(null) }",
+      "setup": "var picked by remember { mutableStateOf<String?>(null) }",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\nMonarchEmojiPicker(\n        onEmojiPicked = { picked = it },\n        recentlyUsed = listOf({{recents.0}}, {{recents.1}}, {{recents.2}}),\n        modifier = Modifier.height(376.dp),\n    )\n    MonarchText(text = \"Last picked: \" + (picked ?: \"none yet\"))\n}",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\nMonarchEmojiPicker(\n        onEmojiPicked = { picked = it },\n        recentlyUsed = listOf(\"👍\", \"🎉\", \"✅\"),\n        modifier = Modifier.height(376.dp),\n    )\n    MonarchText(text = \"Last picked: \" + (picked ?: \"none yet\"))\n}"
+    },
+    {
+      "title": "The picker of a reaction bar",
+      "setup": "var reactions by remember { mutableStateOf(mapOf(\"👍\" to 1)) }",
+      "code": "MonarchReactionBar(\n    reactions = reactions.map { (emoji, count) -> MonarchReactionBarItem(emoji, count = count) },\n    onToggle = { emoji, on -> reactions = reactions + (emoji to (reactions[emoji] ?: 0) + if (on) 1 else -1) },\n    picker = { onPick, onDismiss ->\n        MonarchBottomSheet(onDismissRequest = onDismiss) { MonarchEmojiPicker(onEmojiPicked = onPick) }\n    },\n)"
+    }
+  ],
+  "webEquivalent": "EmojiPicker",
+  "dependsOn": [
+    "reaction-bar"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "android",
+      "paths": [
+        "skinTone"
+      ],
+      "reason": "The system EmojiPickerView applies skin tones itself on a long press, and it has no search, skin-tone button or footer preview and no emoji keyword data to search, so the web search field, the skin-tone button and the footer are not drawn; its category headings are the system's own.",
+      "convention": "the platform emoji picker (AndroidX EmojiPickerView) owns recents and skin tones, as the keyboard emoji panel does"
+    }
+  ]
+}

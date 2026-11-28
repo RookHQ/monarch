@@ -1,5 +1,14 @@
-import { Switch } from '@rookcom/monarch-react';
+import { Switch, type SwitchProps } from '@rookcom/monarch-react';
 import { incomplete, type ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './switch.fixture.json';
+
+const items = fixture.data.items as readonly {
+  label: string;
+  description?: string;
+  checked: boolean;
+  size: NonNullable<SwitchProps['size']>;
+}[];
 
 export default {
   id: 'switch',
@@ -83,12 +92,15 @@ export default {
           stack: true,
           render: () => (
             <>
-              <Switch
-                label="Two-step sign-in"
-                description="Ask for a PIN on new devices."
-                defaultChecked
-              />
-              <Switch label="Compact rail" size="sm" />
+              {items.map((item) => (
+                <Switch
+                  key={item.label}
+                  label={item.label}
+                  {...(item.description !== undefined && { description: item.description })}
+                  defaultChecked={item.checked}
+                  size={item.size}
+                />
+              ))}
             </>
           ),
         },

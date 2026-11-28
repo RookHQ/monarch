@@ -1,0 +1,121 @@
+{
+  "id": "role-picker",
+  "name": "MonarchRolePicker",
+  "title": "RolePicker",
+  "family": "identity",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchRadioCardGroup (Buttons with a card ButtonStyle) for cards; Picker with .pickerStyle(.menu) and selectionDisabled(_:) for compact",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Chooses a role for a person, with what each role can do in plain words, as radio cards or a compact menu picker. Roles that cannot be chosen stay visible with the reason.",
+  "whenToUse": "In invite, member and sharing forms, where the person must understand what a role allows before choosing it.",
+  "whenNotToUse": "Not for choices without descriptions (use a standard Picker) and not for several permissions at once (use a list of toggles).",
+  "api": [
+    "init(_ label: String? = nil, selection: Binding<Value?>, roles: [MonarchRoleOption<Value>], helper: String? = nil, error: String? = nil, layout: MonarchRolePickerLayout = .cards, placeholder: String? = nil)",
+    "struct MonarchRoleOption<Value: Hashable> { init(_ value: Value, title: String, description: String? = nil, capabilities: [String] = [], isDisabled: Bool = false, disabledReason: String? = nil) }",
+    "enum MonarchRolePickerLayout { case cards, compact }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in label \"Role\"."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<Value?>",
+      "default": "required",
+      "description": "The value of the chosen role, or nil for no choice yet."
+    },
+    {
+      "name": "roles",
+      "type": "[MonarchRoleOption<Value>]",
+      "default": "required",
+      "description": "The roles, from least to most access."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Help text under the control."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "An error under the control, with an icon; replaces the helper text."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchRolePickerLayout",
+      "default": ".cards",
+      "description": "cards shows every role with its description and capabilities; compact is a menu picker with the chosen role's description under it."
+    },
+    {
+      "name": "placeholder",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the compact picker's built-in \"Choose a role\", shown while nothing is chosen."
+    }
+  ],
+  "states": [
+    {
+      "name": "selected",
+      "description": "Cards: the radio card's filled mark and heavier border. Compact: the role's name in the picker and its description under it."
+    },
+    {
+      "name": "role disabled",
+      "description": "The card is drawn in the disabled colours with the reason under the description; in the menu the row cannot be chosen and shows the reason."
+    },
+    {
+      "name": "error",
+      "description": "The error text in the danger strong colour with an exclamation icon."
+    },
+    {
+      "name": "disabled",
+      "description": "Apply disabled(_:) to disable every role."
+    }
+  ],
+  "appearance": "The cards layout is MonarchRadioCardGroup and takes its colours. The compact layout is the system menu picker tinted with the default text role. Helper text uses the muted text role; errors the danger strong role.",
+  "platformNotes": "The web's compact layout is a custom Select with descriptions in each option; iOS uses the system menu Picker, which shows the description as a subtitle where the system menu supports one, and the chosen role's description under the control. Capabilities are shown as lines of the card description, because MonarchRadioCardOption takes one description string. The web's required marker, invalid styling and form name have no iOS equivalent; validation is shown with error. The helper text is under the cards rather than under the label, because MonarchRadioCardGroup draws its own label.",
+  "accessibility": [
+    "Cards: each role is a button named by its title, with the description, capabilities and reason as its value, and the selected trait when chosen.",
+    "The cards are a group named by the label.",
+    "Compact: the standard menu Picker named by the label; disabled roles cannot be chosen.",
+    "The error has an icon and text, so it does not depend on colour.",
+    "Every role card and the picker are at least 44 points high."
+  ],
+  "edgeCases": [
+    "A selection that matches no role shows no card selected and the compact placeholder is not shown; keep the selection to a value in roles.",
+    "Long descriptions and many capabilities wrap inside the card."
+  ],
+  "tests": [
+    "MonarchRolePickerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Radio cards",
+      "fixture": "role-picker",
+      "webExample": "Radio cards",
+      "template": "MonarchRolePicker(\n    {{label}},\n    selection: $role,\n    roles: [\n        MonarchRoleOption({{roles.0.value}}, title: {{roles.0.label}}, description: {{roles.0.description}}),\n        MonarchRoleOption({{roles.1.value}}, title: {{roles.1.label}}, description: {{roles.1.description}}, capabilities: [{{roles.1.capabilities.0}}, {{roles.1.capabilities.1}}]),\n        MonarchRoleOption({{roles.2.value}}, title: {{roles.2.label}}, description: {{roles.2.description}}),\n        MonarchRoleOption({{roles.3.value}}, title: {{roles.3.label}}, description: {{roles.3.description}}, isDisabled: {{roles.3.disabled}}, disabledReason: {{roles.3.disabledReason}}),\n    ]\n)",
+      "setupTemplate": "@State private var role: String? = {{value}}",
+      "setup": "@State private var role: String? = \"member\"",
+      "code": "MonarchRolePicker(\n    \"Role\",\n    selection: $role,\n    roles: [\n        MonarchRoleOption(\"viewer\", title: \"Viewer\", description: \"Can see everything in the workspace but cannot change it.\"),\n        MonarchRoleOption(\"member\", title: \"Member\", description: \"Can create and edit work in the apps they have access to.\", capabilities: [\"Create and edit records\", \"Comment and mention people\"]),\n        MonarchRoleOption(\"admin\", title: \"Admin\", description: \"Can also invite and remove members and change workspace settings.\"),\n        MonarchRoleOption(\"owner\", title: \"Owner\", description: \"Full control, including billing and deleting the workspace.\", isDisabled: true, disabledReason: \"Only an owner can make someone an owner.\"),\n    ]\n)"
+    },
+    {
+      "title": "Compact, in a row",
+      "setup": "@State private var role: String?",
+      "code": "MonarchRolePicker(\n    selection: $role,\n    roles: [\n        MonarchRoleOption(\"viewer\", title: \"Viewer\", description: \"Can see everything.\"),\n        MonarchRoleOption(\"editor\", title: \"Editor\", description: \"Can edit content.\"),\n    ],\n    layout: .compact\n)"
+    }
+  ],
+  "webEquivalent": "RolePicker",
+  "dependsOn": [
+    "radio-card-group"
+  ]
+}

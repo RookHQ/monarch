@@ -1,0 +1,101 @@
+{
+  "id": "changelog-feed",
+  "name": null,
+  "title": "ChangelogFeed",
+  "family": "layout",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "NavigationStack with navigationTitle, a List with .listStyle(.plain) of VStack entries, and Link with .buttonStyle(.monarchLink(.standalone, isExternal: true))",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: release notes as a What's new screen, a plain List of entries, newest first, each with its date and version, a heading, tag badges, the notes as MonarchProse and an optional Read more link.",
+  "whenToUse": "For a What's new screen in an app, opened from settings or shown once after an update, in a sheet or pushed on the navigation stack.",
+  "whenNotToUse": "For a single announcement use MonarchBanner or an announcement bar. For the public changelog page with permalinks and an RSS feed, link to the website.",
+  "api": [
+    "NavigationStack { List(releases) { release in VStack { Text(dateLine) caption; Text(release.title).monarchTextStyle(.subheading); MonarchFlowLayout { MonarchBadge(_:tone:) }; MonarchProse { Text(style.markdown(notes, in: theme)) }; Link(\"Read more\", destination:).buttonStyle(.monarchLink(.standalone, isExternal: true)) } }.listStyle(.plain).navigationTitle(\"What's new\") }",
+    "MonarchEmptyState(\"No updates yet.\", kind: .firstRun, size: .sm)"
+  ],
+  "options": [
+    {
+      "name": "releases",
+      "type": "app data",
+      "default": "required",
+      "description": "Release notes, newest first: id (the List identity), date, version, title, tags, notes and an optional link."
+    },
+    {
+      "name": "date",
+      "type": "Date",
+      "default": "required",
+      "description": "The release day, written with Date.FormatStyle(date: .long, time: .omitted) in the environment's locale and in UTC, so a date-only release shows the same day everywhere."
+    },
+    {
+      "name": "MonarchBadge.tone",
+      "type": "MonarchTone",
+      "default": ".neutral",
+      "description": "Neutral for most tags; a status tone only when the tag means that status."
+    },
+    {
+      "name": "MonarchProse",
+      "type": "MonarchProseStyle(size: .sm, limitsLineLength: false)",
+      "default": "required",
+      "description": "The notes, with inline Markdown through MonarchProseStyle.markdown(_:in:); MonarchAiMarkdown when the notes arrive as block Markdown."
+    },
+    {
+      "name": "Link",
+      "type": "Link with .monarchLink(.standalone, isExternal: true)",
+      "default": "none",
+      "description": "Read more, opening the full note in the browser; only for an http or https URL."
+    }
+  ],
+  "states": [
+    {
+      "name": "entries",
+      "description": "One row per release, newest first, separated by the plain list's dividers."
+    },
+    {
+      "name": "empty",
+      "description": "MonarchEmptyState with \"No updates yet.\" in place of the list."
+    }
+  ],
+  "appearance": "A plain list on the system background: muted caption for the date and version, the title in the subheading type, badges in their tone colours, notes in the prose type and the link in the link colour with its external glyph. The navigation bar is the system one in every theme.",
+  "platformNotes": "The web ChangelogFeed is a public changelog page with a timeline marker, permalinks, a heading level and an RSS link in the header. In an app it is a What's new screen: a plain List of entries with no timeline line, no permalinks and no RSS link, as the plan says; the title and description become the navigation title. Read more opens the full note in the browser. Dates are formatted in UTC, matching the web's default time zone. Android ships the same recipe with a LazyColumn.",
+  "accessibility": [
+    "Each release title has the header trait, so the rotor moves from release to release.",
+    "Tags are MonarchBadge text, read with the entry; their tone is not the only signal.",
+    "Read more is a link with an external glyph that VoiceOver reads as opening outside the app.",
+    "Rows grow with Dynamic Type; nothing is truncated."
+  ],
+  "edgeCases": [
+    "A release without notes or a link shows only its date, title and tags.",
+    "Long titles and notes wrap.",
+    "An empty list shows the empty state instead of an empty screen."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Changelog with RSS",
+      "fixture": "changelog-feed",
+      "webExample": "Changelog with RSS",
+      "template": "NavigationStack {\n    List {\n        Section {\n            ForEach(releases) { release in\n        HStack(alignment: .top, spacing: theme.spacing.space3) {\n        Circle()\n            .strokeBorder(theme.colors.accentSolid, lineWidth: 2)\n            .frame(width: 12, height: 12)\n            .padding(.top, 3)\n            .accessibilityHidden(true)\n        VStack(alignment: .leading, spacing: theme.spacing.space2) {\n            Text(dateLine(release))\n                .monarchTextStyle(.caption)\n                .foregroundStyle(theme.colors.textMuted)\n            Text(release.title)\n                .monarchTextStyle(.subheading)\n                .accessibilityAddTraits(.isHeader)\n            MonarchFlowLayout {\n                ForEach(release.tags, id: \\.self) { tag in\n                    MonarchBadge(tag.label, tone: tag.tone)\n                }\n            }\n            if let notes = release.notes {\n                MonarchProse(MonarchProseStyle(size: .sm, limitsLineLength: false)) {\n                    Text(MonarchProseStyle(size: .sm).markdown(notes, in: theme))\n                }\n            }\n            if let url = release.url {\n                Link(\"Read more\", destination: url)\n                    .buttonStyle(.monarchLink(.standalone, isExternal: true))\n            }\n        }\n        }\n        .padding(.vertical, theme.spacing.space2)\n            }\n        } header: {\n            VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                Text({{description}})\n                Label(\"RSS feed\", systemImage: \"dot.radiowaves.up.forward\")\n                    .foregroundStyle(theme.colors.textLink)\n            }\n        }\n    }\n    .listStyle(.plain)\n    .monarchCanvas()\n    .navigationTitle({{title}})\n    #if os(iOS)\n    .navigationBarTitleDisplayMode(.inline)\n    #endif\n}\n.frame(minHeight: theme.spacing.space24 * 5)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n\nprivate struct ReleaseTag: Hashable {\n    let label: String\n    var tone: MonarchTone = .neutral\n}\n\nprivate struct Release: Identifiable {\n    let id: String\n    let date: Date\n    let version: String?\n    let title: String\n    let tags: [ReleaseTag]\n    let notes: String?\n    let url: URL?\n}\n\nprivate let releases = [\n    Release(\n        id: {{entries.0.id}},\n        date: {{entries.0.date|date}},\n        version: {{entries.0.version}},\n        title: {{entries.0.title}},\n        tags: [ReleaseTag(label: {{entries.0.tags.0.label}}, tone: {{entries.0.tags.0.tone|tone}}), ReleaseTag(label: {{entries.0.tags.1.label}})],\n        notes: {{entries.0.body}},\n        url: URL(string: {{entries.0.href}})\n    ),\n    Release(\n        id: {{entries.1.id}},\n        date: {{entries.1.date|date}},\n        version: nil,\n        title: {{entries.1.title}},\n        tags: [ReleaseTag(label: {{entries.1.tags.0.label}})],\n        notes: {{entries.1.body}},\n        url: nil\n    ),\n    Release(\n        id: {{entries.2.id}},\n        date: {{entries.2.date|date}},\n        version: nil,\n        title: {{entries.2.title}},\n        tags: [ReleaseTag(label: {{entries.2.tags.0.label}})],\n        notes: nil,\n        url: nil\n    ),\n]\n\nprivate func dateLine(_ release: Release) -> String {\n    let utc = TimeZone(identifier: \"UTC\") ?? .current\n    let style = Date.FormatStyle(date: .long, time: .omitted, locale: Locale(identifier: {{locale}}), timeZone: utc)\n    return release.date.formatted(style) + (release.version.map { \" \\u{00B7} \" + $0 } ?? \"\")\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n\nprivate struct ReleaseTag: Hashable {\n    let label: String\n    var tone: MonarchTone = .neutral\n}\n\nprivate struct Release: Identifiable {\n    let id: String\n    let date: Date\n    let version: String?\n    let title: String\n    let tags: [ReleaseTag]\n    let notes: String?\n    let url: URL?\n}\n\nprivate let releases = [\n    Release(\n        id: \"sample-export\",\n        date: Date(timeIntervalSince1970: 1_780_272_000),\n        version: \"2.4.0\",\n        title: \"Reports can be exported\",\n        tags: [ReleaseTag(label: \"New\", tone: .accent), ReleaseTag(label: \"Reports\")],\n        notes: \"Every report now has an Export button. Files keep the filters you applied.\",\n        url: URL(string: \"#sample-export\")\n    ),\n    Release(\n        id: \"sample-search\",\n        date: Date(timeIntervalSince1970: 1_779_235_200),\n        version: nil,\n        title: \"Search remembers your last query\",\n        tags: [ReleaseTag(label: \"Improved\")],\n        notes: \"Opening search again shows the last query and its results.\",\n        url: nil\n    ),\n    Release(\n        id: \"sample-fix\",\n        date: Date(timeIntervalSince1970: 1_778_544_000),\n        version: nil,\n        title: \"Fixed a sorting issue in tables\",\n        tags: [ReleaseTag(label: \"Fix\")],\n        notes: nil,\n        url: nil\n    ),\n]\n\nprivate func dateLine(_ release: Release) -> String {\n    let utc = TimeZone(identifier: \"UTC\") ?? .current\n    let style = Date.FormatStyle(date: .long, time: .omitted, locale: Locale(identifier: \"en-GB\"), timeZone: utc)\n    return release.date.formatted(style) + (release.version.map { \" \\u{00B7} \" + $0 } ?? \"\")\n}",
+      "code": "NavigationStack {\n    List {\n        Section {\n            ForEach(releases) { release in\n        HStack(alignment: .top, spacing: theme.spacing.space3) {\n        Circle()\n            .strokeBorder(theme.colors.accentSolid, lineWidth: 2)\n            .frame(width: 12, height: 12)\n            .padding(.top, 3)\n            .accessibilityHidden(true)\n        VStack(alignment: .leading, spacing: theme.spacing.space2) {\n            Text(dateLine(release))\n                .monarchTextStyle(.caption)\n                .foregroundStyle(theme.colors.textMuted)\n            Text(release.title)\n                .monarchTextStyle(.subheading)\n                .accessibilityAddTraits(.isHeader)\n            MonarchFlowLayout {\n                ForEach(release.tags, id: \\.self) { tag in\n                    MonarchBadge(tag.label, tone: tag.tone)\n                }\n            }\n            if let notes = release.notes {\n                MonarchProse(MonarchProseStyle(size: .sm, limitsLineLength: false)) {\n                    Text(MonarchProseStyle(size: .sm).markdown(notes, in: theme))\n                }\n            }\n            if let url = release.url {\n                Link(\"Read more\", destination: url)\n                    .buttonStyle(.monarchLink(.standalone, isExternal: true))\n            }\n        }\n        }\n        .padding(.vertical, theme.spacing.space2)\n            }\n        } header: {\n            VStack(alignment: .leading, spacing: theme.spacing.space2) {\n                Text(\"Sample entries showing the layout.\")\n                Label(\"RSS feed\", systemImage: \"dot.radiowaves.up.forward\")\n                    .foregroundStyle(theme.colors.textLink)\n            }\n        }\n    }\n    .listStyle(.plain)\n    .monarchCanvas()\n    .navigationTitle(\"Changelog\")\n    #if os(iOS)\n    .navigationBarTitleDisplayMode(.inline)\n    #endif\n}\n.frame(minHeight: theme.spacing.space24 * 5)"
+    },
+    {
+      "title": "No releases yet",
+      "code": "MonarchEmptyState(\"No updates yet.\", kind: .firstRun, size: .sm)"
+    }
+  ],
+  "webEquivalent": "ChangelogFeed",
+  "dependsOn": [
+    "badge",
+    "prose",
+    "link",
+    "inline",
+    "empty-state"
+  ]
+}

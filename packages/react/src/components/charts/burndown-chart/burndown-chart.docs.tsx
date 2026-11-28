@@ -1,16 +1,16 @@
 import { BurndownChart } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './burndown-chart.fixture.json';
 
 const DAYS = Array.from(
   { length: 10 },
   (_, i) => new Date(Date.UTC(2026, 2, 2 + i + (i >= 5 ? 2 : 0), 12)),
 );
-const REMAINING = [40, 38, 35, 37, 31, 26, 24, null, null, null];
-const SCOPE = [40, 40, 40, 45, 45, 43, 43, null, null, null];
-const SPRINT = DAYS.map((date, i) => ({
-  date,
-  remaining: REMAINING[i] ?? null,
-  scope: SCOPE[i] ?? null,
+const SPRINT = fixture.data.days.map((day) => ({
+  date: new Date(day.date),
+  remaining: ('remaining' in day ? day.remaining : null) as number | null,
+  scope: ('scope' in day ? day.scope : null) as number | null,
 }));
 const DONE_SPRINT = DAYS.map((date, i) => ({
   date,
@@ -156,12 +156,12 @@ export default {
           stack: true,
           render: () => (
             <BurndownChart
-              title="Sprint 14"
-              description="Remaining story points"
+              title={fixture.data.title}
+              description={fixture.data.description}
               data={SPRINT}
-              formatValue={(v) => `${Math.round(v * 10) / 10} pts`}
+              formatValue={(v) => `${Math.round(v * 10) / 10} ${fixture.data.unit}`}
               formatTick={(v) => String(v)}
-              locale="en-US"
+              locale={fixture.data.locale}
               xFormat={UTC_DAY}
             />
           ),

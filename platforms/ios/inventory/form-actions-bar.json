@@ -1,0 +1,76 @@
+{
+  "id": "form-actions-bar",
+  "name": null,
+  "title": "FormActionsBar",
+  "family": "forms",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "toolbar with ToolbarItem(placement: .confirmationAction) and ToolbarItem(placement: .cancellationAction), with confirmationDialog and interactiveDismissDisabled",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Save and Discard for a form are toolbar items of the navigation bar, which stays in reach while the form scrolls. Monarch ships nothing.",
+  "whenToUse": "On any screen or sheet that edits something: Save in the confirmation position, Discard or Cancel in the cancellation position, both tied to whether the form has unsaved changes.",
+  "whenNotToUse": "For a single action inside the content, such as a sign-in button under two fields, use MonarchButton in the layout.",
+  "api": [
+    "func toolbar<Content: ToolbarContent>(@ToolbarContentBuilder content: () -> Content) -> some View",
+    "ToolbarItem(placement: .confirmationAction) { Button(\"Save\") { … } }",
+    "ToolbarItem(placement: .cancellationAction) { Button(\"Discard\") { … } }",
+    "func confirmationDialog(_ title: String, isPresented: Binding<Bool>, titleVisibility: Visibility, actions:, message:) -> some View",
+    "func interactiveDismissDisabled(_ isDisabled: Bool) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "clean",
+      "description": "Save and Discard are disabled with disabled(_:) while nothing has changed."
+    },
+    {
+      "name": "dirty",
+      "description": "Both are enabled. interactiveDismissDisabled(true) stops a sheet from being swiped away with unsaved changes."
+    },
+    {
+      "name": "pending",
+      "description": "A ProgressView replaces Save and Discard is disabled while the save runs."
+    },
+    {
+      "name": "error",
+      "description": "A failed save is shown in the form with MonarchBanner in the danger tone, or with the system alert."
+    },
+    {
+      "name": "confirming discard",
+      "description": "confirmationDialog asks before the changes are dropped, with a destructive action and a cancel action."
+    }
+  ],
+  "appearance": "System appearance: the navigation bar draws the items, with the confirmation action emphasised, tinted with the accent of the Monarch theme.",
+  "platformNotes": "The web FormActionsBar is a sticky bar at the bottom of the page and Android builds a MonarchFormActionsBar. On iOS the navigation bar is where people look for Save and Cancel, and it already stays visible, so a second bar would duplicate it. What the web component does itself is done with system pieces here: the discard confirmation is confirmationDialog, leaving with unsaved changes is interactiveDismissDisabled, and the pending and error states are the app's state. The web's \"You have unsaved changes\" text has no fixed place in a navigation bar; show it in the form if it is needed.",
+  "accessibility": [
+    "System behaviour: toolbar items are buttons with their titles as labels, and a disabled item is announced as dimmed.",
+    "Give the ProgressView that replaces Save an accessibility label such as \"Saving\".",
+    "The confirmation dialog is announced when it appears and its destructive action is identified as such."
+  ],
+  "edgeCases": [
+    "The toolbar needs a NavigationStack above it; a sheet needs its own.",
+    "On iPad and Mac Catalyst the confirmation dialog is a popover anchored to the item.",
+    "interactiveDismissDisabled affects only sheets and popovers, not a pushed screen; hide or replace the back button with navigationBarBackButtonHidden to guard a pushed form."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Unsaved changes",
+      "fixture": "form-actions-bar",
+      "webExample": "Unsaved changes",
+      "template": "VStack(alignment: .leading, spacing: 0) {\n    VStack(alignment: .leading, spacing: theme.spacing.space3) {\n        MonarchTextField({{name.label}}, text: $name)\n        MonarchTextField({{email.label}}, text: $email)\n    }\n    .padding(theme.spacing.space4)\n    Divider()\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        if isDirty {\n            Text({{unsaved}})\n                .monarchTextStyle(.body)\n                .foregroundStyle(theme.colors.textMuted)\n        }\n        HStack(spacing: theme.spacing.space2) {\n            Spacer()\n            MonarchButton({{discard}}, variant: .ghost) { isConfirmingDiscard = true }\n                .disabled(!isDirty || isSaving)\n            if isSaving {\n                ProgressView().accessibilityLabel(\"Saving\")\n            } else {\n                MonarchButton({{save}}, variant: .primary) { savedName = name }\n                    .disabled(!isDirty)\n            }\n        }\n    }\n    .padding(theme.spacing.space4)\n}\n.confirmationDialog(\"Discard unsaved changes?\", isPresented: $isConfirmingDiscard, titleVisibility: .visible) {\n    Button(\"Discard changes\", role: .destructive) { name = savedName }\n    Button(\"Keep editing\", role: .cancel) {}\n} message: {\n    Text(\"Your changes will be lost. This cannot be undone.\")\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var name = {{name.edited}}\n@State private var savedName = {{name.saved}}\n@State private var email = {{email.value}}\n@State private var isSaving = false\n@State private var isConfirmingDiscard = false\n\nprivate var isDirty: Bool { name != savedName }",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var name = \"Northwind Ltd\"\n@State private var savedName = \"Northwind\"\n@State private var email = \"team@example.com\"\n@State private var isSaving = false\n@State private var isConfirmingDiscard = false\n\nprivate var isDirty: Bool { name != savedName }",
+      "code": "VStack(alignment: .leading, spacing: 0) {\n    VStack(alignment: .leading, spacing: theme.spacing.space3) {\n        MonarchTextField(\"Workspace name\", text: $name)\n        MonarchTextField(\"Contact email\", text: $email)\n    }\n    .padding(theme.spacing.space4)\n    Divider()\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        if isDirty {\n            Text(\"You have unsaved changes\")\n                .monarchTextStyle(.body)\n                .foregroundStyle(theme.colors.textMuted)\n        }\n        HStack(spacing: theme.spacing.space2) {\n            Spacer()\n            MonarchButton(\"Discard\", variant: .ghost) { isConfirmingDiscard = true }\n                .disabled(!isDirty || isSaving)\n            if isSaving {\n                ProgressView().accessibilityLabel(\"Saving\")\n            } else {\n                MonarchButton(\"Save changes\", variant: .primary) { savedName = name }\n                    .disabled(!isDirty)\n            }\n        }\n    }\n    .padding(theme.spacing.space4)\n}\n.confirmationDialog(\"Discard unsaved changes?\", isPresented: $isConfirmingDiscard, titleVisibility: .visible) {\n    Button(\"Discard changes\", role: .destructive) { name = savedName }\n    Button(\"Keep editing\", role: .cancel) {}\n} message: {\n    Text(\"Your changes will be lost. This cannot be undone.\")\n}"
+    }
+  ],
+  "webEquivalent": "FormActionsBar",
+  "dependsOn": [
+    "text-field"
+  ]
+}

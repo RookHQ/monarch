@@ -1,0 +1,110 @@
+{
+  "id": "remove-member-flow",
+  "name": null,
+  "title": "RemoveMemberFlow",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:) with a NavigationStack, Cancel and Remove in toolbar(content:) as ToolbarItem(placement: .cancellationAction) and .confirmationAction, interactiveDismissDisabled(_:) while removing, MonarchMemberRow, MonarchAssigneePicker (one for all work, or one per kind of work behind a Toggle), MonarchConsequenceList and MonarchInlineNotice on the canvas; confirmationDialog(_:isPresented:titleVisibility:actions:message:) with a Button(role: .destructive) for the final step; MonarchToastCenter.show with Undo and monarchToastHost(_:) after the removal",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: remove a member from a workspace after handing over their open work to other members (all at once or per kind of work), confirm in a system confirmation dialog, then offer Undo in a toast.",
+  "whenToUse": "When an admin removes someone who may still own open work: issues, reviews, documents or deals that would otherwise be left without an owner.",
+  "whenNotToUse": "For someone who owns nothing, MonarchMemberRow's own remove confirmation or a confirmationDialog is enough. For a member leaving on their own, use the leave-workspace-flow recipe. For many members at once, use the bulk-destructive-flow recipe.",
+  "api": [
+    ".sheet(isPresented: $isOpen) { NavigationStack { handOver.navigationTitle(…).toolbar { ToolbarItem(placement: .cancellationAction) { Button(\"Cancel\") { … } }; ToolbarItem(placement: .confirmationAction) { Button(\"Remove\", role: .destructive) { isConfirming = true } } } }.interactiveDismissDisabled(isRemoving) }",
+    "MonarchMemberRow(_ name: String, image: Image?, email: String? = nil, role: String? = nil, …)",
+    "MonarchAssigneePicker(_ label: String, selection: Binding<String?>, people: [MonarchAssigneePerson], …, allowsUnassigned: Bool = true, showsAssignToMe: Bool = true, …, labels: MonarchAssigneePickerLabels = MonarchAssigneePickerLabels())",
+    "Toggle(\"Choose a person for each kind of work\", isOn: $isPerItem)",
+    "MonarchConsequenceList([MonarchConsequence(.removed, …), MonarchConsequence(.changed, …), MonarchConsequence(.warning, …), MonarchConsequence(.kept, …)], heading: \"What happens\")",
+    ".confirmationDialog(\"Remove <name>?\", isPresented: $isConfirming, titleVisibility: .visible, actions: { Button(\"Remove member\", role: .destructive) { … }; Button(\"Cancel\", role: .cancel) {} }, message: { Text(…) })",
+    "MonarchInlineNotice(_ message: String, tone: .danger)",
+    "MonarchToastCenter.show(_ title: String, message: String? = nil, tone: MonarchTone = .neutral, actionTitle: String? = nil, duration: TimeInterval? = nil, action: (@MainActor () -> Void)? = nil) -> UUID"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "reassign",
+      "description": "Shown only when the member owns open work: one MonarchAssigneePicker for all of it and a toggle to choose a person for each kind of work instead; the consequence list below says where each kind goes."
+    },
+    {
+      "name": "per item",
+      "description": "One MonarchAssigneePicker per kind of work, labelled with its count, each starting from the all-at-once choice."
+    },
+    {
+      "name": "confirm",
+      "description": "Remove in the navigation bar opens a system confirmation dialog titled Remove <name>? with a destructive Remove member button and Cancel."
+    },
+    {
+      "name": "removing",
+      "description": "Remove is replaced by a progress indicator, Cancel is disabled and the sheet cannot be swiped away."
+    },
+    {
+      "name": "failed",
+      "description": "A danger MonarchInlineNotice below the consequences; the sheet stays open with the choices kept."
+    },
+    {
+      "name": "removed",
+      "description": "The sheet closes and a toast says the member was removed, with Undo."
+    }
+  ],
+  "appearance": "A system sheet with a navigation bar holding Cancel and a destructive Remove; Monarch's member row, assignee pickers, consequence list with its kind colours and inline notice on the canvas background. The confirmation dialog is the system action sheet and the toast uses Monarch's toast host. Every colour is a theme role, so dark and both high-contrast themes follow.",
+  "platformNotes": "The web RemoveMemberFlow is one component on a WizardDialog with a reassign step and a confirm step, a step-up authentication option, number formatting and a useUndoToast bridge. Android composes a recipe with the same states in a ModalBottomSheet with two steps and a Material 3 snackbar. On iOS the recipe follows the system pattern for a destructive action in a sheet: the hand-over and the consequences share one screen in a NavigationStack, Cancel and Remove sit in the navigation bar, and the final step is a system confirmationDialog with a destructive button instead of a second in-sheet step; Undo is MonarchToastCenter's toast. The per-item choice is a native Toggle where Android uses MonarchCheckboxRow. The app writes plural strings with its String Catalog, runs re-authentication (for example MonarchStepUpAuthDialog in a nested sheet) before the removal, and sends the reassignments to its server.",
+  "accessibility": [
+    "The navigation title names the member, and Hand over their open work is a heading (header trait).",
+    "Each MonarchAssigneePicker is named by its label: Reassign all open work to, or the count and kind of work.",
+    "MonarchConsequenceList reads each consequence with its kind, so where the work goes does not depend on colour.",
+    "Remove has the destructive role, and the confirmation dialog's Remove member button is read as destructive by VoiceOver.",
+    "While removing, the progress indicator in the navigation bar reads Removing <name>, and Cancel is read as dimmed.",
+    "The toast host announces the toast, and Undo is reachable with VoiceOver."
+  ],
+  "edgeCases": [
+    "When the member owns nothing, leave out the hand-over section: the sheet shows the member row and the consequences only.",
+    "Leave the removed member, and the assign-to-me shortcut, out of the people offered in the pickers.",
+    "Turning on per item copies the all-at-once choice into each picker, so nothing is lost.",
+    "Reset the choices and any error each time the sheet opens.",
+    "If the removal fails, keep the choices and show the error with MonarchInlineNotice; the sheet stays open.",
+    "Long names wrap in the member row and the consequence list; the navigation title truncates, and the confirmation dialog repeats the full name."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Hand over open work, then remove, with Undo",
+      "fixture": "remove-member-flow",
+      "webExample": "Hand over open work, then remove, with Undo",
+      "template": "MonarchButton({{trigger}}, systemImage: \"person.badge.minus\", variant: .danger) {\n    allTo = nil\n    isOpen = true\n}\n.sheet(isPresented: $isOpen) {\n    NavigationStack {\n        handOver\n            .navigationTitle({{title}})\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button({{cancel}}) { isOpen = false }.disabled(isRemoving)\n                }\n                ToolbarItem(placement: .confirmationAction) {\n                    if isRemoving {\n                        ProgressView().accessibilityLabel(\"Removing {{member.name|raw}}\")\n                    } else {\n                        Button({{continue}}) { isConfirming = true }\n                    }\n                }\n            }\n            .confirmationDialog(\n                \"Remove {{member.name|raw}}?\",\n                isPresented: $isConfirming,\n                titleVisibility: .visible,\n                actions: {\n                    Button(\"Remove member\", role: .destructive) { remove() }\n                    Button(\"Cancel\", role: .cancel) {}\n                },\n                message: { Text(\"They lose access to the workspace straight away.\") }\n            )\n    }\n    .interactiveDismissDisabled(isRemoving)\n}\n.monarchToastHost(toasts)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var toasts = MonarchToastCenter()\n@State private var isOpen = false\n@State private var allTo: String?\n@State private var isPerKind = false\n@State private var assignments: [String: String] = [:]\n@State private var isConfirming = false\n@State private var isRemoving = false\nprivate let work = [\n    (id: {{work.0.id}}, count: {{work.0.count}}, label: {{work.0.label}}),\n    (id: {{work.1.id}}, count: {{work.1.count}}, label: {{work.1.label}}),\n    (id: {{work.2.id}}, count: {{work.2.count}}, label: {{work.2.label}}),\n]\nprivate let people = [\n    MonarchAssigneePerson(id: {{people.0.id}}, name: {{people.0.name}}, email: {{people.0.email}}),\n    MonarchAssigneePerson(id: {{people.1.id}}, name: {{people.1.name}}, email: {{people.1.email}}),\n    MonarchAssigneePerson(id: {{people.2.id}}, name: {{people.2.name}}, email: {{people.2.email}}),\n    MonarchAssigneePerson(id: {{people.3.id}}, name: {{people.3.name}}, email: {{people.3.email}}),\n]\n\nprivate var target: String? { people.first { $0.id == allTo }?.name }\n\n/// Who takes one kind of work: the person chosen for it, or the one chosen for all work.\nprivate func assignee(of kind: String) -> String? {\n    people.first { $0.id == (isPerKind ? assignments[kind] : allTo) }?.name\n}\n\nprivate var handOver: some View {\n    ScrollView {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                Text(\"Step 1 of 2\")\n                    .monarchTextStyle(.caption)\n                    .foregroundStyle(theme.colors.textMuted)\n                ProgressView(value: 0.5)\n                    .progressViewStyle(.monarchLinear)\n                    .accessibilityHidden(true)\n            }\n            Text({{handOver.heading}}).monarchTextStyle(.heading).accessibilityAddTraits(.isHeader)\n            Text({{handOver.description}})\n                .monarchTextStyle(.body)\n                .foregroundStyle(theme.colors.textMuted)\n            if isPerKind {\n                ForEach(work, id: \\.id) { item in\n                    MonarchAssigneePicker(\n                        item.label,\n                        selection: Binding(get: { assignments[item.id] }, set: { assignments[item.id] = $0 }),\n                        people: people,\n                        currentUserID: {{currentUserId}},\n                        showsAssignToMe: false,\n                        labels: MonarchAssigneePickerLabels(unassigned: {{handOver.unassigned}})\n                    )\n                }\n            } else {\n                MonarchAssigneePicker(\n                    {{handOver.reassign}},\n                    selection: $allTo,\n                    people: people,\n                    currentUserID: {{currentUserId}},\n                    showsAssignToMe: false,\n                    labels: MonarchAssigneePickerLabels(unassigned: {{handOver.unassigned}})\n                )\n            }\n            Toggle({{handOver.perKind}}, isOn: $isPerKind)\n                .toggleStyle(.monarchCheckbox)\n                .monarchTextStyle(.body)\n            VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                ForEach(work, id: \\.id) { item in\n                    Text(\"\\u{2022}  \\(item.count) \\(item.label)\")\n                        .monarchTextStyle(.body)\n                        .foregroundStyle(theme.colors.textMuted)\n                }\n            }\n        }\n        .padding(theme.spacing.space4)\n    }\n    .background(theme.colors.bgCanvas)\n}\n\nprivate func remove() {\n    isRemoving = true\n    Task {\n        // Send the removal and each work item's assignee to the server here.\n        isRemoving = false\n        isOpen = false\n        toasts.show(\"{{member.name|raw}} removed\", actionTitle: \"Undo\", duration: 8) {\n            // Restore the membership and the work on the server.\n        }\n    }\n}",
+      "previewPresented": [
+        "isOpen"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var toasts = MonarchToastCenter()\n@State private var isOpen = false\n@State private var allTo: String?\n@State private var isPerKind = false\n@State private var assignments: [String: String] = [:]\n@State private var isConfirming = false\n@State private var isRemoving = false\nprivate let work = [\n    (id: \"issues\", count: 12, label: \"open issues\"),\n    (id: \"reviews\", count: 3, label: \"pending reviews\"),\n    (id: \"docs\", count: 5, label: \"draft documents\"),\n]\nprivate let people = [\n    MonarchAssigneePerson(id: \"me\", name: \"Sam Rivera\", email: \"sam@example.com\"),\n    MonarchAssigneePerson(id: \"m1\", name: \"Alex Morgan\", email: \"alex@example.com\"),\n    MonarchAssigneePerson(id: \"m2\", name: \"Priya Shah\", email: \"priya@example.com\"),\n    MonarchAssigneePerson(id: \"m3\", name: \"Jordan Lee\", email: \"jordan@example.com\"),\n]\n\nprivate var target: String? { people.first { $0.id == allTo }?.name }\n\n/// Who takes one kind of work: the person chosen for it, or the one chosen for all work.\nprivate func assignee(of kind: String) -> String? {\n    people.first { $0.id == (isPerKind ? assignments[kind] : allTo) }?.name\n}\n\nprivate var handOver: some View {\n    ScrollView {\n        VStack(alignment: .leading, spacing: theme.spacing.space4) {\n            VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                Text(\"Step 1 of 2\")\n                    .monarchTextStyle(.caption)\n                    .foregroundStyle(theme.colors.textMuted)\n                ProgressView(value: 0.5)\n                    .progressViewStyle(.monarchLinear)\n                    .accessibilityHidden(true)\n            }\n            Text(\"Hand over their open work\").monarchTextStyle(.heading).accessibilityAddTraits(.isHeader)\n            Text(\"Choose who takes over what Jordan Lee still owns, or leave it unassigned.\")\n                .monarchTextStyle(.body)\n                .foregroundStyle(theme.colors.textMuted)\n            if isPerKind {\n                ForEach(work, id: \\.id) { item in\n                    MonarchAssigneePicker(\n                        item.label,\n                        selection: Binding(get: { assignments[item.id] }, set: { assignments[item.id] = $0 }),\n                        people: people,\n                        currentUserID: \"me\",\n                        showsAssignToMe: false,\n                        labels: MonarchAssigneePickerLabels(unassigned: \"Leave unassigned\")\n                    )\n                }\n            } else {\n                MonarchAssigneePicker(\n                    \"Reassign all open work to\",\n                    selection: $allTo,\n                    people: people,\n                    currentUserID: \"me\",\n                    showsAssignToMe: false,\n                    labels: MonarchAssigneePickerLabels(unassigned: \"Leave unassigned\")\n                )\n            }\n            Toggle(\"Choose a person for each kind of work\", isOn: $isPerKind)\n                .toggleStyle(.monarchCheckbox)\n                .monarchTextStyle(.body)\n            VStack(alignment: .leading, spacing: theme.spacing.space1) {\n                ForEach(work, id: \\.id) { item in\n                    Text(\"\\u{2022}  \\(item.count) \\(item.label)\")\n                        .monarchTextStyle(.body)\n                        .foregroundStyle(theme.colors.textMuted)\n                }\n            }\n        }\n        .padding(theme.spacing.space4)\n    }\n    .background(theme.colors.bgCanvas)\n}\n\nprivate func remove() {\n    isRemoving = true\n    Task {\n        // Send the removal and each work item's assignee to the server here.\n        isRemoving = false\n        isOpen = false\n        toasts.show(\"Jordan Lee removed\", actionTitle: \"Undo\", duration: 8) {\n            // Restore the membership and the work on the server.\n        }\n    }\n}",
+      "code": "MonarchButton(\"Remove Jordan Lee\", systemImage: \"person.badge.minus\", variant: .danger) {\n    allTo = nil\n    isOpen = true\n}\n.sheet(isPresented: $isOpen) {\n    NavigationStack {\n        handOver\n            .navigationTitle(\"Remove Jordan Lee\")\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button(\"Cancel\") { isOpen = false }.disabled(isRemoving)\n                }\n                ToolbarItem(placement: .confirmationAction) {\n                    if isRemoving {\n                        ProgressView().accessibilityLabel(\"Removing Jordan Lee\")\n                    } else {\n                        Button(\"Continue\") { isConfirming = true }\n                    }\n                }\n            }\n            .confirmationDialog(\n                \"Remove Jordan Lee?\",\n                isPresented: $isConfirming,\n                titleVisibility: .visible,\n                actions: {\n                    Button(\"Remove member\", role: .destructive) { remove() }\n                    Button(\"Cancel\", role: .cancel) {}\n                },\n                message: { Text(\"They lose access to the workspace straight away.\") }\n            )\n    }\n    .interactiveDismissDisabled(isRemoving)\n}\n.monarchToastHost(toasts)"
+    }
+  ],
+  "webEquivalent": "RemoveMemberFlow",
+  "dependsOn": [
+    "sheet",
+    "assignee-picker",
+    "confirm-dialog",
+    "undo-toast",
+    "member-row",
+    "consequence-list",
+    "inline-notice",
+    "switch"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "member.email"
+      ],
+      "reason": "The web dialog does not show the member's email; it is listed in the fixture only to name the person being removed.",
+      "convention": "none: the title and the description already name them"
+    }
+  ]
+}

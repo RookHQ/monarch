@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Button, SectionHeader, SectionHeaderLink } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { PlusIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './section-header.fixture.json';
 
 function BusyDemo() {
   const [busy, setBusy] = useState(false);
@@ -132,11 +134,11 @@ export default {
           stack: true,
           render: () => (
             <SectionHeader
-              title="Recent invoices"
-              meta="12 issued this month"
+              title={fixture.data.title}
+              meta={fixture.data.meta}
               link={
                 <SectionHeaderLink href="#/components/section-header">
-                  View all invoices
+                  {fixture.data.linkLabel}
                 </SectionHeaderLink>
               }
             />

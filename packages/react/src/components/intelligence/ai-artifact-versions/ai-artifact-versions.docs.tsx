@@ -5,25 +5,27 @@ import {
   type AiArtifactVersionInfo,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-artifact-versions.fixture.json';
 
-const VERSIONS: AiArtifactVersionInfo[] = [
-  { version: 1, createdAt: '2026-03-12T09:00:00Z' },
-  { version: 2, createdAt: '2026-03-12T09:20:00Z', label: 'Shorter intro' },
-  { version: 3, createdAt: '2026-03-12T10:05:00Z', label: 'Added risks' },
-];
-const TEXT: Record<number, string> = {
-  1: 'The team shipped the new onboarding flow in May. Sign-ups grew and support tickets went down.',
-  2: 'The team shipped the onboarding flow in May. Sign-ups grew by a fifth.',
-  3: 'The team shipped the onboarding flow in May. Sign-ups grew by a fifth. The main risk is the June migration.',
-};
+const VERSIONS: AiArtifactVersionInfo[] = fixture.data.versions.map((v) => ({
+  version: v.version,
+  createdAt: v.createdAt,
+  ...('label' in v ? { label: v.label } : {}),
+}));
+const TEXT: Record<number, string> = Object.fromEntries(
+  fixture.data.versions.map((v) => [v.version, v.text]),
+);
 
 function VersionsDemo() {
-  const [value, setValue] = useState(3);
+  const [value, setValue] = useState(fixture.data.value);
   const [compare, setCompare] = useState<[number, number] | null>(null);
   return (
     <div style={{ display: 'grid', gap: 'var(--mn-space-3)', maxWidth: '36rem' }}>
       <AiArtifactVersions
         versions={VERSIONS}
+        locale="en-GB"
+        timeZone="Europe/London"
         value={value}
         onChange={(v) => {
           setValue(v);

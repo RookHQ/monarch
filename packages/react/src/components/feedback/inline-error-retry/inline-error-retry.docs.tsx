@@ -1,5 +1,7 @@
 import { InlineErrorRetry, Link } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './inline-error-retry.fixture.json';
 
 const wait = () => new Promise<void>((resolve) => setTimeout(resolve, 1200));
 
@@ -110,9 +112,7 @@ export default {
         {
           title: 'Inline, with a pending retry',
           stack: true,
-          render: () => (
-            <InlineErrorRetry onRetry={wait}>Your recent payouts didn’t load.</InlineErrorRetry>
-          ),
+          render: () => <InlineErrorRetry onRetry={wait}>{fixture.data.message}</InlineErrorRetry>,
         },
         {
           title: 'Banner above stale data',

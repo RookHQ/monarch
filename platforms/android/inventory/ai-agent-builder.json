@@ -1,0 +1,150 @@
+{
+  "id": "ai-agent-builder",
+  "name": null,
+  "title": "AiAgentBuilder",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchTabs on phones and a Row of two panes at expanded width (androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2), with a verticalScroll Column of MonarchTextField, MonarchAiConnectorPicker and MonarchAiKnowledgeScope and a test pane of MonarchAiThread over MonarchAiPromptInput",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a screen to define an AI agent (persona, instructions, tools and knowledge) and try the unsaved definition in a test chat.",
+  "whenToUse": "Admin or builder screens where people create or edit an agent and want to test it before saving.",
+  "whenNotToUse": "Picking an existing agent: use MonarchAiAgentPicker. Only choosing tools or knowledge for a conversation: use MonarchAiConnectorPicker or MonarchAiKnowledgeScope on their own.",
+  "api": [
+    "if (currentWindowAdaptiveInfoV2().windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)) Row { form(Modifier.weight(1f)); VerticalDivider(); test(Modifier.weight(1f)) } else Column { PrimaryTabRow(selectedTabIndex = tab) { Tab(\"Configure\"); Tab(\"Test\") }; … }",
+    "form: Column(Modifier.verticalScroll(…)) { MonarchAiAgentAvatar(agent, size = MonarchAvatarSize.Lg, decorative = true); MonarchTextField(name, errorText = …); MonarchTextField(role, helperText = …); MonarchTextField(instructions, singleLine = false, helperText = \"n / 8000 characters\"); MonarchAiConnectorPicker(connectors, onConnectorsChange, title = \"Tools\", searchable = false); MonarchAiKnowledgeScope(sources, selection, onSelectionChange, expandIcon); MonarchButton(\"Save agent\", variant = Primary) }",
+    "test: Column { MonarchAiAgentAvatar(agent, state = Working while streaming); MonarchButton(\"Restart test\") { conversation.stop(); conversation.reset() }; MonarchAiThread(messages, Modifier.weight(1f), daySeparators = false); MonarchAiPromptInput(onSubmit = { conversation.send(it, body = mapOf(\"agent\" to definition())) }) }"
+  ],
+  "options": [
+    {
+      "name": "definition",
+      "type": "App state: name, role, instructions, tool permissions (MonarchAiConnector list), knowledge ids",
+      "default": "required",
+      "description": "Held by the app and saved on Save agent; every edit clears the saved message, as the web's onChange does."
+    },
+    {
+      "name": "connectors",
+      "type": "List<MonarchAiConnector>",
+      "default": "empty",
+      "description": "The tools the agent may use, grouped by connector with a permission per tool (allow, ask, never), shown by MonarchAiConnectorPicker. Destructive tools cannot be set to allow unless the app passes allowsDestructiveAutoApprove."
+    },
+    {
+      "name": "sources",
+      "type": "List<MonarchAiKnowledgeSource>",
+      "default": "none",
+      "description": "Knowledge the agent can read, as a MonarchAiKnowledgeScope tree. Leave the section out without sources."
+    },
+    {
+      "name": "conversation",
+      "type": "MonarchAiConversation",
+      "default": "none",
+      "description": "The test chat. Each test message is sent with the current definition in body under \"agent\", so the transport runs the unsaved agent. Leave the Test tab and pane out without it."
+    },
+    {
+      "name": "maxInstructions",
+      "type": "Int",
+      "default": "8000",
+      "description": "Longest instructions; the field stops at it and its helper text counts characters."
+    },
+    {
+      "name": "save",
+      "type": "App callback",
+      "default": "none",
+      "description": "Save agent checks the name, then the app saves; the status line is a polite live region that reads Agent saved."
+    }
+  ],
+  "states": [
+    {
+      "name": "phone",
+      "description": "Configure and Test are two Material 3 primary tabs; the form scrolls in Configure and the test chat fills Test."
+    },
+    {
+      "name": "expanded width",
+      "description": "From 840dp the form and the test chat show side by side with a vertical divider."
+    },
+    {
+      "name": "name missing",
+      "description": "After Save agent with an empty name, the name field shows \"Give the agent a name.\" as its error and nothing is saved."
+    },
+    {
+      "name": "saved",
+      "description": "The status line reads Agent saved until the next edit."
+    },
+    {
+      "name": "testing",
+      "description": "The avatar reads Working while the reply streams; Restart test stops and clears the test conversation."
+    },
+    {
+      "name": "empty test",
+      "description": "The thread shows \"Send a message to try the agent.\""
+    }
+  ],
+  "appearance": "Every part is an existing component: MonarchTextField, MonarchAiConnectorPicker, MonarchAiKnowledgeScope, MonarchAiAgentAvatar, MonarchAiThread, MonarchAiPromptInput and MonarchButton, with Material 3 primary tabs and a subtle-border divider in the Monarch theme. Light, dark and both high-contrast themes follow from those components.",
+  "platformNotes": "The web ships AiAgentBuilder as one component with the form and the test chat side by side and stacked on narrow screens. On Android the phone form is two primary tabs, Configure and Test, so the test chat gets the whole screen and its lazy thread never sits inside the scrolling form; at expanded width (840dp, the Material window size class) the two show side by side. The web's tool checkbox list is MonarchAiConnectorPicker, which groups tools by connector and gives each an allow, ask or never permission, as the plan's dependency asks; the definition sends the allowed and asked tool ids. The web's avatar URL field is the app's own picker beside MonarchAiAgentAvatar, since Monarch loads no images. The web's save promise with progress and error is the app's own call; this recipe shows the saved state as a polite live region and the missing name as the field's error. The web moves focus to the name field when the name is missing; this recipe does not move focus. iOS has not covered this entry yet.",
+  "accessibility": [
+    "Persona, Instructions and Knowledge are MonarchText headings; Tools is the connector picker's title.",
+    "The name field shows its error as text and reports it to TalkBack through MonarchTextField's error semantics.",
+    "The character count is the instructions field's helper text, read with the field.",
+    "The saved message is a polite live region, announced without moving focus.",
+    "Configure and Test are Material 3 tabs with the tab role and selected state.",
+    "The avatars are decorative; the agent's name is in the name field and the test messages."
+  ],
+  "edgeCases": [
+    "Keep the test thread out of the scrolling form: on phones it is its own tab, at expanded width its own pane.",
+    "A test send while a tool call waits for approval is refused and the text comes back into the prompt input.",
+    "Edits after a save clear the saved message, so it never claims an unsaved edit was saved.",
+    "Long instructions stop at the limit; pasted text over it is cut to the limit."
+  ],
+  "tests": [
+    "InventoryExamplesTest"
+  ],
+  "examples": [
+    {
+      "title": "Builder with a test chat",
+      "fixture": "ai-agent-builder",
+      "webExample": "Builder with a test chat",
+      "template": "val form = @Composable { modifier: Modifier ->\n    Column(\n        modifier = modifier.padding(MonarchTheme.spacing.space4),\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n    ) {\n        MonarchText(text = \"Persona\", style = MonarchTextStyle.Subheading)\n        Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n            MonarchAiAgentAvatar(agent = agent, size = MonarchAvatarSize.Lg, decorative = true)\n            Column(\n                modifier = Modifier.weight(1f),\n                verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n            ) {\n                MonarchTextField(\n                    value = name,\n                    onValueChange = { name = it; saved = false },\n                    label = \"Name\",\n                    required = true,\n                    errorText = if (triedSave && name.isBlank()) \"Give the agent a name.\" else null,\n                )\n                MonarchTextField(\n                    value = role,\n                    onValueChange = { role = it; saved = false },\n                    label = \"Role\",\n                    helperText = \"One line shown under the name, e.g. “Support assistant”.\",\n                )\n            }\n        }\n        MonarchText(text = \"Instructions\", style = MonarchTextStyle.Subheading)\n        MonarchText(\n            text = \"How the agent should behave, what to focus on and what to avoid.\",\n            style = MonarchTextStyle.Caption,\n            color = MonarchTheme.colors.textMuted,\n        )\n        MonarchTextField(\n            value = instructions,\n            onValueChange = { instructions = it.take(maxInstructions); saved = false },\n            label = \"Instructions\",\n            labelVisibility = MonarchTextFieldLabelVisibility.Hidden,\n            minLines = 8,\n            helperText = \"${instructions.length} / ${\"%,d\".format(Locale.ENGLISH, maxInstructions)} characters\",\n            singleLine = false,\n        )\n        MonarchText(text = \"Tools\", style = MonarchTextStyle.Subheading)\n        MonarchText(\n            text = \"Actions the agent may take. It asks before running anything that changes data.\",\n            style = MonarchTextStyle.Caption,\n            color = MonarchTheme.colors.textMuted,\n        )\n        Column(\n            modifier = Modifier\n                .fillMaxWidth()\n                .border(1.dp, MonarchTheme.colors.borderSubtle, MonarchTheme.shapes.md)\n                .padding(MonarchTheme.spacing.space3),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n        ) {\n            toolList.forEach { (id, label, description) ->\n                MonarchCheckbox(\n                    checked = id in tools,\n                    onCheckedChange = { on -> tools = if (on) tools + id else tools - id; saved = false },\n                    label = label,\n                    description = description,\n                )\n            }\n        }\n        MonarchText(text = \"Knowledge\", style = MonarchTextStyle.Subheading)\n        MonarchText(\n            text = \"Sources the agent can read to ground its answers.\",\n            style = MonarchTextStyle.Caption,\n            color = MonarchTheme.colors.textMuted,\n        )\n        MonarchAiKnowledgeScope(\n            sources = sources,\n            selection = knowledge,\n            onSelectionChange = { knowledge = it; saved = false },\n            expandIcon = {\n                MonarchIcon(\n                    imageVector = SampleIcons.ChevronRight,\n                    contentDescription = null,\n                    size = MonarchIconSize.Sm,\n                )\n            },\n        )\n        Row(\n            horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n            verticalAlignment = Alignment.CenterVertically,\n        ) {\n            MonarchText(\n                text = if (saved) \"Agent saved.\" else \"\",\n                modifier = Modifier.weight(1f).semantics { liveRegion = LiveRegionMode.Polite },\n            )\n            MonarchButton(\n                text = \"Save agent\",\n                onClick = {\n                    triedSave = true\n                    // The app saves definition() on its server here.\n                    saved = name.isNotBlank()\n                },\n                variant = MonarchButtonVariant.Primary,\n            )\n        }\n    }\n}\nval test = @Composable { modifier: Modifier ->\n    Column(\n        modifier = modifier.padding(MonarchTheme.spacing.space4),\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n    ) {\n        Row(\n            horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n            verticalAlignment = Alignment.CenterVertically,\n        ) {\n            MonarchAiAgentAvatar(\n                agent = agent,\n                state = if (status == MonarchAiConversationStatus.Streaming) {\n                    MonarchAiAgentState.Working\n                } else {\n                    MonarchAiAgentState.Idle\n                },\n                size = MonarchAvatarSize.Sm,\n                decorative = true,\n            )\n            MonarchText(text = \"Test\", style = MonarchTextStyle.Subheading, modifier = Modifier.weight(1f))\n            MonarchButton(\n                text = \"Restart test\",\n                onClick = {\n                    conversation.stop()\n                    conversation.reset()\n                },\n                variant = MonarchButtonVariant.Ghost,\n                size = MonarchButtonSize.Sm,\n                enabled = messages.isNotEmpty(),\n            )\n        }\n        MonarchText(text = \"Try the agent with the current settings. Nothing here is saved.\", style = MonarchTextStyle.Caption)\n        @OptIn(ExperimentalMonarchApi::class)\n        MonarchAiThread(\n            messages = messages,\n            modifier = Modifier.weight(1f),\n            status = status,\n            daySeparators = false,\n            onStop = conversation::stop,\n            empty = { MonarchText(text = \"Send a message to try the agent.\") },\n        )\n        MonarchAiPromptInput(\n            label = \"Message the agent\",\n            state = prompt,\n            onSubmit = { text -> check(conversation.send(text, body = mapOf(\"agent\" to definition()))) { \"Not sent\" } },\n            busy = status == MonarchAiConversationStatus.Submitted ||\n                status == MonarchAiConversationStatus.Streaming,\n            onStop = conversation::stop,\n        )\n    }\n}\nColumn(modifier = Modifier.fillMaxWidth()) {\n    form(Modifier)\n    Box(\n        modifier = Modifier\n            .padding(horizontal = MonarchTheme.spacing.space4)\n            .fillMaxWidth()\n            .border(1.dp, MonarchTheme.colors.borderSubtle, MonarchTheme.shapes.md),\n    ) {\n        test(Modifier.height(MonarchTheme.spacing.space24 * 3))\n    }\n}",
+      "setupTemplate": "val maxInstructions = 8000\nvar name by rememberSaveable { mutableStateOf({{agent.name}}) }\nvar role by rememberSaveable { mutableStateOf({{agent.role}}) }\nvar instructions by rememberSaveable {\n    mutableStateOf({{agent.instructions}})\n}\nvar knowledge by remember { mutableStateOf(listOf({{agent.knowledge.0}})) }\nvar tools by remember { mutableStateOf(listOf({{agent.tools.0}})) }\nval toolList = listOf(\n    Triple({{tools.0.id}}, {{tools.0.name}}, {{tools.0.description}}),\n    Triple({{tools.1.id}}, {{tools.1.name}}, {{tools.1.description}}),\n    Triple({{tools.2.id}}, {{tools.2.name}}, {{tools.2.description}}),\n)\nvar triedSave by remember { mutableStateOf(false) }\nvar saved by remember { mutableStateOf(false) }\nvar tab by rememberSaveable { mutableIntStateOf(0) }\nval sources = listOf(\n    MonarchAiKnowledgeSource(\n        id = {{sources.0.id}},\n        label = {{sources.0.label}},\n        kind = MonarchAiKnowledgeSourceKind.Space,\n        children = listOf(\n            MonarchAiKnowledgeSource({{sources.0.children.0.id}}, {{sources.0.children.0.label}}, MonarchAiKnowledgeSourceKind.Document),\n            MonarchAiKnowledgeSource({{sources.0.children.1.id}}, {{sources.0.children.1.label}}, MonarchAiKnowledgeSourceKind.Document),\n        ),\n    ),\n    MonarchAiKnowledgeSource({{sources.1.id}}, {{sources.1.label}}, MonarchAiKnowledgeSourceKind.App),\n)\n// The test chat runs the unsaved definition: the transport reads it from the request body.\nval transport = remember {\n    object : MonarchAiTransport {\n        override fun stream(request: MonarchAiTransportRequest): Flow<MonarchAiStreamEvent> = flowOf(\n            MonarchAiStreamEvent.TextDelta(\"The agent received: \" + request.messages.lastOrNull()?.text.orEmpty()),\n            MonarchAiStreamEvent.Done(),\n        )\n    }\n}\nval conversation = rememberMonarchAiConversation(transport)\nval messages by conversation.messages.collectAsState()\nval status by conversation.status.collectAsState()\nval prompt = rememberTextFieldState()\nval agent = MonarchAiAgentRef(name = name.ifBlank { \"New agent\" }, role = role.ifBlank { null })\nfun definition() = MonarchAiJSON.Object(\n    mapOf(\n        \"name\" to MonarchAiJSON.Text(name),\n        \"role\" to MonarchAiJSON.Text(role),\n        \"instructions\" to MonarchAiJSON.Text(instructions),\n        \"tools\" to MonarchAiJSON.Array(\n            tools.map { MonarchAiJSON.Text(it) },\n        ),\n        \"knowledge\" to MonarchAiJSON.Array(knowledge.map { MonarchAiJSON.Text(it) }),\n    ),\n)",
+      "imports": [
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.text.input.rememberTextFieldState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2",
+        "androidx.compose.ui.Alignment",
+        "androidx.window.core.layout.WindowSizeClass",
+        "com.rookhq.monarch.foundation.*",
+        "com.rookhq.monarch.foundation.icon.*",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "kotlinx.coroutines.flow.Flow",
+        "kotlinx.coroutines.flow.flowOf",
+        "java.util.Locale",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.Modifier",
+        "com.rookhq.monarch.components.forms.checkbox.MonarchCheckbox",
+        "com.rookhq.monarch.components.forms.textfield.MonarchTextFieldLabelVisibility"
+      ],
+      "setup": "val maxInstructions = 8000\nvar name by rememberSaveable { mutableStateOf(\"Onboarding guide\") }\nvar role by rememberSaveable { mutableStateOf(\"Helps new teammates find answers\") }\nvar instructions by rememberSaveable {\n    mutableStateOf(\"Answer from the team handbook. Keep answers short and link the source.\")\n}\nvar knowledge by remember { mutableStateOf(listOf(\"handbook\")) }\nvar tools by remember { mutableStateOf(listOf(\"search\")) }\nval toolList = listOf(\n    Triple(\"search\", \"Search documents\", \"Reads documents the agent can see.\"),\n    Triple(\"tasks\", \"Create tasks\", \"Asks before creating anything.\"),\n    Triple(\"email\", \"Draft email\", \"Drafts only; never sends.\"),\n)\nvar triedSave by remember { mutableStateOf(false) }\nvar saved by remember { mutableStateOf(false) }\nvar tab by rememberSaveable { mutableIntStateOf(0) }\nval sources = listOf(\n    MonarchAiKnowledgeSource(\n        id = \"handbook\",\n        label = \"Team handbook\",\n        kind = MonarchAiKnowledgeSourceKind.Space,\n        children = listOf(\n            MonarchAiKnowledgeSource(\"onboarding\", \"Onboarding guide\", MonarchAiKnowledgeSourceKind.Document),\n            MonarchAiKnowledgeSource(\"policies\", \"Policies\", MonarchAiKnowledgeSourceKind.Document),\n        ),\n    ),\n    MonarchAiKnowledgeSource(\"tickets\", \"Support tickets\", MonarchAiKnowledgeSourceKind.App),\n)\n// The test chat runs the unsaved definition: the transport reads it from the request body.\nval transport = remember {\n    object : MonarchAiTransport {\n        override fun stream(request: MonarchAiTransportRequest): Flow<MonarchAiStreamEvent> = flowOf(\n            MonarchAiStreamEvent.TextDelta(\"The agent received: \" + request.messages.lastOrNull()?.text.orEmpty()),\n            MonarchAiStreamEvent.Done(),\n        )\n    }\n}\nval conversation = rememberMonarchAiConversation(transport)\nval messages by conversation.messages.collectAsState()\nval status by conversation.status.collectAsState()\nval prompt = rememberTextFieldState()\nval agent = MonarchAiAgentRef(name = name.ifBlank { \"New agent\" }, role = role.ifBlank { null })\nfun definition() = MonarchAiJSON.Object(\n    mapOf(\n        \"name\" to MonarchAiJSON.Text(name),\n        \"role\" to MonarchAiJSON.Text(role),\n        \"instructions\" to MonarchAiJSON.Text(instructions),\n        \"tools\" to MonarchAiJSON.Array(\n            tools.map { MonarchAiJSON.Text(it) },\n        ),\n        \"knowledge\" to MonarchAiJSON.Array(knowledge.map { MonarchAiJSON.Text(it) }),\n    ),\n)",
+      "code": "val form = @Composable { modifier: Modifier ->\n    Column(\n        modifier = modifier.padding(MonarchTheme.spacing.space4),\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space4),\n    ) {\n        MonarchText(text = \"Persona\", style = MonarchTextStyle.Subheading)\n        Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n            MonarchAiAgentAvatar(agent = agent, size = MonarchAvatarSize.Lg, decorative = true)\n            Column(\n                modifier = Modifier.weight(1f),\n                verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n            ) {\n                MonarchTextField(\n                    value = name,\n                    onValueChange = { name = it; saved = false },\n                    label = \"Name\",\n                    required = true,\n                    errorText = if (triedSave && name.isBlank()) \"Give the agent a name.\" else null,\n                )\n                MonarchTextField(\n                    value = role,\n                    onValueChange = { role = it; saved = false },\n                    label = \"Role\",\n                    helperText = \"One line shown under the name, e.g. “Support assistant”.\",\n                )\n            }\n        }\n        MonarchText(text = \"Instructions\", style = MonarchTextStyle.Subheading)\n        MonarchText(\n            text = \"How the agent should behave, what to focus on and what to avoid.\",\n            style = MonarchTextStyle.Caption,\n            color = MonarchTheme.colors.textMuted,\n        )\n        MonarchTextField(\n            value = instructions,\n            onValueChange = { instructions = it.take(maxInstructions); saved = false },\n            label = \"Instructions\",\n            labelVisibility = MonarchTextFieldLabelVisibility.Hidden,\n            minLines = 8,\n            helperText = \"${instructions.length} / ${\"%,d\".format(Locale.ENGLISH, maxInstructions)} characters\",\n            singleLine = false,\n        )\n        MonarchText(text = \"Tools\", style = MonarchTextStyle.Subheading)\n        MonarchText(\n            text = \"Actions the agent may take. It asks before running anything that changes data.\",\n            style = MonarchTextStyle.Caption,\n            color = MonarchTheme.colors.textMuted,\n        )\n        Column(\n            modifier = Modifier\n                .fillMaxWidth()\n                .border(1.dp, MonarchTheme.colors.borderSubtle, MonarchTheme.shapes.md)\n                .padding(MonarchTheme.spacing.space3),\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n        ) {\n            toolList.forEach { (id, label, description) ->\n                MonarchCheckbox(\n                    checked = id in tools,\n                    onCheckedChange = { on -> tools = if (on) tools + id else tools - id; saved = false },\n                    label = label,\n                    description = description,\n                )\n            }\n        }\n        MonarchText(text = \"Knowledge\", style = MonarchTextStyle.Subheading)\n        MonarchText(\n            text = \"Sources the agent can read to ground its answers.\",\n            style = MonarchTextStyle.Caption,\n            color = MonarchTheme.colors.textMuted,\n        )\n        MonarchAiKnowledgeScope(\n            sources = sources,\n            selection = knowledge,\n            onSelectionChange = { knowledge = it; saved = false },\n            expandIcon = {\n                MonarchIcon(\n                    imageVector = SampleIcons.ChevronRight,\n                    contentDescription = null,\n                    size = MonarchIconSize.Sm,\n                )\n            },\n        )\n        Row(\n            horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n            verticalAlignment = Alignment.CenterVertically,\n        ) {\n            MonarchText(\n                text = if (saved) \"Agent saved.\" else \"\",\n                modifier = Modifier.weight(1f).semantics { liveRegion = LiveRegionMode.Polite },\n            )\n            MonarchButton(\n                text = \"Save agent\",\n                onClick = {\n                    triedSave = true\n                    // The app saves definition() on its server here.\n                    saved = name.isNotBlank()\n                },\n                variant = MonarchButtonVariant.Primary,\n            )\n        }\n    }\n}\nval test = @Composable { modifier: Modifier ->\n    Column(\n        modifier = modifier.padding(MonarchTheme.spacing.space4),\n        verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n    ) {\n        Row(\n            horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2),\n            verticalAlignment = Alignment.CenterVertically,\n        ) {\n            MonarchAiAgentAvatar(\n                agent = agent,\n                state = if (status == MonarchAiConversationStatus.Streaming) {\n                    MonarchAiAgentState.Working\n                } else {\n                    MonarchAiAgentState.Idle\n                },\n                size = MonarchAvatarSize.Sm,\n                decorative = true,\n            )\n            MonarchText(text = \"Test\", style = MonarchTextStyle.Subheading, modifier = Modifier.weight(1f))\n            MonarchButton(\n                text = \"Restart test\",\n                onClick = {\n                    conversation.stop()\n                    conversation.reset()\n                },\n                variant = MonarchButtonVariant.Ghost,\n                size = MonarchButtonSize.Sm,\n                enabled = messages.isNotEmpty(),\n            )\n        }\n        MonarchText(text = \"Try the agent with the current settings. Nothing here is saved.\", style = MonarchTextStyle.Caption)\n        @OptIn(ExperimentalMonarchApi::class)\n        MonarchAiThread(\n            messages = messages,\n            modifier = Modifier.weight(1f),\n            status = status,\n            daySeparators = false,\n            onStop = conversation::stop,\n            empty = { MonarchText(text = \"Send a message to try the agent.\") },\n        )\n        MonarchAiPromptInput(\n            label = \"Message the agent\",\n            state = prompt,\n            onSubmit = { text -> check(conversation.send(text, body = mapOf(\"agent\" to definition()))) { \"Not sent\" } },\n            busy = status == MonarchAiConversationStatus.Submitted ||\n                status == MonarchAiConversationStatus.Streaming,\n            onStop = conversation::stop,\n        )\n    }\n}\nColumn(modifier = Modifier.fillMaxWidth()) {\n    form(Modifier)\n    Box(\n        modifier = Modifier\n            .padding(horizontal = MonarchTheme.spacing.space4)\n            .fillMaxWidth()\n            .border(1.dp, MonarchTheme.colors.borderSubtle, MonarchTheme.shapes.md),\n    ) {\n        test(Modifier.height(MonarchTheme.spacing.space24 * 3))\n    }\n}"
+    }
+  ],
+  "webEquivalent": "AiAgentBuilder",
+  "dependsOn": [
+    "text-field",
+    "ai-connector-picker",
+    "ai-knowledge-scope",
+    "ai-thread",
+    "ai-prompt-input",
+    "tabs"
+  ]
+}

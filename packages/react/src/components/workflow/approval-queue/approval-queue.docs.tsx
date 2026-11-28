@@ -1,39 +1,26 @@
 import { useState } from 'react';
-import { Badge } from '@rookcom/monarch-react';
+import { Badge, Link, type BadgeProps } from '@rookcom/monarch-react';
 import { ApprovalQueue, type ApprovalQueueItem } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './approval-queue.fixture.json';
 
-const NOW = '2026-03-10T12:00:00Z';
+const NOW = fixture.data.now;
 
-const ITEMS: ApprovalQueueItem[] = [
-  {
-    id: '1',
-    requester: { name: 'Alex Morgan', detail: 'Design' },
-    title: 'Expense claim',
-    summary: '3 receipts, travel',
-    submittedAt: '2026-03-08T09:00:00Z',
-    overdue: true,
-  },
-  {
-    id: '2',
-    requester: { name: 'Sam Lee', detail: 'Engineering' },
-    title: 'Leave, 2 days',
-    summary: '14 to 15 April',
-    submittedAt: '2026-03-10T08:15:00Z',
-  },
-  {
-    id: '3',
-    requester: { name: 'Jo Park', detail: 'Operations' },
-    title: 'Timesheet',
-    summary: 'Week of 2 March, 41 h',
-    submittedAt: '2026-03-09T17:40:00Z',
-    badges: (
-      <Badge size="sm" tone="warning">
-        Resubmitted
-      </Badge>
-    ),
-  },
-];
+const ITEMS: ApprovalQueueItem[] = fixture.data.items.map(
+  ({ badge, ...item }): ApprovalQueueItem => ({
+    ...item,
+    ...(badge
+      ? {
+          badges: (
+            <Badge size="sm" tone={badge.tone as NonNullable<BadgeProps['tone']>}>
+              {badge.label}
+            </Badge>
+          ),
+        }
+      : {}),
+  }),
+);
 
 function QueueDemo() {
   const [items, setItems] = useState(ITEMS);
@@ -199,7 +186,7 @@ export default {
               limit={2}
               onApprove={() => {}}
               onReject={() => {}}
-              footer={<a href="#approvals">See all 3 requests</a>}
+              footer={<Link href="#approvals">See all 3 requests</Link>}
             />
           ),
         },

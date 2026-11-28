@@ -1,0 +1,192 @@
+{
+  "id": "issue-card",
+  "name": "MonarchIssueCard",
+  "title": "IssueCard",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack on the MonarchCard surface (monarchElevation and MonarchCardTokens), Link or Button for the title, Menu with an inline Picker for status and priority; MonarchTag, MonarchAvatar, MonarchFlowLayout",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "An issue on a board or in a list: key, title, status, priority, tags, due date and assignee, with status and priority changeable in place.",
+  "whenToUse": "For issues, tasks or tickets in a board column or a list, where readers scan status, urgency, ownership and dates and open the issue from the title.",
+  "whenNotToUse": "For a dense list with many columns, use MonarchDataTable. For a calendar entry, use MonarchEventChip. For a request that needs a decision, use MonarchApprovalQueue.",
+  "api": [
+    "MonarchIssueCard.init(_ title: String, key: String, url: URL? = nil, status: MonarchIssueCardStatus? = nil, statuses: [MonarchIssueCardStatus] = [], priority: MonarchIssueCardPriority? = nil, assignee: MonarchIssueCardAssignee? = nil, tags: [String] = [], dueDate: Date? = nil, today: Date? = nil, isSelected: Bool = false, isDragging: Bool = false, labels: MonarchIssueCardLabels = MonarchIssueCardLabels(), onStatusChange: (@MainActor (_ statusID: String) -> Void)? = nil, onPriorityChange: (@MainActor (_ priority: MonarchIssueCardPriority) -> Void)? = nil, onOpen: (@MainActor () -> Void)? = nil)",
+    "MonarchIssueCardStatus.init(id: String, name: String, category: MonarchIssueCardStatusCategory)",
+    "enum MonarchIssueCardStatusCategory { case backlog, unstarted, started, completed, cancelled }",
+    "enum MonarchIssueCardPriority { case urgent, high, medium, low, none }",
+    "enum MonarchIssueCardAssignee { case person(_ name: String, avatarURL: URL? = nil), unassigned }",
+    "MonarchIssueCardLabels.init(due: (@Sendable (String) -> String)? = nil, overdue: String? = nil, tags: String? = nil, unassigned: String? = nil, assignee: (@Sendable (String) -> String)? = nil, status: (@Sendable (String) -> String)? = nil, priority: (@Sendable (String) -> String)? = nil, priorityLevel: (@Sendable (MonarchIssueCardPriority) -> String)? = nil, selected: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The issue's title, already localised."
+    },
+    {
+      "name": "key",
+      "type": "String",
+      "default": "required",
+      "description": "The issue key, such as STR-142. Read before the title."
+    },
+    {
+      "name": "url",
+      "type": "URL?",
+      "default": "nil",
+      "description": "Where the issue opens. Only http and https addresses make the title a link; others are ignored."
+    },
+    {
+      "name": "status",
+      "type": "MonarchIssueCardStatus?",
+      "default": "nil",
+      "description": "The current status, shown with the symbol of its category."
+    },
+    {
+      "name": "statuses",
+      "type": "[MonarchIssueCardStatus]",
+      "default": "[]",
+      "description": "Every status. With onStatusChange, the status becomes a menu."
+    },
+    {
+      "name": "priority",
+      "type": "MonarchIssueCardPriority?",
+      "default": "nil",
+      "description": "The priority, shown as a symbol at the end of the header. None when nil."
+    },
+    {
+      "name": "assignee",
+      "type": "MonarchIssueCardAssignee?",
+      "default": "nil",
+      "description": ".person shows an avatar; .unassigned an empty dashed slot. No slot when nil."
+    },
+    {
+      "name": "tags",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Labels on the issue, shown as small tags."
+    },
+    {
+      "name": "dueDate",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The due day, shown as \"Due Mar 12\" in the environment's calendar, time zone and locale."
+    },
+    {
+      "name": "today",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference day for overdue. The current date when nil."
+    },
+    {
+      "name": "isSelected",
+      "type": "Bool",
+      "default": "false",
+      "description": "Tints the card with the accent, adds a check mark and the selected trait."
+    },
+    {
+      "name": "isDragging",
+      "type": "Bool",
+      "default": "false",
+      "description": "Lifts the card with a larger shadow."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchIssueCardLabels",
+      "default": "MonarchIssueCardLabels()",
+      "description": "Replacements for the due and overdue text, the priority names and every spoken phrase."
+    },
+    {
+      "name": "onStatusChange",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Changes the status from the card. Receives the chosen status id."
+    },
+    {
+      "name": "onPriorityChange",
+      "type": "(@MainActor (MonarchIssueCardPriority) -> Void)?",
+      "default": "nil",
+      "description": "Changes the priority from the card; the symbol becomes a menu."
+    },
+    {
+      "name": "onOpen",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Opens the issue. Makes the title a button when there is no url."
+    }
+  ],
+  "states": [
+    {
+      "name": "default",
+      "description": "Surface fill, default border, extra-small shadow."
+    },
+    {
+      "name": "selected",
+      "description": "Subtle accent fill, a thicker accent border and a check mark before the key."
+    },
+    {
+      "name": "dragging",
+      "description": "A large shadow lifts the card."
+    },
+    {
+      "name": "overdue",
+      "description": "The due date turns the strong danger colour, its symbol becomes an exclamation mark and the word Overdue is added. Completed and cancelled issues are never overdue."
+    },
+    {
+      "name": "editable",
+      "description": "Status and priority open menus with every option, when their change handlers are given."
+    }
+  ],
+  "appearance": "The card uses the MonarchCard surface, radius and padding. The key is muted caption text, the title strong body text. Priority symbols are strong danger (urgent), strong warning (high), default text (medium, low) or muted (none); status symbols are subtle, muted, strong warning or strong success by category. The same roles adapt to dark and high-contrast themes.",
+  "platformNotes": "The web card uses its PriorityPicker and StatusPicker; iOS uses the system Menu with an inline Picker, as the priority-picker and status-picker entries recommend. MonarchCard has no selected state, so the card draws the same surface with its own fill for selection. The due date is a Date read in the environment's calendar and time zone (the web also accepts YYYY-MM-DD strings), and today is a Date rather than a string. Web labels are called tags here because labels names the strings parameter. Android uses the same name and API shape. Several closures are optional (onStatusChange, onPriorityChange, onOpen). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onStatusChange.",
+  "accessibility": [
+    "The card is a container; its parts are read in order.",
+    "The title is read with the key first (\"STR-142, Sign-in fails…\") and has the selected trait on a selected card.",
+    "The title is a link or a button when the issue can be opened.",
+    "Priority is read as \"Priority: High\", status as \"Status: In progress\", the due date as \"Due Mar 12, Overdue\" and the assignee as \"Assigned to Ana Ruiz\" or \"Unassigned\".",
+    "Every priority level and status category has its own symbol, and overdue is written, so nothing relies on colour.",
+    "The status and priority menus have touch targets at least 44 points high."
+  ],
+  "edgeCases": [
+    "Long titles wrap; tags and the due date flow onto new lines while the assignee stays at the end.",
+    "A url with another scheme (mailto, javascript) is ignored; the title falls back to onOpen or plain text.",
+    "A due date later today is not overdue; overdue compares days, not times.",
+    "With onStatusChange but no statuses, the status is read-only."
+  ],
+  "tests": [
+    "MonarchIssueCardTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Editable status and priority",
+      "fixture": "issue-card",
+      "webExample": "Editable status and priority",
+      "template": "MonarchIssueCard(\n    {{title}},\n    key: {{key}},\n    status: statuses.first { $0.id == statusID },\n    statuses: statuses,\n    priority: {{priority|case}},\n    assignee: .person({{assignee}}),\n    tags: [{{labels.0}}, {{labels.1}}],\n    dueDate: {{dueDate|date}},\n    today: {{today|date}},\n    onStatusChange: { statusID = $0 },\n    onPriorityChange: { _ in },\n    onOpen: {}\n)\n.environment(\\.locale, Locale(identifier: \"en-US\"))",
+      "setupTemplate": "@State private var statusID = {{status}}\n\nprivate let statuses = [\n    MonarchIssueCardStatus(id: {{statuses.0.id}}, name: {{statuses.0.name}}, category: {{statuses.0.category|case}}),\n    MonarchIssueCardStatus(id: {{statuses.1.id}}, name: {{statuses.1.name}}, category: {{statuses.1.category|case}}),\n    MonarchIssueCardStatus(id: {{statuses.2.id}}, name: {{statuses.2.name}}, category: {{statuses.2.category|case}}),\n    MonarchIssueCardStatus(id: {{statuses.3.id}}, name: {{statuses.3.name}}, category: {{statuses.3.category|case}}),\n]",
+      "setup": "@State private var statusID = \"doing\"\n\nprivate let statuses = [\n    MonarchIssueCardStatus(id: \"backlog\", name: \"Backlog\", category: .backlog),\n    MonarchIssueCardStatus(id: \"todo\", name: \"Todo\", category: .unstarted),\n    MonarchIssueCardStatus(id: \"doing\", name: \"In progress\", category: .started),\n    MonarchIssueCardStatus(id: \"done\", name: \"Done\", category: .completed),\n]",
+      "code": "MonarchIssueCard(\n    \"Add keyboard shortcuts to the board view\",\n    key: \"WEB-218\",\n    status: statuses.first { $0.id == statusID },\n    statuses: statuses,\n    priority: .high,\n    assignee: .person(\"Robin Diaz\"),\n    tags: [\"Accessibility\", \"Board\"],\n    dueDate: Date(timeIntervalSince1970: 1_796_342_400),\n    today: Date(timeIntervalSince1970: 1_794_009_600),\n    onStatusChange: { statusID = $0 },\n    onPriorityChange: { _ in },\n    onOpen: {}\n)\n.environment(\\.locale, Locale(identifier: \"en-US\"))"
+    },
+    {
+      "title": "A selected, unassigned card",
+      "code": "MonarchIssueCard(\"Write the release notes\", key: \"STR-150\", assignee: .unassigned, isSelected: true)"
+    }
+  ],
+  "webEquivalent": "IssueCard",
+  "dependsOn": [
+    "card",
+    "avatar",
+    "tag",
+    "priority-picker",
+    "status-picker"
+  ],
+  "icons": {
+    "status.chevron": "ChevronDownGlyph",
+    "dueDate": "CalendarGlyph"
+  }
+}

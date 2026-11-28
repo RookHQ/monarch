@@ -6,8 +6,13 @@ import {
   type EditorToolbarItem,
 } from '@rookcom/monarch-react/editor';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './editor-toolbar.fixture.json';
 
-const DOC = `<h2>Meeting notes</h2><p>Agree the <strong>release date</strong> and who owns the help article.</p><ul><li><p>Draft the announcement</p></li><li><p>Review the checklist</p></li></ul>`;
+const { heading, paragraph, bullets } = fixture.data;
+const DOC = `<h2>${heading}</h2><p>${paragraph.before}<strong>${paragraph.bold}</strong>${paragraph.after}</p><ul>${bullets
+  .map((item) => `<li><p>${item}</p></li>`)
+  .join('')}</ul>`;
 
 function Demo({ items, disabled }: { items?: readonly EditorToolbarItem[]; disabled?: boolean }) {
   const editor = useEditor({

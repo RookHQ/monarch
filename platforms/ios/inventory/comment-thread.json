@@ -1,0 +1,158 @@
+{
+  "id": "comment-thread",
+  "name": "MonarchCommentThread",
+  "title": "CommentThread",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of MonarchMessageRow comments (each with .contextMenu for Delete), a MonarchButton fold and Resolve button, a MonarchMessageComposer reply field and .confirmationDialog(_:isPresented:titleVisibility:presenting:actions:message:) before deleting",
+  "status": "experimental",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "One threaded discussion: the starting comment, replies with older ones folded, an optional quote, Resolve and Reopen, and a reply field that stays busy while the app saves.",
+  "whenToUse": "A discussion anchored to one item and shown in place: a sheet opened from a highlighted passage, a card under a field, a ticket's detail screen. Review flows where threads are resolved when settled.",
+  "whenNotToUse": "For a chat conversation use MonarchVirtualMessageList with MonarchMessageRow and MonarchMessageComposer. For a list of many threads with filters use a List of threads that each push a screen holding this view.",
+  "api": [
+    "init(_ comments: [MonarchCommentThreadComment], quote: String? = nil, isResolved: Bool = false, visibleReplies: Int = 3, now: Date? = nil, labels: MonarchCommentThreadLabels = MonarchCommentThreadLabels(), onResolvedChange: (@MainActor (Bool) async throws -> Void)? = nil, onDelete: (@MainActor (String) async throws -> Void)? = nil, onReply: (@MainActor (String) async throws -> Void)? = nil)",
+    "struct MonarchCommentThreadComment: Identifiable, Sendable, Hashable { init(id: String, author: String, body: String, createdAt: Date, avatarURL: URL? = nil, seed: String? = nil, canDelete: Bool = false) }",
+    "struct MonarchCommentThreadLabels: Sendable { init(thread:quote:showEarlier:earlierShown:reply:replyPlaceholder:send:resolve:reopen:resolved:resolvedHint:resolvedNotice:reopenedNotice:sentNotice:actionFailed:delete:deleteTitle:deleteMessage:cancel:), every parameter optional }"
+  ],
+  "options": [
+    {
+      "name": "comments",
+      "type": "[MonarchCommentThreadComment]",
+      "default": "required",
+      "description": "The comments, oldest first. The first starts the thread; the rest are replies."
+    },
+    {
+      "name": "quote",
+      "type": "String?",
+      "default": "nil",
+      "description": "The passage the thread is about, shown above it beside a bar."
+    },
+    {
+      "name": "isResolved",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the Resolved badge, makes the button Reopen and replaces the reply field with a hint."
+    },
+    {
+      "name": "visibleReplies",
+      "type": "Int",
+      "default": "3",
+      "description": "The latest replies kept visible; older ones fold behind \"Show N earlier replies\". One folded reply is never hidden."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "Fixes \"now\" for the relative times, for tests and previews. The clock by default."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchCommentThreadLabels",
+      "default": "MonarchCommentThreadLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onResolvedChange",
+      "type": "(@MainActor (Bool) async throws -> Void)?",
+      "default": "nil",
+      "description": "Resolves (true) or reopens the thread. Adds the Resolve button, which shows a spinner while it runs."
+    },
+    {
+      "name": "onDelete",
+      "type": "(@MainActor (String) async throws -> Void)?",
+      "default": "nil",
+      "description": "Deletes the comment with this id after a confirmation dialog. Adds Delete to the context menu of comments with canDelete."
+    },
+    {
+      "name": "onReply",
+      "type": "(@MainActor (String) async throws -> Void)?",
+      "default": "nil",
+      "description": "Posts the trimmed reply. Adds the reply field. The text clears when it returns and stays when it throws."
+    }
+  ],
+  "states": [
+    {
+      "name": "open",
+      "description": "Resolve button (when onResolvedChange is given) and the reply field (when onReply is given)."
+    },
+    {
+      "name": "folded",
+      "description": "Between the first comment and the latest replies a ghost button reads \"Show N earlier replies\"; activating it shows them all and announces it."
+    },
+    {
+      "name": "resolved",
+      "description": "A success Resolved badge with a check, the button reads Reopen, and the reply field is replaced by \"This thread is resolved. Reopen it to reply.\""
+    },
+    {
+      "name": "busy",
+      "description": "Resolve shows a spinner and the other buttons are disabled; the reply field shows its sending state until onReply returns."
+    },
+    {
+      "name": "failed",
+      "description": "A danger inline notice \"That didn't work. Try again.\" is shown and announced; a reply keeps its text."
+    },
+    {
+      "name": "deleting",
+      "description": "Delete in a comment's context menu opens a system confirmation dialog with a destructive Delete comment and Cancel."
+    },
+    {
+      "name": "empty",
+      "description": "With no comments only the top row and the reply field are shown, so the first comment can be written."
+    }
+  ],
+  "appearance": "Comments use MonarchMessageRow (default text for author and body, muted text for the time). The quote is muted text beside a bar in the strong border colour. The resolved badge uses the success tone; a failure uses the danger tone with an icon. All colours follow the theme in light, dark and both high-contrast themes.",
+  "platformNotes": "The web thread shows an icon delete button on each comment and a Textarea with an Enter-to-send hint; on iOS Delete is in the comment's context menu, as messages offer actions on touch, and the reply field is MonarchMessageComposer, whose hardware-keyboard Return sends. The web mutes a resolved thread's text; iOS keeps the message rows' colours and marks the state with a Resolved badge and the spoken value. The web moves focus to the first revealed reply; iOS announces how many replies were shown. Comment bodies are plain text on iOS; the web accepts rich content. Android has no comment thread yet. Status experimental: it is a product composite until a Rook app adopts it.",
+  "accessibility": [
+    "The thread is a container named \"Thread started by\" and the first author, with the value Resolved while resolved.",
+    "The quote is one element read as \"Quoted text\" with the passage as its value.",
+    "Each comment is a MonarchMessageRow read as author, full date and time, and text; Delete is in its context menu, available through the VoiceOver actions.",
+    "Showing folded replies announces \"3 earlier replies shown\"; resolving, reopening, posting a reply and a failure are announced.",
+    "A failure is an icon and text, not colour alone; the resolved state is a badge with a check and text.",
+    "Every button is at least 44 points; the reply field is named Reply."
+  ],
+  "edgeCases": [
+    "With visibleReplies at 0 every reply folds; a negative value counts as 0.",
+    "Exactly one reply more than visibleReplies is shown rather than folded behind a button for one item.",
+    "A reply of only spaces and line breaks is not posted.",
+    "Long names and bodies wrap; the top row lets the quote wrap beside the button.",
+    "New replies arriving while folded stay visible because the latest replies are always shown."
+  ],
+  "tests": [
+    "MonarchCommentThreadTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Open thread with a quote",
+      "fixture": "comment-thread",
+      "webExample": "Open thread with a quote",
+      "template": "MonarchCommentThread(\n    comments,\n    quote: {{quote}},\n    isResolved: isResolved,\n    now: {{now|date}},\n    onResolvedChange: { isResolved = $0 },\n    onDelete: { id in comments.removeAll { $0.id == id } },\n    onReply: { text in\n        comments.append(\n            MonarchCommentThreadComment(id: UUID().uuidString, author: \"Lee Park\", body: text, createdAt: .now)\n        )\n    }\n)",
+      "setupTemplate": "@State private var isResolved = false\n@State private var comments = [\n    MonarchCommentThreadComment(\n        id: {{comments.0.id}},\n        author: {{comments.0.author}},\n        body: {{comments.0.body}},\n        createdAt: {{comments.0.createdAt|date}},\n        seed: {{comments.0.seed}}\n    ),\n    MonarchCommentThreadComment(\n        id: {{comments.1.id}},\n        author: {{comments.1.author}},\n        body: {{comments.1.body}},\n        createdAt: {{comments.1.createdAt|date}},\n        seed: {{comments.1.seed}},\n        canDelete: {{comments.1.canDelete}}\n    ),\n]",
+      "setup": "@State private var isResolved = false\n@State private var comments = [\n    MonarchCommentThreadComment(\n        id: \"c1\",\n        author: \"Priya Raman\",\n        body: \"Should this say \\\"billed every quarter\\\" instead?\",\n        createdAt: Date(timeIntervalSince1970: 1_773_133_920),\n        seed: \"u1\"\n    ),\n    MonarchCommentThreadComment(\n        id: \"c2\",\n        author: \"Tom Becker\",\n        body: \"Yes. Monthly billing was retired last year.\",\n        createdAt: Date(timeIntervalSince1970: 1_773_135_600),\n        seed: \"u2\",\n        canDelete: true\n    ),\n]",
+      "code": "MonarchCommentThread(\n    comments,\n    quote: \"Billed monthly, cancel any time.\",\n    isResolved: isResolved,\n    now: Date(timeIntervalSince1970: 1_773_144_000),\n    onResolvedChange: { isResolved = $0 },\n    onDelete: { id in comments.removeAll { $0.id == id } },\n    onReply: { text in\n        comments.append(\n            MonarchCommentThreadComment(id: UUID().uuidString, author: \"Lee Park\", body: text, createdAt: .now)\n        )\n    }\n)"
+    },
+    {
+      "title": "Read only, with older replies folded",
+      "code": "MonarchCommentThread(\n    (0..<6).map { (index: Int) -> MonarchCommentThreadComment in\n        MonarchCommentThreadComment(\n            id: \"\\(index)\",\n            author: index == 0 ? \"Lee Park\" : \"Tom Becker\",\n            body: index == 0 ? \"Can we drop the footnote?\" : \"Reply \\(index)\",\n            createdAt: Date(timeIntervalSinceReferenceDate: 800_000_000).addingTimeInterval(TimeInterval(index * 300))\n        )\n    },\n    visibleReplies: 2,\n    now: Date(timeIntervalSinceReferenceDate: 800_003_600)\n)"
+    }
+  ],
+  "webEquivalent": "CommentThread",
+  "dependsOn": [
+    "avatar",
+    "message-row",
+    "message-composer",
+    "relative-time",
+    "button",
+    "badge",
+    "inline-notice",
+    "confirm-dialog"
+  ],
+  "icons": {
+    "resolve": "CheckGlyph"
+  }
+}

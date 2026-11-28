@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- the fixture is a fixed JSON literal; the indices below exist. */
 import { forwardRef, useState, type AnchorHTMLAttributes } from 'react';
-import { SidebarNav, type SidebarNavSection } from '@rookcom/monarch-react';
+import { SidebarNav, type SidebarNavItem, type SidebarNavSection } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import {
   CalendarIcon,
@@ -8,56 +9,78 @@ import {
   InboxIcon,
   UsersIcon,
 } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './sidebar-nav.fixture.json';
+
+const d = fixture.data;
+type BadgeTone = NonNullable<SidebarNavItem['badgeTone']>;
+const [designItems, researchItems] = d.teams.map((t) => t.items) as unknown as readonly [
+  readonly [
+    { label: string; badge: number; badgeTone: BadgeTone },
+    { label: string; badge: number; badgeTone: BadgeTone },
+  ],
+  readonly [{ label: string }, { label: string }],
+];
 
 const SECTIONS: SidebarNavSection[] = [
   {
     key: 'main',
     items: [
-      { key: 'home', label: 'Home', icon: <HomeIcon />, href: '#/home', exact: true },
-      { key: 'inbox', label: 'Inbox', icon: <InboxIcon />, href: '#/inbox', badge: 4 },
-      { key: 'calendar', label: 'Calendar', icon: <CalendarIcon />, href: '#/calendar' },
+      { key: 'home', label: d.main[0]!.label, icon: <HomeIcon />, href: '#/home', exact: true },
+      {
+        key: 'inbox',
+        label: d.main[1]!.label,
+        icon: <InboxIcon />,
+        href: '#/inbox',
+        badge: d.main[1]!.badge,
+      },
+      { key: 'calendar', label: d.main[2]!.label, icon: <CalendarIcon />, href: '#/calendar' },
     ],
   },
   {
     key: 'teams',
-    label: 'Teams',
+    label: d.teamsLabel,
     items: [
       {
         key: 'design',
-        label: 'Design',
+        label: d.teams[0]!.label,
         icon: <UsersIcon />,
         items: [
           {
             key: 'design-issues',
-            label: 'Issues',
+            label: designItems[0].label,
             href: '#/teams/design/issues',
-            badge: 12,
-            badgeTone: 'neutral',
+            badge: designItems[0].badge,
+            badgeTone: designItems[0].badgeTone,
           },
           {
             key: 'design-backlog',
-            label: 'Backlog',
+            label: designItems[1].label,
             href: '#/teams/design/backlog',
-            badge: 48,
-            badgeTone: 'neutral',
+            badge: designItems[1].badge,
+            badgeTone: designItems[1].badgeTone,
           },
         ],
       },
       {
         key: 'research',
-        label: 'Research',
+        label: d.teams[1]!.label,
         icon: <UsersIcon />,
         items: [
-          { key: 'research-issues', label: 'Issues', href: '#/teams/research/issues' },
-          { key: 'research-notes', label: 'Notes', href: '#/teams/research/notes' },
+          {
+            key: 'research-issues',
+            label: researchItems[0].label,
+            href: '#/teams/research/issues',
+          },
+          { key: 'research-notes', label: researchItems[1].label, href: '#/teams/research/notes' },
         ],
       },
     ],
   },
   {
     key: 'admin',
-    label: 'Workspace',
-    items: [{ key: 'settings', label: 'Settings', icon: <GearIcon />, href: '#/settings' }],
+    label: d.workspaceLabel,
+    items: [{ key: 'settings', label: d.settings.label, icon: <GearIcon />, href: '#/settings' }],
   },
 ];
 

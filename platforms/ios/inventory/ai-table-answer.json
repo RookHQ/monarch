@@ -1,0 +1,149 @@
+{
+  "id": "ai-table-answer",
+  "name": "MonarchAiTableAnswer",
+  "title": "AiTableAnswer",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Grid with GridRow inside ScrollView(.horizontal), Button headers, MonarchCopyButton, MonarchButton and redacted(reason: .placeholder)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A table the model produced, shown as a real table: column types inferred, sortable headers, Copy as CSV, an optional Open as artifact, and rows that can stream in.",
+  "whenToUse": "When an assistant reply or a tool returns rows of data that people will compare, sort or copy into a spreadsheet.",
+  "whenNotToUse": "Not for an app's own data with selection, editing or pagination: use a List or the data table. Not for two or three facts: use MonarchKeyValue.",
+  "api": [
+    "init(_ rows: [[String: MonarchAiJSON]], title: String? = nil, columns: [MonarchAiTableColumn]? = nil, isStreaming: Bool = false, isSortable: Bool = true, isCopyable: Bool = true, visibleRows: Int = 200, labels: MonarchAiTableAnswerLabels = MonarchAiTableAnswerLabels(), onOpenAsArtifact: (@MainActor () -> Void)? = nil)",
+    "MonarchAiTableColumn.init(_ key: String, label: String? = nil, type: MonarchAiTableColumnType? = nil, alignment: MonarchAiTableColumnAlignment? = nil)",
+    "enum MonarchAiTableColumnType { case text, number, date }",
+    "enum MonarchAiTableColumnAlignment { case leading, trailing }",
+    "MonarchAiTableAnswerLabels.init(aiTable: String? = nil, rowCount: (@Sendable (Int) -> String)? = nil, copyCSV: String? = nil, copied: String? = nil, openAsArtifact: String? = nil, sorted: (@Sendable (String, Bool) -> String)? = nil, sortValue: (@Sendable (Bool) -> String)? = nil, empty: String? = nil, noRows: String? = nil, loadingRows: String? = nil, complete: String? = nil, showAllRows: (@Sendable (Int) -> String)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "rows",
+      "type": "[[String: MonarchAiJSON]]",
+      "default": "required",
+      "description": "The rows, as the conversation model's JSON values, for example a tool's output."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "The title under the AI table label."
+    },
+    {
+      "name": "columns",
+      "type": "[MonarchAiTableColumn]?",
+      "default": "nil",
+      "description": "Order, headers, types and alignment. nil makes a column of every key, in alphabetical order, with inferred types."
+    },
+    {
+      "name": "isStreaming",
+      "type": "Bool",
+      "default": "false",
+      "description": "Rows are still arriving: a placeholder row, Open as artifact disabled, and \"Table complete.\" announced when it turns false."
+    },
+    {
+      "name": "isSortable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the headers sort the table."
+    },
+    {
+      "name": "isCopyable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows Copy as CSV."
+    },
+    {
+      "name": "visibleRows",
+      "type": "Int",
+      "default": "200",
+      "description": "Rows drawn before Show all rows. Sorting and the CSV use every row."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiTableAnswerLabels",
+      "default": "MonarchAiTableAnswerLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onOpenAsArtifact",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows Open as artifact."
+    }
+  ],
+  "states": [
+    {
+      "name": "unsorted",
+      "description": "Rows in the order the model gave; every header shows a neutral up and down chevron."
+    },
+    {
+      "name": "sorted",
+      "description": "The active header shows an up or down chevron and reads Sorted ascending or Sorted descending. Blanks stay last."
+    },
+    {
+      "name": "streaming",
+      "description": "A placeholder bar row under the rows; Open as artifact is disabled."
+    },
+    {
+      "name": "empty",
+      "description": "No rows and not streaming: No rows. Copy as CSV is disabled."
+    },
+    {
+      "name": "long",
+      "description": "More rows than visibleRows: a Show all n rows button under the table."
+    }
+  ],
+  "appearance": "The AI table label and bot glyph in the AI strong role, the title in default text, the row count in muted text. The table sits on the surface with a subtle border and rules between rows; headers are muted, cells default text, empty cells a dash in the subtle text role. Numbers use tabular digits.",
+  "platformNotes": "The web renders an HTML table with aria-sort; SwiftUI has no table semantics on iOS 17, so headers are buttons with the header trait and the sort as their value, and each row is read as one element of header and value pairs. Rows are dictionaries of MonarchAiJSON, which have no key order, so inferred columns are alphabetical; pass columns for the model's order. The web's per-column render closure is not offered; cells are text. Dates in the data are ISO strings and are shown as given, not reformatted. Long cells stay on one line and the table scrolls sideways. Copy as CSV uses MonarchCopyButton, which writes to the general pasteboard.",
+  "accessibility": [
+    "The AI table label, title and row count are one header element.",
+    "Each sortable header is a button with the header trait, read as its name with Sorted ascending or Sorted descending as its value, at least 44 points high.",
+    "A sort is announced, for example \"Sorted by Revenue, ascending.\".",
+    "Each row is one element read as \"Region: North, Revenue: 1,200\"; an empty cell is read as Empty.",
+    "The streaming placeholder is read as \"More rows are being generated\", and the end of streaming is announced as \"Table complete.\".",
+    "The sort chevrons are decorative; the direction is the spoken value."
+  ],
+  "edgeCases": [
+    "Text a spreadsheet would run as a formula (=, +, -, @) is prefixed with ' in the CSV; numbers such as -3 are kept.",
+    "Numeric text such as \"1,200\", \"12%\" and \"−3\" sorts by value; mixed columns are text.",
+    "A date or time without a zone is read as UTC for sorting.",
+    "JSON numbers in a number column are formatted for the locale; numeric text is shown as given.",
+    "Arrays and objects in a cell are shown as compact JSON.",
+    "The CSV is built on every render while copyable; very large tables should set isCopyable false and offer an export."
+  ],
+  "tests": [
+    "MonarchAiTableAnswerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Sortable table",
+      "fixture": "ai-table-answer",
+      "webExample": "Sortable table",
+      "template": "MonarchAiTableAnswer(\n    [\n        [{{columns.0}}: {{rows.0.0}}, {{columns.1}}: {{rows.0.1}}, {{columns.2}}: {{rows.0.2}}, {{columns.3}}: {{rows.0.3}}],\n        [{{columns.0}}: {{rows.1.0}}, {{columns.1}}: {{rows.1.1}}, {{columns.2}}: {{rows.1.2}}, {{columns.3}}: {{rows.1.3}}],\n        [{{columns.0}}: {{rows.2.0}}, {{columns.1}}: {{rows.2.1}}, {{columns.2}}: {{rows.2.2}}, {{columns.3}}: {{rows.2.3}}],\n        [{{columns.0}}: {{rows.3.0}}, {{columns.1}}: {{rows.3.1}}, {{columns.2}}: {{rows.3.2}}, {{columns.3}}: {{rows.3.3}}],\n    ],\n    title: {{title}},\n    columns: [\n        MonarchAiTableColumn({{columns.0}}),\n        MonarchAiTableColumn({{columns.1}}, alignment: .trailing),\n        MonarchAiTableColumn({{columns.2}}, alignment: .trailing),\n        MonarchAiTableColumn({{columns.3}}),\n    ],\n    onOpenAsArtifact: {}\n)",
+      "code": "MonarchAiTableAnswer(\n    [\n        [\"Region\": \"North\", \"Deals\": 42, \"Revenue\": \"1,240,000\", \"Last update\": \"2026-03-04\"],\n        [\"Region\": \"South\", \"Deals\": 31, \"Revenue\": \"980,500\", \"Last update\": \"2026-01-15\"],\n        [\"Region\": \"East\", \"Deals\": 57, \"Revenue\": \"1,710,250\", \"Last update\": \"2026-02-20\"],\n        [\"Region\": \"West\", \"Deals\": 18, \"Revenue\": \"455,000\", \"Last update\": \"2026-03-11\"],\n    ],\n    title: \"Pipeline by region\",\n    columns: [\n        MonarchAiTableColumn(\"Region\"),\n        MonarchAiTableColumn(\"Deals\", alignment: .trailing),\n        MonarchAiTableColumn(\"Revenue\", alignment: .trailing),\n        MonarchAiTableColumn(\"Last update\"),\n    ],\n    onOpenAsArtifact: {}\n)"
+    },
+    {
+      "title": "Rows streaming in, columns inferred",
+      "code": "MonarchAiTableAnswer(\n    [[\"name\": \"Ana Flores\", \"seats\": 12], [\"name\": \"Ben Okafor\", \"seats\": \"1,200\"]],\n    isStreaming: true\n)"
+    }
+  ],
+  "webEquivalent": "AiTableAnswer",
+  "dependsOn": [
+    "copy-button",
+    "tabular-number",
+    "button",
+    "ai-conversation"
+  ],
+  "icons": {
+    "ai": "BotGlyph",
+    "copy": "CopyGlyph",
+    "sort": "ChevronDownGlyph"
+  }
+}

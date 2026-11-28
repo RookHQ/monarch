@@ -1,21 +1,18 @@
 import { useState } from 'react';
 import { StatusPicker, type StatusOption } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './status-picker.fixture.json';
 
-const STATUSES: StatusOption[] = [
-  { id: 'triage', name: 'Triage', category: 'backlog' },
-  { id: 'backlog', name: 'Backlog', category: 'backlog' },
-  { id: 'todo', name: 'Todo', category: 'unstarted' },
-  { id: 'doing', name: 'In progress', category: 'started' },
-  { id: 'review', name: 'In review', category: 'started' },
-  { id: 'done', name: 'Done', category: 'completed' },
-  { id: 'dropped', name: 'Won’t do', category: 'cancelled' },
-];
+const STATUSES = fixture.data.statuses as StatusOption[];
 
-function StatusDemo({ compact }: { compact?: boolean }) {
-  const [value, setValue] = useState('doing');
+function StatusDemo({ compact, opened }: { compact?: boolean; opened?: boolean }) {
+  const [value, setValue] = useState(fixture.data.value);
+  const [open, setOpen] = useState(opened ?? false);
   return (
     <StatusPicker
+      open={open}
+      onOpenChange={setOpen}
       statuses={STATUSES}
       value={value}
       onValueChange={setValue}
@@ -135,7 +132,7 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Status picker', render: () => <StatusDemo /> },
+        { title: 'Status picker', stage: true, render: () => <StatusDemo opened /> },
         { title: 'Compact, glyph only', render: () => <StatusDemo compact /> },
       ],
     },

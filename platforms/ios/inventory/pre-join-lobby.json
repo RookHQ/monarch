@@ -1,0 +1,194 @@
+{
+  "id": "pre-join-lobby",
+  "name": "MonarchPreJoinLobby",
+  "title": "PreJoinLobby",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of a preview slot (the app hosts AVCaptureVideoPreviewLayer), MonarchAudioLevelMeter, MonarchCallControls (standard Toggles for microphone and camera), a devices slot for MonarchDevicePicker, MonarchPresenceAvatars and MonarchButton Join and Cancel in a ViewThatFits",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The screen before a call: the person's camera preview, a microphone level, microphone and camera toggles, device choice, who is already in, and Join.",
+  "whenToUse": "Before starting or joining an audio or video call, in a sheet or a pushed screen, so people can check how they look and sound and join muted or with the camera off.",
+  "whenNotToUse": "For answering a ringing call use the system call screen (CallKit) or the incoming-call recipe, since answering is already a choice. For changing devices during a call show MonarchDevicePicker from MonarchCallControls' devices item.",
+  "api": [
+    "init(_ title: String? = nil, isMicOn: Binding<Bool>, isCameraOn: Binding<Bool>? = nil, audioLevel: Double = 0, participants: [MonarchPresencePerson] = [], error: String? = nil, isCameraStarting: Bool = false, isJoining: Bool = false, joinTitle: String? = nil, isTitleHidden: Bool = false, labels: MonarchPreJoinLobbyLabels = MonarchPreJoinLobbyLabels(), onCancel: (@MainActor () -> Void)? = nil, @ViewBuilder preview: () -> Preview, @ViewBuilder devices: () -> Devices, onJoin: @escaping @MainActor () -> Void)",
+    "init(_ title: String? = nil, isMicOn: Binding<Bool>, isCameraOn: Binding<Bool>? = nil, …, onCancel: (@MainActor () -> Void)? = nil, @ViewBuilder preview: () -> Preview, onJoin: @escaping @MainActor () -> Void) where Devices == EmptyView",
+    "init(_ title: String? = nil, isMicOn: Binding<Bool>, audioLevel: Double = 0, participants: [MonarchPresencePerson] = [], error: String? = nil, isJoining: Bool = false, joinTitle: String? = nil, isTitleHidden: Bool = false, labels: MonarchPreJoinLobbyLabels = MonarchPreJoinLobbyLabels(), onCancel: (@MainActor () -> Void)? = nil, onJoin: @escaping @MainActor () -> Void) where Preview == EmptyView, Devices == EmptyView",
+    "struct MonarchPreJoinLobbyLabels: Sendable { init(title:preview:cameraOff:startingCamera:noPreview:controls:micLevel:alreadyIn:cancel:join:joining:), every parameter optional }"
+  ],
+  "options": [
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "The heading; \"Join the call\" by default."
+    },
+    {
+      "name": "isMicOn",
+      "type": "Binding<Bool>",
+      "default": "required",
+      "description": "Join with the microphone on. The microphone toggle."
+    },
+    {
+      "name": "isCameraOn",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Join with the camera on. Shows the camera toggle; leave out for audio calls."
+    },
+    {
+      "name": "audioLevel",
+      "type": "Double",
+      "default": "0",
+      "description": "The microphone level from 0 to 1, measured by the app; values outside are clamped."
+    },
+    {
+      "name": "participants",
+      "type": "[MonarchPresencePerson]",
+      "default": "[]",
+      "description": "People already in the call: up to five avatars and \"3 already in the call\"."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "A problem getting the preview or the microphone, shown as a danger notice; the preview shows No preview."
+    },
+    {
+      "name": "isCameraStarting",
+      "type": "Bool",
+      "default": "false",
+      "description": "The camera is on but the app's preview is not ready: Starting camera… instead of the slot."
+    },
+    {
+      "name": "isJoining",
+      "type": "Bool",
+      "default": "false",
+      "description": "Join shows a spinner and Joining…; Cancel is disabled."
+    },
+    {
+      "name": "joinTitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "The join button's title, such as Start call; \"Join now\" by default."
+    },
+    {
+      "name": "isTitleHidden",
+      "type": "Bool",
+      "default": "false",
+      "description": "Hides the heading when a navigation bar already shows one."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchPreJoinLobbyLabels",
+      "default": "MonarchPreJoinLobbyLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onCancel",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Adds a ghost Cancel button."
+    },
+    {
+      "name": "preview",
+      "type": "@ViewBuilder () -> Preview",
+      "default": "required (EmptyView in the audio initializer)",
+      "description": "The app's camera preview, shown filling a 4:3 area while the camera is on and ready."
+    },
+    {
+      "name": "devices",
+      "type": "@ViewBuilder () -> Devices",
+      "default": "EmptyView",
+      "description": "Device choices under the toggles, usually MonarchDevicePicker with size .sm."
+    },
+    {
+      "name": "onJoin",
+      "type": "@MainActor () -> Void",
+      "default": "required",
+      "description": "Joins; the app reads the microphone and camera bindings."
+    }
+  ],
+  "states": [
+    {
+      "name": "camera on",
+      "description": "The preview slot fills the 4:3 area."
+    },
+    {
+      "name": "camera off or audio call",
+      "description": "A muted placeholder with a crossed-out camera and \"Camera is off\"."
+    },
+    {
+      "name": "camera starting",
+      "description": "The placeholder reads \"Starting camera…\"."
+    },
+    {
+      "name": "problem",
+      "description": "The placeholder reads \"No preview\" with a warning symbol, and the error is a danger notice with an icon."
+    },
+    {
+      "name": "microphone on",
+      "description": "A bar MonarchAudioLevelMeter named Microphone level shows the level; it is hidden while muted."
+    },
+    {
+      "name": "joining",
+      "description": "Join shows a spinner and Joining…; Cancel is disabled."
+    },
+    {
+      "name": "large text",
+      "description": "Join and Cancel stack full width when they do not fit side by side; the placeholder grows past the 4:3 area instead of clipping."
+    }
+  ],
+  "appearance": "The preview area uses the muted background colour with muted text and a rounded container shape. The toggles keep MonarchCallControls' look (danger when a device is off). The meter uses MonarchAudioLevelMeter's colours. Join is a primary button and Cancel a ghost button. All follow the theme in light, dark and both high-contrast themes.",
+  "platformNotes": "The web lobby takes a MediaStream and measures the microphone with Web Audio itself; on iOS Monarch captures nothing: the app fills the preview slot (AVCaptureVideoPreviewLayer in a UIViewRepresentable) and passes the level it measures (AVAudioRecorder or AVAudioEngine metering). The web toggles are labelled \"Join muted\" and \"Join with camera off\"; iOS uses MonarchCallControls' standard toggles, read as Microphone or Camera, on or off. The web mirrors the video; mirroring is the app's preview layer's job on iOS. The web takes device picker props; iOS takes a devices slot. The web's onJoin receives the settings; on iOS the app already owns them through the bindings. Android has no lobby yet. Status experimental: it is a product composite until a Rook app adopts it.",
+  "accessibility": [
+    "The heading has the header trait.",
+    "The preview is a container named Your camera preview; its placeholder icon and text are one element.",
+    "The microphone and camera are standard toggles in a group named Microphone and camera, read with their on or off state; the symbol changes as well as the colour.",
+    "The level meter is MonarchAudioLevelMeter named Microphone level.",
+    "The avatars and \"2 already in the call\" are read as one element.",
+    "An error is shown with an icon and text, not colour alone.",
+    "Join and Cancel are standard buttons of at least 44 points; Join reads Joining… while busy."
+  ],
+  "edgeCases": [
+    "An audio level outside 0 to 1, or not a number, is clamped to the range.",
+    "isCameraOn left out means an audio call: no camera toggle and the Camera is off placeholder.",
+    "An error wins over the camera state, so the preview slot is not shown while there is a problem.",
+    "Long titles and join titles wrap; the action row stacks at large text sizes."
+  ],
+  "tests": [
+    "MonarchPreJoinLobbyTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "In a dialog",
+      "fixture": "pre-join-lobby",
+      "webExample": "In a dialog",
+      "template": "MonarchButton({{trigger}}, variant: .primary) { isOpen = true }\n    .sheet(isPresented: $isOpen) {\n        MonarchPreJoinLobby(\n            {{title}},\n            isMicOn: $isMicOn,\n            isCameraOn: $isCameraOn,\n            audioLevel: 0.3,\n            participants: [\n                MonarchPresencePerson(id: {{participants.0}}, name: {{participants.0}}),\n                MonarchPresencePerson(id: {{participants.1}}, name: {{participants.1}}),\n                MonarchPresencePerson(id: {{participants.2}}, name: {{participants.2}}),\n            ],\n            isJoining: joined,\n            labels: MonarchPreJoinLobbyLabels(cameraOff: {{cameraOff}}, cancel: {{cancel}}, join: {{join}}),\n            onCancel: {},\n            preview: { Color.clear },\n            devices: {\n                MonarchDevicePicker(\n                    microphone: $microphone,\n                    camera: $camera,\n                    microphones: [MonarchDevicePickerDevice({{microphone.id}}, name: {{microphone.label}})],\n                    cameras: [MonarchDevicePickerDevice({{camera.id}}, name: {{camera.label}})],\n                    access: .granted,\n                    size: .sm\n                )\n            },\n            onJoin: { joined = true }\n        )\n        .padding()\n    }",
+      "setupTemplate": "@State private var isOpen = false\n@State private var isMicOn = {{micOn}}\n@State private var isCameraOn = {{cameraOn}}\n@State private var microphone: String? = {{microphone.id}}\n@State private var camera: String? = {{camera.id}}\n@State private var joined = false",
+      "setup": "@State private var isOpen = false\n@State private var isMicOn = true\n@State private var isCameraOn = false\n@State private var microphone: String? = \"mic-desk\"\n@State private var camera: String? = \"cam-built-in\"\n@State private var joined = false",
+      "code": "MonarchButton(\"Join call\", variant: .primary) { isOpen = true }\n    .sheet(isPresented: $isOpen) {\n        MonarchPreJoinLobby(\n            \"Join Weekly planning\",\n            isMicOn: $isMicOn,\n            isCameraOn: $isCameraOn,\n            audioLevel: 0.3,\n            participants: [\n                MonarchPresencePerson(id: \"Robin Park\", name: \"Robin Park\"),\n                MonarchPresencePerson(id: \"Alex Chen\", name: \"Alex Chen\"),\n                MonarchPresencePerson(id: \"Jordan Diaz\", name: \"Jordan Diaz\"),\n            ],\n            isJoining: joined,\n            labels: MonarchPreJoinLobbyLabels(cameraOff: \"Camera is off\", cancel: \"Cancel\", join: \"Join now\"),\n            onCancel: {},\n            preview: { Color.clear },\n            devices: {\n                MonarchDevicePicker(\n                    microphone: $microphone,\n                    camera: $camera,\n                    microphones: [MonarchDevicePickerDevice(\"mic-desk\", name: \"Desk microphone\")],\n                    cameras: [MonarchDevicePickerDevice(\"cam-built-in\", name: \"Built-in camera\")],\n                    access: .granted,\n                    size: .sm\n                )\n            },\n            onJoin: { joined = true }\n        )\n        .padding()\n    }",
+      "previewPresented": [
+        "isOpen"
+      ]
+    },
+    {
+      "title": "An audio call with a problem",
+      "setup": "@State private var isMicOn = true\n@State private var isCameraOn = false\n@State private var joined = false",
+      "code": "MonarchPreJoinLobby(\n    \"Support call\",\n    isMicOn: $isMicOn,\n    error: \"Microphone access is blocked. Allow it in Settings.\",\n    joinTitle: \"Start call\"\n) {\n    joined = true\n}"
+    }
+  ],
+  "webEquivalent": "PreJoinLobby",
+  "dependsOn": [
+    "device-picker",
+    "audio-level-meter",
+    "call-controls",
+    "button",
+    "presence-avatars",
+    "inline-notice"
+  ]
+}

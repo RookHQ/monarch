@@ -2,12 +2,10 @@ import { useState } from 'react';
 import { Button, FilterBar, FilterChip, SearchInput } from '@rookcom/monarch-react';
 import { FilterMenu } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './filter-bar.fixture.json';
 
-const INITIAL = [
-  { name: 'Status', value: 'Open' },
-  { name: 'Assignee', value: 'Me' },
-  { name: 'Priority', value: 'High' },
-];
+const INITIAL: { name: string; value: string }[] = fixture.data.filters;
 
 function ActiveFilters() {
   const [filters, setFilters] = useState(INITIAL);

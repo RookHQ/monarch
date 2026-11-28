@@ -1,0 +1,145 @@
+{
+  "id": "lightbox",
+  "name": "MonarchLightbox",
+  "title": "Lightbox",
+  "family": "overlays",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "fullScreenCover(isPresented:content:), TabView with tabViewStyle(.page), MagnifyGesture, ScrollView, AsyncImage, ShareLink and AVKit's VideoPlayer",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A full-screen viewer for images and videos: swipe or step between items, pinch, double-tap or use buttons to zoom, with a caption and a position count.",
+  "whenToUse": "To look at one or more pictures or videos at full size from a thumbnail, with a caption that belongs to the design: attachments in a conversation, a gallery on a record.",
+  "whenNotToUse": "Not for documents, PDFs or files of unknown type, and not when captions are not needed: Quick Look (quickLookPreview) previews any file with the system's own viewer. Not for a single decorative image.",
+  "api": [
+    "init(_ items: [MonarchLightboxItem], selection: Binding<Int>, isLooping: Bool = false, maximumZoom: Double = 4, labels: MonarchLightboxLabels = MonarchLightboxLabels(), onClose: @escaping @MainActor () -> Void)",
+    "func monarchLightbox(isPresented: Binding<Bool>, items: [MonarchLightboxItem], selection: Binding<Int>, isLooping: Bool = false, maximumZoom: Double = 4, labels: MonarchLightboxLabels = MonarchLightboxLabels()) -> some View",
+    "MonarchLightboxItem.init(image: Image?, alt: String, caption: String? = nil, shareURL: URL? = nil)",
+    "MonarchLightboxItem.init(url: URL?, alt: String, caption: String? = nil, kind: MonarchLightboxItemKind = .image, shareURL: URL? = nil)",
+    "enum MonarchLightboxItemKind { case image, video }",
+    "MonarchLightboxLabels.init(title: String? = nil, previous: String? = nil, next: String? = nil, zoomIn: String? = nil, zoomOut: String? = nil, resetZoom: String? = nil, close: String? = nil, share: String? = nil, position: (@Sendable (Int, Int) -> String)? = nil, unavailable: String? = nil, loading: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "items",
+      "type": "[MonarchLightboxItem]",
+      "default": "required",
+      "description": "The images and videos, in order. Each has alt text, and optionally a caption and a file to share."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<Int>",
+      "default": "required",
+      "description": "The index of the item on screen, starting at 0. An index outside the items shows the nearest item."
+    },
+    {
+      "name": "isPresented",
+      "type": "Binding<Bool>",
+      "default": "required",
+      "description": "In the monarchLightbox modifier: whether the viewer covers the screen."
+    },
+    {
+      "name": "isLooping",
+      "type": "Bool",
+      "default": "false",
+      "description": "Whether the next button on the last item goes to the first, and back. Swiping does not wrap."
+    },
+    {
+      "name": "maximumZoom",
+      "type": "Double",
+      "default": "4",
+      "description": "The largest zoom factor of an image. Values below 1 count as 1, which turns zoom off."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchLightboxLabels",
+      "default": "MonarchLightboxLabels()",
+      "description": "Replacements for the built-in strings: the viewer's name, the button names, the position text, the loading and the unavailable text."
+    },
+    {
+      "name": "onClose",
+      "type": "@MainActor () -> Void",
+      "default": "required",
+      "description": "In the view's initialiser: called by the close button and the escape gesture. The modifier supplies it."
+    }
+  ],
+  "states": [
+    {
+      "name": "fitted",
+      "description": "The image fits the stage. A sideways swipe moves to the next or previous item. The zoom-out and reset buttons are disabled."
+    },
+    {
+      "name": "zoomed",
+      "description": "The image is larger than the stage and a drag pans it. The level is shown as a percentage on the reset button. The zoom-in button is disabled at the largest zoom."
+    },
+    {
+      "name": "first or last item",
+      "description": "Without looping, the previous or next button is disabled."
+    },
+    {
+      "name": "single item",
+      "description": "No position count and no previous and next buttons."
+    },
+    {
+      "name": "loading",
+      "description": "An image from a URL shows a progress indicator until it arrives."
+    },
+    {
+      "name": "unavailable",
+      "description": "An item with no source, an image that failed to load, and an empty list of items show \"This file can’t be shown.\" in place of the media. Zoom is hidden."
+    },
+    {
+      "name": "video",
+      "description": "The system player with its own controls. Zoom is hidden. The video pauses when another item is shown."
+    }
+  ],
+  "appearance": "The viewer fills the screen with the canvas colour. The position count, the group of tools and the caption sit on the raised background colour, the tools with the medium elevation; text is the default text colour and disabled buttons use the disabled roles of the button style. The same roles are used in light, dark and both high-contrast themes.",
+  "platformNotes": "The web Lightbox is a Radix dialog over a translucent scrim with arrow buttons beside the image; here it is a full-screen cover on the opaque canvas, and swiping between items is the main gesture, with the previous and next buttons kept under the image for VoiceOver, Switch Control and pointer users. Pinch and double tap are added to the web's zoom buttons. The web's Download link is a ShareLink, whose sheet offers saving. The web's trigger prop is not needed: any button sets isPresented. The web's caption tracks for video are not offered; the system player shows the subtitles the stream itself carries. The web's check of the URL scheme is not repeated: AsyncImage and AVPlayer load what the app gives them. On macOS, which is only a build convenience, the pager shows the current item without swiping and the modifier uses a sheet. Android uses the same names.",
+  "accessibility": [
+    "The viewer is a container named \"Media viewer\" with the modal trait, and the escape gesture calls onClose. Presented with the modifier it is a full-screen cover, so the system confines focus to it.",
+    "An image is one element with its alt text as the label, the image trait and the zoom level as its value; VoiceOver's adjust gesture and zoom action step the zoom.",
+    "Moving to another item posts an announcement with the position and the item's alt text, such as \"2 of 5: Team photo\".",
+    "Zoom in, zoom out, reset zoom, share, close, previous and next are buttons with spoken names and 44-point touch targets. A zoom button announces the new level.",
+    "A video's alt text is the label of the player.",
+    "Zooming by double tap and stepping with the buttons animate unless Reduce Motion is on. The toolbar wraps to two rows and the caption scrolls at large text sizes."
+  ],
+  "edgeCases": [
+    "Zoom belongs to one item: moving to another item returns to fitted.",
+    "While zoomed, a sideways drag pans the image and does not change the item; zoom out first, or use the buttons.",
+    "An empty alt is allowed by the type but leaves the image without a spoken name; always give one.",
+    "A caption taller than about a third of a phone screen scrolls inside its box.",
+    "A selection outside the items is shown as the nearest item; the binding is not rewritten until the person moves.",
+    "The left and right arrow keys of a hardware keyboard step between items, and Escape closes."
+  ],
+  "tests": [
+    "MonarchLightboxTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Gallery of three images",
+      "fixture": "lightbox",
+      "webExample": "Gallery of three images",
+      "template": "HStack {\n    ForEach(photos.indices, id: \\.self) { i in\n        MonarchButton(\"\\(buttonLabel) \\(i + 1)\") {\n            index = i\n            isShown = true\n        }\n    }\n}\n.monarchLightbox(isPresented: $isShown, items: photos, selection: $index)",
+      "setupTemplate": "@State private var isShown = false\n@State private var index = 0\nprivate let buttonLabel = {{buttonLabel}}\n\nprivate static let picture: Image = {\n    let width = 1200, height = 800\n    guard let context = CGContext(\n        data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,\n        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue\n    ) else { return Image(systemName: \"photo\") }\n    context.setFillColor(red: 0.58, green: 0.64, blue: 0.74, alpha: 1)\n    context.fill(CGRect(x: 0, y: 0, width: width, height: height))\n    guard let picture = context.makeImage() else { return Image(systemName: \"photo\") }\n    return Image(decorative: picture, scale: 1)\n}()\n\nprivate let photos = [\n    MonarchLightboxItem(image: Self.picture, alt: {{photos.0.alt}}, caption: {{photos.0.caption}}),\n    MonarchLightboxItem(image: Self.picture, alt: {{photos.1.alt}}, caption: {{photos.1.caption}}),\n    MonarchLightboxItem(image: Self.picture, alt: {{photos.2.alt}}),\n]",
+      "previewPresented": [
+        "isShown"
+      ],
+      "setup": "@State private var isShown = false\n@State private var index = 0\nprivate let buttonLabel = \"View image\"\n\nprivate static let picture: Image = {\n    let width = 1200, height = 800\n    guard let context = CGContext(\n        data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,\n        space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue\n    ) else { return Image(systemName: \"photo\") }\n    context.setFillColor(red: 0.58, green: 0.64, blue: 0.74, alpha: 1)\n    context.fill(CGRect(x: 0, y: 0, width: width, height: height))\n    guard let picture = context.makeImage() else { return Image(systemName: \"photo\") }\n    return Image(decorative: picture, scale: 1)\n}()\n\nprivate let photos = [\n    MonarchLightboxItem(image: Self.picture, alt: \"Planning board with three columns of notes\", caption: \"Sprint planning board\"),\n    MonarchLightboxItem(image: Self.picture, alt: \"Pencil sketch of a settings screen\", caption: \"Settings sketch\"),\n    MonarchLightboxItem(image: Self.picture, alt: \"Plain sample image in a warm grey\"),\n]",
+      "code": "HStack {\n    ForEach(photos.indices, id: \\.self) { i in\n        MonarchButton(\"\\(buttonLabel) \\(i + 1)\") {\n            index = i\n            isShown = true\n        }\n    }\n}\n.monarchLightbox(isPresented: $isShown, items: photos, selection: $index)"
+    },
+    {
+      "title": "The viewer in a presentation of your own",
+      "setup": "@State private var index = 0",
+      "code": "MonarchLightbox(\n    [\n        MonarchLightboxItem(image: Image(systemName: \"photo\"), alt: \"Team photo\", caption: \"Lisbon\"),\n        MonarchLightboxItem(image: Image(systemName: \"map\"), alt: \"Map of the office\"),\n    ],\n    selection: $index,\n    isLooping: true,\n    onClose: {}\n)\n.frame(height: MonarchTokens.Breakpoint.sm)"
+    }
+  ],
+  "webEquivalent": "Lightbox",
+  "dependsOn": [
+    "button",
+    "icon"
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "id": "ai-context-window-meter",
+  "name": "MonarchAiContextWindowMeter",
+  "title": "AiContextWindowMeter",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "androidx.compose.material3.LinearProgressIndicator (single bar), MonarchStackedProportionBar (parts and legend), MonarchInlineNotice, MonarchButton and MonarchPopover (compact form)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "How full the model's context window is: a bar of what fills it with a legend, a notice as it nears the limit, and an optional Summarize earlier messages button.",
+  "whenToUse": "In an AI chat where long conversations reach the model's context limit, so the person sees why earlier messages may be left out and can summarize them.",
+  "whenNotToUse": "For quotas of tokens or credits over a turn, a conversation or a month, use MonarchAiUsageMeter. For a plain progress value, use MonarchProgress.",
+  "api": [
+    "@Composable fun MonarchAiContextWindowMeter(used: Long, limit: Long, modifier: Modifier = Modifier, breakdown: List<MonarchAiContextWindowPart> = emptyList(), warningAt: Double = 0.8, approximate: Boolean = false, summarizing: Boolean = false, compact: Boolean = false, onSummarize: (() -> Unit)? = null, labels: MonarchAiContextWindowMeterLabels = MonarchAiContextWindowMeterLabels())",
+    "@Composable fun MonarchAiContextWindowMeter(usage: MonarchAiUsage, limit: Long, modifier: Modifier = Modifier, breakdown: List<MonarchAiContextWindowPart> = emptyList(), warningAt: Double = 0.8, approximate: Boolean = false, summarizing: Boolean = false, compact: Boolean = false, onSummarize: (() -> Unit)? = null, labels: MonarchAiContextWindowMeterLabels = MonarchAiContextWindowMeterLabels())",
+    "class MonarchAiContextWindowPart(label: String, tokens: Long, id: String? = null)",
+    "enum class MonarchAiContextWindowState { Ok, Warning, Full; companion object { fun of(used: Long, limit: Long, warningAt: Double = 0.8): MonarchAiContextWindowState } }",
+    "class MonarchAiContextWindowMeterLabels(label: String? = null, amount: ((used: String, limit: String, percent: String) -> String)? = null, approximate: ((amount: String) -> String)? = null, legend: String? = null, other: String? = null, tokens: ((formatted: String) -> String)? = null, warning: String? = null, full: String? = null, summarize: String? = null, showDetails: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "used",
+      "type": "Long",
+      "default": "required",
+      "description": "The tokens in the context window now. A negative count counts as zero."
+    },
+    {
+      "name": "usage",
+      "type": "MonarchAiUsage",
+      "default": "required (second overload)",
+      "description": "The usage the latest reply reported in the conversation model; its input plus output tokens are used."
+    },
+    {
+      "name": "limit",
+      "type": "Long",
+      "default": "required",
+      "description": "The model's context window, in tokens. Zero or less is always ok and shows 0%."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the meter."
+    },
+    {
+      "name": "breakdown",
+      "type": "List<MonarchAiContextWindowPart>",
+      "default": "emptyList()",
+      "description": "What the tokens are made of, drawn as coloured segments with a legend of token counts. Tokens no part covers are listed as Other."
+    },
+    {
+      "name": "warningAt",
+      "type": "Double",
+      "default": "0.8",
+      "description": "The share of the limit at which the meter warns."
+    },
+    {
+      "name": "approximate",
+      "type": "Boolean",
+      "default": "false",
+      "description": "The count is an estimate: the summary reads \"About …\"."
+    },
+    {
+      "name": "summarizing",
+      "type": "Boolean",
+      "default": "false",
+      "description": "A summary is being made: the button shows its progress indicator and ignores taps."
+    },
+    {
+      "name": "compact",
+      "type": "Boolean",
+      "default": "false",
+      "description": "A small bar and the share as one button, for a toolbar; it opens the full meter in a MonarchPopover."
+    },
+    {
+      "name": "onSummarize",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Adds \"Summarize earlier messages\", which calls this."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiContextWindowMeterLabels",
+      "default": "MonarchAiContextWindowMeterLabels()",
+      "description": "Replaces every built-in string: the name, the summary format, About, the legend name, Other, the token amount, the notices, the button and the compact meter's action."
+    }
+  ],
+  "states": [
+    {
+      "name": "ok",
+      "description": "Below warningAt: no notice; the single bar is the accent color and the summarize button is a ghost button."
+    },
+    {
+      "name": "warning",
+      "description": "At or above warningAt: a warning MonarchInlineNotice; the single bar is the warning color and the button is secondary."
+    },
+    {
+      "name": "full",
+      "description": "At or over the limit: a danger MonarchInlineNotice saying earlier messages are being left out; the single bar is the danger color."
+    },
+    {
+      "name": "breakdown",
+      "description": "A MonarchStackedProportionBar of the parts, palette colors for the first five and neutral after, with Other for uncovered tokens and a legend of token counts."
+    },
+    {
+      "name": "approximate",
+      "description": "The summary starts with \"About\"."
+    },
+    {
+      "name": "summarizing",
+      "description": "The button shows its progress indicator and ignores taps."
+    },
+    {
+      "name": "compact",
+      "description": "Bar and share as one button with a 48dp target; the share takes the strong warning or danger color when not ok, and the full meter opens in a popover."
+    }
+  ],
+  "appearance": "The name in the label style and the summary in the caption style in the muted text color, over a bar on the muted background filled with the accent, warning or danger solid color, or the chart palette for parts. Notices are MonarchInlineNotice in the warning and danger tones. All colors are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "Same names as iOS; counts are Long because MonarchAiUsage counts tokens as Long on Android. The web's useAiContextUsage hook and its token estimator are not offered: pass used and approximate, or the usage the latest message reported. The web hides the header in its compact form; Android, like iOS, keeps the details one tap away in a MonarchPopover. Monarch bundles no icons, so the notice carries the state in words and the compact form shows no tone icon; its share changes color and its spoken state is the full summary. The web cycles the five data colors for a sixth part; Android follows MonarchStackedProportionBar and draws the sixth part and later in neutral, as iOS does.",
+  "accessibility": [
+    "The header and the single bar are one TalkBack element read as \"Context window\" and the summary, for example \"45,000 of 128,000 tokens (35%)\", with the range of a progress bar.",
+    "With a breakdown the legend is a group named \"What fills the context window\" and each entry reads its name and token count (from MonarchStackedProportionBar).",
+    "The warning and full states are written in a notice, not shown by color alone.",
+    "A change of state while the meter is on screen is announced once through a polite live region on an always-present node; the state on first appearance is not announced.",
+    "The compact meter is a button named \"Context window\" with the summary as its state description, the action \"Show what fills the context window\" and a 48dp touch target.",
+    "Summarize earlier messages is a MonarchButton with a 48dp touch target that ignores taps while summarizing."
+  ],
+  "edgeCases": [
+    "Negative counts are drawn as zero; a limit of zero or less is always ok and shows 0%.",
+    "When the parts add up to more than the window, the bar is scaled to their total so every part stays visible.",
+    "Parts that cover all of used produce no Other entry.",
+    "The share is capped at 100% in the summary and the bar.",
+    "The name and summary share a line when they fit and wrap onto two lines at large font sizes."
+  ],
+  "tests": [
+    "MonarchAiContextWindowMeterTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "With a breakdown",
+      "fixture": "ai-context-window-meter",
+      "webExample": "With a breakdown",
+      "template": "MonarchAiContextWindowMeter(\n    used = {{used}},\n    limit = {{limit}},\n    modifier = Modifier.widthIn(max = 384.dp),\n    breakdown = listOf(\n        MonarchAiContextWindowPart({{breakdown.0.label}}, {{breakdown.0.tokens}}),\n        MonarchAiContextWindowPart({{breakdown.1.label}}, {{breakdown.1.tokens}}),\n        MonarchAiContextWindowPart({{breakdown.2.label}}, {{breakdown.2.tokens}}),\n    ),\n)",
+      "code": "MonarchAiContextWindowMeter(\n    used = 46_000,\n    limit = 128_000,\n    modifier = Modifier.widthIn(max = 384.dp),\n    breakdown = listOf(\n        MonarchAiContextWindowPart(\"Instructions\", 3000),\n        MonarchAiContextWindowPart(\"Attachments\", 18_000),\n        MonarchAiContextWindowPart(\"Messages\", 22_000),\n    ),\n)"
+    },
+    {
+      "title": "From the latest reply's usage, compact",
+      "code": "MonarchAiContextWindowMeter(\n    usage = MonarchAiUsage(inputTokens = 104_000, outputTokens = 2_000),\n    limit = 128_000,\n    compact = true,\n)"
+    }
+  ],
+  "webEquivalent": "AiContextWindowMeter",
+  "dependsOn": [
+    "progress-bar",
+    "popover",
+    "button"
+  ]
+}

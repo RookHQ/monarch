@@ -1,0 +1,113 @@
+{
+  "id": "terms-acceptance",
+  "name": "MonarchTermsAcceptance",
+  "title": "TermsAcceptance",
+  "family": "forms",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "Toggle with .toggleStyle(.monarchCheckbox), and a Link per document",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The required \"I agree to the Terms of Service and Privacy Policy\" checkbox for sign-up, with a link to each document and the versions that were accepted.",
+  "whenToUse": "In sign-up and checkout forms where agreeing to the terms is required to continue, and in any form that must record which version of a document the person agreed to.",
+  "whenNotToUse": "Not for optional choices such as marketing messages (use MonarchMarketingConsentCheckbox) and not for storage or tracking choices (use MonarchConsentPreferences).",
+  "api": [
+    "init(isAccepted: Binding<Bool>, documents: [MonarchTermsDocument], isRequired: Bool = true, showsRequiredError: Bool = false, labels: MonarchTermsAcceptanceLabels = MonarchTermsAcceptanceLabels(), onChange: (@MainActor (Bool, MonarchTermsAcceptanceDetails) -> Void)? = nil)",
+    "struct MonarchTermsDocument: Identifiable { init(_ title: String, url: URL, version: String? = nil, id: String? = nil); static func versions(of documents: [MonarchTermsDocument]) -> [String: String] }",
+    "struct MonarchTermsAcceptanceDetails { let versions: [String: String]; let date: Date }",
+    "struct MonarchTermsAcceptanceLabels { init(label: (@Sendable (String) -> String)? = nil, requiredMessage: String? = nil, requiredHint: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "isAccepted",
+      "type": "Binding<Bool>",
+      "default": "required",
+      "description": "Whether the box is ticked. Start it false for sign-up so the agreement is an active choice."
+    },
+    {
+      "name": "documents",
+      "type": "[MonarchTermsDocument]",
+      "default": "required",
+      "description": "The documents. Their titles are joined into the label in the locale's list format and each is a link under it."
+    },
+    {
+      "name": "isRequired",
+      "type": "Bool",
+      "default": "true",
+      "description": "Whether the box must be ticked to continue. Adds the VoiceOver hint \"Required\" and allows the error."
+    },
+    {
+      "name": "showsRequiredError",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows \"Accept the terms to continue\" while the box is required and not ticked. Set it when the person tries to continue; the error clears once the box is ticked."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchTermsAcceptanceLabels",
+      "default": "MonarchTermsAcceptanceLabels()",
+      "description": "Replacements for the label sentence (built from the joined titles), the error and the hint."
+    },
+    {
+      "name": "onChange",
+      "type": "(@MainActor (Bool, MonarchTermsAcceptanceDetails) -> Void)?",
+      "default": "nil",
+      "description": "Runs when the box changes, with the new state, the version of each document keyed by its id, and the time."
+    }
+  ],
+  "states": [
+    {
+      "name": "unticked",
+      "description": "The empty checkbox with the sentence and the document links under it."
+    },
+    {
+      "name": "accepted",
+      "description": "The checkbox is filled with a check mark."
+    },
+    {
+      "name": "invalid",
+      "description": "With showsRequiredError while unticked: an error icon and \"Accept the terms to continue\" under the links in the danger strong colour, announced when it appears."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true): the box, the label and the links use the disabled text colour and cannot be used."
+    }
+  ],
+  "appearance": "The checkbox is MonarchCheckboxToggleStyle. The links are underlined in the link text role and indented to line up with the label; the error uses the danger strong role. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "On the web the document links sit inside the checkbox label. On iOS a link inside a toggle's label cannot be activated on its own, so the label is the plain sentence and the documents are separate links under it. There is no form submission on iOS, so the app sets showsRequiredError when the person tries to continue instead of the web's native required attribute, and there are no name, value or versionsName form fields: the app records the details from onChange. The web's target option has no equivalent; links open the system's handler for the URL. Disabling the view also disables the links, unlike the web where the links stay usable.",
+  "accessibility": [
+    "The box is a standard Toggle with the Monarch checkbox style, so VoiceOver reads its label, its on and off value and the activation gesture of the system.",
+    "A required box has the hint \"Required\".",
+    "Each document is a separate standard Link with a 44-point touch target, underlined so it is not shown by colour alone.",
+    "The error has an icon and text, is read as one element and is announced when it appears.",
+    "Text scales with Dynamic Type and the links wrap onto further rows."
+  ],
+  "edgeCases": [
+    "One document gives \"I agree to the Terms of Service\"; three give \"A, B, and C\" in English, joined by the locale's list format.",
+    "Documents without a version are left out of the reported versions.",
+    "Two documents with the same URL need an explicit id, because the id is the key of the versions."
+  ],
+  "tests": [
+    "MonarchTermsAcceptanceTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "In a sign-up form",
+      "fixture": "terms-acceptance",
+      "webExample": "In a sign-up form",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n    MonarchTermsAcceptance(isAccepted: $accepted, documents: documents)\n    MonarchButton({{submit}}, variant: .primary) {}\n}",
+      "setupTemplate": "@State private var accepted = false\nprivate let documents = [\n    MonarchTermsDocument({{documents.0.label}}, url: URL(filePath: \"/terms\"), version: {{documents.0.version}}),\n    MonarchTermsDocument({{documents.1.label}}, url: URL(filePath: \"/privacy\"), version: {{documents.1.version}}),\n]",
+      "setup": "@State private var accepted = false\nprivate let documents = [\n    MonarchTermsDocument(\"Terms of Service\", url: URL(filePath: \"/terms\"), version: \"2026-11-01\"),\n    MonarchTermsDocument(\"Privacy Policy\", url: URL(filePath: \"/privacy\"), version: \"2026-11-01\"),\n]",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n    MonarchTermsAcceptance(isAccepted: $accepted, documents: documents)\n    MonarchButton(\"Create account\", variant: .primary) {}\n}"
+    }
+  ],
+  "webEquivalent": "TermsAcceptance",
+  "dependsOn": [
+    "checkbox",
+    "link"
+  ]
+}

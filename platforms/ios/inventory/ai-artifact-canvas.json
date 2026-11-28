@@ -1,0 +1,184 @@
+{
+  "id": "ai-artifact-canvas",
+  "name": "MonarchAiArtifactCanvas",
+  "title": "AiArtifactCanvas",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Content for .sheet (presentationDetents([.large])): Picker with .pickerStyle(.segmented) for Preview and Code, ShareLink, WKWebView (JavaScript off, non-persistent data, Content Security Policy, navigations cancelled) for HTML, AsyncImage, MonarchAiMarkdown, MonarchAiCodeBlock, MonarchAiArtifactVersions, MonarchCopyButton, MonarchButton",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The working surface for an artifact an AI reply made: title, kind and version, a version stepper, Copy, Share and Save, and Preview and Code views, with HTML previewed only in a sandbox.",
+  "whenToUse": "When a reply produced a document, code, a table, an image or a web page and the person opened its MonarchAiArtifactCard to read, compare, copy, share or save it. Present it in a sheet on iPhone.",
+  "whenNotToUse": "For short output show it in the message with MonarchAiMarkdown or MonarchAiCodeBlock. For AI suggestions in text the person is editing use MonarchAiInlineDiff or MonarchAiEditProposal.",
+  "api": [
+    "init(_ artifact: MonarchAiCanvasArtifact, versions: [MonarchAiArtifactVersion] = [], tab: Binding<MonarchAiArtifactCanvasTab>? = nil, isShareable: Bool = true, saveTitle: String? = nil, labels: MonarchAiArtifactCanvasLabels = MonarchAiArtifactCanvasLabels(), onVersionChange: (@MainActor (Int) -> Void)? = nil, onCopy: (@MainActor (MonarchAiCanvasArtifact) -> Void)? = nil, onSave: (@MainActor (MonarchAiCanvasArtifact) async -> Void)? = nil, onClose: (@MainActor () -> Void)? = nil)",
+    "func preview<Content: View>(for kinds: Set<MonarchAiArtifactKind>, @ViewBuilder _ content: @escaping @MainActor (MonarchAiCanvasArtifact) -> Content) -> MonarchAiArtifactCanvas",
+    "struct MonarchAiCanvasArtifact: Identifiable { init(id: String, kind: MonarchAiArtifactKind, title: String, version: Int, content: String, language: String? = nil) }",
+    "enum MonarchAiArtifactCanvasTab: String { case preview, code }",
+    "struct MonarchAiArtifactCanvasLabels { init(label:, kind:, version:, preview:, code:, views:, close:, copy:, copied:, share:, save:, frameTitle:, sandboxNote:, unsafeImage:, noPreview:) }"
+  ],
+  "options": [
+    {
+      "name": "artifact",
+      "type": "MonarchAiCanvasArtifact",
+      "default": "required",
+      "description": "The artifact version to show: kind, title, version, content and an optional code language."
+    },
+    {
+      "name": "versions",
+      "type": "[MonarchAiArtifactVersion]",
+      "default": "[]",
+      "description": "Every version, for the MonarchAiArtifactVersions stepper, which shows with two or more versions and onVersionChange."
+    },
+    {
+      "name": "tab",
+      "type": "Binding<MonarchAiArtifactCanvasTab>?",
+      "default": "nil",
+      "description": "The view on show. Without it the canvas keeps it, starting on Preview. Code shows when the kind has no preview."
+    },
+    {
+      "name": "isShareable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows Share, the system share sheet with the content and the title as subject."
+    },
+    {
+      "name": "saveTitle",
+      "type": "String?",
+      "default": "nil",
+      "description": "The save button's title, naming the destination, such as \"Save to library\"."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiArtifactCanvasLabels",
+      "default": "MonarchAiArtifactCanvasLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onVersionChange",
+      "type": "(@MainActor (Int) -> Void)?",
+      "default": "nil",
+      "description": "Receives the version chosen in the stepper; load it and pass it as artifact."
+    },
+    {
+      "name": "onCopy",
+      "type": "(@MainActor (MonarchAiCanvasArtifact) -> Void)?",
+      "default": "nil",
+      "description": "Runs after Copy put the content on the pasteboard."
+    },
+    {
+      "name": "onSave",
+      "type": "(@MainActor (MonarchAiCanvasArtifact) async -> Void)?",
+      "default": "nil",
+      "description": "Shows the primary Save button, which shows progress until it returns."
+    },
+    {
+      "name": "onClose",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Shows the close button; dismiss the sheet here."
+    },
+    {
+      "name": "preview(for:_:)",
+      "type": "modifier",
+      "default": "none",
+      "description": "Replaces the preview of the given kinds, for example charts drawn with Swift Charts."
+    }
+  ],
+  "states": [
+    {
+      "name": "preview: document or table",
+      "description": "The Markdown rendered by MonarchAiMarkdown in a scroll view."
+    },
+    {
+      "name": "preview: web page",
+      "description": "The HTML in a sandboxed web view with the note \"Sandboxed preview: scripts, forms and network requests are blocked.\"."
+    },
+    {
+      "name": "preview: image",
+      "description": "The image loaded with AsyncImage, fitted to the width, with a spinner while it loads."
+    },
+    {
+      "name": "unsafe image",
+      "description": "A warning MonarchCalloutBanner, \"This image address is not allowed, so it is not shown.\"."
+    },
+    {
+      "name": "code",
+      "description": "The content in a MonarchAiCodeBlock with line numbers; the only view, without the segmented control, for kinds with no preview."
+    },
+    {
+      "name": "versions",
+      "description": "The version stepper with Compare above the actions."
+    },
+    {
+      "name": "saving",
+      "description": "The Save button shows its spinner and ignores further taps until onSave returns."
+    },
+    {
+      "name": "copied",
+      "description": "Copy reads \"Copied\" for two seconds and announces it."
+    }
+  ],
+  "appearance": "A surface-coloured panel: the kind icon in the strong AI colour on a subtle AI tile, the title in the subheading style, the kind and version in the muted caption style, ghost Copy and Share buttons and a primary Save, the system segmented control, a divider and the content. All colours are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web shows the canvas as a pane beside the thread on wide screens and a full-screen sheet below 640px; on iOS the app presents it with .sheet (and can place it beside the conversation in a regular-width layout), so there is no placement option and no Escape key handling. The web's tab list is the system segmented control here. The web's Download button is Share, the system share sheet, which also offers Save to Files. The web previews HTML in an iframe with an empty sandbox and a Content Security Policy; iOS uses a WKWebView with JavaScript turned off, a non-persistent data store, the same Content Security Policy and every navigation except its own document cancelled; the web also strips meta refresh and base tags, which here cannot act because navigations are cancelled. renderPreview is the preview(for:_:) modifier. The web's allowImages for Markdown follows MonarchAiMarkdown's own image handling. onSave is async rather than returning a promise. Marked experimental as an AI product pattern until a Rook app adopts it. Android has no artifact canvas yet.",
+  "accessibility": [
+    "The canvas is a container named \"Artifact: Q3 summary\".",
+    "The header is one element with the header trait, read as \"Q3 summary, Document, version 3\", built by a tested pure function; the kind icon is decorative.",
+    "Preview and Code are a system segmented picker named \"View\", so the selected segment is read as selected.",
+    "The close button is named \"Close artifact\"; Copy announces that it copied (MonarchCopyButton).",
+    "The web preview is named \"Preview of Event landing page\" and is followed by the sandbox note in text.",
+    "An image preview is read as the artifact's title.",
+    "Every button has a 44-point touch target, and the text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Model output is never rendered as HTML outside the sandboxed web view; scripts in it do not run.",
+    "Links, redirects and refreshes inside the web preview are cancelled; new windows are refused.",
+    "Image content that is not an http or https address is refused with a warning.",
+    "A requested Preview tab falls back to Code for kinds with no preview.",
+    "A long title wraps; the panel keeps a minimum height so a web preview always has room."
+  ],
+  "tests": [
+    "MonarchAiArtifactCanvasTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Beside a reply, with versions and save",
+      "fixture": "ai-artifact-canvas",
+      "webExample": "Beside a reply, with versions and save",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n        Text({{reply}})\n        MonarchAiArtifactCard({{artifact.title}}, kind: {{artifact.kind|case}}, version: {{artifact.version}}, isActive: true) {}\n    }\n    MonarchAiArtifactCanvas(\n        MonarchAiCanvasArtifact(\n            id: {{artifact.id}},\n            kind: {{artifact.kind|case}},\n            title: {{artifact.title}},\n            version: {{artifact.version}},\n            content: versions[1].content ?? \"\"\n        ),\n        versions: versions,\n        saveTitle: {{saveLabel}},\n        labels: MonarchAiArtifactCanvasLabels(share: \"Download\"),\n        onVersionChange: { _ in },\n        onSave: { _ in },\n        onClose: {}\n    )\n}\n.environment(\\.locale, Locale(identifier: {{locale}}))\n.environment(\\.timeZone, TimeZone(identifier: {{timeZone}}) ?? .gmt)",
+      "setupTemplate": "private let versions = [\n    MonarchAiArtifactVersion({{versions.0.version}}, createdAt: {{versions.0.createdAt|date}}, content: {{versions.0.content}}),\n    MonarchAiArtifactVersion({{versions.1.version}}, createdAt: {{versions.1.createdAt|date}}, label: {{versions.1.label}}, content: {{versions.1.content}}),\n]",
+      "setup": "private let versions = [\n    MonarchAiArtifactVersion(1, createdAt: Date(timeIntervalSince1970: 1_773_306_000), content: \"# Q3 summary\\n\\nRevenue grew in every region.\\n\\n- New customers: 140\\n- Churn: 2.1%\"),\n    MonarchAiArtifactVersion(2, createdAt: Date(timeIntervalSince1970: 1_773_307_200), label: \"Added next steps\", content: \"# Q3 summary\\n\\nRevenue grew **12%**, led by the north region.\\n\\n- New customers: 140\\n- Churn: 2.1%\\n\\n## Next steps\\n\\nReview pricing before the planning meeting.\"),\n]",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space4) {\n    VStack(alignment: .leading, spacing: MonarchTokens.Space.space2) {\n        Text(\"Here is the summary you asked for.\")\n        MonarchAiArtifactCard(\"Q3 summary\", kind: .document, version: 2, isActive: true) {}\n    }\n    MonarchAiArtifactCanvas(\n        MonarchAiCanvasArtifact(\n            id: \"q3\",\n            kind: .document,\n            title: \"Q3 summary\",\n            version: 2,\n            content: versions[1].content ?? \"\"\n        ),\n        versions: versions,\n        saveTitle: \"Save to library\",\n        labels: MonarchAiArtifactCanvasLabels(share: \"Download\"),\n        onVersionChange: { _ in },\n        onSave: { _ in },\n        onClose: {}\n    )\n}\n.environment(\\.locale, Locale(identifier: \"en-GB\"))\n.environment(\\.timeZone, TimeZone(identifier: \"Europe/London\") ?? .gmt)"
+    },
+    {
+      "title": "Inline, with an app preview for charts",
+      "code": "MonarchAiArtifactCanvas(\n    MonarchAiCanvasArtifact(id: \"revenue\", kind: .chart, title: \"Revenue\", version: 2, content: \"{\\\"north\\\": 12}\")\n)\n.preview(for: [.chart]) { artifact in\n    Text(\"Chart of \\(artifact.title)\")\n}"
+    }
+  ],
+  "webEquivalent": "AiArtifactCanvas",
+  "dependsOn": [
+    "sheet",
+    "segmented-control",
+    "ai-code-block",
+    "ai-markdown",
+    "ai-artifact-versions",
+    "ai-artifact-card",
+    "copy-button",
+    "button",
+    "callout-banner"
+  ],
+  "icons": {
+    "card.chevron": "ChevronRightGlyph",
+    "close": "CloseGlyph",
+    "versions.previous": "ChevronRightGlyph",
+    "versions.next": "ChevronRightGlyph",
+    "versions.menu": "ChevronDownGlyph",
+    "copy": "CopyGlyph"
+  },
+  "parityExceptions": []
+}

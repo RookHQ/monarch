@@ -2,6 +2,14 @@ import { useState } from 'react';
 import { ToggleButton } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { FilterIcon, GridIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './toggle-button.fixture.json';
+
+const items = fixture.data.items as unknown as readonly [
+  { label: string },
+  { label: string },
+  { label: string },
+];
 
 function ControlledDemo() {
   const [archived, setArchived] = useState(false);
@@ -130,10 +138,10 @@ export default {
           title: 'Default and outline',
           render: () => (
             <>
-              <ToggleButton defaultPressed>Bold</ToggleButton>
-              <ToggleButton variant="outline">Show archived</ToggleButton>
+              <ToggleButton defaultPressed>{items[0].label}</ToggleButton>
+              <ToggleButton variant="outline">{items[1].label}</ToggleButton>
               <ToggleButton variant="outline" leadingIcon={<FilterIcon />}>
-                Filters
+                {items[2].label}
               </ToggleButton>
             </>
           ),

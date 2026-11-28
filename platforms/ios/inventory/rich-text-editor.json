@@ -1,0 +1,183 @@
+{
+  "id": "rich-text-editor",
+  "name": "MonarchRichTextEditor",
+  "title": "RichTextEditor",
+  "family": "collaboration",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "TextEditor(text: Binding<AttributedString>, selection: Binding<AttributedTextSelection>) (iOS 26), with MonarchEditorToolbar above it and MonarchMentionPicker below it; formatting through AttributedString.transformAttributes(in:) and transform(updating:)",
+  "status": "experimental",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A rich-text editor on the system's TextEditor and an AttributedString: a formatting toolbar for bold, italic, strikethrough, code, links, headings and lists, a prompt, a character count against a limit, and @mention suggestions. Requires iOS 26.",
+  "whenToUse": "For descriptions, notes, comments and replies that need inline formatting, links, headings or lists, in an app on iOS 26 or later.",
+  "whenNotToUse": "For plain text, use TextField(axis: .vertical) or TextEditor(text: String). For block documents with tables, callouts and embeds, compose the block components (MonarchTableBlock, MonarchCalloutBlock). Before iOS 26 there is no Monarch rich-text editor.",
+  "api": [
+    "@available(iOS 26.0, macOS 26.0, *) init(_ label: String, text: Binding<AttributedString>, prompt: String? = nil, tools: [[MonarchEditorTool]] = MonarchRichTextEditor.defaultTools, maxLength: Int? = nil, showsCharacterCount: Bool? = nil, isReadOnly: Bool = false, isInvalid: Bool = false, mentionItems: [MonarchMentionItem]? = nil, mentionStatus: MonarchMentionPickerStatus = .ready, labels: MonarchRichTextEditorLabels = MonarchRichTextEditorLabels(), onMentionSearch: (@MainActor (MonarchMentionQuery?) -> Void)? = nil, onMention: (@MainActor (MonarchMentionItem) -> Void)? = nil, onTool: (@MainActor (MonarchEditorTool) -> Void)? = nil)",
+    "static var defaultTools: [[MonarchEditorTool]]",
+    "static func isOverLimit(_ text: AttributedString, maxLength: Int?) -> Bool",
+    "MonarchRichTextEditorLabels.init(count: (@Sendable (Int) -> String)? = nil, countOfLimit: (@Sendable (Int, Int) -> String)? = nil, remaining: (@Sendable (Int) -> String)? = nil, toolbar: MonarchEditorToolbarLabels = MonarchEditorToolbarLabels(), mentions: MonarchMentionPickerLabels = MonarchMentionPickerLabels())"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The spoken name of the text view, already localised. Show a visible label nearby, for example with MonarchFormField."
+    },
+    {
+      "name": "text",
+      "type": "Binding<AttributedString>",
+      "default": "required",
+      "description": "The document. Formatting is stored as SwiftUI attributes (font, strikethroughStyle, link)."
+    },
+    {
+      "name": "prompt",
+      "type": "String?",
+      "default": "nil",
+      "description": "Shown while the document is empty."
+    },
+    {
+      "name": "tools",
+      "type": "[[MonarchEditorTool]]",
+      "default": "MonarchRichTextEditor.defaultTools",
+      "description": "The toolbar's tools in groups; [] for no toolbar. Undo, redo, body text, headings 1 to 3, bold, italic, strikethrough, code, link and both lists are applied by the editor; custom tools go to onTool; checklists, quotes, code blocks and headings 4 to 6 are left out."
+    },
+    {
+      "name": "maxLength",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The most characters. Shows the count against it and the danger border when passed; typing is not stopped."
+    },
+    {
+      "name": "showsCharacterCount",
+      "type": "Bool?",
+      "default": "nil",
+      "description": "Shows the count. By default, shown when there is a maxLength."
+    },
+    {
+      "name": "isReadOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the document as Text, without the toolbar or the box."
+    },
+    {
+      "name": "isInvalid",
+      "type": "Bool",
+      "default": "false",
+      "description": "Draws the danger border, for a validation error shown nearby."
+    },
+    {
+      "name": "mentionItems",
+      "type": "[MonarchMentionItem]?",
+      "default": "nil",
+      "description": "The suggestions for the mention being typed; nil turns mentions off."
+    },
+    {
+      "name": "mentionStatus",
+      "type": "MonarchMentionPickerStatus",
+      "default": ".ready",
+      "description": "The state of the mention search: loading, ready or failed."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchRichTextEditorLabels",
+      "default": "MonarchRichTextEditorLabels()",
+      "description": "Replacements for the count strings, and the toolbar's and mention picker's labels."
+    },
+    {
+      "name": "onMentionSearch",
+      "type": "(@MainActor (MonarchMentionQuery?) -> Void)?",
+      "default": "nil",
+      "description": "Receives the mention being typed after @ or #, or nil when there is none; search and update mentionItems. Also called by the picker's retry."
+    },
+    {
+      "name": "onMention",
+      "type": "(@MainActor (MonarchMentionItem) -> Void)?",
+      "default": "nil",
+      "description": "Receives the chosen person or channel after \"@Name \" is written into the text."
+    },
+    {
+      "name": "onTool",
+      "type": "(@MainActor (MonarchEditorTool) -> Void)?",
+      "default": "nil",
+      "description": "Receives the custom tools of the toolbar."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "The prompt in the muted text colour over the text area."
+    },
+    {
+      "name": "focused",
+      "description": "The theme's focus ring around the box."
+    },
+    {
+      "name": "formatting on",
+      "description": "The toolbar toggles of the formats at the caret or the whole selection are on; the text style menu shows the paragraph's style."
+    },
+    {
+      "name": "over the limit",
+      "description": "The count turns the danger colour, the border the danger colour, and the text view's hint says how many characters are over."
+    },
+    {
+      "name": "invalid",
+      "description": "The danger border."
+    },
+    {
+      "name": "disabled",
+      "description": "With disabled(true): the subtle fill and border, and neither the text nor the toolbar can be used."
+    },
+    {
+      "name": "read only",
+      "description": "The document as Text, without the box or the toolbar."
+    },
+    {
+      "name": "mentioning",
+      "description": "MonarchMentionPicker under the text while @ or # and a name are typed, with its loading, empty and error states."
+    }
+  ],
+  "appearance": "A box in the surface colour with the input border and medium corners: the toolbar, a subtle divider, then the text in the default text colour. Headings use the theme's title, heading and subheading weights. The count is a caption in the muted colour, danger when over. The roles follow light, dark and high-contrast themes.",
+  "platformNotes": "The web RichTextEditor is built on Tiptap and stores HTML or Tiptap JSON. iOS has no shared engine: the editor is SwiftUI's TextEditor on an AttributedString, which exists from iOS 26, so the component is available from iOS 26 only. The parity map named a UITextView with TextKit 2 below iOS 26; that second engine is not built, because it would store formatting as UIKit attributes, unlike the SwiftUI attributes of the iOS 26 editor, before the document interchange format is agreed. It stays experimental until that format is agreed: no HTML, Markdown or JSON conversion is shipped, and the app stores the AttributedString (it is Codable) or converts it. Differences from the web: checklists, quotes and code blocks are not offered, because the system text view has no block structure; lists are text prefixes (\"• \", \"1. \"); headings are levels 1 to 3; maxLength does not stop typing, because TextEditor has no hook to refuse an edit, so the app checks isOverLimit before saving; a mention is written as plain \"@Name \" and reported through onMention, where the web inserts a mention node; pasted and dropped files are not handled (use MonarchFileUpload beside the editor); the toolbar sits above the text, not above the keyboard, and the web's toolbarPosition and toolbarEnd are not offered. The web's text style shortcuts (Command-B and so on) are the system's on a hardware keyboard. Inline formats in a heading: italic, code, strikethrough and links apply; bold has no effect because the heading is bold already. Links are a link attribute set from the toolbar's link form, not the MonarchLinkStyle button style. Android plans a Compose editor with the same scope.",
+  "accessibility": [
+    "The text view is the standard TextEditor, named by label, with its text as the value and all system editing gestures, rotor actions and dictation.",
+    "The toolbar is MonarchEditorToolbar: a container named \"Formatting\" whose toggles read their name and on or off state, with 44-point targets.",
+    "The count reads \"268 characters left\" or \"3 characters over the limit\"; over the limit, the text view's hint says so too.",
+    "The prompt is hidden from VoiceOver, as with a text field's prompt.",
+    "Mention suggestions are MonarchMentionPicker buttons; results and states are announced so focus can stay in the text.",
+    "Formatting is not conveyed by colour: bold, italic, strikethrough and headings are type changes, and links are underlined by the system."
+  ],
+  "edgeCases": [
+    "Return at the end of a list item starts the next item; Return on an empty item ends the list.",
+    "Text pasted from another app keeps its fonts; a font of an unknown size is treated as body text by the toolbar.",
+    "The document stores fonts by text style, so it scales with Dynamic Type, and the system typeface's text styles are used rather than Monarch's token sizes so that formatted and plain runs match."
+  ],
+  "tests": [
+    "MonarchRichTextEditorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Document notes",
+      "fixture": "rich-text-editor",
+      "webExample": "Document notes",
+      "template": "if #available(iOS 26.0, macOS 26.0, *) {\n    MonarchRichTextEditor(\n        {{label}},\n        text: $text,\n        prompt: {{prompt}},\n        tools: [\n            [.bold, .italic, .strikethrough, .code],\n            [.heading(2), .heading(3)],\n            [.bulletList, .orderedList, .taskList],\n            [.link, .blockquote, .codeBlock],\n        ]\n    )\n    .frame(height: 380)\n}",
+      "setupTemplate": "@State private var text: AttributedString = {\n    let introduction: String = [{{intro.before}}, {{intro.bold}}, {{intro.after}}, {{intro.link}}, {{intro.end}}].joined()\n    let tasks: [(label: String, done: Bool)] = [\n        ({{tasks.0.label}}, {{tasks.0.done}}),\n        ({{tasks.1.label}}, {{tasks.1.done}}),\n    ]\n    var document = AttributedString()\n    var heading = AttributedString({{heading}} + \"\\n\")\n    heading.font = .title3.bold()\n    document += heading\n    var intro = AttributedString(introduction + \"\\n\")\n    if let range = intro.range(of: {{intro.bold}}) { intro[range].font = .body.bold() }\n    if let range = intro.range(of: {{intro.link}}) { intro[range].link = URL(string: {{intro.href}}); intro[range].underlineStyle = .single }\n    document += intro\n    for task in tasks {\n        var line = AttributedString((task.done ? \"☑\\u{FE0E} \" : \"☐\\u{FE0E} \") + task.label + \"\\n\")\n        if task.done { line.strikethroughStyle = .single }\n        document += line\n    }\n    var quote = AttributedString(\"▎ \" + {{quote}})\n    quote.foregroundColor = .secondary\n    document += quote\n    return document\n}()",
+      "setup": "@State private var text: AttributedString = {\n    let introduction: String = [\"Ship the \", \"new onboarding\", \" after the review on Thursday. See the \", \"rollout guide\", \".\"].joined()\n    let tasks: [(label: String, done: Bool)] = [\n        (\"Update the help article\", true),\n        (\"Tell the support team\", false),\n    ]\n    var document = AttributedString()\n    var heading = AttributedString(\"Release checklist\" + \"\\n\")\n    heading.font = .title3.bold()\n    document += heading\n    var intro = AttributedString(introduction + \"\\n\")\n    if let range = intro.range(of: \"new onboarding\") { intro[range].font = .body.bold() }\n    if let range = intro.range(of: \"rollout guide\") { intro[range].link = URL(string: \"https://example.com/guide\"); intro[range].underlineStyle = .single }\n    document += intro\n    for task in tasks {\n        var line = AttributedString((task.done ? \"☑\\u{FE0E} \" : \"☐\\u{FE0E} \") + task.label + \"\\n\")\n        if task.done { line.strikethroughStyle = .single }\n        document += line\n    }\n    var quote = AttributedString(\"▎ \" + \"Keep the old flow behind a setting for one release.\")\n    quote.foregroundColor = .secondary\n    document += quote\n    return document\n}()",
+      "code": "if #available(iOS 26.0, macOS 26.0, *) {\n    MonarchRichTextEditor(\n        \"Release notes\",\n        text: $text,\n        prompt: \"Write notes…\",\n        tools: [\n            [.bold, .italic, .strikethrough, .code],\n            [.heading(2), .heading(3)],\n            [.bulletList, .orderedList, .taskList],\n            [.link, .blockquote, .codeBlock],\n        ]\n    )\n    .frame(height: 380)\n}"
+    },
+    {
+      "title": "A reply with inline tools and mentions",
+      "setup": "@State private var text = AttributedString()\n@State private var suggestions: [MonarchMentionItem] = []\nprivate let people = [MonarchMentionItem(id: \"u1\", label: \"Ana Lopez\", detail: \"Design\")]\nprivate func search(_ query: MonarchMentionQuery?) -> [MonarchMentionItem] {\n    guard let query else { return [] }\n    return people.filter { query.text.isEmpty || $0.label.localizedCaseInsensitiveContains(query.text) }\n}",
+      "code": "if #available(iOS 26.0, macOS 26.0, *) {\n    MonarchRichTextEditor(\n        \"Reply\",\n        text: $text,\n        prompt: \"Reply to the thread\",\n        tools: MonarchEditorTool.inlineGroups,\n        mentionItems: suggestions,\n        onMentionSearch: { suggestions = search($0) }\n    )\n}"
+    }
+  ],
+  "webEquivalent": "RichTextEditor",
+  "dependsOn": [
+    "editor-toolbar",
+    "mention-picker"
+  ]
+}

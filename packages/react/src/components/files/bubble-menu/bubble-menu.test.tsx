@@ -8,6 +8,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { expectNoA11yViolations } from '../../../../test/a11y.js';
 import '../../../../test/prosemirror.js';
 import { BubbleMenu, defaultBubbleMenuShouldShow, type BubbleMenuProps } from './index.js';
+import { OverlayStage } from '../../../internal/overlay-stage.js';
 
 let current: Editor | null = null;
 
@@ -42,6 +43,23 @@ const select = (editor: Editor, from: number, to: number) =>
   });
 
 describe('BubbleMenu', () => {
+  it('shows for the selection without focus in an overlay stage', async () => {
+    function Staged() {
+      return (
+        <OverlayStage>
+          <Harness />
+        </OverlayStage>
+      );
+    }
+    render(<Staged />);
+    const editor = await ready();
+    act(() => {
+      editor.commands.setTextSelection({ from: 1, to: 6 });
+    });
+    expect(await screen.findByRole('toolbar', { name: 'Formatting' })).toBeTruthy();
+    expect(screen.getByRole('textbox', { name: 'Body' })).not.toHaveFocus();
+  });
+
   it('stays hidden until text is selected, then shows the inline toolbar without taking focus', async () => {
     render(<Harness />);
     const editor = await ready();

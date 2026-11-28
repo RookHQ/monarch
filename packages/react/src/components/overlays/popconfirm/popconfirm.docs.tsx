@@ -1,23 +1,26 @@
 import { useState } from 'react';
 import { Button, Popconfirm } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './popconfirm.fixture.json';
 
 function RemoveFilter() {
-  const [filters, setFilters] = useState(['Status: Open', 'Owner: Me']);
+  const [filters, setFilters] = useState(fixture.data.filters);
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
       {filters.map((filter) => (
         <Popconfirm
           key={filter}
+          defaultOpen={filter === fixture.data.filters[0]}
           trigger={<Button size="sm">{filter}</Button>}
-          title="Remove this filter?"
-          description="The list shows matching items again."
-          confirmLabel="Remove"
+          title={fixture.data.title}
+          description={fixture.data.description}
+          confirmLabel={fixture.data.confirmLabel}
           onConfirm={() => setFilters((all) => all.filter((f) => f !== filter))}
         />
       ))}
       {filters.length === 0 ? (
-        <Button size="sm" onClick={() => setFilters(['Status: Open', 'Owner: Me'])}>
+        <Button size="sm" onClick={() => setFilters(fixture.data.filters)}>
           Restore filters
         </Button>
       ) : null}
@@ -165,7 +168,7 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Remove a filter', render: () => <RemoveFilter /> },
+        { title: 'Remove a filter', stage: true, render: () => <RemoveFilter /> },
         {
           title: 'Danger tone',
           render: () => (

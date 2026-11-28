@@ -1,0 +1,177 @@
+{
+  "id": "json-viewer",
+  "name": "MonarchJsonViewer",
+  "title": "JSONViewer",
+  "family": "technical",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "LazyVStack of Button rows over a flattened model of the open part of the tree, a TextField search field, MonarchCopyButton for the path and value, AttributedString for matches",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A collapsible, searchable tree for a JSON document, with copy path and copy value for the selected node, that stays fast on large payloads.",
+  "whenToUse": "To inspect an API response, a webhook payload, a log entry's body or a configuration document inside the app.",
+  "whenNotToUse": "For JSON the user should read as text or edit, use MonarchCodeBlock with the json language. For a general hierarchy of app objects use List with children (tree view).",
+  "api": [
+    "init(_ value: MonarchJsonValue, expandDepth: Int = 1, maxChildren: Int = 100, maxStringLength: Int = 500, isSearchable: Bool = true, maxMatches: Int = 500, isCopyable: Bool = true, rootPath: String = \"$\", labels: MonarchJsonViewerLabels = MonarchJsonViewerLabels(), onSelect: (@MainActor (String, MonarchJsonValue) -> Void)? = nil, onCopy: (@MainActor (String) -> Void)? = nil)",
+    "enum MonarchJsonValue: Equatable, ExpressibleBy…Literal { case object([(key: String, value: MonarchJsonValue)]), array([MonarchJsonValue]), string(String), number(String), bool(Bool), null; init(parsing text: String) throws; init(data: Data) throws }",
+    "struct MonarchJsonParseError: Error { let offset: Int; init(offset: Int) }",
+    "struct MonarchJsonViewerLabels { init(label: String? = nil, search: String? = nil, searchPrompt: String? = nil, clearSearch: String? = nil, matches: (@Sendable (Int, Bool) -> String)? = nil, collapseAll: String? = nil, copyPath: String? = nil, copyValue: String? = nil, selectedPath: String? = nil, keys: (@Sendable (Int) -> String)? = nil, items: (@Sendable (Int) -> String)? = nil, showMore: (@Sendable (Int, Int) -> String)? = nil, truncated: (@Sendable (Int) -> String)? = nil, expanded: String? = nil, collapsed: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "value",
+      "type": "MonarchJsonValue",
+      "default": "required",
+      "description": "The document. Build it with MonarchJsonValue(parsing:) or (data:), which keep the order of object keys and the exact text of numbers, or with literals."
+    },
+    {
+      "name": "expandDepth",
+      "type": "Int",
+      "default": "1",
+      "description": "Levels open at first: 1 shows the root's children, 0 only the root."
+    },
+    {
+      "name": "maxChildren",
+      "type": "Int",
+      "default": "100",
+      "description": "Children shown per object or array before a \"Show more\" row; each Show more adds this many. At least 1."
+    },
+    {
+      "name": "maxStringLength",
+      "type": "Int",
+      "default": "500",
+      "description": "Strings longer than this are cut in the tree with \"… (n characters)\". Copy value always copies the whole string."
+    },
+    {
+      "name": "isSearchable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the search field and the match count."
+    },
+    {
+      "name": "maxMatches",
+      "type": "Int",
+      "default": "500",
+      "description": "The search stops after this many matches and the count shows \"500+ matches\"."
+    },
+    {
+      "name": "isCopyable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the footer with the selected path, Copy path and Copy value."
+    },
+    {
+      "name": "rootPath",
+      "type": "String",
+      "default": "\"$\"",
+      "description": "The first part of shown and copied paths: $ gives $.users[0].name, an empty string gives users[0].name."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchJsonViewerLabels",
+      "default": "MonarchJsonViewerLabels()",
+      "description": "Replacements for every built-in string: the tree name, the search field, the match count, Collapse all, the copy buttons, the selected path, the summaries, Show more, the cut string suffix and the spoken open state."
+    },
+    {
+      "name": "onSelect",
+      "type": "(@MainActor (String, MonarchJsonValue) -> Void)?",
+      "default": "nil",
+      "description": "Runs with the formatted path and the value when the selection changes."
+    },
+    {
+      "name": "onCopy",
+      "type": "(@MainActor (String) -> Void)?",
+      "default": "nil",
+      "description": "Runs with the copied text after the path or the value is copied."
+    }
+  ],
+  "states": [
+    {
+      "name": "collapsed",
+      "description": "A closed object or array shows a forward chevron and its summary: { } 3 keys or [ ] 2 items."
+    },
+    {
+      "name": "expanded",
+      "description": "An open container shows a down chevron and its children, indented one level."
+    },
+    {
+      "name": "selected",
+      "description": "The selected row has the muted fill and the selected trait; the footer shows its path. The root is selected at first."
+    },
+    {
+      "name": "searching",
+      "description": "Containers that hold a match open, matched text is highlighted and bold, and the toolbar shows the match count."
+    },
+    {
+      "name": "show more",
+      "description": "A container with more children than maxChildren ends with a link-coloured \"Show 100 more (250 hidden)\" row. Search reveals hidden children that match."
+    },
+    {
+      "name": "collapsed all",
+      "description": "Collapse all clears the search, closes every container below the root and selects the root."
+    }
+  ],
+  "appearance": "A surface-filled box with a subtle border. Keys use the info strong colour (array indexes muted), strings success strong, numbers accent strong, booleans and null warning strong, summaries and punctuation muted. Matches use the warning subtle fill. The colours come from the theme in light, dark and both high-contrast themes.",
+  "platformNotes": "The web takes any JavaScript value and shows circular references, undefined and Dates; on iOS the input is MonarchJsonValue, a value type that cannot be circular, parsed by a small parser that keeps key order (JSONSerialization does not). The web's tree keyboard pattern (arrows, Home, End, *) is replaced by touch: tapping a row selects it and opens or closes it, and VoiceOver moves row by row. The search field is the viewer's own TextField, because .searchable needs a navigation container. onCopy receives the text only; the web also passes whether it was the path or the value. The toolbar has no slot for extra actions. Android uses the same name. Several closures are optional (onSelect, onCopy). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is onSelect.",
+  "accessibility": [
+    "The tree is a container named \"JSON\".",
+    "Each row is a button read as \"key: value\", such as \"amount: 4200\" or \"lines: [ ] 2 items\".",
+    "Containers have \"expanded\" or \"collapsed\" as their value; the chevron is decorative.",
+    "The selected row has the selected trait, and the footer path is read as \"Selected\" with the path as its value.",
+    "Matches are bold as well as highlighted, so they are not shown by colour alone.",
+    "A new match count is announced while searching.",
+    "Rows, Show more, the copy buttons and the clear button are at least 44 points tall.",
+    "Copy path and Copy value are MonarchCopyButton, which confirms with \"Copied\" and an announcement."
+  ],
+  "edgeCases": [
+    "Only open containers are walked, so a closed 10 MB document costs one row; search walks the whole document once per query and stops at maxMatches.",
+    "Long keys and values wrap; very long strings are cut at maxStringLength in the tree only.",
+    "A repeated key in parsed text keeps its first position and its last value, as JSON.parse does. Repeated keys written in a dictionary literal are not merged; avoid them, because rows are identified by path.",
+    "Numbers keep the text they were written with (1.50, 12345678901234567890).",
+    "A primitive root is one row; an empty object or array cannot open.",
+    "MonarchJsonValue(parsing:) rejects nesting deeper than 100 levels with MonarchJsonParseError, which also bounds the recursion of search, flattening and copying."
+  ],
+  "tests": [
+    "MonarchJsonViewerTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Webhook payload",
+      "fixture": "json-viewer",
+      "webExample": "Webhook payload",
+      "template": "MonarchJsonViewer(value, expandDepth: {{expandDepth}})",
+      "setupTemplate": "private let value = (try? MonarchJsonValue(parsing: {{payload}})) ?? .null",
+      "setup": "private let value = (try? MonarchJsonValue(parsing: \"{\\\"id\\\": \\\"evt_3c91a0\\\", \\\"type\\\": \\\"order.created\\\", \\\"created\\\": \\\"2026-01-05T09:30:00Z\\\", \\\"livemode\\\": false, \\\"data\\\": {\\\"order\\\": {\\\"id\\\": \\\"ord_1001\\\", \\\"total\\\": 42.5, \\\"currency\\\": \\\"EUR\\\", \\\"note\\\": null, \\\"items\\\": [{\\\"sku\\\": \\\"A-1\\\", \\\"name\\\": \\\"Sample item\\\", \\\"qty\\\": 2}, {\\\"sku\\\": \\\"B-7\\\", \\\"name\\\": \\\"Second item\\\", \\\"qty\\\": 1}], \\\"shipping address\\\": {\\\"city\\\": \\\"Example City\\\", \\\"country\\\": \\\"NL\\\"}}}}\")) ?? .null",
+      "code": "MonarchJsonViewer(value, expandDepth: 2)"
+    },
+    {
+      "title": "Parsed from text",
+      "setup": "private let value = (try? MonarchJsonValue(parsing: #\"{\"user\": {\"first name\": \"Ada\", \"roles\": [\"admin\"]}}\"#)) ?? .null",
+      "code": "MonarchJsonViewer(value, rootPath: \"\")"
+    }
+  ],
+  "webEquivalent": "JSONViewer",
+  "dependsOn": [
+    "tree-view",
+    "search-input",
+    "copy-button",
+    "button"
+  ],
+  "icons": {
+    "row.chevron": "ChevronRightGlyph",
+    "copyPath": "CopyGlyph",
+    "copyValue": "CopyGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "Rows keep a 44-point touch target, so the tree is looser than the web's 24-pixel rows, and the search field and Collapse all stack in a phone column instead of sharing a row. The data, tones, chevrons, footer path and copy buttons are as on the web.",
+      "convention": "HIG: controls are at least 44 points tall"
+    }
+  ]
+}

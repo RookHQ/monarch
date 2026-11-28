@@ -1,0 +1,70 @@
+{
+  "id": "terms-update-dialog",
+  "name": null,
+  "title": "TermsUpdateDialog",
+  "family": "overlays",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchBottomSheet with dismissible = false, holding MonarchText, MonarchLink and MonarchButton; the date formatted with android.icu.text.DateFormat",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a bottom sheet that tells people the terms have changed, with a summary, the effective date and links to the documents, which in its blocking form cannot be dismissed until they accept or decline.",
+  "whenToUse": "When updated terms or a privacy policy need the person's acceptance before they continue (blocking), or need to be shown once (a notice with a Later button).",
+  "whenNotToUse": "For news about the product, use an announcement bar. For consent to cookies or tracking, use the cookie consent banner.",
+  "api": [
+    "@Composable fun MonarchBottomSheet(onDismissRequest: () -> Unit, modifier: Modifier = Modifier, title: String? = null, description: String? = null, dismissible: Boolean = true, showHandle: Boolean = true, fullyExpanded: Boolean = true, fullWidthContent: Boolean = false, content: @Composable MonarchBottomSheetScope.() -> Unit)",
+    "ModalBottomSheetProperties(shouldDismissOnBackPress: Boolean = true, shouldDismissOnClickOutside: Boolean = true)",
+    "android.icu.text.DateFormat.getDateInstance(style: Int): DateFormat"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "blocking",
+      "description": "No swipe, back or tap outside closes it: dismissible = false. Only Accept or Decline closes it."
+    },
+    {
+      "name": "notice",
+      "description": "The default sheet behavior with a Later button: it can be swiped away and is shown again later."
+    },
+    {
+      "name": "accepting",
+      "description": "Pass loading to the Accept button while the acceptance is recorded; show a failure with MonarchInlineNotice in the sheet."
+    }
+  ],
+  "appearance": "A Material 3 bottom sheet on the raised surface Monarch maps to it, with the heading, the summary in the default text color, the effective date in the muted text color, standalone links and full-width buttons: Accept primary, Decline ghost. The same roles in light, dark and both high-contrast themes.",
+  "platformNotes": "The web TermsUpdateDialog is a component with mode, effectiveDate parsing, documents, version labels, and pending and error props. On Android it composes a MonarchBottomSheet: the date is epoch milliseconds formatted with android.icu.text.DateFormat in the person's locale (in UTC, so the day does not shift), the links open the documents through LocalUriHandler, and blocking turns off every way to dismiss the sheet. iOS uses the same recipe with interactiveDismissDisabled.",
+  "accessibility": [
+    "The heading names the sheet; TalkBack moves into the sheet when it opens.",
+    "Each document is a link with a 48dp touch target, named with its title and version.",
+    "Decline is named for what it does (\"Decline and sign out\").",
+    "The sheet's content scrolls at large font sizes, so the buttons are always reachable."
+  ],
+  "edgeCases": [
+    "In the blocking form there must be a way out: Decline signs the person out.",
+    "Record the accepted version, not only a flag, so the next change shows the sheet again."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "Blocking, with sign out",
+      "fixture": "terms-update-dialog",
+      "webExample": "Blocking, with sign out",
+      "template": "MonarchButton(text = {{trigger}}, onClick = { open = true })\nif (open) {\n    MonarchDialog(\n        onDismissRequest = {},\n        title = \"We’ve updated our terms\",\n        description = \"Effective from $effective\",\n        dismissible = false,\n        actions = {\n            MonarchButton(text = {{declineLabel}}, onClick = { open = false }, size = MonarchButtonSize.Sm)\n            MonarchButton(\n                text = \"Accept and continue\",\n                onClick = { open = false },\n                variant = MonarchButtonVariant.Primary,\n                size = MonarchButtonSize.Sm,\n            )\n        },\n    ) {\n        Column(\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        ) {\n            MonarchText(text = {{summary.intro}})\n            MonarchText(text = \"• \" + {{summary.items.0}})\n            MonarchText(text = \"• \" + {{summary.items.1}})\n            MonarchText(text = \"Read the full documents\", style = MonarchTextStyle.Label)\n            MonarchLink(text = {{documents.0.label}} + \" (version \" + {{documents.0.version}} + \")\", onClick = {}, variant = MonarchLinkVariant.Standalone)\n            MonarchLink(text = {{documents.1.label}} + \" (version \" + {{documents.1.version}} + \")\", onClick = {}, variant = MonarchLinkVariant.Standalone)\n        }\n    }\n}",
+      "setupTemplate": "var open by remember { mutableStateOf(true) }\nval effective = remember {\n    android.icu.text.DateFormat.getDateInstance(android.icu.text.DateFormat.LONG, java.util.Locale.forLanguageTag({{locale}}))\n        .apply { timeZone = android.icu.util.TimeZone.getTimeZone(\"UTC\") }\n        .format(java.util.Date({{effectiveDate|millis}}))\n}",
+      "setup": "var open by remember { mutableStateOf(true) }\nval effective = remember {\n    android.icu.text.DateFormat.getDateInstance(android.icu.text.DateFormat.LONG, java.util.Locale.forLanguageTag(\"en-GB\"))\n        .apply { timeZone = android.icu.util.TimeZone.getTimeZone(\"UTC\") }\n        .format(java.util.Date(1_796_083_200_000L))\n}",
+      "code": "MonarchButton(text = \"Show blocking update\", onClick = { open = true })\nif (open) {\n    MonarchDialog(\n        onDismissRequest = {},\n        title = \"We’ve updated our terms\",\n        description = \"Effective from $effective\",\n        dismissible = false,\n        actions = {\n            MonarchButton(text = \"Sign out\", onClick = { open = false }, size = MonarchButtonSize.Sm)\n            MonarchButton(\n                text = \"Accept and continue\",\n                onClick = { open = false },\n                variant = MonarchButtonVariant.Primary,\n                size = MonarchButtonSize.Sm,\n            )\n        },\n    ) {\n        Column(\n            verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n        ) {\n            MonarchText(text = \"Here is what changed:\")\n            MonarchText(text = \"• \" + \"We explain how long we keep support messages.\")\n            MonarchText(text = \"• \" + \"We list the providers that host your data.\")\n            MonarchText(text = \"Read the full documents\", style = MonarchTextStyle.Label)\n            MonarchLink(text = \"Terms of Service\" + \" (version \" + \"2026-12-01\" + \")\", onClick = {}, variant = MonarchLinkVariant.Standalone)\n            MonarchLink(text = \"Privacy Policy\" + \" (version \" + \"2026-12-01\" + \")\", onClick = {}, variant = MonarchLinkVariant.Standalone)\n        }\n    }\n}"
+    }
+  ],
+  "webEquivalent": "TermsUpdateDialog",
+  "dependsOn": [
+    "sheet",
+    "link",
+    "button",
+    "text"
+  ]
+}

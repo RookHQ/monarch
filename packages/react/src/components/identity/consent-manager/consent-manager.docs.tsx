@@ -1,7 +1,10 @@
 import { useMemo } from 'react';
 import {
+  Badge,
   Button,
   ConsentGate,
+  DescriptionItem,
+  DescriptionList,
   ConsentProvider,
   useConsent,
   type ConsentRecord,
@@ -9,6 +12,8 @@ import {
   type ConsentStorage,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './consent-manager.fixture.json';
 
 /** Docs demos keep the choice in memory, so the page never stores anything. */
 function useMemoryStorage(): ConsentStorage {
@@ -23,36 +28,46 @@ function useMemoryStorage(): ConsentStorage {
   }, []);
 }
 
+const ALLOWED_LABEL = fixture.data.categories[0]?.badge;
+const NOT_ALLOWED_LABEL = fixture.data.categories[1]?.badge;
+
 function StateReadout() {
   const consent = useConsent();
   return (
-    <div style={{ display: 'grid', gap: 'var(--mn-space-2)' }}>
-      <p style={{ margin: 0 }}>
-        Regime: <strong>{consent.regime}</strong> · Status: <strong>{consent.status}</strong>
-      </p>
-      <ul style={{ margin: 0 }}>
+    <div style={{ display: 'grid', gap: 'var(--mn-space-4)', width: '100%', maxWidth: '28rem' }}>
+      <DescriptionList columns={1} layout="inline">
+        <DescriptionItem term={fixture.data.regime.term}>{consent.regime}</DescriptionItem>
+        <DescriptionItem term={fixture.data.status.term}>{consent.status}</DescriptionItem>
         {consent.categories.map((c) => (
-          <li key={c.id}>
-            {c.label}: {consent.allowed(c.id) ? 'allowed' : 'not allowed'}
-          </li>
+          <DescriptionItem key={c.id} term={c.label}>
+            {consent.allowed(c.id) ? (
+              <Badge tone="success">{ALLOWED_LABEL}</Badge>
+            ) : (
+              <Badge>{NOT_ALLOWED_LABEL}</Badge>
+            )}
+          </DescriptionItem>
         ))}
-      </ul>
+      </DescriptionList>
       <div style={{ display: 'flex', gap: 'var(--mn-space-2)', flexWrap: 'wrap' }}>
         <Button size="sm" onClick={consent.rejectAll}>
-          Reject all
+          {fixture.data.actions.rejectAll}
         </Button>
         <Button size="sm" onClick={consent.acceptAll}>
-          Accept all
+          {fixture.data.actions.acceptAll}
         </Button>
         <Button size="sm" variant="ghost" onClick={consent.withdraw}>
-          Withdraw
+          {fixture.data.actions.withdraw}
         </Button>
       </div>
       <ConsentGate
         category="analytics"
-        fallback={<p style={{ margin: 0 }}>The analytics script is not loaded.</p>}
+        fallback={
+          <p style={{ margin: 0, color: 'var(--mn-color-text-muted)' }}>{fixture.data.fallback}</p>
+        }
       >
-        <p style={{ margin: 0 }}>The analytics script would load here.</p>
+        <p style={{ margin: 0, color: 'var(--mn-color-text-muted)' }}>
+          The analytics script would load here.
+        </p>
       </ConsentGate>
     </div>
   );
@@ -169,7 +184,11 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Opt-in', stack: true, render: () => <Demo regime="opt-in" /> },
+        {
+          title: 'Opt-in',
+          stack: true,
+          render: () => <Demo regime={fixture.data.regime.value as ConsentRegime} />,
+        },
         { title: 'Opt-out', stack: true, render: () => <Demo regime="opt-out" /> },
         { title: 'Notice', stack: true, render: () => <Demo regime="notice" /> },
       ],

@@ -1,0 +1,200 @@
+{
+  "id": "ai-trace-view",
+  "name": "MonarchAiTraceView",
+  "title": "AiTraceView",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of tree rows with androidx.compose.foundation.Canvas duration bars, androidx.compose.material3.SingleChoiceSegmentedButtonRow for the filter and androidx.compose.material3.ModalBottomSheet for the details (MonarchDescriptionList, MonarchCopyButton)",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "The technical trace of one agent run: model calls, tool calls, retrievals, sub-agents and guardrails as a tree of rows with duration, tokens, cost and a bar on a shared time axis, run totals, a filter and the details of a span in a sheet.",
+  "whenToUse": "For developers and operators who debug or audit an agent run: which step was slow, which failed, what went in and came out, what it cost.",
+  "whenNotToUse": "For a short, flat list of a run's events for end users, use MonarchAiAgentRunTimeline. For several agents and their status, use MonarchAiSubagentTree.",
+  "api": [
+    "@ExperimentalMonarchApi @Composable fun MonarchAiTraceView(spans: List<MonarchAiTraceSpan>, expandIcon: @Composable () -> Unit, modifier: Modifier = Modifier, currency: String = \"USD\", now: Long? = null, selection: String? = null, onSelectionChange: ((String?) -> Unit)? = null, filter: MonarchAiTraceFilter? = null, onFilterChange: ((MonarchAiTraceFilter) -> Unit)? = null, expanded: Set<String>? = null, onExpandedChange: ((Set<String>) -> Unit)? = null, locale: Locale? = null, labels: MonarchAiTraceViewLabels = MonarchAiTraceViewLabels(), onOpenPart: ((MonarchAiTraceSpan) -> Unit)? = null)",
+    "data class MonarchAiTraceSpan(id: String, kind: MonarchAiTraceSpanKind, name: String, status: MonarchAiTraceSpanStatus, start: Long, end: Long? = null, parentId: String? = null, inputTokens: Long? = null, outputTokens: Long? = null, costMicros: Long? = null, currency: String? = null, model: String? = null, error: String? = null, attributes: Map<String, String> = emptyMap(), input: String? = null, output: String? = null, partId: String? = null, messageId: String? = null)",
+    "enum class MonarchAiTraceSpanKind { Model, Tool, Retrieval, Agent, Guardrail, Other }",
+    "enum class MonarchAiTraceSpanStatus { Ok, Error, Cancelled, Running }",
+    "enum class MonarchAiTraceFilter { All, Errors, Slowest }",
+    "class MonarchAiTraceViewLabels(label: String? = null, filterLabel: String? = null, filter: ((MonarchAiTraceFilter) -> String)? = null, kind: ((MonarchAiTraceSpanKind) -> String)? = null, status: ((MonarchAiTraceSpanStatus) -> String)? = null, totalDuration: String? = null, totalTokens: String? = null, totalCost: String? = null, errors: String? = null, notAvailable: String? = null, empty: String? = null, noErrors: String? = null, tokens: ((count: Long) -> String)? = null, formatDuration: ((millis: Long) -> String)? = null, timing: ((start: String, duration: String?) -> String)? = null, closeDetails: String? = null, openPart: String? = null, start: String? = null, end: String? = null, duration: String? = null, inputTokens: String? = null, outputTokens: String? = null, model: String? = null, statusName: String? = null, kindName: String? = null, error: String? = null, attributes: String? = null, input: String? = null, output: String? = null, expand: ((name: String) -> String)? = null, collapse: ((name: String) -> String)? = null)"
+  ],
+  "options": [
+    {
+      "name": "spans",
+      "type": "List<MonarchAiTraceSpan>",
+      "default": "required",
+      "description": "The spans of one run, in any order; times in milliseconds from the run start. Children come from parentId, in start order."
+    },
+    {
+      "name": "expandIcon",
+      "type": "@Composable () -> Unit",
+      "default": "required",
+      "description": "A chevron that points to the end; it turns a quarter when the span is open. Monarch bundles no icons."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the trace."
+    },
+    {
+      "name": "currency",
+      "type": "String",
+      "default": "\"USD\"",
+      "description": "The ISO 4217 currency of spans that name none."
+    },
+    {
+      "name": "now",
+      "type": "Long?",
+      "default": "null",
+      "description": "The end of running spans, in milliseconds from the run start. Null ends them at the latest known time; the view never reads the clock."
+    },
+    {
+      "name": "selection",
+      "type": "String?",
+      "default": "null",
+      "description": "The id of the span whose details are open. The view keeps the person's choice and starts again from this value when it changes."
+    },
+    {
+      "name": "onSelectionChange",
+      "type": "((String?) -> Unit)?",
+      "default": "null",
+      "description": "Called with the id of the span the person opens, and with null when the details close."
+    },
+    {
+      "name": "filter",
+      "type": "MonarchAiTraceFilter?",
+      "default": "null",
+      "description": "All, Errors (failed spans and their ancestors) or Slowest (siblings slowest first). Null lets the view keep it, starting from All."
+    },
+    {
+      "name": "onFilterChange",
+      "type": "((MonarchAiTraceFilter) -> Unit)?",
+      "default": "null",
+      "description": "Called when the person changes the filter."
+    },
+    {
+      "name": "expanded",
+      "type": "Set<String>?",
+      "default": "null",
+      "description": "The ids of the open spans. Null keeps them inside the view, starting with top-level spans, failed spans and their ancestors open."
+    },
+    {
+      "name": "onExpandedChange",
+      "type": "((Set<String>) -> Unit)?",
+      "default": "null",
+      "description": "Called with the new set of open ids."
+    },
+    {
+      "name": "locale",
+      "type": "Locale?",
+      "default": "null",
+      "description": "The locale of numbers, durations and money. Null uses the configuration's locale."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiTraceViewLabels",
+      "default": "MonarchAiTraceViewLabels()",
+      "description": "Replacements for every built-in string and the duration format."
+    },
+    {
+      "name": "onOpenPart",
+      "type": "((MonarchAiTraceSpan) -> Unit)?",
+      "default": "null",
+      "description": "Adds Show in conversation to the details of a span with a partId or messageId."
+    }
+  ],
+  "states": [
+    {
+      "name": "open and closed",
+      "description": "A span with children has a toggle; its children are listed under it, indented 16dp per level, while it is open."
+    },
+    {
+      "name": "selected",
+      "description": "The span's row takes the accent subtle fill and its details open in a bottom sheet."
+    },
+    {
+      "name": "error",
+      "description": "The row shows an Error badge in the danger tone and a danger bar; the details show the error message."
+    },
+    {
+      "name": "running",
+      "description": "The row shows a Running badge; the bar ends at now and uses the AI thinking color."
+    },
+    {
+      "name": "errors only",
+      "description": "Only failed spans and their ancestors; No errors in this run when there are none."
+    },
+    {
+      "name": "empty",
+      "description": "No spans recorded."
+    }
+  ],
+  "appearance": "A subheading, totals with the value in strong tabular digits over a muted caption, Material 3 segmented buttons in the Monarch theme, then rows with the name in the label style, a muted facts line and a thin bar on a muted track. Bars are coloured by kind (AI solid for models, AI tool for tools, info for retrievals, default text for agents, warning strong for guardrails, strong border for others), danger solid for errors, disabled text for cancelled spans and AI thinking for running ones. The details sheet uses the raised background. The same roles adapt to dark and both high-contrast themes.",
+  "platformNotes": "The web shows a six-column tree grid with arrow keys, windowing and an inline details panel. A phone cannot fit six columns, so, as on iOS, each row shows the name with a facts line and the bar under it, and the details open in a Material 3 ModalBottomSheet. The rows are a Column rather than a lazy list so the trace can sit in a scrolling screen; with the default open set only top-level spans, failed spans and their ancestors are listed, and very large traces belong in their own screen. Times are Long milliseconds from the run start (iOS uses seconds); attributes are strings. expandIcon is required because Monarch bundles no icons. Durations follow the web's format (850 ms, 1.42 s, 12.5 s, 2 min 5 s) with the locale given explicitly; costs show two decimals, four below one unit. The web's OpenTelemetry converters are not offered; map spans in the app. Selection, filter and the open set are hoisted values with callbacks instead of bindings. The web's copy announcements come from MonarchCopyButton. Experimental: a domain pattern until a Rook app adopts it.",
+  "accessibility": [
+    "The title Run trace is a heading; each total is one element read as its name and value, such as Total time, 4.2 s.",
+    "Each span is one button read as its name, status (when not OK), kind, tokens, cost and timing, such as Starts at +1.4 s, takes 600 ms; it has a 48dp touch target and exposes the selected state while its details are open.",
+    "The open and close button is a separate element named Expand or Collapse and the span name, with a 48dp target.",
+    "Bars and the facts line are hidden inside the span's element, so nothing depends on bar color or length; status is a word in a badge.",
+    "The details sheet has the span name as a heading, facts read as label and value, headings for attributes, input and output, and copy buttons named after what they copy.",
+    "The filter is a Material 3 segmented button row named Show, with the selected state of each option.",
+    "The chevron turn follows the reduced-motion setting."
+  ],
+  "edgeCases": [
+    "A repeated id keeps the first span; an unknown parent makes a top-level span; spans in a parent loop are each shown at the top level.",
+    "A span that ends before it starts counts as zero long; the shortest bar is 2dp so instant spans stay visible.",
+    "Costs in several currencies are listed side by side in the total.",
+    "Token and cost totals add every span; parents must carry only their own usage.",
+    "Without now, a running span ends at the latest time any span knows."
+  ],
+  "tests": [
+    "MonarchAiTraceViewTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "A finished run",
+      "fixture": "ai-trace-view",
+      "webExample": "A finished run",
+      "template": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiTraceView(\n    spans = listOf(\n        MonarchAiTraceSpan(\n            id = {{spans.0.id}},\n            kind = MonarchAiTraceSpanKind.{{spans.0.kind|pascal}},\n            name = {{spans.0.name}},\n            status = MonarchAiTraceSpanStatus.{{spans.0.status|pascal}},\n            start = {{spans.0.startMs}},\n            end = {{spans.0.endMs}},\n        ),\n        MonarchAiTraceSpan(\n            id = {{spans.1.id}},\n            kind = MonarchAiTraceSpanKind.{{spans.1.kind|pascal}},\n            name = {{spans.1.name}},\n            status = MonarchAiTraceSpanStatus.{{spans.1.status|pascal}},\n            start = {{spans.1.startMs}},\n            end = {{spans.1.endMs}},\n            parentId = {{spans.1.parentId}},\n        ),\n        MonarchAiTraceSpan(\n            id = {{spans.2.id}},\n            kind = MonarchAiTraceSpanKind.{{spans.2.kind|pascal}},\n            name = {{spans.2.name}},\n            status = MonarchAiTraceSpanStatus.{{spans.2.status|pascal}},\n            start = {{spans.2.startMs}},\n            end = {{spans.2.endMs}},\n            parentId = {{spans.2.parentId}},\n            inputTokens = {{spans.2.inputTokens}},\n            outputTokens = {{spans.2.outputTokens}},\n            costMicros = {{spans.2.costMicros}},\n        ),\n        MonarchAiTraceSpan(\n            id = {{spans.3.id}},\n            kind = MonarchAiTraceSpanKind.{{spans.3.kind|pascal}},\n            name = {{spans.3.name}},\n            status = MonarchAiTraceSpanStatus.{{spans.3.status|pascal}},\n            start = {{spans.3.startMs}},\n            end = {{spans.3.endMs}},\n            parentId = {{spans.3.parentId}},\n        ),\n        MonarchAiTraceSpan(\n            id = {{spans.4.id}},\n            kind = MonarchAiTraceSpanKind.{{spans.4.kind|pascal}},\n            name = {{spans.4.name}},\n            status = MonarchAiTraceSpanStatus.{{spans.4.status|pascal}},\n            start = {{spans.4.startMs}},\n            end = {{spans.4.endMs}},\n            parentId = {{spans.4.parentId}},\n        ),\n        MonarchAiTraceSpan(\n            id = {{spans.5.id}},\n            kind = MonarchAiTraceSpanKind.{{spans.5.kind|pascal}},\n            name = {{spans.5.name}},\n            status = MonarchAiTraceSpanStatus.{{spans.5.status|pascal}},\n            start = {{spans.5.startMs}},\n            end = {{spans.5.endMs}},\n            parentId = {{spans.5.parentId}},\n            inputTokens = {{spans.5.inputTokens}},\n            outputTokens = {{spans.5.outputTokens}},\n            costMicros = {{spans.5.costMicros}},\n        ),\n    ),\n    expandIcon = {\n        MonarchIcon(\n            imageVector = SampleIcons.ChevronRight,\n            contentDescription = null,\n            size = MonarchIconSize.Sm,\n        )\n    },\n    currency = {{currency}},\n    locale = Locale.forLanguageTag({{locale}}),\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "java.util.Locale"
+      ],
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiTraceView(\n    spans = listOf(\n        MonarchAiTraceSpan(\n            id = \"run\",\n            kind = MonarchAiTraceSpanKind.Agent,\n            name = \"Answer question\",\n            status = MonarchAiTraceSpanStatus.Ok,\n            start = 0,\n            end = 6100,\n        ),\n        MonarchAiTraceSpan(\n            id = \"guard\",\n            kind = MonarchAiTraceSpanKind.Guardrail,\n            name = \"Check request\",\n            status = MonarchAiTraceSpanStatus.Ok,\n            start = 0,\n            end = 120,\n            parentId = \"run\",\n        ),\n        MonarchAiTraceSpan(\n            id = \"plan\",\n            kind = MonarchAiTraceSpanKind.Model,\n            name = \"Plan the answer\",\n            status = MonarchAiTraceSpanStatus.Ok,\n            start = 120,\n            end = 1400,\n            parentId = \"run\",\n            inputTokens = 1850,\n            outputTokens = 240,\n            costMicros = 3100,\n        ),\n        MonarchAiTraceSpan(\n            id = \"search\",\n            kind = MonarchAiTraceSpanKind.Retrieval,\n            name = \"Search records\",\n            status = MonarchAiTraceSpanStatus.Ok,\n            start = 1400,\n            end = 2600,\n            parentId = \"run\",\n        ),\n        MonarchAiTraceSpan(\n            id = \"analysis\",\n            kind = MonarchAiTraceSpanKind.Agent,\n            name = \"Analysis agent\",\n            status = MonarchAiTraceSpanStatus.Ok,\n            start = 2600,\n            end = 6100,\n            parentId = \"run\",\n        ),\n        MonarchAiTraceSpan(\n            id = \"analysis-model\",\n            kind = MonarchAiTraceSpanKind.Model,\n            name = \"Write the summary\",\n            status = MonarchAiTraceSpanStatus.Ok,\n            start = 2900,\n            end = 6100,\n            parentId = \"analysis\",\n            inputTokens = 4200,\n            outputTokens = 910,\n            costMicros = 9800,\n        ),\n    ),\n    expandIcon = {\n        MonarchIcon(\n            imageVector = SampleIcons.ChevronRight,\n            contentDescription = null,\n            size = MonarchIconSize.Sm,\n        )\n    },\n    currency = \"EUR\",\n    locale = Locale.forLanguageTag(\"en-GB\"),\n)"
+    },
+    {
+      "title": "Errors only, with a running span",
+      "setup": "var filter by rememberSaveable { mutableStateOf(MonarchAiTraceFilter.Errors) }\nval spans = listOf(\n    MonarchAiTraceSpan(\"run\", MonarchAiTraceSpanKind.Agent, \"Answer question\", MonarchAiTraceSpanStatus.Running, 0),\n    MonarchAiTraceSpan(\"check\", MonarchAiTraceSpanKind.Guardrail, \"Safety check\", MonarchAiTraceSpanStatus.Error, 500, 700, parentId = \"run\"),\n)",
+      "code": "@OptIn(ExperimentalMonarchApi::class)\nMonarchAiTraceView(\n    spans = spans,\n    expandIcon = { Text(\"›\") },\n    now = 2_000,\n    filter = filter,\n    onFilterChange = { filter = it },\n)",
+      "imports": [
+        "com.rookhq.monarch.ExperimentalMonarchApi"
+      ]
+    }
+  ],
+  "webEquivalent": "AiTraceView",
+  "dependsOn": [
+    "tree-view",
+    "ai-agent-run-timeline",
+    "sheet",
+    "description-list"
+  ],
+  "icons": {
+    "row.expand": "ChevronRightGlyph"
+  },
+  "parityExceptions": [
+    {
+      "rule": "layout",
+      "platform": "android",
+      "reason": "The web draws one table of six columns (Span, Kind, Duration, Tokens, Cost and Timeline) in about 620px. A phone window leaves 344dp, and the six columns at a readable width need 736dp, so a table that fits would break words in the span names. The phone therefore draws each span as two lines in the same order of data: the name, the kind and the duration on the first, the timeline bar with the tokens and the cost under it on the second, under one header row.",
+      "convention": "a wide table is a two-line row on a compact window rather than a sideways scroll or a squeezed column (Material list items)"
+    }
+  ]
+}

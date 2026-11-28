@@ -1,0 +1,161 @@
+{
+  "id": "ai-feedback",
+  "name": "MonarchAiFeedback",
+  "title": "AiFeedback",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "androidx.compose.material3.OutlinedIconToggleButton (with an icon) or androidx.compose.material3.FilterChip for the thumbs; androidx.compose.material3.ModalBottomSheet with MonarchCheckboxGroup, MonarchTextField (multi-line), MonarchInlineNotice and MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Thumbs up and down for an AI answer, then reasons and an optional comment in a sheet, then a thank-you.",
+  "whenToUse": "Under an AI answer, to collect a rating and, for a bad answer, why it was bad.",
+  "whenNotToUse": "For a star or number rating, use MonarchRatingPicker. For a long survey, use a form screen.",
+  "api": [
+    "@Composable fun MonarchAiFeedback(selection: MonarchAiMessageFeedback?, onSelectionChange: (MonarchAiMessageFeedback?) -> Unit, modifier: Modifier = Modifier, reasons: Map<MonarchAiMessageFeedback, List<MonarchCheckboxGroupOption<String>>>? = null, asksDetails: MonarchAiFeedbackDetails = MonarchAiFeedbackDetails.Down, enabled: Boolean = true, icon: (@Composable (value: MonarchAiMessageFeedback, checked: Boolean) -> Unit)? = null, labels: MonarchAiFeedbackLabels = MonarchAiFeedbackLabels(), onSubmit: (suspend (MonarchAiFeedbackSubmission) -> Unit)? = null)",
+    "enum class MonarchAiFeedbackDetails { Down, Both, None }",
+    "data class MonarchAiFeedbackSubmission(value: MonarchAiMessageFeedback, reasons: List<String>, comment: String)",
+    "class MonarchAiFeedbackLabels(group: String? = null, good: String? = null, bad: String? = null, reasonsDown: String? = null, reasonsUp: String? = null, comment: String? = null, commentPlaceholder: String? = null, submit: String? = null, cancel: String? = null, thanks: String? = null, error: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "selection",
+      "type": "MonarchAiMessageFeedback?",
+      "default": "required",
+      "description": "The rating, null for none. It changes as soon as a thumb is pressed, before anything is sent."
+    },
+    {
+      "name": "onSelectionChange",
+      "type": "(MonarchAiMessageFeedback?) -> Unit",
+      "default": "required",
+      "description": "Called with the new rating, or null when the pressed thumb is pressed again."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the thumbs."
+    },
+    {
+      "name": "reasons",
+      "type": "Map<MonarchAiMessageFeedback, List<MonarchCheckboxGroupOption<String>>>?",
+      "default": "null",
+      "description": "The reasons offered for each rating; null offers Inaccurate, Not helpful, Incomplete, Hard to follow and Harmful or unsafe after a thumbs down and none after a thumbs up."
+    },
+    {
+      "name": "asksDetails",
+      "type": "MonarchAiFeedbackDetails",
+      "default": "MonarchAiFeedbackDetails.Down",
+      "description": "Which ratings open the sheet; the others are sent at once."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the thumbs can be pressed."
+    },
+    {
+      "name": "icon",
+      "type": "(@Composable (MonarchAiMessageFeedback, Boolean) -> Unit)?",
+      "default": "null",
+      "description": "The thumb glyph, given the rating and whether it is pressed; null shows each thumb as a chip with its name."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiFeedbackLabels",
+      "default": "MonarchAiFeedbackLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onSubmit",
+      "type": "(suspend (MonarchAiFeedbackSubmission) -> Unit)?",
+      "default": "null",
+      "description": "Sends the rating, the chosen reason ids in listed order and the trimmed comment. Throw to show the error."
+    }
+  ],
+  "states": [
+    {
+      "name": "unrated",
+      "description": "Two thumbs, neither pressed."
+    },
+    {
+      "name": "rated",
+      "description": "The chosen thumb is checked (icon toggle) or selected (chip with a check mark); with an icon, the app can show a filled glyph."
+    },
+    {
+      "name": "details",
+      "description": "A sheet with the title, the question and reasons as checkboxes, the comment, Cancel and Send feedback."
+    },
+    {
+      "name": "sending",
+      "description": "Send feedback shows progress; the sheet cannot be dismissed and the thumbs are disabled."
+    },
+    {
+      "name": "thanks",
+      "description": "\"Thanks for your feedback.\" under the thumbs, announced."
+    },
+    {
+      "name": "error",
+      "description": "The send threw: a danger notice in the sheet, which stays filled in, or the error under the thumbs after a direct send, announced."
+    },
+    {
+      "name": "disabled",
+      "description": "The thumbs use the disabled colors and do nothing."
+    }
+  ],
+  "appearance": "Material 3 outlined icon toggle buttons or filter chips in Monarch's theme; the sheet uses the raised surface with the checkbox group, text field and buttons in their own appearance. The thank-you is muted caption text and the error danger-strong caption text. All are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The web shows the reasons as chips and the form inline under the thumbs; as on iOS, the form is a modal bottom sheet and the reasons are a MonarchCheckboxGroup. Monarch bundles no icons, so the thumb glyphs come from the icon slot; without them each thumb is a FilterChip with its name, so meaning never depends on a glyph. Pressed thumbs use the Material toggle colors where the web uses the AI colors. The rating type is MonarchAiMessageFeedback, shared with MonarchAiConversation. The web moves focus to the thank-you; Android announces it through a polite live region because the sheet closes. onSubmit is a suspend function that throws in place of a promise. The web's uncontrolled mode is not offered: selection is hoisted. iOS uses a Binding and a trailing onSubmit closure; Android hoists selection with onSelectionChange and keeps onSubmit last. Experimental: an AI product composite that waits for a Rook app to adopt it.",
+  "accessibility": [
+    "Each thumb is a Material toggle (icon button, with on or off state) or a selectable chip, named \"Good response\" or \"Bad response\"; the thumbs are a traversal group named \"Rate this response\".",
+    "Thumbs and sheet buttons have touch targets of at least 48dp.",
+    "In the sheet the title is a heading, the reasons are labelled checkboxes under the question and the comment has a visible label.",
+    "The thank-you and the error under the thumbs are one always-present polite live region; the error in the sheet is a polite notice.",
+    "The pressed state is a toggle state or a chip's check mark, not color alone."
+  ],
+  "edgeCases": [
+    "Pressing the pressed thumb again clears the rating and closes any sheet without sending.",
+    "A rating with no reasons shows only the comment in the sheet.",
+    "Without onSubmit, ratings still change and the thank-you shows.",
+    "A send cancelled by leaving the screen is not shown as an error.",
+    "Reason ids that are not offered are left out of the submission."
+  ],
+  "tests": [
+    "MonarchAiFeedbackTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Default (details on thumbs down)",
+      "fixture": "ai-feedback",
+      "webExample": "Default (details on thumbs down)",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchAiFeedback(\n        selection = rating,\n        onSelectionChange = { rating = it },\n        asksDetails = MonarchAiFeedbackDetails.{{askDetails|pascal}},\n    ) { submission ->\n        // The app sends submission with the message id here.\n        sent = submission.toString()\n    }\n    MonarchText(text = sent ?: \"Nothing sent yet\", style = MonarchTextStyle.Caption)\n}",
+      "setupTemplate": "var rating by remember { mutableStateOf<MonarchAiMessageFeedback?>(null) }\nvar sent by remember { mutableStateOf<String?>(null) }",
+      "imports": [
+        "com.rookhq.monarch.components.intelligence.aiconversation.MonarchAiMessageFeedback",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ],
+      "setup": "var rating by remember { mutableStateOf<MonarchAiMessageFeedback?>(null) }\nvar sent by remember { mutableStateOf<String?>(null) }",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n    MonarchAiFeedback(\n        selection = rating,\n        onSelectionChange = { rating = it },\n        asksDetails = MonarchAiFeedbackDetails.Down,\n    ) { submission ->\n        // The app sends submission with the message id here.\n        sent = submission.toString()\n    }\n    MonarchText(text = sent ?: \"Nothing sent yet\", style = MonarchTextStyle.Caption)\n}"
+    },
+    {
+      "title": "Custom reasons for both ratings, with icons",
+      "setup": "var rating by remember { mutableStateOf<MonarchAiMessageFeedback?>(MonarchAiMessageFeedback.Up) }",
+      "code": "MonarchAiFeedback(\n    selection = rating,\n    onSelectionChange = { rating = it },\n    reasons = mapOf(\n        MonarchAiMessageFeedback.Up to listOf(MonarchCheckboxGroupOption(\"clear\", \"Clear\")),\n        MonarchAiMessageFeedback.Down to listOf(MonarchCheckboxGroupOption(\"wrong\", \"Wrong\")),\n    ),\n    asksDetails = MonarchAiFeedbackDetails.Both,\n    icon = { value, _ ->\n        val glyph = if (value == MonarchAiMessageFeedback.Up) SampleIcons.ThumbUp else SampleIcons.ThumbDown\n        Icon(glyph, contentDescription = null)\n    },\n)",
+      "imports": [
+        "com.rookhq.monarch.components.intelligence.aiconversation.MonarchAiMessageFeedback",
+        "com.rookhq.monarch.sampleicons.SampleIcons"
+      ]
+    }
+  ],
+  "webEquivalent": "AiFeedback",
+  "dependsOn": [
+    "toggle-button",
+    "checkbox-group",
+    "text-field",
+    "sheet"
+  ]
+}

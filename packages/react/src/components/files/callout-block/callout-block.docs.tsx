@@ -1,5 +1,16 @@
 import { CalloutBlock, CalloutBlockExtension, RichTextEditor } from '@rookcom/monarch-react/editor';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './callout-block.fixture.json';
+
+type Callout = { tone: 'neutral' | 'info' | 'success' | 'warning' | 'danger'; text: string };
+const callouts = fixture.data.callouts as unknown as readonly [
+  Callout,
+  Callout,
+  Callout,
+  Callout,
+  Callout,
+];
 
 const EXTENSIONS = [CalloutBlockExtension];
 
@@ -110,11 +121,11 @@ export default {
           stack: true,
           render: () => (
             <div style={{ display: 'grid', gap: 8, width: '100%', maxWidth: 560 }}>
-              <CalloutBlock>Drafts are visible only to you.</CalloutBlock>
-              <CalloutBlock tone="info">The import keeps existing labels.</CalloutBlock>
-              <CalloutBlock tone="success">The checklist is complete.</CalloutBlock>
-              <CalloutBlock tone="warning">Archive the old project before you start.</CalloutBlock>
-              <CalloutBlock tone="danger">Deleted pages cannot be restored.</CalloutBlock>
+              <CalloutBlock tone={callouts[0].tone}>{callouts[0].text}</CalloutBlock>
+              <CalloutBlock tone={callouts[1].tone}>{callouts[1].text}</CalloutBlock>
+              <CalloutBlock tone={callouts[2].tone}>{callouts[2].text}</CalloutBlock>
+              <CalloutBlock tone={callouts[3].tone}>{callouts[3].text}</CalloutBlock>
+              <CalloutBlock tone={callouts[4].tone}>{callouts[4].text}</CalloutBlock>
             </div>
           ),
         },

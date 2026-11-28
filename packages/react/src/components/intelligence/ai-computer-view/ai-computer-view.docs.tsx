@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion -- the fixture is a fixed JSON literal; the indices below exist. */
 import { useEffect, useState } from 'react';
 import {
   AiComputerView,
@@ -6,9 +7,11 @@ import {
   type AiComputerViewStatus,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-computer-view.fixture.json';
 
-const WIDTH = 960;
-const HEIGHT = 600;
+const WIDTH = fixture.data.frame.width;
+const HEIGHT = fixture.data.frame.height;
 
 /** A neutral stand-in screenshot as a local `blob:` URL, so nothing is hotlinked. */
 function useDemoFrame(step: number): AiComputerFrame | null {
@@ -25,25 +28,25 @@ function useDemoFrame(step: number): AiComputerFrame | null {
         src,
         width: WIDTH,
         height: HEIGHT,
-        capturedAt: '2026-01-01T12:00:09Z',
-        alt: 'The sign-in page of the supplier portal',
+        capturedAt: fixture.data.frame.capturedAt,
+        alt: fixture.data.frame.alt,
       }
     : null;
 }
 
 const ACTIONS: AiComputerAction[] = [
   {
-    id: 'a1',
+    id: fixture.data.actions[0]!.id,
     kind: 'navigate',
-    label: 'Opened the supplier portal',
-    at: '2026-01-01T12:00:01Z',
-    detail: 'https://portal.example.com/sign-in',
+    label: fixture.data.actions[0]!.label,
+    at: fixture.data.actions[0]!.at,
+    detail: fixture.data.actions[0]!.detail,
   },
   {
-    id: 'a2',
+    id: fixture.data.actions[1]!.id,
     kind: 'read',
-    label: 'Read the sign-in form',
-    at: '2026-01-01T12:00:03Z',
+    label: fixture.data.actions[1]!.label,
+    at: fixture.data.actions[1]!.at,
   },
   {
     id: 'a3',
@@ -71,14 +74,16 @@ const ACTIONS: AiComputerAction[] = [
 ];
 
 const shared = {
-  windowTitle: 'Supplier portal',
-  currentUrl: 'https://portal.example.com/sign-in',
-  locale: 'en-GB',
-  timeZone: 'UTC',
+  windowTitle: fixture.data.windowTitle,
+  currentUrl: fixture.data.currentUrl,
+  locale: fixture.data.locale,
+  timeZone: fixture.data.timeZone,
 } as const;
 
 function LiveDemo() {
-  const [status, setStatus] = useState<AiComputerViewStatus>('working');
+  const [status, setStatus] = useState<AiComputerViewStatus>(
+    fixture.data.status as AiComputerViewStatus,
+  );
   const [count, setCount] = useState(2);
   const frame = useDemoFrame(0);
   useEffect(() => {

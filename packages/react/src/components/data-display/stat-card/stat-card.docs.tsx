@@ -1,6 +1,19 @@
 import { StatCard, StatCardGroup } from '@rookcom/monarch-react';
 import { Sparkline } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './stat-card.fixture.json';
+
+const { data } = fixture;
+const [revenue, cost, reply] = data.cards as unknown as readonly [
+  { label: string; value: number; change: { value: number } },
+  {
+    label: string;
+    value: number;
+    change: { current: number; previous: number; goodDirection: 'up' | 'down' };
+  },
+  { label: string; value: number; change: { value: number }; hint: string },
+];
 
 export default {
   id: 'stat-card',
@@ -169,34 +182,34 @@ export default {
           title: 'KPI row with changes',
           stack: true,
           render: () => (
-            <StatCardGroup label="Last 30 days" columns={3} style={{ width: '100%' }}>
+            <StatCardGroup label={data.groupLabel} columns={3} style={{ width: '100%' }}>
               <StatCard
-                label="Revenue"
-                value={1_284_500}
+                label={revenue.label}
+                value={revenue.value}
                 format="currency"
-                currency="USD"
+                currency={data.currency}
                 notation="compact"
-                locale="en-US"
-                change={{ value: 0.124, locale: 'en-US' }}
-                caption="vs previous 30 days"
+                locale={data.locale}
+                change={{ value: revenue.change.value, locale: data.locale }}
+                caption={data.caption}
               />
               <StatCard
-                label="Cost per lead"
-                value={41.2}
+                label={cost.label}
+                value={cost.value}
                 format="currency"
-                currency="USD"
-                locale="en-US"
-                change={{ current: 41.2, previous: 50.4, goodDirection: 'down', locale: 'en-US' }}
-                caption="vs previous 30 days"
+                currency={data.currency}
+                locale={data.locale}
+                change={{ ...cost.change, locale: data.locale }}
+                caption={data.caption}
               />
               <StatCard
-                label="Reply rate"
-                value={0.081}
+                label={reply.label}
+                value={reply.value}
                 format="percent"
-                locale="en-US"
-                change={{ value: 0, locale: 'en-US' }}
-                caption="vs previous 30 days"
-                hint="212 of 2,617 contacts"
+                locale={data.locale}
+                change={{ value: reply.change.value, locale: data.locale }}
+                caption={data.caption}
+                hint={reply.hint}
               />
             </StatCardGroup>
           ),

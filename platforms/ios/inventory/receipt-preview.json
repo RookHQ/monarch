@@ -1,0 +1,155 @@
+{
+  "id": "receipt-preview",
+  "name": "MonarchReceiptPreview",
+  "title": "ReceiptPreview",
+  "family": "billing",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "MonarchButton with quickLookPreview(_:) (QuickLook), .task(id:) for the app's loader",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A \"View receipt\" button that opens an expense's receipt in Quick Look, running the app's loader for a private file only when pressed, with a loading state, Try again and a \"No receipt\" fallback.",
+  "whenToUse": "On an expense, bill or reimbursement line with an attached receipt or invoice scan, especially when the file is private and must be fetched with the app's authorised request only when someone opens it.",
+  "whenNotToUse": "For uploading a receipt, use PhotosPicker or fileImporter. For browsing many documents, use a list with quickLookPreview(_:in:). For a file that is not a receipt, use quickLookPreview(_:) directly (see file-preview).",
+  "api": [
+    "init(url: URL?, systemImage: String? = nil, variant: MonarchButtonVariant = .ghost, size: MonarchButtonSize = .sm, labels: MonarchReceiptPreviewLabels = MonarchReceiptPreviewLabels(), onClose: (@MainActor (URL) -> Void)? = nil)",
+    "init(systemImage: String? = nil, variant: MonarchButtonVariant = .ghost, size: MonarchButtonSize = .sm, labels: MonarchReceiptPreviewLabels = MonarchReceiptPreviewLabels(), onClose: (@MainActor (URL) -> Void)? = nil, load: @escaping @Sendable () async throws -> URL)",
+    "MonarchReceiptPreviewLabels.init(view: String? = nil, none: String? = nil, loading: String? = nil, loadError: String? = nil, retry: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "url",
+      "type": "URL?",
+      "default": "required (first initialiser)",
+      "description": "A local file of the receipt. nil, or a URL that is not a file, shows \"No receipt\"."
+    },
+    {
+      "name": "load",
+      "type": "@Sendable () async throws -> URL",
+      "default": "required (second initialiser)",
+      "description": "The app's code that fetches the receipt and returns a local file URL; run on each press and on Try again."
+    },
+    {
+      "name": "systemImage",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the paperclip symbol."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchButtonVariant",
+      "default": ".ghost",
+      "description": "primary, secondary, ghost or danger."
+    },
+    {
+      "name": "size",
+      "type": "MonarchButtonSize",
+      "default": ".sm",
+      "description": "sm, md or lg."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchReceiptPreviewLabels",
+      "default": "MonarchReceiptPreviewLabels()",
+      "description": "Replacements for \"View receipt\", \"No receipt\", \"Loading receipt\", \"The receipt could not be loaded.\" and the retry title."
+    },
+    {
+      "name": "onClose",
+      "type": "(@MainActor (URL) -> Void)?",
+      "default": "nil",
+      "description": "Runs with the previewed file's URL after Quick Look closes, for example to delete a temporary copy."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "The button with a paperclip and \"View receipt\"."
+    },
+    {
+      "name": "loading",
+      "description": "The button shows a spinner and is read as \"Loading receipt\" while the loader runs."
+    },
+    {
+      "name": "previewing",
+      "description": "Quick Look shows the file full screen with the system's share and markup controls."
+    },
+    {
+      "name": "failed",
+      "description": "MonarchInlineErrorRetry under the button with \"The receipt could not be loaded.\" and Try again; the message is announced."
+    },
+    {
+      "name": "none",
+      "description": "Muted caption text \"No receipt\" instead of the button."
+    },
+    {
+      "name": "disabled",
+      "description": "Set with disabled(_:): the button uses the disabled roles."
+    }
+  ],
+  "appearance": "The button is a Monarch ghost button at the small size by default; the error uses the inline error retry's danger roles; \"No receipt\" is caption text in the muted text colour. Quick Look is drawn by the system. Colours come from theme roles in every theme.",
+  "platformNotes": "The web ReceiptPreview opens images in a dialog with Download, PDFs in a new tab or an embedded viewer, and explains formats the browser cannot draw (HEIC). On iOS Quick Look draws images including HEIC, PDFs and most documents and has its own share action, so there is no dialog, Download button, pdf option or unsupported-format messages; open, onOpenChange and onLoadError are replaced by the loader's thrown error and onClose. The loader must return a local file: Quick Look cannot show a remote URL, and Monarch does not download. Android ships the same MonarchReceiptPreview.",
+  "accessibility": [
+    "The button is a standard MonarchButton labelled \"View receipt\"; while loading it is read as \"Loading receipt\".",
+    "A failed load is announced with the error text, and Try again is a separate button.",
+    "\"No receipt\" is plain text, not a disabled button.",
+    "Quick Look provides its own VoiceOver support for the file.",
+    "The button keeps a 44-point touch target at every size."
+  ],
+  "edgeCases": [
+    "Pressing again while loading starts a new load and cancels the previous one.",
+    "Leaving the screen while loading cancels the loader's task; the loader should respect cancellation.",
+    "A URL that is not a file URL counts as no receipt; fetch it in load instead.",
+    "Quick Look presentation and onClose were checked only by compiling and unit tests of the close rule; they were not tried on a device."
+  ],
+  "tests": [
+    "MonarchReceiptPreviewTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Image from a URL",
+      "fixture": "receipt-preview",
+      "webExample": "Image from a URL",
+      "template": "MonarchReceiptPreview(url: receiptFile, labels: MonarchReceiptPreviewLabels(view: {{label}}))",
+      "setupTemplate": "private let receiptFile: URL = {\n    let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent({{fileName}})\n    // The sample receipt of the web example: an itemised till receipt as an SVG image large enough to read in Quick Look.\n    let svg = \"\"\"\n        <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"640\" height=\"880\" viewBox=\"0 0 320 440\">\n        <rect width=\"320\" height=\"440\" fill=\"white\"/>\n        <g font-family=\"Courier\" font-size=\"14\" fill=\"black\">\n        <text x=\"110\" y=\"40\">SAMPLE STORE</text>\n        <text x=\"100\" y=\"80\">Coffee 4.50</text>\n        <text x=\"100\" y=\"100\">Sandwich 8.25</text>\n        <text x=\"100\" y=\"140\">TOTAL 12.75</text>\n        </g>\n        </svg>\n        \"\"\"\n    try? svg.write(to: url, atomically: true, encoding: .utf8)\n    return url\n}()",
+      "setup": "private let receiptFile: URL = {\n    let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(\"lunch.svg\")\n    // The sample receipt of the web example: an itemised till receipt as an SVG image large enough to read in Quick Look.\n    let svg = \"\"\"\n        <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"640\" height=\"880\" viewBox=\"0 0 320 440\">\n        <rect width=\"320\" height=\"440\" fill=\"white\"/>\n        <g font-family=\"Courier\" font-size=\"14\" fill=\"black\">\n        <text x=\"110\" y=\"40\">SAMPLE STORE</text>\n        <text x=\"100\" y=\"80\">Coffee 4.50</text>\n        <text x=\"100\" y=\"100\">Sandwich 8.25</text>\n        <text x=\"100\" y=\"140\">TOTAL 12.75</text>\n        </g>\n        </svg>\n        \"\"\"\n    try? svg.write(to: url, atomically: true, encoding: .utf8)\n    return url\n}()",
+      "code": "MonarchReceiptPreview(url: receiptFile, labels: MonarchReceiptPreviewLabels(view: \"View receipt\"))",
+      "previewTap": true
+    },
+    {
+      "title": "A private file fetched when pressed",
+      "setup": "private func download() async throws -> URL {\n    URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(\"receipt-1042.jpg\")\n}",
+      "code": "MonarchReceiptPreview(\n    variant: .secondary,\n    onClose: { try? FileManager.default.removeItem(at: $0) },\n    load: { try await download() }\n)"
+    },
+    {
+      "title": "No receipt",
+      "code": "MonarchReceiptPreview(url: nil, labels: MonarchReceiptPreviewLabels(none: \"No receipt attached\"))"
+    }
+  ],
+  "webEquivalent": "ReceiptPreview",
+  "dependsOn": [
+    "button",
+    "file-preview",
+    "inline-error-retry"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "fixture-data",
+      "platform": "ios",
+      "paths": [
+        "mimeType"
+      ],
+      "reason": "The iOS preview takes a file URL and Quick Look reads the type from the file, so there is no MIME type to pass.",
+      "convention": "Apple Quick Look: the content type comes from the file."
+    },
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The receipt opens in the system Quick Look viewer, which fills the screen with its own Close and Share controls; the web's dialog with the Receipt title, an X and a Download button is not drawn, and the trigger sits under the viewer.",
+      "convention": "Apple Quick Look: the system file viewer"
+    }
+  ]
+}

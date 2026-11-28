@@ -1,0 +1,143 @@
+{
+  "id": "unsaved-changes-guard",
+  "name": "MonarchUnsavedChangesGuard",
+  "title": "UnsavedChangesGuard",
+  "family": "overlays",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "androidx.activity.compose.BackHandler with androidx.compose.material3.AlertDialog and MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Warns before back or the screen's own Close throws away unsaved changes, with Keep editing, Discard changes and an optional Save and leave.",
+  "whenToUse": "On an edit screen or a sheet with a form, where leaving without saving loses what the person typed.",
+  "whenNotToUse": "When changes are saved as the person types (show a save status instead), or when the edit is so small that losing it does not matter.",
+  "api": [
+    "@Composable fun MonarchUnsavedChangesGuard(hasChanges: Boolean, open: Boolean, onOpenChange: (Boolean) -> Unit, onLeave: (MonarchUnsavedChangesGuardLeaveReason) -> Unit, modifier: Modifier = Modifier, guardsBack: Boolean = true, onSave: (suspend () -> Unit)? = null, details: (@Composable () -> Unit)? = null, labels: MonarchUnsavedChangesGuardLabels = MonarchUnsavedChangesGuardLabels())",
+    "enum class MonarchUnsavedChangesGuardLeaveReason { Discard, Save }",
+    "class MonarchUnsavedChangesGuardLabels(title: String? = null, message: String? = null, keepEditing: String? = null, discard: String? = null, save: String? = null, saveFailed: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "hasChanges",
+      "type": "Boolean",
+      "default": "required",
+      "description": "Whether there are unsaved changes. While false, back is not intercepted."
+    },
+    {
+      "name": "open",
+      "type": "Boolean",
+      "default": "required",
+      "description": "Whether the question is shown. Set it to true from the screen's Close or Cancel when there are changes; back sets it through onOpenChange."
+    },
+    {
+      "name": "onOpenChange",
+      "type": "(Boolean) -> Unit",
+      "default": "required",
+      "description": "Called with true when back asks, and with false when the person stays (Keep editing, back, a tap outside) and before onLeave."
+    },
+    {
+      "name": "onLeave",
+      "type": "(MonarchUnsavedChangesGuardLeaveReason) -> Unit",
+      "default": "required",
+      "description": "Leaves the screen (pops the back stack or closes the sheet), with Discard at once or Save after onSave returned."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the dialog."
+    },
+    {
+      "name": "guardsBack",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether system back is intercepted while there are changes. Set it to false when the screen handles back itself and opens the guard."
+    },
+    {
+      "name": "onSave",
+      "type": "(suspend () -> Unit)?",
+      "default": "null",
+      "description": "Saves the changes; when given, Save and leave is offered. While it runs the screen cannot be left. Throw to report a failure."
+    },
+    {
+      "name": "details",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "Extra content under the message, such as the list of unsaved fields."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchUnsavedChangesGuardLabels",
+      "default": "MonarchUnsavedChangesGuardLabels()",
+      "description": "Replacements for the question, the message, the three choices and the save failure."
+    }
+  ],
+  "states": [
+    {
+      "name": "no changes",
+      "description": "Back works as usual; nothing is shown."
+    },
+    {
+      "name": "changes",
+      "description": "Back is intercepted and opens the question instead of leaving."
+    },
+    {
+      "name": "asking",
+      "description": "An AlertDialog titled \"Discard unsaved changes?\" with Keep editing (ghost), Discard changes (danger) and, with onSave, Save and leave (primary)."
+    },
+    {
+      "name": "saving",
+      "description": "Save and leave shows its progress indicator and reads \"Loading\"; the other choices are disabled and back and taps outside do nothing."
+    },
+    {
+      "name": "save failed",
+      "description": "\"Your changes could not be saved. Try again.\" in the danger strong color inside the dialog, announced; the person stays."
+    }
+  ],
+  "appearance": "A Material 3 AlertDialog on the raised background Monarch maps to it, the message in the muted text color, Discard changes as a danger MonarchButton, Save and leave as a primary one and Keep editing as a ghost one. The same roles in light, dark and both high-contrast themes.",
+  "platformNotes": "The web UnsavedChangesGuard is a dialog plus a hook that blocks router navigation, intercepts same-origin links and asks the browser to warn before the tab closes. Android has no links or tabs to close: the guard intercepts system back (gesture and button, including predictive back) with BackHandler while there are changes, and the app's own Close opens it through open. Components do not navigate, so onLeave pops the back stack. The web's open and onOpenChange are kept; iOS uses an isPresented binding and a view modifier. Unlike the iOS confirmation dialog, the Android dialog stays open while saving, as on the web, so the busy state and a failure are shown in it. The web's error prop and errorMessage function are not offered: a failure shows labels.saveFailed, because exception messages are not written for people. A ModalBottomSheet's own swipe-to-dismiss is not intercepted: guard it with the sheet state's confirmValueChange while hasChanges is true.",
+  "accessibility": [
+    "System behavior: TalkBack reads the dialog's title and message, and back or a tap outside chooses to stay.",
+    "The destructive choice is named \"Discard changes\", so it does not depend on its danger color.",
+    "Each choice is a MonarchButton with a 48dp touch target; Save and leave reads \"Loading\" while saving and the other choices are disabled.",
+    "A failed save is shown as text and announced through a polite live region that is always present in the dialog.",
+    "While the save runs, back cannot leave the screen, so a gesture cannot lose the changes."
+  ],
+  "edgeCases": [
+    "Setting open to true while hasChanges is false still shows the question; check hasChanges before opening it from the screen's Close.",
+    "A save cancelled because the screen left the composition is not shown as a failure.",
+    "Place one guard per screen; two enabled BackHandlers compete and the last one composed wins."
+  ],
+  "tests": [
+    "MonarchUnsavedChangesGuardTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Leaving with unsaved changes",
+      "fixture": "unsaved-changes-guard",
+      "webExample": "Leaving with unsaved changes",
+      "template": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n    MonarchTextField(value = name, onValueChange = { name = it }, label = {{fieldLabel}})\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n        MonarchButton(text = {{save}}, onClick = {}, variant = MonarchButtonVariant.Primary)\n        MonarchButton(text = {{leave}}, onClick = { asking = true })\n    }\n    MonarchText(text = \"Current page: \" + page)\n    MonarchUnsavedChangesGuard(\n        hasChanges = true,\n        open = asking,\n        onOpenChange = { asking = it },\n        onLeave = { page = {{leftPage}} },\n        onSave = { delay(600) },\n        labels = MonarchUnsavedChangesGuardLabels(\n            title = {{dialog.title}},\n            message = {{dialog.message}},\n            keepEditing = {{dialog.keepEditing}},\n            discard = {{dialog.discard}},\n            save = {{dialog.save}},\n        ),\n    )\n}",
+      "setupTemplate": "var name by remember { mutableStateOf({{name}}) }\nvar page by remember { mutableStateOf({{page}}) }\nvar asking by remember { mutableStateOf(true) }",
+      "imports": [
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "kotlinx.coroutines.delay"
+      ],
+      "setup": "var name by remember { mutableStateOf(\"Weekly planning v2\") }\nvar page by remember { mutableStateOf(\"Editor\") }\nvar asking by remember { mutableStateOf(true) }",
+      "code": "Column(verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3)) {\n    MonarchTextField(value = name, onValueChange = { name = it }, label = \"Board name\")\n    Row(horizontalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space2)) {\n        MonarchButton(text = \"Save\", onClick = {}, variant = MonarchButtonVariant.Primary)\n        MonarchButton(text = \"Go to overview\", onClick = { asking = true })\n    }\n    MonarchText(text = \"Current page: \" + page)\n    MonarchUnsavedChangesGuard(\n        hasChanges = true,\n        open = asking,\n        onOpenChange = { asking = it },\n        onLeave = { page = \"Overview\" },\n        onSave = { delay(600) },\n        labels = MonarchUnsavedChangesGuardLabels(\n            title = \"Discard unsaved changes?\",\n            message = \"Your changes have not been saved. If you leave now, they will be lost.\",\n            keepEditing = \"Keep editing\",\n            discard = \"Discard changes\",\n            save = \"Save and leave\",\n        ),\n    )\n}"
+    },
+    {
+      "title": "List the unsaved fields",
+      "setup": "var asking by remember { mutableStateOf(true) }",
+      "code": "MonarchUnsavedChangesGuard(\n    hasChanges = true,\n    open = asking,\n    onOpenChange = { asking = it },\n    onLeave = { /* Close the sheet. */ },\n    details = { MonarchText(text = \"Unsaved: Name, Email\") },\n)"
+    }
+  ],
+  "webEquivalent": "UnsavedChangesGuard",
+  "dependsOn": [
+    "confirm-dialog"
+  ]
+}

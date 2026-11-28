@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { ColorPicker, Field, FieldDescription, FieldLabel } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './color-picker.fixture.json';
 
 function LabelColourDemo() {
-  const [color, setColor] = useState<string | null>('#2563eb');
+  const [color, setColor] = useState<string | null>(fixture.data.value);
   return (
     <Field style={{ width: '100%', maxWidth: 360 }}>
-      <FieldLabel>Label colour</FieldLabel>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
       <ColorPicker value={color} onValueChange={setColor} />
       <FieldDescription>Selected: {color ?? 'none'}</FieldDescription>
     </Field>

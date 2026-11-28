@@ -1,14 +1,22 @@
 import { useState } from 'react';
 import { LineChart } from '@rookcom/monarch-react/charts';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './line-chart.fixture.json';
 
-const DAYS = Array.from({ length: 14 }, (_, i) => new Date(Date.UTC(2026, 2, 1 + i, 12)));
-const SESSIONS = [820, 932, 901, 934, 1290, 1330, 1320, 1180, 1250, 1400, 1380, 1460, 1510, 1490];
+const DAYS = Array.from(
+  { length: fixture.data.days },
+  (_, i) => new Date(Date.parse(fixture.data.start) + i * 86_400_000),
+);
+type Series = { key: string; label: string; values: number[] };
+const [current, earlier] = fixture.data.series as [Series, Series];
+const SESSIONS = current.values;
+const PREVIOUS = earlier.values;
 const SIGNUPS = [42, 51, 47, 60, 88, 91, 85, 70, 76, 95, 90, 99, 104, 101];
 const TRAFFIC = DAYS.map((date, i) => ({
   date,
   sessions: SESSIONS[i] ?? 0,
-  previous: Math.round((SESSIONS[i] ?? 0) * 0.82),
+  previous: PREVIOUS[i] ?? 0,
 }));
 const SIGNUP_DATA = DAYS.map((date, i) => ({ date, signups: SIGNUPS[i] ?? 0 }));
 const LATENCY = DAYS.map((date, i) => ({
@@ -201,16 +209,21 @@ export default {
           stack: true,
           render: () => (
             <LineChart
-              title="Sessions"
-              description="Last 14 days against the previous 14"
+              title={fixture.data.title}
+              description={fixture.data.description}
               data={TRAFFIC}
               xKey="date"
               xLabel="Day"
               series={[
-                { key: 'sessions', label: 'This period' },
-                { key: 'previous', label: 'Previous period', color: 'neutral', dashed: true },
+                { key: current.key, label: current.label },
+                {
+                  key: earlier.key,
+                  label: earlier.label,
+                  color: 'neutral',
+                  dashed: true,
+                },
               ]}
-              referenceLines={[{ value: 1200, label: 'Target' }]}
+              referenceLines={[fixture.data.referenceLine]}
               locale="en-US"
               xFormat={UTC_DAY}
             />

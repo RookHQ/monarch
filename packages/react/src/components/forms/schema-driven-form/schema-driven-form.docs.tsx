@@ -6,18 +6,21 @@ import {
   type SchemaDrivenFormValues,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './schema-driven-form.fixture.json';
 
+const d = fixture.data;
 const BOOKING: SchemaDrivenFormSchema = [
   {
     type: 'section',
     id: 'you',
-    title: 'Your details',
+    title: d.you.title,
     fields: [
-      { type: 'text', name: 'name', label: 'Full name', required: true, autoComplete: 'name' },
+      { type: 'text', name: 'name', label: d.name.label, required: true, autoComplete: 'name' },
       {
         type: 'text',
         name: 'email',
-        label: 'Email',
+        label: d.email.label,
         inputType: 'email',
         required: true,
         autoComplete: 'email',
@@ -29,19 +32,16 @@ const BOOKING: SchemaDrivenFormSchema = [
   {
     type: 'section',
     id: 'visit',
-    title: 'Your visit',
-    description: 'Tell us what to prepare.',
+    title: d.visit.title,
+    description: d.visit.description,
     fields: [
       {
         type: 'select',
         name: 'topic',
-        label: 'Topic',
+        label: d.topic.label,
         required: true,
-        options: [
-          { value: 'demo', label: 'Product demo' },
-          { value: 'support', label: 'Support question' },
-          { value: 'other', label: 'Something else' },
-        ],
+        placeholder: d.topic.placeholder,
+        options: d.topic.options,
       },
       {
         type: 'textarea',
@@ -51,19 +51,26 @@ const BOOKING: SchemaDrivenFormSchema = [
         maxLength: 500,
         visibleWhen: { field: 'topic', equals: 'other' },
       },
-      { type: 'number', name: 'guests', label: 'Guests', min: 1, max: 10, integer: true },
-      { type: 'date', name: 'date', label: 'Preferred date', min: '2026-01-01' },
+      {
+        type: 'number',
+        name: 'guests',
+        label: d.guests.label,
+        min: d.guests.min,
+        max: d.guests.max,
+        integer: true,
+      },
+      { type: 'date', name: 'date', label: d.date.label, min: d.date.min },
       {
         type: 'switch',
         name: 'reminder',
-        label: 'Email reminder',
-        description: 'One day before.',
-        defaultValue: true,
+        label: d.reminder.label,
+        description: d.reminder.description,
+        defaultValue: d.reminder.value,
       },
       {
         type: 'checkbox',
         name: 'consent',
-        label: 'I agree to be contacted about this booking',
+        label: d.consent.label,
         required: true,
       },
     ],
@@ -98,8 +105,8 @@ function BookingDemo() {
       <SchemaDrivenForm
         aria-label="Booking form"
         schema={BOOKING}
-        locale="en-GB"
-        submitLabel="Book"
+        locale={d.locale}
+        submitLabel={d.submitLabel}
         onSubmit={async (values) => {
           await new Promise((r) => setTimeout(r, 700));
           setSent(values);

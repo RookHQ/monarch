@@ -1,5 +1,10 @@
 import { LoadingState } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './loading-state.fixture.json';
+
+type State = { label: string; variant: 'list' | 'rows'; rows: number };
+const [contacts, invoices] = fixture.data.states as [State, State];
 
 export default {
   id: 'loading-state',
@@ -100,8 +105,16 @@ export default {
           stack: true,
           render: () => (
             <>
-              <LoadingState label="Loading contacts" rows={3} />
-              <LoadingState label="Loading invoices" variant="rows" rows={3} />
+              <LoadingState
+                label={contacts.label}
+                variant={contacts.variant}
+                rows={contacts.rows}
+              />
+              <LoadingState
+                label={invoices.label}
+                variant={invoices.variant}
+                rows={invoices.rows}
+              />
             </>
           ),
         },

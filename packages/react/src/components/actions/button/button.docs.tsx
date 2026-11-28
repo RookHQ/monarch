@@ -1,6 +1,12 @@
-import { Button, IconButton } from '@rookcom/monarch-react';
+import { Button, IconButton, type ButtonProps } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { MoreIcon, PlusIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './button.fixture.json';
+
+type Variant = NonNullable<ButtonProps['variant']>;
+type Item = { label: string; variant: Variant };
+const buttons = fixture.data.buttons as unknown as readonly [Item, Item, Item, Item, Item];
 
 export default {
   id: 'button',
@@ -143,11 +149,11 @@ export default {
           title: 'Variants',
           render: () => (
             <>
-              <Button variant="primary">Save changes</Button>
-              <Button>Cancel</Button>
-              <Button variant="ghost">Learn more</Button>
-              <Button variant="danger">Delete</Button>
-              <Button variant="danger-subtle">Remove</Button>
+              <Button variant={buttons[0].variant}>{buttons[0].label}</Button>
+              <Button>{buttons[1].label}</Button>
+              <Button variant={buttons[2].variant}>{buttons[2].label}</Button>
+              <Button variant={buttons[3].variant}>{buttons[3].label}</Button>
+              <Button variant={buttons[4].variant}>{buttons[4].label}</Button>
             </>
           ),
         },

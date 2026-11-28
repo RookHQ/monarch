@@ -1,0 +1,157 @@
+{
+  "id": "ai-draft-queue",
+  "name": "MonarchAiDraftQueue",
+  "title": "AiDraftQueue",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of MonarchCard drafts with MonarchBadge, MonarchAiGeneratedBadge, MonarchAiThinkingIndicator, MonarchButton in a MonarchFlowLayout, a multi-line TextField(axis: .vertical) for editing, ProgressView with .monarchLinear for progress, and AccessibilityFocusState to move on",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A review queue for AI-written drafts: each draft with its context, a writing state while it is regenerated, and Approve, Edit, Regenerate, Skip and Send, so nothing is sent without a person approving it.",
+  "whenToUse": "When the assistant prepares several drafts (replies, follow-ups, notes) that a person must approve one by one before they go out.",
+  "whenNotToUse": "For a single draft in an editor show it there with MonarchAiGeneratedBadge. For a list of suggestions to pick from use MonarchAiFollowUpSuggestions.",
+  "api": [
+    "MonarchAiDraftQueue.init(_ drafts: [MonarchAiDraft], title: String? = nil, advancesOnAction: Bool = true, labels: MonarchAiDraftQueueLabels = MonarchAiDraftQueueLabels(), onEdit: @escaping @MainActor (_ id: String, _ body: String) -> Void, onRegenerate: @escaping @MainActor (_ id: String) -> Void, onSkip: @escaping @MainActor (_ id: String) -> Void, onSend: (@MainActor (_ id: String) -> Void)? = nil, onApprove: @escaping @MainActor (_ id: String) -> Void)",
+    "MonarchAiDraft.init(id: String, title: String, body: String, context: String? = nil, status: MonarchAiDraftStatus = .draft)",
+    "MonarchAiDraft.init(_ message: MonarchAiConversationMessage, title: String, context: String? = nil, status: MonarchAiDraftStatus = .draft)",
+    "enum MonarchAiDraftStatus: String { case draft, regenerating, approved, sent, skipped }",
+    "MonarchAiDraftQueueLabels.init(label: String? = nil, progress: (@Sendable (_ reviewed: Int, _ total: Int) -> String)? = nil, empty: String? = nil, status: (@Sendable (_ status: MonarchAiDraftStatus) -> String)? = nil, writing: String? = nil, aiDraft: String? = nil, context: String? = nil, approve: String? = nil, send: String? = nil, edit: String? = nil, regenerate: String? = nil, skip: String? = nil, save: String? = nil, cancel: String? = nil, editField: (@Sendable (_ title: String) -> String)? = nil, announce: (@Sendable (_ status: MonarchAiDraftStatus, _ title: String) -> String)? = nil)"
+  ],
+  "options": [
+    {
+      "name": "drafts",
+      "type": "[MonarchAiDraft]",
+      "default": "required",
+      "description": "The drafts in review order, each with a title, a plain-text body, optional context and a status. A draft can be made from an assistant MonarchAiConversationMessage."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "nil",
+      "description": "A heading above the queue; it also names the queue."
+    },
+    {
+      "name": "advancesOnAction",
+      "type": "Bool",
+      "default": "true",
+      "description": "After Approve, Send or Skip, VoiceOver moves to the next draft that needs review."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiDraftQueueLabels",
+      "default": "MonarchAiDraftQueueLabels()",
+      "description": "Replaces every built-in string, including the status names and announcements."
+    },
+    {
+      "name": "onEdit",
+      "type": "@MainActor (_ id: String, _ body: String) -> Void",
+      "default": "required",
+      "description": "Receives the trimmed edited text; never empty or unchanged text."
+    },
+    {
+      "name": "onRegenerate",
+      "type": "@MainActor (_ id: String) -> Void",
+      "default": "required",
+      "description": "Asks for a new version; set the status to regenerating until it arrives."
+    },
+    {
+      "name": "onSkip",
+      "type": "@MainActor (_ id: String) -> Void",
+      "default": "required",
+      "description": "Receives the id of a skipped draft."
+    },
+    {
+      "name": "onSend",
+      "type": "(@MainActor (_ id: String) -> Void)?",
+      "default": "nil",
+      "description": "Adds Send to approved drafts."
+    },
+    {
+      "name": "onApprove",
+      "type": "@MainActor (_ id: String) -> Void",
+      "default": "required",
+      "description": "Receives the id of an approved draft."
+    }
+  ],
+  "states": [
+    {
+      "name": "draft",
+      "description": "Needs review: Approve, Edit, Regenerate and Skip."
+    },
+    {
+      "name": "regenerating",
+      "description": "\"AI is still writing…\" replaces the body; no actions."
+    },
+    {
+      "name": "approved",
+      "description": "Send (with onSend) and Edit."
+    },
+    {
+      "name": "sent",
+      "description": "Read only."
+    },
+    {
+      "name": "skipped",
+      "description": "Read only, with muted text."
+    },
+    {
+      "name": "editing",
+      "description": "A multi-line field with the body, Save and Cancel; Save is disabled while the text is empty."
+    },
+    {
+      "name": "empty",
+      "description": "A success empty state: \"No drafts to review\"."
+    }
+  ],
+  "appearance": "Each draft is a MonarchCard with a heading in default text, a status badge in the status tone (neutral, info or success) with an icon, the context on the subtle background in muted text, an AI generated badge and the body in default text (muted once skipped). Approve and Send are primary buttons, Edit and Regenerate secondary and Skip ghost. A linear progress bar shows how many are reviewed. The high-contrast themes resolve the same roles to stronger colours.",
+  "platformNotes": "The web's J and K shortcuts and the Command-Enter save are not offered; swipe and VoiceOver navigation replace them. Moving on after a decision moves VoiceOver focus, not the scroll position, because the queue sits in the app's ScrollView. Context is plain text where the web accepts rich content. The editor is a multi-line field drawn with MonarchTextField's tokens until a shared multi-line field exists. Android uses the same names.",
+  "accessibility": [
+    "The queue is a container named by its title, or \"Drafts to review\"; the progress bar reads \"2 of 5 reviewed\".",
+    "Each draft's title is a header; its status is a badge with an icon and a name, so it does not depend on colour.",
+    "The body is read after \"AI draft\", so it is identified as AI-written; the visible AI badge is hidden from VoiceOver to avoid repeating it.",
+    "After Approve, Send or Skip, VoiceOver moves to the next draft that needs review, wrapping to the top, or stays on the same draft when none is left.",
+    "Every status change is announced, for example \"Approved: Reply to Alex Morgan\" or \"New draft ready: …\".",
+    "The editor is named \"Edit draft:\" and the title, and focus returns to the draft after Save or Cancel.",
+    "Buttons have 44-point touch targets and wrap onto new rows."
+  ],
+  "edgeCases": [
+    "Drafts that appear for the first time are not announced; only status changes are.",
+    "The body is plain text and is never rendered as markup.",
+    "A long title moves the status badge under it when they do not fit on one line."
+  ],
+  "tests": [
+    "MonarchAiDraftQueueTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Review queue",
+      "fixture": "ai-draft-queue",
+      "webExample": "Review queue",
+      "template": "MonarchAiDraftQueue(\n    [\n        MonarchAiDraft(id: {{drafts.0.id}}, title: {{drafts.0.title}}, body: {{drafts.0.body}}, context: {{drafts.0.context}}, status: {{drafts.0.status|case}}),\n        MonarchAiDraft(id: {{drafts.1.id}}, title: {{drafts.1.title}}, body: {{drafts.1.body}}, context: {{drafts.1.context}}, status: {{drafts.1.status|case}}),\n        MonarchAiDraft(id: {{drafts.2.id}}, title: {{drafts.2.title}}, body: {{drafts.2.body}}, context: {{drafts.2.context}}, status: {{drafts.2.status|case}}),\n    ],\n    title: {{title}},\n    onEdit: { _, _ in },\n    onRegenerate: { _ in },\n    onSkip: { _ in },\n    onApprove: { _ in }\n)",
+      "code": "MonarchAiDraftQueue(\n    [\n        MonarchAiDraft(id: \"1\", title: \"Reply to Alex Morgan\", body: \"Hi Alex,\\n\\nThursday afternoon works. Shall we say 2 pm?\\n\\nThanks\", context: \"Could we move Thursday’s review to the afternoon?\", status: .draft),\n        MonarchAiDraft(id: \"2\", title: \"Reply to Sam Lee\", body: \"Hi Sam,\\n\\nYes, the updated report is attached. Let me know if anything needs changing.\", context: \"Is the updated report ready to share?\", status: .draft),\n        MonarchAiDraft(id: \"3\", title: \"Reply to Kim Park\", body: \"You are welcome. Glad they helped.\", context: \"Thanks for the notes from yesterday.\", status: .regenerating),\n    ],\n    title: \"Replies to review\",\n    onEdit: { _, _ in },\n    onRegenerate: { _ in },\n    onSkip: { _ in },\n    onApprove: { _ in }\n)"
+    }
+  ],
+  "webEquivalent": "AiDraftQueue",
+  "dependsOn": [
+    "card",
+    "button",
+    "text-field",
+    "ai-generated-badge",
+    "badge",
+    "ai-thinking-indicator",
+    "inline",
+    "ai-conversation"
+  ],
+  "icons": {
+    "status.draft": "PencilGlyph",
+    "status.regenerating": "RetryGlyph",
+    "approve": "CheckGlyph",
+    "edit": "PencilGlyph",
+    "regenerate": "RetryGlyph"
+  }
+}

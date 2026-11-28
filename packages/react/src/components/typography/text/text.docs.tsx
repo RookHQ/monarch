@@ -1,5 +1,9 @@
 import { Heading, Text } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './text.fixture.json';
+
+const lines = fixture.data.lines as unknown as readonly [string, string, string, string];
 
 export default {
   id: 'text',
@@ -132,11 +136,11 @@ export default {
           stack: true,
           render: () => (
             <>
-              <Text size="lg">Large lead text for a short introduction.</Text>
-              <Text>Base body text for descriptions and paragraphs.</Text>
-              <Text size="sm">Small text for dense lists and table cells.</Text>
+              <Text size="lg">{lines[0]}</Text>
+              <Text>{lines[1]}</Text>
+              <Text size="sm">{lines[2]}</Text>
               <Text size="xs" tone="muted">
-                Extra small meta text, such as a timestamp.
+                {lines[3]}
               </Text>
             </>
           ),

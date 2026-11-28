@@ -1,0 +1,120 @@
+{
+  "id": "ai-multi-agent-roster",
+  "name": "MonarchAiMultiAgentRoster",
+  "title": "AiMultiAgentRoster",
+  "family": "intelligence",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of rows with MonarchAiAgentAvatar, MonarchAvatarGroup for the stack, ViewThatFits, AccessibilityNotification.Announcement",
+  "status": "experimental",
+  "layer": "patterns",
+  "since": "0.1.0",
+  "summary": "Every agent taking part in a task and what each is doing now, as a list of rows or a compact stack of pictures.",
+  "whenToUse": "When several agents work on one request and the person should see who is involved, what each is doing and which one needs them. Use the stack in headers and toolbars and the list in a side panel.",
+  "whenNotToUse": "Not for one agent working through steps: use MonarchAiChainOfSteps or MonarchAiTaskProgress. Not for people in a workspace: use MonarchPresenceAvatars or MonarchAvatarGroup.",
+  "api": [
+    "init(_ members: [MonarchAiMultiAgentRosterMember], variant: MonarchAiMultiAgentRosterVariant = .list, maxVisible: Int = 4, showsSummary: Bool = true, announcesChanges: Bool = true, labels: MonarchAiMultiAgentRosterLabels = MonarchAiMultiAgentRosterLabels())",
+    "struct MonarchAiMultiAgentRosterMember: Identifiable { var agent: MonarchAiAgentRef; var state: MonarchAiAgentState; var task: String?; var id: String; init(_ agent: MonarchAiAgentRef, state: MonarchAiAgentState = .idle, task: String? = nil) }",
+    "enum MonarchAiMultiAgentRosterVariant { case list, stack }",
+    "struct MonarchAiMultiAgentRosterLabels { var label: String?; var agentKind: String?; var state: (@Sendable (MonarchAiAgentState) -> String)?; var summary: (@Sendable (Int, [MonarchAiAgentState: Int]) -> String)?; var changed: (@Sendable (String, String) -> String)?; var empty: String? }"
+  ],
+  "options": [
+    {
+      "name": "members",
+      "type": "[MonarchAiMultiAgentRosterMember]",
+      "default": "required",
+      "description": "The agents, each with a state and an optional task. Keep agent ids stable between updates."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchAiMultiAgentRosterVariant",
+      "default": ".list",
+      "description": "list: a row per agent. stack: overlapping pictures beside the summary."
+    },
+    {
+      "name": "maxVisible",
+      "type": "Int",
+      "default": "4",
+      "description": "In the stack, the pictures shown before \"+N\". At least one is shown."
+    },
+    {
+      "name": "showsSummary",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the \"3 agents · 2 working\" line."
+    },
+    {
+      "name": "announcesChanges",
+      "type": "Bool",
+      "default": "true",
+      "description": "Announces state changes to VoiceOver. Never the first state."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiMultiAgentRosterLabels",
+      "default": "MonarchAiMultiAgentRosterLabels()",
+      "description": "Replacements for the list name, \"AI agent\", the state names, the summary, the change announcement and the empty text."
+    }
+  ],
+  "states": [
+    {
+      "name": "idle",
+      "description": "No ring; the state text is muted."
+    },
+    {
+      "name": "working",
+      "description": "A turning ring (still with Reduce Motion); the state text uses the strong AI colour."
+    },
+    {
+      "name": "waiting",
+      "description": "The row is tinted warning, the state text is strong warning, the avatar has a dashed warning ring. First in the stack after errors."
+    },
+    {
+      "name": "error",
+      "description": "The row is tinted danger and the state text is strong danger. First in the stack."
+    },
+    {
+      "name": "empty",
+      "description": "\"No agents are working on this.\" in muted text, without a summary."
+    }
+  ],
+  "appearance": "Rows on the surface, with the warning subtle fill for waiting and the danger subtle fill for errors. Names are default text, roles muted, tasks default; the state is caption text in the AI, warning, danger or muted strong role. The stack uses the avatar group's ring on the surface colour. All roles come from the theme.",
+  "platformNotes": "The web's task is any node; here it is a String. The web uses a polite live region; iOS posts an accessibility announcement when a state changes. The stack reuses MonarchAvatarGroup, so a \"+1\" tile is never shown: with one agent too many all are shown, as everywhere else in Monarch. When the stack and the summary do not fit on one line the summary moves under the pictures. The parity map listed presence-avatars and status-badge; the stack is the avatar group that presence-avatars also builds on, and the state is plain coloured text as on the web, so neither is used directly.",
+  "accessibility": [
+    "A list row is one element read as the name with \"(AI agent)\", the role, the task and the state; the picture is hidden because the text says the same.",
+    "In the stack each picture is an image named by the agent, \"AI agent\" and its state unless idle; \"+N\" reads every hidden agent with its state.",
+    "Every state is written text as well as a ring and a tint, so it never depends on colour or motion.",
+    "A state change is announced, for example \"Research agent: Error\"; several changes are joined. The first state is not announced, and announcesChanges false turns announcements off.",
+    "Text scales with Dynamic Type; names, roles and tasks wrap, and the state stays on one line at the trailing edge."
+  ],
+  "edgeCases": [
+    "Agents are matched by agent.id, else by name; changing ids makes every update read as new.",
+    "An agent that joins is announced with its state.",
+    "maxVisible below 1 shows one picture.",
+    "Empty roles and tasks are not shown or read."
+  ],
+  "tests": [
+    "MonarchAiMultiAgentRosterTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "List",
+      "fixture": "ai-multi-agent-roster",
+      "webExample": "List",
+      "template": "MonarchAiMultiAgentRoster([\n    MonarchAiMultiAgentRosterMember(\n        MonarchAiAgentRef(id: {{members.0.agent.id}}, name: {{members.0.agent.name}}, role: {{members.0.agent.role}}),\n        state: {{members.0.state|case}},\n        task: {{members.0.task}}\n    ),\n    MonarchAiMultiAgentRosterMember(\n        MonarchAiAgentRef(id: {{members.1.agent.id}}, name: {{members.1.agent.name}}, role: {{members.1.agent.role}}),\n        state: {{members.1.state|case}},\n        task: {{members.1.task}}\n    ),\n    MonarchAiMultiAgentRosterMember(\n        MonarchAiAgentRef(id: {{members.2.agent.id}}, name: {{members.2.agent.name}}, role: {{members.2.agent.role}}),\n        state: {{members.2.state|case}},\n        task: {{members.2.task}}\n    ),\n    MonarchAiMultiAgentRosterMember(\n        MonarchAiAgentRef(id: {{members.3.agent.id}}, name: {{members.3.agent.name}}, role: {{members.3.agent.role}}),\n        state: {{members.3.state|case}}\n    ),\n    MonarchAiMultiAgentRosterMember(\n        MonarchAiAgentRef(id: {{members.4.agent.id}}, name: {{members.4.agent.name}}, role: {{members.4.agent.role}}),\n        state: {{members.4.state|case}}\n    ),\n])",
+      "code": "MonarchAiMultiAgentRoster([\n    MonarchAiMultiAgentRosterMember(\n        MonarchAiAgentRef(id: \"lead\", name: \"Coordinator\", role: \"Plans the work\"),\n        state: .working,\n        task: \"Splitting the request into parts\"\n    ),\n    MonarchAiMultiAgentRosterMember(\n        MonarchAiAgentRef(id: \"research\", name: \"Research agent\", role: \"Finds sources\"),\n        state: .waiting,\n        task: \"Needs read access to the shared drive\"\n    ),\n    MonarchAiMultiAgentRosterMember(\n        MonarchAiAgentRef(id: \"analyst\", name: \"Analysis agent\", role: \"Checks the numbers\"),\n        state: .working,\n        task: \"Comparing quarterly figures\"\n    ),\n    MonarchAiMultiAgentRosterMember(\n        MonarchAiAgentRef(id: \"writer\", name: \"Writing agent\", role: \"Drafts the summary\"),\n        state: .idle\n    ),\n    MonarchAiMultiAgentRosterMember(\n        MonarchAiAgentRef(id: \"review\", name: \"Review agent\", role: \"Checks tone\"),\n        state: .idle\n    ),\n])"
+    },
+    {
+      "title": "A stack for a header",
+      "code": "MonarchAiMultiAgentRoster(\n    [\n        MonarchAiMultiAgentRosterMember(MonarchAiAgentRef(id: \"a\", name: \"Coordinator\"), state: .working),\n        MonarchAiMultiAgentRosterMember(MonarchAiAgentRef(id: \"b\", name: \"Research agent\"), state: .error),\n        MonarchAiMultiAgentRosterMember(MonarchAiAgentRef(id: \"c\", name: \"Writing agent\")),\n        MonarchAiMultiAgentRosterMember(MonarchAiAgentRef(id: \"d\", name: \"Review agent\")),\n    ],\n    variant: .stack,\n    maxVisible: 2\n)"
+    }
+  ],
+  "webEquivalent": "AiMultiAgentRoster",
+  "dependsOn": [
+    "ai-agent-avatar",
+    "avatar"
+  ]
+}

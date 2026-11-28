@@ -1,0 +1,184 @@
+{
+  "id": "duration-input",
+  "name": "MonarchDurationInput",
+  "title": "DurationInput",
+  "family": "forms",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "TextField(_:text:prompt:) with .onSubmit and a focus-loss commit, and Stepper(_:onIncrement:onDecrement:)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A labelled field for a length of time typed the way people say it (\"1h 30m\", \"90m\", \"1.5h\", \"1:30\"), kept as whole minutes, with a stepper, helper text and an error state.",
+  "whenToUse": "For a duration in minutes or hours: an estimate, time logged, a meeting length, a buffer or a response target.",
+  "whenNotToUse": "For a time of day, use DatePicker with .hourAndMinute. For a handful of fixed lengths (15, 30, 60 minutes), use a segmented Picker. For a plain count, use MonarchNumberInput.",
+  "api": [
+    "init(_ label: String, minutes: Binding<Int?>, minimum: Int = 0, maximum: Int? = nil, step: Int = 15, largestUnit: MonarchDurationInputUnit = .hours, minutesPerDay: Int = 1440, prompt: String? = nil, helper: String? = nil, error: String? = nil, showsStepper: Bool = true, labels: MonarchDurationInputLabels = MonarchDurationInputLabels(), format: (@Sendable (Int) -> String)? = nil, parse: (@Sendable (String) -> Int?)? = nil)",
+    "enum MonarchDurationInputUnit { case hours, days }",
+    "struct MonarchDurationInputLabels { init(invalid: String? = nil, range: (@Sendable (Int, Int?) -> String)? = nil, valueText: (@Sendable (Int) -> String)? = nil, errorHint: (@Sendable (String) -> String)? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The visible label, already localised."
+    },
+    {
+      "name": "minutes",
+      "type": "Binding<Int?>",
+      "default": "required",
+      "description": "The duration in whole minutes, or nil when empty. Written only when the text is read (Return or leaving the field) or stepped, never while typing."
+    },
+    {
+      "name": "minimum",
+      "type": "Int",
+      "default": "0",
+      "description": "The shortest allowed duration in minutes. Shorter text is flagged; steps stop at it."
+    },
+    {
+      "name": "maximum",
+      "type": "Int?",
+      "default": "nil",
+      "description": "The longest allowed duration in minutes. Longer text is flagged; steps stop at it."
+    },
+    {
+      "name": "step",
+      "type": "Int",
+      "default": "15",
+      "description": "Minutes added or removed by one press of the stepper or an arrow key."
+    },
+    {
+      "name": "largestUnit",
+      "type": "MonarchDurationInputUnit",
+      "default": ".hours",
+      "description": "Writes 26 hours as \"26h\" (.hours) or \"1d 2h\" (.days)."
+    },
+    {
+      "name": "minutesPerDay",
+      "type": "Int",
+      "default": "1440",
+      "description": "Minutes in a \"d\" when reading and writing; 480 for 8-hour work days."
+    },
+    {
+      "name": "prompt",
+      "type": "String?",
+      "default": "nil",
+      "description": "Replaces the built-in placeholder \"e.g. 1h 30m\"."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Supporting text under the field."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "Error message from the app; replaces the helper and the field's own message while present."
+    },
+    {
+      "name": "showsStepper",
+      "type": "Bool",
+      "default": "true",
+      "description": "Shows the system stepper beside the field."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchDurationInputLabels",
+      "default": "MonarchDurationInputLabels()",
+      "description": "Replacements for the invalid and range messages, the spoken value and the spoken error prefix."
+    },
+    {
+      "name": "format",
+      "type": "(@Sendable (Int) -> String)?",
+      "default": "nil",
+      "description": "Writes minutes as text. The default writes \"0m\", \"45m\", \"1h 30m\"."
+    },
+    {
+      "name": "parse",
+      "type": "(@Sendable (String) -> Int?)?",
+      "default": "nil",
+      "description": "Reads trimmed, non-empty text as minutes, or nil when it cannot be read. Empty text always saves nil."
+    }
+  ],
+  "states": [
+    {
+      "name": "empty",
+      "description": "The binding is nil; the placeholder shows in the subtle text colour. The first step starts from the minimum."
+    },
+    {
+      "name": "focused",
+      "description": "The theme's focus ring around the field."
+    },
+    {
+      "name": "unreadable",
+      "description": "Danger border, an icon and \"Use a duration like 1h 30m, 90m or 1.5h.\" under the field. The text stays; the binding keeps its last value."
+    },
+    {
+      "name": "out of range",
+      "description": "Danger border, an icon and \"Enter between 15m and 2h.\" (or \"at least\" / \"at most\"). Nothing is saved."
+    },
+    {
+      "name": "error",
+      "description": "The app's message in place of the field's own, drawn the same way."
+    },
+    {
+      "name": "at a bound",
+      "description": "The half of the stepper that would pass the bound is disabled."
+    },
+    {
+      "name": "disabled",
+      "description": "Subtle background and the disabled text colour, set with disabled(_:); keys do nothing."
+    }
+  ],
+  "appearance": "The measures and colours of MonarchTextField: a surface fill, an input border and the control radius, with the theme's focus ring and the danger strong role for errors. Digits are monospaced so the value does not shift while it is stepped. The stepper is the system control.",
+  "platformNotes": "Matches the web's DurationInput: the same forms are read, the same \"1h 30m\" format is written, the value is whole minutes and unreadable text is kept and flagged, never saved. The web's size option (sm, md, lg) is not offered: the field is always at least 44 points high, like the other Monarch fields. The web steps with ArrowUp and ArrowDown and moves by an hour with PageUp and PageDown; on iOS the system Stepper does the stepping, and with a hardware keyboard the same keys and Escape are handled with onKeyPress. Home and End have no equivalent. With a minimum of 0 and a maximum, the range message is \"Enter at most 2h.\" where the web says \"Enter between 0m and 2h.\". Unit words are read in English (d, h, m, hours, minutes), as on the web; the spoken value is spelled out by the system's DateComponentsFormatter in the person's language. Android uses the same name and parser. Several closures are optional (format, parse). Pass each one with its label: Swift gives a single unlabelled trailing closure to the first parameter that accepts it, which is format.",
+  "accessibility": [
+    "The field is one element: the label, the typed text, and the error (spoken as \"Error: …\") or else the helper as the hint.",
+    "A new error is announced when it appears and is shown with an icon and text, not colour alone.",
+    "The stepper is the system control with the same label, the duration spelled out (\"1 hour, 30 minutes\") as its value, and the increment and decrement actions.",
+    "Autocorrection is off so unit letters are not replaced.",
+    "The field is at least 44 points high and text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "\"1h30\" is 90 minutes: a bare number after hours counts as minutes. After any other unit it is unreadable.",
+    "\"1.5\" with no unit is minutes, rounded to 2.",
+    "\"1:75\" and \"1:5\" are unreadable: a clock needs two-digit minutes below 60.",
+    "A step from text that does not read starts from the saved value; from an empty field it starts at the minimum.",
+    "A step snaps to the step grid: 50 minutes plus 15 is 1 hour, 50 minus 15 is 45 minutes.",
+    "Changing the binding from outside rewrites the text and clears the message."
+  ],
+  "tests": [
+    "MonarchDurationInputTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Estimate",
+      "fixture": "duration-input",
+      "webExample": "Estimate",
+      "template": "MonarchDurationInput(\n    {{label}},\n    minutes: $estimate,\n    helper: {{helper}},\n    showsStepper: false\n)",
+      "setupTemplate": "@State private var estimate: Int? = {{minutes}}",
+      "setup": "@State private var estimate: Int? = 90",
+      "code": "MonarchDurationInput(\n    \"Estimate\",\n    minutes: $estimate,\n    helper: \"Type 1h 30m, 90m or 1.5h. Arrow keys step by 15 minutes.\",\n    showsStepper: false\n)"
+    },
+    {
+      "title": "Bounds and a small step",
+      "setup": "@State private var buffer: Int? = 10",
+      "code": "MonarchDurationInput(\"Buffer\", minutes: $buffer, minimum: 5, maximum: 120, step: 5)"
+    },
+    {
+      "title": "Work days",
+      "setup": "@State private var target: Int? = 1_680",
+      "code": "MonarchDurationInput(\"Response target\", minutes: $target, largestUnit: .days, minutesPerDay: 480)"
+    }
+  ],
+  "webEquivalent": "DurationInput",
+  "dependsOn": [
+    "text-field"
+  ]
+}

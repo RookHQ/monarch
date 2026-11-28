@@ -1,0 +1,114 @@
+{
+  "id": "call-stats-panel",
+  "name": "MonarchCallStatsPanel",
+  "title": "CallStatsPanel",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of Text, MonarchStatusBadge and LabeledContent with .labeledContentStyle(.monarch(.inline)) per person; the app presents it in .sheet",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "The data a call has used and each person's round trip, packet loss and connection grade.",
+  "whenToUse": "In a call's Connection panel, opened from the call controls (MonarchCallControls onOpenStats) and shown in a sheet, or in support and diagnostics views of a live call.",
+  "whenNotToUse": "For one connection indicator on a person's tile, use a status badge or dot on the tile. Not for history or analytics of past calls; use a table or a chart.",
+  "api": [
+    "MonarchCallStatsPanel.init(usage: MonarchCallStatsPanelUsage, peers: [MonarchCallStatsPanelPeer], isLowData: Bool = false, footnote: String? = nil, labels: MonarchCallStatsPanelLabels = MonarchCallStatsPanelLabels())",
+    "MonarchCallStatsPanelUsage.init(sentBytes: Int64, receivedBytes: Int64, upBitsPerSecond: Double? = nil, downBitsPerSecond: Double? = nil)",
+    "MonarchCallStatsPanelPeer.init(id: String, name: String, roundTripMilliseconds: Double? = nil, inboundLossPercent: Double? = nil, outboundLossPercent: Double? = nil, quality: MonarchCallStatsPanelQuality = .unknown)",
+    "enum MonarchCallStatsPanelQuality { case good, fair, poor, unknown }",
+    "MonarchCallStatsPanelLabels.init(dataUsed: String? = nil, usageSummary: (@Sendable (String, String, String) -> String)? = nil, lowData: String? = nil, connections: String? = nil, roundTrip: String? = nil, loss: String? = nil, noPeers: String? = nil, qualityNames: [MonarchCallStatsPanelQuality: String] = [:])"
+  ],
+  "options": [
+    {
+      "name": "usage",
+      "type": "MonarchCallStatsPanelUsage",
+      "default": "required",
+      "description": "Bytes sent and received, and the current upload and download rates in bits per second."
+    },
+    {
+      "name": "peers",
+      "type": "[MonarchCallStatsPanelPeer]",
+      "default": "required",
+      "description": "One entry per remote person: name, round trip in milliseconds, inbound and outbound loss in percent, and a grade."
+    },
+    {
+      "name": "isLowData",
+      "type": "Bool",
+      "default": "false",
+      "description": "Adds the note \"Low data mode is on: audio only.\""
+    },
+    {
+      "name": "footnote",
+      "type": "String?",
+      "default": "nil",
+      "description": "A closing note, such as how media is routed or encrypted. App copy: Monarch does not know how the app connects calls."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchCallStatsPanelLabels",
+      "default": "MonarchCallStatsPanelLabels()",
+      "description": "Replacements for the built-in strings: the heading, the usage line, the low data note, the list name, the number labels, the no-peers text and the grade names."
+    }
+  ],
+  "states": [
+    {
+      "name": "default",
+      "description": "The heading and usage line, then one block per person: the name with a grade badge, the round trip and the loss."
+    },
+    {
+      "name": "low data",
+      "description": "A muted note under the usage line."
+    },
+    {
+      "name": "not measured",
+      "description": "A missing number shows a dash; an unknown grade is a neutral badge \"Not measured yet\"."
+    },
+    {
+      "name": "no peers",
+      "description": "\"No one else is connected yet.\" instead of the people."
+    }
+  ],
+  "appearance": "The heading is default text; the usage line, notes and footnote are muted caption text. Grades are subtle status badges: success for good, warning for unstable, danger for poor and neutral for not measured, each with its own icon. People are separated by the default divider. The same roles apply in light, dark and high-contrast themes.",
+  "platformNotes": "The web shows a table with a column per number and signal bars for the grade; on a phone a four-column table does not fit at large text sizes, so each person is a block with LabeledContent rows and the grade is a MonarchStatusBadge, as the plan's dependencies say. The panel is the sheet's content, not the sheet: the app presents it with .sheet and adds a title, as in the example, because detents and navigation belong to the app. The parity map named a List; a VStack is used so the panel also sits inside a ScrollView or a popover. Bytes use the system byte count format (powers of 1024); rates and percentages use the environment locale. The web's formatCallBytes and formatCallRate helpers are not public API. Android uses the same names.",
+  "accessibility": [
+    "\"Data used this call\" is a header; the usage line is plain text.",
+    "The people are a container named \"Connection to each person\".",
+    "Each person is one element read as the name, the round trip, the loss and the grade, such as \"Alex Chen, Round trip 186 ms, Loss 3.4%, Unstable connection\".",
+    "A number that was not measured is read as \"Not measured yet\", not as a dash.",
+    "The grade has an icon and a name, so it is not told by colour alone.",
+    "Text wraps and scales with Dynamic Type; long names wrap onto a second line."
+  ],
+  "edgeCases": [
+    "Loss shows the worse of the two directions; a direction that is missing or not finite is ignored.",
+    "Negative or non-finite rates count as 0 bps; negative byte counts as 0.",
+    "Round trip is rounded to whole milliseconds; loss has one decimal.",
+    "Rates of 10 Mbps and more have no decimal.",
+    "The panel holds no timer: set new numbers as statistics arrive, every second or two."
+  ],
+  "tests": [
+    "MonarchCallStatsPanelTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "During a group call",
+      "fixture": "call-stats-panel",
+      "webExample": "During a group call",
+      "template": "MonarchCallStatsPanel(\n    usage: MonarchCallStatsPanelUsage(\n        sentBytes: {{usage.sentBytes}},\n        receivedBytes: {{usage.receivedBytes}},\n        upBitsPerSecond: {{usage.upBps|double}},\n        downBitsPerSecond: {{usage.downBps|double}}\n    ),\n    peers: [\n        MonarchCallStatsPanelPeer(id: {{peers.0.id}}, name: {{peers.0.name}}, roundTripMilliseconds: {{peers.0.rttMs|double}}, inboundLossPercent: {{peers.0.inboundLossPct|double}}, outboundLossPercent: {{peers.0.outboundLossPct|double}}, quality: {{peers.0.quality|case}}),\n        MonarchCallStatsPanelPeer(id: {{peers.1.id}}, name: {{peers.1.name}}, roundTripMilliseconds: {{peers.1.rttMs|double}}, inboundLossPercent: {{peers.1.inboundLossPct|double}}, outboundLossPercent: {{peers.1.outboundLossPct|double}}, quality: {{peers.1.quality|case}}),\n        MonarchCallStatsPanelPeer(id: {{peers.2.id}}, name: {{peers.2.name}}, quality: {{peers.2.quality|case}}),\n    ],\n    footnote: {{footnote}}\n)",
+      "code": "MonarchCallStatsPanel(\n    usage: MonarchCallStatsPanelUsage(\n        sentBytes: 6_200_000,\n        receivedBytes: 9_400_000,\n        upBitsPerSecond: 420_000.0,\n        downBitsPerSecond: 1_250_000.0\n    ),\n    peers: [\n        MonarchCallStatsPanelPeer(id: \"a\", name: \"Robin Park\", roundTripMilliseconds: 38.0, inboundLossPercent: 0.2, outboundLossPercent: 0.1, quality: .good),\n        MonarchCallStatsPanelPeer(id: \"b\", name: \"Alex Chen\", roundTripMilliseconds: 186.0, inboundLossPercent: 3.4, outboundLossPercent: 1.2, quality: .fair),\n        MonarchCallStatsPanelPeer(id: \"c\", name: \"Jordan Diaz\", quality: .unknown),\n    ],\n    footnote: \"Example footnote: say here how your product routes and protects call media.\"\n)"
+    },
+    {
+      "title": "Shown in a sheet from the call controls",
+      "code": "MonarchButton(\"Show connection\", variant: .secondary) { showsStats = true }\n    .sheet(isPresented: $showsStats) {\n        NavigationStack {\n            ScrollView {\n                MonarchCallStatsPanel(usage: usage, peers: [], isLowData: true)\n                    .padding()\n            }\n            .navigationTitle(\"Connection\")\n        }\n        .presentationDetents([.medium, .large])\n    }",
+      "setup": "@State private var showsStats = false\nprivate let usage = MonarchCallStatsPanelUsage(sentBytes: 120_000, receivedBytes: 80_000)"
+    }
+  ],
+  "webEquivalent": "CallStatsPanel",
+  "dependsOn": [
+    "description-list",
+    "status-badge"
+  ]
+}

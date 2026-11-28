@@ -8,58 +8,12 @@ import {
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
 import { ListIcon } from '../../../internal/docs-demo.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-prompt-template-picker.fixture.json';
 
-const TEMPLATES: AiPromptTemplate[] = [
-  {
-    id: 'reply',
-    title: 'Customer reply',
-    description: 'Answer a customer question politely.',
-    category: 'support',
-    body: 'Write a reply to {{customer}} about {{topic}}. Keep it {{length}} and offer one next step.',
-    variables: [
-      { name: 'customer', label: 'Customer name', required: true, placeholder: 'Ana Lopez' },
-      {
-        name: 'topic',
-        label: 'Topic',
-        required: true,
-        multiline: true,
-        placeholder: 'The order that arrived late',
-      },
-      {
-        name: 'length',
-        label: 'Length',
-        defaultValue: 'short',
-        description: 'For example short or detailed.',
-      },
-    ],
-  },
-  {
-    id: 'summary',
-    title: 'Meeting summary',
-    description: 'Turn notes into decisions and actions.',
-    category: 'internal',
-    body: 'Summarize {{meeting_notes}} as decisions, open questions and actions with owners.',
-  },
-  {
-    id: 'brief',
-    title: 'Project brief',
-    description: 'A one-page brief from a goal.',
-    category: 'internal',
-    body: 'Draft a one-page brief for {{project}} with goal, scope, risks and milestones.',
-  },
-  {
-    id: 'recap',
-    title: 'Conversation recap',
-    description: 'No blanks: used as is.',
-    category: 'internal',
-    body: 'Recap this conversation in three sentences.',
-  },
-];
+const TEMPLATES = fixture.data.templates as AiPromptTemplate[];
 
-const CATEGORIES = [
-  { id: 'support', label: 'Support' },
-  { id: 'internal', label: 'Internal' },
-];
+const CATEGORIES = fixture.data.categories;
 
 function GalleryDemo() {
   const [used, setUsed] = useState('');

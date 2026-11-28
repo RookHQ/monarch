@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Fragment,
   forwardRef,
   type ComponentPropsWithoutRef,
   type ElementRef,
@@ -12,13 +13,18 @@ import { cx } from '../../../internal/cx.js';
 import { CloseGlyph } from '../../../internal/icons.js';
 import { dismissHandlers } from '../../../internal/dismiss.js';
 import { useDirectionContext } from '../../../internal/direction.js';
+import { stagedDismiss, useOverlayStage } from '../../../internal/overlay-stage.js';
 
 /**
  * Modal dialog. Focus is trapped inside, Escape closes it, and focus returns
  * to the trigger. Every dialog needs a DialogTitle (visually hidden if
  * necessary) so it has an accessible name.
  */
-export const Dialog = DialogPrimitive.Root;
+export function Dialog(props: DialogPrimitive.DialogProps) {
+  // In a docs preview stage the dialog is a picture in the page: never modal.
+  const staged = useOverlayStage();
+  return <DialogPrimitive.Root {...props} {...(staged ? { modal: false } : {})} />;
+}
 export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogClose = DialogPrimitive.Close;
 
@@ -80,14 +86,19 @@ export const DialogContent = forwardRef<
   },
   ref,
 ) {
-  const guards = dismissHandlers(
-    { busy, closeOnOutsideClick, escapeGuard },
-    { onEscapeKeyDown, onInteractOutside },
+  const staged = useOverlayStage();
+  const guards = stagedDismiss(
+    staged,
+    dismissHandlers(
+      { busy, closeOnOutsideClick, escapeGuard },
+      { onEscapeKeyDown, onInteractOutside },
+    ),
   );
   // The portal leaves the subtree that carries `dir`; take it from a DirectionProvider.
   const dir = useDirectionContext();
+  const Portal = staged ? Fragment : DialogPrimitive.Portal;
   return (
-    <DialogPrimitive.Portal>
+    <Portal>
       <DialogPrimitive.Overlay className="mn-overlay" />
       <DialogPrimitive.Content
         ref={ref}
@@ -95,6 +106,11 @@ export const DialogContent = forwardRef<
         {...rest}
         {...guards}
         onOpenAutoFocus={(event) => {
+          // A staged dialog is a picture: nothing in it takes focus on mount.
+          if (staged) {
+            event.preventDefault();
+            return;
+          }
           onOpenAutoFocus?.(event);
           if (event.defaultPrevented) return;
           // Opening on a tab strip would draw a focus ring on the first tab
@@ -125,7 +141,7 @@ export const DialogContent = forwardRef<
           </DialogPrimitive.Close>
         ) : null}
       </DialogPrimitive.Content>
-    </DialogPrimitive.Portal>
+    </Portal>
   );
 });
 

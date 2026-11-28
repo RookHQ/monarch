@@ -16,6 +16,8 @@ import {
   SheetTrigger,
 } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './sheet.fixture.json';
 import { FilterIcon } from '../../../internal/docs-demo.js';
 
 export default {
@@ -149,28 +151,31 @@ export default {
       items: [
         {
           title: 'Record details',
+          stage: { align: 'end' },
           render: () => (
-            <Sheet>
+            <Sheet defaultOpen>
               <SheetTrigger asChild>
-                <Button>Open details</Button>
+                <Button>{fixture.data.trigger}</Button>
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
-                  <SheetTitle>Invoice INV-1042</SheetTitle>
-                  <SheetDescription>Sent on 12 March to the billing contact.</SheetDescription>
+                  <SheetTitle>{fixture.data.title}</SheetTitle>
+                  <SheetDescription>{fixture.data.description}</SheetDescription>
                 </SheetHeader>
                 <SheetBody>
                   <DescriptionList>
-                    <DescriptionItem term="Status">Awaiting payment</DescriptionItem>
-                    <DescriptionItem term="Due">26 March</DescriptionItem>
-                    <DescriptionItem term="Owner">Priya Raman</DescriptionItem>
+                    {fixture.data.details.map((detail) => (
+                      <DescriptionItem key={detail.term} term={detail.term}>
+                        {detail.value}
+                      </DescriptionItem>
+                    ))}
                   </DescriptionList>
                 </SheetBody>
                 <SheetFooter>
                   <SheetClose asChild>
-                    <Button>Close</Button>
+                    <Button>{fixture.data.close}</Button>
                   </SheetClose>
-                  <Button variant="primary">Send reminder</Button>
+                  <Button variant="primary">{fixture.data.action}</Button>
                 </SheetFooter>
               </SheetContent>
             </Sheet>

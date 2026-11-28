@@ -1,0 +1,207 @@
+{
+  "id": "running-timer",
+  "name": "MonarchRunningTimer",
+  "title": "RunningTimer",
+  "family": "workflow",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "MonarchButton (androidx.compose.material3.Button), androidx.compose.material3.DropdownMenu, AlertDialog and TimeInput, androidx.compose.material3.Text with tabular figures, android.icu.text.MeasureFormat",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A running stopwatch for time tracking: a panel with a large clock, Start, Stop, \"I stopped earlier\" and a confirmed Discard, or a compact indicator for a top bar.",
+  "whenToUse": "For tracking time on an issue, a task or a project, in a timesheet screen (panel) or in a top bar while the person works elsewhere (indicator).",
+  "whenNotToUse": "For a countdown or a deadline use MonarchSlaIndicator. For entering time by hand use a form with MonarchNumberInput. For a timer outside the app (an ongoing notification) use the platform's notifications; that stays in the app.",
+  "api": [
+    "@Composable fun MonarchRunningTimer(startedAt: Long?, modifier: Modifier = Modifier, variant: MonarchRunningTimerVariant = MonarchRunningTimerVariant.Panel, label: String? = null, warnAfterMillis: Long? = 43_200_000L, startEnabled: Boolean = true, pending: Boolean = false, showWhenStopped: Boolean = false, now: Long? = null, timeZone: String? = null, menuIcon: (@Composable () -> Unit)? = null, labels: MonarchRunningTimerLabels = MonarchRunningTimerLabels(), onStart: (suspend () -> Unit)? = null, onStop: (suspend () -> Unit)? = null, onStopAt: (suspend (Long) -> Unit)? = null, onDiscard: (suspend () -> Unit)? = null, onOpen: (() -> Unit)? = null, fields: (@Composable ColumnScope.() -> Unit)? = null)",
+    "enum class MonarchRunningTimerVariant { Panel, Indicator }",
+    "class MonarchRunningTimerLabels(start, stop, stopAndLog, more, moreActions, discard, discardTitle, discardMessage, discardConfirm, stoppedEarlier, stoppedEarlierTitle, stoppedEarlierMessage, started: ((String) -> String)?, workDuration: ((String) -> String)?, save, cancel, stoppedAtFuture, stoppedAtTooEarly, failed, running, stopped, defaultLabel, open, longRunning: ((String) -> String)?), every parameter optional and String? unless noted"
+  ],
+  "options": [
+    {
+      "name": "startedAt",
+      "type": "Long?",
+      "default": "required",
+      "description": "When the running timer started, in epoch milliseconds; null when no timer runs. The app changes it when an action succeeds."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the timer."
+    },
+    {
+      "name": "variant",
+      "type": "MonarchRunningTimerVariant",
+      "default": "MonarchRunningTimerVariant.Panel",
+      "description": "Panel: a large clock with buttons and fields. Indicator: a compact chip with a stop button and a menu."
+    },
+    {
+      "name": "label",
+      "type": "String?",
+      "default": "null",
+      "description": "What is being timed, such as an issue key. Shown under the panel's clock and in the indicator (\"Timer\" when null)."
+    },
+    {
+      "name": "warnAfterMillis",
+      "type": "Long?",
+      "default": "12 hours",
+      "description": "Shows a warning once the timer has run this long: a message on the panel, warning colors on the indicator. null turns it off."
+    },
+    {
+      "name": "startEnabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether Start can be pressed, for example only once a required project is chosen."
+    },
+    {
+      "name": "pending",
+      "type": "Boolean",
+      "default": "false",
+      "description": "An action runs outside the component: Start shows a spinner and the other buttons are disabled."
+    },
+    {
+      "name": "showWhenStopped",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Keeps the indicator visible, at 0:00:00, while no timer runs."
+    },
+    {
+      "name": "now",
+      "type": "Long?",
+      "default": "null",
+      "description": "A fixed reference time, which also stops the clock. For previews, screenshots and tests."
+    },
+    {
+      "name": "timeZone",
+      "type": "String?",
+      "default": "null",
+      "description": "The zone of the times in the earlier-stop dialog. An IANA id such as Europe/Berlin; null, or an id the device does not know, is the device's zone."
+    },
+    {
+      "name": "menuIcon",
+      "type": "(@Composable () -> Unit)?",
+      "default": "null",
+      "description": "The icon of the indicator's menu button. Without it the button reads \"More\". Monarch bundles no icons."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchRunningTimerLabels",
+      "default": "MonarchRunningTimerLabels()",
+      "description": "Replacements for every built-in string."
+    },
+    {
+      "name": "onStart",
+      "type": "(suspend () -> Unit)?",
+      "default": "null",
+      "description": "Starts a timer. Adds Start to the stopped panel; the button shows a spinner until it returns."
+    },
+    {
+      "name": "onStop",
+      "type": "(suspend () -> Unit)?",
+      "default": "null",
+      "description": "Stops the timer and logs the time. Adds Stop to the panel and the indicator."
+    },
+    {
+      "name": "onStopAt",
+      "type": "(suspend (Long) -> Unit)?",
+      "default": "null",
+      "description": "Stops the timer at an earlier time. Adds \"I stopped earlier\", which asks for the time of day."
+    },
+    {
+      "name": "onDiscard",
+      "type": "(suspend () -> Unit)?",
+      "default": "null",
+      "description": "Throws the running time away. Adds Discard (a button on the panel, a menu item on the indicator), confirmed first."
+    },
+    {
+      "name": "onOpen",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Opens what is being timed. Makes the indicator's clock a button."
+    },
+    {
+      "name": "fields",
+      "type": "(@Composable ColumnScope.() -> Unit)?",
+      "default": "null",
+      "description": "Fields for the entry being timed, such as a project picker, shown in the panel between the clock and the buttons."
+    }
+  ],
+  "states": [
+    {
+      "name": "stopped",
+      "description": "The panel shows 0:00:00 in the muted text color and Start; the indicator is hidden unless showWhenStopped."
+    },
+    {
+      "name": "running",
+      "description": "The clock ticks every second in the strong accent color; the panel shows Stop, \"I stopped earlier\" and Discard; the indicator has the accent surface."
+    },
+    {
+      "name": "long running",
+      "description": "After warnAfterMillis the panel shows a warning message; the indicator takes the warning colors."
+    },
+    {
+      "name": "busy",
+      "description": "The button of the action in progress shows a spinner and the others are disabled; pending shows the same from outside."
+    },
+    {
+      "name": "failed",
+      "description": "A thrown error is shown as text under the buttons (panel) or turns the indicator to the danger colors and is added to its state; it is announced."
+    },
+    {
+      "name": "stopping earlier",
+      "description": "A dialog with the start time, a Material 3 TimeInput suggesting an hour after the start, and the length of work that will be saved; Save is disabled for a time in the future or less than a minute after the start."
+    },
+    {
+      "name": "discarding",
+      "description": "A dialog asks \"Discard the running timer?\" with a danger Discard button."
+    }
+  ],
+  "appearance": "The panel's clock uses the display style with tabular figures, in the strong accent color while running, the strong warning color when long running and the muted color when stopped. The indicator is a rounded chip on the accent, warning, danger or muted subtle surface with text in the matching strong color. Warnings and errors are caption text in the strong warning and danger colors.",
+  "platformNotes": "The web's datetime-local input is a Material 3 TimeInput: the chosen time of day is the latest such moment at or before now, which covers timers shorter than a day (a timer that ran longer can still be stopped at a time within the last 24 hours, or discarded). The web's required and invalid errors cannot happen; the future and too-early checks remain. The web's trash, play and stop glyphs are text buttons and the indicator's chevron menu button is an optional icon slot, because Monarch bundles no icons. The web's description hover text is not offered: touch has no hover. The clock uses tabular figures of the text face rather than the monospaced family. The actions suspend instead of returning promises. Showing the timer outside the app stays in the product. iOS builds the same component with the same name.",
+  "accessibility": [
+    "The clock is one element: its content description is the label and the time in words (\"ENG-142, 4 minutes, 9 seconds\"); its state description is \"Timer running\" or \"Timer stopped\", followed by a failure if there is one.",
+    "Starting and stopping are announced through a polite live region that is always present, even when the indicator hides; the ticking is not announced.",
+    "With onOpen the indicator's clock is a button with the click label \"Open\" and a 48dp touch target.",
+    "The indicator's stop button is named \"Stop timer and log time\" and its menu button \"More timer actions\"; each has a 48dp touch target.",
+    "Failures and the long-running warning are text in polite live regions, not color alone.",
+    "The earlier-stop dialog has a title, the start time, a Material 3 TimeInput and the length of work as text."
+  ],
+  "edgeCases": [
+    "A start in the future shows 0:00:00.",
+    "Times of 100 hours and more widen the clock (100:00:00).",
+    "When startedAt becomes null the discard confirmation and the earlier-stop dialog close.",
+    "The dialogs cannot be dismissed while they save.",
+    "With now set the clock does not tick.",
+    "An error without a message shows \"That did not work. Try again.\"; an error with a message shows the message, as on the web."
+  ],
+  "tests": [
+    "MonarchRunningTimerTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Panel with entry fields",
+      "fixture": "running-timer",
+      "webExample": "Panel with entry fields",
+      "template": "MonarchRunningTimer(\n    startedAt = startedAt,\n    label = note.ifEmpty { null },\n    labels = MonarchRunningTimerLabels(start = {{startLabel}}),\n    onStart = { startedAt = System.currentTimeMillis() },\n    onStop = { startedAt = null },\n    onStopAt = { startedAt = null },\n    onDiscard = { startedAt = null },\n    fields = {\n        MonarchTextField(value = note, onValueChange = { note = it }, label = {{fieldLabel}})\n    },\n)",
+      "setupTemplate": "var startedAt by remember { mutableStateOf<Long?>({{startedAt}}) }\nvar note by remember { mutableStateOf({{note}}) }",
+      "setup": "var startedAt by remember { mutableStateOf<Long?>(null) }\nvar note by remember { mutableStateOf(\"\") }",
+      "code": "MonarchRunningTimer(\n    startedAt = startedAt,\n    label = note.ifEmpty { null },\n    labels = MonarchRunningTimerLabels(start = \"Start timer\"),\n    onStart = { startedAt = System.currentTimeMillis() },\n    onStop = { startedAt = null },\n    onStopAt = { startedAt = null },\n    onDiscard = { startedAt = null },\n    fields = {\n        MonarchTextField(value = note, onValueChange = { note = it }, label = \"What are you working on?\")\n    },\n)"
+    },
+    {
+      "title": "An indicator in a top bar",
+      "setup": "val startedAt = 1_793_784_600_000L",
+      "code": "MonarchRunningTimer(\n    startedAt = startedAt,\n    variant = MonarchRunningTimerVariant.Indicator,\n    label = \"ENG-142\",\n    now = startedAt + 249_000L,\n    onStop = {},\n    onDiscard = {},\n    onOpen = {},\n)"
+    }
+  ],
+  "webEquivalent": "RunningTimer",
+  "dependsOn": [
+    "button",
+    "confirm-dialog",
+    "badge"
+  ]
+}

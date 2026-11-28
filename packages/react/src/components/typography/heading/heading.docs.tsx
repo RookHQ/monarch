@@ -1,5 +1,9 @@
 import { Heading, Text } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './heading.fixture.json';
+
+const HEADINGS = fixture.data.headings as readonly { level: 1 | 2 | 3 | 4; text: string }[];
 
 export default {
   id: 'heading',
@@ -119,10 +123,11 @@ export default {
           stack: true,
           render: () => (
             <>
-              <Heading level={1}>Workspace overview</Heading>
-              <Heading level={2}>Recent activity</Heading>
-              <Heading level={3}>This week</Heading>
-              <Heading level={4}>Pinned items</Heading>
+              {HEADINGS.map((h) => (
+                <Heading key={h.level} level={h.level}>
+                  {h.text}
+                </Heading>
+              ))}
             </>
           ),
         },

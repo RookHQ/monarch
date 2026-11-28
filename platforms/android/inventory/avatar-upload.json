@@ -1,0 +1,159 @@
+{
+  "id": "avatar-upload",
+  "name": "MonarchAvatarUpload",
+  "title": "AvatarUpload",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia, androidx.compose.foundation.Canvas, androidx.compose.foundation.gestures.transformable, androidx.compose.material3.Slider, android.graphics.ImageDecoder, MonarchAvatar, MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Picks a profile or workspace picture with the system photo picker and crops it to a circle or a square before handing it over.",
+  "whenToUse": "On a profile or workspace settings screen, wherever people set the picture that MonarchAvatar shows.",
+  "whenNotToUse": "For attachments, documents or several files, use MonarchFileUpload. To show a picture without changing it, use MonarchAvatar.",
+  "api": [
+    "@Composable fun MonarchAvatarUpload(name: String, image: Painter?, onChange: suspend (MonarchAvatarUploadResult) -> Unit, modifier: Modifier = Modifier, shape: MonarchAvatarShape = MonarchAvatarShape.Circle, enabled: Boolean = true, accept: List<String> = listOf(\"image/png\", \"image/jpeg\", \"image/webp\", \"image/gif\"), maxSize: Long? = null, outputSize: Int = 512, onRemove: (() -> Unit)? = null, labels: MonarchAvatarUploadLabels = MonarchAvatarUploadLabels())",
+    "class MonarchAvatarUploadResult(image: ImageBitmap, file: MonarchPickedFile, crop: MonarchAvatarCrop)",
+    "data class MonarchAvatarCrop(x: Float, y: Float, size: Float)",
+    "class MonarchAvatarUploadLabels(upload: String? = null, change: String? = null, remove: String? = null, cropArea: String? = null, cropHint: String? = null, zoom: String? = null, zoomValue: ((percent: Int) -> String)? = null, moveLeft: String? = null, moveRight: String? = null, moveUp: String? = null, moveDown: String? = null, zoomIn: String? = null, zoomOut: String? = null, save: String? = null, cancel: String? = null, saveFailed: String? = null, openFailed: String? = null, validation: MonarchFileUploadLabels = MonarchFileUploadLabels())"
+  ],
+  "options": [
+    {
+      "name": "name",
+      "type": "String",
+      "default": "required",
+      "description": "The person's or workspace's name, for the initials and the TalkBack name of the picture."
+    },
+    {
+      "name": "image",
+      "type": "Painter?",
+      "default": "required",
+      "description": "The current picture, loaded by the app, or null for the initials. Decides between Upload photo and Change photo."
+    },
+    {
+      "name": "onChange",
+      "type": "suspend (MonarchAvatarUploadResult) -> Unit",
+      "default": "required",
+      "description": "Stores the cropped picture. Save stays busy until it returns; throwing shows the save failure and keeps the editor open."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the component."
+    },
+    {
+      "name": "shape",
+      "type": "MonarchAvatarShape",
+      "default": "MonarchAvatarShape.Circle",
+      "description": "Circle for people, Square for workspaces and organizations. Also the crop mask."
+    },
+    {
+      "name": "enabled",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the user can change the picture."
+    },
+    {
+      "name": "accept",
+      "type": "List<String>",
+      "default": "PNG, JPEG, WebP and GIF",
+      "description": "Allowed image types. Also chooses what the photo picker shows."
+    },
+    {
+      "name": "maxSize",
+      "type": "Long?",
+      "default": "null",
+      "description": "The largest file accepted, in bytes."
+    },
+    {
+      "name": "outputSize",
+      "type": "Int",
+      "default": "512",
+      "description": "The width and height of the cropped picture, in pixels."
+    },
+    {
+      "name": "onRemove",
+      "type": "(() -> Unit)?",
+      "default": "null",
+      "description": "Removes the picture. The Remove photo button shows only with a picture and this callback."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAvatarUploadLabels",
+      "default": "MonarchAvatarUploadLabels()",
+      "description": "Replacements for the strings monarch_avatarupload_*, and validation for the type and size messages shared with MonarchFileUpload."
+    }
+  ],
+  "states": [
+    {
+      "name": "no picture",
+      "description": "The initials avatar and Upload photo."
+    },
+    {
+      "name": "picture",
+      "description": "The picture, Change photo and, with onRemove, Remove photo."
+    },
+    {
+      "name": "cropping",
+      "description": "The picture in a square area masked to the shape, the hint, the zoom slider, Save photo and Cancel."
+    },
+    {
+      "name": "saving",
+      "description": "Save photo shows progress; the crop, the slider and Cancel are locked."
+    },
+    {
+      "name": "error",
+      "description": "A refused file, an unreadable image or a failed save is written in danger text and announced."
+    },
+    {
+      "name": "disabled",
+      "description": "The buttons are disabled."
+    }
+  ],
+  "appearance": "A large MonarchAvatar with small secondary and ghost buttons. While cropping, the picture fills a square of at most 288dp; outside the kept circle or square the canvas color hides it (no dimming), and a ring in the strong border color marks the edge. The hint is a muted caption and errors use the strong danger color. The same roles in light, dark and both high-contrast themes.",
+  "platformNotes": "The web picks with a file input and produces a Blob from a canvas; on Android the picker is the system photo picker (PickVisualMedia, no storage permission) and the result is an ImageBitmap the app encodes, with the picked file and the crop. The web src is an image URL; on Android the picture is a Painter the app loads. The crop editor is inline, as on the web, rather than in a sheet, so the drag of a sheet never competes with moving the photo; an app can place the component in a ModalBottomSheet itself. Pinch zooms on Android, in addition to the slider and the plus and minus keys; TalkBack users move and zoom with custom actions. Images are decoded off the main thread and scaled down to 2048 pixels; from API 28 ImageDecoder applies the EXIF rotation, on API 24 to 27 BitmapFactory does not. The web outputType and outputQuality are left to the app's encoding. iOS has no entry yet; the names follow the web.",
+  "accessibility": [
+    "Upload photo, Change photo, Remove photo, Save photo and Cancel are MonarchButtons with 48dp touch targets.",
+    "The crop area is named \"Photo position\", reads the zoom as its state (\"150%\") and offers the TalkBack actions Move left, Move right, Move up, Move down, Zoom in and Zoom out.",
+    "With a keyboard, the arrow keys move, plus and minus zoom, Home resets, Enter saves and Escape cancels; the crop area draws the focus ring.",
+    "Focus moves to the crop area when it opens and back to the picker button when it closes.",
+    "The zoom slider is labelled \"Zoom\" and reads the zoom as a percentage.",
+    "Errors are written as text and announced through a polite live region."
+  ],
+  "edgeCases": [
+    "The crop is clamped so the picture always covers the area; zoom is between 100% and 400%.",
+    "The picked image is kept in memory only; after a configuration change the editor closes and the person picks again.",
+    "Large photos are scaled down before cropping, so the crop is in the pixels of the scaled image.",
+    "A file the decoder cannot read shows \"The photo could not be opened.\"."
+  ],
+  "tests": [
+    "MonarchAvatarUploadTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Profile photo",
+      "fixture": "avatar-upload",
+      "webExample": "Profile photo",
+      "template": "MonarchAvatarUpload(\n    name = {{name}},\n    image = picture?.let { BitmapPainter(it) },\n    onChange = { result -> picture = result.image /* and upload it */ },\n    shape = MonarchAvatarShape.{{shape|pascal}},\n    maxSize = {{maxSize}}L,\n    onRemove = { picture = null },\n)",
+      "setupTemplate": "var picture by remember { mutableStateOf<ImageBitmap?>(null) }",
+      "setup": "var picture by remember { mutableStateOf<ImageBitmap?>(null) }",
+      "code": "MonarchAvatarUpload(\n    name = \"Alex Morgan\",\n    image = picture?.let { BitmapPainter(it) },\n    onChange = { result -> picture = result.image /* and upload it */ },\n    shape = MonarchAvatarShape.Circle,\n    maxSize = 5_242_880L,\n    onRemove = { picture = null },\n)"
+    },
+    {
+      "title": "A workspace logo, at most 5 MB",
+      "code": "MonarchAvatarUpload(\n    name = \"Rook Labs\",\n    image = null,\n    onChange = { /* upload it */ },\n    shape = MonarchAvatarShape.Square,\n    maxSize = 5L * 1024 * 1024,\n)"
+    }
+  ],
+  "webEquivalent": "AvatarUpload",
+  "dependsOn": [
+    "avatar",
+    "button",
+    "sheet"
+  ]
+}

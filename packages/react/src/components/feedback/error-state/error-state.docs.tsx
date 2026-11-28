@@ -1,5 +1,7 @@
 import { Button, ErrorState, ErrorStateBoundary } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './error-state.fixture.json';
 
 export default {
   id: 'error-state',
@@ -131,10 +133,10 @@ export default {
           stack: true,
           render: () => (
             <ErrorState
-              title="Couldn't load invoices"
-              description="Check your connection and try again."
+              title={fixture.data.title}
+              description={fixture.data.description}
               onRetry={() => {}}
-              requestId="req_7f3a91c2"
+              requestId={fixture.data.requestId}
             />
           ),
         },

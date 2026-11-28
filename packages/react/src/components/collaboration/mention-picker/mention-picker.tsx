@@ -18,6 +18,7 @@ import {
 import { useIsomorphicLayoutEffect } from '../../../internal/layout-effect.js';
 import { createPortal } from 'react-dom';
 import { cx } from '../../../internal/cx.js';
+import { useOverlayStage } from '../../../internal/overlay-stage.js';
 import { Avatar } from '../../identity/avatar/index.js';
 import { Spinner } from '../../feedback/spinner/index.js';
 
@@ -621,6 +622,9 @@ export const MentionPicker = forwardRef<HTMLDivElement, MentionPickerProps>(func
   ref,
 ) {
   const m = { ...DEFAULT_MESSAGES, ...messagesProp };
+  // In a docs preview stage the list is a picture under its field: in place, not
+  // portalled or positioned at the caret, and it never scrolls the page.
+  const staged = useOverlayStage();
   const panel = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
@@ -634,7 +638,7 @@ export const MentionPicker = forwardRef<HTMLDivElement, MentionPickerProps>(func
 
   // Below the caret, flipped above when it would leave the viewport, and kept inside it horizontally.
   useIsoLayoutEffect(() => {
-    if (!open || !anchor || !panel.current) return;
+    if (staged || !open || !anchor || !panel.current) return;
     const { offsetWidth: w, offsetHeight: h } = panel.current;
     const gap = 4;
     const vw = window.innerWidth;
@@ -643,14 +647,14 @@ export const MentionPicker = forwardRef<HTMLDivElement, MentionPickerProps>(func
     const top = below + h > vh - 8 && anchor.top - gap - h >= 8 ? anchor.top - gap - h : below;
     const left = Math.max(8, Math.min(anchor.left, vw - w - 8));
     setPosition({ top, left });
-  }, [open, anchor?.top, anchor?.left, anchor?.height, items.length, status]);
+  }, [staged, open, anchor?.top, anchor?.left, anchor?.height, items.length, status]);
 
   // Keep the highlighted option visible.
   useEffect(() => {
-    if (!open || !activeId) return;
+    if (staged || !open || !activeId) return;
     const el = document.getElementById(optionId(id, activeId));
     el?.scrollIntoView?.({ block: 'nearest' });
-  }, [open, activeId, id]);
+  }, [staged, open, activeId, id]);
 
   const announcement = !open
     ? ''
@@ -773,25 +777,36 @@ export const MentionPicker = forwardRef<HTMLDivElement, MentionPickerProps>(func
       <span role="status" aria-live="polite" className="mn-visually-hidden">
         {announcement}
       </span>
-      {open && mounted && anchor
-        ? createPortal(
-            <div
-              ref={setRefs}
-              {...rest}
-              className={cx('mn-mention-picker', className)}
-              data-status={status}
-              style={{
-                ...style,
-                top: position?.top ?? anchor.top + anchor.height + 4,
-                left: position?.left ?? anchor.left,
-                visibility: position ? undefined : 'hidden',
-              }}
-            >
-              {body}
-            </div>,
-            container ?? document.body,
-          )
-        : null}
+      {open && staged ? (
+        <div
+          ref={setRefs}
+          {...rest}
+          className={cx('mn-mention-picker', className)}
+          data-status={status}
+          data-staged=""
+          style={style}
+        >
+          {body}
+        </div>
+      ) : open && mounted && anchor ? (
+        createPortal(
+          <div
+            ref={setRefs}
+            {...rest}
+            className={cx('mn-mention-picker', className)}
+            data-status={status}
+            style={{
+              ...style,
+              top: position?.top ?? anchor.top + anchor.height + 4,
+              left: position?.left ?? anchor.left,
+              visibility: position ? undefined : 'hidden',
+            }}
+          >
+            {body}
+          </div>,
+          container ?? document.body,
+        )
+      ) : null}
     </>
   );
 });

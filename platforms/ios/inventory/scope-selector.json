@@ -1,0 +1,160 @@
+{
+  "id": "scope-selector",
+  "name": "MonarchScopeSelector",
+  "title": "ScopeSelector",
+  "family": "technical",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "DisclosureGroup(isExpanded:content:label:) with .disclosureGroupStyle(.monarch) per resource, Toggle(sources:isOn:label:) for select all and Toggle with .toggleStyle(.monarchCheckbox) per scope; a Button with buttonStyle(.monarch(.ghost)) pages the groups",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Chooses the scopes (permissions) to grant, grouped by resource such as an API, with a per-group count, select all, loading groups, paging and optional auto-selection.",
+  "whenToUse": "When creating or editing an API key, an OAuth app or an integration grant that is limited to a set of scopes.",
+  "whenNotToUse": "For a short flat list of choices use MonarchCheckboxGroup; for role-based access (viewer, editor, admin) use a Picker; for an AI assistant's permissions see ai-permission-scope.",
+  "api": [
+    "MonarchScopeSelector.init(_ label: String, selection: Binding<Set<String>>, groups: [MonarchScopeGroup], initiallyExpanded: Set<String> = [], isLabelHidden: Bool = false, isReadOnly: Bool = false, pageSize: Int = 10, autoSelect: MonarchScopeSelectorAutoSelect? = nil, labels: MonarchScopeSelectorLabels = MonarchScopeSelectorLabels())",
+    "MonarchScopeGroup.init(id: String, label: String, description: String? = nil, systemImage: String? = nil, scopes: [MonarchScopeOption], isLoading: Bool = false, emptyMessage: String? = nil)",
+    "MonarchScopeOption.init(_ value: String, label: String? = nil, description: String? = nil, isDisabled: Bool = false)",
+    "enum MonarchScopeSelectorAutoSelect { case all, added }",
+    "MonarchScopeSelectorLabels.init(empty:loading:noScopes:count:selectAll:showMore:), every parameter optional"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The visible title, such as \"Scopes\". It also names the selector for VoiceOver."
+    },
+    {
+      "name": "selection",
+      "type": "Binding<Set<String>>",
+      "default": "required",
+      "description": "The selected scope strings."
+    },
+    {
+      "name": "groups",
+      "type": "[MonarchScopeGroup]",
+      "default": "required",
+      "description": "The resources in order, each with a name, an optional description and symbol, its scopes, a loading flag and an empty message."
+    },
+    {
+      "name": "initiallyExpanded",
+      "type": "Set<String>",
+      "default": "[]",
+      "description": "The ids of the groups open at first. Pass every id to open them all."
+    },
+    {
+      "name": "isLabelHidden",
+      "type": "Bool",
+      "default": "false",
+      "description": "Hides the title; VoiceOver still reads it as the container's name."
+    },
+    {
+      "name": "isReadOnly",
+      "type": "Bool",
+      "default": "false",
+      "description": "Disables every checkbox and hides select all; the groups still open so the grant can be reviewed."
+    },
+    {
+      "name": "pageSize",
+      "type": "Int",
+      "default": "10",
+      "description": "How many groups show before \"Show 10 more of 25\", and how many each tap adds."
+    },
+    {
+      "name": "autoSelect",
+      "type": "MonarchScopeSelectorAutoSelect?",
+      "default": "nil",
+      "description": ".all selects every enabled scope of each group that loads with none selected, once per group; .added does it only for groups added after the selector appears."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchScopeSelectorLabels",
+      "default": "MonarchScopeSelectorLabels()",
+      "description": "Replacements for the empty message, Loading scopes…, No scopes available., the count, Select all and Show more."
+    }
+  ],
+  "states": [
+    {
+      "name": "collapsed",
+      "description": "A group shows its name, description and \"0 of 2 scopes\"."
+    },
+    {
+      "name": "expanded",
+      "description": "Select all (checked, mixed or clear) above the indented scope checkboxes, each with its description."
+    },
+    {
+      "name": "granted",
+      "description": "A group with selected scopes shows its count in the accent colour."
+    },
+    {
+      "name": "loading",
+      "description": "The summary reads \"Loading scopes…\" and the content is a progress indicator."
+    },
+    {
+      "name": "no scopes",
+      "description": "The summary reads \"No scopes available.\" or the group's emptyMessage, and the group has no content."
+    },
+    {
+      "name": "empty",
+      "description": "With no groups, \"There are no scopes to choose from.\""
+    },
+    {
+      "name": "read only",
+      "description": "Checkboxes are disabled and select all is hidden; groups still open."
+    },
+    {
+      "name": "paged",
+      "description": "Past pageSize, a Show 10 more of 25 button adds the next page."
+    }
+  ],
+  "appearance": "Groups are separated by dividers; names use the default text role, descriptions the muted role, scope strings the code font, and a granted group's count the accent strong role. Checkboxes use the Monarch checkbox style in every theme.",
+  "platformNotes": "The web ScopeSelector puts Select all / Clear all as a button on each group header, so a group can be granted without opening it, and moves focus to the first new group after Show more. On iOS select all is the system's Toggle(sources:) inside the open group, with the system's mixed state, and focus after paging is left to VoiceOver. The web's emptyState slot is the empty text here; use the labels to change it. Group icons are SF Symbols. Android builds the same component with the same name.",
+  "accessibility": [
+    "The selector is a container named by its label; the visible label has the header trait.",
+    "Each group header is one button that reads the name, the description, the summary (\"1 of 2 scopes\") and Expanded or Collapsed. The symbol is decorative.",
+    "Select all is a checkbox whose value is on, off or mixed.",
+    "Each scope is a checkbox read with its label, or its scope string, and its description.",
+    "A loading group's progress indicator is named \"Loading scopes…\".",
+    "Every checkbox and button has a touch target of at least 44 by 44 points and the text scales with Dynamic Type."
+  ],
+  "edgeCases": [
+    "Auto-selection runs once per group id, only after the group has loaded and only when none of its scopes is selected; clearing them later is respected.",
+    "Disabled scopes keep their state; select all skips them.",
+    "Selected values not in any group are kept in the selection.",
+    "Long API names and scope strings wrap at the largest text sizes."
+  ],
+  "tests": [
+    "MonarchScopeSelectorTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Scopes for a key",
+      "fixture": "scope-selector",
+      "webExample": "Scopes for a key",
+      "template": "MonarchScopeSelector(\n    {{label}},\n    selection: $scopes,\n    groups: [\n        MonarchScopeGroup(id: {{groups.0.id}}, label: {{groups.0.label}}, description: {{groups.0.description}}, scopes: [\n            MonarchScopeOption({{groups.0.scopes.0.value}}, description: {{groups.0.scopes.0.description}}),\n            MonarchScopeOption({{groups.0.scopes.1.value}}, description: {{groups.0.scopes.1.description}}),\n        ]),\n        MonarchScopeGroup(id: {{groups.1.id}}, label: {{groups.1.label}}, description: {{groups.1.description}}, scopes: [\n            MonarchScopeOption({{groups.1.scopes.0.value}}, description: {{groups.1.scopes.0.description}}),\n            MonarchScopeOption({{groups.1.scopes.1.value}}, description: {{groups.1.scopes.1.description}}),\n        ]),\n    ],\n    initiallyExpanded: [{{expanded}}]\n)",
+      "setupTemplate": "@State private var scopes: Set<String> = [{{selected}}]",
+      "setup": "@State private var scopes: Set<String> = [\"projects:read\"]",
+      "code": "MonarchScopeSelector(\n    \"Scopes\",\n    selection: $scopes,\n    groups: [\n        MonarchScopeGroup(id: \"projects\", label: \"Projects API\", description: \"Example Inc.\", scopes: [\n            MonarchScopeOption(\"projects:read\", description: \"List and read projects.\"),\n            MonarchScopeOption(\"projects:write\", description: \"Create, update and archive projects.\"),\n        ]),\n        MonarchScopeGroup(id: \"reports\", label: \"Reports API\", description: \"Example Inc.\", scopes: [\n            MonarchScopeOption(\"reports:read\", description: \"Read generated reports.\"),\n            MonarchScopeOption(\"reports:export\", description: \"Download reports as files.\"),\n        ]),\n    ],\n    initiallyExpanded: [\"projects\"]\n)"
+    },
+    {
+      "title": "Loading groups with auto-selection",
+      "setup": "@State private var scopes: Set<String> = []",
+      "code": "MonarchScopeSelector(\n    \"Scopes\",\n    selection: $scopes,\n    groups: [MonarchScopeGroup(id: \"projects\", label: \"Projects API\", scopes: [], isLoading: true)],\n    autoSelect: .all\n)"
+    }
+  ],
+  "webEquivalent": "ScopeSelector",
+  "dependsOn": [
+    "checkbox-group",
+    "collapsible"
+  ],
+  "icons": {
+    "group.expanded": "ChevronDownGlyph",
+    "group.collapsed": "ChevronRightGlyph",
+    "scope.selected": "CheckGlyph"
+  }
+}

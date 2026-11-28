@@ -7,7 +7,8 @@
  * instead of each one.
  *
  * The same exports are still available from `/shell`, `/patterns` and `/ai`,
- * where they are deprecated; those paths are removed in 0.15.0.
+ * where they are deprecated; those paths are removed no earlier than
+ * 2027-02-11 (90-day window).
  */
 export {
   RookRail,

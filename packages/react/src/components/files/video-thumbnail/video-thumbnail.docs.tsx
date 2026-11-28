@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { VideoThumbnail } from '@rookcom/monarch-react/data';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './video-thumbnail.fixture.json';
 
 /** A neutral poster drawn as an inline SVG data URL, so the docs load no remote media. */
 const POSTER = `data:image/svg+xml;utf8,${encodeURIComponent(
@@ -133,7 +135,11 @@ export default {
           title: 'With a poster and duration',
           render: () => (
             <div style={{ maxWidth: 320 }}>
-              <VideoThumbnail thumbnailUrl={POSTER} alt="Product overview" duration={65} />
+              <VideoThumbnail
+                thumbnailUrl={POSTER}
+                alt={fixture.data.alt}
+                duration={fixture.data.duration}
+              />
             </div>
           ),
         },

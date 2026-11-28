@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { Field, FieldDescription, FieldLabel, PhoneInput } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './phone-input.fixture.json';
 
 function ContactDemo() {
-  const [phone, setPhone] = useState<string | null>('+442079460958');
+  const [phone, setPhone] = useState<string | null>(fixture.data.value);
   return (
     <Field style={{ width: '100%', maxWidth: 420 }}>
-      <FieldLabel>Phone</FieldLabel>
-      <PhoneInput value={phone} onValueChange={setPhone} preferred={['GB', 'US', 'IN']} />
-      <FieldDescription>Stored as {phone ?? 'nothing yet'}.</FieldDescription>
+      <FieldLabel>{fixture.data.label}</FieldLabel>
+      <PhoneInput value={phone} onValueChange={setPhone} preferred={fixture.data.preferred} />
+      <FieldDescription>
+        {fixture.data.storedAs} {phone ?? fixture.data.nothingYet}.
+      </FieldDescription>
     </Field>
   );
 }

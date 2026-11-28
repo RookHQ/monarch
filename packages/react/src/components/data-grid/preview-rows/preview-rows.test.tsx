@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderToString } from 'react-dom/server';
@@ -114,5 +116,12 @@ describe('PreviewRows', () => {
     );
     expect(html).toContain('mn-preview-rows');
     expect(html).toContain('Not an email address');
+  });
+
+  it('keeps an email whole where a card field has room for it', () => {
+    // In a 620px column the card fields were ~8rem and "ana@example.com" broke mid-word.
+    const css = readFileSync(join(dirname(__filename), 'preview-rows.css'), 'utf8');
+    expect(css).toMatch(/\.mn-preview-rows__value \{[^}]*overflow-wrap: break-word/);
+    expect(css).toContain('minmax(10rem, 1fr)');
   });
 });

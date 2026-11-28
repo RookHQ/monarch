@@ -62,6 +62,9 @@ const single = mediaStore(SINGLE_QUERY);
 const drawer = mediaStore(DRAWER_QUERY);
 const serverFalse = () => false;
 
+/** Narrowest detail pane next to an inline context column; any less and the context becomes the drawer. */
+const DETAIL_MIN = 360;
+
 /* ------------------------------------------------------------------ */
 /* Context for the pane toggles                                        */
 /* ------------------------------------------------------------------ */
@@ -69,7 +72,7 @@ const serverFalse = () => false;
 export interface SplitInboxLayoutState {
   /** `single` below 768px (one pane at a time), `split` otherwise. */
   layout: 'single' | 'split';
-  /** `drawer` below 1280px (the context pane opens as a Sheet), `inline` otherwise. */
+  /** `drawer` below 1280px or when the layout is too narrow for three panes (the context pane opens as a Sheet), `inline` otherwise. */
   contextMode: 'inline' | 'drawer';
   /** Whether the context pane is showing, as a column or as the drawer. */
   contextVisible: boolean;
@@ -398,7 +401,6 @@ export const SplitInboxLayout = forwardRef<HTMLDivElement, SplitInboxLayoutProps
     const isSingle = useSyncExternalStore(single.subscribe, single.get, serverFalse);
     const isDrawer = useSyncExternalStore(drawer.subscribe, drawer.get, serverFalse);
     const layout: 'single' | 'split' = isSingle ? 'single' : 'split';
-    const contextMode: 'inline' | 'drawer' = isDrawer ? 'drawer' : 'inline';
 
     const [listSize, setListSize] = useControllable(
       listSizeProp,
@@ -420,6 +422,21 @@ export const SplitInboxLayout = forwardRef<HTMLDivElement, SplitInboxLayoutProps
       defaultContextOpen,
       onContextOpenChange,
     );
+    // The layout's own width, not only the window's: a wide window can still hold the
+    // layout in a narrow column (beside a sidebar, in a preview), where an inline context
+    // column would squeeze the detail pane to a sliver.
+    const [width, setWidth] = useState(0);
+    useEffect(() => {
+      const el = rootRef.current;
+      if (!el || typeof ResizeObserver === 'undefined') return;
+      const ro = new ResizeObserver(() => setWidth(el.clientWidth));
+      ro.observe(el);
+      setWidth(el.clientWidth);
+      return () => ro.disconnect();
+    }, []);
+    const tooNarrow =
+      width > 0 && width < (listCollapsed ? 0 : listSize) + contextSize + DETAIL_MIN;
+    const contextMode: 'inline' | 'drawer' = isDrawer || tooNarrow ? 'drawer' : 'inline';
     const [drawerOpen, setDrawerOpen] = useState(false);
     const hasContext = context !== undefined && context !== null && context !== false;
     const contextVisible = hasContext && (contextMode === 'drawer' ? drawerOpen : contextOpen);

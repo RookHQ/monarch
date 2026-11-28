@@ -1,5 +1,7 @@
-import { BackLink } from '@rookcom/monarch-react';
+import { BackLink, type BackLinkProps } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './back-link.fixture.json';
 
 export default {
   id: 'back-link',
@@ -92,9 +94,14 @@ export default {
           stack: true,
           render: () => (
             <>
-              <BackLink href="#/components/back-link">Back to domains</BackLink>
-              <BackLink href="#/components/back-link" variant="standalone">
-                All invoices
+              <BackLink href="#/components/back-link">
+                {fixture.data.links[0]?.label as string}
+              </BackLink>
+              <BackLink
+                href="#/components/back-link"
+                variant={fixture.data.links[1]?.variant as NonNullable<BackLinkProps['variant']>}
+              >
+                {fixture.data.links[1]?.label as string}
               </BackLink>
             </>
           ),

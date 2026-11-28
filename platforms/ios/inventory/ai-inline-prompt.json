@@ -1,0 +1,182 @@
+{
+  "id": "ai-inline-prompt",
+  "name": "MonarchAiInlinePrompt",
+  "title": "AiInlinePrompt",
+  "family": "intelligence",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "sheet(isPresented:) or sheet(item:) with presentationDetents([.medium, .large]) around MonarchAiPromptInput; UITextView with UITextViewDelegate.textView(_:editMenuForTextIn:suggestedActions:) for the text-menu item (MonarchAiInlinePromptTextView); contextMenu(menuItems:) for whole content (MonarchAiInlinePromptArea)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A prompt about selected text: an \"Ask AI\" item in the text selection menu (or a context menu) that opens a sheet with an excerpt of the selection, a prompt field and quick prompts.",
+  "whenToUse": "In documents, emails or notes where AI rewrites what the person selected, opened from the text menu, a long press, or a visible button such as \"Edit paragraph with AI\".",
+  "whenNotToUse": "For an open-ended conversation, use MonarchAiPromptInput in an assistant screen. For suggesting the value of one form field, use MonarchAiAutofillField. For completing text as it is typed, use MonarchAiGhostText.",
+  "api": [
+    "public struct MonarchAiInlinePrompt: View { public init(context: String? = nil, suggestions: [String] = [], initialValue: String = \"\", closesOnSubmit: Bool = true, isPending: Bool = false, labels: MonarchAiInlinePromptLabels = MonarchAiInlinePromptLabels(), onSubmit: @escaping @MainActor (String) -> Void) }",
+    "public struct MonarchAiInlinePromptTextView: View { public init(_ title: String, text: Binding<String>, isEditable: Bool = true, isEnabled: Bool = true, label: String? = nil, onAskAi: @escaping @MainActor (String) -> Void) }",
+    "public struct MonarchAiInlinePromptArea<Content: View>: View { public init(isEnabled: Bool = true, label: String? = nil, onAskAi: @escaping @MainActor () -> Void, @ViewBuilder content: () -> Content) }",
+    "public struct MonarchAiInlinePromptLabels: Sendable, Hashable { public init(label: String? = nil, placeholder: String? = nil, inputLabel: String? = nil, submit: String? = nil, context: String? = nil, suggestions: String? = nil, pending: String? = nil, cancel: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "context",
+      "type": "String?",
+      "default": "nil",
+      "description": "What the prompt acts on, usually the selected text. Shown as an excerpt of at most 140 characters under the label \"Selection\"."
+    },
+    {
+      "name": "suggestions",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Quick prompts such as \"Shorten\". Tapping one sends it at once."
+    },
+    {
+      "name": "initialValue",
+      "type": "String",
+      "default": "\"\"",
+      "description": "The text the field starts with each time the sheet is shown."
+    },
+    {
+      "name": "closesOnSubmit",
+      "type": "Bool",
+      "default": "true",
+      "description": "Dismisses the sheet after sending. Off, the sheet stays and the field is cleared."
+    },
+    {
+      "name": "isPending",
+      "type": "Bool",
+      "default": "false",
+      "description": "A request is being sent: the field, Send and the quick prompts are disabled and \"Sending…\" is shown and announced."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchAiInlinePromptLabels",
+      "default": "MonarchAiInlinePromptLabels()",
+      "description": "Replacements for the built-in strings: label, placeholder, inputLabel, submit, context, suggestions, pending, cancel."
+    },
+    {
+      "name": "onSubmit",
+      "type": "@MainActor (String) -> Void",
+      "default": "required",
+      "description": "Receives the trimmed prompt or the tapped quick prompt. Never called with blank text or while pending."
+    },
+    {
+      "name": "MonarchAiInlinePromptTextView title, text",
+      "type": "String, Binding<String>",
+      "default": "required",
+      "description": "The spoken name and the text of a UITextView whose text menu gets \"Ask AI\" while text is selected."
+    },
+    {
+      "name": "MonarchAiInlinePromptTextView isEditable",
+      "type": "Bool",
+      "default": "true",
+      "description": "Off, the text can be selected but not edited."
+    },
+    {
+      "name": "MonarchAiInlinePromptTextView / Area isEnabled",
+      "type": "Bool",
+      "default": "true",
+      "description": "Off, the menu item and the VoiceOver action are not added."
+    },
+    {
+      "name": "MonarchAiInlinePromptTextView / Area label",
+      "type": "String?",
+      "default": "nil",
+      "description": "The menu item's title; the built-in \"Ask AI\" without it."
+    },
+    {
+      "name": "MonarchAiInlinePromptTextView onAskAi",
+      "type": "@MainActor (String) -> Void",
+      "default": "required",
+      "description": "Receives the selected text when \"Ask AI\" is chosen. Present the sheet."
+    },
+    {
+      "name": "MonarchAiInlinePromptArea onAskAi, content",
+      "type": "@MainActor () -> Void, @ViewBuilder () -> Content",
+      "default": "required",
+      "description": "Adds \"Ask AI\" to the context menu of the content; the app passes the context itself."
+    }
+  ],
+  "states": [
+    {
+      "name": "open",
+      "description": "The sheet opens at the medium detent with the drag indicator and can be pulled to large; the keyboard raises it."
+    },
+    {
+      "name": "empty",
+      "description": "Send is disabled until the field holds text (MonarchAiPromptInput)."
+    },
+    {
+      "name": "with context",
+      "description": "An excerpt box with the subtle AI fill and AI border shows \"Selection\" and the first 140 characters of the context, cut with an ellipsis."
+    },
+    {
+      "name": "pending",
+      "description": "The field, Send and the quick prompts are disabled and \"Sending…\" with a spinner appears under them."
+    },
+    {
+      "name": "closed",
+      "description": "After sending (with closesOnSubmit), Cancel, a swipe down or the VoiceOver escape gesture, the sheet is dismissed."
+    },
+    {
+      "name": "text menu",
+      "description": "In MonarchAiInlinePromptTextView, \"Ask AI\" follows the system's items in the edit menu only while text is selected; the caret menu is unchanged."
+    }
+  ],
+  "appearance": "The sheet uses the surface fill. The excerpt sits in a box with the subtle AI fill and the AI border role, its label in the strong AI colour and the excerpt in muted text. The prompt box and Send come from MonarchAiPromptInput; quick prompts and Cancel are small ghost MonarchButtons. The text view draws its text in the default text role (disabled role when disabled). Dark and both high-contrast themes swap the same roles.",
+  "platformNotes": "The web shows a floating popover anchored to the selection rectangle. iOS, like Android, has no floating panel for a selection; the platform pattern is an item in the system text edit menu plus a sheet. SwiftUI on iOS 17 has no public hook for the text edit menu and does not report the selection of TextEditor or of Text with textSelection, so MonarchAiInlinePromptTextView is a UITextView whose delegate adds the item through textView(_:editMenuForTextIn:suggestedActions:) and passes the selected text (Android's TextFieldState overload). For other content MonarchAiInlinePromptArea uses the SwiftUI context menu (a long press), and the app passes the context, as Android's SelectionContainer overload does. The sheet is MonarchAiInlinePrompt, presented by the app with .sheet(isPresented:) or .sheet(item:); Android's onDismissRequest is SwiftUI's dismiss and the sheet's binding, and Android's closeOnSubmit and pending are closesOnSubmit and isPending. iOS opens at the medium detent, which suits a short prompt, where Android opens fully expanded. A Cancel button is added because iOS sheets offer a visible way out. There is no anchor, side, align or returnFocusTo: the system returns focus when the sheet closes. The keyboard hint line of the web is left out; a hardware keyboard sends with Return as in MonarchAiPromptInput. Android's sendIcon is not needed: MonarchAiPromptInput shows its own SF Symbol. The prompt field does not take focus when the sheet opens, because MonarchAiPromptInput keeps its focus state private; the web and Android focus it.",
+  "accessibility": [
+    "The sheet's title \"Ask AI\" is a header.",
+    "The prompt field is named \"Prompt\" (labels.inputLabel).",
+    "The excerpt is one VoiceOver element read as \"Selection, \" followed by the excerpt.",
+    "The quick prompts are a container named \"Suggestions\"; each is a button with a 44-point touch target.",
+    "While pending, \"Sending…\" is announced once, and the field, Send and the quick prompts are disabled.",
+    "In MonarchAiInlinePromptTextView, \"Ask AI\" is a regular item of the system edit menu, built from the same suggested actions as Cut, Copy and Paste; the text view is named by its title and, while its text is not blank, has an \"Ask AI\" VoiceOver action that passes the selection or, without one, the whole text.",
+    "In MonarchAiInlinePromptArea, the context menu is reached from the VoiceOver actions, and \"Ask AI\" is also a named accessibility action of the content.",
+    "The sheet keeps the system's VoiceOver escape gesture and drag indicator."
+  ],
+  "edgeCases": [
+    "A blank prompt or quick prompt is never sent; the prompt is trimmed before onSubmit.",
+    "Context longer than 140 characters is cut at a character boundary with trailing spaces removed and an ellipsis added; blank context shows no excerpt.",
+    "The edit menu may move \"Ask AI\" behind its forward arrow when there is no room after the system's items.",
+    "The text view adds nothing while only a caret is placed, so the caret menu (Paste, Select) is unchanged; a selection of only spaces adds nothing.",
+    "Do not combine MonarchAiInlinePromptArea with .textSelection(.enabled) on the same text: both use the long press.",
+    "Long prompts grow the field up to eight lines and then scroll inside it.",
+    "On the macOS host build, which exists only for tests, the text view is a TextEditor whose context menu passes the whole text."
+  ],
+  "tests": [
+    "MonarchAiInlinePromptTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Over a selection (select text, or use the button)",
+      "fixture": "ai-inline-prompt",
+      "webExample": "Over a selection (select text, or use the button)",
+      "template": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n    Text({{paragraph}})\n    MonarchButton({{button}}, variant: .secondary, size: .sm) {}\n    MonarchAiInlinePrompt(\n        context: {{paragraph}},\n        suggestions: [{{suggestions.0}}, {{suggestions.1}}, {{suggestions.2}}]\n    ) { _ in }\n    .monarchAiPopoverCard()\n}",
+      "code": "VStack(alignment: .leading, spacing: MonarchTokens.Space.space3) {\n    Text(\"The team shipped the new onboarding flow in March. Early numbers suggest more people finish setup on their first visit, although the sample is still small and support tickets have not changed much yet.\")\n    MonarchButton(\"Edit paragraph with AI\", variant: .secondary, size: .sm) {}\n    MonarchAiInlinePrompt(\n        context: \"The team shipped the new onboarding flow in March. Early numbers suggest more people finish setup on their first visit, although the sample is still small and support tickets have not changed much yet.\",\n        suggestions: [\"Shorten\", \"Make it more formal\", \"Fix spelling and grammar\"]\n    ) { _ in }\n    .monarchAiPopoverCard()\n}"
+    },
+    {
+      "title": "From a long press or a button",
+      "setup": "@State private var isAsking = false\nprivate let paragraph = \"Early numbers suggest more people finish setup on their first visit.\"",
+      "code": "VStack(alignment: .leading) {\n    MonarchAiInlinePromptArea(onAskAi: { isAsking = true }, content: {\n        Text(paragraph).monarchTextStyle(.body)\n    })\n    MonarchButton(\"Edit paragraph with AI\", systemImage: \"text.bubble\", size: .sm) {\n        isAsking = true\n    }\n}\n.sheet(isPresented: $isAsking) {\n    MonarchAiInlinePrompt(context: paragraph, closesOnSubmit: false) { _ in }\n}"
+    },
+    {
+      "title": "The sheet's content while sending",
+      "code": "MonarchAiInlinePrompt(\n    context: \"Early numbers suggest more people finish setup on their first visit.\",\n    suggestions: [\"Shorten\"],\n    initialValue: \"Make it friendlier\",\n    isPending: true\n) { _ in }"
+    }
+  ],
+  "webEquivalent": "AiInlinePrompt",
+  "dependsOn": [
+    "ai-prompt-input",
+    "sheet",
+    "button",
+    "inline"
+  ],
+  "icons": {
+    "glyph": "BotGlyph"
+  }
+}

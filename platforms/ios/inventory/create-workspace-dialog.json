@@ -1,0 +1,80 @@
+{
+  "id": "create-workspace-dialog",
+  "name": null,
+  "title": "CreateWorkspaceDialog",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:) with a NavigationStack, a ScrollView around the workspace onboarding form, a cancellation ToolbarItem and interactiveDismissDisabled(_:)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: a sheet titled \"Create new workspace\" around the workspace onboarding form, which cannot be dismissed while the workspace is being created and closes when it is created.",
+  "whenToUse": "To create another workspace from inside the app, for example from the workspace switcher or an empty state.",
+  "whenNotToUse": "For the very first workspace in the first-run flow, show the workspace onboarding form as a full screen instead. For renaming or editing a workspace, use a settings Form.",
+  "api": [
+    "MonarchButton(\"New workspace\") { isPresented = true }.sheet(isPresented: $isPresented) { NavigationStack { ScrollView { <workspace onboarding form> }.navigationTitle(\"Create new workspace\").toolbar { ToolbarItem(placement: .cancellationAction) { Button(\"Cancel\") { … }.disabled(isCreating) } } }.interactiveDismissDisabled(isCreating) }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "closed",
+      "description": "Only the button that opens the sheet."
+    },
+    {
+      "name": "open",
+      "description": "The sheet with the title in the navigation bar, Cancel at the leading edge, and the name, username and type fields."
+    },
+    {
+      "name": "invalid",
+      "description": "Each field shows its own error after a submit, as in the workspace onboarding form."
+    },
+    {
+      "name": "creating",
+      "description": "The submit button shows progress; Cancel is disabled and the sheet cannot be swiped down."
+    },
+    {
+      "name": "created",
+      "description": "The app sets isPresented to false and the sheet closes."
+    }
+  ],
+  "appearance": "The system sheet and navigation bar; the fields and the primary button keep their Monarch look.",
+  "platformNotes": "The web ships CreateWorkspaceDialog as one component around WorkspaceOnboardingForm with onSubmit, checkUsername, rules, closeOnSuccess and messages props. On iOS it is a recipe: a sheet is the system's modal surface, Cancel goes in the navigation bar's cancellation slot, and interactiveDismissDisabled replaces the web's \"cannot be dismissed while busy\". Validation, the availability lookup and the creation call stay in the app's view, as in the workspace onboarding form recipe. On iPad the sheet is a centred form sheet.",
+  "accessibility": [
+    "The sheet is modal for VoiceOver; the navigation title is read first.",
+    "Cancel is in the standard place and reached with the escape gesture (two-finger scrub) while it is enabled.",
+    "Each field keeps its own label, helper and error; the submit button reports its loading state."
+  ],
+  "edgeCases": [
+    "A swipe down while creating does nothing, and Cancel is disabled until creation ends.",
+    "If creation fails, keep the sheet open and show the reason, for example with MonarchInlineNotice above the button.",
+    "At the largest text sizes the form scrolls inside the sheet."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "From a workspace switcher",
+      "fixture": "create-workspace-dialog",
+      "webExample": "From a workspace switcher",
+      "template": "MonarchButton({{trigger}}, variant: .primary) { isPresented = true }\n    .sheet(isPresented: $isPresented) {\n        NavigationStack {\n            ScrollView {\n                VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                    MonarchTextField({{name.label}}, text: $name, prompt: {{name.value}}, error: nameError, isRequired: true)\n                    MonarchUsernameAvailabilityInput(\n                        {{username.label}},\n                        text: $username,\n                        prompt: {{username.prompt}},\n                        helper: {{username.helper}},\n                        prefix: {{username.prefix}},\n                        isRequired: true,\n                        onStatusChange: { status, _ in usernameStatus = status },\n                        validate: { handle in await Self.checkUsername(handle) }\n                    )\n                    MonarchRadioCardGroup(\n                        {{type.label}},\n                        selection: $type,\n                        options: [\n                            MonarchRadioCardOption({{type.options.0.id}}, title: {{type.options.0.title}}, description: {{type.options.0.description}}, systemImage: \"person\"),\n                            MonarchRadioCardOption({{type.options.1.id}}, title: {{type.options.1.title}}, description: {{type.options.1.description}}, systemImage: \"building.2\"),\n                        ],\n                        columns: 2,\n                        compactColumns: 2\n                    )\n                    MonarchButton({{submit}}, variant: .primary, isLoading: isCreating, fullWidth: true) {\n                        hasSubmitted = true\n                        guard nameError == nil, type != nil, usernameStatus == .valid else { return }\n                        isCreating = true\n                        // Create the workspace, then set isCreating to false and isPresented to false.\n                    }\n                }\n                .monarchHelperAbove()\n                .padding(theme.spacing.space4)\n            }\n            .navigationTitle({{title}})\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button({{cancel}}) { isPresented = false }\n                        .disabled(isCreating)\n                }\n            }\n        }\n        .interactiveDismissDisabled(isCreating)\n    }",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var isPresented = false\n@State private var name = {{name.value}}\n@State private var username = \"\"\n@State private var type: String? = {{type.value}}\n@State private var usernameStatus = MonarchUsernameAvailabilityStatus.idle\n@State private var hasSubmitted = false\n@State private var isCreating = false\n\nprivate var nameError: String? {\n    let count = name.trimmingCharacters(in: .whitespacesAndNewlines).count\n    guard hasSubmitted || count > 0 else { return nil }\n    if count < 4 { return \"Name must be at least 4 characters\" }\n    if count > 25 { return \"Name must be at most 25 characters\" }\n    return nil\n}\n\nnonisolated private static func checkUsername(_ handle: String) async -> MonarchUsernameAvailabilityResult? {\n    guard !handle.isEmpty else { return nil }\n    // Call the product's availability lookup here.\n    return handle.lowercased() == {{username.taken}}\n        ? MonarchUsernameAvailabilityResult(isValid: false, message: {{username.takenMessage}})\n        : MonarchUsernameAvailabilityResult(isValid: true)\n}",
+      "previewPresented": [
+        "isPresented"
+      ],
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var isPresented = false\n@State private var name = \"Acme Inc.\"\n@State private var username = \"\"\n@State private var type: String? = \"business\"\n@State private var usernameStatus = MonarchUsernameAvailabilityStatus.idle\n@State private var hasSubmitted = false\n@State private var isCreating = false\n\nprivate var nameError: String? {\n    let count = name.trimmingCharacters(in: .whitespacesAndNewlines).count\n    guard hasSubmitted || count > 0 else { return nil }\n    if count < 4 { return \"Name must be at least 4 characters\" }\n    if count > 25 { return \"Name must be at most 25 characters\" }\n    return nil\n}\n\nnonisolated private static func checkUsername(_ handle: String) async -> MonarchUsernameAvailabilityResult? {\n    guard !handle.isEmpty else { return nil }\n    // Call the product's availability lookup here.\n    return handle.lowercased() == \"acmeinc\"\n        ? MonarchUsernameAvailabilityResult(isValid: false, message: \"That username is taken\")\n        : MonarchUsernameAvailabilityResult(isValid: true)\n}",
+      "code": "MonarchButton(\"Create workspace\", variant: .primary) { isPresented = true }\n    .sheet(isPresented: $isPresented) {\n        NavigationStack {\n            ScrollView {\n                VStack(alignment: .leading, spacing: theme.spacing.space4) {\n                    MonarchTextField(\"Workspace name\", text: $name, prompt: \"Acme Inc.\", error: nameError, isRequired: true)\n                    MonarchUsernameAvailabilityInput(\n                        \"Workspace username\",\n                        text: $username,\n                        prompt: \"acme\",\n                        helper: \"Letters and numbers only, 5 to 30 characters.\",\n                        prefix: \"@\",\n                        isRequired: true,\n                        onStatusChange: { status, _ in usernameStatus = status },\n                        validate: { handle in await Self.checkUsername(handle) }\n                    )\n                    MonarchRadioCardGroup(\n                        \"Type\",\n                        selection: $type,\n                        options: [\n                            MonarchRadioCardOption(\"creator\", title: \"Creator\", description: \"For individual creators and personal projects\", systemImage: \"person\"),\n                            MonarchRadioCardOption(\"business\", title: \"Business\", description: \"For teams and companies\", systemImage: \"building.2\"),\n                        ],\n                        columns: 2,\n                        compactColumns: 2\n                    )\n                    MonarchButton(\"Create workspace\", variant: .primary, isLoading: isCreating, fullWidth: true) {\n                        hasSubmitted = true\n                        guard nameError == nil, type != nil, usernameStatus == .valid else { return }\n                        isCreating = true\n                        // Create the workspace, then set isCreating to false and isPresented to false.\n                    }\n                }\n                .monarchHelperAbove()\n                .padding(theme.spacing.space4)\n            }\n            .navigationTitle(\"Create new workspace\")\n            .toolbar {\n                ToolbarItem(placement: .cancellationAction) {\n                    Button(\"Cancel\") { isPresented = false }\n                        .disabled(isCreating)\n                }\n            }\n        }\n        .interactiveDismissDisabled(isCreating)\n    }"
+    }
+  ],
+  "webEquivalent": "CreateWorkspaceDialog",
+  "dependsOn": [
+    "sheet",
+    "workspace-onboarding-form",
+    "text-field",
+    "username-availability-input",
+    "radio-card-group",
+    "button"
+  ]
+}

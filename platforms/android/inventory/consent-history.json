@@ -1,0 +1,154 @@
+{
+  "id": "consent-history",
+  "name": "MonarchConsentHistory",
+  "title": "ConsentHistory",
+  "family": "identity",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.foundation.layout.Column of bordered records with androidx.compose.material3.Text, android.icu.text.DateFormat and android.text.format.DateUtils.getRelativeTimeSpanString, MonarchEmptyState and MonarchButton",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A person's recorded consent decisions, newest first: when, how, which policy version and rules applied, and each category allowed or not.",
+  "whenToUse": "On a privacy screen where people see what they agreed to, or in an admin view of one person's consent.",
+  "whenNotToUse": "To ask for consent or change it, use a consent preferences sheet or MonarchMarketingConsentCheckbox. For permissions the system grants, such as notifications or location, use the system permission request.",
+  "api": [
+    "@Composable fun MonarchConsentHistory(records: List<MonarchConsentRecord>, modifier: Modifier = Modifier, categories: List<MonarchConsentCategory> = emptyList(), title: String? = null, description: String? = null, showRelativeTime: Boolean = false, formatDate: ((Long) -> String)? = null, exportTitle: String? = null, onExport: (suspend () -> Unit)? = null, labels: MonarchConsentHistoryLabels = MonarchConsentHistoryLabels())",
+    "class MonarchConsentRecord(id: String, dateMillis: Long, method: MonarchConsentMethod, policyVersion: String, regime: MonarchConsentRegime, categories: Map<String, Boolean>, globalPrivacyControl: Boolean = false)",
+    "enum class MonarchConsentMethod { AcceptAll, RejectAll, Custom, GlobalPrivacyControl, Acknowledged, Withdrawn }",
+    "enum class MonarchConsentRegime { OptIn, OptOut, Notice }",
+    "class MonarchConsentCategory(id: String, label: String)",
+    "class MonarchConsentHistoryLabels(method: ((MonarchConsentMethod) -> String)? = null, regime: ((MonarchConsentRegime) -> String)? = null, methodTitle: String? = null, policyVersionTitle: String? = null, regimeTitle: String? = null, categoriesTitle: String? = null, allowed: String? = null, denied: String? = null, signalPresent: String? = null, emptyTitle: String? = null, emptyMessage: String? = null, exportFailed: String? = null)"
+  ],
+  "options": [
+    {
+      "name": "records",
+      "type": "List<MonarchConsentRecord>",
+      "default": "required",
+      "description": "The decisions, in any order; shown newest first."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the history."
+    },
+    {
+      "name": "categories",
+      "type": "List<MonarchConsentCategory>",
+      "default": "emptyList()",
+      "description": "The product's categories, for their names and order. Ids in a record that are not listed are shown as the raw id, after the listed ones, sorted."
+    },
+    {
+      "name": "title",
+      "type": "String?",
+      "default": "null",
+      "description": "The heading; \"Consent history\" when null."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "null",
+      "description": "A sentence under the heading."
+    },
+    {
+      "name": "showRelativeTime",
+      "type": "Boolean",
+      "default": "false",
+      "description": "Also shows how long ago each decision was (\"3 days ago\"), updated every minute."
+    },
+    {
+      "name": "formatDate",
+      "type": "((Long) -> String)?",
+      "default": "null",
+      "description": "Formats each decision's date. By default a medium date and short time in the configuration's locale and the device's time zone."
+    },
+    {
+      "name": "exportTitle",
+      "type": "String?",
+      "default": "null",
+      "description": "The title of the download button; name the format. \"Download history\" when null."
+    },
+    {
+      "name": "onExport",
+      "type": "(suspend () -> Unit)?",
+      "default": "null",
+      "description": "Builds and shares the file, for example with a CreateDocument launcher or a share sheet. The button shows while there are records and is busy while this runs; throwing shows the export failure."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchConsentHistoryLabels",
+      "default": "MonarchConsentHistoryLabels()",
+      "description": "Replacements for the methods, regimes, line names, Allowed and Not allowed, the signal note, the empty state and the export failure."
+    }
+  ],
+  "states": [
+    {
+      "name": "records",
+      "description": "One bordered record per decision on the surface color."
+    },
+    {
+      "name": "empty",
+      "description": "A small MonarchEmptyState and no download button."
+    },
+    {
+      "name": "exporting",
+      "description": "The download button shows its progress indicator, reads \"Loading\" and ignores taps."
+    },
+    {
+      "name": "export failed",
+      "description": "\"The download did not start. Try again.\" in the danger strong color under the header, announced; the button can be used again."
+    }
+  ],
+  "appearance": "Records use the surface color, a subtle border and 12dp corners. Dates use the strong body style; line names the caption style in the muted color; values the body style. Allowed categories have \"Allowed\" in the success strong color, refused ones \"Not allowed\" in the muted color. All are theme roles, so light, dark and both high-contrast themes follow.",
+  "platformNotes": "The parity map names a LazyColumn; the records are a plain Column instead, because a consent history is short and sits inside a scrolling screen, where a LazyColumn without a fixed height cannot be measured. The web shows a table on wide containers and stacked cards below 640 points; Android always shows the stacked records, as iOS does. Dates are epoch milliseconds; the web's locale and timeZone props and iOS's dateFormat are replaced by formatDate, and relative times follow the system clock. The web's headingLevel has no Android equivalent: the title and dates have the heading semantics. The categories show their state in words without the iOS check and cross symbols, because Monarch bundles no icons. onExport is a suspend function; a failure always shows the exportFailed text. The record types are defined here because the consent manager is not built on Android; a later consent preferences component should use them. The parity map lists badge as a dependency; the method is plain text, as on the web and iOS.",
+  "accessibility": [
+    "The title and each decision's date are headings, so TalkBack's heading navigation moves between decisions.",
+    "Each line is one element read as its name, value and any note (\"Choice, Custom choice, Browser privacy signal present\").",
+    "Each category is one element read as its name and \"Allowed\" or \"Not allowed\", so the state does not depend on color.",
+    "The download button is a MonarchButton with a 48dp touch target and a busy state while exporting.",
+    "The export failure is announced through a polite live region."
+  ],
+  "edgeCases": [
+    "Records with the same date keep the order they were given in.",
+    "A record with no categories shows no categories list.",
+    "The relative time is static text refreshed every minute, not a ticking clock.",
+    "Long policy versions and category names wrap."
+  ],
+  "tests": [
+    "MonarchConsentHistoryTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Privacy page, with labels from the categories",
+      "fixture": "consent-history",
+      "webExample": "Privacy page, with labels from the categories",
+      "template": "MonarchConsentHistory(\n    records = records,\n    title = {{title}},\n    categories = listOf(\n        MonarchConsentCategory({{categories.0.id}}, {{categories.0.label}}),\n        MonarchConsentCategory({{categories.1.id}}, {{categories.1.label}}),\n        MonarchConsentCategory({{categories.2.id}}, {{categories.2.label}}),\n        MonarchConsentCategory({{categories.3.id}}, {{categories.3.label}}),\n    ),\n    description = {{description}},\n    formatDate = formatDate,\n    allowedIcon = { MonarchIcon(SampleIcons.Check, contentDescription = null, size = MonarchIconSize.Sm) },\n    deniedIcon = { MonarchIcon(SampleIcons.Close, contentDescription = null, size = MonarchIconSize.Sm) },\n)",
+      "setupTemplate": "val records = listOf(\n        MonarchConsentRecord(\n            id = {{records.0.id}},\n            dateMillis = {{records.0.at|millis}},\n            method = MonarchConsentMethod.{{records.0.method|pascal}},\n            policyVersion = {{records.0.policyVersion}},\n            regime = MonarchConsentRegime.{{records.0.regime|pascal}},\n            categories = mapOf(\"necessary\" to {{records.0.categories.necessary}}, \"preferences\" to {{records.0.categories.preferences}}, \"analytics\" to {{records.0.categories.analytics}}, \"marketing\" to {{records.0.categories.marketing}}),\n            globalPrivacyControl = {{records.0.gpc}},\n        ),\n        MonarchConsentRecord(\n            id = {{records.1.id}},\n            dateMillis = {{records.1.at|millis}},\n            method = MonarchConsentMethod.{{records.1.method|pascal}},\n            policyVersion = {{records.1.policyVersion}},\n            regime = MonarchConsentRegime.{{records.1.regime|pascal}},\n            categories = mapOf(\"necessary\" to {{records.1.categories.necessary}}, \"preferences\" to {{records.1.categories.preferences}}, \"analytics\" to {{records.1.categories.analytics}}, \"marketing\" to {{records.1.categories.marketing}}),\n            globalPrivacyControl = {{records.1.gpc}},\n        ),\n        MonarchConsentRecord(\n            id = {{records.2.id}},\n            dateMillis = {{records.2.at|millis}},\n            method = MonarchConsentMethod.{{records.2.method|pascal}},\n            policyVersion = {{records.2.policyVersion}},\n            regime = MonarchConsentRegime.{{records.2.regime|pascal}},\n            categories = mapOf(\"necessary\" to {{records.2.categories.necessary}}, \"preferences\" to {{records.2.categories.preferences}}, \"analytics\" to {{records.2.categories.analytics}}, \"marketing\" to {{records.2.categories.marketing}}),\n            globalPrivacyControl = {{records.2.gpc}},\n        ),\n)\nval formatDate = remember {\n    { millis: Long ->\n        SimpleDateFormat(\"d MMM yyyy, HH:mm\", Locale.forLanguageTag({{locale}})).apply {\n            timeZone = TimeZone.getTimeZone({{timeZone}})\n        }.format(Date(millis))\n    }\n}",
+      "imports": [
+        "java.text.SimpleDateFormat",
+        "java.util.Date",
+        "java.util.Locale",
+        "java.util.TimeZone",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "com.rookhq.monarch.foundation.icon.MonarchIcon",
+        "com.rookhq.monarch.foundation.icon.MonarchIconSize"
+      ],
+      "setup": "val records = listOf(\n        MonarchConsentRecord(\n            id = \"c-3\",\n            dateMillis = 1_776_501_720_000L,\n            method = MonarchConsentMethod.Custom,\n            policyVersion = \"2026-04\",\n            regime = MonarchConsentRegime.OptIn,\n            categories = mapOf(\"necessary\" to true, \"preferences\" to true, \"analytics\" to true, \"marketing\" to false),\n            globalPrivacyControl = false,\n        ),\n        MonarchConsentRecord(\n            id = \"c-2\",\n            dateMillis = 1_770_135_000_000L,\n            method = MonarchConsentMethod.AcceptAll,\n            policyVersion = \"2026-01\",\n            regime = MonarchConsentRegime.OptIn,\n            categories = mapOf(\"necessary\" to true, \"preferences\" to true, \"analytics\" to true, \"marketing\" to true),\n            globalPrivacyControl = false,\n        ),\n        MonarchConsentRecord(\n            id = \"c-1\",\n            dateMillis = 1_768_212_300_000L,\n            method = MonarchConsentMethod.RejectAll,\n            policyVersion = \"2026-01\",\n            regime = MonarchConsentRegime.OptIn,\n            categories = mapOf(\"necessary\" to true, \"preferences\" to false, \"analytics\" to false, \"marketing\" to false),\n            globalPrivacyControl = false,\n        ),\n)\nval formatDate = remember {\n    { millis: Long ->\n        SimpleDateFormat(\"d MMM yyyy, HH:mm\", Locale.forLanguageTag(\"en-GB\")).apply {\n            timeZone = TimeZone.getTimeZone(\"UTC\")\n        }.format(Date(millis))\n    }\n}",
+      "code": "MonarchConsentHistory(\n    records = records,\n    title = \"Consent history\",\n    categories = listOf(\n        MonarchConsentCategory(\"necessary\", \"Strictly necessary\"),\n        MonarchConsentCategory(\"preferences\", \"Preferences\"),\n        MonarchConsentCategory(\"analytics\", \"Analytics\"),\n        MonarchConsentCategory(\"marketing\", \"Marketing\"),\n    ),\n    description = \"Every choice you made about cookies and similar storage.\",\n    formatDate = formatDate,\n    allowedIcon = { MonarchIcon(SampleIcons.Check, contentDescription = null, size = MonarchIconSize.Sm) },\n    deniedIcon = { MonarchIcon(SampleIcons.Close, contentDescription = null, size = MonarchIconSize.Sm) },\n)"
+    }
+  ],
+  "webEquivalent": "ConsentHistory",
+  "dependsOn": [
+    "relative-time",
+    "badge"
+  ],
+  "icons": {
+    "allowed": "CheckGlyph",
+    "denied": "CloseGlyph"
+  }
+}

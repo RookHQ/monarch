@@ -1,0 +1,197 @@
+{
+  "id": "activity-timeline",
+  "name": "MonarchActivityTimeline",
+  "title": "ActivityTimeline",
+  "family": "collaboration",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "VStack of day sections (a header Text per day) and event rows with a drawn line; DisclosureGroup with .disclosureGroupStyle(.monarch) for details; TimelineView(.everyMinute) for relative times; MonarchAvatar, MonarchTag, MonarchLoadMore, MonarchEmptyState and MonarchInlineErrorRetry",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A vertical feed of events (actor, verb, object, time and a marker) grouped by day, with expandable details and Load more.",
+  "whenToUse": "For a record's history, an audit trail in context, or project activity: who did what, to what, and when, newest first.",
+  "whenNotToUse": "For a conversation people reply in, use a comment thread. For a searchable, filterable audit log of a whole workspace, use a table. For the steps of a process, use MonarchStepper or MonarchStageJourney.",
+  "api": [
+    "MonarchActivityTimeline.init(_ events: [MonarchActivityTimelineEvent], isGroupedByDay: Bool = true, marker: MonarchActivityTimelineMarker = .dot, density: MonarchActivityTimelineDensity = .regular, expandedIDs: Binding<Set<String>>? = nil, isLoading: Bool = false, isFailed: Bool = false, hasMore: Bool = false, isLoadingMore: Bool = false, isLoadMoreFailed: Bool = false, now: Date? = nil, labels: MonarchActivityTimelineLabels = MonarchActivityTimelineLabels(), onRetry: (@MainActor () -> Void)? = nil, onLoadMore: (@MainActor () -> Void)? = nil)",
+    "MonarchActivityTimelineEvent.init(id: String, actor: MonarchActivityTimelineActor? = nil, verb: String, object: String? = nil, time: Date, systemImage: String? = nil, tone: MonarchTone = .neutral, tags: [String] = [], body: String? = nil, details: String? = nil)",
+    "MonarchActivityTimelineEvent.init(id: String, actor: MonarchActivityTimelineActor? = nil, verb: String, object: String?, link: String?, time: Date, systemImage: String? = nil, tone: MonarchTone = .neutral, tags: [String] = [], body: String? = nil, details: String? = nil)",
+    "MonarchActivityTimelineActor.init(_ name: String, avatarURL: URL? = nil, kind: MonarchActivityTimelineActorKind = .person, seed: String? = nil)",
+    "enum MonarchActivityTimelineActorKind { case person, automation, system }",
+    "enum MonarchActivityTimelineMarker { case dot, avatar }",
+    "enum MonarchActivityTimelineDensity { case regular, compact }",
+    "MonarchActivityTimelineLabels.init(list: String? = nil, today: String? = nil, yesterday: String? = nil, automated: String? = nil, details: String? = nil, empty: String? = nil, loading: String? = nil, error: String? = nil)"
+  ],
+  "options": [
+    {
+      "name": "events",
+      "type": "[MonarchActivityTimelineEvent]",
+      "default": "required",
+      "description": "The events, newest first or oldest first; the order is kept. The app filters them; put filter controls above the timeline."
+    },
+    {
+      "name": "isGroupedByDay",
+      "type": "Bool",
+      "default": "true",
+      "description": "Groups events under Today, Yesterday and dates, in the environment's calendar and time zone."
+    },
+    {
+      "name": "marker",
+      "type": "MonarchActivityTimelineMarker",
+      "default": ".dot",
+      "description": "A dot in the event's tone, or the actor's avatar. An event's systemImage always wins."
+    },
+    {
+      "name": "density",
+      "type": "MonarchActivityTimelineDensity",
+      "default": ".regular",
+      "description": "Regular, or compact for side panels."
+    },
+    {
+      "name": "expandedIDs",
+      "type": "Binding<Set<String>>?",
+      "default": "nil",
+      "description": "The ids of events whose details are open. Kept inside when nil."
+    },
+    {
+      "name": "isLoading",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows three placeholder rows for the first page."
+    },
+    {
+      "name": "isFailed",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows the error message, with Try again when onRetry is given."
+    },
+    {
+      "name": "hasMore",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows Load more after the feed when onLoadMore is given."
+    },
+    {
+      "name": "isLoadingMore",
+      "type": "Bool",
+      "default": "false",
+      "description": "Load more shows that the next page is loading."
+    },
+    {
+      "name": "isLoadMoreFailed",
+      "type": "Bool",
+      "default": "false",
+      "description": "Load more shows that the next page failed, with a retry."
+    },
+    {
+      "name": "now",
+      "type": "Date?",
+      "default": "nil",
+      "description": "The reference time for relative times and day headings. The current time when nil, refreshed every minute."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchActivityTimelineLabels",
+      "default": "MonarchActivityTimelineLabels()",
+      "description": "Replacements for the built-in strings."
+    },
+    {
+      "name": "onRetry",
+      "type": "(() -> Void)?",
+      "default": "nil",
+      "description": "Retries the first page after a failure."
+    },
+    {
+      "name": "onLoadMore",
+      "type": "(() -> Void)?",
+      "default": "nil",
+      "description": "Loads the next page."
+    }
+  ],
+  "states": [
+    {
+      "name": "default",
+      "description": "Day headings, then each event: marker on a line, the sentence with the actor and object in bold, the relative time and tags, the body."
+    },
+    {
+      "name": "automated",
+      "description": "Automation and system actors get an \"Automated\" tag after the time."
+    },
+    {
+      "name": "details open",
+      "description": "The Details disclosure shows the event's details under it."
+    },
+    {
+      "name": "loading",
+      "description": "Three placeholder rows, redacted."
+    },
+    {
+      "name": "empty",
+      "description": "The Monarch empty state \"No activity yet\"."
+    },
+    {
+      "name": "failed",
+      "description": "An inline error with Try again, or the error text alone without onRetry."
+    },
+    {
+      "name": "more",
+      "description": "Load more after the feed, with its loading and failed states."
+    }
+  ],
+  "appearance": "Sentences are default body text with the actor and object in bold; times and day headings are muted. Dots use the solid colour of their tone (neutral is the strong border colour); icon markers are the tone's symbol colour on its subtle background. The line between markers is the subtle border colour. Light, dark and high-contrast themes follow the same roles.",
+  "platformNotes": "The web takes rich content (links, nodes) for the verb, object, meta, body and details; here they are strings and tags, and a link to the record belongs in the app's navigation. The web accent tone is not offered, because MonarchTone has no accent case yet. The filters slot is not offered: put the controls above the timeline. The web day heading level option has no meaning here: headings are headers. The web locale and timeZone options are the environment's locale, calendar and time zone. The parity map named a List with a Section per day; a VStack is used so the line can join the markers and the timeline can sit inside a ScrollView with other content. Details use the Monarch disclosure group, which says Expanded or Collapsed, instead of Show and Hide titles. Android uses the same names.",
+  "accessibility": [
+    "Day headings are headers; each day is a container.",
+    "Each event is one element read as its sentence, its absolute date and time, \"Automated\" for rules, its tags and its body, such as \"Ana Ruiz moved Acme renewal, Mar 4, 2026 at 2:00 PM, Negotiation\". The relative time is visual.",
+    "Markers, avatars and the line are decorative and hidden.",
+    "Details are a standard disclosure group after the event: a button named \"Details\" with the value Expanded or Collapsed, at least 44 points high.",
+    "Loading is one element read as \"Loading activity\".",
+    "The ungrouped feed is a container named \"Activity\".",
+    "Text wraps and scales with Dynamic Type; the marker column scales with it."
+  ],
+  "edgeCases": [
+    "Days appear in the order of their first event, so an oldest-first feed reads oldest day first.",
+    "Day boundaries follow the environment's time zone; an event near midnight can move to the other day in another zone.",
+    "Events from another year get the year in their day heading.",
+    "An event without an actor reads as its verb and object only.",
+    "Load more is hidden while loading or failed, and without onLoadMore.",
+    "Relative times refresh every minute when now is nil; pass now for a fixed time, as tests and screenshots do."
+  ],
+  "tests": [
+    "MonarchActivityTimelineTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Task activity with filters and details",
+      "fixture": "activity-timeline",
+      "webExample": "Task activity with filters and details",
+      "template": "VStack(alignment: .leading, spacing: 12) {\n    MonarchSegmentedControl(\n        \"Show\",\n        selection: $filter,\n        items: [\n            MonarchSegmentedItem({{filters.0.label}}, value: {{filters.0.value}}),\n            MonarchSegmentedItem({{filters.1.label}}, value: {{filters.1.value}}),\n            MonarchSegmentedItem({{filters.2.label}}, value: {{filters.2.value}}),\n        ],\n        fillsWidth: false\n    )\n    MonarchActivityTimeline(\n        [\n            MonarchActivityTimelineEvent(\n                id: {{events.0.id}},\n                actor: MonarchActivityTimelineActor({{events.0.actor}}),\n                verb: {{events.0.verb}},\n                object: {{events.0.object}},\n                link: \"Pricing page refresh\",\n                time: {{events.0.time|date}},\n                tone: {{events.0.tone|tone}},\n                details: {{events.0.details.0.label}} + \"\\t\" + {{events.0.details.0.value}} + \"\\n\" + {{events.0.details.1.label}} + \"\\t\" + {{events.0.details.1.value}}\n            ),\n            MonarchActivityTimelineEvent(\n                id: {{events.1.id}},\n                actor: MonarchActivityTimelineActor({{events.1.actor}}),\n                verb: {{events.1.verb}},\n                time: {{events.1.time|date}},\n                systemImage: \"pencil\",\n                body: {{events.1.body}}\n            ),\n            MonarchActivityTimelineEvent(\n                id: {{events.2.id}},\n                actor: MonarchActivityTimelineActor({{events.2.actor}}, kind: {{events.2.kind|case}}),\n                verb: {{events.2.verb}},\n                object: {{events.2.object}},\n                time: {{events.2.time|date}},\n                tags: [{{events.2.tag}}]\n            ),\n            MonarchActivityTimelineEvent(\n                id: {{events.3.id}},\n                actor: MonarchActivityTimelineActor({{events.3.actor}}),\n                verb: {{events.3.verb}},\n                time: {{events.3.time|date}},\n                systemImage: \"plus\",\n                tone: {{events.3.tone|tone}}\n            ),\n        ],\n        expandedIDs: $expanded,\n        hasMore: true,\n        now: {{now|date}},\n        onLoadMore: {}\n    )\n}\n.environment(\\.timeZone, TimeZone(identifier: {{timeZone}}) ?? .gmt)",
+      "setupTemplate": "@State private var expanded: Set<String> = [{{expanded.0}}]\n@State private var filter = {{filters.0.value}}",
+      "setup": "@State private var expanded: Set<String> = [\"e1\"]\n@State private var filter = \"all\"",
+      "code": "VStack(alignment: .leading, spacing: 12) {\n    MonarchSegmentedControl(\n        \"Show\",\n        selection: $filter,\n        items: [\n            MonarchSegmentedItem(\"All\", value: \"all\"),\n            MonarchSegmentedItem(\"Comments\", value: \"comment\"),\n            MonarchSegmentedItem(\"Changes\", value: \"change\"),\n        ],\n        fillsWidth: false\n    )\n    MonarchActivityTimeline(\n        [\n            MonarchActivityTimelineEvent(\n                id: \"e1\",\n                actor: MonarchActivityTimelineActor(\"Ana Lopez\"),\n                verb: \"moved\",\n                object: \"Pricing page refresh to In review\",\n                link: \"Pricing page refresh\",\n                time: Date(timeIntervalSince1970: 1_772_450_400),\n                tone: .info,\n                details: \"Status\" + \"\\t\" + \"In progress → In review\" + \"\\n\" + \"Reviewer\" + \"\\t\" + \"None → Ben Okafor\"\n            ),\n            MonarchActivityTimelineEvent(\n                id: \"e2\",\n                actor: MonarchActivityTimelineActor(\"Ben Okafor\"),\n                verb: \"commented\",\n                time: Date(timeIntervalSince1970: 1_772_445_900),\n                systemImage: \"pencil\",\n                body: \"Copy looks good. Can we swap the hero image for the lighter one?\"\n            ),\n            MonarchActivityTimelineEvent(\n                id: \"e3\",\n                actor: MonarchActivityTimelineActor(\"Auto-assign rule\", kind: .automation),\n                verb: \"assigned\",\n                object: \"Chloé Martin\",\n                time: Date(timeIntervalSince1970: 1_772_440_200),\n                tags: [\"Rule: Round robin\"]\n            ),\n            MonarchActivityTimelineEvent(\n                id: \"e4\",\n                actor: MonarchActivityTimelineActor(\"Dev Patel\"),\n                verb: \"created this task\",\n                time: Date(timeIntervalSince1970: 1_772_383_500),\n                systemImage: \"plus\",\n                tone: .success\n            ),\n        ],\n        expandedIDs: $expanded,\n        hasMore: true,\n        now: Date(timeIntervalSince1970: 1_772_452_800),\n        onLoadMore: {}\n    )\n}\n.environment(\\.timeZone, TimeZone(identifier: \"UTC\") ?? .gmt)"
+    },
+    {
+      "title": "Paged, compact, in a side panel",
+      "code": "MonarchActivityTimeline(\n    events,\n    isGroupedByDay: false,\n    density: .compact,\n    hasMore: true,\n    isLoadingMore: isLoading,\n    now: now,\n    onLoadMore: { isLoading = true }\n)",
+      "setup": "@State private var isLoading = false\nprivate let now = Date(timeIntervalSince1970: 1_772_636_400)\nprivate var events: [MonarchActivityTimelineEvent] {\n    [MonarchActivityTimelineEvent(id: \"1\", verb: \"Ticket created from email\", time: now, tone: .success)]\n}"
+    }
+  ],
+  "webEquivalent": "ActivityTimeline",
+  "dependsOn": [
+    "avatar",
+    "relative-time",
+    "collapsible",
+    "tag",
+    "load-more",
+    "empty-state",
+    "inline-error-retry"
+  ],
+  "icons": {
+    "details.toggle": "ChevronDownGlyph",
+    "event.comment": "PencilGlyph",
+    "event.created": "PlusGlyph"
+  }
+}

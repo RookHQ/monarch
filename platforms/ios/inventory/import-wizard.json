@@ -1,0 +1,104 @@
+{
+  "id": "import-wizard",
+  "name": null,
+  "title": "ImportWizard",
+  "family": "data-grid",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "sheet(isPresented:) holding a NavigationStack with MonarchStepper, then per step MonarchFileUpload (.fileImporter for .commaSeparatedText), MonarchColumnMapping, MonarchPreviewRows with ProgressView(.monarchLinear) while importing, and a result notice; a bottom bar of MonarchButton Back and Continue in .safeAreaInset; TabularData's DataFrame(contentsOfCSVFile:) reads the file",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: importing records from a CSV file in four steps in a sheet: choose the file, match its columns to fields, check the rows, then import and see what was saved.",
+  "whenToUse": "When people bring a spreadsheet of records into the app, such as contacts, products or members, and need to match columns and see problems before anything is saved.",
+  "whenNotToUse": "For attaching a file to a record use MonarchFileUpload alone. For a short task without a file use the wizard-dialog recipe. On iPad or Mac, where a wide table fits, the same steps can be pushed screens instead of a sheet.",
+  "api": [
+    "MonarchStepper.init(_ steps: [MonarchStepperStep], current: Int, furthest: Int? = nil, …)",
+    "MonarchFileUpload.init(allowedContentTypes: [UTType] = [.item], maxSize: Int64? = nil, maxFiles: Int? = nil, …, onFiles: @escaping @MainActor ([MonarchFileUploadFile], [MonarchFileUploadRejection]) -> Void)",
+    "MonarchColumnMapping.init(_ sources: [MonarchColumnMappingSource], mapping: Binding<[String: String]>, fields: [MonarchColumnMappingField], …)",
+    "static func MonarchColumnMapping.suggest(_ sources: [MonarchColumnMappingSource], fields: [MonarchColumnMappingField], threshold: Double = 0.75) -> [String: MonarchColumnMappingSuggestion]",
+    "static func MonarchColumnMapping.issues(_ mapping: [String: String], fields: [MonarchColumnMappingField]) -> (missing: [MonarchColumnMappingField], duplicates: [String: [String]])",
+    "MonarchPreviewRows.init(_ caption: String, rows: [MonarchPreviewRow], columns: [MonarchPreviewRowsColumn], …)",
+    "ProgressView(_ title: String, value: Double).progressViewStyle(.monarchLinear)",
+    "DataFrame(contentsOfCSVFile: URL) (TabularData)",
+    "func sheet(isPresented: Binding<Bool>, content: () -> some View) -> some View",
+    "func interactiveDismissDisabled(_ isDisabled: Bool = true) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "upload",
+      "description": "MonarchFileUpload limited to one CSV file; a file that cannot be read, or has no data rows, shows a danger MonarchInlineNotice and stays on this step."
+    },
+    {
+      "name": "map",
+      "description": "MonarchColumnMapping pre-filled from MonarchColumnMapping.suggest; Check rows is disabled while a required field has no column."
+    },
+    {
+      "name": "preview",
+      "description": "MonarchPreviewRows shows each row's status; rows with errors are skipped and the button reads \"Import 2 rows\". Nothing is saved yet."
+    },
+    {
+      "name": "importing",
+      "description": "A linear ProgressView reads Importing 2 rows…, the import button shows its spinner, and Back and Cancel are disabled."
+    },
+    {
+      "name": "results",
+      "description": "A success notice with what was created and skipped; Done closes the sheet."
+    },
+    {
+      "name": "started",
+      "description": "After the first step the sheet cannot be swiped away; Cancel in the toolbar closes it."
+    }
+  ],
+  "appearance": "A system sheet on the theme's surface colour with MonarchStepper, Monarch text styles, the mapping and preview components in their own theme colours, the Monarch linear progress style, and a bottom bar with a secondary Back and a primary next button.",
+  "platformNotes": "The web ImportWizard is one component that parses the CSV itself, offers a template download and a downloadable problems CSV, validates rows through a callback, picks a duplicate rule and reports created, updated, skipped and failed counts. On iOS the app composes the steps: it reads the file with TabularData's DataFrame (or its own parser), validates rows into MonarchPreviewRow errors and warnings, and shows the report; a problems file can be offered with ShareLink, and a duplicate rule with a Picker on the preview step. The web shows the preview as a wide table; on iPhone MonarchPreviewRows lays rows out for the narrow screen. Android plans the same recipe. Status experimental: it is a product pattern until a Rook app adopts it.",
+  "accessibility": [
+    "MonarchStepper reads \"Step 2 of 4\" and each step's state; the step title has the header trait.",
+    "Post an AccessibilityNotification.Announcement of the new step when Continue or Back changes it, since focus stays on the button.",
+    "MonarchFileUpload, MonarchColumnMapping and MonarchPreviewRows keep their own labels, values and announcements.",
+    "The progress view is read with its title and percentage; failures are text with an icon, not colour alone.",
+    "Cancel is in the toolbar with the cancellation placement, so it remains once swiping the sheet away is disabled."
+  ],
+  "edgeCases": [
+    "A file with only a header row, or without column names, stays on the upload step with a message.",
+    "Duplicate header names: give the later ones a suffix before building the mapping sources.",
+    "Very large files: read and validate off the main actor and show the first rows in the preview; MonarchPreviewRows pages its rows.",
+    "When no row can be imported, disable the import button and say why.",
+    "Reset every step's state when the sheet is presented again."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Contacts import",
+      "fixture": "import-wizard",
+      "webExample": "Contacts import",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    MonarchStepper(steps, current: step, furthest: step)\n    switch step {\n    case 0:\n        Text({{title}})\n            .monarchTextStyle(.heading)\n            .accessibilityAddTraits(.isHeader)\n        Text({{description}})\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textMuted)\n        MonarchFileUpload(allowedContentTypes: [.commaSeparatedText], maxSize: {{maxSize}}, maxFiles: 1,\n            labels: MonarchFileUploadLabels(\n                title: \"Drag and drop a CSV file here\",\n                browse: \"Choose file\",\n                limits: { _, _ in\n                    \"Up to \\(ByteCountFormatter.string(fromByteCount: {{maxSize}}, countStyle: .binary)) each · 1 file max\"\n                }\n            )\n        ) { files, _ in\n            guard let file = files.first else { return }\n            // The file may hold {{maxRows|raw}} data rows: the first line names the columns.\n            if Self.dataRows(in: file) <= {{maxRows}} {\n                hasTooManyRows = false\n                step = 1\n            } else {\n                hasTooManyRows = true\n            }\n        }\n        if hasTooManyRows {\n            MonarchInlineNotice(\"The file has more than \\({{maxRows}}) rows.\", tone: .danger)\n        }\n        if let template = URL(string: \"https://example.com/contacts-template.csv\") {\n            Link({{template}}, destination: template)\n                .buttonStyle(.monarchLink(.standalone))\n        }\n    case 1:\n        MonarchColumnMapping(Self.sources, mapping: $mapping, fields: Self.fields)\n            .frame(height: 420)\n    case 2:\n        MonarchPreviewRows(\n            \"Preview of contacts.csv\",\n            rows: [\n                MonarchPreviewRow(row: 1, values: [\"email\": \"ada@example.com\", \"name\": \"Ada Moss\"]),\n                MonarchPreviewRow(\n                    row: 2,\n                    values: [\"email\": \"bea@example.com\", \"name\": \"\"],\n                    errors: [MonarchPreviewRowIssue(\"Name is required\", field: \"Name\")]\n                ),\n            ],\n            columns: Self.fields.map { MonarchPreviewRowsColumn($0.label, id: $0.id) }\n        )\n        ProgressView(\"Importing 1 row…\", value: 0.5)\n            .progressViewStyle(.monarchLinear)\n    default:\n        MonarchInlineNotice(\"1 created, 1 skipped.\", tone: .success)\n    }\n    if step > 0 {\n        HStack {\n            if step < 3 {\n                MonarchButton(\"Back\") { step -= 1 }\n            }\n            Spacer(minLength: 0)\n            if step < 3 {\n                MonarchButton(step == 2 ? \"Import 1 row\" : \"Continue\", variant: .primary) { step += 1 }\n                    .disabled(step == 1 && !MonarchColumnMapping.issues(mapping, fields: Self.fields).missing.isEmpty)\n            }\n        }\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var step = 0\n@State private var hasTooManyRows = false\n\n/// The data rows of a CSV file: its lines after the header.\nprivate static func dataRows(in file: MonarchFileUploadFile) -> Int {\n    let didStart = file.url.startAccessingSecurityScopedResource()\n    defer { if didStart { file.url.stopAccessingSecurityScopedResource() } }\n    guard let text = try? String(contentsOf: file.url, encoding: .utf8) else { return 0 }\n    return max(0, text.split(whereSeparator: \\.isNewline).count - 1)\n}\nprivate static let sources = [\n    MonarchColumnMappingSource(\"E-mail\", samples: [\"ada@example.com\", \"bea@example.com\"]),\n    MonarchColumnMappingSource(\"Full name\", samples: [\"Ada Moss\", \"\"]),\n]\nprivate static let fields = [\n    MonarchColumnMappingField(id: \"email\", label: \"Email\", isRequired: true, aliases: [\"E-mail\"]),\n    MonarchColumnMappingField(id: \"name\", label: \"Name\", isRequired: true, aliases: [\"Full name\"]),\n]\n@State private var mapping = MonarchColumnMapping.mapping(\n    from: MonarchColumnMapping.suggest(Self.sources, fields: Self.fields)\n)\nprivate let steps = [\n    MonarchStepperStep(id: \"upload\", label: {{steps.0}}),\n    MonarchStepperStep(id: \"map\", label: {{steps.1}}),\n    MonarchStepperStep(id: \"preview\", label: {{steps.2}}),\n    MonarchStepperStep(id: \"results\", label: {{steps.3}}),\n]",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    MonarchStepper(steps, current: step, furthest: step)\n    switch step {\n    case 0:\n        Text(\"Choose a file\")\n            .monarchTextStyle(.heading)\n            .accessibilityAddTraits(.isHeader)\n        Text(\"A CSV file whose first row holds the column names. Up to 2 MB and 5,000 rows.\")\n            .monarchTextStyle(.body)\n            .foregroundStyle(theme.colors.textMuted)\n        MonarchFileUpload(allowedContentTypes: [.commaSeparatedText], maxSize: 2_097_152, maxFiles: 1,\n            labels: MonarchFileUploadLabels(\n                title: \"Drag and drop a CSV file here\",\n                browse: \"Choose file\",\n                limits: { _, _ in\n                    \"Up to \\(ByteCountFormatter.string(fromByteCount: 2_097_152, countStyle: .binary)) each · 1 file max\"\n                }\n            )\n        ) { files, _ in\n            guard let file = files.first else { return }\n            // The file may hold 5000 data rows: the first line names the columns.\n            if Self.dataRows(in: file) <= 5000 {\n                hasTooManyRows = false\n                step = 1\n            } else {\n                hasTooManyRows = true\n            }\n        }\n        if hasTooManyRows {\n            MonarchInlineNotice(\"The file has more than \\(5000) rows.\", tone: .danger)\n        }\n        if let template = URL(string: \"https://example.com/contacts-template.csv\") {\n            Link(\"Download a template\", destination: template)\n                .buttonStyle(.monarchLink(.standalone))\n        }\n    case 1:\n        MonarchColumnMapping(Self.sources, mapping: $mapping, fields: Self.fields)\n            .frame(height: 420)\n    case 2:\n        MonarchPreviewRows(\n            \"Preview of contacts.csv\",\n            rows: [\n                MonarchPreviewRow(row: 1, values: [\"email\": \"ada@example.com\", \"name\": \"Ada Moss\"]),\n                MonarchPreviewRow(\n                    row: 2,\n                    values: [\"email\": \"bea@example.com\", \"name\": \"\"],\n                    errors: [MonarchPreviewRowIssue(\"Name is required\", field: \"Name\")]\n                ),\n            ],\n            columns: Self.fields.map { MonarchPreviewRowsColumn($0.label, id: $0.id) }\n        )\n        ProgressView(\"Importing 1 row…\", value: 0.5)\n            .progressViewStyle(.monarchLinear)\n    default:\n        MonarchInlineNotice(\"1 created, 1 skipped.\", tone: .success)\n    }\n    if step > 0 {\n        HStack {\n            if step < 3 {\n                MonarchButton(\"Back\") { step -= 1 }\n            }\n            Spacer(minLength: 0)\n            if step < 3 {\n                MonarchButton(step == 2 ? \"Import 1 row\" : \"Continue\", variant: .primary) { step += 1 }\n                    .disabled(step == 1 && !MonarchColumnMapping.issues(mapping, fields: Self.fields).missing.isEmpty)\n            }\n        }\n    }\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var step = 0\n@State private var hasTooManyRows = false\n\n/// The data rows of a CSV file: its lines after the header.\nprivate static func dataRows(in file: MonarchFileUploadFile) -> Int {\n    let didStart = file.url.startAccessingSecurityScopedResource()\n    defer { if didStart { file.url.stopAccessingSecurityScopedResource() } }\n    guard let text = try? String(contentsOf: file.url, encoding: .utf8) else { return 0 }\n    return max(0, text.split(whereSeparator: \\.isNewline).count - 1)\n}\nprivate static let sources = [\n    MonarchColumnMappingSource(\"E-mail\", samples: [\"ada@example.com\", \"bea@example.com\"]),\n    MonarchColumnMappingSource(\"Full name\", samples: [\"Ada Moss\", \"\"]),\n]\nprivate static let fields = [\n    MonarchColumnMappingField(id: \"email\", label: \"Email\", isRequired: true, aliases: [\"E-mail\"]),\n    MonarchColumnMappingField(id: \"name\", label: \"Name\", isRequired: true, aliases: [\"Full name\"]),\n]\n@State private var mapping = MonarchColumnMapping.mapping(\n    from: MonarchColumnMapping.suggest(Self.sources, fields: Self.fields)\n)\nprivate let steps = [\n    MonarchStepperStep(id: \"upload\", label: \"Upload\"),\n    MonarchStepperStep(id: \"map\", label: \"Map columns\"),\n    MonarchStepperStep(id: \"preview\", label: \"Preview\"),\n    MonarchStepperStep(id: \"results\", label: \"Results\"),\n]"
+    }
+  ],
+  "webEquivalent": "ImportWizard",
+  "dependsOn": [
+    "file-upload",
+    "column-mapping",
+    "preview-rows",
+    "stepper",
+    "progress-bar",
+    "sheet",
+    "button",
+    "inline-notice"
+  ],
+  "parityExceptions": [
+    {
+      "rule": "structure",
+      "platform": "ios",
+      "reason": "The web draws the four steps as a row with each name beside its circle, which needs about 420 points; a phone column has 306, so the stepper shows its compact form (Step 1 of 4, the name of the step and a progress bar). The page, the file drop area, the template link and the buttons are inline, as on the web.",
+      "convention": "HIG: progress through steps at compact width is a summary, not a row of names"
+    }
+  ]
+}

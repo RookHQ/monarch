@@ -1,0 +1,134 @@
+{
+  "id": "responsive-dialog",
+  "name": "MonarchResponsiveDialog",
+  "title": "ResponsiveDialog",
+  "family": "overlays",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "androidx.compose.material3.ModalBottomSheet below the breakpoint and androidx.compose.ui.window.Dialog with androidx.compose.material3.Surface at or above it, chosen with androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2 and androidx.window.core.layout.WindowSizeClass",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A dialog that is a bottom sheet on a phone and a centered panel on a large window, from one call, with a title, a description, scrolling content and actions.",
+  "whenToUse": "For a short task or form that should feel native on both a phone (a sheet within thumb reach) and a tablet or unfolded foldable (a centered dialog), such as renaming, a small settings form or a picker.",
+  "whenNotToUse": "For a yes or no question, use AlertDialog (see confirm-dialog), which is a dialog at every size. For a long task with several steps, use a full screen. For content that should stay beside the main view on a large screen, use a supporting pane.",
+  "api": [
+    "@Composable fun MonarchResponsiveDialog(onDismissRequest: () -> Unit, title: String, modifier: Modifier = Modifier, sheetBelow: MonarchResponsiveDialogBreakpoint = MonarchResponsiveDialogBreakpoint.Medium, dismissible: Boolean = true, showHandle: Boolean = true, description: String? = null, actions: (@Composable RowScope.() -> Unit)? = null, content: @Composable ColumnScope.() -> Unit)",
+    "enum class MonarchResponsiveDialogBreakpoint { Medium, Expanded }"
+  ],
+  "options": [
+    {
+      "name": "onDismissRequest",
+      "type": "() -> Unit",
+      "default": "required",
+      "description": "Called when the person dismisses it: back, a tap outside, or a swipe down on the sheet. Not called when not dismissible."
+    },
+    {
+      "name": "title",
+      "type": "String",
+      "default": "required",
+      "description": "The heading, also the pane title TalkBack reads when it opens."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the sheet or the dialog panel."
+    },
+    {
+      "name": "sheetBelow",
+      "type": "MonarchResponsiveDialogBreakpoint",
+      "default": "MonarchResponsiveDialogBreakpoint.Medium",
+      "description": "Medium: a sheet on compact windows (narrower than 600dp). Expanded: also on medium windows (narrower than 840dp)."
+    },
+    {
+      "name": "dismissible",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether back, a tap outside and a swipe can dismiss it. When false the actions must close it."
+    },
+    {
+      "name": "showHandle",
+      "type": "Boolean",
+      "default": "true",
+      "description": "Whether the sheet shows the Material 3 drag handle. The dialog never does."
+    },
+    {
+      "name": "description",
+      "type": "String?",
+      "default": "null",
+      "description": "A line under the title in the muted text color."
+    },
+    {
+      "name": "actions",
+      "type": "(@Composable RowScope.() -> Unit)?",
+      "default": "null",
+      "description": "The buttons at the end, such as a ghost Cancel and a primary MonarchButton. They wrap onto another line when there is no room."
+    },
+    {
+      "name": "content",
+      "type": "@Composable ColumnScope.() -> Unit",
+      "default": "required",
+      "description": "The body, in a column that scrolls when it is taller than the window."
+    }
+  ],
+  "states": [
+    {
+      "name": "compact window",
+      "description": "A ModalBottomSheet from the bottom, fully expanded, with the drag handle."
+    },
+    {
+      "name": "large window",
+      "description": "A Dialog centered over a scrim, on the Material 3 dialog surface and shape."
+    },
+    {
+      "name": "not dismissible",
+      "description": "Back, a tap outside and the swipe do nothing; the sheet cannot be dragged away."
+    },
+    {
+      "name": "tall content",
+      "description": "The body scrolls; the title and the actions stay in place."
+    }
+  ],
+  "appearance": "Both forms use the raised background, which Monarch maps to the Material surface containers, with the default text color and the large corner radius of the Material sheet or dialog, over the overlay scrim. The title is in the heading style and the description in the muted text color. The same roles in light, dark and both high-contrast themes.",
+  "platformNotes": "The web ResponsiveDialog switches between Dialog and a bottom sheet with a CSS breakpoint (sheetBelow sm 640px or md 768px) and shows a grab handle. Android decides with the window size classes of the Material guidance (600dp and 840dp) through currentWindowAdaptiveInfoV2, so it follows split screen and foldables. iOS uses the system sheet, which adapts by itself, and ships nothing; Compose has no adaptive sheet, so Android builds this wrapper. The web composes the Dialog parts (header, body, footer); here title, description, content and actions are parameters. When the app removes the sheet by setting its state to false, the sheet leaves without the slide-down animation.",
+  "accessibility": [
+    "Both forms are modal windows: TalkBack stays inside, and back closes them when they are dismissible.",
+    "The title is a heading and the pane title, so TalkBack reads it when the window opens.",
+    "The sheet's drag handle is the Material 3 handle, which TalkBack offers with its expand and dismiss actions.",
+    "The body scrolls at large font sizes instead of being cut, and the actions wrap."
+  ],
+  "edgeCases": [
+    "Turning or resizing the window across the breakpoint switches between sheet and dialog; the content keeps rememberSaveable state but not plain remember state.",
+    "With dismissible = false, give the person a visible way out in the actions.",
+    "The dialog takes the platform's default dialog width; very wide content scrolls inside it."
+  ],
+  "tests": [
+    "MonarchResponsiveDialogTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Invite form",
+      "fixture": "responsive-dialog",
+      "webExample": "Invite form",
+      "template": "MonarchButton(text = {{trigger}}, onClick = { open = true })\nif (open) {\n    MonarchResponsiveDialog(\n        onDismissRequest = { open = false },\n        title = {{title}},\n        description = {{description}},\n        actions = {\n            MonarchButton(text = {{cancel}}, onClick = { open = false })\n            MonarchButton(text = {{confirm}}, onClick = { open = false }, variant = MonarchButtonVariant.Primary)\n        },\n    ) {\n        MonarchTextField(value = email, onValueChange = { email = it }, label = {{field}}, placeholder = {{placeholder}})\n    }\n}",
+      "setupTemplate": "var open by remember { mutableStateOf(true) }\nvar email by remember { mutableStateOf(\"\") }",
+      "setup": "var open by remember { mutableStateOf(true) }\nvar email by remember { mutableStateOf(\"\") }",
+      "code": "MonarchButton(text = \"Invite people\", onClick = { open = true })\nif (open) {\n    MonarchResponsiveDialog(\n        onDismissRequest = { open = false },\n        title = \"Invite people\",\n        description = \"They get an email with a link to join.\",\n        actions = {\n            MonarchButton(text = \"Cancel\", onClick = { open = false })\n            MonarchButton(text = \"Send invite\", onClick = { open = false }, variant = MonarchButtonVariant.Primary)\n        },\n    ) {\n        MonarchTextField(value = email, onValueChange = { email = it }, label = \"Email address\", placeholder = \"name@example.com\")\n    }\n}"
+    },
+    {
+      "title": "A required choice that cannot be dismissed, a sheet below 840dp",
+      "setup": "var open by remember { mutableStateOf(true) }",
+      "code": "if (open) {\n    MonarchResponsiveDialog(\n        onDismissRequest = { open = false },\n        title = \"Choose a workspace\",\n        sheetBelow = MonarchResponsiveDialogBreakpoint.Expanded,\n        dismissible = false,\n        actions = {\n            MonarchButton(text = \"Continue\", onClick = { open = false }, variant = MonarchButtonVariant.Primary)\n        },\n    ) {\n        MonarchText(text = \"You belong to two workspaces. Choose the one to open.\")\n    }\n}"
+    }
+  ],
+  "webEquivalent": "ResponsiveDialog",
+  "dependsOn": [
+    "dialog",
+    "sheet"
+  ]
+}

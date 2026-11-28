@@ -1,0 +1,65 @@
+{
+  "id": "ai-scroll-anchor",
+  "name": null,
+  "title": "AiScrollAnchor",
+  "family": "intelligence",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "ScrollView with .defaultScrollAnchor(.bottom); .scrollPosition(id:anchor:) to jump to the latest message (ScrollPosition and onScrollGeometryChange from iOS 18)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Bottom-pinned scrolling for a growing thread is a property of the standard ScrollView. Monarch ships nothing.",
+  "whenToUse": "For a chat thread or log that should open at its newest entry and stay there while content arrives: put the messages in a ScrollView with defaultScrollAnchor(.bottom).",
+  "whenNotToUse": "Not for content read from the top. For the full thread with Jump to latest and Load earlier, use AiThread when it is available.",
+  "api": [
+    "func defaultScrollAnchor(_ anchor: UnitPoint?) -> some View",
+    "func scrollPosition(id: Binding<(some Hashable)?>, anchor: UnitPoint? = nil) -> some View",
+    "func scrollTargetLayout(isEnabled: Bool = true) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "at the bottom",
+      "description": "The scroll view opens at the bottom anchor, and keeps that anchor when the content or the container changes size."
+    },
+    {
+      "name": "scrolled up",
+      "description": "The person's position is kept. Setting the scrollPosition binding to the last id scrolls back to the newest entry."
+    }
+  ],
+  "appearance": "System scrolling in every theme. The content inside uses the theme.",
+  "platformNotes": "The web ships a hook and a headless container that measure the scroller, pin it while the person is within 48 pixels of the bottom and report atBottom. In SwiftUI the anchor is declared on the ScrollView and the system does the pinning, so there is no Monarch type. iOS 17 has no public reading of the scroll offset: to show a Jump to latest button only when the person has scrolled up, compare the scrollPosition id with the last id, or on iOS 18 and later use onScrollGeometryChange. iOS 18 also adds ScrollPosition and defaultScrollAnchor(_:for:), which separates the initial offset from size changes. Android uses a reversed LazyColumn.",
+  "accessibility": [
+    "System behaviour: VoiceOver scrolls the ScrollView with three-finger swipes and announces the page.",
+    "Scrolling to the newest entry does not move VoiceOver focus.",
+    "Scrolling with withAnimation follows the system's Reduce Motion handling only if the app checks accessibilityReduceMotion; the example does."
+  ],
+  "edgeCases": [
+    "scrollPosition(id:) needs scrollTargetLayout() on the stack that holds the entries, and each entry needs a stable id.",
+    "Content shorter than the scroll view is laid out from the bottom with a bottom anchor.",
+    "How firmly iOS 17 keeps the bottom while text streams in was not measured on a device for this entry."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Scrolled up, with a jump button",
+      "fixture": "ai-scroll-anchor",
+      "webExample": "Scrolled up, with a jump button",
+      "template": "VStack {\n    ScrollView {\n        LazyVStack(alignment: .leading, spacing: theme.spacing.space2) {\n            ForEach(0..<{{count}}, id: \\.self) { index in\n                Text(lines[index % lines.count])\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textDefault)\n                    .id(index)\n            }\n        }\n        .scrollTargetLayout()\n        .frame(maxWidth: .infinity, alignment: .leading)\n    }\n    .scrollPosition(id: $position, anchor: .bottom)\n    .defaultScrollAnchor(.bottom)\n    .frame(height: theme.spacing.space24 * 2)\n    if position != {{count}} - 1 {\n        MonarchButton({{jump}}, size: .sm) {\n            withAnimation { position = {{count}} - 1 }\n        }\n    }\n}\n.padding(.horizontal)",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var position: Int? = {{count}} - 4\n\nprivate let lines = [\n    {{lines.0}},\n    {{lines.1}},\n    {{lines.2}},\n    {{lines.3}},\n    {{lines.4}},\n    {{lines.5}},\n]",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var position: Int? = 10 - 4\n\nprivate let lines = [\n    \"The draft has three sections.\",\n    \"The first summarises the request.\",\n    \"The second lists the open questions.\",\n    \"The third proposes next steps.\",\n    \"Each step has an owner and a date.\",\n    \"Nothing is sent until you approve it.\",\n]",
+      "code": "VStack {\n    ScrollView {\n        LazyVStack(alignment: .leading, spacing: theme.spacing.space2) {\n            ForEach(0..<10, id: \\.self) { index in\n                Text(lines[index % lines.count])\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textDefault)\n                    .id(index)\n            }\n        }\n        .scrollTargetLayout()\n        .frame(maxWidth: .infinity, alignment: .leading)\n    }\n    .scrollPosition(id: $position, anchor: .bottom)\n    .defaultScrollAnchor(.bottom)\n    .frame(height: theme.spacing.space24 * 2)\n    if position != 10 - 1 {\n        MonarchButton(\"Jump to latest\", size: .sm) {\n            withAnimation { position = 10 - 1 }\n        }\n    }\n}\n.padding(.horizontal)"
+    },
+    {
+      "title": "Jump to latest",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@Environment(\\.accessibilityReduceMotion) private var reduceMotion\n@State private var position: Int?\n\nprivate let messages = Array(1...12)",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space2) {\n    ScrollView {\n        LazyVStack(alignment: .leading, spacing: theme.spacing.space2) {\n            ForEach(messages, id: \\.self) { message in\n                Text(\"Message \\(message)\")\n                    .monarchTextStyle(.body)\n                    .foregroundStyle(theme.colors.textDefault)\n            }\n        }\n        .frame(maxWidth: .infinity, alignment: .leading)\n        .scrollTargetLayout()\n    }\n    .defaultScrollAnchor(.bottom)\n    .scrollPosition(id: $position, anchor: .bottom)\n    .frame(height: theme.spacing.space24 * 2)\n\n    Button(\"Jump to latest\") {\n        withAnimation(theme.motion.animation(reduceMotion: reduceMotion)) {\n            position = messages.last\n        }\n    }\n    .buttonStyle(.monarch(.secondary, size: .sm))\n}"
+    }
+  ],
+  "webEquivalent": "AiScrollAnchor",
+  "dependsOn": []
+}

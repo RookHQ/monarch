@@ -1,5 +1,7 @@
 import { Button, ComingSoonState } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './coming-soon-state.fixture.json';
 
 export default {
   id: 'coming-soon-state',
@@ -103,14 +105,11 @@ export default {
           stack: true,
           render: () => (
             <ComingSoonState
-              title="Status pages"
-              description="Publish a page that shows your uptime and incident history."
-              highlights={[
-                'A public page on your own domain',
-                'Incident updates by email',
-                'Ninety days of uptime history',
-              ]}
-              actions={<Button>Notify me</Button>}
+              title={fixture.data.title}
+              description={fixture.data.description}
+              highlights={fixture.data.highlights}
+              messages={{ badge: fixture.data.badge }}
+              actions={<Button>{fixture.data.action}</Button>}
             />
           ),
         },

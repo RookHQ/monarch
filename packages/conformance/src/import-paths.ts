@@ -47,7 +47,9 @@ export function movedImports(
 export function movedMessage(d: ImportPathDeprecation, moved: readonly ImportedName[]): string {
   const names = moved.map((n) => `\`${n.name}\``).join(', ');
   const verb = moved.length === 1 ? 'has' : 'have';
-  const removal = d.removeIn ? `; ${d.from} stops exporting it in ${d.removeIn}` : '';
+  const removal = d.removeNoEarlierThan
+    ? `; ${d.from} stops exporting it no earlier than ${d.removeNoEarlierThan} (90-day window)`
+    : '';
   return `${names} ${verb} moved to ${d.to} (since ${d.since})${removal}. Import from ${d.to}${d.message ? `. ${d.message}` : ''}`;
 }
 

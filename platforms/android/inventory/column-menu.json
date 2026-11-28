@@ -1,0 +1,83 @@
+{
+  "id": "column-menu",
+  "name": null,
+  "title": "ColumnMenu",
+  "family": "data-grid",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "MonarchMenu, MonarchMenuItem, MonarchCheckbox, MonarchDivider",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A Columns menu with one checkable item per column, to show and hide the columns of a table: a MonarchButton that opens a MonarchMenu with a checkbox in each item.",
+  "whenToUse": "Above a table or data grid whose columns people may hide, such as a list of contacts with optional email, plan and created columns.",
+  "whenNotToUse": "To filter which rows are shown, use filter chips. To reorder columns, use a reorderable list in a settings sheet. To switch between whole layouts, use a view switcher.",
+  "api": [
+    "@Composable fun MonarchMenu(expanded: Boolean, onDismissRequest: () -> Unit, modifier: Modifier = Modifier, offset: DpOffset = DpOffset(MonarchTokens.Space.space0.dp, MonarchTokens.Space.space1.dp), content: @Composable ColumnScope.() -> Unit)",
+    "@Composable fun MonarchMenuItem(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, destructive: Boolean = false, selected: Boolean? = null, shortcut: String? = null, leadingIcon: (@Composable () -> Unit)? = null, interactionSource: MutableInteractionSource? = null)",
+    "@Composable fun MonarchCheckbox(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: Modifier = Modifier, enabled: Boolean = true, invalid: Boolean = false, label: String? = null, description: String? = null, interactionSource: MutableInteractionSource? = null)",
+    "@Composable fun MonarchButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, variant: MonarchButtonVariant = MonarchButtonVariant.Secondary, size: MonarchButtonSize = MonarchButtonSize.Md, …)"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "shown",
+      "description": "The item's Checkbox is checked and the item's toggleable state is on."
+    },
+    {
+      "name": "last column",
+      "description": "The last visible column's item is disabled, so the table is never empty (the web's minVisible of 1)."
+    },
+    {
+      "name": "all shown",
+      "description": "Show all columns is disabled when every column is visible."
+    }
+  ],
+  "appearance": "The Material 3 menu in the raised background role with Monarch's medium radius; the trigger is a small secondary MonarchButton and each item ends with a MonarchCheckbox in the accent colors Monarch maps to the scheme. The same mapping in every theme, including both high-contrast themes.",
+  "platformNotes": "The web ColumnMenu is a component that takes DataTable's column state and offers minVisible, showAll, onReset and a trigger size. On Android the same result is a few lines of a MonarchMenu with a MonarchCheckbox in each item, so Monarch adds no type: minVisible is enabled = false on the last visible item, Show all and Reset are items after a MonarchDivider, and the trigger size is the MonarchButton size. The web keeps the menu open while items are checked; on Android the item's onClick changes the set and leaves expanded as it is. iOS documents the same menu as a native SwiftUI Menu with Toggles.",
+  "accessibility": [
+    "The trigger is a button; its state description says how many columns are shown (\"3 of 4 shown\"), like the web's hidden count.",
+    "Each column item carries a toggleable state with the checkbox role, so TalkBack says checked or not checked; the MonarchCheckbox inside has a null callback so the item is the one target.",
+    "A disabled last column is announced as disabled, so TalkBack users know it cannot be hidden.",
+    "Material 3 gives each item a row at least 48dp high."
+  ],
+  "edgeCases": [
+    "Keep at least one column visible by disabling the last visible item.",
+    "The menu stays open while columns are toggled; close it from Show all or by tapping outside.",
+    "Keep the visible set in the view model or rememberSaveable (as a list of ids) so it survives a configuration change."
+  ],
+  "tests": [
+    "InventoryExamplesTest",
+    "CataloguePagesTest"
+  ],
+  "examples": [
+    {
+      "title": "With DataTable",
+      "fixture": "column-menu",
+      "webExample": "With DataTable",
+      "template": "Column(\n    horizontalAlignment = Alignment.End,\n    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n) {\n    Box {\n        MonarchButton(\n            text = {{menu.trigger}},\n            onClick = { expanded = true },\n            modifier = Modifier.semantics { stateDescription = \"${visible.size} of ${columns.size} shown\" },\n            size = MonarchButtonSize.Sm,\n            leadingIcon = { MonarchIcon(SampleIcons.Columns, contentDescription = null) },\n        )\n        MonarchMenu(expanded = expanded, onDismissRequest = { expanded = false }) {\n            MonarchMenuLabel(text = \"Visible columns\")\n            columns.forEach { column ->\n                val shown = column.id in visible\n                MonarchMenuItem(\n                    text = column.title,\n                    onClick = { visible = if (shown) visible - column.id else visible + column.id },\n                    enabled = column.hideable && !(shown && visible.size == 1),\n                    selected = shown,\n                )\n            }\n            MonarchMenuDivider()\n            MonarchMenuItem(\n                text = {{menu.showAll}},\n                onClick = {\n                    visible = columns.map { it.id }.toSet()\n                    expanded = false\n                },\n                enabled = visible.size < columns.size,\n            )\n            MonarchMenuItem(\n                text = \"Reset columns\",\n                onClick = {\n                    visible = columns.filterNot { it.hidden }.map { it.id }.toSet()\n                    expanded = false\n                },\n            )\n        }\n    }\n    // Room for the open menu above the table, as on the web.\n    Spacer(Modifier.height(MonarchTheme.spacing.space24 * 3 + MonarchTheme.spacing.space8))\n    MonarchDataTable(\n        caption = {{caption}},\n        rows = domains,\n        columns = columns.map { column ->\n            MonarchDataTableColumn<Domain>(column.title, id = column.id, hideable = column.hideable) { it.value(column.id) }\n        },\n        rowKey = { it.id },\n        layout = MonarchDataTableLayout.Table,\n        hiddenColumns = columns.map { it.id }.toSet() - visible,\n    )\n}",
+      "setupTemplate": "class Domain(val id: String, val name: String, val status: String, val owner: String, val expires: String) {\n    fun value(column: String) = when (column) {\n        \"name\" -> name\n        \"status\" -> status\n        \"owner\" -> owner\n        else -> expires\n    }\n}\nclass ColumnSpec(val id: String, val title: String, val hideable: Boolean, val hidden: Boolean)\nval columns = listOf(\n    ColumnSpec({{columns.0.id}}, {{columns.0.header}}, {{columns.0.hideable}}, {{columns.0.defaultHidden}}),\n    ColumnSpec({{columns.1.id}}, {{columns.1.header}}, {{columns.1.hideable}}, {{columns.1.defaultHidden}}),\n    ColumnSpec({{columns.2.id}}, {{columns.2.header}}, {{columns.2.hideable}}, {{columns.2.defaultHidden}}),\n    ColumnSpec({{columns.3.id}}, {{columns.3.header}}, {{columns.3.hideable}}, {{columns.3.defaultHidden}}),\n)\nval domains = listOf(\n    Domain({{rows.0.id}}, {{rows.0.name}}, {{rows.0.status}}, {{rows.0.owner}}, {{rows.0.expires}}),\n    Domain({{rows.1.id}}, {{rows.1.name}}, {{rows.1.status}}, {{rows.1.owner}}, {{rows.1.expires}}),\n)\nvar visible by remember { mutableStateOf(columns.filterNot { it.hidden }.map { it.id }.toSet()) }\nvar expanded by remember { mutableStateOf(true) }",
+      "imports": [
+        "androidx.compose.ui.state.ToggleableState",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "com.rookhq.monarch.theme.MonarchTheme",
+        "com.rookhq.monarch.components.datagrid.datatable.MonarchDataTableLayout",
+        "com.rookhq.monarch.sampleicons.SampleIcons",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.height"
+      ],
+      "setup": "class Domain(val id: String, val name: String, val status: String, val owner: String, val expires: String) {\n    fun value(column: String) = when (column) {\n        \"name\" -> name\n        \"status\" -> status\n        \"owner\" -> owner\n        else -> expires\n    }\n}\nclass ColumnSpec(val id: String, val title: String, val hideable: Boolean, val hidden: Boolean)\nval columns = listOf(\n    ColumnSpec(\"name\", \"Name\", false, false),\n    ColumnSpec(\"status\", \"Status\", true, false),\n    ColumnSpec(\"owner\", \"Owner\", true, true),\n    ColumnSpec(\"expires\", \"Expires\", true, false),\n)\nval domains = listOf(\n    Domain(\"1\", \"example.com\", \"Active\", \"Sam Lee\", \"1 Feb 2027\"),\n    Domain(\"2\", \"example.org\", \"Expiring\", \"Ana Ruiz\", \"1 Dec 2026\"),\n)\nvar visible by remember { mutableStateOf(columns.filterNot { it.hidden }.map { it.id }.toSet()) }\nvar expanded by remember { mutableStateOf(true) }",
+      "code": "Column(\n    horizontalAlignment = Alignment.End,\n    verticalArrangement = Arrangement.spacedBy(MonarchTheme.spacing.space3),\n) {\n    Box {\n        MonarchButton(\n            text = \"Columns\",\n            onClick = { expanded = true },\n            modifier = Modifier.semantics { stateDescription = \"${visible.size} of ${columns.size} shown\" },\n            size = MonarchButtonSize.Sm,\n            leadingIcon = { MonarchIcon(SampleIcons.Columns, contentDescription = null) },\n        )\n        MonarchMenu(expanded = expanded, onDismissRequest = { expanded = false }) {\n            MonarchMenuLabel(text = \"Visible columns\")\n            columns.forEach { column ->\n                val shown = column.id in visible\n                MonarchMenuItem(\n                    text = column.title,\n                    onClick = { visible = if (shown) visible - column.id else visible + column.id },\n                    enabled = column.hideable && !(shown && visible.size == 1),\n                    selected = shown,\n                )\n            }\n            MonarchMenuDivider()\n            MonarchMenuItem(\n                text = \"Show all columns\",\n                onClick = {\n                    visible = columns.map { it.id }.toSet()\n                    expanded = false\n                },\n                enabled = visible.size < columns.size,\n            )\n            MonarchMenuItem(\n                text = \"Reset columns\",\n                onClick = {\n                    visible = columns.filterNot { it.hidden }.map { it.id }.toSet()\n                    expanded = false\n                },\n            )\n        }\n    }\n    // Room for the open menu above the table, as on the web.\n    Spacer(Modifier.height(MonarchTheme.spacing.space24 * 3 + MonarchTheme.spacing.space8))\n    MonarchDataTable(\n        caption = \"Domains\",\n        rows = domains,\n        columns = columns.map { column ->\n            MonarchDataTableColumn<Domain>(column.title, id = column.id, hideable = column.hideable) { it.value(column.id) }\n        },\n        rowKey = { it.id },\n        layout = MonarchDataTableLayout.Table,\n        hiddenColumns = columns.map { it.id }.toSet() - visible,\n    )\n}"
+    }
+  ],
+  "webEquivalent": "ColumnMenu",
+  "dependsOn": [
+    "dropdown-menu",
+    "button",
+    "checkbox"
+  ]
+}

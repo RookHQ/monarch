@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Button, TermsAcceptance } from '@rookcom/monarch-react';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './terms-acceptance.fixture.json';
 
-const DOCUMENTS = [
-  { label: 'Terms of Service', href: '#terms', version: '2026-11-01' },
-  { label: 'Privacy Policy', href: '#privacy', version: '2026-11-01' },
-];
+const HREFS = ['#terms', '#privacy'];
+const DOCUMENTS = (fixture.data.documents as readonly { label: string; version: string }[]).map(
+  (document, i) => ({ ...document, href: HREFS[i] ?? '#' }),
+);
 
 function SignUpForm() {
   const [sent, setSent] = useState<string | null>(null);
@@ -21,7 +23,7 @@ function SignUpForm() {
       <TermsAcceptance documents={DOCUMENTS} name="terms" versionsName="terms_versions" />
       <div>
         <Button type="submit" variant="primary">
-          Create account
+          {fixture.data.submit}
         </Button>
       </div>
       {sent ? <p>Submitted: {sent}</p> : null}

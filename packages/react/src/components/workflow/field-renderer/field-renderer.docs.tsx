@@ -6,38 +6,15 @@ import {
   type FormFieldValue,
 } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './field-renderer.fixture.json';
 
-const FIELDS: FormFieldDefinition[] = [
-  { id: 'name', type: 'short-text', label: 'Full name', required: true },
-  {
-    id: 'email',
-    type: 'email',
-    label: 'Email',
-    required: true,
-    description: 'We only use it to reply.',
-  },
-  {
-    id: 'where',
-    type: 'radio',
-    label: 'Where will you join from?',
-    options: [
-      { value: 'remote', label: 'Remote' },
-      { value: 'office', label: 'Office' },
-    ],
-  },
-  { id: 'relocate', type: 'yes-no', label: 'Can you relocate?' },
-  { id: 'rating', type: 'rating', label: 'How was the process?' },
-  {
-    id: 'consent',
-    type: 'consent',
-    label: 'Consent',
-    consentText: 'I agree to be contacted about this request.',
-    required: true,
-  },
-];
+const FIELDS = fixture.data.fields as FormFieldDefinition[];
 
 function FormDemo() {
-  const [values, setValues] = useState<Record<string, FormFieldValue>>({ name: 'Alex Morgan' });
+  const [values, setValues] = useState<Record<string, FormFieldValue>>({
+    [fixture.data.prefilled.field]: fixture.data.prefilled.value,
+  });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   return (
     <form style={{ display: 'grid', gap: 16, width: '100%', maxWidth: 520 }}>
@@ -46,7 +23,9 @@ function FormDemo() {
           key={f.id}
           field={f}
           value={values[f.id]}
-          confidence={f.id === 'name' ? 0.92 : undefined}
+          confidence={
+            f.id === fixture.data.prefilled.field ? fixture.data.prefilled.confidence : undefined
+          }
           error={touched[f.id] ? validateFormField(f, values[f.id]) : null}
           onChange={(v: FormFieldValue) => {
             setValues((s) => ({ ...s, [f.id]: v }));

@@ -1,0 +1,72 @@
+{
+  "id": "workspace-onboarding-form",
+  "name": null,
+  "title": "WorkspaceOnboardingForm",
+  "family": "identity",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "VStack of MonarchTextField, MonarchUsernameAvailabilityInput, MonarchRadioCardGroup and MonarchButton, with @State for values and validation",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the form that creates a workspace, with a name, a unique username checked for availability, and a workspace type, with inline validation and a pending submit.",
+  "whenToUse": "In the first-run flow of a product that needs a workspace or organisation before anything else.",
+  "whenNotToUse": "Not for editing an existing workspace's settings (use a Form with sections) and not for signing up a person (that is the account flow).",
+  "api": [
+    "VStack { MonarchTextField(\"Workspace name\", text: $name, error: nameError); MonarchUsernameAvailabilityInput(\"Workspace username\", text: $username, prefix: \"@\", onStatusChange: …, validate: …); MonarchRadioCardGroup(\"Type\", selection: $type, options: …, columns: 2); MonarchButton(\"Continue\", variant: .primary, isLoading: isCreating, fullWidth: true) { … } }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "invalid name",
+      "description": "MonarchTextField shows the error once the person has typed or submitted: at least 4 and at most 25 characters."
+    },
+    {
+      "name": "username checking, available, taken or failed",
+      "description": "MonarchUsernameAvailabilityInput checks the local rules and the product's lookup after typing pauses, and reports its status; Continue waits for valid."
+    },
+    {
+      "name": "type missing",
+      "description": "After a submit without a type, an error label with an icon appears under the cards."
+    },
+    {
+      "name": "creating",
+      "description": "The Continue button shows a progress indicator while the product creates the workspace."
+    }
+  ],
+  "appearance": "Each part keeps its own Monarch look: the text field's input border, the radio cards' selected border and mark, the primary button. Errors use the danger strong role with an icon.",
+  "platformNotes": "The web ships WorkspaceOnboardingForm as one pattern with onSubmit, checkUsername, rules and messages props. On iOS it is a recipe: the fields, rules and submit logic stay in the app's view, so the rules (4 to 25 characters for the name, 5 to 30 letters and digits for the username) and the default types (Creator and Business) are shown in the example and are not a Monarch API. The web's form error alert after a failed submit is left to the app, for example MonarchInlineNotice above the button.",
+  "accessibility": [
+    "Each field keeps its own label, helper and error text, read by VoiceOver with the field.",
+    "The username status is announced by MonarchUsernameAvailabilityInput.",
+    "The type cards are buttons with the selected trait.",
+    "Errors have an icon and text, not colour alone.",
+    "The Continue button reports its loading state."
+  ],
+  "edgeCases": [
+    "Submitting while the username is still being checked does nothing; tell the person to wait, as the catalogue page does.",
+    "At the accessibility text sizes the two type cards stack in one column."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Onboarding with availability check (try \"acme\")",
+      "fixture": "workspace-onboarding-form",
+      "webExample": "Onboarding with availability check (try \"acme\")",
+      "template": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    MonarchTextField(\"Workspace name\", text: $name, prompt: \"Acme Inc.\", error: nameError, isRequired: true)\n    MonarchUsernameAvailabilityInput(\n        \"Workspace username\",\n        text: $username,\n        prompt: \"acme\",\n        helper: \"Letters and numbers only, 5 to 30 characters.\",\n        prefix: \"@\",\n        isRequired: true,\n        onStatusChange: { status, _ in usernameStatus = status },\n        validate: { handle in await Self.checkUsername(handle) }\n    )\n    .monarchHelperAbove()\n    MonarchRadioCardGroup(\n        \"Type\",\n        selection: $type,\n        options: [\n            MonarchRadioCardOption(\"creator\", title: \"Creator\", description: \"For individual creators and personal projects\", systemImage: \"person\"),\n            MonarchRadioCardOption(\"business\", title: \"Business\", description: \"For teams and companies\", systemImage: \"building.2\"),\n        ],\n        columns: 2,\n        compactColumns: 2\n    )\n    if hasSubmitted && type == nil {\n        Label(\"Choose a workspace type\", systemImage: \"exclamationmark.circle\")\n            .monarchTextStyle(.caption)\n            .foregroundStyle(theme.colors.dangerStrong)\n    }\n    MonarchButton(\"Continue\", variant: .primary, isLoading: isCreating, fullWidth: true) {\n        hasSubmitted = true\n        guard nameError == nil, type != nil, usernameStatus == .valid else { return }\n        isCreating = true\n        // Create the workspace, then set isCreating to false.\n    }\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var name = {{name}}\n@State private var username = {{username}}\n@State private var type: String?\n@State private var usernameStatus = MonarchUsernameAvailabilityStatus.idle\n@State private var hasSubmitted = false\n@State private var isCreating = false\n\nprivate var nameError: String? {\n    let count = name.trimmingCharacters(in: .whitespacesAndNewlines).count\n    guard hasSubmitted || count > 0 else { return nil }\n    if count < 4 { return \"Name must be at least 4 characters\" }\n    if count > 25 { return \"Name must be at most 25 characters\" }\n    return nil\n}\n\nnonisolated private static func checkUsername(_ handle: String) async -> MonarchUsernameAvailabilityResult? {\n    guard !handle.isEmpty else { return nil }\n    guard handle.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) else {\n        return MonarchUsernameAvailabilityResult(isValid: false, message: \"Use letters and numbers only\")\n    }\n    guard (5...30).contains(handle.count) else {\n        return MonarchUsernameAvailabilityResult(isValid: false, message: \"Use 5 to 30 characters\")\n    }\n    // Call the product's availability lookup here.\n    return MonarchUsernameAvailabilityResult(isValid: handle.lowercased() != \"acmeinc\")\n}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var name = \"\"\n@State private var username = \"\"\n@State private var type: String?\n@State private var usernameStatus = MonarchUsernameAvailabilityStatus.idle\n@State private var hasSubmitted = false\n@State private var isCreating = false\n\nprivate var nameError: String? {\n    let count = name.trimmingCharacters(in: .whitespacesAndNewlines).count\n    guard hasSubmitted || count > 0 else { return nil }\n    if count < 4 { return \"Name must be at least 4 characters\" }\n    if count > 25 { return \"Name must be at most 25 characters\" }\n    return nil\n}\n\nnonisolated private static func checkUsername(_ handle: String) async -> MonarchUsernameAvailabilityResult? {\n    guard !handle.isEmpty else { return nil }\n    guard handle.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) else {\n        return MonarchUsernameAvailabilityResult(isValid: false, message: \"Use letters and numbers only\")\n    }\n    guard (5...30).contains(handle.count) else {\n        return MonarchUsernameAvailabilityResult(isValid: false, message: \"Use 5 to 30 characters\")\n    }\n    // Call the product's availability lookup here.\n    return MonarchUsernameAvailabilityResult(isValid: handle.lowercased() != \"acmeinc\")\n}",
+      "code": "VStack(alignment: .leading, spacing: theme.spacing.space4) {\n    MonarchTextField(\"Workspace name\", text: $name, prompt: \"Acme Inc.\", error: nameError, isRequired: true)\n    MonarchUsernameAvailabilityInput(\n        \"Workspace username\",\n        text: $username,\n        prompt: \"acme\",\n        helper: \"Letters and numbers only, 5 to 30 characters.\",\n        prefix: \"@\",\n        isRequired: true,\n        onStatusChange: { status, _ in usernameStatus = status },\n        validate: { handle in await Self.checkUsername(handle) }\n    )\n    .monarchHelperAbove()\n    MonarchRadioCardGroup(\n        \"Type\",\n        selection: $type,\n        options: [\n            MonarchRadioCardOption(\"creator\", title: \"Creator\", description: \"For individual creators and personal projects\", systemImage: \"person\"),\n            MonarchRadioCardOption(\"business\", title: \"Business\", description: \"For teams and companies\", systemImage: \"building.2\"),\n        ],\n        columns: 2,\n        compactColumns: 2\n    )\n    if hasSubmitted && type == nil {\n        Label(\"Choose a workspace type\", systemImage: \"exclamationmark.circle\")\n            .monarchTextStyle(.caption)\n            .foregroundStyle(theme.colors.dangerStrong)\n    }\n    MonarchButton(\"Continue\", variant: .primary, isLoading: isCreating, fullWidth: true) {\n        hasSubmitted = true\n        guard nameError == nil, type != nil, usernameStatus == .valid else { return }\n        isCreating = true\n        // Create the workspace, then set isCreating to false.\n    }\n}"
+    }
+  ],
+  "webEquivalent": "WorkspaceOnboardingForm",
+  "dependsOn": [
+    "text-field",
+    "username-availability-input",
+    "radio-card-group",
+    "button"
+  ]
+}

@@ -1,0 +1,21 @@
+// CI only. Maven Central answers 429 (Too Many Requests) to busy GitHub-hosted runners, so the
+// Android jobs look in Google's public mirror of Maven Central first. The project's own
+// repositories (google(), mavenCentral(), gradlePluginPortal()) stay in place after it, so a
+// module the mirror lacks still resolves. Local builds do not use this file.
+def mirrorUrl = 'https://maven-central.storage-download.googleapis.com/maven2/'
+
+def addMirrorFirst = { repositories ->
+    // An empty list means Gradle's default (the plugin portal); adding to it would replace that.
+    if (repositories.isEmpty()) return
+    def mirror = repositories.maven {
+        name = 'MavenCentralMirror'
+        url = mirrorUrl
+    }
+    repositories.remove(mirror)
+    repositories.addFirst(mirror)
+}
+
+settingsEvaluated { settings ->
+    addMirrorFirst(settings.pluginManagement.repositories)
+    addMirrorFirst(settings.dependencyResolutionManagement.repositories)
+}

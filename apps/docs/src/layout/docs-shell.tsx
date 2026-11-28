@@ -42,6 +42,7 @@ export function DocsShell({
         Skip to content
       </a>
       <TopBar
+        path={path}
         currentGroup={group}
         menuOpen={menuOpen}
         onOpenMenu={() => {

@@ -1,0 +1,69 @@
+{
+  "id": "live-region",
+  "name": null,
+  "title": "LiveRegion",
+  "family": "interaction",
+  "category": "A",
+  "coverage": "native",
+  "kind": "native",
+  "wrapsNative": "AccessibilityNotification.Announcement(_:).post(); AttributedString.accessibilitySpeechAnnouncementPriority; accessibilityAddTraits(.updatesFrequently)",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "Telling a screen reader about a change without moving focus is a posted announcement on iOS, not a rendered region. Monarch ships nothing and uses the same call inside its components.",
+  "whenToUse": "Post an announcement when something changes that the person did not directly cause or cannot see: a save finished, a result count changed, an error appeared, an item moved. For a value that changes continuously, add the updatesFrequently trait to the element instead.",
+  "whenNotToUse": "Do not announce what VoiceOver already reads: the new value of the focused control, or a screen change. When a new screen or a large part of one appears, post AccessibilityNotification.ScreenChanged or LayoutChanged instead.",
+  "api": [
+    "AccessibilityNotification.Announcement(_ announcement: String).post()",
+    "AccessibilityNotification.Announcement(_ announcement: AttributedString).post()",
+    "var AttributedString.accessibilitySpeechAnnouncementPriority: AccessibilityNotification.Announcement.Priority (.low, .default, .high)",
+    "func accessibilityAddTraits(_ traits: AccessibilityTraits) -> some View"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "polite",
+      "description": "The default priority. The announcement may be dropped if other speech interrupts it."
+    },
+    {
+      "name": "assertive",
+      "description": "The high priority interrupts current speech. Keep it for errors and for the steps of a drag."
+    }
+  ],
+  "appearance": "Nothing is drawn. If sighted people need the message too, show it with a banner or text as well.",
+  "platformNotes": "The web renders an aria-live region and changes its text; the web component also offers a useAnnouncer hook. iOS has no live region: the app posts the announcement at the moment of the change. Android sets a live-region property on a composable instead. Monarch components that announce (the text field's error, the stop button's stopped state, the typing dots) call the same API.",
+  "accessibility": [
+    "System behaviour: the announcement is spoken by VoiceOver and shown on a braille display without moving focus.",
+    "Nothing is spoken when no assistive technology is running; posting is always safe.",
+    "An element with the updatesFrequently trait is re-read at intervals while it has focus, instead of on every change."
+  ],
+  "edgeCases": [
+    "An announcement posted in the same moment as a screen change is usually lost; post it after the transition.",
+    "The same text posted twice is spoken twice. No padding character is needed, unlike on the web.",
+    "The priority attribute needs the AttributedString form."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Visible status text that is also announced",
+      "fixture": "live-region",
+      "webExample": "Visible status text that is also announced",
+      "template": "HStack(spacing: 12) {\n    MonarchButton({{add}}, variant: .secondary) {\n        count += 1\n        AccessibilityNotification.Announcement(count == 1 ? \"1 item in the list.\" : \"\\(count) items in the list.\").post()\n    }\n    // The same message, shown, for people who do not use VoiceOver.\n    Text(count == 0 ? {{empty}} : (count == 1 ? \"1 item in the list.\" : \"\\(count) items in the list.\"))\n        .monarchTextStyle(.body)\n        .foregroundStyle(theme.colors.textMuted)\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var count = 0",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var count = 0",
+      "code": "HStack(spacing: 12) {\n    MonarchButton(\"Add item\", variant: .secondary) {\n        count += 1\n        AccessibilityNotification.Announcement(count == 1 ? \"1 item in the list.\" : \"\\(count) items in the list.\").post()\n    }\n    // The same message, shown, for people who do not use VoiceOver.\n    Text(count == 0 ? \"No items yet.\" : (count == 1 ? \"1 item in the list.\" : \"\\(count) items in the list.\"))\n        .monarchTextStyle(.body)\n        .foregroundStyle(theme.colors.textMuted)\n}"
+    },
+    {
+      "title": "Announce an error at once",
+      "code": "MonarchButton(\"Upload\") {\n    var message = AttributedString(\"Upload failed. Check the connection.\")\n    message.accessibilitySpeechAnnouncementPriority = .high\n    AccessibilityNotification.Announcement(message).post()\n}"
+    },
+    {
+      "title": "A value that changes often",
+      "code": "ProgressView(\"Uploading\", value: 0.4)\n    .progressViewStyle(.monarchLinear)\n    .accessibilityAddTraits(.updatesFrequently)"
+    }
+  ],
+  "webEquivalent": "LiveRegion",
+  "dependsOn": []
+}

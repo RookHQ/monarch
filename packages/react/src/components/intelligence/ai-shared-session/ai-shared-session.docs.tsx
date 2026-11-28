@@ -4,29 +4,11 @@ import {
   type AiSharedSessionRequest,
 } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-shared-session.fixture.json';
 
-const participants: AiSharedSessionParticipant[] = [
-  { id: 'maya', name: 'Maya Chen', kind: 'person', role: 'owner', presence: 'active', you: true },
-  {
-    id: 'leo',
-    name: 'Leo Park',
-    kind: 'person',
-    role: 'editor',
-    presence: 'active',
-    activity: 'typing',
-  },
-  { id: 'ana', name: 'Ana Ruiz', kind: 'person', role: 'viewer', presence: 'away' },
-  { id: 'sam', name: 'Sam Okoro', kind: 'person', role: 'editor', presence: 'idle' },
-  { id: 'assistant', name: 'Assistant', kind: 'agent', presence: 'active' },
-  { id: 'research', name: 'Research agent', kind: 'agent', presence: 'idle' },
-];
-
-const queue: AiSharedSessionRequest[] = [
-  { id: 'r1', participantId: 'leo', preview: 'Compare the two drafts and list what changed' },
-  { id: 'r2', participantId: 'maya', preview: 'Summarise the meeting notes' },
-  { id: 'r3', participantId: 'sam', preview: 'List the open questions' },
-];
-
+const participants = fixture.data.participants as AiSharedSessionParticipant[];
+const queue = fixture.data.queue as AiSharedSessionRequest[];
 const asViewer = participants.map((p) => ({ ...p, you: p.id === 'ana' }));
 const asEditor = participants.map((p) => ({ ...p, you: p.id === 'leo' }));
 
@@ -182,7 +164,7 @@ export default {
           render: () => (
             <AiSharedSession
               participants={participants}
-              answering={{ participantId: 'assistant', forParticipantId: 'sam' }}
+              answering={fixture.data.answering}
               queue={queue}
               defaultQueueOpen
               onInvite={() => {}}

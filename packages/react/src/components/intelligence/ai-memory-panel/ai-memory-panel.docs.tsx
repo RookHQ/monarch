@@ -1,33 +1,10 @@
 import { useState } from 'react';
 import { AiMemoryPanel, type AiMemoryItem } from '@rookcom/monarch-react/ai';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './ai-memory-panel.fixture.json';
 
-const MEMORIES: AiMemoryItem[] = [
-  {
-    id: 'a1',
-    text: 'Prefers summaries under 200 words',
-    entity: { kind: 'person', name: 'Ada Lovelace' },
-    updatedAt: '2026-10-01T10:00:00Z',
-  },
-  {
-    id: 'a2',
-    text: 'Works in the Lisbon office',
-    entity: { kind: 'person', name: 'Ada Lovelace' },
-    updatedAt: '2026-10-05T10:00:00Z',
-  },
-  {
-    id: 'o1',
-    text: 'Fiscal year starts in April',
-    entity: { kind: 'org', name: 'Northwind' },
-    updatedAt: '2026-08-01T10:00:00Z',
-  },
-  {
-    id: 'p1',
-    text: 'Launch review is every Thursday',
-    entity: { kind: 'project', name: 'Atlas' },
-    updatedAt: '2026-09-01T10:00:00Z',
-  },
-];
+const MEMORIES = fixture.data.memories as AiMemoryItem[];
 
 function PanelDemo({ initial = MEMORIES, label }: { initial?: AiMemoryItem[]; label?: string }) {
   const [memories, setMemories] = useState(initial);
@@ -35,6 +12,8 @@ function PanelDemo({ initial = MEMORIES, label }: { initial?: AiMemoryItem[]; la
     <div style={{ maxWidth: '32rem' }}>
       <AiMemoryPanel
         memories={memories}
+        locale={fixture.data.locale}
+        timeZone={fixture.data.timeZone}
         {...(label ? { messages: { label } } : {})}
         onEdit={(id, text) =>
           setMemories((all) =>

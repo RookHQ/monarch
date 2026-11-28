@@ -1,0 +1,146 @@
+{
+  "id": "form-field",
+  "name": "MonarchFormField",
+  "title": "Field",
+  "family": "forms",
+  "category": "B",
+  "coverage": "build",
+  "kind": "wrapper",
+  "wrapsNative": "VStack or HStack around any control, with accessibilityLabel and accessibilityHint applied to the control",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A visible label, one control, help text and an error message, with the label and supporting text given to the control for VoiceOver.",
+  "whenToUse": "For a control that has no label, help or error of its own: a Picker, a Stepper, a Toggle with a description, MonarchTagInput, MonarchRangeSlider or a custom control.",
+  "whenNotToUse": "MonarchTextField, MonarchPasswordInput and MonarchNumberInput already have a label, help and error; use them alone. Inside a system Form, a plain Toggle or Picker with a Section footer is the native layout.",
+  "api": [
+    "init(_ label: String, helper: String? = nil, error: String? = nil, layout: MonarchFormFieldLayout = .stack, isRequired: Bool = false, mode: MonarchFormFieldMode = .single, optionalText: String? = nil, labels: MonarchFormFieldLabels = MonarchFormFieldLabels(), @ViewBuilder control: () -> Control)",
+    "enum MonarchFormFieldLayout { case stack, row }",
+    "struct MonarchFormFieldLabels { init(required: String? = nil, error: (@Sendable (String) -> String)? = nil) }",
+    "enum MonarchFormFieldMode { case single, group }"
+  ],
+  "options": [
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The visible label. It is also the VoiceOver label of the control."
+    },
+    {
+      "name": "helper",
+      "type": "String?",
+      "default": "nil",
+      "description": "Help text. Under the control in the stack layout, under the label in the row layout."
+    },
+    {
+      "name": "error",
+      "type": "String?",
+      "default": "nil",
+      "description": "An error message, shown with an icon under the control and announced when it appears. An empty string is no error."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchFormFieldLayout",
+      "default": ".stack",
+      "description": "stack puts the label above the control; row puts the label and help text before the control and the error under both."
+    },
+    {
+      "name": "isRequired",
+      "type": "Bool",
+      "default": "false",
+      "description": "Shows a mark after the label and adds \"Required\" to the hint of the control."
+    },
+    {
+      "name": "mode",
+      "type": "MonarchFormFieldMode",
+      "default": ".single",
+      "description": ".group for several controls that give one value: each keeps its own label and the field names the group."
+    },
+    {
+      "name": "optionalText",
+      "type": "String?",
+      "default": "nil",
+      "description": "Text after the label of an optional field, such as \"Optional\". Ignored when isRequired is true."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchFormFieldLabels",
+      "default": "MonarchFormFieldLabels()",
+      "description": "Replacements for the spoken \"Required\" and \"Error: …\"."
+    },
+    {
+      "name": "control",
+      "type": "() -> Control",
+      "default": "required",
+      "description": "One control without a visible label of its own."
+    }
+  ],
+  "states": [
+    {
+      "name": "default",
+      "description": "Label in the default text colour, help text in the muted colour."
+    },
+    {
+      "name": "required",
+      "description": "A mark in the danger colour after the label; \"Required\" at the end of the hint."
+    },
+    {
+      "name": "error",
+      "description": "The error replaces the help text in the stack layout and appears under the row in the row layout, in the danger colour with an icon. It is the first part of the hint and is announced when it changes to a new message."
+    },
+    {
+      "name": "disabled",
+      "description": "Set with disabled(_:). The control is disabled by the environment; the label, mark and help text take the disabled text colour."
+    }
+  ],
+  "appearance": "The label uses the label type style in the default text colour, help text the caption style in the muted text colour, the required mark and the error the strong danger colour. The field draws no box of its own, so it is the same in light, dark and both high-contrast themes apart from those roles.",
+  "platformNotes": "On the web, Field gives the control its id, aria-describedby, aria-invalid and aria-required through context, and NativeSelect is part of the same file. On iOS there is no id wiring: the field applies accessibilityLabel and accessibilityHint to the control, and there is no invalid or required trait, so the error and \"Required\" are spoken in the hint. The control is not told it is invalid, so it does not change its border; MonarchTextField has its own error parameter for that. The platform select is Picker, used inside the field. The row layout is an HStack rather than LabeledContent, because LabeledContent restyles its content outside a Form. Android builds the same component.",
+  "accessibility": [
+    "The visible label, mark, help text and error are hidden from VoiceOver; the control is labelled with the label instead.",
+    "The hint of the control is the error (\"Error: …\"), the help text and \"Required\", in that order, each when present; the order is built by a tested pure function.",
+    "When the error changes to a new message, it is posted as an announcement.",
+    "The error has an icon and text, and the required mark is backed by the spoken \"Required\", so neither depends on colour.",
+    "The row layout becomes a stack at the accessibility text sizes."
+  ],
+  "edgeCases": [
+    "The label and hint are applied to the whole control slot. Put one control in it: a control made of several elements, such as MonarchRangeSlider, has its own label parameter and is better given the same text there.",
+    "A Toggle in the row layout should use labelsHidden(), or its own label is drawn twice.",
+    "A long label and help text wrap; in the row layout the control keeps its size and the text column takes the rest."
+  ],
+  "tests": [
+    "MonarchFormFieldTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Validation wiring",
+      "fixture": "form-field",
+      "webExample": "Validation wiring",
+      "template": "MonarchFormField(\n    {{label}},\n    helper: {{description}},\n    error: email.isEmpty || email.contains(\"@\") ? nil : {{error}},\n    isRequired: true\n) {\n    TextField({{placeholder}}, text: $email)\n        .textFieldStyle(.plain)\n        .padding(theme.spacing.space3)\n        .background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: MonarchTokens.Radius.md))\n        .overlay(\n            RoundedRectangle(cornerRadius: MonarchTokens.Radius.md)\n                .strokeBorder(\n                    email.isEmpty || email.contains(\"@\") ? theme.colors.borderInput : theme.colors.dangerSolid,\n                    lineWidth: 1\n                )\n        )\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var email = {{value}}",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var email = \"not-an-email\"",
+      "code": "MonarchFormField(\n    \"Email\",\n    helper: \"Used for sign-in codes only.\",\n    error: email.isEmpty || email.contains(\"@\") ? nil : \"Enter a valid email address.\",\n    isRequired: true\n) {\n    TextField(\"you@example.com\", text: $email)\n        .textFieldStyle(.plain)\n        .padding(theme.spacing.space3)\n        .background(theme.colors.bgSurface, in: RoundedRectangle(cornerRadius: MonarchTokens.Radius.md))\n        .overlay(\n            RoundedRectangle(cornerRadius: MonarchTokens.Radius.md)\n                .strokeBorder(\n                    email.isEmpty || email.contains(\"@\") ? theme.colors.borderInput : theme.colors.dangerSolid,\n                    lineWidth: 1\n                )\n        )\n}"
+    },
+    {
+      "title": "A switch with a description",
+      "setup": "@State private var digest = true",
+      "code": "MonarchFormField(\"Weekly digest\", helper: \"A summary of activity, sent on Monday mornings.\", layout: .row) {\n    Toggle(\"Weekly digest\", isOn: $digest).labelsHidden()\n}"
+    },
+    {
+      "title": "Validation",
+      "setup": "@State private var seats = 0",
+      "code": "MonarchFormField(\"Seats\", error: seats == 0 ? \"Choose at least 1 seat.\" : nil) {\n    Stepper(\"Seats: \\(seats)\", value: $seats, in: 0...10)\n}"
+    },
+    {
+      "title": "A group of controls",
+      "code": "MonarchFormField(\"Starts\", helper: \"In your time zone.\", mode: .group) {\n    HStack {\n        DatePicker(\"Date\", selection: $start, displayedComponents: .date).labelsHidden()\n        DatePicker(\"Time\", selection: $start, displayedComponents: .hourAndMinute).labelsHidden()\n    }\n}",
+      "setup": "@State private var start = Date()"
+    }
+  ],
+  "webEquivalent": "Field",
+  "dependsOn": [
+    "text",
+    "icon"
+  ]
+}

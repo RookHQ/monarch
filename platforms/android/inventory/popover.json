@@ -1,0 +1,118 @@
+{
+  "id": "popover",
+  "name": "MonarchPopover",
+  "title": "Popover",
+  "family": "overlays",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "androidx.compose.ui.window.Popup with a androidx.compose.ui.window.PopupPositionProvider",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A floating panel anchored to a control, for a small amount of interactive content that belongs to it. Material 3 has no popover, so Monarch builds one on the Compose Popup.",
+  "whenToUse": "For a filter panel, a quick edit or a short explanation with a link that belongs to one control and should not take the person to another screen.",
+  "whenNotToUse": "For a list of actions use DropdownMenu (see dropdown-menu). For text that only names a control use a PlainTooltip (see tooltip). For a decision the person must take before going on use AlertDialog (see dialog). For a task with several steps or a long form on a phone use ModalBottomSheet (see sheet).",
+  "api": [
+    "@Composable fun MonarchPopover(expanded: Boolean, onDismissRequest: () -> Unit, label: String, modifier: Modifier = Modifier, side: MonarchPopoverSide = MonarchPopoverSide.Bottom, content: @Composable ColumnScope.() -> Unit)",
+    "enum class MonarchPopoverSide { Bottom, Top }"
+  ],
+  "options": [
+    {
+      "name": "expanded",
+      "type": "Boolean",
+      "default": "required",
+      "description": "Whether the panel is shown."
+    },
+    {
+      "name": "onDismissRequest",
+      "type": "() -> Unit",
+      "default": "required",
+      "description": "Called on a tap outside, the back gesture or Escape. Set expanded to false in it."
+    },
+    {
+      "name": "label",
+      "type": "String",
+      "default": "required",
+      "description": "The spoken name of the panel, announced when it opens. Start the content with a visible heading too."
+    },
+    {
+      "name": "modifier",
+      "type": "Modifier",
+      "default": "Modifier",
+      "description": "The modifier of the panel."
+    },
+    {
+      "name": "side",
+      "type": "MonarchPopoverSide",
+      "default": "MonarchPopoverSide.Bottom",
+      "description": "The preferred side of the anchor. The panel moves to the other side when it does not fit."
+    },
+    {
+      "name": "content",
+      "type": "@Composable ColumnScope.() -> Unit",
+      "default": "required",
+      "description": "The content, in a column with a 12dp gap and 16dp padding. Text takes the default text color."
+    }
+  ],
+  "states": [
+    {
+      "name": "closed",
+      "description": "Nothing is drawn; the popup window does not exist."
+    },
+    {
+      "name": "open",
+      "description": "The panel fades and grows in over the fast duration below or above the anchor, aligned with its start edge. With animations removed it appears at once."
+    },
+    {
+      "name": "no room on the preferred side",
+      "description": "The panel opens on the other side, and is moved inward to keep 16dp from the window edges."
+    }
+  ],
+  "appearance": "The panel uses the raised background role with the default text role, a 1dp border in the subtle border role (the strong border role in the high-contrast themes), 12dp corners and the large elevation. Up to 384dp wide, and never wider than the window minus 16dp on each side.",
+  "platformNotes": "The parity map lists Popover as build on Android and native on iOS, where SwiftUI has popover(isPresented:). It is placed like the Material 3 DropdownMenu: in a Box next to its anchor, whose bounds it uses. The web Popover is non-modal and leaves the page interactive; on Android the popup takes focus, so a tap outside first closes it (the same as iOS). The web's align (start, center, end) and the left and right sides are not offered: phones have little room beside a control, so the panel is start-aligned and opens below or above. The web's PopoverClose is a button that sets expanded to false. The panel has no arrow, as on the web.",
+  "accessibility": [
+    "The panel is a pane with the label as its title, so TalkBack announces it when it opens.",
+    "The popup takes focus: TalkBack and keyboard focus move into it, and back, Escape and a tap outside call onDismissRequest.",
+    "Controls inside keep their own 48dp touch targets.",
+    "Text inside wraps; the panel's width is limited and its height follows the content.",
+    "The opening animation is replaced by an immediate change when animations are removed."
+  ],
+  "edgeCases": [
+    "At the largest font size a long content can be taller than the screen; put it in a verticalScroll column of limited height, or use a sheet.",
+    "If the anchor scrolls away, the panel follows the anchor's position as long as it is composed.",
+    "The panel does not close by itself after an action; call onDismissRequest's code from a Done button.",
+    "Two popovers open at once each take focus in turn; open one at a time."
+  ],
+  "tests": [
+    "MonarchPopoverTest",
+    "ComponentMatrixTest",
+    "InventoryExamplesTest",
+    "ComponentPreviewsTest"
+  ],
+  "examples": [
+    {
+      "title": "Filters",
+      "fixture": "popover",
+      "webExample": "Filters",
+      "template": "Box {\n    MonarchButton(text = {{trigger}}, onClick = { open = true })\n    MonarchPopover(\n        expanded = open,\n        onDismissRequest = { open = false },\n        label = {{label}},\n    ) {\n        MonarchCheckboxRow(checked = first, onCheckedChange = { first = it }, label = {{options.0.label}})\n        MonarchCheckboxRow(checked = second, onCheckedChange = { second = it }, label = {{options.1.label}})\n    }\n}",
+      "setupTemplate": "var open by remember { mutableStateOf(true) }\nvar first by remember { mutableStateOf({{options.0.checked}}) }\nvar second by remember { mutableStateOf({{options.1.checked}}) }",
+      "setup": "var open by remember { mutableStateOf(true) }\nvar first by remember { mutableStateOf(true) }\nvar second by remember { mutableStateOf(false) }",
+      "code": "Box {\n    MonarchButton(text = \"Filters\", onClick = { open = true })\n    MonarchPopover(\n        expanded = open,\n        onDismissRequest = { open = false },\n        label = \"Filters\",\n    ) {\n        MonarchCheckboxRow(checked = first, onCheckedChange = { first = it }, label = \"Only mine\")\n        MonarchCheckboxRow(checked = second, onCheckedChange = { second = it }, label = \"Unassigned\")\n    }\n}",
+      "imports": [
+        "androidx.compose.foundation.layout.IntrinsicSize",
+        "androidx.compose.foundation.layout.width"
+      ]
+    },
+    {
+      "title": "An explanation above its button",
+      "setup": "var open by remember { mutableStateOf(false) }",
+      "code": "Box {\n    MonarchButton(text = \"Why this price?\", onClick = { open = true }, variant = MonarchButtonVariant.Ghost)\n    MonarchPopover(\n        expanded = open,\n        onDismissRequest = { open = false },\n        label = \"Why this price\",\n        side = MonarchPopoverSide.Top,\n    ) {\n        MonarchText(text = \"Seats added this month are charged from the day they were added.\")\n    }\n}"
+    }
+  ],
+  "webEquivalent": "Popover",
+  "dependsOn": [
+    "card",
+    "button"
+  ]
+}

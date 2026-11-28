@@ -1,0 +1,159 @@
+{
+  "id": "file-card",
+  "name": "MonarchFileCard",
+  "title": "FileCard",
+  "family": "files",
+  "category": "C",
+  "coverage": "build",
+  "kind": "custom",
+  "wrapsNative": "Button with a custom ButtonStyle for opening, Toggle with .toggleStyle(.monarchCheckbox) for selection, Menu for actions, AsyncImage for a remote thumbnail",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "One file as a card or a row: a thumbnail or the type icon, the name, the type and size, optional badges, an optional selection checkbox and an optional menu of actions.",
+  "whenToUse": "To show files in a grid (card layout) or a list (row layout) where people open, select or act on them.",
+  "whenNotToUse": "Not for a file attached to a message or form, with upload progress (use MonarchAttachmentChip), and not for an upload in progress (use MonarchUploadQueue).",
+  "api": [
+    "init(_ name: String, isSelected: Binding<Bool>? = nil, size: Int64? = nil, contentType: String? = nil, meta: String? = nil, thumbnail: Image? = nil, badges: [String] = [], layout: MonarchFileCardLayout = .card, labels: MonarchFileCardLabels = MonarchFileCardLabels(), onOpen: (@MainActor () -> Void)? = nil, @ViewBuilder menu: () -> MenuItems)",
+    "init(_ name: String, isSelected: Binding<Bool>? = nil, size: Int64? = nil, contentType: String? = nil, meta: String? = nil, thumbnailURL: URL?, badges: [String] = [], layout: MonarchFileCardLayout = .card, labels: MonarchFileCardLabels = MonarchFileCardLabels(), onOpen: (@MainActor () -> Void)? = nil, @ViewBuilder menu: () -> MenuItems)",
+    "init(_ name: String, isSelected: Binding<Bool>? = nil, size: Int64? = nil, contentType: String? = nil, meta: String? = nil, thumbnail: Image? = nil, badges: [String] = [], layout: MonarchFileCardLayout = .card, labels: MonarchFileCardLabels = MonarchFileCardLabels(), onOpen: (@MainActor () -> Void)? = nil) where MenuItems == EmptyView",
+    "init(_ name: String, isSelected: Binding<Bool>? = nil, size: Int64? = nil, contentType: String? = nil, meta: String? = nil, thumbnailURL: URL?, badges: [String] = [], layout: MonarchFileCardLayout = .card, labels: MonarchFileCardLabels = MonarchFileCardLabels(), onOpen: (@MainActor () -> Void)? = nil) where MenuItems == EmptyView",
+    "enum MonarchFileCardLayout { case card, row }",
+    "struct MonarchFileCardLabels { init(select: (@Sendable (String) -> String)? = nil, actions: (@Sendable (String) -> String)? = nil, type: String? = nil) }"
+  ],
+  "options": [
+    {
+      "name": "name",
+      "type": "String",
+      "default": "required",
+      "description": "The file name with its extension. Shortened in the middle when it does not fit, so the extension stays visible."
+    },
+    {
+      "name": "isSelected",
+      "type": "Binding<Bool>?",
+      "default": "nil",
+      "description": "Shows a selection checkbox bound to this value: at the top leading corner of a card, at the start of a row."
+    },
+    {
+      "name": "size",
+      "type": "Int64?",
+      "default": "nil",
+      "description": "The size in bytes, shown in the locale's file units, such as \"2.4 MB\"."
+    },
+    {
+      "name": "contentType",
+      "type": "String?",
+      "default": "nil",
+      "description": "The MIME type. With the name it decides the type icon and the type in the meta line."
+    },
+    {
+      "name": "meta",
+      "type": "String?",
+      "default": "nil",
+      "description": "More text after the size, already localised, such as \"Edited yesterday\" or an owner."
+    },
+    {
+      "name": "thumbnail / thumbnailURL",
+      "type": "Image? / URL?",
+      "default": "nil / required",
+      "description": "A preview image, given directly or loaded with AsyncImage. The type icon on a subtle tile is shown without one, while loading and on failure."
+    },
+    {
+      "name": "badges",
+      "type": "[String]",
+      "default": "[]",
+      "description": "Short states shown as neutral MonarchBadges under the name, such as \"Shared\"."
+    },
+    {
+      "name": "layout",
+      "type": "MonarchFileCardLayout",
+      "default": ".card",
+      "description": "card: a 4:3 preview above the name, for grids. row: a small preview beside the name, for lists."
+    },
+    {
+      "name": "labels",
+      "type": "MonarchFileCardLabels",
+      "default": "MonarchFileCardLabels()",
+      "description": "Replacements for the spoken names of the checkbox and the menu, and for the type in the meta line."
+    },
+    {
+      "name": "onOpen",
+      "type": "(@MainActor () -> Void)?",
+      "default": "nil",
+      "description": "Opens the file, for example with Quick Look. Makes the preview, name and meta one button with a pressed state."
+    },
+    {
+      "name": "menu",
+      "type": "@ViewBuilder () -> MenuItems",
+      "default": "none (no menu)",
+      "description": "The items of the actions menu, shown behind an ellipsis button at the top trailing corner of a card or the end of a row."
+    }
+  ],
+  "states": [
+    {
+      "name": "rest",
+      "description": "Surface background with a subtle border."
+    },
+    {
+      "name": "pressed",
+      "description": "With onOpen: the card turns to the subtle background with the default border; a row tints its open area."
+    },
+    {
+      "name": "selected",
+      "description": "The checkbox is ticked and the card has the accent subtle background and a thicker accent border."
+    },
+    {
+      "name": "disabled",
+      "description": "With .disabled(true): subtle background, disabled text colours, and the open button, checkbox and menu cannot be used."
+    },
+    {
+      "name": "no thumbnail or failed thumbnail",
+      "description": "The file type icon on a subtle tile."
+    }
+  ],
+  "appearance": "A rounded card on the surface background with a subtle border; the preview is clipped to a smaller radius. Name in the label style and default text colour, the meta line in the caption style and muted colour. Selection uses the accent subtle and accent border roles. All colours are theme roles, so dark and high-contrast themes follow.",
+  "platformNotes": "The web's href becomes onOpen: the app opens the file itself, for example with Quick Look or a document viewer. The web's actions slot becomes a Menu of standard items, so it follows the platform's menu behaviour. The web reports Shift for range selection; iOS has no Shift-click, so range selection belongs to the app (for example EditMode in a List). Badges are strings shown as neutral MonarchBadges instead of free content.",
+  "accessibility": [
+    "The preview, name and meta line are one element labelled with the file name, whose value is the type, size, meta and badges; with onOpen it is a button.",
+    "The checkbox is a standard Toggle labelled \"Select\" and the file name; the label is hidden on screen.",
+    "The actions menu is a standard Menu labelled \"Actions for\" and the file name, with a 44-point touch target.",
+    "Selection is shown by the check mark and a thicker border as well as colour.",
+    "The thumbnail and the type icon are hidden from VoiceOver, because the value already says the type."
+  ],
+  "edgeCases": [
+    "Long names wrap to two lines in a card and one line in a row, shortened in the middle.",
+    "A remote thumbnail that fails to load shows the type icon; it is not an error state.",
+    "Without onOpen the card is not a button but is still one element for VoiceOver."
+  ],
+  "tests": [
+    "MonarchFileCardTests",
+    "ComponentMatrixTests",
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Selectable card with actions",
+      "fixture": "file-card",
+      "webExample": "Selectable card with actions",
+      "template": "MonarchFileCard(\n    {{name}},\n    isSelected: $isSelected,\n    size: {{size}},\n    onOpen: {},\n    menu: {\n        Button({{menu.0}}) {}\n        Button({{menu.1}}) {}\n        Button({{menu.2}}, role: .destructive) {}\n    }\n)",
+      "setupTemplate": "@State private var isSelected = {{selected}}",
+      "setup": "@State private var isSelected = false",
+      "code": "MonarchFileCard(\n    \"site-survey.pdf\",\n    isSelected: $isSelected,\n    size: 3_400_000,\n    onOpen: {},\n    menu: {\n        Button(\"Download\") {}\n        Button(\"Rename\") {}\n        Button(\"Move to trash\", role: .destructive) {}\n    }\n)"
+    },
+    {
+      "title": "Rows in a list",
+      "code": "VStack {\n    MonarchFileCard(\"notes.txt\", size: 900, layout: .row, onOpen: {})\n    MonarchFileCard(\"archive.zip\", size: 9_800_000, meta: \"Shared by Sam\", layout: .row, onOpen: {})\n}"
+    }
+  ],
+  "webEquivalent": "FileCard",
+  "dependsOn": [
+    "card",
+    "file-type-icon",
+    "dropdown-menu",
+    "checkbox",
+    "badge"
+  ],
+  "icons": {
+    "actions": "MoreGlyph"
+  }
+}

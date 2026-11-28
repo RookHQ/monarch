@@ -1,18 +1,21 @@
-import { useState } from 'react';
+import { useState, type ComponentProps } from 'react';
 import { DownloadReportButton } from '@rookcom/monarch-react/patterns';
 import type { ComponentDocs } from '../../../internal/component-docs.js';
+// The scenario of the primary example, shared with iOS and Android (CROSS-PLATFORM.md section 8).
+import fixture from './download-report-button.fixture.json';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function ProgressDemo() {
-  const [progress, setProgress] = useState<number | null>(null);
+  const [progress, setProgress] = useState<number | null>(fixture.data.progress);
+  const [open, setOpen] = useState(true);
   return (
     <DownloadReportButton
-      formats={[
-        { id: 'csv', label: 'CSV', description: 'Opens in any spreadsheet' },
-        { id: 'xlsx', label: 'Excel' },
-        { id: 'pdf', label: 'PDF', description: 'For printing and sharing' },
-      ]}
+      open={open}
+      onOpenChange={setOpen}
+      formats={
+        fixture.data.formats as NonNullable<ComponentProps<typeof DownloadReportButton>['formats']>
+      }
       progress={progress}
       onDownload={async () => {
         for (let p = 0; p <= 1; p += 0.25) {
@@ -146,7 +149,7 @@ export default {
     },
     examples: {
       items: [
-        { title: 'Several formats with progress', render: () => <ProgressDemo /> },
+        { title: 'Several formats with progress', stage: true, render: () => <ProgressDemo /> },
         {
           title: 'Queued for background preparation',
           render: () => (

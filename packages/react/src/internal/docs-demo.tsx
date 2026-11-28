@@ -3,7 +3,7 @@
  * component code may not (.dependency-cruiser.cjs). Excluded from the build.
  * Monarch ships no icon set: apps pass their own (for AI features, lucide `Bot`).
  */
-import type { SVGProps } from 'react';
+import type { ReactNode, SVGProps } from 'react';
 
 export const PlusIcon = () => (
   <svg
@@ -86,6 +86,20 @@ export const FilterIcon = () => (
   </svg>
 );
 
+export const LinkIcon = () => (
+  <svg {...stroke}>
+    <path d="M6.75 9.25a2.75 2.75 0 0 0 3.9 0l2-2a2.75 2.75 0 0 0-3.9-3.9l-.75.75" />
+    <path d="M9.25 6.75a2.75 2.75 0 0 0-3.9 0l-2 2a2.75 2.75 0 0 0 3.9 3.9l.75-.75" />
+  </svg>
+);
+
+export const CopyIcon = () => (
+  <svg {...stroke}>
+    <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
+    <path d="M10.5 5.5V4A1.5 1.5 0 0 0 9 2.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5" />
+  </svg>
+);
+
 // Rook app shell examples (./shell): navigation glyphs and a generic app mark.
 const shellBase = {
   width: 18,
@@ -163,3 +177,31 @@ export const AppMark = (p: P) => (
     />
   </svg>
 );
+
+/**
+ * A plain list for dashboard demo widgets: a label on the left and a value,
+ * badge or date on the right, one hairline between rows.
+ */
+export function DemoRows({ rows }: { rows: readonly { label: ReactNode; value: ReactNode }[] }) {
+  return (
+    <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid' }}>
+      {rows.map((row, i) => (
+        <li
+          key={i}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 'var(--mn-space-3)',
+            paddingBlock: 'var(--mn-space-2)',
+            borderBlockStart: i ? '1px solid var(--mn-color-border-subtle)' : undefined,
+            fontSize: 'var(--mn-text-sm)',
+          }}
+        >
+          <span style={{ minWidth: 0 }}>{row.label}</span>
+          <span style={{ flex: 'none', color: 'var(--mn-color-text-muted)' }}>{row.value}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}

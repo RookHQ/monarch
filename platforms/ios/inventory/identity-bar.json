@@ -1,0 +1,76 @@
+{
+  "id": "identity-bar",
+  "name": null,
+  "title": "IdentityBar",
+  "family": "navigation",
+  "category": "B",
+  "coverage": "compose",
+  "kind": "recipe",
+  "wrapsNative": "NavigationStack toolbar: ToolbarItem(placement: .navigation) for the product, searchable(text:prompt:) for search, and ToolbarItemGroup(placement: .primaryAction) with MonarchNotificationsBell and a Menu labelled by MonarchAvatar for the account",
+  "status": "available",
+  "layer": "components",
+  "since": "0.1.0",
+  "summary": "A recipe, not a component: the top bar content of a Rook app (product name, search, notifications and the account menu) placed in the system navigation bar.",
+  "whenToUse": "At the top of every screen of a Rook app, in the NavigationStack of each tab or in the detail column of a NavigationSplitView.",
+  "whenNotToUse": "Inside a modal sheet or a full-screen flow, which shows its own title and Cancel or Done instead. For a marketing page header, use the app's own layout.",
+  "api": [
+    "NavigationStack { content.navigationTitle(_:).searchable(text:prompt:).toolbar { ToolbarItem(placement: .navigation) { Label(product, systemImage:) }; ToolbarItemGroup(placement: .primaryAction) { MonarchNotificationsBell(unreadCount:action:); Menu { … } label: { MonarchAvatar(image:name:size:status:isDecorative:) } } } }"
+  ],
+  "options": [],
+  "states": [
+    {
+      "name": "default",
+      "description": "The product name and icon at the leading edge, the screen title, and notifications and the account avatar at the trailing edge."
+    },
+    {
+      "name": "unread",
+      "description": "MonarchNotificationsBell shows its count badge and reads the unread count."
+    },
+    {
+      "name": "searching",
+      "description": "The system search field under the title takes the query; the app filters its content."
+    },
+    {
+      "name": "account menu open",
+      "description": "The system menu with the signed-in address, Profile and preferences, Rook account and Sign out."
+    }
+  ],
+  "appearance": "The navigation bar, search field and menu are the system ones in every theme; the product label uses the Monarch label text style, and the bell and avatar keep their Monarch colours.",
+  "platformNotes": "The web ships IdentityBar as a sticky <header> with product, start, search, notifications, actions and account slots. On iOS the navigation bar is the banner, so the recipe fills the bar's slots instead of drawing a bar: the product goes in the navigation placement, search uses searchable, which the system places under the title, and the trailing actions go in the primary action group. The web's sticky option is the navigation bar's own behaviour. The start slot (breadcrumb or space switcher) is the navigationTitle or a title menu. Rook account opens in the browser; use openURL in its action.",
+  "accessibility": [
+    "The product label has the header trait; its icon is part of the label.",
+    "The search field is the system search field with its prompt as the placeholder and label.",
+    "MonarchNotificationsBell reads \"Notifications\" with the unread count.",
+    "The account menu is named \"Account: <name>\" with accessibilityLabel; the avatar inside is decorative and keeps a 44-point target with monarchMinimumHitTarget().",
+    "Sign out uses the destructive role, which VoiceOver announces."
+  ],
+  "edgeCases": [
+    "On a narrow phone the system may move toolbar items into an overflow menu; keep the trailing group to the bell and the account.",
+    "A long product name truncates in the bar; keep it short.",
+    "Without search, leave out searchable."
+  ],
+  "tests": [
+    "InventoryExampleTests"
+  ],
+  "examples": [
+    {
+      "title": "Product, search, notifications and account",
+      "fixture": "identity-bar",
+      "webExample": "Product, search, notifications and account",
+      "template": "VStack(spacing: 0) {\n    ViewThatFits(in: .horizontal) {\n    HStack(spacing: theme.spacing.space3) {\n        HStack(spacing: theme.spacing.space2) {\n            Text(\"R\")\n                .monarchTextStyle(.bodyStrong)\n                .foregroundStyle(theme.colors.textDefault)\n                .frame(width: 24, height: 24)\n                .background(theme.colors.bgMuted, in: RoundedRectangle(cornerRadius: 6))\n                .accessibilityHidden(true)\n            Text({{product}})\n                .monarchTextStyle(.label)\n                .fixedSize()\n                .accessibilityAddTraits(.isHeader)\n        }\n        MonarchTextField(\n            {{search}},\n            text: $query,\n            prompt: {{search}},\n            labelVisibility: .hidden,\n            leading: { Image(systemName: \"magnifyingglass\").foregroundStyle(theme.colors.textMuted) },\n            trailing: { EmptyView() }\n        )\n        .frame(minWidth: 150)\n        MonarchNotificationsBell(unreadCount: 0) {}\n            .accessibilityLabel({{notifications}})\n        Menu {\n            Section(\"Signed in as \" + {{account.email}}) {\n                Button(\"Profile and preferences\", systemImage: \"person.crop.circle\") {}\n                Button(\"Rook account\", systemImage: \"arrow.up.forward.square\") {}\n            }\n            Button(\"Sign out\", systemImage: \"rectangle.portrait.and.arrow.right\", role: .destructive) {}\n        } label: {\n            MonarchAvatar(image: nil, name: {{account.name}}, size: .sm, isDecorative: true)\n                .monarchMinimumHitTarget()\n        }\n        .accessibilityLabel(\"Account: \" + {{account.name}})\n    }\n    // Too narrow for the search field beside the name: the field takes its own line.\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        HStack(spacing: theme.spacing.space3) {\n            HStack(spacing: theme.spacing.space2) {\n                Text(\"R\")\n                    .monarchTextStyle(.bodyStrong)\n                    .foregroundStyle(theme.colors.textDefault)\n                    .frame(width: 24, height: 24)\n                    .background(theme.colors.bgMuted, in: RoundedRectangle(cornerRadius: 6))\n                    .accessibilityHidden(true)\n                Text({{product}})\n                    .monarchTextStyle(.label)\n                    .fixedSize()\n                    .accessibilityAddTraits(.isHeader)\n            }\n            Spacer(minLength: 0)\n            MonarchNotificationsBell(unreadCount: 0) {}\n                .accessibilityLabel({{notifications}})\n            Menu {\n                Section(\"Signed in as \" + {{account.email}}) {\n                    Button(\"Profile and preferences\", systemImage: \"person.crop.circle\") {}\n                    Button(\"Rook account\", systemImage: \"arrow.up.forward.square\") {}\n                }\n                Button(\"Sign out\", systemImage: \"rectangle.portrait.and.arrow.right\", role: .destructive) {}\n            } label: {\n                MonarchAvatar(image: nil, name: {{account.name}}, size: .sm, isDecorative: true)\n                    .monarchMinimumHitTarget()\n            }\n            .accessibilityLabel(\"Account: \" + {{account.name}})\n        }\n            MonarchTextField(\n                {{search}},\n                text: $query,\n                prompt: {{search}},\n                labelVisibility: .hidden,\n                leading: { Image(systemName: \"magnifyingglass\").foregroundStyle(theme.colors.textMuted) },\n                trailing: { EmptyView() }\n            )\n    }\n    }\n    .padding(.horizontal, theme.spacing.space4)\n    .padding(.vertical, theme.spacing.space3)\n    Divider()\n}",
+      "setupTemplate": "@Environment(\\.monarchTheme) private var theme\n@State private var query = \"\"",
+      "setup": "@Environment(\\.monarchTheme) private var theme\n@State private var query = \"\"",
+      "code": "VStack(spacing: 0) {\n    ViewThatFits(in: .horizontal) {\n    HStack(spacing: theme.spacing.space3) {\n        HStack(spacing: theme.spacing.space2) {\n            Text(\"R\")\n                .monarchTextStyle(.bodyStrong)\n                .foregroundStyle(theme.colors.textDefault)\n                .frame(width: 24, height: 24)\n                .background(theme.colors.bgMuted, in: RoundedRectangle(cornerRadius: 6))\n                .accessibilityHidden(true)\n            Text(\"Acme Desk\")\n                .monarchTextStyle(.label)\n                .fixedSize()\n                .accessibilityAddTraits(.isHeader)\n        }\n        MonarchTextField(\n            \"Search tickets\",\n            text: $query,\n            prompt: \"Search tickets\",\n            labelVisibility: .hidden,\n            leading: { Image(systemName: \"magnifyingglass\").foregroundStyle(theme.colors.textMuted) },\n            trailing: { EmptyView() }\n        )\n        .frame(minWidth: 150)\n        MonarchNotificationsBell(unreadCount: 0) {}\n            .accessibilityLabel(\"Notifications\")\n        Menu {\n            Section(\"Signed in as \" + \"grace@example.com\") {\n                Button(\"Profile and preferences\", systemImage: \"person.crop.circle\") {}\n                Button(\"Rook account\", systemImage: \"arrow.up.forward.square\") {}\n            }\n            Button(\"Sign out\", systemImage: \"rectangle.portrait.and.arrow.right\", role: .destructive) {}\n        } label: {\n            MonarchAvatar(image: nil, name: \"Grace Hopper\", size: .sm, isDecorative: true)\n                .monarchMinimumHitTarget()\n        }\n        .accessibilityLabel(\"Account: \" + \"Grace Hopper\")\n    }\n    // Too narrow for the search field beside the name: the field takes its own line.\n    VStack(alignment: .leading, spacing: theme.spacing.space2) {\n        HStack(spacing: theme.spacing.space3) {\n            HStack(spacing: theme.spacing.space2) {\n                Text(\"R\")\n                    .monarchTextStyle(.bodyStrong)\n                    .foregroundStyle(theme.colors.textDefault)\n                    .frame(width: 24, height: 24)\n                    .background(theme.colors.bgMuted, in: RoundedRectangle(cornerRadius: 6))\n                    .accessibilityHidden(true)\n                Text(\"Acme Desk\")\n                    .monarchTextStyle(.label)\n                    .fixedSize()\n                    .accessibilityAddTraits(.isHeader)\n            }\n            Spacer(minLength: 0)\n            MonarchNotificationsBell(unreadCount: 0) {}\n                .accessibilityLabel(\"Notifications\")\n            Menu {\n                Section(\"Signed in as \" + \"grace@example.com\") {\n                    Button(\"Profile and preferences\", systemImage: \"person.crop.circle\") {}\n                    Button(\"Rook account\", systemImage: \"arrow.up.forward.square\") {}\n                }\n                Button(\"Sign out\", systemImage: \"rectangle.portrait.and.arrow.right\", role: .destructive) {}\n            } label: {\n                MonarchAvatar(image: nil, name: \"Grace Hopper\", size: .sm, isDecorative: true)\n                    .monarchMinimumHitTarget()\n            }\n            .accessibilityLabel(\"Account: \" + \"Grace Hopper\")\n        }\n            MonarchTextField(\n                \"Search tickets\",\n                text: $query,\n                prompt: \"Search tickets\",\n                labelVisibility: .hidden,\n                leading: { Image(systemName: \"magnifyingglass\").foregroundStyle(theme.colors.textMuted) },\n                trailing: { EmptyView() }\n            )\n    }\n    }\n    .padding(.horizontal, theme.spacing.space4)\n    .padding(.vertical, theme.spacing.space3)\n    Divider()\n}"
+    }
+  ],
+  "webEquivalent": "IdentityBar",
+  "dependsOn": [
+    "search-input",
+    "notifications-bell",
+    "account-menu",
+    "avatar"
+  ],
+  "icons": {
+    "notifications": "BellGlyph"
+  }
+}
