@@ -1841,10 +1841,10 @@ public enum MonarchTokens {
             hcDark: MonarchAccentScale(solid: MonarchRGBA(0xE87D88), solidHover: MonarchRGBA(0xEC939C), solidActive: MonarchRGBA(0xEFA4AB), onSolid: MonarchRGBA(0x0D0F14), subtle: MonarchRGBA(0x211214), subtleHover: MonarchRGBA(0x2E1A1C), strong: MonarchRGBA(0xEB909A), onStrong: MonarchRGBA(0x0D0F14), border: MonarchRGBA(0xEB909A), strongInverse: MonarchRGBA(0x931A26))
         )
 
-        /// Rook Friends.
+        /// Rook Partner.
         public static let friends = MonarchAccent(
             id: "friends",
-            label: "Rook Friends",
+            label: "Rook Partner",
             light: MonarchAccentScale(solid: MonarchRGBA(0x000000), solidHover: MonarchRGBA(0x000000), solidActive: MonarchRGBA(0x000000), onSolid: MonarchRGBA(0xFFFFFF), subtle: MonarchRGBA(0xF6F6F6), subtleHover: MonarchRGBA(0xEEEEEE), strong: MonarchRGBA(0x000000), onStrong: MonarchRGBA(0xFFFFFF), border: MonarchRGBA(0xD6D6D6), strongInverse: MonarchRGBA(0x939393)),
             dark: MonarchAccentScale(solid: MonarchRGBA(0xF0F0F0), solidHover: MonarchRGBA(0xFCFCFC), solidActive: MonarchRGBA(0xFFFFFF), onSolid: MonarchRGBA(0x0D0F14), subtle: MonarchRGBA(0x242424), subtleHover: MonarchRGBA(0x2E2E2E), strong: MonarchRGBA(0xCCCCCC), onStrong: MonarchRGBA(0x0D0F14), border: MonarchRGBA(0x525252), strongInverse: MonarchRGBA(0x4D4D4D)),
             hcLight: MonarchAccentScale(solid: MonarchRGBA(0x000000), solidHover: MonarchRGBA(0x000000), solidActive: MonarchRGBA(0x000000), onSolid: MonarchRGBA(0xFFFFFF), subtle: MonarchRGBA(0xF7F7F7), subtleHover: MonarchRGBA(0xF0F0F0), strong: MonarchRGBA(0x000000), onStrong: MonarchRGBA(0xFFFFFF), border: MonarchRGBA(0x000000), strongInverse: MonarchRGBA(0xA2A2A2)),
