@@ -26,7 +26,7 @@ released.
 
 ### Added
 
-- Optional artifact `com.rookhq.monarch:monarch-fonts-poppins` (`MonarchPoppins`,
+- Optional artifact `dev.monarchui:monarch-fonts-poppins` (`MonarchPoppins`,
   `monarchPoppinsTypography()`): the Poppins typeface, SIL Open Font License 1.1,
   with the licence text. The default typeface stays the system font.
 - Sample-only module `monarch-sample-icons` (outlined Material Icons, Apache
@@ -82,11 +82,11 @@ released.
   the JVM, public API check, detekt, Android lint, local Maven publication.
 - Structure for adding components in parallel
   (`docs/ADDING-COMPONENTS.md`): family packages
-  `com.rookhq.monarch.components.<family>.<name>`, per-component strings,
+  `dev.monarchui.components.<family>.<name>`, per-component strings,
   tests, fixtures, previews, catalogue pages and inventory files; generated
   example sources, fixture registry and catalogue navigation; the tasks
   `componentCheck`, `verifyLocal`, `mergeCheck` and `verifyMonarch`.
-- Shared internals for component authors (`com.rookhq.monarch.internal`):
+- Shared internals for component authors (`dev.monarchui.internal`):
   tone palette, surface modifier, control state, shared shapes, string
   lookup, image with placeholder, labelled control row.
 - Dependencies available to components: Material 3 adaptive (`adaptive`,

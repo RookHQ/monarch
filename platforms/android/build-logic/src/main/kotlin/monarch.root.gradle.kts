@@ -1,7 +1,7 @@
-import com.rookhq.monarch.buildlogic.LOCAL_REPOSITORY_NAME
-import com.rookhq.monarch.buildlogic.inventory.ComponentSelection
-import com.rookhq.monarch.buildlogic.inventory.GenerateInventory
-import com.rookhq.monarch.buildlogic.inventory.ParityReport
+import dev.monarchui.buildlogic.LOCAL_REPOSITORY_NAME
+import dev.monarchui.buildlogic.inventory.ComponentSelection
+import dev.monarchui.buildlogic.inventory.GenerateInventory
+import dev.monarchui.buildlogic.inventory.ParityReport
 
 // Tasks of the root project: generation of the shared inventory file, the gates, and the
 // combined API reference.

@@ -119,7 +119,7 @@ Source rules, checked in review and by static analysis where the tool allows:
 `packages/tokens` stays the single source. `packages/tokens/scripts/emit-native.ts`
 reads the same modules that produce the CSS and the DTCG files and writes:
 
-- `platforms/android/monarch-tokens/src/main/kotlin/com/rookhq/monarch/tokens/MonarchTokens.kt`
+- `platforms/android/monarch-tokens/src/main/kotlin/dev/monarchui/tokens/MonarchTokens.kt`
 - `platforms/ios/Sources/MonarchTokens/MonarchTokens.swift`
 
 Both files hold the primitives, the four themes (`light`, `dark`, `hcLight`,

@@ -1,4 +1,4 @@
-import com.rookhq.monarch.buildlogic.configureMonarchPom
+import dev.monarchui.buildlogic.configureMonarchPom
 
 plugins {
     id("monarch.kotlin.library")

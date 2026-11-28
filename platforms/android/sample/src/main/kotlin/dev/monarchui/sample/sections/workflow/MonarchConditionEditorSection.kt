@@ -1,0 +1,84 @@
+package dev.monarchui.sample.sections.workflow
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import dev.monarchui.components.actions.button.MonarchButton
+import dev.monarchui.components.forms.select.MonarchSelectOption
+import dev.monarchui.components.typography.text.MonarchText
+import dev.monarchui.components.workflow.conditioneditor.MonarchCondition
+import dev.monarchui.components.workflow.conditioneditor.MonarchConditionEditor
+import dev.monarchui.components.workflow.conditioneditor.MonarchConditionField
+import dev.monarchui.components.workflow.conditioneditor.MonarchConditionFieldType
+import dev.monarchui.components.workflow.conditioneditor.MonarchConditionMatch
+import dev.monarchui.components.workflow.conditioneditor.MonarchConditionOperator
+import dev.monarchui.components.workflow.conditioneditor.MonarchConditionValue
+import dev.monarchui.sample.CatalogueCaption
+import dev.monarchui.sample.CataloguePage
+import dev.monarchui.theme.MonarchTheme
+
+/** The catalogue page of ConditionEditor: a ticket rule with every kind of value and a sample ticket. */
+object MonarchConditionEditorSection : CataloguePage {
+    override val title = "ConditionEditor"
+
+    private const val SAMPLE_HOURS = 6
+
+    private val fields = listOf(
+        MonarchConditionField(
+            key = "priority",
+            label = "Priority",
+            type = MonarchConditionFieldType.Select,
+            options = listOf(
+                MonarchSelectOption("urgent", "Urgent"),
+                MonarchSelectOption("high", "High"),
+                MonarchSelectOption("normal", "Normal"),
+            ),
+        ),
+        MonarchConditionField(key = "subject", label = "Subject", type = MonarchConditionFieldType.Text),
+        MonarchConditionField(
+            key = "hours",
+            label = "Hours since created",
+            type = MonarchConditionFieldType.Number,
+            placeholder = "Hours",
+        ),
+        MonarchConditionField(key = "due", label = "Due date", type = MonarchConditionFieldType.Date),
+        MonarchConditionField(key = "tags", label = "Tags", type = MonarchConditionFieldType.Tags),
+        MonarchConditionField(key = "vip", label = "VIP customer", type = MonarchConditionFieldType.Boolean),
+    )
+
+    private val start = listOf(
+        MonarchCondition("c1", "priority", MonarchConditionOperator.In, MonarchConditionValue.Values(listOf("urgent"))),
+        MonarchCondition("c2", "hours", MonarchConditionOperator.Gt, MonarchConditionValue.Number("4")),
+    )
+
+    @Composable
+    override fun Content() {
+        var conditions by remember { mutableStateOf(start) }
+        var match by rememberSaveable { mutableStateOf(MonarchConditionMatch.All) }
+        var submitted by rememberSaveable { mutableStateOf(false) }
+        val sample = mapOf("priority" to "urgent", "hours" to SAMPLE_HOURS, "vip" to true)
+        val problems = MonarchCondition.problems(conditions, fields)
+        CatalogueCaption("Escalate a ticket when")
+        MonarchConditionEditor(
+            value = conditions,
+            onValueChange = { conditions = it },
+            fields = fields,
+            match = match,
+            onMatchChange = { match = it },
+            showErrors = submitted,
+        )
+        MonarchButton(text = "Save rule", onClick = { submitted = true })
+        val matches = MonarchCondition.evaluate(conditions, sample, match)
+        MonarchText(
+            text = if (problems.isNotEmpty() && submitted) {
+                "${problems.size} condition(s) need attention."
+            } else {
+                "An urgent ticket open for 6 hours from a VIP ${if (matches) "matches" else "does not match"}."
+            },
+            color = MonarchTheme.colors.textMuted,
+        )
+    }
+}

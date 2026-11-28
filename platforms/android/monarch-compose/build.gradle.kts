@@ -1,11 +1,11 @@
-import com.rookhq.monarch.buildlogic.configureMonarchPom
+import dev.monarchui.buildlogic.configureMonarchPom
 
 plugins {
     id("monarch.components")
 }
 
 android {
-    namespace = "com.rookhq.monarch"
+    namespace = "dev.monarchui"
 }
 
 dependencies {

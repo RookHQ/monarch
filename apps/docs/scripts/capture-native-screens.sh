@@ -97,7 +97,7 @@ capture_ios() {
 capture_android() {
     (cd "$root/platforms/android" &&
         MONARCH_LANDING_SHOTS="$raw" ./gradlew :sample:testDebugUnitTest \
-            --tests 'com.rookhq.monarch.sample.LandingScreensTest' --rerun --console=plain)
+            --tests 'dev.monarchui.sample.LandingScreensTest' --rerun --console=plain)
 }
 
 case "$which" in

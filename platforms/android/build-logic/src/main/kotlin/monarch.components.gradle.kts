@@ -1,10 +1,10 @@
 import java.time.Duration
 import com.android.build.api.variant.HostTestBuilder
 import com.android.build.api.variant.LibraryAndroidComponentsExtension
-import com.rookhq.monarch.buildlogic.inventory.ComponentSelection
-import com.rookhq.monarch.buildlogic.inventory.GenerateComponentTestSources
-import com.rookhq.monarch.buildlogic.library
-import com.rookhq.monarch.buildlogic.libs
+import dev.monarchui.buildlogic.inventory.ComponentSelection
+import dev.monarchui.buildlogic.inventory.GenerateComponentTestSources
+import dev.monarchui.buildlogic.library
+import dev.monarchui.buildlogic.libs
 import io.gitlab.arturbosch.detekt.Detekt
 
 // The component library: generated test sources and the fast per-component loop.

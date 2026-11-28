@@ -19,7 +19,7 @@ in `packages/tokens/src/primitives.ts` and meaning is in
 `packages/tokens/scripts/emit-native.ts` reads the same modules that produce
 the CSS and the DTCG files, and writes two files:
 
-- `platforms/android/monarch-tokens/src/main/kotlin/com/rookhq/monarch/tokens/MonarchTokens.kt`
+- `platforms/android/monarch-tokens/src/main/kotlin/dev/monarchui/tokens/MonarchTokens.kt`
 - `platforms/ios/Sources/MonarchTokens/MonarchTokens.swift`
 
 Semantic colours are read from the DTCG build, with aliases resolved, so a

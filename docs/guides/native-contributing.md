@@ -354,7 +354,7 @@ Run the unit and UI tests:
 ```sh
 ./gradlew :monarch-tokens:test :monarch-compose:testDebugUnitTest :sample:testDebugUnitTest
 # one class
-./gradlew :monarch-compose:testDebugUnitTest --tests "com.rookhq.monarch.components.actions.MonarchButtonTest"
+./gradlew :monarch-compose:testDebugUnitTest --tests "dev.monarchui.components.actions.MonarchButtonTest"
 ```
 
 The tests run on the JVM with Robolectric; no emulator or device is needed.

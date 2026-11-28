@@ -132,7 +132,7 @@ for (const dir of ['packages/tokens', 'packages/react', 'packages/conformance'])
         '.',
     );
   const glyphs = read(
-    'platforms/android/monarch-compose/src/main/kotlin/com/rookhq/monarch/internal/MonarchGlyphs.kt',
+    'platforms/android/monarch-compose/src/main/kotlin/dev/monarchui/internal/MonarchGlyphs.kt',
   );
   if (!glyphs.includes('Material Symbols: Copyright Google LLC, Apache License 2.0'))
     problems.push('MonarchGlyphs.kt must carry the Material Symbols copyright and license line.');

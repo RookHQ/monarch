@@ -51,7 +51,7 @@ for runtime, devices in data.items():
             best = (version, item["udid"])
 print(best[1] if best else sys.argv[1])
 ' "$device")"
-bundle="com.rookhq.monarch.previewhost"
+bundle="dev.monarchui.previewhost"
 derived=".build/preview-host"
 raw="$(mktemp -d)"
 mkdir -p "$out" .build

@@ -1,13 +1,13 @@
-import com.rookhq.monarch.buildlogic.configureMonarchCoordinates
-import com.rookhq.monarch.buildlogic.configureMonarchPublishing
-import com.rookhq.monarch.buildlogic.failFastOnHungTests
-import com.rookhq.monarch.buildlogic.intVersion
-import com.rookhq.monarch.buildlogic.library
-import com.rookhq.monarch.buildlogic.libs
-import com.rookhq.monarch.buildlogic.monarchJavadocJar
+import dev.monarchui.buildlogic.configureMonarchCoordinates
+import dev.monarchui.buildlogic.configureMonarchPublishing
+import dev.monarchui.buildlogic.failFastOnHungTests
+import dev.monarchui.buildlogic.intVersion
+import dev.monarchui.buildlogic.library
+import dev.monarchui.buildlogic.libs
+import dev.monarchui.buildlogic.monarchJavadocJar
 import com.vanniktech.maven.publish.KotlinJvm
 import com.vanniktech.maven.publish.SourcesJar
-import com.rookhq.monarch.buildlogic.version
+import dev.monarchui.buildlogic.version
 import java.time.Duration
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 

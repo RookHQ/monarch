@@ -145,7 +145,7 @@ function nativeSource(platform, entry) {
         )
       : join(
           root,
-          'platforms/android/monarch-compose/src/main/kotlin/com/rookhq/monarch/components',
+          'platforms/android/monarch-compose/src/main/kotlin/dev/monarchui/components',
           androidFamily(entry.family),
           entry.name.replace(/^Monarch/, '').toLowerCase(),
         );
@@ -159,7 +159,7 @@ function nativeSource(platform, entry) {
 const defaultIconGlyphs = (() => {
   const file = join(
     root,
-    'platforms/android/monarch-compose/src/main/kotlin/com/rookhq/monarch/internal/MonarchDefaultIcons.kt',
+    'platforms/android/monarch-compose/src/main/kotlin/dev/monarchui/internal/MonarchDefaultIcons.kt',
   );
   const members = new Map();
   if (!existsSync(file)) return members;
@@ -366,7 +366,7 @@ for (const file of iosComponents) {
   }
 }
 const androidComponents = walk(
-  join(root, 'platforms/android/monarch-compose/src/main/kotlin/com/rookhq/monarch/components'),
+  join(root, 'platforms/android/monarch-compose/src/main/kotlin/dev/monarchui/components'),
   (p) => p.endsWith('.kt'),
 );
 for (const file of androidComponents) {

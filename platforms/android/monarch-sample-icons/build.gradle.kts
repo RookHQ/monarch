@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.rookhq.monarch.sampleicons"
+    namespace = "dev.monarchui.sampleicons"
 }
 
 dependencies {

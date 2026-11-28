@@ -52,19 +52,19 @@ Below, `<Name>` is `android.name` (for example `MonarchBadge`), `<name>` is
 that name without `Monarch`, in lower case (`badge`; `MonarchSwitchRow` gives
 `switchrow`), `<family>` is the package from the table and `<id>` is the web
 id. Paths are from `platforms/android`. `…` stands for
-`kotlin/com/rookhq/monarch`.
+`kotlin/dev/monarchui`.
 
 ### Coverage `build`, or `style` with a new Kotlin declaration
 
 | #   | File                                                                                  | Required                                                                                               |
 | --- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| 1   | `monarch-compose/src/main/…/components/<family>/<name>/<Name>.kt`                     | Yes. The public composable and its overloads. Package `com.rookhq.monarch.components.<family>.<name>`. |
+| 1   | `monarch-compose/src/main/…/components/<family>/<name>/<Name>.kt`                     | Yes. The public composable and its overloads. Package `dev.monarchui.components.<family>.<name>`. |
 | 2   | `monarch-compose/src/main/…/components/<family>/<name>/<Name><Option>.kt`             | One file per further public type (a variant or size enum).                                             |
 | 3   | `monarch-compose/src/main/…/components/<family>/<name>/<Name>Tokens.kt`               | Yes if the component has any size, spacing or colour decision. An `internal object`.                   |
 | 4   | `monarch-compose/src/main/res/values/strings_<name>.xml`                              | Only if the component has built-in text.                                                               |
 | 5   | `monarch-compose/src/debug/…/components/<family>/<name>/<Name>Previews.kt`            | Yes. The previews.                                                                                     |
 | 6   | `monarch-compose/src/test/…/components/<family>/<Name>Test.kt`                        | Yes. Fixtures and tests.                                                                               |
-| 7   | `sample/src/main/kotlin/com/rookhq/monarch/sample/sections/<family>/<Name>Section.kt` | Yes. The catalogue page.                                                                               |
+| 7   | `sample/src/main/kotlin/dev/monarchui/sample/sections/<family>/<Name>Section.kt` | Yes. The catalogue page.                                                                               |
 | 8   | `inventory/<id>.json`                                                                 | Yes. Documentation and compiled examples.                                                              |
 
 ### Coverage `style` that reuses an existing type
@@ -408,7 +408,7 @@ fails when a component folder has no previews file.
 ## 7. Tests
 
 One file, `monarch-compose/src/test/…/components/<family>/<Name>Test.kt`, in
-the package `com.rookhq.monarch.components.<family>`, with two things in it.
+the package `dev.monarchui.components.<family>`, with two things in it.
 
 **Fixtures.** An object named `<Name>Fixtures`:
 
@@ -467,10 +467,10 @@ write no test for this.
 
 ## 8. The catalogue page
 
-`sample/src/main/kotlin/com/rookhq/monarch/sample/sections/<family>/<Name>Section.kt`:
+`sample/src/main/kotlin/dev/monarchui/sample/sections/<family>/<Name>Section.kt`:
 
 ```kotlin
-package com.rookhq.monarch.sample.sections.datadisplay
+package dev.monarchui.sample.sections.datadisplay
 
 /** The catalogue page of Badge. */
 object MonarchBadgeSection : CataloguePage {
@@ -540,7 +540,7 @@ are imported for you: `androidx.compose.foundation` (with `layout`, `lazy`,
 `selection`, `shape`, `text`), `androidx.compose.material3`,
 `androidx.compose.runtime` (with `saveable`), `androidx.compose.ui` (with
 `graphics`, `graphics.painter`, `graphics.vector`, `res`, `semantics`, `text`,
-`text.font`, `text.input`, `text.style`, `unit`), `com.rookhq.monarch.tokens`
+`text.font`, `text.input`, `text.style`, `unit`), `dev.monarchui.tokens`
 and every public Monarch package, including your component's. The file opts
 in to `ExperimentalMaterial3Api` and `ExperimentalLayoutApi`. Anything else
 goes in `imports`, as a fully qualified name or a package followed by `.*`.
@@ -549,10 +549,10 @@ Examples are composed in all four themes at font scale 2.0, so they must not
 need a network, a permission or a device capability. For an icon in an
 example use `SampleIcons` (outlined Material icons from the unpublished
 `monarch-sample-icons` module) and add
-`com.rookhq.monarch.sampleicons.SampleIcons` to `imports`:
+`dev.monarchui.sampleicons.SampleIcons` to `imports`:
 `MonarchIcon(SampleIcons.Search, contentDescription = null)`, or
 `rememberVectorPainter(SampleIcons.Search)` where a slot takes a painter. For a
-photo use `samplePainter()` (import `com.rookhq.monarch.testing.samplePainter`).
+photo use `samplePainter()` (import `dev.monarchui.testing.samplePainter`).
 Never use `android.R.drawable.*` or the filled icons (`Icons.Default`,
 `Icons.Filled`); `IconSourceRulesTest` fails on them. See `docs/PREVIEWS.md`.
 
@@ -596,7 +596,7 @@ merged tree by `./gradlew mergeCheck`.
 One test class or method on its own:
 
 ```sh
-./gradlew :monarch-compose:testDebugUnitTest --tests "com.rookhq.monarch.components.datadisplay.MonarchBadgeTest"
+./gradlew :monarch-compose:testDebugUnitTest --tests "dev.monarchui.components.datadisplay.MonarchBadgeTest"
 ./gradlew :monarch-compose:testDebugUnitTest --tests "*MonarchBadgeTest.coloursCome*"
 ```
 

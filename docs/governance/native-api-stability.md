@@ -348,7 +348,7 @@ period.
 
 | Rule               | Android                                                                                       | iOS                                                             |
 | ------------------ | --------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| Marker             | `@ExperimentalMonarchApi` (package `com.rookhq.monarch`), a `@RequiresOptIn` at level `ERROR` | `@_spi(Experimental)` on the declaration                        |
+| Marker             | `@ExperimentalMonarchApi` (package `dev.monarchui`), a `@RequiresOptIn` at level `ERROR` | `@_spi(Experimental)` on the declaration                        |
 | How an app opts in | `@OptIn(ExperimentalMonarchApi::class)` at the use site                                       | `@_spi(Experimental) import MonarchUI` in the file that uses it |
 | Without the opt-in | The call does not compile                                                                     | The declaration is not visible                                  |
 | In the API record  | A change to a marked declaration in the dump is reviewed, and is not a breaking change        | Left out of the baseline                                        |
