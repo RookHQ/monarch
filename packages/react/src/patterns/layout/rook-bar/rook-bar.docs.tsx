@@ -246,7 +246,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'Every Rook app’s public pages carry the same company bar as the main site: Products, services, news and the account controls, with a full-height sheet on phones. RookBar is that bar, with panels for an app catalog, a featured card with links, and recent posts. The data (apps, links, posts) comes from the app. Needed by: every Rook app with public pages (Links, Tickets, App, Dossier, Intellect, Calendar, Friends, Atlas, Signal, Base, Chat, Dots, Pulse, People, Stride, Recruit, GTM, Ranker).',
+        'Every Rook app’s public pages carry the same company bar as the main site: Products, services, news and the account controls, with a full-height sheet on phones. RookBar is that bar, with panels for an app catalog, a featured card with links, and recent posts. The data (apps, links, posts) comes from the app. Needed by: every Rook app with public pages (Links, Tickets, App, Dossier, Intellect, Calendar, Partner, Atlas, Signal, Base, Chat, Dots, Pulse, People, Stride, Recruit, GTM, Ranker).',
       useWhen: [
         'The top of a public or signed-out page that should match the company site.',
         'A product site that needs wide menus (mega-menu panels) rather than short dropdowns.',

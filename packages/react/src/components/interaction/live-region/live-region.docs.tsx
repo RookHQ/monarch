@@ -49,7 +49,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'Tells screen-reader users about changes they cannot see happen: results counts, saves, uploads, the steps of a drag. Every Rook app hand-rolls `aria-live` spans today (rook-support-chat, rookatlas, rookbase, rookcalendar, rookchat, rookdevelopers, rookdossier, rookdots, rookfriends, rookid, rookintellect, rookpeople, rookpulse, rookrecruit, rookstride and rooktickets frontends); this is the one shared way. Needed by: all of them, and by SortableGrid, ReorderableList-style widgets and filters.',
+        'Tells screen-reader users about changes they cannot see happen: results counts, saves, uploads, the steps of a drag. Every Rook app hand-rolls `aria-live` spans today (rook-support-chat, rookatlas, rookbase, rookcalendar, rookchat, rookdevelopers, rookdossier, rookdots, rookid, rookintellect, rookpartner, rookpeople, rookpulse, rookrecruit, rookstride and rooktickets frontends); this is the one shared way. Needed by: all of them, and by SortableGrid, ReorderableList-style widgets and filters.',
       useWhen: [
         'Something changed on the page without focus moving: a filter updated the results, an autosave finished, a background job completed.',
         'A widget needs to narrate a keyboard interaction, such as each step of a drag.',

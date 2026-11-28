@@ -27,7 +27,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'Enters an amount in a given ISO 4217 currency with the right symbol, grouping and number of decimals, and stores either a major-unit number (19.99) or integer minor units (1999). Built on NumberInput with Money’s `formatMoney`. Needed by: rookdots, rookpeople, rookfriends, rookrecruit, rookatlas, rookcalendar and rookranker frontends, which format currency by hand around `type="number"` today. There is no shadcn/ui currency copy in the apps.',
+        'Enters an amount in a given ISO 4217 currency with the right symbol, grouping and number of decimals, and stores either a major-unit number (19.99) or integer minor units (1999). Built on NumberInput with Money’s `formatMoney`. Needed by: rookdots, rookpeople, rookpartner, rookrecruit, rookatlas, rookcalendar and rookranker frontends, which format currency by hand around `type="number"` today. There is no shadcn/ui currency copy in the apps.',
       useWhen: [
         'Prices, budgets, salaries, invoice lines, refunds: any amount in one known currency.',
         'The API stores integer cents or paise: set `minorUnits`.',

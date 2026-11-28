@@ -83,7 +83,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'Primary navigation for phone layouts, within thumb reach and clear of the home indicator. Needed by: none recorded yet; the Rook apps currently open a drawer from the top bar on phones (`src/components/rook-bar/mobile-menu.tsx` in Rook Base, Rook Calendar, Rook People, Rook Pulse, Rook Ranker, Rook Signal, Rook Friends, Rook Dots, Rook App), and BottomTabBar is the option for app areas people switch between constantly.',
+        'Primary navigation for phone layouts, within thumb reach and clear of the home indicator. Needed by: none recorded yet; the Rook apps currently open a drawer from the top bar on phones (`src/components/rook-bar/mobile-menu.tsx` in Rook Base, Rook Calendar, Rook People, Rook Pulse, Rook Ranker, Rook Signal, Rook Partner, Rook Dots, Rook App), and BottomTabBar is the option for app areas people switch between constantly.',
       useWhen: [
         'A phone layout with three to five top-level destinations people switch between often.',
         'Alongside SidebarNav or RookRail on wide screens, hidden there with `hideFrom`.',

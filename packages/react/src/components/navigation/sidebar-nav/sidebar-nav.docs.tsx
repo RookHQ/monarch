@@ -130,7 +130,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'The navigation list inside an app sidebar: labelled sections of links, nested groups, count badges, the current page and an icon-only collapsed mode with tooltips. Replaces the per-app link lists in `src/components/layout/Sidebar.tsx`. Needed by: Rook Stride (team groups with Issues / Backlog / Sprints), Rook Tickets, Rook Base, Rook Intellect, Rook Recruit, Rook People, Rook Calendar, Rook Dots, Rook Atlas, Rook Chat, Rook Developers, Rook Dossier, Rook Friends, Rook GTM, Rook Pulse, Rook Ranker, Rook Signal, Rook App.',
+        'The navigation list inside an app sidebar: labelled sections of links, nested groups, count badges, the current page and an icon-only collapsed mode with tooltips. Replaces the per-app link lists in `src/components/layout/Sidebar.tsx`. Needed by: Rook Stride (team groups with Issues / Backlog / Sprints), Rook Tickets, Rook Base, Rook Intellect, Rook Recruit, Rook People, Rook Calendar, Rook Dots, Rook Atlas, Rook Chat, Rook Developers, Rook Dossier, Rook Partner, Rook GTM, Rook Pulse, Rook Ranker, Rook Signal, Rook App.',
       useWhen: [
         'An app or settings area needs a vertical list of destinations, grouped into sections.',
         'Some destinations have sub-pages that should be shown under their parent.',

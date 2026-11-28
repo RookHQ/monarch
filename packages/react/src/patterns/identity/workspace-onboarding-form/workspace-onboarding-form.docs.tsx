@@ -50,7 +50,7 @@ export default {
   sections: {
     purpose: {
       summary:
-        'Every Rook app asks a new person to create a workspace before they start, and offers the same form again from the workspace switcher. WorkspaceOnboardingForm collects a name, a unique username with a debounced availability check, and a workspace type, validates them inline and shows the server’s error if creation fails. Needed by: App, Atlas, Base, Calendar, Chat, Developers, Dossier, Dots, Friends, GTM, Intellect, People, Pulse, Ranker, Recruit, Signal, Stride and Tickets (onboarding page and workspace switcher).',
+        'Every Rook app asks a new person to create a workspace before they start, and offers the same form again from the workspace switcher. WorkspaceOnboardingForm collects a name, a unique username with a debounced availability check, and a workspace type, validates them inline and shows the server’s error if creation fails. Needed by: App, Atlas, Base, Calendar, Chat, Developers, Dossier, Dots, GTM, Intellect, Partner, People, Pulse, Ranker, Recruit, Signal, Stride and Tickets (onboarding page and workspace switcher).',
       useWhen: [
         'A first-run onboarding page that creates the person’s first workspace.',
         'Inside CreateWorkspaceDialog, for creating another workspace.',

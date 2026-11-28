@@ -15,7 +15,7 @@ export const products = {
   "chat": { id: "chat", name: "Rook Chat", accent: hsl(239, 84, 67) },
   "dossier": { id: "dossier", name: "Rook Dossier", accent: hsl(175, 84, 32) },
   "dots": { id: "dots", name: "Rook Dots", accent: hsl(354, 70, 52) },
-  "friends": { id: "friends", name: "Rook Friends", accent: hsl(0, 0, 0) },
+  "friends": { id: "friends", name: "Rook Partner", accent: hsl(0, 0, 0) },
   "gtm": { id: "gtm", name: "Rook GTM", accent: hsl(25, 95, 53) },
   "id": { id: "id", name: "Rook ID & Workspace", accent: hsl(354, 70, 52) },
   "intellect": { id: "intellect", name: "Rook Intellect", accent: hsl(175, 77, 26) },

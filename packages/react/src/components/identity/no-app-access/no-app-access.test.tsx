@@ -68,7 +68,7 @@ describe('NoAppAccess', () => {
     const onSwitchWorkspace = vi.fn();
     render(
       <NoAppAccess
-        appName="Rook Friends"
+        appName="Rook Partner"
         homeHref="/w/acme/home"
         onSwitchWorkspace={onSwitchWorkspace}
         contactHref="mailto:admin@example.com"

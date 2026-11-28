@@ -1506,10 +1506,10 @@ public object MonarchTokens {
             hcDark = MonarchAccentScale(0xFFE87D88L, 0xFFEC939CL, 0xFFEFA4ABL, 0xFF0D0F14L, 0xFF211214L, 0xFF2E1A1CL, 0xFFEB909AL, 0xFF0D0F14L, 0xFFEB909AL, 0xFF931A26L),
         )
 
-        /** Rook Friends. */
+        /** Rook Partner. */
         public val friends: MonarchAccent = MonarchAccent(
             id = "friends",
-            label = "Rook Friends",
+            label = "Rook Partner",
             light = MonarchAccentScale(0xFF000000L, 0xFF000000L, 0xFF000000L, 0xFFFFFFFFL, 0xFFF6F6F6L, 0xFFEEEEEEL, 0xFF000000L, 0xFFFFFFFFL, 0xFFD6D6D6L, 0xFF939393L),
             dark = MonarchAccentScale(0xFFF0F0F0L, 0xFFFCFCFCL, 0xFFFFFFFFL, 0xFF0D0F14L, 0xFF242424L, 0xFF2E2E2EL, 0xFFCCCCCCL, 0xFF0D0F14L, 0xFF525252L, 0xFF4D4D4DL),
             hcLight = MonarchAccentScale(0xFF000000L, 0xFF000000L, 0xFF000000L, 0xFFFFFFFFL, 0xFFF7F7F7L, 0xFFF0F0F0L, 0xFF000000L, 0xFFFFFFFFL, 0xFF000000L, 0xFFA2A2A2L),
