@@ -199,8 +199,8 @@ Rules:
 
 | Platform | Artefact                                                                             | State                                                                                                                    |
 | -------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
-| Android  | `dev.monarchui:monarch-tokens` (JAR, sources, POM)                              | Published to Maven Central by the release workflow, signed, when the `maven-central` environment has its secrets (below) |
-| Android  | `dev.monarchui:monarch-compose` (AAR, sources, POM)                             | Same                                                                                                                     |
+| Android  | `dev.monarchui:monarch-tokens` (JAR, sources, POM)                                   | Published to Maven Central by the release workflow, signed, when the `maven-central` environment has its secrets (below) |
+| Android  | `dev.monarchui:monarch-compose` (AAR, sources, POM)                                  | Same                                                                                                                     |
 | iOS      | The Swift package source at the `0.14.N` tag (products `MonarchTokens`, `MonarchUI`) | Resolved by URL from the root `Package.swift` once the tag exists                                                        |
 | Both     | The changelog entry, the compatibility row and, if needed, the migration guide       | Written by hand                                                                                                          |
 

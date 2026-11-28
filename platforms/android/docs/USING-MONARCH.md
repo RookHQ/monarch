@@ -17,8 +17,8 @@ patch series. Maven uses the same `0.14.N`. Replace `0.14.N` below with the
 version in the [changelog](../CHANGELOG.md) (the first native release is
 `0.14.6`).
 
-| Artifact                                          | What it is                                                                                   |
-| ------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Artifact                                     | What it is                                                                                   |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | `dev.monarchui:monarch-compose:0.14.N`       | The theme, foundations, accessibility helpers and components. Brings `monarch-tokens`        |
 | `dev.monarchui:monarch-tokens:0.14.N`        | Generated token constants. Pure Kotlin, no Android and no Compose                            |
 | `dev.monarchui:monarch-fonts-poppins:0.14.N` | Optional. The Poppins typeface (SIL Open Font License 1.1). See [Poppins](#poppins-optional) |

@@ -20,14 +20,14 @@ yet, so the API has not been proven in production and may change.
 
 ## Modules
 
-| Module                  | Artifact                                   | Contents                                                                                       |
-| ----------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Module                  | Artifact                              | Contents                                                                                       |
+| ----------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `monarch-tokens`        | `dev.monarchui:monarch-tokens`        | Generated token constants. Pure Kotlin, no Android, no Compose.                                |
 | `monarch-compose`       | `dev.monarchui:monarch-compose`       | Theme, foundations, accessibility helpers and components.                                      |
 | `monarch-fonts-poppins` | `dev.monarchui:monarch-fonts-poppins` | Optional Poppins typeface (SIL Open Font License 1.1).                                         |
-| `monarch-sample-icons`  | not published                              | Outlined Material icons for the sample app, previews and tests only. No library depends on it. |
-| `sample`                | not published                              | Catalogue app that shows every component in all four themes.                                   |
-| `build-logic`           | not published                              | Convention plugins shared by the modules.                                                      |
+| `monarch-sample-icons`  | not published                         | Outlined Material icons for the sample app, previews and tests only. No library depends on it. |
+| `sample`                | not published                         | Catalogue app that shows every component in all four themes.                                   |
+| `build-logic`           | not published                         | Convention plugins shared by the modules.                                                      |
 
 `inventory/<id>.json` documents one entry of the web catalogue each: the
 component or the plain Material 3 API that covers it, its API, options,
@@ -298,25 +298,25 @@ by declaring the same names, and each can be replaced per call by a parameter.
 
 Run from `platforms/android`.
 
-| Command                                                                                                          | What it does                                                                                                                                        |
-| ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `./gradlew componentCheck -Pcomponent=MonarchBadge`                                                              | The fast loop for one component (type name, title or id): its tests, fixtures, examples, previews, detekt on its files, and the catalogue compiles. |
-| `./gradlew verifyLocal`                                                                                          | Everything to pass before handing a component over: generation, detekt, lint, all unit tests, the catalogue builds. Skips the API check.            |
-| `./gradlew mergeCheck`                                                                                           | For the merged tree: regenerates `components.json` and the API dumps, reports parity with `../parity.json`, then runs `verifyMonarch`.              |
-| `./gradlew verifyMonarch`                                                                                        | The complete gate: `components.json` is current, tests, API check, detekt, lint, debug and release catalogue builds, local publish.                 |
-| `./gradlew generateInventory`                                                                                    | Validates `inventory/*.json` and the conventions and writes `components.json`.                                                                      |
-| `./gradlew parityReport`                                                                                         | Compares the inventory with `../parity.json`.                                                                                                       |
-| `./gradlew :monarch-tokens:test`                                                                                 | Unit tests of the tokens.                                                                                                                           |
-| `./gradlew :monarch-compose:testDebugUnitTest`                                                                   | Unit and Compose UI tests on the JVM (Robolectric). No device needed.                                                                               |
+| Command                                                                                                     | What it does                                                                                                                                        |
+| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `./gradlew componentCheck -Pcomponent=MonarchBadge`                                                         | The fast loop for one component (type name, title or id): its tests, fixtures, examples, previews, detekt on its files, and the catalogue compiles. |
+| `./gradlew verifyLocal`                                                                                     | Everything to pass before handing a component over: generation, detekt, lint, all unit tests, the catalogue builds. Skips the API check.            |
+| `./gradlew mergeCheck`                                                                                      | For the merged tree: regenerates `components.json` and the API dumps, reports parity with `../parity.json`, then runs `verifyMonarch`.              |
+| `./gradlew verifyMonarch`                                                                                   | The complete gate: `components.json` is current, tests, API check, detekt, lint, debug and release catalogue builds, local publish.                 |
+| `./gradlew generateInventory`                                                                               | Validates `inventory/*.json` and the conventions and writes `components.json`.                                                                      |
+| `./gradlew parityReport`                                                                                    | Compares the inventory with `../parity.json`.                                                                                                       |
+| `./gradlew :monarch-tokens:test`                                                                            | Unit tests of the tokens.                                                                                                                           |
+| `./gradlew :monarch-compose:testDebugUnitTest`                                                              | Unit and Compose UI tests on the JVM (Robolectric). No device needed.                                                                               |
 | `./gradlew :monarch-compose:testDebugUnitTest --tests "dev.monarchui.components.actions.MonarchButtonTest"` | One test class.                                                                                                                                     |
-| `./gradlew :monarch-compose:testDebugUnitTest --tests "*MonarchButtonTest.aLoading*"`                            | One test method, by pattern.                                                                                                                        |
-| `./gradlew apiCheck`                                                                                             | Compares the public API with `monarch-tokens/api/` and `monarch-compose/api/`.                                                                      |
-| `./gradlew apiDump`                                                                                              | Rewrites the API dumps after an intended API change. Commit the result.                                                                             |
-| `./gradlew detekt`                                                                                               | Static analysis with `config/detekt/detekt.yml`.                                                                                                    |
-| `./gradlew :monarch-compose:lintDebug :sample:lintDebug`                                                         | Android lint. Warnings are errors.                                                                                                                  |
-| `./gradlew :sample:assembleDebug`                                                                                | Builds the catalogue app (`sample/build/outputs/apk/debug/`).                                                                                       |
-| `./gradlew :sample:installDebug`                                                                                 | Installs the catalogue on a connected device or emulator.                                                                                           |
-| `./gradlew publishAllPublicationsToLocalRepository`                                                              | Publishes both libraries to `build/repo`.                                                                                                           |
+| `./gradlew :monarch-compose:testDebugUnitTest --tests "*MonarchButtonTest.aLoading*"`                       | One test method, by pattern.                                                                                                                        |
+| `./gradlew apiCheck`                                                                                        | Compares the public API with `monarch-tokens/api/` and `monarch-compose/api/`.                                                                      |
+| `./gradlew apiDump`                                                                                         | Rewrites the API dumps after an intended API change. Commit the result.                                                                             |
+| `./gradlew detekt`                                                                                          | Static analysis with `config/detekt/detekt.yml`.                                                                                                    |
+| `./gradlew :monarch-compose:lintDebug :sample:lintDebug`                                                    | Android lint. Warnings are errors.                                                                                                                  |
+| `./gradlew :sample:assembleDebug`                                                                           | Builds the catalogue app (`sample/build/outputs/apk/debug/`).                                                                                       |
+| `./gradlew :sample:installDebug`                                                                            | Installs the catalogue on a connected device or emulator.                                                                                           |
+| `./gradlew publishAllPublicationsToLocalRepository`                                                         | Publishes both libraries to `build/repo`.                                                                                                           |
 
 ## Updating versions
 

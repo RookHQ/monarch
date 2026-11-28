@@ -29,13 +29,13 @@ Made by [Rook](https://rookhq.com), open to everyone under the
 without restriction beyond the license; the Rook and Monarch names and logos are trademarks (see
 [License and trademarks](#license-and-trademarks)).
 
-| Package                                                           | What it is                                                                                              | Needs                |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------- |
-| [`@rookcom/monarch-tokens`](packages/tokens)                      | CSS variables, 4 themes, per-product accents with guaranteed contrast, Tailwind 3 preset, `tokens.json` | nothing              |
-| [`@rookcom/monarch-react`](packages/react)                        | Accessible components and patterns (React 18/19, SSR-safe) and `styles.css`                             | tokens, React        |
-| [`@rookcom/monarch-conformance`](packages/conformance)            | `monarch` CLI: conformance checks with fixes and SARIF, an ESLint plugin, starter apps, an MCP server   | Node only            |
-| [`MonarchUI`, `MonarchTokens`](platforms/ios) (Swift package)     | SwiftUI components and tokens for iPhone and iPad                                                       | iOS 17               |
-| [`dev.monarchui:monarch-compose`](platforms/android) (Maven) | Jetpack Compose components and tokens for phones and tablets                                            | Android 7.0 (API 24) |
+| Package                                                       | What it is                                                                                              | Needs                |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------- |
+| [`@rookcom/monarch-tokens`](packages/tokens)                  | CSS variables, 4 themes, per-product accents with guaranteed contrast, Tailwind 3 preset, `tokens.json` | nothing              |
+| [`@rookcom/monarch-react`](packages/react)                    | Accessible components and patterns (React 18/19, SSR-safe) and `styles.css`                             | tokens, React        |
+| [`@rookcom/monarch-conformance`](packages/conformance)        | `monarch` CLI: conformance checks with fixes and SARIF, an ESLint plugin, starter apps, an MCP server   | Node only            |
+| [`MonarchUI`, `MonarchTokens`](platforms/ios) (Swift package) | SwiftUI components and tokens for iPhone and iPad                                                       | iOS 17               |
+| [`dev.monarchui:monarch-compose`](platforms/android) (Maven)  | Jetpack Compose components and tokens for phones and tablets                                            | Android 7.0 (API 24) |
 
 ## Start a new app
 
@@ -83,7 +83,7 @@ the platform:
 
 | Platform | Where                                              | Library                                                             |
 | -------- | -------------------------------------------------- | ------------------------------------------------------------------- |
-| Android  | [`platforms/android`](platforms/android/README.md) | Jetpack Compose: `dev.monarchui:monarch-compose`               |
+| Android  | [`platforms/android`](platforms/android/README.md) | Jetpack Compose: `dev.monarchui:monarch-compose`                    |
 | iOS      | [`platforms/ios`](platforms/ios/README.md)         | SwiftUI: the Swift package products `MonarchUI` and `MonarchTokens` |
 
 Both cover all 515 web components (built, styled, adopted from the platform or

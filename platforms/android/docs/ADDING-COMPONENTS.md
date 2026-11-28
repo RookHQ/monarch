@@ -56,16 +56,16 @@ id. Paths are from `platforms/android`. `…` stands for
 
 ### Coverage `build`, or `style` with a new Kotlin declaration
 
-| #   | File                                                                                  | Required                                                                                               |
-| --- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| 1   | `monarch-compose/src/main/…/components/<family>/<name>/<Name>.kt`                     | Yes. The public composable and its overloads. Package `dev.monarchui.components.<family>.<name>`. |
-| 2   | `monarch-compose/src/main/…/components/<family>/<name>/<Name><Option>.kt`             | One file per further public type (a variant or size enum).                                             |
-| 3   | `monarch-compose/src/main/…/components/<family>/<name>/<Name>Tokens.kt`               | Yes if the component has any size, spacing or colour decision. An `internal object`.                   |
-| 4   | `monarch-compose/src/main/res/values/strings_<name>.xml`                              | Only if the component has built-in text.                                                               |
-| 5   | `monarch-compose/src/debug/…/components/<family>/<name>/<Name>Previews.kt`            | Yes. The previews.                                                                                     |
-| 6   | `monarch-compose/src/test/…/components/<family>/<Name>Test.kt`                        | Yes. Fixtures and tests.                                                                               |
-| 7   | `sample/src/main/kotlin/dev/monarchui/sample/sections/<family>/<Name>Section.kt` | Yes. The catalogue page.                                                                               |
-| 8   | `inventory/<id>.json`                                                                 | Yes. Documentation and compiled examples.                                                              |
+| #   | File                                                                             | Required                                                                                          |
+| --- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| 1   | `monarch-compose/src/main/…/components/<family>/<name>/<Name>.kt`                | Yes. The public composable and its overloads. Package `dev.monarchui.components.<family>.<name>`. |
+| 2   | `monarch-compose/src/main/…/components/<family>/<name>/<Name><Option>.kt`        | One file per further public type (a variant or size enum).                                        |
+| 3   | `monarch-compose/src/main/…/components/<family>/<name>/<Name>Tokens.kt`          | Yes if the component has any size, spacing or colour decision. An `internal object`.              |
+| 4   | `monarch-compose/src/main/res/values/strings_<name>.xml`                         | Only if the component has built-in text.                                                          |
+| 5   | `monarch-compose/src/debug/…/components/<family>/<name>/<Name>Previews.kt`       | Yes. The previews.                                                                                |
+| 6   | `monarch-compose/src/test/…/components/<family>/<Name>Test.kt`                   | Yes. Fixtures and tests.                                                                          |
+| 7   | `sample/src/main/kotlin/dev/monarchui/sample/sections/<family>/<Name>Section.kt` | Yes. The catalogue page.                                                                          |
+| 8   | `inventory/<id>.json`                                                            | Yes. Documentation and compiled examples.                                                         |
 
 ### Coverage `style` that reuses an existing type
 
